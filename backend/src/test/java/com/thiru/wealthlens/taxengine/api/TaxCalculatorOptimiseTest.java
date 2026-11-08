@@ -192,6 +192,40 @@ class TaxCalculatorOptimiseTest {
                 .hasMessageContaining("defines no component MEAL_COUPON");
     }
 
+    /** {@code components/EMPLOYEE_NPS.json}: EMPLOYEE_CONTRIBUTION, paid from take-home, never from the cost to company. */
+    @Test
+    void optimise_whenAnEmployeeContributionIsMovable_isRefusedNamingItsKind() {
+        // Given
+        AllocationSpace space = space(flipsWithHra(), Set.of(ComponentCodes.EMPLOYEE_NPS), "0", 6);
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("EMPLOYEE_NPS").hasMessageContaining("EMPLOYEE_CONTRIBUTION");
+    }
+
+    /** {@code components/PROFESSIONAL_TAX.json}: STATUTORY_DEDUCTION. */
+    @Test
+    void optimise_whenAStatutoryDeductionIsMovable_isRefusedNamingItsKind() {
+        // Given
+        AllocationSpace space = space(flipsWithHra(), Set.of(HRA, ComponentCodes.PROFESSIONAL_TAX), "0", 6);
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("PROFESSIONAL_TAX").hasMessageContaining("STATUTORY_DEDUCTION");
+    }
+
+    /** {@code components/LIFE_INSURANCE_PREMIUM.json}: QUALIFYING_PAYMENT, so it cannot fund a move (W-238g C2a). */
+    @Test
+    void optimise_whenTheResidualIsNotPay_isRefusedNamingItsKind() {
+        // Given
+        AllocationSpace space = new AllocationSpace(flipsWithHra(), Set.of(HRA), Set.of(),
+                ComponentCodes.LIFE_INSURANCE_PREMIUM, Money.ZERO, 6);
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("LIFE_INSURANCE_PREMIUM").hasMessageContaining("QUALIFYING_PAYMENT");
+    }
+
     /**
      * The funds' history with no income accrued in the year: the accretion beyond the limit, (PC ÷ 2 + PC1 + TP1) × I ÷
      * F(avg) ({@code PERQ-EMPLOYER-ACCRETION}, S2 s.17(1)(i)), is then nil, so only the excess itself is a perquisite.
@@ -465,7 +499,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     @Test
-    void optimise_whenTheEmployeesProvidentFundIsAlsoMovable_isRefused() {
+    void optimise_whenTheEmployeesProvidentFundIsAlsoMovable_isRefusedAsNotPay() {
         // Given
         AllocationSpace space = new AllocationSpace(paidBasic("1000000",
                 List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))), List.of(), false),
@@ -473,6 +507,6 @@ class TaxCalculatorOptimiseTest {
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("EMPLOYEE_PF follows BASIC");
+                .hasMessageContaining("EMPLOYEE_PF").hasMessageContaining("EMPLOYEE_CONTRIBUTION");
     }
 }

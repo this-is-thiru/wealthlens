@@ -6,10 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/** The HR-support table is refused at start unless it is well-formed (W-238f), and gives no default for a gap (C3a). */
+/** The HR-support table is refused at start unless it is well-formed (W-238f), and gives no default for a name it does not cover (C3a, W-238g C4a). */
 class HrSupportTableTest {
 
     private static InputStream json(String text) {
@@ -22,16 +21,18 @@ class HrSupportTableTest {
         HrSupportTable table = HrSupportTable.read(json("{\"_note\": \"n\", \"likelihoods\": {\"HRA\": \"HIGH\"}}"));
 
         // When / Then
-        assertThat(table.likelihoodOf("HRA")).contains(HrSupportLikelihood.HIGH);
+        assertThat(table.likelihoodOf("HRA")).isEqualTo(HrSupportLikelihood.HIGH);
     }
 
     @Test
-    void likelihoodOf_whenTheNameHasNoValue_isEmpty() {
-        // Given
+    void likelihoodOf_whenTheNameHasNoValue_isRefused() {
+        // Given — only pay and employer funds move (W-238g), and the coverage test holds the table to both, so a
+        // name with no value is a defect, never a gap to show
         HrSupportTable table = HrSupportTable.read(json("{\"likelihoods\": {\"HRA\": \"HIGH\"}}"));
 
         // When / Then
-        assertThat(table.likelihoodOf("EMPLOYEE_NPS")).isEqualTo(Optional.empty());
+        assertThatThrownBy(() -> table.likelihoodOf("EMPLOYEE_NPS")).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("no value for EMPLOYEE_NPS");
     }
 
     @Test
@@ -76,8 +77,8 @@ class HrSupportTableTest {
 
         // When / Then
         assertThat(table.likelihoods()).hasSize(22);
-        assertThat(table.likelihoodOf("SPECIAL_ALLOWANCE")).contains(HrSupportLikelihood.HIGH);
-        assertThat(table.likelihoodOf("BASIC")).contains(HrSupportLikelihood.LOW);
-        assertThat(table.likelihoodOf("NOTIFIED_PENSION_SCHEME")).contains(HrSupportLikelihood.EMPLOYER_DISCRETION);
+        assertThat(table.likelihoodOf("SPECIAL_ALLOWANCE")).isEqualTo(HrSupportLikelihood.HIGH);
+        assertThat(table.likelihoodOf("BASIC")).isEqualTo(HrSupportLikelihood.LOW);
+        assertThat(table.likelihoodOf("NOTIFIED_PENSION_SCHEME")).isEqualTo(HrSupportLikelihood.EMPLOYER_DISCRETION);
     }
 }

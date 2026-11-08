@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxplanning.compute;
 
 import com.thiru.wealthlens.taxengine.api.Optimisation;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -34,8 +33,8 @@ public record DraftOptimisation(Optimisation optimisation, List<HrSupport> hrSup
      * One move's HR support.
      *
      * @param name the component's code or the fund's {@code EmployerFund} name, as the change names it
-     * @param likelihood the table's value; empty where the table gives none, never a default (W-238f C3a)
+     * @param likelihood the table's value; the table covers every name that can move (W-238f C3a, W-238g C4a)
      */
-    public record HrSupport(String name, Optional<HrSupportLikelihood> likelihood) {
+    public record HrSupport(String name, HrSupportLikelihood likelihood) {
     }
 }

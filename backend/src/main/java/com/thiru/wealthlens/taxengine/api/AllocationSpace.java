@@ -14,10 +14,12 @@ import java.util.Set;
  * highest (A2.5), the rest held at the greedy answer.
  *
  * @param base the inputs as entered; their regime is only a starting point, since the regime is chosen on every allocation
- * @param movable the components the employer will let move; a code not yet in the employment starts at nil
+ * @param movable the components the employer will let move, each pay ({@code SALARY} in the year's pack, W-238g): an
+ *     employee's own contribution is paid from take-home, so the residual never funds it; a code not yet in the
+ *     employment starts at nil
  * @param movableFunds the funds the employer will let pay into for the residual's employment, at nil where none is
  *     entered (W-238c); a contribution is never take-home (C11), so the cash floor binds it
- * @param residual the taxable balancing component that funds every move
+ * @param residual the taxable balancing component that funds every move, itself pay ({@code SALARY})
  * @param cashFloor the least cash take-home after tax the user accepts
  * @param verificationBreadth how many components the exhaustive check covers
  */

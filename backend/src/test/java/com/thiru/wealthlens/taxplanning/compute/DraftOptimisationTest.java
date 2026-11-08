@@ -15,13 +15,14 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/** Each move carries the table's value, and a gap stays a gap (W-238f C1a, C3a). */
+/** Each move carries the table's value (W-238f C1a; W-238g C4a). */
 class DraftOptimisationTest {
 
     private static final Liquidity NONE = new Liquidity(List.of(), List.of());
 
     private static final HrSupportTable TABLE = new HrSupportTable(Map.of(
             "HRA", HrSupportLikelihood.HIGH,
+            "CONVEYANCE_ALLOWANCE", HrSupportLikelihood.MEDIUM,
             "NOTIFIED_PENSION_SCHEME", HrSupportLikelihood.EMPLOYER_DISCRETION,
             "RECOGNISED_PROVIDENT_FUND", HrSupportLikelihood.LOW));
 
@@ -32,9 +33,9 @@ class DraftOptimisationTest {
 
     @Test
     void of_whenComponentsFundsAndAFollowerMove_givesComponentsThenFundsAndNoneForTheFollower() {
-        // Given — EMPLOYEE_NPS has no value in the table; the provident fund only follows basic
+        // Given — the provident fund only follows basic
         Optimisation optimisation = new Optimisation("NEW_TAX_REGIME", Money.TEN, "NEW_TAX_REGIME", Money.ZERO,
-                List.of(change("HRA"), change("EMPLOYEE_NPS")),
+                List.of(change("HRA"), change("CONVEYANCE_ALLOWANCE")),
                 List.of(new FundChange("NOTIFIED_PENSION_SCHEME", List.of(), Money.ZERO, Money.TEN, Optional.empty(),
                         Money.ZERO, NONE)),
                 List.of(new FollowingChange("RECOGNISED_PROVIDENT_FUND", List.of(), Money.ZERO, Money.TEN, "BASIC",
@@ -47,8 +48,8 @@ class DraftOptimisationTest {
         // Then
         assertThat(view.optimisation()).isSameAs(optimisation);
         assertThat(view.hrSupport()).containsExactly(
-                new HrSupport("HRA", Optional.of(HrSupportLikelihood.HIGH)),
-                new HrSupport("EMPLOYEE_NPS", Optional.empty()),
-                new HrSupport("NOTIFIED_PENSION_SCHEME", Optional.of(HrSupportLikelihood.EMPLOYER_DISCRETION)));
+                new HrSupport("HRA", HrSupportLikelihood.HIGH),
+                new HrSupport("CONVEYANCE_ALLOWANCE", HrSupportLikelihood.MEDIUM),
+                new HrSupport("NOTIFIED_PENSION_SCHEME", HrSupportLikelihood.EMPLOYER_DISCRETION));
     }
 }

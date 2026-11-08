@@ -705,6 +705,20 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void optimise_whenAnEmployeeContributionIsMovable_expected400() {
+        // Given — components/EMPLOYEE_NPS.json is EMPLOYEE_CONTRIBUTION: paid from take-home, not pay to move (W-238g)
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId,
+                "{\"movable\": [\"EMPLOYEE_NPS\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("EMPLOYEE_NPS").contains("EMPLOYEE_CONTRIBUTION");
+    }
+
+    @Test
     void optimise_whenTheFloorIsAboveTheTakeHomeAsEntered_expected400() {
         // Given — cash as entered is 24,00,000 less a bill of 2,92,500; a floor of 30,00,000 is above all the pay
         String draftId = rentingDraft();

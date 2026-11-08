@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import org.springframework.core.io.ClassPathResource;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.StreamReadFeature;
@@ -65,9 +64,18 @@ public record HrSupportTable(Map<String, HrSupportLikelihood> likelihoods) {
         }
     }
 
-    /** The value given for a component's code or a fund's {@code EmployerFund} name; empty where none is given. */
-    public Optional<HrSupportLikelihood> likelihoodOf(String name) {
-        return Optional.ofNullable(likelihoods.get(name));
+    /**
+     * The value given for a component's code or a fund's {@code EmployerFund} name.
+     *
+     * @throws IllegalStateException if the table gives none: only pay and employer funds move (W-238g), and
+     *     {@code HrSupportCoverageTest} holds the table to both, so a missing name is a defect, never a gap to show
+     */
+    public HrSupportLikelihood likelihoodOf(String name) {
+        HrSupportLikelihood likelihood = likelihoods.get(name);
+        if (likelihood == null) {
+            throw new IllegalStateException("The HR-support table gives no value for " + name);
+        }
+        return likelihood;
     }
 
     private record Contents(@JsonProperty("_note") String note, Map<String, HrSupportLikelihood> likelihoods) {

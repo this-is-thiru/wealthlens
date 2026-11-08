@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.Liquidity;
 import com.thiru.wealthlens.taxengine.rules.component.UnstatedTerms;
@@ -73,9 +74,9 @@ final class AllocationPricing {
     }
 
     /**
-     * @throws IllegalArgumentException if a code is not in the year's pack, or the residual is not in exactly one
-     *     employment, or a code appears twice in it, or a movable fund has two contributions entered for it, or basic
-     *     cannot be moved with what follows it ({@link #following})
+     * @throws IllegalArgumentException if a code is not in the year's pack, or its row's kind is not {@code SALARY}
+     *     (W-238g), or the residual is not in exactly one employment, or a code appears twice in it, or a movable fund
+     *     has two contributions entered for it, or basic cannot be moved with what follows it ({@link #following})
      */
     static AllocationPricing over(NodeRegistry registry, RulePack pack, RegimeSpec computing, AllocationSpace space) {
         List<ComponentCode> codes = new ArrayList<>(space.movable());
@@ -83,6 +84,12 @@ final class AllocationPricing {
         for (ComponentCode code : codes) {
             if (!pack.components().containsKey(code)) {
                 throw new IllegalArgumentException(pack.taxYear().label() + " defines no component " + code.value());
+            }
+            ComponentKind kind = pack.components().get(code).kind();
+            if (kind != ComponentKind.SALARY) {
+                throw new IllegalArgumentException(code.value() + " is " + kind.name() + " in " + pack.taxYear().label()
+                        + ", not pay: only a SALARY component is drawn from the cost to company, so only one can move"
+                        + " or fund the moves (A2.1)");
             }
         }
         List<Employment> employments = space.base().entered().employments();
@@ -120,9 +127,6 @@ final class AllocationPricing {
         if (held.dearnessAllowanceCountsForRetirement() && count(held, ComponentCodes.DEARNESS_ALLOWANCE) > 0) {
             throw new IllegalArgumentException("BASIC cannot move here: the employment's dearness allowance counts for"
                     + " retirement, and whether the provident fund follows it too is not entered (A2.2 C8)");
-        }
-        if (space.movable().contains(ComponentCodes.EMPLOYEE_PF)) {
-            throw new IllegalArgumentException("EMPLOYEE_PF follows BASIC (A2.2 C8), so it cannot also move by itself");
         }
         if (count(held, ComponentCodes.EMPLOYEE_PF) > 1
                 || contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 1) {
