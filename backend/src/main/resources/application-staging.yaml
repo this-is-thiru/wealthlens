@@ -106,6 +106,8 @@ app:
     retention:
       archive-after: P18M
       purge-archived-after: P12M
+      # W-239: DR 14 O5 — a landlord or lender is kept to the end of the tax year it last supports, plus this
+      third-party-after: P2Y
   portfolio:
     idempotency:
       # How long a trade with NO client-supplied idempotencyKey stays de-duplicable, in seconds.

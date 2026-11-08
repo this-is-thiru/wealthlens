@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 /**
- * A lender: data about someone who is not the user ({@code DR 15} F3; retention is W-232's, {@code DR 14} O5).
+ * A lender: data about someone who is not the user ({@code DR 15} F3; retention {@code DR 14} O5, W-239).
  */
 @Data
 @NoArgsConstructor

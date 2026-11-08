@@ -310,6 +310,18 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
 
 Expected: no failures, and `leasesHeld` 0 between runs. A failure naming a tax year means a filed draft of a year no shipped pack covers: it is **kept**, and the row stays until the owner decides (ship that year's pack, or a D-row). Nothing to run twice; the collections are new.
 
+**From W-239 (D-505)** the monthly `retention-purge` also deletes **landlords and lenders** once `app.tax.retention.third-party-after` (P2Y, all three profile yamls) has passed since the end of the last tax year the record can support — the later of the profile's latest stored draft and the year the record was last entered or changed (`DR 14` O5). Each deletion logs `Job retention-purge deleted landlord <id>` or `… deleted lender <id>`; a record with no stored date is **kept** and logged as a refusal in `tax_job_failures` (subject `landlord <id>` / `lender <id>`). Nothing to seed or run. **Before the first run carrying W-239, and after it** (read-only; the drop is the records past their period):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    return { database: n, landlords: d.tax_landlords.countDocuments({}), lenders: d.tax_lenders.countDocuments({}),
+      undated: d.tax_landlords.countDocuments({ "audit_metadata.updatedAt": null, "audit_metadata.createdAt": null })
+        + d.tax_lenders.countDocuments({ "audit_metadata.updatedAt": null, "audit_metadata.createdAt": null }) }; }) }])
+```
+
+Expected after: the counts fall by the number of `deleted landlord|lender` log lines, and `undated` equals the third-party refusals. A second run deletes nothing more. **Way back:** restore the two collections from the backup taken before the deploy — deleting them is the point, so only if a record was deleted in error.
+
 **Way back:** set `app.tax.jobs.enabled=false` and restart; nothing is scheduled, and stored drafts stay as they are. A draft the purge deleted is gone: restore it from the database backup.
 
 ### 1.z W-235 — erasure on request · owner · **first deploy carrying it, then after the first purge that erases**

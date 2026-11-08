@@ -15,6 +15,8 @@ import com.thiru.wealthlens.taxplanning.jobs.JobLease;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
 import com.thiru.wealthlens.taxplanning.jobs.StalenessSweep;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
+import com.thiru.wealthlens.taxplanning.profile.Landlord;
+import com.thiru.wealthlens.taxplanning.profile.Lender;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
@@ -134,6 +136,32 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
     private FilingDraft stored(String id) {
         return mongoTemplate.findById(id, FilingDraft.class);
+    }
+
+    private void landlord(String id, String profileId, String lastChanged) {
+        Landlord landlord = new Landlord();
+        landlord.setId(id);
+        landlord.setProfileId(profileId);
+        landlord.setName("A landlord");
+        landlord.setPan("ABCPL1234K");
+        mongoTemplate.save(landlord);
+        mongoTemplate.updateFirst(query(where("_id").is(id)), new Update().set("audit_metadata.updatedAt",
+                LocalDateTime.parse(lastChanged)), Landlord.class);
+    }
+
+    private void lender(String id, String profileId, String lastChanged) {
+        Lender lender = new Lender();
+        lender.setId(id);
+        lender.setProfileId(profileId);
+        lender.setName("A bank");
+        mongoTemplate.save(lender);
+        mongoTemplate.updateFirst(query(where("_id").is(id)), new Update().set("audit_metadata.updatedAt",
+                LocalDateTime.parse(lastChanged)), Lender.class);
+    }
+
+    private void draftOf(String id, String profileId, int taxYear) {
+        draft(id, DraftStatus.DRAFT, taxYear, "2026-10-01T12:00:00");
+        mongoTemplate.updateFirst(query(where("_id").is(id)), new Update().set("profile_id", profileId), FilingDraft.class);
     }
 
     /** The actor as the row holds it, past the converter (W-256). */
@@ -283,6 +311,86 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(stored("expired")).isNotNull();
+        assertThat(mongoTemplate.findAll(JobFailure.class)).isEmpty();
+    }
+
+    @Test
+    void retentionPurge_whenALandlordOutlivesTheProfilesLatestDraftYearByTwoYears_deletesItTheDayAfter() {
+        // Given — profile-1 drafts 2025-26 and 2026-27; its landlord last changed 01-06-2025, in 2025-26. Last year supported:
+        // max(2026-27, 2025-26) = 2026-27, ending 31-03-2027; + P2Y = 31-03-2029. profile-2 has no draft; its lender last
+        // changed 10-05-2027, in 2027-28, ending 31-03-2028; + P2Y = 31-03-2030
+        workspace("workspace-1", null);
+        draftOf("draft-2025", "profile-1", 2025);
+        draftOf("draft-2026", "profile-1", 2026);
+        landlord("landlord-1", "profile-1", "2025-06-01T12:00:00");
+        lender("lender-2", "profile-2", "2027-05-10T12:00:00");
+
+        // When — 31-03-2029, the last day kept
+        clock.set("2029-03-31T12:00:00Z");
+        runner.run(retentionPurge);
+
+        // Then
+        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
+
+        // When — the day after
+        clock.set("2029-04-01T00:30:00Z");
+        runner.run(retentionPurge);
+
+        // Then
+        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNull();
+        assertThat(mongoTemplate.findById("lender-2", Lender.class)).isNotNull();
+        assertThat(stored("draft-2026")).isNotNull();
+        assertThat(failures.findAll()).isEmpty();
+    }
+
+    @Test
+    void retentionPurge_whenTheProfileHasALaterDraftThanTheRecordsLastChange_keepsTheRecordThroughThatDraftsYear() {
+        // Given — changed 01-07-2024, in 2024-25 (alone: 31-03-2025 + P2Y = 31-03-2027, past on 01-04-2029); the
+        // profile's draft of 2028-29 ends 31-03-2029, + P2Y = 31-03-2031
+        workspace("workspace-1", null);
+        draftOf("draft-2028", "profile-1", 2028);
+        landlord("landlord-1", "profile-1", "2024-07-01T12:00:00");
+        lender("lender-1", "profile-1", "2024-07-01T12:00:00");
+
+        // When
+        clock.set("2029-04-01T00:30:00Z");
+        runner.run(retentionPurge);
+
+        // Then
+        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
+        assertThat(mongoTemplate.findById("lender-1", Lender.class)).isNotNull();
+    }
+
+    @Test
+    void retentionPurge_whenALandlordHasNoStoredDate_keepsItAndRecordsWhy() {
+        // Given
+        landlord("landlord-1", "profile-1", "2020-06-01T12:00:00");
+        mongoTemplate.updateFirst(query(where("_id").is("landlord-1")),
+                new Update().unset("audit_metadata.updatedAt").unset("audit_metadata.createdAt"), Landlord.class);
+
+        // When
+        clock.set("2029-04-01T00:30:00Z");
+        runner.run(retentionPurge);
+
+        // Then
+        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
+        assertThat(failures.findAll()).singleElement().satisfies(failure -> {
+            assertThat(failure.getSubject()).isEqualTo("landlord landlord-1");
+            assertThat(failure.getJob()).isEqualTo("retention-purge");
+        });
+    }
+
+    @Test
+    void retentionPurge_whenTheLeaseIsLostBeforeDeletingALandlord_deletesNothing() {
+        // Given — no draft; changed in 2025-26, so past 31-03-2027 + P2Y = 31-03-2028 on 01-04-2029
+        landlord("landlord-1", "profile-1", "2025-06-01T12:00:00");
+        clock.set("2029-04-01T00:30:00Z");
+
+        // When
+        retentionPurge.run(new JobContext("retention-purge", clock, () -> false, failures));
+
+        // Then
+        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
         assertThat(mongoTemplate.findAll(JobFailure.class)).isEmpty();
     }
 
