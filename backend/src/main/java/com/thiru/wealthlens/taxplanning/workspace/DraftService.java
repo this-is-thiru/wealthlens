@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxplanning.profile.TaxProfileReferenceService;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
@@ -8,7 +9,9 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ import tools.jackson.databind.JsonNode;
 public class DraftService {
 
     private final TaxProfileService taxProfileService;
+    private final TaxProfileReferenceService thirdPartyReferences;
     private final TaxYearWorkspaceRepository workspaceRepository;
     private final FilingDraftRepository draftRepository;
     private final DraftRevisionRepository revisionRepository;
@@ -126,6 +130,7 @@ public class DraftService {
         }
         JsonNode inputs = JsonPatchApplier.apply(DraftInputsMapper.tree(draft.getInputsJson()), patch);
         DraftInputsMapper.requireBinds(inputs);
+        requireNewThirdPartiesHeld(draft, DraftInputsMapper.read(DraftInputsMapper.text(inputs)).thirdParties());
         boolean reopened = draft.getStatus() == DraftStatus.READY;
         DraftRevision revision = revision(draft, expectedRevision + 1, email, reopened);
         revision.setChangeSetJson(DraftInputsMapper.text(patch));
@@ -134,6 +139,19 @@ public class DraftService {
         draft.setCurrentRevision(expectedRevision + 1);
         draft.setStatus(DraftStatus.DRAFT);
         return DraftView.of(draftRepository.save(draft));
+    }
+
+    /** Only ids this patch adds are checked: one named earlier may since have been deleted by retention (W-239a C2a). */
+    private void requireNewThirdPartiesHeld(FilingDraft draft, DraftInputs.ThirdParties after) {
+        DraftInputs.ThirdParties before = DraftInputsMapper.read(draft.getInputsJson()).thirdParties();
+        thirdPartyReferences.requireHeld(draft.getProfileId(), added(before.landlordIds(), after.landlordIds()),
+                added(before.lenderIds(), after.lenderIds()));
+    }
+
+    private static Set<String> added(List<String> before, List<String> after) {
+        Set<String> added = new LinkedHashSet<>(after);
+        before.forEach(added::remove);
+        return added;
     }
 
     @Transactional(readOnly = true)

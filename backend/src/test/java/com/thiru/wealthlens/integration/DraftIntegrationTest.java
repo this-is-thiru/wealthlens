@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxplanning.profile.Landlord;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
@@ -149,6 +150,73 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).contains("employmentz");
         assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+    }
+
+    private String landlordOf(String ownerProfileId) {
+        call(HttpMethod.POST, OWNER, "/profiles/" + ownerProfileId + "/landlords", """
+                {"name": "A landlord", "address": "1 Main Road", "pan": "ABCPL1234K"}""", null);
+        return mongoTemplate.findAll(Landlord.class).getLast().getId();
+    }
+
+    private static String naming(String list, String id) {
+        return "[{\"op\": \"add\", \"path\": \"/thirdParties/" + list + "/-\", \"value\": \"" + id + "\"}]";
+    }
+
+    @Test
+    void patch_whenTheDraftNamesItsProfilesLandlord_savesTheName() {
+        // Given
+        String landlordId = landlordOf(profileId);
+
+        // When
+        ResponseEntity<String> saved = save(naming("landlordIds", landlordId), "\"rev-0\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode read = JsonMapper.builder().build().readTree(call(HttpMethod.GET, OWNER, "/drafts/" + draftId, null, null).getBody());
+        assertThat(read.at("/inputs/thirdParties/landlordIds/0").asString()).isEqualTo(landlordId);
+    }
+
+    @Test
+    void patch_whenTheDraftNamesAnotherProfilesLandlord_expected400AndStoresNothing() {
+        // Given — a second profile of the same account, holding the landlord
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Spouse", "pan": "BCDEF2345G", "kind": "INDIVIDUAL", "dateOfBirth": "1987-02-01",
+                 "residentialStatus": "RESIDENT"}""", null);
+        String otherProfileId = mongoTemplate.findAll(TaxpayerProfile.class).stream().map(TaxpayerProfile::getId)
+                .filter(id -> !id.equals(profileId)).findFirst().orElseThrow();
+        String landlordId = landlordOf(otherProfileId);
+
+        // When
+        ResponseEntity<String> refused = save(naming("landlordIds", landlordId), "\"rev-0\"");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("landlord " + landlordId + " is not one of this profile's landlords");
+        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+    }
+
+    @Test
+    void patch_whenTheDraftNamesAnUnknownLender_expected400() {
+        // When
+        ResponseEntity<String> refused = save(naming("lenderIds", "no-such-lender"), "\"rev-0\"");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("lender no-such-lender is not one of this profile's lenders");
+    }
+
+    @Test
+    void patch_whenANamedRecordWasDeletedSince_savesAChangeElsewhere() {
+        // Given — named, then removed as retention would
+        String landlordId = landlordOf(profileId);
+        save(naming("landlordIds", landlordId), "\"rev-0\"");
+        mongoTemplate.remove(mongoTemplate.findById(landlordId, Landlord.class));
+
+        // When
+        ResponseEntity<String> saved = save(ADD_EMPLOYMENT.formatted("175000"), "\"rev-1\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test

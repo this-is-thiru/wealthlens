@@ -4,8 +4,12 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.protection.IdentifierDigest;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -93,6 +97,28 @@ public class TaxProfileReferenceService {
     public List<Lender> lenders(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return lenderRepository.findByProfileId(profileId);
+    }
+
+    /**
+     * Refuses unless every id is one of this profile's landlords or lenders: a draft names only what its own profile holds
+     * (W-239a C2a).
+     *
+     * @throws BadRequestException naming the first id the profile does not hold
+     */
+    @Transactional(readOnly = true)
+    public void requireHeld(String profileId, Collection<String> landlordIds, Collection<String> lenderIds) {
+        requireAmong(landlordIds, landlordRepository.findByProfileId(profileId).stream().map(Landlord::getId), "landlord");
+        requireAmong(lenderIds, lenderRepository.findByProfileId(profileId).stream().map(Lender::getId), "lender");
+    }
+
+    private static void requireAmong(Collection<String> named, Stream<String> held, String kind) {
+        if (named.isEmpty()) {
+            return;
+        }
+        Set<String> heldIds = held.collect(Collectors.toSet());
+        named.stream().filter(id -> !heldIds.contains(id)).findFirst().ifPresent(id -> {
+            throw new BadRequestException(kind + " " + id + " is not one of this profile's " + kind + "s");
+        });
     }
 
     public BankAccount createBankAccount(String email, String profileId, BankAccountRequest request) {

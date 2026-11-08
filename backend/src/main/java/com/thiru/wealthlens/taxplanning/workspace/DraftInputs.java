@@ -14,11 +14,37 @@ import java.util.Optional;
  * @param entered the entries
  * @param filing the due date, which may not be known while drafting, and tax already paid
  * @param brought what earlier years carried in, as the user's last return states it (W-234, D-445)
+ * @param thirdParties the landlords and lenders this draft relies on ({@code DR 15} F3; W-239a, D-506); none when absent,
+ *     which every draft stored before W-239a is, since none could name one
  */
-public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot brought) {
+public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot brought, ThirdParties thirdParties) {
+
+    public DraftInputs {
+        thirdParties = thirdParties == null ? ThirdParties.NONE : thirdParties;
+    }
 
     static DraftInputs blank() {
-        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of()), LedgerSnapshot.empty());
+        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of()), LedgerSnapshot.empty(),
+                ThirdParties.NONE);
+    }
+
+    /** A stored draft's inputs, read for a job that is not editing it (retention, W-239a). */
+    public static DraftInputs of(FilingDraft draft) {
+        return DraftInputsMapper.read(draft.getInputsJson());
+    }
+
+    /**
+     * Ids of the profile's landlords and lenders, as the draft names them. Retention keeps a named record to two years past
+     * the last tax year naming it ({@code DR 14} O5).
+     */
+    public record ThirdParties(List<String> landlordIds, List<String> lenderIds) {
+
+        static final ThirdParties NONE = new ThirdParties(List.of(), List.of());
+
+        public ThirdParties {
+            landlordIds = landlordIds == null ? List.of() : List.copyOf(landlordIds);
+            lenderIds = lenderIds == null ? List.of() : List.copyOf(lenderIds);
+        }
     }
 
     /** The engine's {@link FilingFacts} once the due date is stated; {@code dueDate} and {@code furnishedOn} may be null until then. */

@@ -4,6 +4,7 @@ import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.profile.LandlordRepository;
 import com.thiru.wealthlens.taxplanning.profile.LenderRepository;
+import com.thiru.wealthlens.taxplanning.workspace.DraftInputs;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import java.time.LocalDate;
@@ -12,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +21,17 @@ import org.springframework.stereotype.Component;
 
 /**
  * Deletes landlords and lenders — data about people who are not the user — once {@link RetentionPeriods#thirdPartyAfter()} has
- * passed since the end of the last tax year the record can support ({@code DR 14} O5; W-239, C1a). No draft names the record it
- * relied on ({@code DR 15} F3's reference is W-239a), so that year is the later of the profile's latest stored draft and the year
- * the record was last entered or changed: any of the profile's drafts may be the return it supports.
+ * passed since the end of the last tax year the record can support ({@code DR 14} O5; W-239, D-505). That year is the later of
+ * the latest tax year of a stored draft naming the record and the year it was last entered or changed; a record no draft names
+ * supports only the year of its last change (W-239a C3a, D-506).
  */
 @Component
 @Log4j2
 @RequiredArgsConstructor
 class ThirdPartyRetention {
+
+    private static final String LANDLORD = "landlord";
+    private static final String LENDER = "lender";
 
     private final LandlordRepository landlords;
     private final LenderRepository lenders;
@@ -38,7 +41,7 @@ class ThirdPartyRetention {
     /** Stops at the first record it would delete once the lease is lost. */
     void purge(String job, JobContext context) {
         LocalDate today = context.nowUtc().toLocalDate();
-        Map<String, OptionalInt> latestDraftYears = new HashMap<>();
+        Map<String, Map<String, Integer>> namingYearsByProfile = new HashMap<>();
         for (HeldRecord held : held()) {
             Optional<TaxYearId> changedIn = held.lastChangedIn();
             if (changedIn.isEmpty()) {
@@ -46,8 +49,9 @@ class ThirdPartyRetention {
                         + "measured; kept");
                 continue;
             }
-            OptionalInt latestDraftYear = latestDraftYears.computeIfAbsent(held.profileId(), this::latestDraftYear);
-            int lastSupported = Math.max(changedIn.get().startYear(), latestDraftYear.orElse(Integer.MIN_VALUE));
+            Integer namingYear = namingYearsByProfile.computeIfAbsent(held.profileId(), this::latestNamingYears).get(held.subject());
+            int lastSupported = namingYear == null ? changedIn.get().startYear()
+                    : Math.max(changedIn.get().startYear(), namingYear);
             if (!today.isAfter(TaxYearId.of(lastSupported).endsOn().plus(periods.thirdPartyAfter()))) {
                 continue;
             }
@@ -62,15 +66,23 @@ class ThirdPartyRetention {
 
     private List<HeldRecord> held() {
         return Stream.concat(
-                landlords.findAll().stream().map(landlord -> new HeldRecord("landlord", landlord.getId(), landlord.getProfileId(),
+                landlords.findAll().stream().map(landlord -> new HeldRecord(LANDLORD, landlord.getId(), landlord.getProfileId(),
                         landlord.getAuditMetadata(), landlords::deleteById)),
-                lenders.findAll().stream().map(lender -> new HeldRecord("lender", lender.getId(), lender.getProfileId(),
+                lenders.findAll().stream().map(lender -> new HeldRecord(LENDER, lender.getId(), lender.getProfileId(),
                         lender.getAuditMetadata(), lenders::deleteById)))
                 .toList();
     }
 
-    private OptionalInt latestDraftYear(String profileId) {
-        return drafts.findByProfileId(profileId).stream().mapToInt(FilingDraft::getTaxYearStart).max();
+    /** For each record the profile's drafts name, keyed as {@link HeldRecord#subject()}, the latest tax year naming it. */
+    private Map<String, Integer> latestNamingYears(String profileId) {
+        Map<String, Integer> years = new HashMap<>();
+        for (FilingDraft draft : drafts.findByProfileId(profileId)) {
+            DraftInputs.ThirdParties named = DraftInputs.of(draft).thirdParties();
+            Stream.concat(named.landlordIds().stream().map(id -> LANDLORD + " " + id),
+                    named.lenderIds().stream().map(id -> LENDER + " " + id))
+                    .forEach(subject -> years.merge(subject, draft.getTaxYearStart(), Math::max));
+        }
+        return years;
     }
 
     /** A landlord or lender as retention sees it: whose it is, when it last changed, and how to delete it. */

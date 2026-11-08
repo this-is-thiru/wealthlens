@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -162,6 +163,14 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
     private void draftOf(String id, String profileId, int taxYear) {
         draft(id, DraftStatus.DRAFT, taxYear, "2026-10-01T12:00:00");
         mongoTemplate.updateFirst(query(where("_id").is(id)), new Update().set("profile_id", profileId), FilingDraft.class);
+    }
+
+    /** Has the stored draft name {@code landlordId} and, if given, {@code lenderId} (W-239a). */
+    private void naming(String draftId, String landlordId, String... lenderIds) {
+        FilingDraft draft = stored(draftId);
+        draft.setInputsJson("{\"thirdParties\":{\"landlordIds\":[\"" + landlordId + "\"],\"lenderIds\":["
+                + String.join(",", Arrays.stream(lenderIds).map(id -> "\"" + id + "\"").toList()) + "]}}");
+        mongoTemplate.save(draft);
     }
 
     /** The actor as the row holds it, past the converter (W-256). */
@@ -315,22 +324,26 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void retentionPurge_whenALandlordOutlivesTheProfilesLatestDraftYearByTwoYears_deletesItTheDayAfter() {
-        // Given — profile-1 drafts 2025-26 and 2026-27; its landlord last changed 01-06-2025, in 2025-26. Last year supported:
-        // max(2026-27, 2025-26) = 2026-27, ending 31-03-2027; + P2Y = 31-03-2029. profile-2 has no draft; its lender last
-        // changed 10-05-2027, in 2027-28, ending 31-03-2028; + P2Y = 31-03-2030
+    void retentionPurge_whenALandlordOutlivesTheLatestDraftNamingItByTwoYears_deletesItTheDayAfter() {
+        // Given — landlord-1 last changed 01-06-2025 (2025-26), named by the 2026-27 draft, not by the 2028-29 one: max(2026-27,
+        // 2025-26) = 2026-27, ending 31-03-2027; + P2Y = 31-03-2029. lender-1, same profile, named by none, changed 01-06-2025:
+        // 2025-26 ends 31-03-2026; + P2Y = 31-03-2028. lender-2, profile-2, named by none, changed 10-05-2027 (2027-28): ending
+        // 31-03-2028; + P2Y = 31-03-2030
         workspace("workspace-1", null);
-        draftOf("draft-2025", "profile-1", 2025);
         draftOf("draft-2026", "profile-1", 2026);
+        naming("draft-2026", "landlord-1");
+        draftOf("draft-2028", "profile-1", 2028);
         landlord("landlord-1", "profile-1", "2025-06-01T12:00:00");
+        lender("lender-1", "profile-1", "2025-06-01T12:00:00");
         lender("lender-2", "profile-2", "2027-05-10T12:00:00");
 
-        // When — 31-03-2029, the last day kept
+        // When — 31-03-2029, landlord-1's last day kept
         clock.set("2029-03-31T12:00:00Z");
         runner.run(retentionPurge);
 
         // Then
         assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
+        assertThat(mongoTemplate.findById("lender-1", Lender.class)).isNull();
 
         // When — the day after
         clock.set("2029-04-01T00:30:00Z");
@@ -344,11 +357,12 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void retentionPurge_whenTheProfileHasALaterDraftThanTheRecordsLastChange_keepsTheRecordThroughThatDraftsYear() {
-        // Given — changed 01-07-2024, in 2024-25 (alone: 31-03-2025 + P2Y = 31-03-2027, past on 01-04-2029); the
-        // profile's draft of 2028-29 ends 31-03-2029, + P2Y = 31-03-2031
+    void retentionPurge_whenALaterDraftNamesTheRecord_keepsItThroughThatDraftsYear() {
+        // Given — changed 01-07-2024, in 2024-25 (alone: 31-03-2025 + P2Y = 31-03-2027, past on 01-04-2029); the 2028-29 draft
+        // names both, ending 31-03-2029; + P2Y = 31-03-2031
         workspace("workspace-1", null);
         draftOf("draft-2028", "profile-1", 2028);
+        naming("draft-2028", "landlord-1", "lender-1");
         landlord("landlord-1", "profile-1", "2024-07-01T12:00:00");
         lender("lender-1", "profile-1", "2024-07-01T12:00:00");
 

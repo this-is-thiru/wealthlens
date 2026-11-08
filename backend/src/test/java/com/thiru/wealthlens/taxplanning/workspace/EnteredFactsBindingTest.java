@@ -37,6 +37,16 @@ class EnteredFactsBindingTest {
     }
 
     @Test
+    void read_whenStoredBeforeThirdPartiesExisted_namesNone() {
+        // When — a draft stored before W-239a has no thirdParties
+        DraftInputs read = DraftInputsMapper.read("{\"entered\": null, \"filing\": null, \"brought\": null}");
+
+        // Then
+        assertThat(read.thirdParties().landlordIds()).isEmpty();
+        assertThat(read.thirdParties().lenderIds()).isEmpty();
+    }
+
+    @Test
     void requireBinds_whenAFieldIsMisspelt_namesWhereWithoutTheValue() {
         // Given
         JsonNode tree = JsonPatchApplier.apply(DraftInputsMapper.tree(DraftInputsMapper.blank()),
