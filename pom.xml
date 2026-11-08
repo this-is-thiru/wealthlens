@@ -294,6 +294,7 @@
                       missed), so 0.90: X5.5 met for the engine outside its rules.
                       W-240c (D-510) raised the rules vocabulary to 81.20 % (475 of 2,526 missed; 3 are on Condition's two
                       switches and :70, left with all 15 permitted types exercised, so compiler-made by elimination), so 0.81.
+                      W-240d (D-511) raised it to 85.47 % (367 of 2,526 missed), so 0.85: X5.5 met for both.
                     -->
                     <execution>
                         <id>check-taxengine</id>
@@ -351,7 +352,7 @@
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.81</minimum>
+                                            <minimum>0.85</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
