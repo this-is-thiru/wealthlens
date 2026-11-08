@@ -290,7 +290,8 @@
                       vocabulary, and the rules vocabulary (taxrules, folded into taxengine.rules by D-048). Lines hold X5.5's
                       figures (95 %, 90 %). Branches are a RATCHET at the level measured on 2026-11-07 (81.56 %, 76.91 %),
                       below X5.5's 90 % and 85 %: raise each minimum as tests close the gap (W-240), never lower it. W-240a
-                      (2026-11-08, D-508) raised the engine outside its rules to 86.12 % (447 of 3,220 missed), so 0.86.
+                      (2026-11-08, D-508) raised the engine outside its rules to 86.12 %; W-240b (D-509) to 90.68 % (300 of 3,220
+                      missed), so 0.90: X5.5 met for the engine outside its rules.
                     -->
                     <execution>
                         <id>check-taxengine</id>
@@ -318,7 +319,7 @@
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.86</minimum>
+                                            <minimum>0.90</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

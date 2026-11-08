@@ -1,12 +1,19 @@
 package com.thiru.wealthlens.taxengine.input;
 
+import static com.thiru.wealthlens.taxengine.input.InputRefusals.refusal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
+import java.util.Optional;
+import java.util.stream.Stream;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /** A retirement or termination payment, as entered (S2 s.19(1) Table; 1961 s.10(10)–(10C); D-103). Fixtures. */
 class RetirementPaymentTest {
@@ -75,4 +82,33 @@ class RetirementPaymentTest {
         assertThat(payment.statutory()).contains(entitlement);
     }
 
+
+    /** Each constructor argument made bad on its own (W-240b). */
+    static Stream<Arguments> refusals() {
+        RetirementEntry entry = RetirementEntry.GOVERNMENT_GRATUITY;
+        String needs = "A retirement payment needs its component and entry";
+        return Stream.of(
+                refusal("component null", () -> new RetirementPayment(0, null, entry, Optional.empty(), false,
+                        Optional.empty(), Optional.empty(), Optional.empty()), needs),
+                refusal("entry null", () -> new RetirementPayment(0, GRATUITY, null, Optional.empty(), false,
+                        Optional.empty(), Optional.empty(), Optional.empty()), needs),
+                refusal("commutedValueOfWholePension null", () -> new RetirementPayment(0, GRATUITY, entry, null, false,
+                        Optional.empty(), Optional.empty(), Optional.empty()), needs),
+                refusal("separation null", () -> new RetirementPayment(0, GRATUITY, entry, Optional.empty(), false, null,
+                        Optional.empty(), Optional.empty()), needs),
+                refusal("leave null", () -> new RetirementPayment(0, GRATUITY, entry, Optional.empty(), false,
+                        Optional.empty(), null, Optional.empty()), needs),
+                refusal("statutory null", () -> new RetirementPayment(0, GRATUITY, entry, Optional.empty(), false,
+                        Optional.empty(), Optional.empty(), null), needs),
+                refusal("employment negative", () -> new RetirementPayment(-1, GRATUITY, entry, Optional.empty(), false,
+                        Optional.empty(), Optional.empty(), Optional.empty()),
+                        "GRATUITY: the employment that paid it is an index from 0, but was -1"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("refusals")
+    void construct_whenOneFieldIsBad_isRefusedNamingIt(String badField, ThrowingCallable construct, String message) {
+        // When / Then
+        assertThatThrownBy(construct).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(message);
+    }
 }
