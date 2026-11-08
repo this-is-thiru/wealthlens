@@ -39,7 +39,7 @@ class DraftOptimisationTest {
                 List.of(change("HRA"), change("CONVEYANCE_ALLOWANCE")),
                 List.of(new FundChange("NOTIFIED_PENSION_SCHEME", List.of(), Money.ZERO, Money.TEN, Optional.empty(),
                         Money.ZERO, NONE)),
-                List.of(new FollowingChange("RECOGNISED_PROVIDENT_FUND", List.of(), Money.ZERO, Money.TEN, "BASIC",
+                List.of(new FollowingChange("RECOGNISED_PROVIDENT_FUND", List.of(), Money.ZERO, Money.TEN, List.of("BASIC"),
                         NONE)),
                 List.of(change("EMPLOYEE_NPS")), Money.ZERO, List.of("HRA"), 1, Optional.empty(), Optional.empty());
 

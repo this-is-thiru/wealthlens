@@ -166,7 +166,7 @@ public final class SalaryOptimiser {
             }
             if (entered.following().follows(item)) {
                 followingChanges.add(new Optimisation.FollowingChange(item.name(), pricing.feedsInto(item), current,
-                        suggested, entered.following().leader().name(), pricing.liquidity(item)));
+                        suggested, entered.following().leaders().keySet().stream().map(Movable::name).toList(), pricing.liquidity(item)));
                 continue;
             }
             Allocation alone = entered.moved(item, suggested);

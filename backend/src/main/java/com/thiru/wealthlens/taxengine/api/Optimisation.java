@@ -87,14 +87,16 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param feedsInto every rule it can feed, from its component's or fund's row in the year's pack, sorted (W-238e)
      * @param current its amount as entered
      * @param suggested its amount in the answer
-     * @param follows the component it follows
+     * @param follows the components it follows, each a part of the provident fund's base that may move, in code order
+     *     (W-238j1)
      * @param liquidity when the money paid in can come out, from its component's or fund's row (W-238e1)
      */
-    public record FollowingChange(String name, List<String> feedsInto, Money current, Money suggested, String follows,
+    public record FollowingChange(String name, List<String> feedsInto, Money current, Money suggested, List<String> follows,
             Liquidity liquidity) {
 
         public FollowingChange {
             feedsInto = List.copyOf(feedsInto);
+            follows = List.copyOf(follows);
         }
     }
 

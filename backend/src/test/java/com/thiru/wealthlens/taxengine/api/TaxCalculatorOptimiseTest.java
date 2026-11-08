@@ -462,7 +462,7 @@ class TaxCalculatorOptimiseTest {
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
         assertThat(optimised.fundChanges()).isEmpty();
         assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(new Optimisation.FollowingChange(
-                "RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"), Money.of("270000"), "BASIC",
+                "RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"), Money.of("270000"), List.of("BASIC"),
                 NO_LIQUIDITY));
         assertThat(outline(optimised.followingChanges().getFirst().liquidity())).containsExactlyElementsOf(EPF_2026_27);
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
@@ -487,9 +487,9 @@ class TaxCalculatorOptimiseTest {
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-300000")));
         assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
                 new Optimisation.FollowingChange("EMPLOYEE_PF", List.of("DED-SCHEDULE-XV"), Money.of("120000"),
-                        Money.of("270000"), "BASIC", NO_LIQUIDITY),
+                        Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY),
                 new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"),
-                        Money.of("270000"), "BASIC", NO_LIQUIDITY));
+                        Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY));
         assertThat(optimised.followingChanges()).allSatisfy(change ->
                 assertThat(outline(change.liquidity())).containsExactlyElementsOf(EPF_2026_27));
     }
@@ -593,7 +593,7 @@ class TaxCalculatorOptimiseTest {
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
         assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
-                        Money.of("120000"), Money.of("270000"), "BASIC", NO_LIQUIDITY));
+                        Money.of("120000"), Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY));
     }
 
     @Test
@@ -663,7 +663,7 @@ class TaxCalculatorOptimiseTest {
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("45500")), Money.of("-150000")));
         assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
-                        Money.of("144000"), Money.of("294000"), "BASIC", NO_LIQUIDITY));
+                        Money.of("144000"), Money.of("294000"), List.of("BASIC"), NO_LIQUIDITY));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
     }
 
@@ -683,25 +683,90 @@ class TaxCalculatorOptimiseTest {
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("45500")), Money.of("-150000")));
         assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
-                        Money.of("120000"), Money.of("270000"), "BASIC", NO_LIQUIDITY));
+                        Money.of("120000"), Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY));
     }
 
     @Test
-    void optimise_whenTheAllowanceInTheBaseIsMovable_isRefused() {
-        // Given — stated in the base, and (second) not stated but counting for retirement
+    void optimise_whenTheAllowanceMovesWithItsBaseUnstated_isRefused() {
+        // Given — counting for retirement, the base not stated: moving with basic, and (W-238j1) alone
         EngineInputs inputs = paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000), List.of(PROVIDENT_FUND_120000),
                 true);
-        Set<ComponentCode> movable = Set.of(BASIC, ComponentCodes.DEARNESS_ALLOWANCE);
-        AllocationSpace stated = new AllocationSpace(inputs, new AllocationSpace.Moves(movable, Set.of(), Set.of()), SPECIAL, Money.ZERO, 6,
-                baseIncludesDearnessAllowance(true));
-        AllocationSpace unstated = new AllocationSpace(inputs, new AllocationSpace.Moves(movable, Set.of(), Set.of()), SPECIAL, Money.ZERO, 6,
+        AllocationSpace withBasic = new AllocationSpace(inputs, new AllocationSpace.Moves(
+                Set.of(BASIC, ComponentCodes.DEARNESS_ALLOWANCE), Set.of(), Set.of()), SPECIAL, Money.ZERO, 6,
+                ProvidentFundTerms.FOLLOW_BASIC);
+        AllocationSpace alone = new AllocationSpace(inputs, new AllocationSpace.Moves(
+                Set.of(ComponentCodes.DEARNESS_ALLOWANCE), Set.of(), Set.of()), SPECIAL, Money.ZERO, 6,
                 ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
-        assertThatThrownBy(() -> CALCULATOR.optimise(stated)).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> CALCULATOR.optimise(withBasic)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("DEARNESS_ALLOWANCE cannot move here");
-        assertThatThrownBy(() -> CALCULATOR.optimise(unstated)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("DEARNESS_ALLOWANCE cannot move here");
+        assertThatThrownBy(() -> CALCULATOR.optimise(alone)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("DEARNESS_ALLOWANCE cannot move here")
+                .hasMessageContaining("whether the provident fund follows it too is not entered");
+    }
+
+    /** The dearness allowance's pack row ({@code components/DEARNESS_ALLOWANCE.json}): SALARY, CASH, one rule fed. */
+    private static final Optimisation.ComponentFacts DEARNESS_ALLOWANCE_FACTS = new Optimisation.ComponentFacts(
+            "SALARY", "CASH", List.of("SAL-SALARY-INCLUDES"), NO_LIQUIDITY);
+
+    private static AllocationSpace allowanceMovesUnder(EngineInputs inputs, ProvidentFundTerms terms) {
+        return new AllocationSpace(inputs, new AllocationSpace.Moves(Set.of(ComponentCodes.DEARNESS_ALLOWANCE),
+                Set.of(), Set.of()), SPECIAL, Money.ZERO, 6, terms);
+    }
+
+    @Test
+    void optimise_whenTheAllowanceInTheBaseIsMovable_leadsTheFundAsBasicDoes() {
+        // Given — W-238j's case with DA moving instead of basic (W-238j1). Before: 26L − 75,000 = 25,25,000 → 3,51,000.
+        // Basic is held, so each rupee of DA takes 1 + 0.12 from special: 14,00,000 ÷ 1.12 = 12,50,000, DA 14,50,000,
+        // the fund 0.12 × 24,50,000 = 2,94,000. After: 23,75,000 → 2,93,750, + 4 % = 3,05,500; saving 45,500. Cash:
+        // +12,50,000 − 14,00,000 = −1,50,000.
+        AllocationSpace space = allowanceMovesUnder(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
+                List.of(new EmployerFundContribution(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("144000"))),
+                true), baseIncludesDearnessAllowance(true));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("351000"));
+        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("305500"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("DEARNESS_ALLOWANCE",
+                DEARNESS_ALLOWANCE_FACTS, Money.of("200000"), Money.of("1450000"), Optional.of(Money.of("45500")),
+                Money.of("-150000")));
+        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+                .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
+                        Money.of("144000"), Money.of("294000"), List.of("DEARNESS_ALLOWANCE"), NO_LIQUIDITY));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
+    }
+
+    @Test
+    void optimise_whenTheAllowanceIsMovableButNotEnteredAndMayBeInTheBase_isRefused() {
+        // Given — no DA entered; it counts for retirement and the base is not stated (W-238j1 C3a)
+        AllocationSpace space = allowanceMovesUnder(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000),
+                true), ProvidentFundTerms.FOLLOW_BASIC);
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("DEARNESS_ALLOWANCE is not entered");
+    }
+
+    @Test
+    void optimise_whenTheEmployersShareIsHeldWhileTheAllowanceLeads_answersWithNoChange() {
+        // Given — DA counts for retirement with the base unstated, so it is in the base and leads; the employer's share is
+        // held, no employee share is entered, so nothing follows; DA and special are taxed alike, so no move saves
+        AllocationSpace space = allowanceMovesUnder(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
+                List.of(new EmployerFundContribution(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("144000"))),
+                true), new ProvidentFundTerms(false, true, Optional.empty()));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("351000"));
+        assertThat(optimised.changes()).isEmpty();
+        assertThat(optimised.followingChanges()).isEmpty();
     }
 
     @Test

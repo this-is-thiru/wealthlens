@@ -30,7 +30,8 @@ record Allocation(SortedMap<Movable, Money> amounts, Movable.Pay residual, Follo
 
     /**
      * {@code code} set to {@code target}, the difference taken from or returned to the residual. Where {@code code} leads,
-     * its followers move with it, and the residual funds the employer's share too (C1, C8). An employee's contribution
+     * its followers move with the leaders' sum as it now stands, and the residual funds the employer's share too (C1, C8;
+     * W-238j1). An employee's contribution
      * is paid from take-home, so the residual stays as it is (W-238k).
      */
     Allocation moved(Movable code, Money target) {
@@ -40,9 +41,10 @@ record Allocation(SortedMap<Movable, Money> amounts, Movable.Pay residual, Follo
             return new Allocation(next, residual, following);
         }
         Money taken = target.minus(amount(code));
-        if (code.equals(following.leader())) {
+        if (following.leads(code)) {
+            Money leaders = following.leaders().keySet().stream().map(next::get).reduce(Money.ZERO, Money::plus);
             for (Movable follower : following.followers().keySet()) {
-                Money to = following.amountAt(follower, target);
+                Money to = following.amountAt(follower, leaders);
                 if (Following.isFundedByResidual(follower)) {
                     taken = taken.plus(to.minus(amount(follower)));
                 }
@@ -55,7 +57,7 @@ record Allocation(SortedMap<Movable, Money> amounts, Movable.Pay residual, Follo
 
     /** The most {@code code}, pay or a fund, can reach before the residual is spent. */
     Money ceiling(Movable code) {
-        return code.equals(following.leader())
+        return following.leads(code)
                 ? following.ceiling(amount(code), residualAmount())
                 : amount(code).plus(residualAmount());
     }

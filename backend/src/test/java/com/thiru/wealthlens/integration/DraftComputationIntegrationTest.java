@@ -924,7 +924,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         JsonNode following = view.at("/followingChanges/0");
         assertThat(following.get("name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
         assertThat(amountAt(following, "/suggested")).isEqualByComparingTo("270000");
-        assertThat(following.get("follows").asString()).isEqualTo("BASIC");
+        assertThat(following.get("follows").toString()).isEqualTo("[\"BASIC\"]");
         assertThat(view.get("fundChanges").size()).isZero();
         // W-238f: basic is LOW in the owner's table (D-495); the provident fund only follows it, so has no entry
         assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"BASIC\",\"likelihood\":\"LOW\"}]");

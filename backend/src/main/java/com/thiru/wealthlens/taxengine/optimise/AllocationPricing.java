@@ -144,33 +144,31 @@ final class AllocationPricing {
     }
 
     /**
-     * What follows basic where basic may move (A2.2 C8; W-238d): the employer's provident fund contribution and the
-     * employee's, as entered for the employment, each only where the terms say it follows (W-238i); a share that does
-     * not is left out and so held as entered. Each follows over its base: basic, and the dearness allowance held where
-     * the terms say the base includes it (W-238j). Refused where the facts cannot say how much follows: the base not
-     * stated for dearness allowance that counts for retirement, a follower entered twice, or dearness allowance in the
-     * base moving by itself (W-238j C2a); and refused where a term changes nothing (W-238i, W-238j C3a).
+     * What follows the provident fund's base where a part of it may move (A2.2 C8; W-238d): the employer's provident fund
+     * contribution and the employee's, as entered for the employment, each only where the terms say it follows (W-238i);
+     * a share that does not is left out and so held as entered. The base is basic, and the dearness allowance where the
+     * terms say the base includes it (W-238j); each part that may move leads, basic or the allowance (W-238j1), and the
+     * rest is held. Refused where the facts cannot say how much follows: the base not stated for dearness allowance that
+     * counts for retirement, the allowance movable but not entered where it may be in the base (W-238j1 C3a), or a
+     * follower entered twice; and refused where a term changes nothing (W-238i, W-238j C3a).
      */
     private static Following following(AllocationSpace space, Employment held, int employment) {
-        Movable.Pay basic = new Movable.Pay(ComponentCodes.BASIC);
         ProvidentFundTerms terms = space.providentFundTerms();
-        boolean basicMoves = space.moves().movable().contains(ComponentCodes.BASIC);
-        requireHeldShareEntered(terms.employerShareFollowsBasic(), "employerShareFollowsBasic", basicMoves,
-                contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 0);
-        requireHeldShareEntered(terms.employeeShareFollowsBasic(), "employeeShareFollowsBasic", basicMoves,
-                count(held, ComponentCodes.EMPLOYEE_PF) > 0);
-        SortedMap<Movable, Money> followers = sharesThatFollow(space, held, employment);
+        Set<ComponentCode> movable = space.moves().movable();
         Money dearnessAllowance = enteredAmount(held, ComponentCodes.DEARNESS_ALLOWANCE);
-        requireBaseFactUsed(terms, basicMoves, !followers.isEmpty(), dearnessAllowance.isGreaterThan(Money.ZERO));
         boolean dearnessAllowanceInBase = dearnessAllowance.isGreaterThan(Money.ZERO)
                 && terms.baseIncludesDearnessAllowance().orElse(held.dearnessAllowanceCountsForRetirement());
-        if (!followers.isEmpty() && dearnessAllowanceInBase
-                && space.moves().movable().contains(ComponentCodes.DEARNESS_ALLOWANCE)) {
-            throw new IllegalArgumentException("DEARNESS_ALLOWANCE cannot move here: it is in the provident fund's base,"
-                    + " and only BASIC leads the contributions (A2.2 C8; W-238j1)");
-        }
-        if (!basicMoves) {
-            return new Following(basic, Money.ZERO, Money.ZERO, new TreeMap<>(Movable.ORDER));
+        boolean anyLeads = movable.contains(ComponentCodes.BASIC)
+                || dearnessAllowanceInBase && movable.contains(ComponentCodes.DEARNESS_ALLOWANCE);
+        requireHeldShareEntered(terms.employerShareFollowsBasic(), "employerShareFollowsBasic", anyLeads,
+                contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 0);
+        requireHeldShareEntered(terms.employeeShareFollowsBasic(), "employeeShareFollowsBasic", anyLeads,
+                count(held, ComponentCodes.EMPLOYEE_PF) > 0);
+        SortedMap<Movable, Money> followers = sharesThatFollow(space, held, employment);
+        requireBaseFactUsed(terms, anyLeads, !followers.isEmpty(), dearnessAllowance.isGreaterThan(Money.ZERO));
+        requireAllowanceEntered(space, held, !followers.isEmpty(), dearnessAllowance);
+        if (!anyLeads) {
+            return Following.none();
         }
         if (count(held, ComponentCodes.EMPLOYEE_PF) > 1
                 || contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 1) {
@@ -178,11 +176,49 @@ final class AllocationPricing {
                     + " once for the employment, so it has no one ratio to basic (A2.2 C8)");
         }
         if (!followers.isEmpty() && dearnessAllowanceInBase && terms.baseIncludesDearnessAllowance().isEmpty()) {
-            throw new IllegalArgumentException("BASIC cannot move here: the employment's dearness allowance counts for"
-                    + " retirement, and whether the provident fund follows it too is not entered (A2.2 C8)");
+            String moving = movable.contains(ComponentCodes.DEARNESS_ALLOWANCE) ? "DEARNESS_ALLOWANCE" : "BASIC";
+            throw new IllegalArgumentException(moving + " cannot move here: the employment's dearness allowance counts"
+                    + " for retirement, and whether the provident fund follows it too is not entered (A2.2 C8)");
         }
-        return new Following(basic, enteredAmount(held, ComponentCodes.BASIC),
-                dearnessAllowanceInBase ? dearnessAllowance : Money.ZERO, followers);
+        return new Following(leaders(movable, held, dearnessAllowanceInBase), fixed(movable, held,
+                dearnessAllowanceInBase), followers);
+    }
+
+    /** The parts of the base that may move, each at its amount as entered (W-238j1 C1a). */
+    private static SortedMap<Movable, Money> leaders(Set<ComponentCode> movable, Employment held,
+            boolean dearnessAllowanceInBase) {
+        SortedMap<Movable, Money> leaders = new TreeMap<>(Movable.ORDER);
+        if (movable.contains(ComponentCodes.BASIC)) {
+            leaders.put(new Movable.Pay(ComponentCodes.BASIC), enteredAmount(held, ComponentCodes.BASIC));
+        }
+        if (dearnessAllowanceInBase && movable.contains(ComponentCodes.DEARNESS_ALLOWANCE)) {
+            leaders.put(new Movable.Pay(ComponentCodes.DEARNESS_ALLOWANCE),
+                    enteredAmount(held, ComponentCodes.DEARNESS_ALLOWANCE));
+        }
+        return leaders;
+    }
+
+    /** The parts of the base that are held: basic where it may not move, the allowance in the base where it may not. */
+    private static Money fixed(Set<ComponentCode> movable, Employment held, boolean dearnessAllowanceInBase) {
+        Money fixed = movable.contains(ComponentCodes.BASIC) ? Money.ZERO : enteredAmount(held, ComponentCodes.BASIC);
+        return dearnessAllowanceInBase && !movable.contains(ComponentCodes.DEARNESS_ALLOWANCE)
+                ? fixed.plus(enteredAmount(held, ComponentCodes.DEARNESS_ALLOWANCE))
+                : fixed;
+    }
+
+    /**
+     * A movable dearness allowance not entered, where a share follows and the allowance counts for retirement with the
+     * base unstated, may be in the base, so whether moving it moves the fund cannot be told (W-238j1 C3a).
+     */
+    private static void requireAllowanceEntered(AllocationSpace space, Employment held, boolean anyFollows,
+            Money dearnessAllowance) {
+        if (anyFollows && space.moves().movable().contains(ComponentCodes.DEARNESS_ALLOWANCE)
+                && !dearnessAllowance.isGreaterThan(Money.ZERO) && held.dearnessAllowanceCountsForRetirement()
+                && space.providentFundTerms().baseIncludesDearnessAllowance().isEmpty()) {
+            throw new IllegalArgumentException("DEARNESS_ALLOWANCE is not entered, so whether the provident fund follows"
+                    + " it cannot be told: it counts for retirement, and whether the fund's base includes it is not"
+                    + " entered (A2.2 C8; W-238j1)");
+        }
     }
 
     /** The provident fund shares entered for the employment whose terms say they follow basic (W-238i). */
@@ -208,12 +244,12 @@ final class AllocationPricing {
     }
 
     /** A stated base must be one a basic move measures against (W-238j C3a). */
-    private static void requireBaseFactUsed(ProvidentFundTerms terms, boolean basicMoves, boolean anyFollows,
+    private static void requireBaseFactUsed(ProvidentFundTerms terms, boolean anyLeads, boolean anyFollows,
             boolean dearnessAllowanceEntered) {
         if (terms.baseIncludesDearnessAllowance().isEmpty()) {
             return;
         }
-        String reason = !basicMoves ? "BASIC is not movable"
+        String reason = !anyLeads ? "BASIC is not movable, nor dearness allowance in the provident fund's base"
                 : !anyFollows ? "no provident fund share follows basic"
                 : !dearnessAllowanceEntered ? "no dearness allowance is entered for the employment" : "";
         if (!reason.isEmpty()) {
@@ -223,12 +259,13 @@ final class AllocationPricing {
     }
 
     /** A share held by its term ({@code follows} false) must be one that would otherwise move with basic (W-238i C3a). */
-    private static void requireHeldShareEntered(boolean follows, String term, boolean basicMoves, boolean entered) {
+    private static void requireHeldShareEntered(boolean follows, String term, boolean anyLeads, boolean entered) {
         if (follows) {
             return;
         }
-        if (!basicMoves) {
-            throw new IllegalArgumentException(term + " is false, but BASIC is not movable, so nothing follows it to hold");
+        if (!anyLeads) {
+            throw new IllegalArgumentException(term + " is false, but BASIC is not movable, nor dearness allowance in the"
+                    + " provident fund's base, so nothing follows it to hold");
         }
         if (!entered) {
             throw new IllegalArgumentException(term + " is false, but that provident fund share is not entered for the"
@@ -409,7 +446,7 @@ final class AllocationPricing {
         }
         CashNature residual = cashNature(from.residual());
         Money impact = cashImpact(residual, cashNature(item), from.amount(item), to.amount(item));
-        if (item.equals(following.leader())) {
+        if (following.leads(item)) {
             for (Movable follower : following.followers().keySet()) {
                 impact = impact.plus(Following.isFundedByResidual(follower)
                         ? cashImpact(residual, CashNature.NON_CASH, from.amount(follower), to.amount(follower))
