@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -69,6 +70,7 @@ public final class RulePackCompiler {
         ArrayNode disallowanceSets = disallowanceSets(timeline, taxYear);
         ArrayNode conditionSets = conditionSets(timeline, taxYear);
         ArrayNode components = components(timeline, taxYear, ruleChecksums.keySet());
+        ArrayNode funds = funds(timeline, taxYear, ruleChecksums.keySet());
         ArrayNode nodes = nodes(timeline);
 
         Map<String, String> files = new HashMap<>();
@@ -83,6 +85,7 @@ public final class RulePackCompiler {
                 .<ObjectNode>set("nodes", nodes)
                 .set("axes", object().set("bindings", MAPPER.createArrayNode()))));
         files.put("exec/components.json", render(object().set("components", components)));
+        files.put("exec/funds.json", render(object().set("funds", funds)));
         files.put("forms/itr-forms.json", render(object().set("forms", MAPPER.createArrayNode())));
         files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
         return new CompiledPack(taxYear, files, ruleChecksums);
@@ -132,6 +135,18 @@ public final class RulePackCompiler {
         return components;
     }
 
+    /** The employer funds live in the year, each projected onto the rules the year's pack holds (W-238e). */
+    private static ArrayNode funds(Timeline timeline, TaxYearId taxYear, Set<RuleId> rules) {
+        ArrayNode funds = MAPPER.createArrayNode();
+        for (EmployerFundCode code : sorted(timeline.funds().keySet(), EmployerFundCode::value)) {
+            if (timeline.funds().get(code).validity().coversTaxYear(taxYear)) {
+                ObjectNode fund = (ObjectNode) MAPPER.readTree(timeline.fundSources().get(code));
+                funds.add(canonical(fund.set("feedsInto", held(fund.path("feedsInto"), rules))));
+            }
+        }
+        return funds;
+    }
+
     private static ArrayNode nodes(Timeline timeline) {
         ArrayNode nodes = MAPPER.createArrayNode();
         sorted(timeline.pipelineNodes().keySet(), NodeId::value)
@@ -148,6 +163,10 @@ public final class RulePackCompiler {
                     .forEach(rule -> problems.add("component " + component.code() + " names " + rule
                             + ", which the timeline states in no year"));
         });
+        timeline.funds().values().forEach(fund -> fund.feedsInto().stream()
+                .filter(rule -> !timeline.rules().containsKey(rule))
+                .forEach(rule -> problems.add("employer fund " + fund.code() + " names " + rule
+                        + ", which the timeline states in no year")));
         if (!problems.isEmpty()) {
             throw new PackValidationException(String.join("; ", problems));
         }
@@ -156,12 +175,7 @@ public final class RulePackCompiler {
     /** The component as the year sees it: references to rules the year does not hold are dropped. */
     private static JsonNode projected(JsonNode component, Set<RuleId> held) {
         ObjectNode copy = (ObjectNode) component.deepCopy();
-        ArrayNode feeds = MAPPER.createArrayNode();
-        component.path("feedsInto").forEach(rule -> {
-            if (held.contains(new RuleId(rule.asString()))) {
-                feeds.add(rule);
-            }
-        });
+        ArrayNode feeds = held(component.path("feedsInto"), held);
         ArrayNode bases = MAPPER.createArrayNode();
         component.path("salaryBaseFor").forEach(inclusion -> {
             if (held.contains(new RuleId(inclusion.path("rule").asString()))) {
@@ -171,6 +185,17 @@ public final class RulePackCompiler {
         copy.set("feedsInto", feeds);
         copy.set("salaryBaseFor", bases);
         return copy;
+    }
+
+    /** The rule ids in {@code rules} the year's pack holds, in their own order. */
+    private static ArrayNode held(JsonNode rules, Set<RuleId> held) {
+        ArrayNode kept = MAPPER.createArrayNode();
+        rules.forEach(rule -> {
+            if (held.contains(new RuleId(rule.asString()))) {
+                kept.add(rule);
+            }
+        });
+        return kept;
     }
 
     /** The positions, in the rule's own order, of the versions this year's pack holds. */

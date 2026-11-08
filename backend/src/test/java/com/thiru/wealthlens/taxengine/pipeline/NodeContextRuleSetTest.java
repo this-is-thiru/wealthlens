@@ -175,7 +175,7 @@ class NodeContextRuleSetTest {
                 other.midYearCombinationRule(), other.prorationBasis(), other.headProvenance()));
         RulePack overlapping = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules,
                 shipped.ruleSets(), shipped.components(), shipped.regimes(), shipped.disallowanceSets(),
-                shipped.conditionSets());
+                shipped.conditionSets(), shipped.funds());
         NodeContext ctx = reading(overlapping, NEW_TAX_REGIME, NodeHarness.plainTaxpayer(),
                 RuleSetIds.RS_SAL_STANDARD_DEDUCTION);
 
@@ -236,7 +236,7 @@ class NodeContextRuleSetTest {
                 hotel.midYearCombinationRule(), hotel.prorationBasis(), hotel.headProvenance()));
         RulePack overlapping = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules,
                 shipped.ruleSets(), shipped.components(), shipped.regimes(), shipped.disallowanceSets(),
-                shipped.conditionSets());
+                shipped.conditionSets(), shipped.funds());
         NodeContext ctx = reading(overlapping, NEW_TAX_REGIME, NodeHarness.plainTaxpayer(), RuleSetIds.RS_PERQ_ACCOM);
 
         // When / Then
@@ -268,7 +268,7 @@ class NodeContextRuleSetTest {
         sets.put(partly.id(), new RuleSet(partly.id(), partly.selection(), partly.ground(),
                 List.of(RuleIds.PERQ_CAR_PARTLY_SMALL)));
         RulePack small = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(),
-                sets, shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+                sets, shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
         NodeContext ctx = reading(small, NEW_TAX_REGIME, NodeHarness.plainTaxpayer(), RuleSetIds.RS_PERQ_CAR_PARTLY);
 
         // When / Then
@@ -327,7 +327,7 @@ class NodeContextRuleSetTest {
         Map<RuleSetId, RuleSet> sets = new HashMap<>(shipped.ruleSets());
         sets.put(id, new RuleSet(id, selection, shipped.ruleSets().get(id).ground(), List.of(rows)));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), sets,
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
     }
 
     /**

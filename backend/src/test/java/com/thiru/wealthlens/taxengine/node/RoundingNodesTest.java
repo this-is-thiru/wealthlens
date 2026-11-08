@@ -184,7 +184,7 @@ class RoundingNodesTest {
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(toHundred),
                 row.midYearCombination(), row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
         RulePack hundred = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
-                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
+                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds());
 
         // When — 12,34,567 leaves 67 over a multiple of 100, at or above 50
         NodeResult result = run(hundred, new RoundTotalIncomeNode(), NodeIds.TOTALINCOME, "1234567");

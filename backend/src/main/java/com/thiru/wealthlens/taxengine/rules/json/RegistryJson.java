@@ -5,10 +5,12 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentLifecycle;
 import com.thiru.wealthlens.taxengine.rules.component.DeprecationPolicy;
+import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
@@ -67,6 +69,32 @@ public final class RegistryJson {
                         lifecycle(PackJson.object(node, "lifecycle", where), where + ".lifecycle"),
                         ValueJson.provenance(
                                 PackJson.object(node, "provenance", where), where + ".provenance")));
+    }
+
+    // ----------------------------------------------------------------- funds
+
+    /** Every employer fund in {@code exec/funds.json}, keyed by code (W-238e). */
+    public static Map<EmployerFundCode, EmployerFundDefinition> funds(JsonNode root, String path) {
+        Map<EmployerFundCode, EmployerFundDefinition> byCode = new LinkedHashMap<>();
+        for (EmployerFundDefinition definition :
+                PackJson.arrayOrEmpty(root, "funds", path, e -> fund(e.node(), e.path()))) {
+            if (byCode.put(definition.code(), definition) != null) {
+                throw new PackValidationException(path + " defines employer fund " + definition.code() + " twice");
+            }
+        }
+        return byCode;
+    }
+
+    /** One employer fund, from its own file on the timeline or an entry of a year's registry. */
+    public static EmployerFundDefinition fund(JsonNode node, String path) {
+        EmployerFundCode code = PackJson.construct(path, () -> new EmployerFundCode(PackJson.text(node, "code", path)));
+        String where = path + " (" + code + ")";
+        return PackJson.construct(where, () -> new EmployerFundDefinition(
+                code,
+                PackJson.text(node, "displayName", where),
+                ruleIds(node, "feedsInto", where),
+                ValueJson.dateRange(PackJson.object(node, "validity", where), where + ".validity"),
+                ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
     static ComponentLifecycle lifecycle(JsonNode node, String path) {

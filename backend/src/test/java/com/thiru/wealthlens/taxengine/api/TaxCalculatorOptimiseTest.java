@@ -202,6 +202,16 @@ class TaxCalculatorOptimiseTest {
         return Fixtures.salaried("1600000", "800000", contributions, NOTHING_ACCRUED);
     }
 
+    /**
+     * The rules each fund's row lists in TY 2026-27 ({@code exec/funds/}, W-238e): those whose conditions read the fund,
+     * and the aggregate limit and its accretion, which take every contribution. Every rule named has a version from
+     * 2026-04-01 except {@code PERQ-RPF-CONTRIBUTION}, whose one version ends 2026-03-31, so the year drops it.
+     */
+    private static final List<String> NPS_FEEDS = List.of("DED-NPS-EMPLOYER-GOVT", "DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+            "DED-NPS-EMPLOYER-OTHER", "PERQ-EMPLOYER-ACCRETION", "PERQ-EMPLOYER-CONTRIBUTION",
+            "SAL-INCLUDES-PENSION-CONTRIBUTION");
+    private static final List<String> AGGREGATE_FEEDS = List.of("PERQ-EMPLOYER-ACCRETION", "PERQ-EMPLOYER-CONTRIBUTION");
+
     private static AllocationSpace funds(EngineInputs inputs, Set<EmployerFund> movable) {
         return new AllocationSpace(inputs, Set.of(), movable, SPECIAL, Money.ZERO, 6);
     }
@@ -225,7 +235,7 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.billAfter()).isEqualTo(Money.of("234260"));
         assertThat(optimised.changes()).isEmpty();
         assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME",
-                Money.ZERO, Money.of("224000"), Optional.of(Money.of("58240")), Money.of("-224000")));
+                NPS_FEEDS, Money.ZERO, Money.of("224000"), Optional.of(Money.of("58240")), Money.of("-224000")));
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("576000"));
         assertThat(optimised.verified()).containsExactly("NOTIFIED_PENSION_SCHEME");
     }
@@ -245,7 +255,7 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
         assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
         assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME",
-                Money.ZERO, Money.of("150000"), Optional.of(Money.of("39000")), Money.of("-150000")));
+                NPS_FEEDS, Money.ZERO, Money.of("150000"), Optional.of(Money.of("39000")), Money.of("-150000")));
     }
 
     @Test
@@ -262,7 +272,7 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.regimeAfter()).isEqualTo(NEW);
         assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
         assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("APPROVED_SUPERANNUATION_FUND",
-                Money.ZERO, Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000")));
+                AGGREGATE_FEEDS, Money.ZERO, Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000")));
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("50000"));
     }
 
@@ -337,7 +347,7 @@ class TaxCalculatorOptimiseTest {
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
         assertThat(optimised.fundChanges()).isEmpty();
         assertThat(optimised.followingChanges()).containsExactly(new Optimisation.FollowingChange(
-                "RECOGNISED_PROVIDENT_FUND", Money.of("120000"), Money.of("270000"), "BASIC"));
+                "RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"), Money.of("270000"), "BASIC"));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
     }
 
@@ -359,9 +369,10 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-300000")));
         assertThat(optimised.followingChanges()).containsExactly(
-                new Optimisation.FollowingChange("EMPLOYEE_PF", Money.of("120000"), Money.of("270000"), "BASIC"),
-                new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", Money.of("120000"), Money.of("270000"),
-                        "BASIC"));
+                new Optimisation.FollowingChange("EMPLOYEE_PF", List.of("DED-SCHEDULE-XV"), Money.of("120000"),
+                        Money.of("270000"), "BASIC"),
+                new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"),
+                        Money.of("270000"), "BASIC"));
     }
 
     @Test

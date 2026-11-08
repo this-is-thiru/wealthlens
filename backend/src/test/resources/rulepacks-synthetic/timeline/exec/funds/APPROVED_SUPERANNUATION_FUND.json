@@ -1,0 +1,19 @@
+{
+  "code": "APPROVED_SUPERANNUATION_FUND",
+  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack (W-238e); not law, never shipped. Original note: The rules an employer's contribution to an approved superannuation fund feeds (W-238e). No rule reads employer.fund for it in a condition. PERQ-EMPLOYER-CONTRIBUTION adds up every employer contribution to a recognised provident fund, the notified pension scheme and an approved superannuation fund and charges the excess over its limit (S2 s.17(1)(h); 1961 s.17(2)(vii); D-126); PERQ-EMPLOYER-ACCRETION charges the accretion on that excess (S2 s.17(1)(i); 1961 s.17(2)(viia); D-127). Neither reads employer.fund in a condition: EmployerContributionNode reaches both with every contribution (W-238e).",
+  "displayName": "The employer's contribution to an approved superannuation fund",
+  "feedsInto": [
+    "PERQ-EMPLOYER-ACCRETION",
+    "PERQ-EMPLOYER-CONTRIBUTION"
+  ],
+  "validity": {
+    "from": "2025-04-01"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(h), (i): as PERQ-EMPLOYER-CONTRIBUTION and PERQ-EMPLOYER-ACCRETION cite them",
+    "accessedOn": "2026-11-08",
+    "verificationLevel": "UNVERIFIED",
+    "whatToCheck": "Open Gazette 265620 at s.17(1)(h) and (i): confirm they take the employer's contribution to an approved superannuation fund, and that no other section of the Act takes it"
+  }
+}

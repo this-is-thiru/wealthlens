@@ -1,7 +1,9 @@
 package com.thiru.wealthlens.taxengine.rules.pack;
 
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
  * @param regimes by code
  * @param disallowanceSets shared disallowance lists, by id — the s.205(1) pattern
  * @param conditionSets shared eligibility lists, by id — the s.205(2) pattern
+ * @param funds the employer-fund registry, by code (W-238e)
  */
 public record RulePack(
         TaxYearId taxYear,
@@ -48,7 +51,8 @@ public record RulePack(
         Map<ComponentCode, ComponentDefinition> components,
         Map<RegimeCode, RegimeSpec> regimes,
         Map<DisallowanceSetId, DisallowanceSet> disallowanceSets,
-        Map<ConditionSetId, ConditionSet> conditionSets) {
+        Map<ConditionSetId, ConditionSet> conditionSets,
+        Map<EmployerFundCode, EmployerFundDefinition> funds) {
 
     public RulePack {
         if (taxYear == null) {
@@ -65,6 +69,7 @@ public record RulePack(
         regimes = regimes == null ? Map.of() : Map.copyOf(regimes);
         disallowanceSets = disallowanceSets == null ? Map.of() : Map.copyOf(disallowanceSets);
         conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
+        funds = funds == null ? Map.of() : Map.copyOf(funds);
 
         requireRulesFiledUnderTheirOwnIds(taxYear, rules);
         requireOnlyPublishedVersions(taxYear, rules);

@@ -17,9 +17,11 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -183,6 +185,26 @@ final class AllocationPricing {
         ComponentDefinition row = pack.components().get(pay.code());
         return new Optimisation.ComponentFacts(row.kind().name(), row.cashNature().name(),
                 row.feedsInto().stream().map(RuleId::value).sorted().toList());
+    }
+
+    /**
+     * The rules {@code item} can feed, sorted: its component's row, or its fund's (W-238e) — the fund's own, because a
+     * contribution is no component.
+     *
+     * @throws IllegalArgumentException if the year's pack has no row for the fund
+     */
+    List<String> feedsInto(Movable item) {
+        return switch (item) {
+            case Movable.Pay pay -> pack.components().get(pay.code()).feedsInto().stream().map(RuleId::value)
+                    .sorted().toList();
+            case Movable.Fund fund -> {
+                EmployerFundDefinition row = pack.funds().get(new EmployerFundCode(fund.name()));
+                if (row == null) {
+                    throw new IllegalArgumentException(pack.taxYear().label() + " defines no employer fund " + fund.name());
+                }
+                yield row.feedsInto().stream().map(RuleId::value).sorted().toList();
+            }
+        };
     }
 
     /**

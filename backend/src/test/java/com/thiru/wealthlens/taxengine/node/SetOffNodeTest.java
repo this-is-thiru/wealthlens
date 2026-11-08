@@ -441,7 +441,7 @@ class SetOffNodeTest {
         rules.put(row, new RuleRow(rule.id(), rule.axis(), versions, rule.midYearCombination(),
                 rule.midYearCombinationRule(), rule.prorationBasis(), rule.headProvenance()));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules, shipped.ruleSets(),
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
     }
 
     private static CarriedCapitalLoss capitalLoss(String shortTerm, String longTerm, String longTermAbsorbed,

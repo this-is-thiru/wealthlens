@@ -78,7 +78,7 @@ class ComponentPartitionNodeTest {
                         new DeprecationPolicy.HistoricalOnly()),
                 shipped.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance()));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
-                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
     }
 
     private static ComponentDefinition component(RulePack pack, ComponentCode code, HeadCode head, DateRange live) {

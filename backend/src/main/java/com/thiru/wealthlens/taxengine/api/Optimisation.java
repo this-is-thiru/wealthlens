@@ -55,13 +55,19 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * a component of pay, so it has no row in the pack's components and carries no {@link ComponentFacts}.
      *
      * @param fund the fund's {@code EmployerFund} name
+     * @param feedsInto every rule the contribution can feed, from the fund's row in the year's pack, sorted (W-238e)
      * @param current the contribution as entered, nil where none was
      * @param suggested the contribution in the answer
      * @param savingAlone the bill as entered less the bill with only this change; empty where the residual as entered
      *     cannot fund it by itself
      * @param cashImpact the change in cash before tax: the residual's pay given up, since a contribution is never in hand
      */
-    public record FundChange(String fund, Money current, Money suggested, Optional<Money> savingAlone, Money cashImpact) {
+    public record FundChange(String fund, List<String> feedsInto, Money current, Money suggested,
+            Optional<Money> savingAlone, Money cashImpact) {
+
+        public FundChange {
+            feedsInto = List.copyOf(feedsInto);
+        }
     }
 
     /**
@@ -70,11 +76,16 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * saving and the cash impact of both.
      *
      * @param name the employee's component code or the employer's {@code EmployerFund} name
+     * @param feedsInto every rule it can feed, from its component's or fund's row in the year's pack, sorted (W-238e)
      * @param current its amount as entered
      * @param suggested its amount in the answer
      * @param follows the component it follows
      */
-    public record FollowingChange(String name, Money current, Money suggested, String follows) {
+    public record FollowingChange(String name, List<String> feedsInto, Money current, Money suggested, String follows) {
+
+        public FollowingChange {
+            feedsInto = List.copyOf(feedsInto);
+        }
     }
 
     /**

@@ -172,7 +172,7 @@ class MotorCarPerquisiteTest {
         sets.put(partly.id(), new RuleSet(partly.id(), partly.selection(), partly.ground(),
                 List.of(RuleIds.PERQ_CAR_PARTLY_ELECTRIC)));
         RulePack gap = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), sets,
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
 
         // When / Then — a pack defect, said as one, not as the electric car's refusal
         assertThatThrownBy(() -> runOn(gap, 2026, ABOVE_THRESHOLD, Optional.empty(),

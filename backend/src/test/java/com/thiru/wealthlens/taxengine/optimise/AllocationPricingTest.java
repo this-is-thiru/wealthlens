@@ -2,8 +2,14 @@ package com.thiru.wealthlens.taxengine.optimise;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
+import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
+import java.util.Arrays;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -56,5 +62,18 @@ class AllocationPricingTest {
 
         // Then
         assertThat(impact).isEqualTo(Money.of("60000"));
+    }
+
+    @Test
+    void feedsInto_whenAnyEmployerFundMoves_findsItsRowInEveryShippedYear() {
+        // Given — a fund the inputs can name with no row would refuse the optimisation (W-238e)
+        Set<TaxYearId> years = Set.of(TaxYearId.of(2025), TaxYearId.of(2026));
+        ShippedRulePacks packs = ShippedRulePacks.compile("rulepacks", years);
+
+        // When / Then
+        for (TaxYearId year : years) {
+            assertThat(packs.load(year).funds().keySet()).as(year.label()).containsExactlyInAnyOrderElementsOf(
+                    Arrays.stream(EmployerFund.values()).map(fund -> new EmployerFundCode(fund.name())).toList());
+        }
     }
 }

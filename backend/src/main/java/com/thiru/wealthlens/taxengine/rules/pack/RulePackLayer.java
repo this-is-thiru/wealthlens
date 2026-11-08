@@ -34,7 +34,7 @@ public enum RulePackLayer {
      *
      * <p>May change a number, but only by selecting which law applies. Authored by engineers.
      */
-    EXEC(true, "exec/pipelines.json", "exec/components.json"),
+    EXEC(true, "exec/pipelines.json", "exec/components.json", "exec/funds.json"),
 
     /**
      * ITR form specifications, schedules and field mappings.

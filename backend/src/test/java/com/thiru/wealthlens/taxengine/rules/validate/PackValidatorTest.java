@@ -252,7 +252,7 @@ class PackValidatorTest {
 
         RulePack build() {
             return new RulePack(TY, layers(), instruments(), rules, oneRowSets(rules.keySet()), components, regimes,
-                    disallowanceSets, conditionSets);
+                    disallowanceSets, conditionSets, Map.of());
         }
 
         /** Each rule in a set of its own, as most shipped rows are (D-252). */
@@ -285,7 +285,7 @@ class PackValidatorTest {
             Map<RuleSetId, RuleSet> sets = new LinkedHashMap<>(whole.ruleSets());
             sets.remove(new RuleSetId("RS-" + rule.value()));
             return new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
-                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets());
+                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds());
         }
 
         @Test
@@ -326,7 +326,7 @@ class PackValidatorTest {
             RuleSetId empty = new RuleSetId("RS-NOT-THIS-YEAR");
             sets.put(empty, new RuleSet(empty, RuleSelection.EXACTLY_ONE, SelectionGround.REGIME, List.of()));
             RulePack withEmpty = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
-                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets());
+                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds());
 
             // When / Then — a provision of one year only is AT_MOST_ONE instead
             assertThatThrownBy(() -> PackValidator.validate(withEmpty))
@@ -342,7 +342,7 @@ class PackValidatorTest {
             RuleSetId optional = new RuleSetId("RS-ONE-YEAR-ONLY");
             sets.put(optional, new RuleSet(optional, RuleSelection.AT_MOST_ONE, SelectionGround.REGIME, List.of()));
             RulePack withOptional = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(),
-                    sets, whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets());
+                    sets, whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds());
 
             // When / Then
             assertThatCode(() -> PackValidator.validate(withOptional)).doesNotThrowAnyException();

@@ -90,6 +90,7 @@ public final class PackValidator {
         checkRequiredRuleSetsHoldARow(pack, problems);           // D-252
         checkEveryRuleIsReached(pack, problems);                 // D-252
         CapitalGainsPartReferences.check(pack, problems);        // D-309
+        EmployerFundReferences.check(pack, problems);            // W-238e
 
         if (!problems.isEmpty()) {
             throw new PackValidationException(

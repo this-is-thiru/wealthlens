@@ -827,9 +827,14 @@ class PackJsonTest {
                             Map.of(
                                     "law/rates.json", resource("law/rates.json"),
                                     "law/regimes.json", resource("law/regimes.json"),
-                                    "exec/components.json", resource("exec/components.json")));
+                                    "exec/components.json", resource("exec/components.json"),
+                                    "exec/funds.json", resource("exec/funds.json")));
 
             assertThat(pack.rules()).hasSize(236);
+            assertThat(pack.funds()).containsOnlyKeys(
+                    new com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode("APPROVED_SUPERANNUATION_FUND"),
+                    new com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode("NOTIFIED_PENSION_SCHEME"),
+                    new com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode("RECOGNISED_PROVIDENT_FUND"));
             assertThat(pack.regimes()).hasSize(2);
             assertThat(pack.disallowanceSets()).containsOnlyKeys(new DisallowanceSetId("DIS-NEW-TAX-REGIME-NO-EXEMPTION"),
                     new DisallowanceSetId("DIS-NEW-TAX-REGIME-NO-SETOFF"));
@@ -846,7 +851,8 @@ class PackJsonTest {
                             Map.of(
                                     "law/rates.json", resource("law/rates.json"),
                                     "law/regimes.json", resource("law/regimes.json"),
-                                    "exec/components.json", resource("exec/components.json")));
+                                    "exec/components.json", resource("exec/components.json"),
+                                    "exec/funds.json", resource("exec/funds.json")));
 
             var slab = pack.rule(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-TAX-REGIME"));
             var cap = slab.versions().getFirst().cap().orElseThrow();

@@ -1,7 +1,9 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -55,12 +57,14 @@ public final class TimelineReader {
     private static final String PIPELINES = "exec/pipelines";
     /** The pay components, one per file (D-089). */
     private static final String COMPONENTS = "exec/components";
+    /** The employer funds, one per file (W-238e). */
+    private static final String FUNDS = "exec/funds";
     /** The section catalogue, carried verbatim for its own reader (D-060). */
     private static final String SECTIONS = "content/sections";
     /** Each Act's section list, carried verbatim for the coverage register (D-066). */
     private static final String ACTS = "content/acts";
-    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, CONDITION_SETS, PIPELINES, COMPONENTS, SECTIONS,
-            ACTS);
+    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, CONDITION_SETS, PIPELINES, COMPONENTS, FUNDS,
+            SECTIONS, ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
     /** The rule sets every year's pack declares; each rule row names its own (D-252). */
@@ -109,6 +113,8 @@ public final class TimelineReader {
         private final Map<ConditionSetId, String> conditionSetSources = new HashMap<>();
         private final Map<ComponentCode, ComponentDefinition> components = new HashMap<>();
         private final Map<ComponentCode, String> componentSources = new HashMap<>();
+        private final Map<EmployerFundCode, EmployerFundDefinition> funds = new HashMap<>();
+        private final Map<EmployerFundCode, String> fundSources = new HashMap<>();
         private final Map<NodeId, String> pipelineNodes = new HashMap<>();
         private final Map<String, String> sections = new HashMap<>();
         private final Map<String, String> acts = new HashMap<>();
@@ -131,6 +137,7 @@ public final class TimelineReader {
                 case CONDITION_SETS -> addConditionSet(path, stem, node, content);
                 case PIPELINES -> addPipelineNode(path, stem, node, content);
                 case COMPONENTS -> addComponent(path, stem, node, content);
+                case FUNDS -> addFund(path, stem, node, content);
                 case SECTIONS -> addSection(path, stem, node, content);
                 case ACTS -> addAct(path, stem, node, content);
                 default -> throw new IllegalStateException(directory + " is a known directory with no reader");
@@ -185,6 +192,13 @@ public final class TimelineReader {
             componentSources.put(component.code(), content);
         }
 
+        private void addFund(String path, String stem, JsonNode node, String content) {
+            EmployerFundDefinition fund = RegistryJson.fund(node, path);
+            requireNamedFor(path, stem, fund.code().value());
+            funds.put(fund.code(), fund);
+            fundSources.put(fund.code(), content);
+        }
+
         private void addSection(String path, String stem, JsonNode node, String content) {
             String key = PackJson.text(node, "key", path);
             requireNamedFor(path, stem, key);
@@ -200,7 +214,7 @@ public final class TimelineReader {
         Timeline timeline() {
             return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources,
                     conditionSetSources, components, componentSources,
-                    pipelineNodes, coverage, sections, acts);
+                    funds, fundSources, pipelineNodes, coverage, sections, acts);
         }
     }
 

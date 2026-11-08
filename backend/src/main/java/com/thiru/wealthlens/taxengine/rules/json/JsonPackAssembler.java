@@ -53,6 +53,7 @@ public final class JsonPackAssembler implements PackAssembler {
         JsonNode rates = parse(layerContents, "law/rates.json");
         JsonNode regimes = parse(layerContents, "law/regimes.json");
         JsonNode components = parse(layerContents, "exec/components.json");
+        JsonNode funds = parse(layerContents, "exec/funds.json");
 
         return new RulePack(
                 taxYear,
@@ -63,7 +64,8 @@ public final class JsonPackAssembler implements PackAssembler {
                 RegistryJson.components(components, "exec/components.json"),
                 RegimeJson.regimes(regimes, "law/regimes.json"),
                 RegistryJson.disallowanceSets(regimes, "law/regimes.json"),
-                RegistryJson.conditionSets(regimes, "law/regimes.json"));
+                RegistryJson.conditionSets(regimes, "law/regimes.json"),
+                RegistryJson.funds(funds, "exec/funds.json"));
     }
 
     private static JsonNode parse(Map<String, String> contents, String file) {

@@ -776,6 +776,9 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(view.get("changes").size()).isZero();
         JsonNode change = view.at("/fundChanges/0");
         assertThat(change.get("fund").asString()).isEqualTo("NOTIFIED_PENSION_SCHEME");
+        assertThat(change.get("feedsInto").valueStream().map(JsonNode::asString).toList()).containsExactly(
+                "DED-NPS-EMPLOYER-GOVT", "DED-NPS-EMPLOYER-NEW-TAX-REGIME", "DED-NPS-EMPLOYER-OTHER",
+                "PERQ-EMPLOYER-ACCRETION", "PERQ-EMPLOYER-CONTRIBUTION", "SAL-INCLUDES-PENSION-CONTRIBUTION");
         assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("224000");
         assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("58240");
         assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-224000");
