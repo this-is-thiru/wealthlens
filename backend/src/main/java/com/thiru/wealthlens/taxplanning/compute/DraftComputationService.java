@@ -1,7 +1,9 @@
 package com.thiru.wealthlens.taxplanning.compute;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.api.AllocationSpace;
 import com.thiru.wealthlens.taxengine.api.ComputedTax;
+import com.thiru.wealthlens.taxengine.api.Optimisation;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -49,6 +51,7 @@ public class DraftComputationService {
     private final DraftComputationRepository repository;
     private final Clock clock;
     private final TaxAccessLog taxAccessLog;
+    private final OptimiserSettings optimiserSettings;
 
     /** Computes the draft under {@code regimeCode} and stores the result. */
     public DraftComputationView compute(String email, String draftId, String regimeCode) {
@@ -84,6 +87,23 @@ public class DraftComputationService {
         int year = draftService.ownedDraft(email, draftId).draft().getTaxYearStart();
         RegimeCode regime = taxCalculator.defaultRegime(TaxYearId.of(year));
         return taxCalculator.compareRegimes(assembler.assemble(email, draftId, regime, LocalDate.now(clock)).inputs());
+    }
+
+    /**
+     * The split of the draft's movable pay that leaves the least tax, the regime chosen on each (W-238b); the draft is
+     * unchanged and nothing is stored.
+     *
+     * @throws IllegalArgumentException if the draft is not this account's, the request asks for more breadth than the
+     *     setting, or the request does not fit the draft or the year's pack
+     */
+    @Transactional(readOnly = true)
+    public Optimisation optimise(String email, String draftId, DraftOptimisationRequest request) {
+        int year = draftService.ownedDraft(email, draftId).draft().getTaxYearStart();
+        int breadth = optimiserSettings.breadthFor(request.verificationBreadth());
+        RegimeCode regime = taxCalculator.defaultRegime(TaxYearId.of(year));
+        return taxCalculator.optimise(new AllocationSpace(
+                assembler.assemble(email, draftId, regime, LocalDate.now(clock)).inputs(), request.movableCodes(),
+                request.residualCode(), request.cashFloorRupees(), breadth));
     }
 
     /**

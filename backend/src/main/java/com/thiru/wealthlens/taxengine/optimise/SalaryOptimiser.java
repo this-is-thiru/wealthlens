@@ -165,7 +165,8 @@ public final class SalaryOptimiser {
             Optional<Money> savingAlone = alone.isFeasible()
                     ? Optional.of(before.bill().minus(pricing.price(alone).bill()))
                     : Optional.empty();
-            changes.add(new Optimisation.Change(code.value(), entered.amount(code), suggested, savingAlone));
+            changes.add(new Optimisation.Change(code.value(), pricing.facts(code), entered.amount(code), suggested,
+                    savingAlone, pricing.cashImpact(code, entered.residual(), entered.amount(code), suggested)));
         }
         Optional<String> discrepancy = answer.equals(greedy) ? Optional.empty() : Optional.of("The greedy answer"
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "

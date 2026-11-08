@@ -1,10 +1,12 @@
 package com.thiru.wealthlens.taxplanning.compute.controller;
 
+import com.thiru.wealthlens.taxengine.api.Optimisation;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationView;
+import com.thiru.wealthlens.taxplanning.compute.DraftOptimisationRequest;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +37,12 @@ public class DraftComputationController {
     @PostMapping("/drafts/{draftId}/compare-regimes")
     public RegimeComparison compare(@PathVariable String email, @PathVariable String draftId) {
         return service.compare(email, draftId);
+    }
+
+    @PostMapping("/drafts/{draftId}/optimise")
+    public Optimisation optimise(@PathVariable String email, @PathVariable String draftId,
+            @RequestBody DraftOptimisationRequest request) {
+        return service.optimise(email, draftId, request);
     }
 
     @GetMapping("/profiles/{profileId}/capital-gains/{taxYear}")

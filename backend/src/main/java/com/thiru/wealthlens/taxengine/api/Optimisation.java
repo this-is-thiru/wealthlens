@@ -33,11 +33,29 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * components interact (a shared cap, the regime), so the savings need not add up to the whole saving.
      *
      * @param component the component's code
+     * @param facts what the year's pack says the component is, so a reader outside the engine can show it (W-238b)
      * @param current its amount as entered
      * @param suggested its amount in the answer
      * @param savingAlone the bill as entered less the bill with only this change; empty where the residual as entered
      *     cannot fund this change by itself
+     * @param cashImpact the change in cash before tax when the residual funds this move: what the move costs in hand,
+     *     which a saving in tax does not show (A2.6, D-CASHFLAG)
      */
-    public record Change(String component, Money current, Money suggested, Optional<Money> savingAlone) {
+    public record Change(String component, ComponentFacts facts, Money current, Money suggested,
+            Optional<Money> savingAlone, Money cashImpact) {
+    }
+
+    /**
+     * A component's row in the year's pack, published as facts, not as a verdict drawn from them (CLAUDE.md §4).
+     *
+     * @param kind its {@code ComponentKind}'s name
+     * @param cashNature its {@code CashNature}'s name
+     * @param feedsInto the rules it feeds, sorted
+     */
+    public record ComponentFacts(String kind, String cashNature, List<String> feedsInto) {
+
+        public ComponentFacts {
+            feedsInto = List.copyOf(feedsInto);
+        }
     }
 }

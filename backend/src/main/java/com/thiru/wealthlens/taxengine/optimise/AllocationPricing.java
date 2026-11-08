@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.optimise;
 
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
+import com.thiru.wealthlens.taxengine.api.Optimisation;
 import com.thiru.wealthlens.taxengine.election.ElectionOutcome;
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
 import com.thiru.wealthlens.taxengine.election.PricedAlternative;
@@ -12,9 +13,11 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
+import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
@@ -112,15 +115,37 @@ final class AllocationPricing {
         Money cash = Money.ZERO;
         for (Employment each : applied(allocation).entered().employments()) {
             for (SalaryComponent component : each.components()) {
-                CashNature nature = pack.components().get(component.code()).cashNature();
-                if (nature == CashNature.CASH) {
-                    cash = cash.plus(component.annualAmount());
-                } else if (nature == CashNature.CASH_OUTFLOW) {
-                    cash = cash.minus(component.annualAmount());
-                }
+                cash = cash.plus(inHand(pack.components().get(component.code()).cashNature(), component.annualAmount()));
             }
         }
         return cash.minus(price(allocation).bill());
+    }
+
+    /** What the year's pack says {@code code} is (W-238b). */
+    Optimisation.ComponentFacts facts(ComponentCode code) {
+        ComponentDefinition row = pack.components().get(code);
+        return new Optimisation.ComponentFacts(row.kind().name(), row.cashNature().name(),
+                row.feedsInto().stream().map(RuleId::value).sorted().toList());
+    }
+
+    /** The cash before tax that moving {@code code} from {@code current} to {@code suggested} adds, the residual funding it. */
+    Money cashImpact(ComponentCode code, ComponentCode residual, Money current, Money suggested) {
+        return cashImpact(pack.components().get(residual).cashNature(), pack.components().get(code).cashNature(), current,
+                suggested);
+    }
+
+    /** By the take-home rule (C3): the moved component gains what the residual gives up. */
+    static Money cashImpact(CashNature residual, CashNature moved, Money current, Money suggested) {
+        Money delta = suggested.minus(current);
+        return inHand(moved, delta).minus(inHand(residual, delta));
+    }
+
+    private static Money inHand(CashNature nature, Money amount) {
+        return switch (nature) {
+            case CASH -> amount;
+            case CASH_OUTFLOW -> Money.ZERO.minus(amount);
+            case NON_CASH -> Money.ZERO;
+        };
     }
 
     int pipelineRuns() {

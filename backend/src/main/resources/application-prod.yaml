@@ -100,6 +100,9 @@ app:
       # A copy naming the Board, or the Act with the Department, is a lead (sources/2026-11-07-gazette-watch-window.md)
       lead-when-any: ["central board of direct taxes"]
       lead-when-all: ["income-tax act", "department of revenue"]
+    optimiser:
+      # W-238b: O8's knob — the most components a request's exhaustive check may cover (A2.5's 6)
+      exhaustive-breadth: 6
     retention:
       archive-after: P18M
       purge-archived-after: P12M

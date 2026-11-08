@@ -36,6 +36,12 @@ class TaxCalculatorOptimiseTest {
     private static final ComponentCode SPECIAL = ComponentCodes.SPECIAL_ALLOWANCE;
     private static final String NEW = "NEW_TAX_REGIME";
     private static final String OLD = "FIRST_SCHEDULE_RATES";
+    /** HRA's pack row ({@code components/HRA.json}): SALARY, CASH, feeding the two rules named, sorted. */
+    private static final Optimisation.ComponentFacts HRA_FACTS = new Optimisation.ComponentFacts("SALARY", "CASH",
+            List.of("SAL-HOUSE-RENT-ALLOWANCE", "SAL-SALARY-INCLUDES"));
+    /** The uniform allowance's pack row ({@code components/UNIFORM_ALLOWANCE.json}). */
+    private static final Optimisation.ComponentFacts UNIFORM_FACTS = new Optimisation.ComponentFacts("SALARY", "CASH",
+            List.of("SAL-ALW-UNIFORM", "SAL-SALARY-INCLUDES"));
 
     /** Basic 16L, special 8L, rent 9.6L: HRA saturates at min(9.6L − 1.6L, 8L) = 8L, all the special allowance. */
     private static EngineInputs flipsWithHra() {
@@ -67,8 +73,8 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
         assertThat(optimised.regimeAfter()).isEqualTo(OLD);
         assertThat(optimised.billAfter()).isEqualTo(Money.of("288600"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("HRA", Money.ZERO, Money.of("800000"),
-                Optional.of(Money.of("3900"))));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
+                Money.of("800000"), Optional.of(Money.of("3900")), Money.ZERO));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
         assertThat(optimised.verified()).containsExactly("HRA");
         assertThat(optimised.discrepancy()).isEmpty();
@@ -109,8 +115,10 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.regimeAfter()).isEqualTo(OLD);
         assertThat(optimised.billAfter()).isEqualTo(Money.of("291720"));
         assertThat(optimised.changes()).containsExactly(
-                new Optimisation.Change("HRA", Money.ZERO, Money.of("750000"), Optional.of(Money.ZERO)),
-                new Optimisation.Change("UNIFORM_ALLOWANCE", Money.ZERO, Money.of("60000"), Optional.of(Money.ZERO)));
+                new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO, Money.of("750000"), Optional.of(Money.ZERO),
+                        Money.ZERO),
+                new Optimisation.Change("UNIFORM_ALLOWANCE", UNIFORM_FACTS, Money.ZERO, Money.of("60000"),
+                        Optional.of(Money.ZERO), Money.ZERO));
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("10000"));
         assertThat(optimised.verified()).containsExactly("HRA", "UNIFORM_ALLOWANCE");
         assertThat(optimised.discrepancy()).hasValueSatisfying(notice -> assertThat(notice)

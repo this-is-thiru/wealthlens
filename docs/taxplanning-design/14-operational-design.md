@@ -251,7 +251,7 @@ Following the repo's precedent of a master kill switch plus narrow feature flags
 | `app.taxplanning.rulepacks.path` | classpath | override only for tests |
 | `app.taxplanning.rulepacks.required-years` | `2025-26,2026-27` | startup fails if any is missing (`D-FAILFAST`) |
 | `app.taxplanning.documents.enabled` | `false` | ingestion is the largest slice; ship the engine first |
-| `app.taxplanning.optimiser.exhaustive-breadth` | `6` | `O8`'s tuning knob |
+| `app.tax.optimiser.exhaustive-breadth` | `6` | `O8`'s tuning knob; a request may ask for less, never more (W-238b C2a: the repo's tax keys are under `app.tax.*`, so not `app.taxplanning.*`) |
 | `app.taxplanning.drafts.soft-cap` / `.hard-cap` | `25` / `100` | `11-filing-drafts.md` F6 |
 | `app.taxplanning.advisor-access.enabled` | `false` | D1's later work; the seam exists from day one |
 

@@ -601,4 +601,130 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(stored.getLawAndExec()).hasSize(2);
         assertThat(stored.getRuleChecksums()).isNotEmpty().allSatisfy((rule, checksum) -> assertThat(checksum).startsWith("sha256:"));
     }
+
+    /**
+     * W-238a's HRA case on a draft: basic 16,00,000, special allowance 8,00,000, rent 9,60,000 in Mumbai all year, and
+     * 2,92,500 deducted at source — the new regime's tax on that pay (worked in {@code TaxCalculatorOptimiseTest}), so
+     * nothing is short of advance tax on this fixed day and no interest enters a bill the optimiser chooses between.
+     */
+    private String rentingDraft() {
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT", "holdsPortfolio": false}""", null);
+        String profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/entered/employments/-", "value": {
+                  "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": 1600000}},
+                                 {"code": {"value": "SPECIAL_ALLOWANCE"}, "annualAmount": {"amountInRupees": 800000}}],
+                  "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
+                  "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}},
+                 {"op": "add", "path": "/entered/tenancies/-", "value": {
+                  "occupied": {"from": "2026-04-01", "to": "2027-03-31"}, "location": "MUMBAI",
+                  "ownedByAssessee": false, "rentPaid": {"amountInRupees": 960000}}},
+                 {"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"},
+                 {"op": "replace", "path": "/filing/taxAtSource", "value": {"amountInRupees": 292500}}]""", "\"rev-0\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        return draftId;
+    }
+
+    private ResponseEntity<String> optimise(String caller, String draftId, String body) {
+        return call(HttpMethod.POST, caller, "/drafts/" + draftId + "/optimise", body, null);
+    }
+
+    private static BigDecimal amountAt(JsonNode view, String pointer) {
+        return view.at(pointer + "/amountInRupees").decimalValue();
+    }
+
+    @Test
+    void optimise_whenHraTurnsTheOldRegimeCheaper_suggestsHraWithItsFactsAndChangesNothing() {
+        // Given — the bill is the tax before credits (TAX_NETPAYABLE). Before: new 2,92,500, nothing short at source, so
+        // no interest; old 5,38,200, and more with interest on the 2,45,700 short. After HRA 8,00,000: old 2,88,600, below
+        // what was deducted, so no interest; new still 2,92,500. HRA and the residual are both paid in money, so the move
+        // costs nothing in hand.
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId,
+                "{\"movable\": [\"HRA\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody());
+        assertThat(view.get("regimeBefore").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
+        assertThat(view.get("regimeAfter").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("288600");
+        assertThat(view.get("changes").size()).isEqualTo(1);
+        JsonNode change = view.at("/changes/0");
+        assertThat(change.get("component").asString()).isEqualTo("HRA");
+        assertThat(amountAt(change, "/current")).isEqualByComparingTo("0");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("800000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("3900");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("0");
+        assertThat(change.at("/facts/kind").asString()).isEqualTo("SALARY");
+        assertThat(change.at("/facts/cashNature").asString()).isEqualTo("CASH");
+        assertThat(change.at("/facts/feedsInto").toString())
+                .isEqualTo("[\"SAL-HOUSE-RENT-ALLOWANCE\",\"SAL-SALARY-INCLUDES\"]");
+        assertThat(amountAt(view, "/residualAfter")).isEqualByComparingTo("0");
+        assertThat(view.get("verified").toString()).isEqualTo("[\"HRA\"]");
+        assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void optimise_whenTheBreadthAskedExceedsTheSetting_expected400NamingIt() {
+        // Given — app.tax.optimiser.exhaustive-breadth ships at 6
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId, "{\"movable\": [\"HRA\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"verificationBreadth\": 7}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("at most 6").contains("not 7");
+    }
+
+    @Test
+    void optimise_whenAMovableCodeIsNotInThePack_expected400() {
+        // Given
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId,
+                "{\"movable\": [\"MEAL_COUPON\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("MEAL_COUPON");
+    }
+
+    @Test
+    void optimise_whenTheFloorIsAboveTheTakeHomeAsEntered_expected400() {
+        // Given — cash as entered is 24,00,000 less a bill of 2,92,500; a floor of 30,00,000 is above all the pay
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId,
+                "{\"movable\": [\"HRA\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"3000000\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("below the floor");
+    }
+
+    @Test
+    void optimise_whenTheDraftIsAnotherAccounts_expected400() {
+        // Given
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise("other@example.com", draftId,
+                "{\"movable\": [\"HRA\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
 }
