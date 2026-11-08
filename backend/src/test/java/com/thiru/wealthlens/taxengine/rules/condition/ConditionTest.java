@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.condition;
 
+import static com.thiru.wealthlens.taxengine.rules.RuleRefusals.refusal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -8,11 +9,17 @@ import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * One positive and one negative case per predicate, plus the two behaviours the algebra's usefulness
@@ -743,5 +750,113 @@ class ConditionTest {
             // W-197); and the three item facts
             assertThat(all).hasSize(15);
         }
+    }
+
+    /** One of each permitted {@link Condition}: whether it reads the item, and which item facts (W-240c). */
+    static Stream<Arguments> everyKindOfCondition() {
+        Condition engineIs = new ItemFactIs(VEHICLE_ENGINE, "PETROL");
+        Condition engineAtMost = new ItemFactAtMost(ENGINE_CC, 1600);
+        Condition aged = new AgeAtLeast(60, AgeSubject.SELF);
+        return Stream.of(
+                Arguments.of(engineIs, true, Set.of(VEHICLE_ENGINE)),
+                Arguments.of(engineAtMost, true, Set.of(ENGINE_CC)),
+                Arguments.of(new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2018, 1, 31)), true, Set.of(ACQUIRED_ON)),
+                Arguments.of(new IsResident(), false, Set.of()),
+                Arguments.of(aged, false, Set.of()),
+                Arguments.of(new HasPersonType(Set.of(PersonType.INDIVIDUAL)), false, Set.of()),
+                Arguments.of(new IsCertifiedDisabled(DisabilitySeverity.DISABILITY), false, Set.of()),
+                Arguments.of(new IncomeAtMost(TOTAL_INCOME, Money.of("500000")), false, Set.of()),
+                Arguments.of(new IncomeAtLeast(TOTAL_INCOME, Money.of("500000")), false, Set.of()),
+                Arguments.of(new HasIncomeUnderHead(HeadCode.SALARIES), false, Set.of()),
+                Arguments.of(new ComponentPresent(HRA), false, Set.of()),
+                Arguments.of(new EvidenceRecorded(EvidenceType.LANDLORD_PAN), false, Set.of()),
+                Arguments.of(new AllOf(List.of(new IsResident(), engineIs)), true, Set.of(VEHICLE_ENGINE)),
+                Arguments.of(new AnyOf(List.of(aged, new IsResident())), false, Set.of()),
+                Arguments.of(new Not(engineAtMost), true, Set.of(ENGINE_CC)));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("everyKindOfCondition")
+    void isAboutItem_whenEachKindOfCondition_isTrueExactlyWhereAnItemFactIsRead(Condition condition, boolean aboutItem,
+            Set<ItemFactId> factsRead) {
+        // When / Then
+        assertThat(condition.isAboutItem()).isEqualTo(aboutItem);
+        assertThat(condition.itemFactsRead()).isEqualTo(factsRead);
+    }
+
+    /** Each condition record made bad on its own (W-240c). */
+    static Stream<Arguments> refusals() {
+        return Stream.of(
+                refusal("AnyOf null", () -> new AnyOf(null), "AnyOf must have at least one limb"),
+                refusal("AnyOf empty", () -> new AnyOf(List.of()), "AnyOf must have at least one limb"),
+                refusal("AllOf null", () -> new AllOf(null), "AllOf must have at least one limb"),
+                refusal("AllOf empty", () -> new AllOf(List.of()), "AllOf must have at least one limb"),
+                refusal("ItemDateBefore fact null", () -> new ItemDateBefore(null, LocalDate.of(2018, 1, 31)),
+                        "ItemDateBefore needs a fact and a date"),
+                refusal("ItemDateBefore date null", () -> new ItemDateBefore(ACQUIRED_ON, null),
+                        "ItemDateBefore needs a fact and a date"),
+                refusal("ItemFactIs fact null", () -> new ItemFactIs(null, "PETROL"), "ItemFactIs needs a fact and a code"),
+                refusal("ItemFactIs code null", () -> new ItemFactIs(VEHICLE_ENGINE, null),
+                        "ItemFactIs needs a fact and a code"),
+                refusal("ItemFactIs code blank", () -> new ItemFactIs(VEHICLE_ENGINE, " "),
+                        "ItemFactIs needs a fact and a code"),
+                refusal("ItemFactAtMost fact null", () -> new ItemFactAtMost(null, 1600), "ItemFactAtMost needs a fact"),
+                refusal("IncomeAtLeast node null", () -> new IncomeAtLeast(null, Money.ZERO),
+                        "IncomeAtLeast needs both a node and a threshold"),
+                refusal("IncomeAtLeast threshold null", () -> new IncomeAtLeast(TOTAL_INCOME, null),
+                        "IncomeAtLeast needs both a node and a threshold"),
+                refusal("IncomeAtMost node null", () -> new IncomeAtMost(null, Money.ZERO),
+                        "IncomeAtMost needs both a node and a limit"),
+                refusal("IncomeAtMost limit null", () -> new IncomeAtMost(TOTAL_INCOME, null),
+                        "IncomeAtMost needs both a node and a limit"),
+                refusal("HasPersonType null", () -> new HasPersonType(null), "HasPersonType must name at least one type"),
+                refusal("HasPersonType empty", () -> new HasPersonType(Set.of()),
+                        "HasPersonType must name at least one type"),
+                refusal("ItemFacts codes null", () -> new ItemFacts(null, Map.of(), Map.of()),
+                        "ItemFacts needs its codes, quantities and dates"),
+                refusal("ItemFacts quantities null", () -> new ItemFacts(Map.of(), null, Map.of()),
+                        "ItemFacts needs its codes, quantities and dates"),
+                refusal("ItemFacts dates null", () -> new ItemFacts(Map.of(), Map.of(), null),
+                        "ItemFacts needs its codes, quantities and dates"),
+                refusal("HasIncomeUnderHead null", () -> new HasIncomeUnderHead(null), "HasIncomeUnderHead must name a head"),
+                refusal("EvidenceRecorded null", () -> new EvidenceRecorded(null),
+                        "EvidenceRecorded must name an evidence type"),
+                refusal("ComponentPresent null", () -> new ComponentPresent(null), "ComponentPresent must name a component"),
+                refusal("IsCertifiedDisabled null", () -> new IsCertifiedDisabled(null),
+                        "IsCertifiedDisabled must state a minimum severity"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("refusals")
+    void construct_whenOneFieldIsBad_isRefusedNamingIt(String badField, ThrowingCallable construct, String message) {
+        // When / Then
+        assertThatThrownBy(construct).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(message);
+    }
+
+    @Test
+    void describe_whenOneOrSeveralPersonTypes_namesTheOneOrListsThem() {
+        // When / Then — HasPersonType.java:30
+        assertThat(new HasPersonType(Set.of(PersonType.INDIVIDUAL)).describe()).isEqualTo("the assessee is INDIVIDUAL");
+        assertThat(new HasPersonType(Set.of(PersonType.INDIVIDUAL, PersonType.HUF)).describe())
+                .startsWith("the assessee is one of [");
+    }
+
+    @Test
+    void describe_whenTheMinimumIsSevereOrNot_namesTheCertificate() {
+        // When / Then — IsCertifiedDisabled.java:34
+        assertThat(new IsCertifiedDisabled(DisabilitySeverity.SEVERE_DISABILITY).describe())
+                .isEqualTo("a certificate of severe disability has been furnished");
+        assertThat(new IsCertifiedDisabled(DisabilitySeverity.DISABILITY).describe())
+                .isEqualTo("a certificate of disability has been furnished");
+    }
+
+    @Test
+    void firstFailing_whenTheFirstLimbHoldsAndTheSecondFails_isTheSecond() {
+        // Given — resident, aged 30: residence holds, sixty years does not
+        Condition sixty = new AgeAtLeast(60, AgeSubject.SELF);
+        AllOf both = new AllOf(List.of(new IsResident(), sixty));
+
+        // When / Then
+        assertThat(both.firstFailing(resident(30))).contains(sixty);
     }
 }

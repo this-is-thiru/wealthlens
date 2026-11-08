@@ -1,13 +1,19 @@
 package com.thiru.wealthlens.taxengine.rules.regime;
 
+import static com.thiru.wealthlens.taxengine.rules.RuleRefusals.refusal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Resolution of the tier-3 escape hatch.
@@ -87,5 +93,18 @@ class RegimeBehaviourRegistryTest {
             // L5: ship with zero implementations other than the default
             assertThat(RegimeBehaviourRegistry.empty().registeredIds()).isEmpty();
         }
+    }
+
+    /** A missing registry is refused (W-240c). */
+    static Stream<Arguments> refusals() {
+        return Stream.of(refusal("behaviours null", () -> new RegimeBehaviourRegistry(null),
+                "A behaviour registry may not be null; pass an empty one"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("refusals")
+    void construct_whenOneFieldIsBad_isRefusedNamingIt(String badField, ThrowingCallable construct, String message) {
+        // When / Then
+        assertThatThrownBy(construct).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(message);
     }
 }

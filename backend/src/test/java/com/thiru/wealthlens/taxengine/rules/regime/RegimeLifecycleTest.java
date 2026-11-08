@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.regime;
 
+import static com.thiru.wealthlens.taxengine.rules.RuleRefusals.refusal;
+import static com.thiru.wealthlens.taxengine.rules.RuleRefusals.withComponent;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -20,9 +22,14 @@ import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.stream.Stream;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Two windows, and why one is not enough.
@@ -696,5 +703,26 @@ class RegimeLifecycleTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("computes nothing");
         }
+    }
+
+    /** Each part of a valid lifecycle made missing on its own (W-240c). */
+    static Stream<Arguments> refusals() {
+        RegimeLifecycle valid = RegimeFixtures.regimeWithBehaviour(null).lifecycle();
+        String windows = "A regime lifecycle needs both windows";
+        String policies = "A regime lifecycle must state what happens at sunset and on condition failure";
+        return Stream.of(
+                refusal("entryWindow null", () -> withComponent(valid, "entryWindow", null), windows),
+                refusal("inForceWindow null", () -> withComponent(valid, "inForceWindow", null), windows),
+                refusal("onSunset null", () -> withComponent(valid, "onSunset", null), policies),
+                refusal("onConditionFailure null", () -> withComponent(valid, "onConditionFailure", null), policies),
+                refusal("provenance null", () -> withComponent(valid, "provenance", null),
+                        "A regime lifecycle must say where it was read from"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("refusals")
+    void construct_whenOneFieldIsBad_isRefusedNamingIt(String badField, ThrowingCallable construct, String message) {
+        // When / Then
+        assertThatThrownBy(construct).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(message);
     }
 }

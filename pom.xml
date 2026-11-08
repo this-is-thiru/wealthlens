@@ -292,6 +292,8 @@
                       below X5.5's 90 % and 85 %: raise each minimum as tests close the gap (W-240), never lower it. W-240a
                       (2026-11-08, D-508) raised the engine outside its rules to 86.12 %; W-240b (D-509) to 90.68 % (300 of 3,220
                       missed), so 0.90: X5.5 met for the engine outside its rules.
+                      W-240c (D-510) raised the rules vocabulary to 81.20 % (475 of 2,526 missed; 3 are on Condition's two
+                      switches and :70, left with all 15 permitted types exercised, so compiler-made by elimination), so 0.81.
                     -->
                     <execution>
                         <id>check-taxengine</id>
@@ -349,7 +351,7 @@
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.76</minimum>
+                                            <minimum>0.81</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
