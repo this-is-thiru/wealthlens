@@ -27,13 +27,13 @@ class SaturationTest {
     private static final RulePack PACK = ShippedRulePacks.compile("rulepacks", Set.of(TY_2026_27)).load(TY_2026_27);
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
     private static final AllocationSpace SPACE = new AllocationSpace(
-            Fixtures.rentingInMumbai("600000", "600000", "300000", List.of()), Set.of(ComponentCodes.HRA),
+            Fixtures.rentingInMumbai("600000", "600000", "300000", List.of()), Set.of(ComponentCodes.HRA), Set.of(),
             ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6);
 
     private static Money saturation(RegimeCode regime) {
         AllocationPricing pricing = AllocationPricing.over(NodeRegistry.of(ShippedNodes.all()), PACK,
                 PACK.regimes().get(NEW), SPACE);
-        return Saturation.of(pricing, pricing.entered(SPACE), ComponentCodes.HRA, regime);
+        return Saturation.of(pricing, pricing.entered(SPACE), new Movable.Pay(ComponentCodes.HRA), regime);
     }
 
     @Test

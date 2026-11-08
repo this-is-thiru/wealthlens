@@ -727,4 +727,63 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
+
+    /** Basic 16,00,000 and special 8,00,000 from an OTHER employer, no rent, 2,92,500 at source (W-238c). */
+    private String salariedDraft() {
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT", "holdsPortfolio": false}""", null);
+        String profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/entered/employments/-", "value": {
+                  "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": 1600000}},
+                                 {"code": {"value": "SPECIAL_ALLOWANCE"}, "annualAmount": {"amountInRupees": 800000}}],
+                  "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
+                  "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}},
+                 {"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"},
+                 {"op": "replace", "path": "/filing/taxAtSource", "value": {"amountInRupees": 292500}}]""", "\"rev-0\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        return draftId;
+    }
+
+    @Test
+    void optimise_whenTheEmployersNpsIsMovable_suggestsItAsAFundChange() {
+        // Given — TaxCalculatorOptimiseTest's case: 2,92,500 → 2,34,260 in the new regime with 2,24,000 (14 % of basic)
+        // into the NPS; the move is not take-home, so its cash impact is the whole of it
+        String draftId = salariedDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"NOTIFIED_PENSION_SCHEME\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody());
+        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
+        assertThat(view.get("regimeAfter").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("234260");
+        assertThat(view.get("changes").size()).isZero();
+        JsonNode change = view.at("/fundChanges/0");
+        assertThat(change.get("fund").asString()).isEqualTo("NOTIFIED_PENSION_SCHEME");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("224000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("58240");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-224000");
+        assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
+    }
+
+    @Test
+    void optimise_whenTheProvidentFundIsMovable_expected400NamingW238d() {
+        // Given
+        String draftId = salariedDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"RECOGNISED_PROVIDENT_FUND\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("W-238d");
+    }
 }

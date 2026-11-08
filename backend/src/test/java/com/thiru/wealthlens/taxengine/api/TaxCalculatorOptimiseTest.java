@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
+import com.thiru.wealthlens.taxengine.input.EmployerFund;
+import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -55,7 +58,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace space(EngineInputs inputs, Set<ComponentCode> movable, String floor, int breadth) {
-        return new AllocationSpace(inputs, movable, SPECIAL, Money.of(floor), breadth);
+        return new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.of(floor), breadth);
     }
 
     @Test
@@ -166,7 +169,7 @@ class TaxCalculatorOptimiseTest {
     @Test
     void optimise_whenTheResidualIsNotInAnyEmployment_isRefused() {
         // Given
-        AllocationSpace space = new AllocationSpace(flipsWithHra(), Set.of(HRA), ComponentCodes.CONVEYANCE_ALLOWANCE,
+        AllocationSpace space = new AllocationSpace(flipsWithHra(), Set.of(HRA), Set.of(), ComponentCodes.CONVEYANCE_ALLOWANCE,
                 Money.ZERO, 6);
 
         // When / Then
@@ -182,5 +185,104 @@ class TaxCalculatorOptimiseTest {
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("defines no component MEAL_COUPON");
+    }
+
+    /**
+     * The funds' history with no income accrued in the year: the accretion beyond the limit, (PC ÷ 2 + PC1 + TP1) × I ÷
+     * F(avg) ({@code PERQ-EMPLOYER-ACCRETION}, S2 s.17(1)(i)), is then nil, so only the excess itself is a perquisite.
+     */
+    private static final Optional<RetirementFundHistory> NOTHING_ACCRUED = Optional.of(new RetirementFundHistory(
+            Money.ZERO, Money.ZERO, Money.ZERO, Money.of("100000"), Money.of("100000")));
+
+    /** Basic 16L and special 8L from an OTHER employer, with these fund contributions entered (W-238c). */
+    private static EngineInputs salaried(List<EmployerFundContribution> contributions) {
+        return Fixtures.salaried("1600000", "800000", contributions, NOTHING_ACCRUED);
+    }
+
+    private static AllocationSpace funds(EngineInputs inputs, Set<EmployerFund> movable) {
+        return new AllocationSpace(inputs, Set.of(), movable, SPECIAL, Money.ZERO, 6);
+    }
+
+    @Test
+    void optimise_whenTheEmployersNpsIsMovable_fillsItToTheNewRegimeCap() {
+        // Given — before: new 24L − 75,000 = 23,25,000 → 2,81,250, + 4 % = 2,92,500. The NPS contribution is salary
+        // (SAL-INCLUDES-PENSION-CONTRIBUTION) and deducted to 14 % of basic in the new regime
+        // (DED-NPS-EMPLOYER-NEW-TAX-REGIME): 2,24,000. After: 21,01,000 → 2,00,000 + 25 % × 1,01,000 = 2,25,250, + 4 % =
+        // 2,34,260. Old after, 10 % (DED-NPS-EMPLOYER-OTHER): 24L − 50,000 − 1,60,000 = 21,90,000 → 1,12,500 + 3,57,000
+        // = 4,69,500, + 4 % = 4,88,280 — still more.
+        AllocationSpace space = funds(salaried(List.of()), Set.of(EmployerFund.NOTIFIED_PENSION_SCHEME));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeBefore()).isEqualTo(NEW);
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("234260"));
+        assertThat(optimised.changes()).isEmpty();
+        assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME",
+                Money.ZERO, Money.of("224000"), Optional.of(Money.of("58240")), Money.of("-224000")));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.of("576000"));
+        assertThat(optimised.verified()).containsExactly("NOTIFIED_PENSION_SCHEME");
+    }
+
+    @Test
+    void optimise_whenTheAggregateLimitBinds_stopsTheNpsAtTheHeadroom() {
+        // Given — 6,00,000 to the provident fund leaves 1,50,000 under PERQ-EMPLOYER-CONTRIBUTION's 7,50,000; above it
+        // each rupee deducted is added back as a perquisite. After: 23,25,000 − 1,50,000 = 21,75,000 → 2,00,000 +
+        // 43,750 = 2,43,750, + 4 % = 2,53,500. The fund is not salary and its 12 % charge is TY 2025-26 only.
+        AllocationSpace space = funds(salaried(List.of(new EmployerFundContribution(0,
+                EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("600000")))), Set.of(EmployerFund.NOTIFIED_PENSION_SCHEME));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME",
+                Money.ZERO, Money.of("150000"), Optional.of(Money.of("39000")), Money.of("-150000")));
+    }
+
+    @Test
+    void optimise_whenSuperannuationIsMovable_fillsItToTheAggregateLimit() {
+        // Given — a superannuation contribution is neither salary nor deducted; only its excess over 7,50,000 is a
+        // perquisite. Salary falls rupee for rupee to 7,50,000. After: 16,50,000 − 75,000 = 15,75,000 → 20,000 + 40,000 +
+        // 15 % × 3,75,000 = 1,16,250, + 4 % = 1,20,900. Old after: 15,50,000 → 2,77,500, + 4 % = 2,88,600 — more.
+        AllocationSpace space = funds(salaried(List.of()), Set.of(EmployerFund.APPROVED_SUPERANNUATION_FUND));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
+        assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("APPROVED_SUPERANNUATION_FUND",
+                Money.ZERO, Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000")));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.of("50000"));
+    }
+
+    @Test
+    void optimise_whenAMoveCrossesTheLimitWithNoFundHistory_isRefusedByTheEngine() {
+        // Given — the search tries superannuation above 7,50,000, where the accretion needs the funds' figures
+        AllocationSpace space = funds(Fixtures.salaried("1600000", "800000", List.of(), Optional.empty()),
+                Set.of(EmployerFund.APPROVED_SUPERANNUATION_FUND));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("enter the retirement fund history");
+    }
+
+    @Test
+    void optimise_whenTheFundIsEnteredTwiceForTheEmployment_isRefused() {
+        // Given
+        EmployerFundContribution once = new EmployerFundContribution(0, EmployerFund.NOTIFIED_PENSION_SCHEME,
+                Money.of("10000"));
+        AllocationSpace space = funds(salaried(List.of(once, once)), Set.of(EmployerFund.NOTIFIED_PENSION_SCHEME));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("NOTIFIED_PENSION_SCHEME is entered more than once");
     }
 }

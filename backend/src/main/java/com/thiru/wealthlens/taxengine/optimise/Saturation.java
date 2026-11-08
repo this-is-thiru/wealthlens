@@ -1,11 +1,10 @@
 package com.thiru.wealthlens.taxengine.optimise;
 
-import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 
 /**
- * A component's saturation point, found by measurement rather than by a formula ({@code 03-advisory.md} A2.4 step 2;
+ * A movable item's saturation point, found by measurement rather than by a formula ({@code 03-advisory.md} A2.4 step 2;
  * W-238 C1a): the least whole-rupee amount beyond which one more rupee moved into it from the residual no longer lowers
  * total income under a regime. A formula would be the law a second time in Java (CLAUDE.md §4); measuring reads the
  * law only through the pack's rows.
@@ -22,7 +21,7 @@ final class Saturation {
     private Saturation() {
     }
 
-    static Money of(AllocationPricing pricing, Allocation from, ComponentCode code, RegimeCode regime) {
+    static Money of(AllocationPricing pricing, Allocation from, Movable code, RegimeCode regime) {
         Money low = Money.ZERO;
         Money high = wholeRupees(from.amount(code).plus(from.residualAmount()));
         while (low.isLessThan(high)) {
@@ -36,7 +35,7 @@ final class Saturation {
         return low;
     }
 
-    private static boolean stopsFalling(AllocationPricing pricing, Allocation from, ComponentCode code, RegimeCode regime,
+    private static boolean stopsFalling(AllocationPricing pricing, Allocation from, Movable code, RegimeCode regime,
             Money amount) {
         Money here = pricing.totalIncome(from.moved(code, amount), regime);
         Money next = pricing.totalIncome(from.moved(code, amount.plus(RUPEE)), regime);

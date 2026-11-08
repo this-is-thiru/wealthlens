@@ -14,6 +14,7 @@ import java.util.Optional;
  * @param regimeAfter the regime the rules choose on the suggested pay
  * @param billAfter that regime's net payable — never more than {@code billBefore}
  * @param changes each movable component whose amount changes, in code order
+ * @param fundChanges each movable fund whose contribution changes, by fund name (W-238c)
  * @param residualAfter the residual component's amount after every change
  * @param verified the components the exhaustive check covered, recorded because the breadth is a tuning knob (G6.3)
  * @param pipelineRuns the whole computations run to reach the answer
@@ -21,10 +22,11 @@ import java.util.Optional;
  *     breakpoint (G6.3)
  */
 public record Optimisation(String regimeBefore, Money billBefore, String regimeAfter, Money billAfter,
-        List<Change> changes, Money residualAfter, List<String> verified, int pipelineRuns, Optional<String> discrepancy) {
+        List<Change> changes, List<FundChange> fundChanges, Money residualAfter, List<String> verified, int pipelineRuns, Optional<String> discrepancy) {
 
     public Optimisation {
         changes = List.copyOf(changes);
+        fundChanges = List.copyOf(fundChanges);
         verified = List.copyOf(verified);
     }
 
@@ -43,6 +45,20 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      */
     public record Change(String component, ComponentFacts facts, Money current, Money suggested,
             Optional<Money> savingAlone, Money cashImpact) {
+    }
+
+    /**
+     * One employer contribution's suggested amount (W-238c), its saving measured as {@link Change}'s. A contribution is not
+     * a component of pay, so it has no row in the pack's components and carries no {@link ComponentFacts}.
+     *
+     * @param fund the fund's {@code EmployerFund} name
+     * @param current the contribution as entered, nil where none was
+     * @param suggested the contribution in the answer
+     * @param savingAlone the bill as entered less the bill with only this change; empty where the residual as entered
+     *     cannot fund it by itself
+     * @param cashImpact the change in cash before tax: the residual's pay given up, since a contribution is never in hand
+     */
+    public record FundChange(String fund, Money current, Money suggested, Optional<Money> savingAlone, Money cashImpact) {
     }
 
     /**

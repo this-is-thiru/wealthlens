@@ -3,7 +3,6 @@ package com.thiru.wealthlens.taxengine.optimise;
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
 import com.thiru.wealthlens.taxengine.api.Optimisation;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
-import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
@@ -30,7 +29,7 @@ public final class SalaryOptimiser {
     }
 
     /** The greedy answer and, for each component, the most its best first move saved — what ranks the verification. */
-    private record Greedy(Allocation answer, Map<ComponentCode, Money> firstValue) {
+    private record Greedy(Allocation answer, Map<Movable, Money> firstValue) {
     }
 
     /** {@code savingPerMillion}: the tax saved per ₹10,00,000 moved — a ratio carried as money to stay exact to paise. */
@@ -51,20 +50,20 @@ public final class SalaryOptimiser {
             throw new IllegalArgumentException("The pay as entered already leaves " + takeHome + " in cash after tax,"
                     + " below the floor of " + space.cashFloor() + "; no reallocation of it can raise cash");
         }
-        SortedMap<ComponentCode, SortedSet<Money>> candidates = candidates(pricing, entered);
+        SortedMap<Movable, SortedSet<Money>> candidates = candidates(pricing, entered);
         Greedy greedy = greedy(pricing, entered, candidates, space.cashFloor());
-        List<ComponentCode> verified = greedy.firstValue().entrySet().stream()
-                .sorted(Map.Entry.<ComponentCode, Money>comparingByValue().reversed()
-                        .thenComparing(Map.Entry.comparingByKey(Allocation.CODE_ORDER)))
+        List<Movable> verified = greedy.firstValue().entrySet().stream()
+                .sorted(Map.Entry.<Movable, Money>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey(Movable.ORDER)))
                 .limit(space.verificationBreadth()).map(Map.Entry::getKey).toList();
         Allocation answer = exhaustive(pricing, greedy.answer(), candidates, verified, space.cashFloor());
         return result(pricing, entered, greedy.answer(), answer, verified);
     }
 
-    private static SortedMap<ComponentCode, SortedSet<Money>> candidates(AllocationPricing pricing, Allocation entered) {
+    private static SortedMap<Movable, SortedSet<Money>> candidates(AllocationPricing pricing, Allocation entered) {
         List<RegimeCode> offered = pricing.price(entered).offered();
-        SortedMap<ComponentCode, SortedSet<Money>> candidates = new TreeMap<>(Allocation.CODE_ORDER);
-        for (ComponentCode code : entered.amounts().keySet()) {
+        SortedMap<Movable, SortedSet<Money>> candidates = new TreeMap<>(Movable.ORDER);
+        for (Movable code : entered.amounts().keySet()) {
             if (code.equals(entered.residual())) {
                 continue;
             }
@@ -76,15 +75,15 @@ public final class SalaryOptimiser {
     }
 
     private static Greedy greedy(AllocationPricing pricing, Allocation entered,
-            SortedMap<ComponentCode, SortedSet<Money>> candidates, Money floor) {
-        Map<ComponentCode, Money> firstValue = new TreeMap<>(Allocation.CODE_ORDER);
+            SortedMap<Movable, SortedSet<Money>> candidates, Money floor) {
+        Map<Movable, Money> firstValue = new TreeMap<>(Movable.ORDER);
         candidates.keySet().forEach(code -> firstValue.put(code, Money.ZERO));
         Allocation current = entered;
         boolean firstRound = true;
         while (true) {
             Money bill = pricing.price(current).bill();
             Optional<Move> best = Optional.empty();
-            for (Map.Entry<ComponentCode, SortedSet<Money>> each : candidates.entrySet()) {
+            for (Map.Entry<Movable, SortedSet<Money>> each : candidates.entrySet()) {
                 for (Money target : each.getValue()) {
                     Money step = target.minus(current.amount(each.getKey()));
                     Allocation next = current.moved(each.getKey(), target);
@@ -114,9 +113,9 @@ public final class SalaryOptimiser {
 
     /** Every combination of the verified components' candidates, the rest held at the greedy answer (A2.5). */
     private static Allocation exhaustive(AllocationPricing pricing, Allocation greedy,
-            SortedMap<ComponentCode, SortedSet<Money>> candidates, List<ComponentCode> verified, Money floor) {
+            SortedMap<Movable, SortedSet<Money>> candidates, List<Movable> verified, Money floor) {
         List<List<Money>> options = new ArrayList<>();
-        for (ComponentCode code : verified) {
+        for (Movable code : verified) {
             SortedSet<Money> points = new TreeSet<>(candidates.get(code));
             points.add(greedy.amount(code));
             options.add(List.copyOf(points));
@@ -152,28 +151,34 @@ public final class SalaryOptimiser {
     }
 
     private static Optimisation result(AllocationPricing pricing, Allocation entered, Allocation greedy, Allocation answer,
-            List<ComponentCode> verified) {
+            List<Movable> verified) {
         AllocationPricing.Priced before = pricing.price(entered);
         AllocationPricing.Priced after = pricing.price(answer);
         List<Optimisation.Change> changes = new ArrayList<>();
-        for (ComponentCode code : entered.amounts().keySet()) {
-            Money suggested = answer.amount(code);
-            if (code.equals(entered.residual()) || suggested.equals(entered.amount(code))) {
+        List<Optimisation.FundChange> fundChanges = new ArrayList<>();
+        for (Movable item : entered.amounts().keySet()) {
+            Money current = entered.amount(item);
+            Money suggested = answer.amount(item);
+            if (item.equals(entered.residual()) || suggested.equals(current)) {
                 continue;
             }
-            Allocation alone = entered.moved(code, suggested);
+            Allocation alone = entered.moved(item, suggested);
             Optional<Money> savingAlone = alone.isFeasible()
                     ? Optional.of(before.bill().minus(pricing.price(alone).bill()))
                     : Optional.empty();
-            changes.add(new Optimisation.Change(code.value(), pricing.facts(code), entered.amount(code), suggested,
-                    savingAlone, pricing.cashImpact(code, entered.residual(), entered.amount(code), suggested)));
+            Money cashImpact = pricing.cashImpact(item, entered.residual(), current, suggested);
+            switch (item) {
+                case Movable.Pay pay -> changes.add(new Optimisation.Change(pay.name(), pricing.facts(pay), current,
+                        suggested, savingAlone, cashImpact));
+                case Movable.Fund fund -> fundChanges.add(new Optimisation.FundChange(fund.name(), current, suggested,
+                        savingAlone, cashImpact));
+            }
         }
+        List<String> verifiedNames = verified.stream().map(Movable::name).toList();
         Optional<String> discrepancy = answer.equals(greedy) ? Optional.empty() : Optional.of("The greedy answer"
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "
-                + verified.stream().map(ComponentCode::value).toList() + " found " + after.bill()
-                + " — the candidates miss a breakpoint (G6.3)");
+                + verifiedNames + " found " + after.bill() + " — the candidates miss a breakpoint (G6.3)");
         return new Optimisation(before.regime().value(), before.bill(), after.regime().value(), after.bill(), changes,
-                answer.residualAmount(), verified.stream().map(ComponentCode::value).toList(), pricing.pipelineRuns(),
-                discrepancy);
+                fundChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy);
     }
 }

@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.input.HealthPaymentKind;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
+import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
@@ -130,6 +131,22 @@ public final class Fixtures {
         EnteredFacts entered = new EnteredFacts(List.of(employment), List.of(rented), List.of(), spending,
                 Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(),
+                List.of());
+        return inputs(entered, bornOn(LocalDate.of(1990, 6, 15)), noGains());
+    }
+
+    /**
+     * A salaried employee under 60 with no rent (W-238c): basic pay and a special allowance from one {@code OTHER}
+     * employer, the employer's fund contributions given, each for that employment, and the funds' history if entered.
+     */
+    public static EngineInputs salaried(String basic, String specialAllowance, List<EmployerFundContribution> contributions,
+            Optional<RetirementFundHistory> history) {
+        EngineInputs paid = rentingInMumbai(basic, specialAllowance, "0", List.of());
+        EnteredFacts entered = new EnteredFacts(paid.entered().employments(), List.of(), List.of(), List.of(),
+                Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), contributions, history, List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(),
                 List.of());

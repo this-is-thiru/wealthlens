@@ -103,7 +103,7 @@ public class DraftComputationService {
         RegimeCode regime = taxCalculator.defaultRegime(TaxYearId.of(year));
         return taxCalculator.optimise(new AllocationSpace(
                 assembler.assemble(email, draftId, regime, LocalDate.now(clock)).inputs(), request.movableCodes(),
-                request.residualCode(), request.cashFloorRupees(), breadth));
+                request.movableFundNames(), request.residualCode(), request.cashFloorRupees(), breadth));
     }
 
     /**

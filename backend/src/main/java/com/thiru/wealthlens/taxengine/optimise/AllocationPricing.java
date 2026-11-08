@@ -6,8 +6,11 @@ import com.thiru.wealthlens.taxengine.election.ElectionOutcome;
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
 import com.thiru.wealthlens.taxengine.election.PricedAlternative;
 import com.thiru.wealthlens.taxengine.election.RegimeElection;
+import com.thiru.wealthlens.taxengine.input.EmployerFund;
+import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
@@ -23,8 +26,10 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
@@ -60,7 +65,7 @@ final class AllocationPricing {
 
     /**
      * @throws IllegalArgumentException if a code is not in the year's pack, or the residual is not in exactly one
-     *     employment, or a code appears twice in it
+     *     employment, or a code appears twice in it, or a movable fund has two contributions entered for it
      */
     static AllocationPricing over(NodeRegistry registry, RulePack pack, RegimeSpec computing, AllocationSpace space) {
         List<ComponentCode> codes = new ArrayList<>(space.movable());
@@ -81,18 +86,31 @@ final class AllocationPricing {
         codes.stream().filter(code -> count(held, code) > 1).findFirst().ifPresent(code -> {
             throw new IllegalArgumentException(code.value() + " appears more than once in the employment");
         });
-        return new AllocationPricing(registry, pack, computing, space.base(), holding.get(0));
+        int employment = holding.get(0);
+        space.movableFunds().stream().filter(fund -> contributions(space.base(), employment, fund) > 1).findFirst()
+                .ifPresent(fund -> {
+                    throw new IllegalArgumentException("The employer's contribution to " + fund.name()
+                            + " is entered more than once for the employment the residual is in");
+                });
+        return new AllocationPricing(registry, pack, computing, space.base(), employment);
     }
 
-    /** The movable pay as entered; a movable code not in the employment starts at nil. */
+    /** The movable pay and funds as entered; a movable code or fund not entered for the employment starts at nil. */
     Allocation entered(AllocationSpace space) {
-        SortedMap<ComponentCode, Money> amounts = new TreeMap<>(Allocation.CODE_ORDER);
-        space.movable().forEach(code -> amounts.put(code, Money.ZERO));
-        amounts.put(space.residual(), Money.ZERO);
+        SortedMap<Movable, Money> amounts = new TreeMap<>(Movable.ORDER);
+        space.movable().forEach(code -> amounts.put(new Movable.Pay(code), Money.ZERO));
+        space.movableFunds().forEach(fund -> amounts.put(new Movable.Fund(fund), Money.ZERO));
+        Movable.Pay residual = new Movable.Pay(space.residual());
+        amounts.put(residual, Money.ZERO);
         for (SalaryComponent component : base.entered().employments().get(employment).components()) {
-            amounts.computeIfPresent(component.code(), (code, nil) -> component.annualAmount());
+            amounts.computeIfPresent(new Movable.Pay(component.code()), (code, nil) -> component.annualAmount());
         }
-        return new Allocation(amounts, space.residual());
+        for (EmployerFundContribution contribution : base.entered().employerContributions()) {
+            if (contribution.employment() == employment) {
+                amounts.computeIfPresent(new Movable.Fund(contribution.fund()), (fund, nil) -> contribution.amount());
+            }
+        }
+        return new Allocation(amounts, residual);
     }
 
     Priced price(Allocation allocation) {
@@ -121,17 +139,23 @@ final class AllocationPricing {
         return cash.minus(price(allocation).bill());
     }
 
-    /** What the year's pack says {@code code} is (W-238b). */
-    Optimisation.ComponentFacts facts(ComponentCode code) {
-        ComponentDefinition row = pack.components().get(code);
+    /** What the year's pack says {@code pay} is (W-238b). */
+    Optimisation.ComponentFacts facts(Movable.Pay pay) {
+        ComponentDefinition row = pack.components().get(pay.code());
         return new Optimisation.ComponentFacts(row.kind().name(), row.cashNature().name(),
                 row.feedsInto().stream().map(RuleId::value).sorted().toList());
     }
 
-    /** The cash before tax that moving {@code code} from {@code current} to {@code suggested} adds, the residual funding it. */
-    Money cashImpact(ComponentCode code, ComponentCode residual, Money current, Money suggested) {
-        return cashImpact(pack.components().get(residual).cashNature(), pack.components().get(code).cashNature(), current,
-                suggested);
+    /**
+     * The cash before tax that moving {@code item} from {@code current} to {@code suggested} adds, the residual funding it.
+     * A fund contribution is never in hand, which is what {@link #takeHome} already reads: it counts components only (C11).
+     */
+    Money cashImpact(Movable item, Movable.Pay residual, Money current, Money suggested) {
+        CashNature moved = switch (item) {
+            case Movable.Pay pay -> pack.components().get(pay.code()).cashNature();
+            case Movable.Fund fund -> CashNature.NON_CASH;
+        };
+        return cashImpact(pack.components().get(residual.code()).cashNature(), moved, current, suggested);
     }
 
     /** By the take-home rule (C3): the moved component gains what the residual gives up. */
@@ -167,18 +191,48 @@ final class AllocationPricing {
         Employment held = employments.get(employment);
         List<SalaryComponent> components = new ArrayList<>();
         for (SalaryComponent component : held.components()) {
-            Money amount = allocation.amounts().get(component.code());
+            Money amount = allocation.amounts().get(new Movable.Pay(component.code()));
             components.add(amount == null ? component : new SalaryComponent(component.code(), amount));
         }
-        allocation.amounts().forEach((code, amount) -> {
-            if (count(held, code) == 0) {
-                components.add(new SalaryComponent(code, amount));
+        allocation.amounts().forEach((item, amount) -> {
+            if (item instanceof Movable.Pay pay && count(held, pay.code()) == 0) {
+                components.add(new SalaryComponent(pay.code(), amount));
             }
         });
         employments.set(employment, new Employment(components, held.termsIncludeDearnessAllowance(),
                 held.employerKind(), held.dearnessAllowanceCountsForRetirement(), held.companyEmployer()));
-        return new EngineInputs(base.taxYear(), base.regime(), base.temporal(), base.entered().withEmployments(employments),
-                base.assessee(), base.family(), base.ledgers(), base.elections(), base.capitalGains(), base.filing());
+        EnteredFacts entered = base.entered().withEmployments(employments)
+                .withEmployerContributions(contributions(allocation));
+        return new EngineInputs(base.taxYear(), base.regime(), base.temporal(), entered, base.assessee(), base.family(),
+                base.ledgers(), base.elections(), base.capitalGains(), base.filing());
+    }
+
+    /** The contributions as entered, each movable fund's for this employment at its allocated amount. */
+    private List<EmployerFundContribution> contributions(Allocation allocation) {
+        List<EmployerFundContribution> contributions = new ArrayList<>();
+        Set<EmployerFund> written = new HashSet<>();
+        for (EmployerFundContribution contribution : base.entered().employerContributions()) {
+            Money amount = contribution.employment() == employment
+                    ? allocation.amounts().get(new Movable.Fund(contribution.fund()))
+                    : null;
+            if (amount == null) {
+                contributions.add(contribution);
+            } else {
+                contributions.add(new EmployerFundContribution(employment, contribution.fund(), amount));
+                written.add(contribution.fund());
+            }
+        }
+        allocation.amounts().forEach((item, amount) -> {
+            if (item instanceof Movable.Fund fund && !written.contains(fund.fund()) && amount.isGreaterThan(Money.ZERO)) {
+                contributions.add(new EmployerFundContribution(employment, fund.fund(), amount));
+            }
+        });
+        return contributions;
+    }
+
+    private static long contributions(EngineInputs inputs, int employment, EmployerFund fund) {
+        return inputs.entered().employerContributions().stream()
+                .filter(contribution -> contribution.employment() == employment && contribution.fund() == fund).count();
     }
 
     private static long count(Employment employment, ComponentCode code) {
