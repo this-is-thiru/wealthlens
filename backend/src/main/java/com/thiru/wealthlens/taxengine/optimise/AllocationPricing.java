@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -50,22 +51,25 @@ final class AllocationPricing {
     private final RegimeSpec computing;
     private final EngineInputs base;
     private final int employment;
+    private final Following following;
     private final Map<Allocation, Priced> priced = new HashMap<>();
     private final Map<RegimeCode, Map<Allocation, Money>> totalIncome = new HashMap<>();
     private int pipelineRuns;
 
     private AllocationPricing(NodeRegistry registry, RulePack pack, RegimeSpec computing, EngineInputs base,
-            int employment) {
+            int employment, Following following) {
         this.registry = registry;
         this.pack = pack;
         this.computing = computing;
         this.base = base;
         this.employment = employment;
+        this.following = following;
     }
 
     /**
      * @throws IllegalArgumentException if a code is not in the year's pack, or the residual is not in exactly one
-     *     employment, or a code appears twice in it, or a movable fund has two contributions entered for it
+     *     employment, or a code appears twice in it, or a movable fund has two contributions entered for it, or basic
+     *     cannot be moved with what follows it ({@link #following})
      */
     static AllocationPricing over(NodeRegistry registry, RulePack pack, RegimeSpec computing, AllocationSpace space) {
         List<ComponentCode> codes = new ArrayList<>(space.movable());
@@ -92,7 +96,41 @@ final class AllocationPricing {
                     throw new IllegalArgumentException("The employer's contribution to " + fund.name()
                             + " is entered more than once for the employment the residual is in");
                 });
-        return new AllocationPricing(registry, pack, computing, space.base(), employment);
+        return new AllocationPricing(registry, pack, computing, space.base(), employment,
+                following(space, held, employment));
+    }
+
+    /**
+     * What follows basic where basic may move (A2.2 C8; W-238d): the employer's provident fund contribution and the
+     * employee's, as entered for the employment. Refused where the facts cannot say how much follows: dearness allowance
+     * that counts for retirement may be in the provident fund's base too, and a follower entered twice has no one ratio.
+     */
+    private static Following following(AllocationSpace space, Employment held, int employment) {
+        Movable.Pay basic = new Movable.Pay(ComponentCodes.BASIC);
+        SortedMap<Movable, Money> followers = new TreeMap<>(Movable.ORDER);
+        if (!space.movable().contains(ComponentCodes.BASIC)) {
+            return new Following(basic, Money.ZERO, followers);
+        }
+        if (held.dearnessAllowanceCountsForRetirement() && count(held, ComponentCodes.DEARNESS_ALLOWANCE) > 0) {
+            throw new IllegalArgumentException("BASIC cannot move here: the employment's dearness allowance counts for"
+                    + " retirement, and whether the provident fund follows it too is not entered (A2.2 C8)");
+        }
+        if (space.movable().contains(ComponentCodes.EMPLOYEE_PF)) {
+            throw new IllegalArgumentException("EMPLOYEE_PF follows BASIC (A2.2 C8), so it cannot also move by itself");
+        }
+        if (count(held, ComponentCodes.EMPLOYEE_PF) > 1
+                || contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 1) {
+            throw new IllegalArgumentException("A provident fund contribution that follows BASIC is entered more than"
+                    + " once for the employment, so it has no one ratio to basic (A2.2 C8)");
+        }
+        held.components().stream().filter(component -> component.code().equals(ComponentCodes.EMPLOYEE_PF))
+                .forEach(component -> followers.put(new Movable.Pay(component.code()), component.annualAmount()));
+        space.base().entered().employerContributions().stream()
+                .filter(each -> each.employment() == employment && each.fund() == EmployerFund.RECOGNISED_PROVIDENT_FUND)
+                .forEach(each -> followers.put(new Movable.Fund(each.fund()), each.amount()));
+        Money basicEntered = held.components().stream().filter(component -> component.code().equals(ComponentCodes.BASIC))
+                .map(SalaryComponent::annualAmount).findFirst().orElse(Money.ZERO);
+        return new Following(basic, basicEntered, followers);
     }
 
     /** The movable pay and funds as entered; a movable code or fund not entered for the employment starts at nil. */
@@ -110,7 +148,8 @@ final class AllocationPricing {
                 amounts.computeIfPresent(new Movable.Fund(contribution.fund()), (fund, nil) -> contribution.amount());
             }
         }
-        return new Allocation(amounts, residual);
+        amounts.putAll(following.followers());
+        return new Allocation(amounts, residual, following);
     }
 
     Priced price(Allocation allocation) {
@@ -147,15 +186,29 @@ final class AllocationPricing {
     }
 
     /**
-     * The cash before tax that moving {@code item} from {@code current} to {@code suggested} adds, the residual funding it.
-     * A fund contribution is never in hand, which is what {@link #takeHome} already reads: it counts components only (C11).
+     * The cash before tax that moving {@code item} from its amount in {@code from} to its amount in {@code to} adds, the
+     * residual funding it, and its followers' moves with it (W-238d): the residual funds an employer's share, and an
+     * employee's share withheld is cash out. A fund contribution is never in hand, which is what {@link #takeHome}
+     * already reads: it counts components only (C11).
      */
-    Money cashImpact(Movable item, Movable.Pay residual, Money current, Money suggested) {
-        CashNature moved = switch (item) {
+    Money cashImpact(Movable item, Allocation from, Allocation to) {
+        CashNature residual = cashNature(from.residual());
+        Money impact = cashImpact(residual, cashNature(item), from.amount(item), to.amount(item));
+        if (item.equals(following.leader())) {
+            for (Movable follower : following.followers().keySet()) {
+                impact = impact.plus(Following.isFundedByResidual(follower)
+                        ? cashImpact(residual, CashNature.NON_CASH, from.amount(follower), to.amount(follower))
+                        : inHand(cashNature(follower), to.amount(follower).minus(from.amount(follower))));
+            }
+        }
+        return impact;
+    }
+
+    private CashNature cashNature(Movable item) {
+        return switch (item) {
             case Movable.Pay pay -> pack.components().get(pay.code()).cashNature();
             case Movable.Fund fund -> CashNature.NON_CASH;
         };
-        return cashImpact(pack.components().get(residual.code()).cashNature(), moved, current, suggested);
     }
 
     /** By the take-home rule (C3): the moved component gains what the residual gives up. */

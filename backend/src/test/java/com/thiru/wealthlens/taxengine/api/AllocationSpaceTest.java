@@ -47,12 +47,12 @@ class AllocationSpaceTest {
     }
 
     @Test
-    void constructor_whenTheProvidentFundIsMovable_isRefusedNamingW238d() {
+    void constructor_whenTheProvidentFundIsMovable_isRefusedNamingBasic() {
         // Given / When / Then — employer PF follows basic (A2.2 C8)
         assertThatThrownBy(() -> new AllocationSpace(NodeHarness.plainTaxpayer(), Set.of(),
                 Set.of(EmployerFund.RECOGNISED_PROVIDENT_FUND), ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("follows basic pay")
-                .hasMessageContaining("W-238d");
+                .hasMessageContaining("name BASIC movable");
     }
 
     @Test

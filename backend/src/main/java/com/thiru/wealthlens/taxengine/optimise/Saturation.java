@@ -23,7 +23,7 @@ final class Saturation {
 
     static Money of(AllocationPricing pricing, Allocation from, Movable code, RegimeCode regime) {
         Money low = Money.ZERO;
-        Money high = wholeRupees(from.amount(code).plus(from.residualAmount()));
+        Money high = wholeRupees(from.ceiling(code));
         while (low.isLessThan(high)) {
             Money middle = wholeRupees(low.plus(high).scaledBy(1, 2));
             if (stopsFalling(pricing, from, code, regime, middle)) {

@@ -6,14 +6,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
+import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.test.Fixtures;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -284,5 +287,139 @@ class TaxCalculatorOptimiseTest {
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("NOTIFIED_PENSION_SCHEME is entered more than once");
+    }
+
+    private static final ComponentCode BASIC = ComponentCodes.BASIC;
+    /** Basic pay's pack row ({@code components/BASIC.json}): SALARY, CASH, feeding salary only. */
+    private static final Optimisation.ComponentFacts BASIC_FACTS = new Optimisation.ComponentFacts("SALARY", "CASH",
+            List.of("SAL-SALARY-INCLUDES"));
+    private static final EmployerFundContribution PROVIDENT_FUND_120000 = new EmployerFundContribution(0,
+            EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("120000"));
+
+    /**
+     * Basic as given and special 14L from an OTHER employer, with these pay lines added and contributions entered, and
+     * whether dearness allowance counts for retirement (W-238d).
+     */
+    private static EngineInputs paidBasic(String basic, List<SalaryComponent> added,
+            List<EmployerFundContribution> contributions, boolean dearnessAllowanceCountsForRetirement) {
+        EngineInputs paid = Fixtures.salaried(basic, "1400000", contributions, NOTHING_ACCRUED);
+        Employment held = paid.entered().employments().getFirst();
+        List<SalaryComponent> components = new ArrayList<>(held.components());
+        components.addAll(added);
+        Employment changed = new Employment(components, held.termsIncludeDearnessAllowance(), held.employerKind(),
+                dearnessAllowanceCountsForRetirement, held.companyEmployer());
+        return new EngineInputs(paid.taxYear(), paid.regime(), paid.temporal(),
+                paid.entered().withEmployments(List.of(changed)), paid.assessee(), paid.family(), paid.ledgers(),
+                paid.elections(), paid.capitalGains(), paid.filing());
+    }
+
+    private static AllocationSpace basicMoves(EngineInputs inputs) {
+        return new AllocationSpace(inputs, Set.of(BASIC), Set.of(), SPECIAL, Money.ZERO, 6);
+    }
+
+    @Test
+    void optimise_whenTheProvidentFundFollowsBasic_movesBasicUntilTheResidualIsSpent() {
+        // Given — before: 24L − 75,000 = 23,25,000 → 2,81,250, + 4 % = 2,92,500 (new). The fund follows basic at the
+        // entered 1,20,000 ÷ 10,00,000, so each rupee of basic takes 1.12 from special and salary falls 0.12 a rupee:
+        // basic rises 14,00,000 ÷ 1.12 = 12,50,000 to 22,50,000, the fund to 2,70,000 (under 7,50,000), special to nil.
+        // After: 22,50,000 − 75,000 = 21,75,000 → 2,00,000 + 43,750 = 2,43,750, + 4 % = 2,53,500. Old after: 22,00,000 →
+        // 1,12,500 + 3,60,000 = 4,72,500, + 4 % = 4,91,400 — more. Cash: +12,50,000 − 14,00,000 = −1,50,000.
+        AllocationSpace space = basicMoves(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+                Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
+        assertThat(optimised.fundChanges()).isEmpty();
+        assertThat(optimised.followingChanges()).containsExactly(new Optimisation.FollowingChange(
+                "RECOGNISED_PROVIDENT_FUND", Money.of("120000"), Money.of("270000"), "BASIC"));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
+    }
+
+    @Test
+    void optimise_whenTheEmployeesProvidentFundFollowsToo_countsItsWithholdingInTheCashImpact() {
+        // Given — as the case above, plus 1,20,000 withheld to the fund. Schedule XV is not in the new regime, so the bill
+        // is the same 2,53,500. The withholding rises to 2,70,000: cash −1,50,000 − 1,50,000 = −3,00,000. Old after:
+        // 22,00,000 − 1,50,000 (the Schedule XV cap) = 20,50,000 → 1,12,500 + 3,15,000 = 4,27,500, + 4 % = 4,44,600.
+        AllocationSpace space = basicMoves(paidBasic("1000000",
+                List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))),
+                List.of(PROVIDENT_FUND_120000), false));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+                Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-300000")));
+        assertThat(optimised.followingChanges()).containsExactly(
+                new Optimisation.FollowingChange("EMPLOYEE_PF", Money.of("120000"), Money.of("270000"), "BASIC"),
+                new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", Money.of("120000"), Money.of("270000"),
+                        "BASIC"));
+    }
+
+    @Test
+    void optimise_whenNothingFollowsBasic_suggestsNoChange() {
+        // Given — basic and special are both salary, so no move between them changes the bill
+        AllocationSpace space = basicMoves(paidBasic("1000000", List.of(), List.of(), false));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.changes()).isEmpty();
+        assertThat(optimised.followingChanges()).isEmpty();
+    }
+
+    @Test
+    void optimise_whenBasicIsNilAndTheFundFollowsIt_isRefused() {
+        // Given
+        AllocationSpace space = basicMoves(paidBasic("0", List.of(), List.of(PROVIDENT_FUND_120000), false));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("BASIC must be entered above nil");
+    }
+
+    @Test
+    void optimise_whenDearnessAllowanceCountsForRetirement_isRefused() {
+        // Given
+        AllocationSpace space = basicMoves(paidBasic("1000000",
+                List.of(new SalaryComponent(ComponentCodes.DEARNESS_ALLOWANCE, Money.of("100000"))),
+                List.of(PROVIDENT_FUND_120000), true));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("dearness allowance counts for retirement");
+    }
+
+    @Test
+    void optimise_whenTheFollowerIsEnteredTwice_isRefused() {
+        // Given
+        AllocationSpace space = basicMoves(paidBasic("1000000", List.of(),
+                List.of(PROVIDENT_FUND_120000, PROVIDENT_FUND_120000), false));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no one ratio to basic");
+    }
+
+    @Test
+    void optimise_whenTheEmployeesProvidentFundIsAlsoMovable_isRefused() {
+        // Given
+        AllocationSpace space = new AllocationSpace(paidBasic("1000000",
+                List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))), List.of(), false),
+                Set.of(BASIC, ComponentCodes.EMPLOYEE_PF), Set.of(), SPECIAL, Money.ZERO, 6);
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("EMPLOYEE_PF follows BASIC");
     }
 }

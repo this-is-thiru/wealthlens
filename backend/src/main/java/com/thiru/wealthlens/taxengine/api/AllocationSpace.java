@@ -33,8 +33,8 @@ public record AllocationSpace(EngineInputs base, Set<ComponentCode> movable, Set
             throw new IllegalArgumentException("Name at least one component or fund the optimiser may move");
         }
         if (movableFunds.contains(EmployerFund.RECOGNISED_PROVIDENT_FUND)) {
-            throw new IllegalArgumentException("The employer's provident fund contribution follows basic pay (A2.2 C8), so"
-                    + " it moves only with basic, which the optimiser does not yet do (W-238d)");
+            throw new IllegalArgumentException("The employer's provident fund contribution follows basic pay (A2.2 C8):"
+                    + " name BASIC movable, and the contribution follows it");
         }
         if (movable.contains(residual)) {
             throw new IllegalArgumentException("The residual component " + residual.value()

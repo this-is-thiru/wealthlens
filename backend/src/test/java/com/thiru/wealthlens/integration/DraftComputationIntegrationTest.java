@@ -730,6 +730,14 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
     /** Basic 16,00,000 and special 8,00,000 from an OTHER employer, no rent, 2,92,500 at source (W-238c). */
     private String salariedDraft() {
+        return salariedDraft(1600000, 800000, "");
+    }
+
+    /**
+     * Basic and special as given from an OTHER employer, no rent, 2,92,500 at source, with {@code addedOps} — patch
+     * operations, each followed by a comma — applied too (W-238d).
+     */
+    private String salariedDraft(int basic, int special, String addedOps) {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT", "holdsPortfolio": false}""", null);
@@ -738,12 +746,13 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
         ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
                 [{"op": "add", "path": "/entered/employments/-", "value": {
-                  "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": 1600000}},
-                                 {"code": {"value": "SPECIAL_ALLOWANCE"}, "annualAmount": {"amountInRupees": 800000}}],
+                  "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": %d}},
+                                 {"code": {"value": "SPECIAL_ALLOWANCE"}, "annualAmount": {"amountInRupees": %d}}],
                   "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
                   "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}},
-                 {"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"},
-                 {"op": "replace", "path": "/filing/taxAtSource", "value": {"amountInRupees": 292500}}]""", "\"rev-0\"");
+                 %s{"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"},
+                 {"op": "replace", "path": "/filing/taxAtSource", "value": {"amountInRupees": 292500}}]"""
+                .formatted(basic, special, addedOps), "\"rev-0\"");
         assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
         return draftId;
     }
@@ -774,7 +783,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void optimise_whenTheProvidentFundIsMovable_expected400NamingW238d() {
+    void optimise_whenTheProvidentFundIsMovable_expected400NamingBasic() {
         // Given
         String draftId = salariedDraft();
 
@@ -784,6 +793,36 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(refused.getBody()).contains("W-238d");
+        assertThat(refused.getBody()).contains("name BASIC movable");
+    }
+
+    @Test
+    void optimise_whenBasicIsMovableAndTheProvidentFundFollows_suggestsBothMoves() {
+        // Given — TaxCalculatorOptimiseTest's case: basic 10,00,000 → 22,50,000, the fund at its entered 12 % of basic
+        // 1,20,000 → 2,70,000, special to nil; 2,92,500 → 2,53,500 in the new regime, cash −1,50,000
+        String draftId = salariedDraft(1000000, 1400000, """
+                {"op": "add", "path": "/entered/employerContributions/-", "value": {"employment": 0,
+                  "fund": "RECOGNISED_PROVIDENT_FUND", "amount": {"amountInRupees": 120000}}},
+                """);
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId,
+                "{\"movable\": [\"BASIC\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody());
+        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("253500");
+        JsonNode change = view.at("/changes/0");
+        assertThat(change.get("component").asString()).isEqualTo("BASIC");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("2250000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("39000");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-150000");
+        JsonNode following = view.at("/followingChanges/0");
+        assertThat(following.get("name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
+        assertThat(amountAt(following, "/suggested")).isEqualByComparingTo("270000");
+        assertThat(following.get("follows").asString()).isEqualTo("BASIC");
+        assertThat(view.get("fundChanges").size()).isZero();
     }
 }

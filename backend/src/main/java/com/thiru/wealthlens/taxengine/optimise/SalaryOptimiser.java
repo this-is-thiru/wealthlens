@@ -64,7 +64,7 @@ public final class SalaryOptimiser {
         List<RegimeCode> offered = pricing.price(entered).offered();
         SortedMap<Movable, SortedSet<Money>> candidates = new TreeMap<>(Movable.ORDER);
         for (Movable code : entered.amounts().keySet()) {
-            if (code.equals(entered.residual())) {
+            if (code.equals(entered.residual()) || entered.following().follows(code)) {
                 continue;
             }
             SortedSet<Money> points = new TreeSet<>(List.of(Money.ZERO, entered.amount(code)));
@@ -156,17 +156,23 @@ public final class SalaryOptimiser {
         AllocationPricing.Priced after = pricing.price(answer);
         List<Optimisation.Change> changes = new ArrayList<>();
         List<Optimisation.FundChange> fundChanges = new ArrayList<>();
+        List<Optimisation.FollowingChange> followingChanges = new ArrayList<>();
         for (Movable item : entered.amounts().keySet()) {
             Money current = entered.amount(item);
             Money suggested = answer.amount(item);
             if (item.equals(entered.residual()) || suggested.equals(current)) {
                 continue;
             }
+            if (entered.following().follows(item)) {
+                followingChanges.add(new Optimisation.FollowingChange(item.name(), current, suggested,
+                        entered.following().leader().name()));
+                continue;
+            }
             Allocation alone = entered.moved(item, suggested);
             Optional<Money> savingAlone = alone.isFeasible()
                     ? Optional.of(before.bill().minus(pricing.price(alone).bill()))
                     : Optional.empty();
-            Money cashImpact = pricing.cashImpact(item, entered.residual(), current, suggested);
+            Money cashImpact = pricing.cashImpact(item, entered, alone);
             switch (item) {
                 case Movable.Pay pay -> changes.add(new Optimisation.Change(pay.name(), pricing.facts(pay), current,
                         suggested, savingAlone, cashImpact));
@@ -179,6 +185,6 @@ public final class SalaryOptimiser {
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "
                 + verifiedNames + " found " + after.bill() + " — the candidates miss a breakpoint (G6.3)");
         return new Optimisation(before.regime().value(), before.bill(), after.regime().value(), after.bill(), changes,
-                fundChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy);
+                fundChanges, followingChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy);
     }
 }

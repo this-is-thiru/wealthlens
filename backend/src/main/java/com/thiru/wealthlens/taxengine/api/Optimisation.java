@@ -15,6 +15,7 @@ import java.util.Optional;
  * @param billAfter that regime's net payable — never more than {@code billBefore}
  * @param changes each movable component whose amount changes, in code order
  * @param fundChanges each movable fund whose contribution changes, by fund name (W-238c)
+ * @param followingChanges each amount that changes only because what it follows moved, by name (W-238d)
  * @param residualAfter the residual component's amount after every change
  * @param verified the components the exhaustive check covered, recorded because the breadth is a tuning knob (G6.3)
  * @param pipelineRuns the whole computations run to reach the answer
@@ -22,11 +23,13 @@ import java.util.Optional;
  *     breakpoint (G6.3)
  */
 public record Optimisation(String regimeBefore, Money billBefore, String regimeAfter, Money billAfter,
-        List<Change> changes, List<FundChange> fundChanges, Money residualAfter, List<String> verified, int pipelineRuns, Optional<String> discrepancy) {
+        List<Change> changes, List<FundChange> fundChanges, List<FollowingChange> followingChanges, Money residualAfter,
+        List<String> verified, int pipelineRuns, Optional<String> discrepancy) {
 
     public Optimisation {
         changes = List.copyOf(changes);
         fundChanges = List.copyOf(fundChanges);
+        followingChanges = List.copyOf(followingChanges);
         verified = List.copyOf(verified);
     }
 
@@ -59,6 +62,19 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param cashImpact the change in cash before tax: the residual's pay given up, since a contribution is never in hand
      */
     public record FundChange(String fund, Money current, Money suggested, Optional<Money> savingAlone, Money cashImpact) {
+    }
+
+    /**
+     * An amount that moves only with another (A2.2 C8; W-238d): a provident fund contribution kept at its entered ratio to
+     * basic. It is no move a user can make alone, so it has no saving of its own; the change it follows carries the
+     * saving and the cash impact of both.
+     *
+     * @param name the employee's component code or the employer's {@code EmployerFund} name
+     * @param current its amount as entered
+     * @param suggested its amount in the answer
+     * @param follows the component it follows
+     */
+    public record FollowingChange(String name, Money current, Money suggested, String follows) {
     }
 
     /**
