@@ -103,8 +103,8 @@ public class DraftComputationService {
         int breadth = optimiserSettings.breadthFor(request.verificationBreadth());
         RegimeCode regime = taxCalculator.defaultRegime(TaxYearId.of(year));
         Optimisation optimisation = taxCalculator.optimise(new AllocationSpace(
-                assembler.assemble(email, draftId, regime, LocalDate.now(clock)).inputs(), request.movableCodes(),
-                request.movableFundNames(), request.residualCode(), request.cashFloorRupees(), breadth,
+                assembler.assemble(email, draftId, regime, LocalDate.now(clock)).inputs(), request.moves(),
+                request.residualCode(), request.cashFloorRupees(), breadth,
                 request.providentFundTerms()));
         return DraftOptimisation.of(optimisation, hrSupportTable);
     }

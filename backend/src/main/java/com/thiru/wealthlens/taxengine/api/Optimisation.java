@@ -17,6 +17,8 @@ import java.util.Optional;
  * @param changes each movable component whose amount changes, in code order
  * @param fundChanges each movable fund whose contribution changes, by fund name (W-238c)
  * @param followingChanges each amount that changes only because what it follows moved, by name (W-238d)
+ * @param contributionChanges each employee's own contribution the answer adds to, in code order (W-238k): current is
+ *     the amount entered, suggested that amount with the addition, and the cash impact the addition paid from take-home
  * @param residualAfter the residual component's amount after every change
  * @param verified the components the exhaustive check covered, recorded because the breadth is a tuning knob (G6.3)
  * @param pipelineRuns the whole computations run to reach the answer
@@ -26,13 +28,15 @@ import java.util.Optional;
  *     that needs it; the search kept to what the engine could price, so entering the fact may widen the answer (W-238h)
  */
 public record Optimisation(String regimeBefore, Money billBefore, String regimeAfter, Money billAfter,
-        List<Change> changes, List<FundChange> fundChanges, List<FollowingChange> followingChanges, Money residualAfter,
+        List<Change> changes, List<FundChange> fundChanges, List<FollowingChange> followingChanges,
+        List<Change> contributionChanges, Money residualAfter,
         List<String> verified, int pipelineRuns, Optional<String> discrepancy, Optional<UnpricedNotice> unpriced) {
 
     public Optimisation {
         changes = List.copyOf(changes);
         fundChanges = List.copyOf(fundChanges);
         followingChanges = List.copyOf(followingChanges);
+        contributionChanges = List.copyOf(contributionChanges);
         verified = List.copyOf(verified);
     }
 

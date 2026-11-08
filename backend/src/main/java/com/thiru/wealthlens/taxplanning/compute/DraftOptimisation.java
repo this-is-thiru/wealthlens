@@ -11,7 +11,8 @@ import java.util.stream.Stream;
  *
  * @param optimisation the engine's answer
  * @param hrSupport one entry per changed component, in the answer's order, then per changed fund. An amount that only
- *     follows another has none of its own: it moves with what it follows (W-238d)
+ *     follows another has none of its own: it moves with what it follows (W-238d). Nor has an employee's own
+ *     contribution: it is the employee's declaration, not a structure the employer agrees to (W-238k C5a)
  */
 public record DraftOptimisation(Optimisation optimisation, List<HrSupport> hrSupport) {
 

@@ -157,6 +157,7 @@ public final class SalaryOptimiser {
         List<Optimisation.Change> changes = new ArrayList<>();
         List<Optimisation.FundChange> fundChanges = new ArrayList<>();
         List<Optimisation.FollowingChange> followingChanges = new ArrayList<>();
+        List<Optimisation.Change> contributionChanges = new ArrayList<>();
         for (Movable item : entered.amounts().keySet()) {
             Money current = entered.amount(item);
             Money suggested = answer.amount(item);
@@ -174,10 +175,13 @@ public final class SalaryOptimiser {
                     : Optional.empty();
             Money cashImpact = pricing.cashImpact(item, entered, alone);
             switch (item) {
-                case Movable.Pay pay -> changes.add(new Optimisation.Change(pay.name(), pricing.facts(pay), current,
+                case Movable.Pay pay -> changes.add(new Optimisation.Change(pay.name(), pricing.facts(pay.code()), current,
                         suggested, savingAlone, cashImpact));
                 case Movable.Fund fund -> fundChanges.add(new Optimisation.FundChange(fund.name(),
                         pricing.feedsInto(fund), current, suggested, savingAlone, cashImpact, pricing.liquidity(fund)));
+                case Movable.Contribution contribution -> contributionChanges.add(new Optimisation.Change(
+                        contribution.name(), pricing.facts(contribution.code()), pricing.entered(contribution),
+                        pricing.entered(contribution).plus(suggested), savingAlone, cashImpact));
             }
         }
         List<String> verifiedNames = verified.stream().map(Movable::name).toList();
@@ -185,7 +189,7 @@ public final class SalaryOptimiser {
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "
                 + verifiedNames + " found " + after.bill() + " — the candidates miss a breakpoint (G6.3)");
         return new Optimisation(before.regime().value(), before.bill(), after.regime().value(), after.bill(), changes,
-                fundChanges, followingChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy,
+                fundChanges, followingChanges, contributionChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy,
                 pricing.unpriced());
     }
 }

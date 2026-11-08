@@ -8,7 +8,7 @@ import java.util.TreeMap;
 
 /**
  * One way of dividing the movable pay: the amount of each movable item, of what follows basic, and of the residual
- * that funds them. A value, so a priced allocation can be remembered and never computed twice.
+ * that funds them, with what the employee adds to each contribution named (W-238k). A value, so a priced allocation can be remembered and never computed twice.
  *
  * @param amounts each movable item's amount, each follower's and the residual's, in {@link Movable#ORDER}
  * @param residual the funding component
@@ -30,12 +30,16 @@ record Allocation(SortedMap<Movable, Money> amounts, Movable.Pay residual, Follo
 
     /**
      * {@code code} set to {@code target}, the difference taken from or returned to the residual. Where {@code code} leads,
-     * its followers move with it, and the residual funds the employer's share too (C1, C8).
+     * its followers move with it, and the residual funds the employer's share too (C1, C8). An employee's contribution
+     * is paid from take-home, so the residual stays as it is (W-238k).
      */
     Allocation moved(Movable code, Money target) {
         SortedMap<Movable, Money> next = copyOf(amounts);
-        Money taken = target.minus(amount(code));
         next.put(code, target);
+        if (code instanceof Movable.Contribution) {
+            return new Allocation(next, residual, following);
+        }
+        Money taken = target.minus(amount(code));
         if (code.equals(following.leader())) {
             for (Movable follower : following.followers().keySet()) {
                 Money to = following.amountAt(follower, target);
@@ -49,7 +53,7 @@ record Allocation(SortedMap<Movable, Money> amounts, Movable.Pay residual, Follo
         return new Allocation(next, residual, following);
     }
 
-    /** The most {@code code} can reach before the residual is spent. */
+    /** The most {@code code}, pay or a fund, can reach before the residual is spent. */
     Money ceiling(Movable code) {
         return code.equals(following.leader())
                 ? following.ceiling(amount(code), residualAmount())

@@ -81,10 +81,11 @@ final class AllocationPricing {
     /**
      * @throws IllegalArgumentException if a code is not in the year's pack, or its row's kind is not {@code SALARY}
      *     (W-238g), or the residual is not in exactly one employment, or a code appears twice in it, or a movable fund
-     *     has two contributions entered for it, or basic cannot be moved with what follows it ({@link #following})
+     *     has two contributions entered for it, or basic cannot be moved with what follows it ({@link #following}), or a
+     *     contribution is not one the employee can add to ({@link #requireContributions})
      */
     static AllocationPricing over(NodeRegistry registry, RulePack pack, RegimeSpec computing, AllocationSpace space) {
-        List<ComponentCode> codes = new ArrayList<>(space.movable());
+        List<ComponentCode> codes = new ArrayList<>(space.moves().movable());
         codes.add(space.residual());
         for (ComponentCode code : codes) {
             if (!pack.components().containsKey(code)) {
@@ -94,7 +95,8 @@ final class AllocationPricing {
             if (kind != ComponentKind.SALARY) {
                 throw new IllegalArgumentException(code.value() + " is " + kind.name() + " in " + pack.taxYear().label()
                         + ", not pay: only a SALARY component is drawn from the cost to company, so only one can move"
-                        + " or fund the moves (A2.1)");
+                        + " or fund the moves (A2.1)" + (kind == ComponentKind.EMPLOYEE_CONTRIBUTION
+                                ? "; name it under contributions, paid from take-home (W-238k)" : ""));
             }
         }
         List<Employment> employments = space.base().entered().employments();
@@ -105,17 +107,40 @@ final class AllocationPricing {
                     + " must be in exactly one employment, not " + holding.size());
         }
         Employment held = employments.get(holding.get(0));
+        codes.addAll(space.moves().contributions());
         codes.stream().filter(code -> count(held, code) > 1).findFirst().ifPresent(code -> {
             throw new IllegalArgumentException(code.value() + " appears more than once in the employment");
         });
         int employment = holding.get(0);
-        space.movableFunds().stream().filter(fund -> contributions(space.base(), employment, fund) > 1).findFirst()
+        space.moves().movableFunds().stream().filter(fund -> contributions(space.base(), employment, fund) > 1).findFirst()
                 .ifPresent(fund -> {
                     throw new IllegalArgumentException("The employer's contribution to " + fund.name()
                             + " is entered more than once for the employment the residual is in");
                 });
-        return new AllocationPricing(registry, pack, computing, space.base(), employment,
-                following(space, held, employment));
+        Following following = following(space, held, employment);
+        requireContributions(pack, space.moves().contributions(), following);
+        return new AllocationPricing(registry, pack, computing, space.base(), employment, following);
+    }
+
+    /**
+     * Each contribution must be an employee's own ({@code EMPLOYEE_CONTRIBUTION} in the year's pack, W-238k C1a), and not a
+     * share that follows basic: what is added on top of a following share is W-238k1's (C2a).
+     */
+    private static void requireContributions(RulePack pack, Set<ComponentCode> contributions, Following following) {
+        for (ComponentCode code : contributions) {
+            if (!pack.components().containsKey(code)) {
+                throw new IllegalArgumentException(pack.taxYear().label() + " defines no component " + code.value());
+            }
+            ComponentKind kind = pack.components().get(code).kind();
+            if (kind != ComponentKind.EMPLOYEE_CONTRIBUTION) {
+                throw new IllegalArgumentException(code.value() + " is " + kind.name() + " in " + pack.taxYear().label()
+                        + ", not an employee's own contribution, so it cannot be added to from take-home (W-238k)");
+            }
+            if (following.follows(new Movable.Pay(code))) {
+                throw new IllegalArgumentException(code.value() + " follows BASIC here, so what is added on top of it"
+                        + " cannot be told from what follows (W-238k1)");
+            }
+        }
     }
 
     /**
@@ -129,7 +154,7 @@ final class AllocationPricing {
     private static Following following(AllocationSpace space, Employment held, int employment) {
         Movable.Pay basic = new Movable.Pay(ComponentCodes.BASIC);
         ProvidentFundTerms terms = space.providentFundTerms();
-        boolean basicMoves = space.movable().contains(ComponentCodes.BASIC);
+        boolean basicMoves = space.moves().movable().contains(ComponentCodes.BASIC);
         requireHeldShareEntered(terms.employerShareFollowsBasic(), "employerShareFollowsBasic", basicMoves,
                 contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 0);
         requireHeldShareEntered(terms.employeeShareFollowsBasic(), "employeeShareFollowsBasic", basicMoves,
@@ -140,7 +165,7 @@ final class AllocationPricing {
         boolean dearnessAllowanceInBase = dearnessAllowance.isGreaterThan(Money.ZERO)
                 && terms.baseIncludesDearnessAllowance().orElse(held.dearnessAllowanceCountsForRetirement());
         if (!followers.isEmpty() && dearnessAllowanceInBase
-                && space.movable().contains(ComponentCodes.DEARNESS_ALLOWANCE)) {
+                && space.moves().movable().contains(ComponentCodes.DEARNESS_ALLOWANCE)) {
             throw new IllegalArgumentException("DEARNESS_ALLOWANCE cannot move here: it is in the provident fund's base,"
                     + " and only BASIC leads the contributions (A2.2 C8; W-238j1)");
         }
@@ -211,11 +236,15 @@ final class AllocationPricing {
         }
     }
 
-    /** The movable pay and funds as entered; a movable code or fund not entered for the employment starts at nil. */
+    /**
+     * The movable pay and funds as entered, each contribution with nothing added; a movable code or fund not entered for
+     * the employment starts at nil.
+     */
     Allocation entered(AllocationSpace space) {
         SortedMap<Movable, Money> amounts = new TreeMap<>(Movable.ORDER);
-        space.movable().forEach(code -> amounts.put(new Movable.Pay(code), Money.ZERO));
-        space.movableFunds().forEach(fund -> amounts.put(new Movable.Fund(fund), Money.ZERO));
+        space.moves().movable().forEach(code -> amounts.put(new Movable.Pay(code), Money.ZERO));
+        space.moves().movableFunds().forEach(fund -> amounts.put(new Movable.Fund(fund), Money.ZERO));
+        space.moves().contributions().forEach(code -> amounts.put(new Movable.Contribution(code), Money.ZERO));
         Movable.Pay residual = new Movable.Pay(space.residual());
         amounts.put(residual, Money.ZERO);
         for (SalaryComponent component : base.entered().employments().get(employment).components()) {
@@ -284,20 +313,33 @@ final class AllocationPricing {
         });
     }
 
-    /** Cash in hand after tax: every CASH component less every CASH_OUTFLOW one, less the bill (C3). */
+    /** Cash in hand after tax: {@link #cashBeforeTax} less the bill (C3). */
     Money takeHome(Allocation allocation) {
+        return cashBeforeTax(allocation).minus(price(allocation).bill());
+    }
+
+    /**
+     * Every CASH component less every CASH_OUTFLOW one: the most an employee could pay from take-home before tax, and
+     * so the ceiling of what a contribution can add (W-238k C3a).
+     */
+    Money cashBeforeTax(Allocation allocation) {
         Money cash = Money.ZERO;
         for (Employment each : applied(allocation).entered().employments()) {
             for (SalaryComponent component : each.components()) {
                 cash = cash.plus(inHand(pack.components().get(component.code()).cashNature(), component.annualAmount()));
             }
         }
-        return cash.minus(price(allocation).bill());
+        return cash;
     }
 
-    /** What the year's pack says {@code pay} is (W-238b). */
-    Optimisation.ComponentFacts facts(Movable.Pay pay) {
-        ComponentDefinition row = pack.components().get(pay.code());
+    /** {@code contribution}'s amount as entered for the employment, nil where it is not entered (W-238k). */
+    Money entered(Movable.Contribution contribution) {
+        return enteredAmount(base.entered().employments().get(employment), contribution.code());
+    }
+
+    /** What the year's pack says {@code code} is (W-238b). */
+    Optimisation.ComponentFacts facts(ComponentCode code) {
+        ComponentDefinition row = pack.components().get(code);
         return new Optimisation.ComponentFacts(row.kind().name(), row.cashNature().name(),
                 row.feedsInto().stream().map(RuleId::value).sorted().toList(), published(row.liquidity()));
     }
@@ -313,6 +355,8 @@ final class AllocationPricing {
             case Movable.Pay pay -> pack.components().get(pay.code()).feedsInto().stream().map(RuleId::value)
                     .sorted().toList();
             case Movable.Fund fund -> fundRow(fund).feedsInto().stream().map(RuleId::value).sorted().toList();
+            case Movable.Contribution contribution -> pack.components().get(contribution.code()).feedsInto().stream()
+                    .map(RuleId::value).sorted().toList();
         };
     }
 
@@ -325,6 +369,7 @@ final class AllocationPricing {
         return published(switch (item) {
             case Movable.Pay pay -> pack.components().get(pay.code()).liquidity();
             case Movable.Fund fund -> fundRow(fund).liquidity();
+            case Movable.Contribution contribution -> pack.components().get(contribution.code()).liquidity();
         });
     }
 
@@ -355,9 +400,13 @@ final class AllocationPricing {
      * The cash before tax that moving {@code item} from its amount in {@code from} to its amount in {@code to} adds, the
      * residual funding it, and its followers' moves with it (W-238d): the residual funds an employer's share, and an
      * employee's share withheld is cash out. A fund contribution is never in hand, which is what {@link #takeHome}
-     * already reads: it counts components only (C11).
+     * already reads: it counts components only (C11). What an employee adds to a contribution is paid from take-home,
+     * so it is cash out and the residual plays no part (W-238k).
      */
     Money cashImpact(Movable item, Allocation from, Allocation to) {
+        if (item instanceof Movable.Contribution) {
+            return inHand(cashNature(item), to.amount(item).minus(from.amount(item)));
+        }
         CashNature residual = cashNature(from.residual());
         Money impact = cashImpact(residual, cashNature(item), from.amount(item), to.amount(item));
         if (item.equals(following.leader())) {
@@ -374,6 +423,7 @@ final class AllocationPricing {
         return switch (item) {
             case Movable.Pay pay -> pack.components().get(pay.code()).cashNature();
             case Movable.Fund fund -> CashNature.NON_CASH;
+            case Movable.Contribution contribution -> pack.components().get(contribution.code()).cashNature();
         };
     }
 
@@ -411,11 +461,17 @@ final class AllocationPricing {
         List<SalaryComponent> components = new ArrayList<>();
         for (SalaryComponent component : held.components()) {
             Money amount = allocation.amounts().get(new Movable.Pay(component.code()));
-            components.add(amount == null ? component : new SalaryComponent(component.code(), amount));
+            Money added = allocation.amounts().getOrDefault(new Movable.Contribution(component.code()), Money.ZERO);
+            components.add(amount == null && added.equals(Money.ZERO) ? component
+                    : new SalaryComponent(component.code(), (amount == null ? component.annualAmount() : amount).plus(added)));
         }
         allocation.amounts().forEach((item, amount) -> {
             if (item instanceof Movable.Pay pay && count(held, pay.code()) == 0) {
                 components.add(new SalaryComponent(pay.code(), amount));
+            }
+            if (item instanceof Movable.Contribution contribution && count(held, contribution.code()) == 0
+                    && amount.isGreaterThan(Money.ZERO)) {
+                components.add(new SalaryComponent(contribution.code(), amount));
             }
         });
         employments.set(employment, new Employment(components, held.termsIncludeDearnessAllowance(),

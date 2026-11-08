@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxplanning.compute;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.api.AllocationSpace;
 import com.thiru.wealthlens.taxengine.api.ProvidentFundTerms;
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -18,14 +19,16 @@ import java.util.stream.Collectors;
  * @param movable the codes of the components that may move
  * @param movableFunds the {@code EmployerFund} names of the employer contributions that may move; none when absent
  *     (W-238c)
+ * @param contributions the codes of the employee's own contributions that may rise above what is entered, paid from
+ *     take-home; none when absent (W-238k)
  * @param residual the code of the taxable component that funds every move
  * @param cashFloor the least cash take-home after tax, in rupees
  * @param verificationBreadth how many components the exhaustive check covers; the setting when absent
  * @param providentFund how the provident fund moves with basic (W-238i, W-238j); each share following basic, the base
  *     not stated, when absent
  */
-public record DraftOptimisationRequest(List<String> movable, Optional<List<String>> movableFunds, String residual,
-        String cashFloor, Optional<Integer> verificationBreadth,
+public record DraftOptimisationRequest(List<String> movable, Optional<List<String>> movableFunds,
+        Optional<List<String>> contributions, String residual, String cashFloor, Optional<Integer> verificationBreadth,
         Optional<DraftProvidentFundTerms> providentFund) {
 
     public DraftOptimisationRequest {
@@ -34,6 +37,7 @@ public record DraftOptimisationRequest(List<String> movable, Optional<List<Strin
         }
         movable = List.copyOf(movable);
         movableFunds = movableFunds == null ? Optional.empty() : movableFunds.map(List::copyOf);
+        contributions = contributions == null ? Optional.empty() : contributions.map(List::copyOf);
         if (verificationBreadth == null) {
             verificationBreadth = Optional.empty();
         }
@@ -47,8 +51,11 @@ public record DraftOptimisationRequest(List<String> movable, Optional<List<Strin
         return providentFund.map(DraftProvidentFundTerms::toTerms).orElse(ProvidentFundTerms.FOLLOW_BASIC);
     }
 
-    Set<ComponentCode> movableCodes() {
-        return movable.stream().map(ComponentCode::new).collect(Collectors.toUnmodifiableSet());
+    /** What may move, as the engine's (W-238k C6a). */
+    AllocationSpace.Moves moves() {
+        return new AllocationSpace.Moves(movable.stream().map(ComponentCode::new).collect(Collectors.toUnmodifiableSet()),
+                movableFundNames(), contributions.orElse(List.of()).stream().map(ComponentCode::new)
+                        .collect(Collectors.toUnmodifiableSet()));
     }
 
     /**

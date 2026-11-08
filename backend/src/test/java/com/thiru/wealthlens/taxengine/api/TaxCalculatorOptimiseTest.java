@@ -63,7 +63,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace space(EngineInputs inputs, Set<ComponentCode> movable, String floor, int breadth) {
-        return new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.of(floor), breadth, ProvidentFundTerms.FOLLOW_BASIC);
+        return new AllocationSpace(inputs, new AllocationSpace.Moves(movable, Set.of(), Set.of()), SPECIAL, Money.of(floor), breadth, ProvidentFundTerms.FOLLOW_BASIC);
     }
 
     @Test
@@ -174,7 +174,7 @@ class TaxCalculatorOptimiseTest {
     @Test
     void optimise_whenTheResidualIsNotInAnyEmployment_isRefused() {
         // Given
-        AllocationSpace space = new AllocationSpace(flipsWithHra(), Set.of(HRA), Set.of(), ComponentCodes.CONVEYANCE_ALLOWANCE,
+        AllocationSpace space = new AllocationSpace(flipsWithHra(), new AllocationSpace.Moves(Set.of(HRA), Set.of(), Set.of()), ComponentCodes.CONVEYANCE_ALLOWANCE,
                 Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
@@ -200,7 +200,8 @@ class TaxCalculatorOptimiseTest {
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("EMPLOYEE_NPS").hasMessageContaining("EMPLOYEE_CONTRIBUTION");
+                .hasMessageContaining("EMPLOYEE_NPS").hasMessageContaining("EMPLOYEE_CONTRIBUTION")
+                .hasMessageContaining("name it under contributions");
     }
 
     /** {@code components/PROFESSIONAL_TAX.json}: STATUTORY_DEDUCTION. */
@@ -218,7 +219,7 @@ class TaxCalculatorOptimiseTest {
     @Test
     void optimise_whenTheResidualIsNotPay_isRefusedNamingItsKind() {
         // Given
-        AllocationSpace space = new AllocationSpace(flipsWithHra(), Set.of(HRA), Set.of(),
+        AllocationSpace space = new AllocationSpace(flipsWithHra(), new AllocationSpace.Moves(Set.of(HRA), Set.of(), Set.of()),
                 ComponentCodes.LIFE_INSURANCE_PREMIUM, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
@@ -275,7 +276,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace funds(EngineInputs inputs, Set<EmployerFund> movable) {
-        return new AllocationSpace(inputs, Set.of(), movable, SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
+        return new AllocationSpace(inputs, new AllocationSpace.Moves(Set.of(), movable, Set.of()), SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
     }
 
     @Test
@@ -438,7 +439,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace basicMoves(EngineInputs inputs) {
-        return new AllocationSpace(inputs, Set.of(BASIC), Set.of(), SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
+        return new AllocationSpace(inputs, new AllocationSpace.Moves(Set.of(BASIC), Set.of(), Set.of()), SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
     }
 
     @Test
@@ -544,8 +545,7 @@ class TaxCalculatorOptimiseTest {
     void optimise_whenTheEmployeesProvidentFundIsAlsoMovable_isRefusedAsNotPay() {
         // Given
         AllocationSpace space = new AllocationSpace(paidBasic("1000000",
-                List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))), List.of(), false),
-                Set.of(BASIC, ComponentCodes.EMPLOYEE_PF), Set.of(), SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
+                List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))), List.of(), false), new AllocationSpace.Moves(Set.of(BASIC, ComponentCodes.EMPLOYEE_PF), Set.of(), Set.of()), SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
@@ -553,7 +553,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace basicMovesUnder(EngineInputs inputs, ProvidentFundTerms terms) {
-        return new AllocationSpace(inputs, Set.of(BASIC), Set.of(), SPECIAL, Money.ZERO, 6, terms);
+        return new AllocationSpace(inputs, new AllocationSpace.Moves(Set.of(BASIC), Set.of(), Set.of()), SPECIAL, Money.ZERO, 6, terms);
     }
 
     @Test
@@ -627,8 +627,7 @@ class TaxCalculatorOptimiseTest {
     @Test
     void optimise_whenAShareIsHeldButBasicIsNotMovable_isRefused() {
         // Given
-        AllocationSpace space = new AllocationSpace(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false),
-                Set.of(UNIFORM), Set.of(), SPECIAL, Money.ZERO, 6, new ProvidentFundTerms(false, true, Optional.empty()));
+        AllocationSpace space = new AllocationSpace(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false), new AllocationSpace.Moves(Set.of(UNIFORM), Set.of(), Set.of()), SPECIAL, Money.ZERO, 6, new ProvidentFundTerms(false, true, Optional.empty()));
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
@@ -693,9 +692,9 @@ class TaxCalculatorOptimiseTest {
         EngineInputs inputs = paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000), List.of(PROVIDENT_FUND_120000),
                 true);
         Set<ComponentCode> movable = Set.of(BASIC, ComponentCodes.DEARNESS_ALLOWANCE);
-        AllocationSpace stated = new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.ZERO, 6,
+        AllocationSpace stated = new AllocationSpace(inputs, new AllocationSpace.Moves(movable, Set.of(), Set.of()), SPECIAL, Money.ZERO, 6,
                 baseIncludesDearnessAllowance(true));
-        AllocationSpace unstated = new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.ZERO, 6,
+        AllocationSpace unstated = new AllocationSpace(inputs, new AllocationSpace.Moves(movable, Set.of(), Set.of()), SPECIAL, Money.ZERO, 6,
                 ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
@@ -709,7 +708,7 @@ class TaxCalculatorOptimiseTest {
     void optimise_whenTheBaseIsStatedButChangesNothing_isRefusedSayingWhy() {
         // Given — BASIC not movable; no share following; no dearness allowance entered
         AllocationSpace basicStill = new AllocationSpace(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
-                List.of(PROVIDENT_FUND_120000), false), Set.of(UNIFORM), Set.of(), SPECIAL, Money.ZERO, 6,
+                List.of(PROVIDENT_FUND_120000), false), new AllocationSpace.Moves(Set.of(UNIFORM), Set.of(), Set.of()), SPECIAL, Money.ZERO, 6,
                 baseIncludesDearnessAllowance(true));
         AllocationSpace nothingFollows = basicMovesUnder(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
                 List.of(), false), baseIncludesDearnessAllowance(true));
@@ -723,5 +722,171 @@ class TaxCalculatorOptimiseTest {
                 .hasMessageContaining("no provident fund share follows basic");
         assertThatThrownBy(() -> CALCULATOR.optimise(noAllowance)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no dearness allowance is entered");
+    }
+
+    // W-238k — an employee's own contribution, added on top of what is entered and paid from take-home. Figures: slabs
+    // R3 (01-rulebook.md:88-100, :117, :1689), standard deductions :540-541, cess 4 % :458; Schedule XV's 1,50,000
+    // ceiling (DED-80C-001, :1076) with the NPS sub-cap at 10 % of salary first (DED-80C-NPS-CAP-001, :1078); own NPS
+    // 50,000 on what the sub-cap left (DED-NPS-SELF-001, :972; 08-golden-tests.md T5-1). Both old regime only.
+
+    /** Employee NPS's pack row ({@code components/EMPLOYEE_NPS.json}): the two rules it feeds, sorted. */
+    private static final List<String> EMPLOYEE_NPS_FEEDS = List.of("DED-NPS-OWN", "DED-SCHEDULE-XV");
+
+    private static AllocationSpace contributing(EngineInputs inputs, Set<ComponentCode> movable,
+            Set<ComponentCode> contributions, String floor) {
+        return new AllocationSpace(inputs, new AllocationSpace.Moves(movable, Set.of(), contributions), SPECIAL,
+                Money.of(floor), 6, ProvidentFundTerms.FOLLOW_BASIC);
+    }
+
+    /** {@link #flipsWithHra} with these pay lines added to its one employment. */
+    private static EngineInputs flipsWithHraAnd(SalaryComponent... added) {
+        EngineInputs paid = flipsWithHra();
+        Employment held = paid.entered().employments().getFirst();
+        List<SalaryComponent> components = new ArrayList<>(held.components());
+        components.addAll(List.of(added));
+        Employment changed = new Employment(components, held.termsIncludeDearnessAllowance(), held.employerKind(),
+                held.dearnessAllowanceCountsForRetirement(), held.companyEmployer());
+        return new EngineInputs(paid.taxYear(), paid.regime(), paid.temporal(),
+                paid.entered().withEmployments(List.of(changed)), paid.assessee(), paid.family(), paid.ledgers(),
+                paid.elections(), paid.capitalGains(), paid.filing());
+    }
+
+    @Test
+    void optimise_whenTheOwnNpsLiesPastTheScheduleXvCeiling_addsTheNpsUntilOwnNpsIsFull() {
+        // Given — salary for the sub-cap is basic 16L, so the sub-cap is 1,60,000. NPS's point under the old regime is
+        // the least addition reaching total income at the ceiling (24L in hand): 1,60,000 + 50,000 = 2,10,000, where
+        // s.123 allows 1,50,000 and own NPS 50,000. Round 1: HRA 8L saves 2,92,500 − 2,88,600 = 3,900; NPS alone saves
+        // nil (old 21,50,000 → 1,12,500 + 3,45,000 = 4,57,500, + 4 % = 4,75,800, above the new 2,92,500). Round 2: old
+        // 15,50,000 − 2,00,000 = 13,50,000 → 1,12,500 + 1,05,000 = 2,17,500, + 4 % = 2,26,200.
+        AllocationSpace space = contributing(flipsWithHra(), Set.of(HRA), Set.of(ComponentCodes.EMPLOYEE_NPS), "0");
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("226200"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
+                Money.of("800000"), Optional.of(Money.of("3900")), Money.ZERO));
+        assertThat(optimised.contributionChanges()).hasSize(1);
+        Optimisation.Change nps = optimised.contributionChanges().getFirst();
+        assertThat(nps.component()).isEqualTo("EMPLOYEE_NPS");
+        assertThat(nps.facts().kind()).isEqualTo("EMPLOYEE_CONTRIBUTION");
+        assertThat(nps.facts().cashNature()).isEqualTo("CASH_OUTFLOW");
+        assertThat(nps.facts().feedsInto()).isEqualTo(EMPLOYEE_NPS_FEEDS);
+        assertThat(outline(nps.facts().liquidity())).isEqualTo(NPS_2026_27);
+        assertThat(nps.current()).isEqualTo(Money.ZERO);
+        assertThat(nps.suggested()).isEqualTo(Money.of("210000"));
+        assertThat(nps.savingAlone()).contains(Money.ZERO);
+        assertThat(nps.cashImpact()).isEqualTo(Money.of("-210000"));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
+        assertThat(optimised.verified()).containsExactly("HRA", "EMPLOYEE_NPS");
+        assertThat(optimised.discrepancy()).isEmpty();
+    }
+
+    @Test
+    void optimise_whenTheCashFloorCannotPayTheContribution_leavesItAsEntered() {
+        // Given — as entered 24L − 2,92,500 = 21,07,500 in hand; HRA and NPS leave 24L − 2,10,000 − 2,26,200 = 19,63,800,
+        // below 20,00,000; HRA alone leaves 24L − 2,88,600 = 21,11,400
+        AllocationSpace space = contributing(flipsWithHra(), Set.of(HRA), Set.of(ComponentCodes.EMPLOYEE_NPS),
+                "2000000");
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("288600"));
+        assertThat(optimised.changes()).extracting(Optimisation.Change::component).containsExactly("HRA");
+        assertThat(optimised.contributionChanges()).isEmpty();
+    }
+
+    @Test
+    void optimise_whenTheEmployeesProvidentFundIsHeld_addsTheHeadroomUnderTheCeilingOnTop() {
+        // Given — PF 1,00,000 entered, BASIC not movable. Old before: 23,50,000 − 1,00,000 = 22,50,000 → 4,87,500,
+        // + 4 % = 5,07,000; new 2,92,500. HRA 8L: old 14,50,000 → 2,47,500, + 4 % = 2,57,400, saving 35,100. The PF's
+        // headroom under the ceiling is 1,50,000 − 1,00,000 = 50,000: old 14,00,000 → 2,32,500, + 4 % = 2,41,800.
+        AllocationSpace space = contributing(
+                flipsWithHraAnd(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("100000"))), Set.of(HRA),
+                Set.of(ComponentCodes.EMPLOYEE_PF), "0");
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("241800"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
+                Money.of("800000"), Optional.of(Money.of("35100")), Money.ZERO));
+        assertThat(optimised.contributionChanges()).hasSize(1);
+        Optimisation.Change pf = optimised.contributionChanges().getFirst();
+        assertThat(pf.component()).isEqualTo("EMPLOYEE_PF");
+        assertThat(pf.facts().feedsInto()).containsExactly("DED-SCHEDULE-XV");
+        assertThat(outline(pf.facts().liquidity())).isEqualTo(EPF_2026_27);
+        assertThat(pf.current()).isEqualTo(Money.of("100000"));
+        assertThat(pf.suggested()).isEqualTo(Money.of("150000"));
+        assertThat(pf.savingAlone()).contains(Money.ZERO);
+        assertThat(pf.cashImpact()).isEqualTo(Money.of("-50000"));
+    }
+
+    /** {@code components/HRA.json} SALARY; {@code components/LIFE_INSURANCE_PREMIUM.json} QUALIFYING_PAYMENT. */
+    @Test
+    void optimise_whenAContributionIsNotAnEmployeesOwn_isRefusedNamingItsKind() {
+        // Given
+        AllocationSpace pay = contributing(flipsWithHra(), Set.of(), Set.of(HRA), "0");
+        AllocationSpace premium = contributing(flipsWithHra(), Set.of(),
+                Set.of(ComponentCodes.LIFE_INSURANCE_PREMIUM), "0");
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(pay)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("HRA is SALARY").hasMessageContaining("not an employee's own contribution");
+        assertThatThrownBy(() -> CALCULATOR.optimise(premium)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("LIFE_INSURANCE_PREMIUM is QUALIFYING_PAYMENT");
+    }
+
+    @Test
+    void optimise_whenAContributionIsNotInThePack_isRefused() {
+        // Given
+        AllocationSpace space = contributing(flipsWithHra(), Set.of(), Set.of(new ComponentCode("NO_SUCH_CODE")), "0");
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("defines no component NO_SUCH_CODE");
+    }
+
+    @Test
+    void optimise_whenAContributionIsEnteredTwice_isRefused() {
+        // Given
+        SalaryComponent nps = new SalaryComponent(ComponentCodes.EMPLOYEE_NPS, Money.of("50000"));
+        AllocationSpace space = contributing(flipsWithHraAnd(nps, nps), Set.of(), Set.of(ComponentCodes.EMPLOYEE_NPS),
+                "0");
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("EMPLOYEE_NPS appears more than once");
+    }
+
+    @Test
+    void optimise_whenTheProvidentFundContributionFollowsAMovableBasic_isRefused() {
+        // Given
+        EngineInputs inputs = paidBasic("1000000",
+                List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))), List.of(), false);
+        AllocationSpace space = contributing(inputs, Set.of(BASIC), Set.of(ComponentCodes.EMPLOYEE_PF), "0");
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("EMPLOYEE_PF follows BASIC").hasMessageContaining("W-238k1");
+    }
+
+    /** {@code GOVERNMENT_DEFERRED_ANNUITY} is measured on the Government salary; this employer is OTHER (D-154). */
+    @Test
+    void optimise_whenTheGovernmentDeferredAnnuityIsAddedForAnotherEmployer_isRefusedByTheEngine() {
+        // Given
+        AllocationSpace space = contributing(flipsWithHra(), Set.of(),
+                Set.of(ComponentCodes.GOVERNMENT_DEFERRED_ANNUITY), "0");
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("is measured on the Government salary");
     }
 }

@@ -715,7 +715,35 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(refused.getBody()).contains("EMPLOYEE_NPS").contains("EMPLOYEE_CONTRIBUTION");
+        assertThat(refused.getBody()).contains("EMPLOYEE_NPS").contains("EMPLOYEE_CONTRIBUTION")
+                .contains("name it under contributions");
+    }
+
+    @Test
+    void optimise_whenTheEmployeesNpsIsAContribution_addsItPaidFromTakeHomeWithNoHrSupport() {
+        // Given — TaxCalculatorOptimiseTest's W-238k case 1 on a draft: HRA 8,00,000 and NPS 2,10,000 (s.123 1,50,000,
+        // own NPS 50,000) give old 13,50,000 → 2,26,200, below what was deducted, so no interest
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [\"HRA\"], \"contributions\":"
+                + " [\"EMPLOYEE_NPS\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
+        assertThat(view.get("regimeAfter").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("226200");
+        assertThat(view.get("contributionChanges").size()).isEqualTo(1);
+        JsonNode nps = view.at("/contributionChanges/0");
+        assertThat(nps.get("component").asString()).isEqualTo("EMPLOYEE_NPS");
+        assertThat(amountAt(nps, "/current")).isEqualByComparingTo("0");
+        assertThat(amountAt(nps, "/suggested")).isEqualByComparingTo("210000");
+        assertThat(amountAt(nps, "/cashImpact")).isEqualByComparingTo("-210000");
+        assertThat(nps.at("/facts/kind").asString()).isEqualTo("EMPLOYEE_CONTRIBUTION");
+        // W-238k C5a: HR support for HRA only, the contribution being the employee's own declaration
+        assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"HRA\",\"likelihood\":\"HIGH\"}]");
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.optimise;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
 import com.thiru.wealthlens.taxengine.api.ProvidentFundTerms;
@@ -14,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.test.Fixtures;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +30,7 @@ class SaturationTest {
     private static final RulePack PACK = ShippedRulePacks.compile("rulepacks", Set.of(TY_2026_27)).load(TY_2026_27);
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
     private static final AllocationSpace SPACE = new AllocationSpace(
-            Fixtures.rentingInMumbai("600000", "600000", "300000", List.of()), Set.of(ComponentCodes.HRA), Set.of(),
+            Fixtures.rentingInMumbai("600000", "600000", "300000", List.of()), new AllocationSpace.Moves(Set.of(ComponentCodes.HRA), Set.of(), Set.of()),
             ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
     private static Money saturation(RegimeCode regime) {
@@ -53,5 +55,53 @@ class SaturationTest {
 
         // Then
         assertThat(point).isEqualTo(Money.ZERO);
+    }
+
+    /**
+     * Own NPS's shape where the Schedule XV ceiling binds first (W-238k C3a): falling to 1,50,000, flat to the 1,60,000
+     * sub-cap, falling again for the 50,000 of own NPS, then flat. The least amount reaching the floor is 2,10,000.
+     */
+    @Test
+    void leastReaching_whenTotalIncomeIsFlatAndThenFallsAgain_findsTheSecondStop() {
+        // Given
+        Money income = Money.of("2350000");
+
+        // When
+        Money point = Saturation.leastReaching(Money.of("2400000"), amount -> income
+                .minus(Money.min(amount, Money.of("150000")))
+                .minus(Money.min(Money.max(amount.minus(Money.of("160000")), Money.ZERO), Money.of("50000"))));
+
+        // Then
+        assertThat(point).isEqualTo(Money.of("210000"));
+    }
+
+    @Test
+    void leastReaching_whenTotalIncomeRisesWithTheAmount_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> Saturation.leastReaching(Money.of("1000"), amount -> Money.of("500").plus(amount)))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("Total income rises");
+    }
+
+    /**
+     * Employee NPS through the pipeline where the flat stretch is wide (W-238k C3a): basic 30,00,000 puts the sub-cap at
+     * 10 % × 30,00,000 = 3,00,000 ({@code 01-rulebook.md:1078}) above the 1,50,000 ceiling ({@code :1076}), and own NPS
+     * takes up to 50,000 of what the sub-cap left ({@code :972}; {@code 08-golden-tests.md} T5-1), so the point is
+     * 3,50,000. A halving from the residual's 8,00,000 would probe 4,00,000 and 2,00,000, both flat, and stop at 1,50,000.
+     */
+    @Test
+    void of_whenTheContributionsTotalIncomeIsFlatPastTheCeiling_findsTheEndOfOwnNps() {
+        // Given
+        AllocationSpace space = new AllocationSpace(Fixtures.salaried("3000000", "800000", List.of(), Optional.empty()),
+                new AllocationSpace.Moves(Set.of(), Set.of(), Set.of(ComponentCodes.EMPLOYEE_NPS)),
+                ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
+        AllocationPricing pricing = AllocationPricing.over(NodeRegistry.of(ShippedNodes.all()), PACK,
+                PACK.regimes().get(NEW), space);
+
+        // When
+        Money point = Saturation.of(pricing, pricing.entered(space), new Movable.Contribution(ComponentCodes.EMPLOYEE_NPS),
+                new RegimeCode("FIRST_SCHEDULE_RATES"));
+
+        // Then
+        assertThat(point).isEqualTo(Money.of("350000"));
     }
 }
