@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
 import com.thiru.wealthlens.taxengine.api.ProvidentFundTerms;
+import com.thiru.wealthlens.taxengine.input.Employment;
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
@@ -14,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.test.Fixtures;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -103,5 +107,70 @@ class SaturationTest {
 
         // Then
         assertThat(point).isEqualTo(Money.of("350000"));
+    }
+
+    private static final Movable.Contribution OWN_PF = new Movable.Contribution(ComponentCodes.EMPLOYEE_PF);
+    private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
+
+    /**
+     * Basic 10,00,000 and special 14,00,000 from an OTHER employer, the employee's provident fund 60,000 following basic
+     * and named as a contribution (W-238k1); the pricing over it.
+     */
+    private static AllocationSpace followingSpace() {
+        EngineInputs paid = Fixtures.salaried("1000000", "1400000", List.of(), Optional.empty());
+        Employment held = paid.entered().employments().getFirst();
+        List<SalaryComponent> components = new ArrayList<>(held.components());
+        components.add(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("60000")));
+        Employment changed = new Employment(components, held.termsIncludeDearnessAllowance(), held.employerKind(),
+                held.dearnessAllowanceCountsForRetirement(), held.companyEmployer());
+        EngineInputs inputs = new EngineInputs(paid.taxYear(), paid.regime(), paid.temporal(),
+                paid.entered().withEmployments(List.of(changed)), paid.assessee(), paid.family(), paid.ledgers(),
+                paid.elections(), paid.capitalGains(), paid.filing());
+        return new AllocationSpace(inputs, new AllocationSpace.Moves(Set.of(ComponentCodes.BASIC), Set.of(),
+                Set.of(ComponentCodes.EMPLOYEE_PF)), ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6,
+                ProvidentFundTerms.FOLLOW_BASIC);
+    }
+
+    private static AllocationPricing pricingOver(AllocationSpace space) {
+        return AllocationPricing.over(NodeRegistry.of(ShippedNodes.all()), PACK, PACK.regimes().get(NEW), space);
+    }
+
+    /**
+     * Basic moved to 12,00,000 takes the follower to 60,000 × 12 ÷ 10 = 72,000, so the old regime's total income is
+     * 24,00,000 − 50,000 − min(72,000 + a, 1,50,000) ({@code DED-80C-001}, {@code 01-rulebook.md:1076}) and the point
+     * is 78,000 — not the 90,000 the pay as entered leaves (W-238k1).
+     */
+    @Test
+    void of_whenTheContributionFollowsAMovedBasic_measuresTheHeadroomLeftAtTheMovedBasic() {
+        // Given
+        AllocationSpace space = followingSpace();
+        AllocationPricing pricing = pricingOver(space);
+        Allocation moved = pricing.entered(space).moved(new Movable.Pay(ComponentCodes.BASIC), Money.of("1200000"));
+
+        // When
+        Money point = Saturation.of(pricing, moved, OWN_PF, OLD);
+
+        // Then
+        assertThat(point).isEqualTo(Money.of("78000"));
+    }
+
+    /**
+     * At basic 12,00,000 an addition of 90,000 writes 1,62,000, of which Schedule XV takes 1,50,000: total income is the
+     * same from 78,000 up, so 78,000 keeps it (W-238k1 C2a). An addition of 50,000 is all deducted, so it is kept whole.
+     */
+    @Test
+    void leastKeeping_whenTheAdditionOverfillsTheCeiling_trimsItToTheHeadroom() {
+        // Given
+        AllocationSpace space = followingSpace();
+        AllocationPricing pricing = pricingOver(space);
+        Allocation moved = pricing.entered(space).moved(new Movable.Pay(ComponentCodes.BASIC), Money.of("1200000"));
+
+        // When
+        Money overfilled = Saturation.leastKeeping(pricing, moved.moved(OWN_PF, Money.of("90000")), OWN_PF, OLD);
+        Money within = Saturation.leastKeeping(pricing, moved.moved(OWN_PF, Money.of("50000")), OWN_PF, OLD);
+
+        // Then
+        assertThat(overfilled).isEqualTo(Money.of("78000"));
+        assertThat(within).isEqualTo(Money.of("50000"));
     }
 }

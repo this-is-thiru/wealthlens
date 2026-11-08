@@ -118,15 +118,16 @@ final class AllocationPricing {
                             + " is entered more than once for the employment the residual is in");
                 });
         Following following = following(space, held, employment);
-        requireContributions(pack, space.moves().contributions(), following);
+        requireContributions(pack, space.moves().contributions());
         return new AllocationPricing(registry, pack, computing, space.base(), employment, following);
     }
 
     /**
-     * Each contribution must be an employee's own ({@code EMPLOYEE_CONTRIBUTION} in the year's pack, W-238k C1a), and not a
-     * share that follows basic: what is added on top of a following share is W-238k1's (C2a).
+     * Each contribution must be an employee's own ({@code EMPLOYEE_CONTRIBUTION} in the year's pack, W-238k C1a). A share
+     * that follows basic may be one too: the addition rides on its following amount, since {@link #applied} writes the
+     * two together (W-238k1).
      */
-    private static void requireContributions(RulePack pack, Set<ComponentCode> contributions, Following following) {
+    private static void requireContributions(RulePack pack, Set<ComponentCode> contributions) {
         for (ComponentCode code : contributions) {
             if (!pack.components().containsKey(code)) {
                 throw new IllegalArgumentException(pack.taxYear().label() + " defines no component " + code.value());
@@ -135,10 +136,6 @@ final class AllocationPricing {
             if (kind != ComponentKind.EMPLOYEE_CONTRIBUTION) {
                 throw new IllegalArgumentException(code.value() + " is " + kind.name() + " in " + pack.taxYear().label()
                         + ", not an employee's own contribution, so it cannot be added to from take-home (W-238k)");
-            }
-            if (following.follows(new Movable.Pay(code))) {
-                throw new IllegalArgumentException(code.value() + " follows BASIC here, so what is added on top of it"
-                        + " cannot be told from what follows (W-238k1)");
             }
         }
     }

@@ -33,11 +33,9 @@ final class Saturation {
     }
 
     static Money of(AllocationPricing pricing, Allocation from, Movable code, RegimeCode regime) {
-        if (code instanceof Movable.Contribution) {
+        if (code instanceof Movable.Contribution contribution) {
             Money ceiling = wholeRupees(pricing.cashBeforeTax(from).plus(from.amount(code)));
-            return leastReaching(ceiling, amount -> pricing.totalIncome(from.moved(code, amount), regime)
-                    .orElseThrow(() -> new IllegalStateException("A contribution of " + amount + " to " + code.name()
-                            + " could not be priced, though the pay it is added to was")));
+            return leastReaching(ceiling, totalIncome(pricing, from, contribution, regime));
         }
         Money low = Money.ZERO;
         Money high = wholeRupees(from.ceiling(code));
@@ -60,6 +58,22 @@ final class Saturation {
             return true;
         }
         return !next.get().isLessThan(here.get());
+    }
+
+    /**
+     * The least addition to {@code code} that keeps total income under {@code regime} at what it is in {@code from} — the
+     * addition with what Schedule XV would not take cut off. A later move can raise what follows basic after the
+     * addition's point was measured, and the bill cannot see the excess, so the answer is trimmed by this (W-238k1 C2a).
+     */
+    static Money leastKeeping(AllocationPricing pricing, Allocation from, Movable.Contribution code, RegimeCode regime) {
+        return leastReaching(wholeRupees(from.amount(code)), totalIncome(pricing, from, code, regime));
+    }
+
+    private static Function<Money, Money> totalIncome(AllocationPricing pricing, Allocation from,
+            Movable.Contribution code, RegimeCode regime) {
+        return amount -> pricing.totalIncome(from.moved(code, amount), regime)
+                .orElseThrow(() -> new IllegalStateException("A contribution of " + amount + " to " + code.name()
+                        + " could not be priced, though the pay it is added to was"));
     }
 
     /**

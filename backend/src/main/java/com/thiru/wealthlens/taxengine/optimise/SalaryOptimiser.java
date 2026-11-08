@@ -56,8 +56,25 @@ public final class SalaryOptimiser {
                 .sorted(Map.Entry.<Movable, Money>comparingByValue().reversed()
                         .thenComparing(Map.Entry.comparingByKey(Movable.ORDER)))
                 .limit(space.verificationBreadth()).map(Map.Entry::getKey).toList();
-        Allocation answer = exhaustive(pricing, greedy.answer(), candidates, verified, space.cashFloor());
-        return result(pricing, entered, greedy.answer(), answer, verified);
+        Allocation exhaustive = exhaustive(pricing, greedy.answer(), candidates, verified, space.cashFloor());
+        return result(pricing, entered, greedy.answer(), exhaustive, trimmed(pricing, exhaustive), verified);
+    }
+
+    /**
+     * Each addition cut to the least that keeps the answer's total income under its regime (W-238k1 C2a): its point was
+     * measured at the pay as entered, and a later basic move raises what follows basic beneath the same ceiling. Only
+     * Schedule XV reads the addition, and it reaches the bill only through total income, so the bill stays as it is and
+     * cash rises.
+     */
+    private static Allocation trimmed(AllocationPricing pricing, Allocation answer) {
+        RegimeCode regime = pricing.price(answer).regime();
+        Allocation trimmed = answer;
+        for (Movable item : answer.amounts().keySet()) {
+            if (item instanceof Movable.Contribution contribution) {
+                trimmed = trimmed.moved(contribution, Saturation.leastKeeping(pricing, trimmed, contribution, regime));
+            }
+        }
+        return trimmed;
     }
 
     private static SortedMap<Movable, SortedSet<Money>> candidates(AllocationPricing pricing, Allocation entered) {
@@ -150,8 +167,9 @@ public final class SalaryOptimiser {
         return allocation.isFeasible() && pricing.isPriced(allocation) && !pricing.takeHome(allocation).isLessThan(floor);
     }
 
-    private static Optimisation result(AllocationPricing pricing, Allocation entered, Allocation greedy, Allocation answer,
-            List<Movable> verified) {
+    /** The answer reported; the discrepancy is between the greedy and the exhaustive answers, before any trim. */
+    private static Optimisation result(AllocationPricing pricing, Allocation entered, Allocation greedy,
+            Allocation exhaustive, Allocation answer, List<Movable> verified) {
         AllocationPricing.Priced before = pricing.price(entered);
         AllocationPricing.Priced after = pricing.price(answer);
         List<Optimisation.Change> changes = new ArrayList<>();
@@ -179,17 +197,29 @@ public final class SalaryOptimiser {
                         suggested, savingAlone, cashImpact));
                 case Movable.Fund fund -> fundChanges.add(new Optimisation.FundChange(fund.name(),
                         pricing.feedsInto(fund), current, suggested, savingAlone, cashImpact, pricing.liquidity(fund)));
-                case Movable.Contribution contribution -> contributionChanges.add(new Optimisation.Change(
-                        contribution.name(), pricing.facts(contribution.code()), pricing.entered(contribution),
-                        pricing.entered(contribution).plus(suggested), savingAlone, cashImpact));
+                case Movable.Contribution contribution -> {
+                    Money beneath = beneath(pricing, entered, answer, contribution);
+                    contributionChanges.add(new Optimisation.Change(contribution.name(),
+                            pricing.facts(contribution.code()), beneath, beneath.plus(suggested), savingAlone, cashImpact));
+                }
             }
         }
         List<String> verifiedNames = verified.stream().map(Movable::name).toList();
-        Optional<String> discrepancy = answer.equals(greedy) ? Optional.empty() : Optional.of("The greedy answer"
+        Optional<String> discrepancy = exhaustive.equals(greedy) ? Optional.empty() : Optional.of("The greedy answer"
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "
                 + verifiedNames + " found " + after.bill() + " — the candidates miss a breakpoint (G6.3)");
         return new Optimisation(before.regime().value(), before.bill(), after.regime().value(), after.bill(), changes,
                 fundChanges, followingChanges, contributionChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy,
                 pricing.unpriced());
+    }
+
+    /**
+     * What the addition sits on: the share's following amount at the answer's basic where it follows, else the amount
+     * entered (W-238k1 C1a), so a following change and a contribution change chain to what is paid.
+     */
+    private static Money beneath(AllocationPricing pricing, Allocation entered, Allocation answer,
+            Movable.Contribution contribution) {
+        Movable.Pay share = new Movable.Pay(contribution.code());
+        return entered.following().follows(share) ? answer.amount(share) : pricing.entered(contribution);
     }
 }

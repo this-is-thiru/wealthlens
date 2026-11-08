@@ -931,16 +931,61 @@ class TaxCalculatorOptimiseTest {
                 .hasMessageContaining("EMPLOYEE_NPS appears more than once");
     }
 
-    @Test
-    void optimise_whenTheProvidentFundContributionFollowsAMovableBasic_isRefused() {
-        // Given
-        EngineInputs inputs = paidBasic("1000000",
-                List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))), List.of(), false);
-        AllocationSpace space = contributing(inputs, Set.of(BASIC), Set.of(ComponentCodes.EMPLOYEE_PF), "0");
+    /**
+     * Basic 16L, HRA 8L entered and held, special 11.2L, rent 9.6L in Mumbai; the employee's provident fund 60,000 and
+     * the employer's 1,92,000 (12 %) both follow basic (W-238k1). Every fund probe stays under the 7,50,000 aggregate
+     * ({@code PF-AGGCAP-001}), so no history is needed, and a 12 % share of basic is never over 12 % of salary
+     * ({@code PF-RPF12-001}).
+     */
+    private static EngineInputs followedInMumbai() {
+        EngineInputs paid = Fixtures.rentingInMumbai("1600000", "1120000", "960000", List.of());
+        Employment held = paid.entered().employments().getFirst();
+        List<SalaryComponent> components = new ArrayList<>(held.components());
+        components.add(new SalaryComponent(HRA, Money.of("800000")));
+        components.add(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("60000")));
+        Employment changed = new Employment(components, held.termsIncludeDearnessAllowance(), held.employerKind(),
+                held.dearnessAllowanceCountsForRetirement(), held.companyEmployer());
+        return new EngineInputs(paid.taxYear(), paid.regime(), paid.temporal(),
+                paid.entered().withEmployments(List.of(changed)).withEmployerContributions(List.of(
+                        new EmployerFundContribution(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("192000")))),
+                paid.assessee(), paid.family(), paid.ledgers(), paid.elections(), paid.capitalGains(), paid.filing());
+    }
 
-        // When / Then
-        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("EMPLOYEE_PF follows BASIC").hasMessageContaining("W-238k1");
+    @Test
+    void optimise_whenTheProvidentFundContributionFollowsAMovableBasic_addsOnTopOfTheFollowingShareToTheCeiling() {
+        // Given — old TI = 26,70,000 − 0.02d − min(60,000 + 0.0375d + a, 1,50,000) for basic 16L + d and addition a.
+        // Entered: TI 26,10,000 → 5,95,500, + 4 % = 6,19,320 (new 34,45,000 → 6,38,040). Round 1: the addition's
+        // 90,000 headroom (TI 25,20,000 → 5,91,240). Round 2: basic to the residual's end, 16L + 11.2L × 16 ÷ 17.92 =
+        // 26L: TI 26,50,000 − 1,50,000 = 25,00,000 → 5,62,500, + 4 % = 5,85,000. The follower is then 97,500, so the
+        // trim keeps 52,500 of the 90,000 (C2a). Basic alone: new 33,25,000 → 6,00,600, saving 18,720; cash 0 −
+        // 1,20,000 (the employer's share) − 37,500 (withheld). The addition alone: TI 25,57,500 → 6,02,940, saving 16,380.
+        AllocationSpace space = contributing(followedInMumbai(), Set.of(BASIC), Set.of(ComponentCodes.EMPLOYEE_PF), "0");
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeBefore()).isEqualTo(OLD);
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("619320"));
+        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("585000"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+                Money.of("1600000"), Money.of("2600000"), Optional.of(Money.of("18720")), Money.of("-157500")));
+        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+                .containsExactly(
+                        new Optimisation.FollowingChange("EMPLOYEE_PF", List.of("DED-SCHEDULE-XV"), Money.of("60000"),
+                                Money.of("97500"), List.of("BASIC"), NO_LIQUIDITY),
+                        new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
+                                Money.of("192000"), Money.of("312000"), List.of("BASIC"), NO_LIQUIDITY));
+        assertThat(optimised.contributionChanges()).hasSize(1);
+        Optimisation.Change pf = optimised.contributionChanges().getFirst();
+        assertThat(pf.component()).isEqualTo("EMPLOYEE_PF");
+        assertThat(pf.current()).isEqualTo(Money.of("97500"));
+        assertThat(pf.suggested()).isEqualTo(Money.of("150000"));
+        assertThat(pf.savingAlone()).contains(Money.of("16380"));
+        assertThat(pf.cashImpact()).isEqualTo(Money.of("-52500"));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
+        assertThat(optimised.discrepancy()).isEmpty();
     }
 
     /** {@code GOVERNMENT_DEFERRED_ANNUITY} is measured on the Government salary; this employer is OTHER (D-154). */
