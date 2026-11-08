@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.test;
 
+import com.thiru.wealthlens.taxengine.input.AllowanceUse;
 import com.thiru.wealthlens.taxengine.input.Assessee;
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
@@ -113,6 +114,26 @@ public final class Fixtures {
                 List.of(), List.of(), List.of());
         return inputs(entered, NodeHarness.plainTaxpayer().assessee(),
                 CapitalGainsHarness.inputOf(listedEquity("1550000", "1000000", LONG_HELD_SINCE)));
+    }
+
+    /**
+     * A salaried renter in Mumbai under 60 (W-238a): basic pay and a special allowance from one employer, rent paid for the
+     * whole of TY 2026-27, and any allowance spending given. No house rent allowance is entered: the optimiser's cases
+     * start from none.
+     */
+    public static EngineInputs rentingInMumbai(String basic, String specialAllowance, String rent,
+            List<AllowanceUse> spending) {
+        Employment employment = employment(pay(ComponentCodes.BASIC, basic),
+                pay(ComponentCodes.SPECIAL_ALLOWANCE, specialAllowance));
+        Tenancy rented = new Tenancy(DateRange.between(TY_2026_27.startsOn(), TY_2026_27.endsOn()), "MUMBAI", false,
+                Money.of(rent));
+        EnteredFacts entered = new EnteredFacts(List.of(employment), List.of(rented), List.of(), spending,
+                Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(),
+                List.of());
+        return inputs(entered, bornOn(LocalDate.of(1990, 6, 15)), noGains());
     }
 
     private static EngineInputs inputs(EnteredFacts entered, Assessee person,

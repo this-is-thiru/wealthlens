@@ -265,4 +265,16 @@ public record EnteredFacts(
                 agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems, providentFundAccounts,
                 giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, absorptionOrder, reinvestments);
     }
+
+    /** The same facts, the pay reallocated — how the optimiser's candidate allocation enters a run (W-238a). */
+    public EnteredFacts withEmployments(List<Employment> reallocated) {
+        return new EnteredFacts(reallocated, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies, healthPayments,
+                disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems, providentFundAccounts,
+                giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, absorptionOrder,
+                houseReinvestments);
+    }
 }

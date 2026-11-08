@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsTerm;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
+import com.thiru.wealthlens.taxengine.optimise.SalaryOptimiser;
 import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
 import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
@@ -75,6 +76,16 @@ public class TaxCalculator {
                 .outcome();
         return new RegimeComparison(outcome.chosen().value(), outcome.mode().name(), outcome.alternatives().stream()
                 .map(priced -> new RegimeComparison.Priced(priced.choice().value(), priced.netPayable())).toList());
+    }
+
+    /**
+     * The allocation of the movable pay that leaves the least tax, the regime chosen on each (W-238a).
+     *
+     * @throws IllegalArgumentException if the space does not fit the year's pack or the inputs
+     */
+    public Optimisation optimise(AllocationSpace space) {
+        RulePack pack = rulePacks.load(space.base().taxYear());
+        return SalaryOptimiser.optimise(REGISTRY, pack, spec(pack, space.base().regime()), space);
     }
 
     /**
