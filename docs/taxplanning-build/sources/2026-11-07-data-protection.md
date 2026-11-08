@@ -57,3 +57,17 @@ on it.
   hold on `ACTED_ON` drafts is a product recommendation, not a cited legal duty.
 - Whether a pseudonymised record (an HMAC of the email) is still "personal data" under s.2(t).
 - Whether WealthLens is operated as a service (a Data Fiduciary) or for the owner's personal use (s.3(c)(i)).
+
+## Read for W-250 (session 59, 2026-11-08; the same copies, sha256 re-checked: `4deb2398…`, `eabc7d05…`)
+
+| # | Provision | Text, in substance (quoted where it decides) | Copy |
+|---|---|---|---|
+| 20 | Act s.4(1) | Processing only for a lawful purpose *"(a) for which the Data Principal has given her consent; or (b) for certain legitimate uses"* | 248045, p.4 |
+| 21 | Act s.5(1) | *"Every request made to a Data Principal under section 6 for consent shall be accompanied or preceded by a notice"*: the personal data and purpose; the manner of exercising rights under s.6(4) and s.13; the manner of complaining to the Board | 248045, p.4 |
+| 22 | Act s.5(2), (3) | Consent before commencement: the notice *"as soon as it is reasonably practicable"*; processing may continue *"until and unless the Data Principal withdraws her consent"*; the notice readable *"in English or any language specified in the Eighth Schedule"* | 248045, pp.4–5 |
+| 23 | Act s.6(1), (3) | Consent *"free, specific, informed, unconditional and unambiguous with a clear affirmative action"*; the request in clear and plain language with the contact of the person who answers for rights | 248045, p.5 |
+| 24 | Act s.6(10) | The Fiduciary *"shall be obliged to prove that a notice was given … and consent was given"* | 248045, p.6 |
+| 25 | Act s.7(a) | Legitimate use: *"the specified purpose for which the Data Principal has voluntarily provided her personal data … and in respect of which she has not indicated … that she does not consent"* | 248045, p.6 |
+| 26 | Act s.13(3) | *"The Data Principal shall exhaust the opportunity of redressing her grievance under this section before approaching the Board"* | 248045, p.10 |
+| 27 | Rules r.3 | Understandable independently; *"an itemised description of such personal data"*; the specified purpose and the goods, services or uses; *"the particular communication link for accessing the website or app"* and a description of the means to withdraw consent as easily as given, exercise rights and complain to the Board | 267650, pp.24–25 |
+| 28 | Rules r.20 | The Board functions as a digital office; **neither copy gives an address or link for a complaint** | 267650 |

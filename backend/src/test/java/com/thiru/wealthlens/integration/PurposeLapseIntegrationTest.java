@@ -15,6 +15,7 @@ import com.thiru.wealthlens.shared.privacy.AccountErasureService;
 import com.thiru.wealthlens.shared.privacy.ErasureCause;
 import com.thiru.wealthlens.shared.privacy.ErasureReapplication;
 import com.thiru.wealthlens.shared.privacy.PersonalDataHolder;
+import com.thiru.wealthlens.shared.privacy.PrivacySettings;
 import com.thiru.wealthlens.taxplanning.jobs.AccountErasure;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import io.restassured.http.ContentType;
@@ -63,6 +64,12 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
 
         private final AtomicBoolean failNext = new AtomicBoolean();
 
+        /** Stands in for a store the notice already describes. */
+        @Override
+        public String noticePart() {
+            return "portfolio";
+        }
+
         @Override
         public void erase(String email) {
             if (failNext.getAndSet(false)) {
@@ -93,6 +100,9 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PrivacySettings privacy;
 
     private void anAccount(String email, LocalDateTime lastSignedInAt) {
         UserDetail user = new UserDetail();
@@ -126,6 +136,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         request.setEmail(ANU);
         request.setPassword(PASSWORD);
         request.setRole(AuthHelper.Role.USER);
+        request.setPrivacyNoticeVersion(privacy.notice().version());
 
         // When
         given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then().statusCode(200);

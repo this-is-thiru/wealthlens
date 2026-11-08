@@ -20,10 +20,16 @@ public class PrivacyRecordErasure implements PersonalDataHolder {
     private final MongoTemplate mongoTemplate;
 
     @Override
+    public String noticePart() {
+        return "privacy-records";
+    }
+
+    @Override
     public void erase(String email) {
         mongoTemplate.remove(query(where("email").is(email)), Grievance.class);
         mongoTemplate.remove(query(where("email").is(email)), BreachIntimation.class);
         mongoTemplate.remove(query(where("principal").is(email)), ProcessingRecord.class);
+        mongoTemplate.remove(query(where("email").is(email)), PrivacyConsent.class);
         mongoTemplate.updateMulti(query(where("affected").is(email)), new Update().pull("affected", email), BreachNotice.class);
     }
 }

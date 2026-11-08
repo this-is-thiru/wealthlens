@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PrivacyIndexInitializer {
 
-    private static final List<Class<?>> ENTITIES = List.of(ProcessingRecord.class);
+    private static final List<Class<?>> ENTITIES = List.of(ProcessingRecord.class, PrivacyConsent.class);
 
     private final MongoTemplate mongoTemplate;
 

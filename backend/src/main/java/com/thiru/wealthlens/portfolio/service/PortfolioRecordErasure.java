@@ -18,6 +18,11 @@ public class PortfolioRecordErasure implements PersonalDataHolder {
     private final UserRecordsErasureService userRecordsErasureService;
 
     @Override
+    public String noticePart() {
+        return "portfolio";
+    }
+
+    @Override
     public void erase(String email) {
         ErasureReport report = userRecordsErasureService.erase(UserMail.from(email));
         if (!report.isComplete()) {

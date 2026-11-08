@@ -18,6 +18,12 @@
 </head>
 <body>
 <h1>Your privacy rights</h1>
+<h2>The personal data held about you</h2>
+<ul>
+    <li th:each="held : ${notice.consent.personalData}" th:text="${held.description}">description</li>
+</ul>
+<h2>Why it is held</h2>
+<p th:text="${notice.consent.purpose}">purpose</p>
 <p>Questions about how your personal data is processed are answered by
     <strong th:text="${notice.contact}">contact</strong>.
     Every request is identified by <span th:text="${notice.identifier}">identifier</span>.</p>
@@ -31,8 +37,15 @@
     </ul>
 </section>
 
+<h2>Withdrawing your consent</h2>
+<p th:text="${notice.consent.withdrawal}">withdrawal</p>
+<h2>Complaining to the Data Protection Board</h2>
+<p th:text="${notice.consent.boardComplaint}">board complaint</p>
+
 <p>A grievance is answered within <span th:text="${notice.grievanceResponseDays}">30</span> days of its receipt.</p>
 <p>Your account and everything it holds is erased once its purpose is no longer served: when no one has signed in to it for
     <span th:text="${notice.purposeLapse.toTotalMonths()}">36</span> months.</p>
+<p class="section">Notice version <code th:text="${notice.version}">version</code>: send it as
+    <code>privacyNoticeVersion</code> when you register.</p>
 </body>
 </html>

@@ -20,6 +20,11 @@ public class InsuranceRecordErasure implements PersonalDataHolder {
     private final MongoTemplate mongoTemplate;
 
     @Override
+    public String noticePart() {
+        return "insurance";
+    }
+
+    @Override
     public void erase(String email) {
         mongoTemplate.remove(query(where("email").is(email)), InsuranceEntity.class);
     }

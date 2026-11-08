@@ -20,6 +20,12 @@ public interface PersonalDataHolder extends Ordered {
         // Nothing runs here without the person, so refusing their sign-in is enough.
     }
 
+    /**
+     * The {@link PersonalDataItem#part()} of the notice before consent that describes what this module stores (DPDP Rules
+     * r.3(b)(i); W-250), so a store is never added without telling people what it holds.
+     */
+    String noticePart();
+
     /** Deletes everything the module stores about the person. */
     void erase(String email);
 

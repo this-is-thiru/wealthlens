@@ -45,6 +45,11 @@ public class TaxAccountErasure implements PersonalDataHolder {
     }
 
     @Override
+    public String noticePart() {
+        return "tax-planning";
+    }
+
+    @Override
     public void erase(String email) {
         for (TaxpayerProfile profile : profiles.findByEmail(email)) {
             profileRemoval.remove(profile);

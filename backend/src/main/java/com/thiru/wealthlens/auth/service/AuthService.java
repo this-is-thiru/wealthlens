@@ -7,6 +7,8 @@ import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
 import com.thiru.wealthlens.shared.privacy.HeldAccounts;
+import com.thiru.wealthlens.shared.privacy.PrivacyConsents;
+import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -40,6 +42,7 @@ public class AuthService {
     private final SecurityConfig securityConfig;
     private final HeldAccounts heldAccounts;
     private final RegisteredUserDirectory signIns;
+    private final PrivacyConsents privacyConsents;
     private final Clock clock;
 
     public String addUser(RegistrationRequest request) {
@@ -52,13 +55,16 @@ public class AuthService {
         if (heldAccounts.contains(request.getEmail())) {
             throw new IllegalArgumentException("The account " + request.getEmail() + " is being erased");
         }
+        privacyConsents.requireCurrent(request.getPrivacyNoticeVersion());
 
         UserDetail userEntity = new UserDetail();
         userEntity.setEmail(request.getEmail());
         userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
         userEntity.setRoles(request.getRole().name());
-        userEntity.setLastSignedInAt(nowUtc());
+        LocalDateTime registeredAt = nowUtc();
+        userEntity.setLastSignedInAt(registeredAt);
         userDetailsRepo.save(userEntity);
+        privacyConsents.recordConsent(request.getEmail(), request.getPrivacyNoticeVersion(), registeredAt);
         return "user with username " + request.getEmail() + " added to system ";
     }
 
@@ -140,17 +146,22 @@ public class AuthService {
         return email + "'s password changed successfully";
     }
 
-    /** Called only after a successful sign-in, which is what keeps the account's purpose served (W-249). */
+    /**
+     * Called only after a successful sign-in, which is what keeps the account's purpose served (W-249), and which gives an
+     * account registered before W-250 the notice it was never shown (Act s.5(2)(a)).
+     */
     public LoginResponse generateToken(String username, Authentication authentication) {
-        signIns.recordSignIn(username, nowUtc());
-        return createToken(username, authentication);
+        LocalDateTime signedInAt = nowUtc();
+        signIns.recordSignIn(username, signedInAt);
+        String noticeVersion = privacyConsents.recordNotice(username, signedInAt);
+        return createToken(username, authentication, noticeVersion);
     }
 
     private LocalDateTime nowUtc() {
         return LocalDateTime.now(clock.withZone(ZoneOffset.UTC));
     }
 
-    private LoginResponse createToken(String username, Authentication authentication) {
+    private LoginResponse createToken(String username, Authentication authentication, String noticeVersion) {
         int expirationTime = 60 * 30;
         Map<String, Object> claims = new HashMap<>();
         AuthHelper.setRoles(claims, authentication.getAuthorities());
@@ -164,7 +175,7 @@ public class AuthService {
                 .signWith(getSignInKey())
                 .compact();
 
-        return LoginResponse.from(token, expirationTime);
+        return LoginResponse.from(token, expirationTime, PrivacyNotice.PAGE, noticeVersion);
     }
 
     private SecretKey getSignInKey() {

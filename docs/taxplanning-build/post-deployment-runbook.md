@@ -629,6 +629,36 @@ where absent, and an account with a request open is left to it. **Way back:** be
 `last_signed_in_at` loses nothing (the next run counts again from its own time). An erased account cannot be brought
 back; after a restore, §1.s's reapply erases a lapse erasure again like a requested one.
 
+### 1.p W-250 (D-481) — the notice before consent · owner · **first deploy carrying it, then a week after**
+
+Registration (`POST /auth/register`) now needs `privacyNoticeVersion`, the `version` that `GET /privacy/rights` publishes.
+It is a SHA-256 of the notice's wording, so any change to `app.privacy` text gives a new one. Without the current version,
+registration is refused with 400 and nothing is stored. A successful registration writes a `privacy_consents` row
+(`notice_version`, `given_at`). Each sign-in's response carries `privacy_notice` (`/privacy`) and `privacy_notice_version`.
+The first sign-in of an account with no row (every account registered before W-250) writes one row with `noticed_at`
+(Act s.5(2)(a)). Account erasure deletes the row. **There is no command to run.** **Any client must send the version
+before it can register anyone.** The start refuses a missing `app.privacy.consent.*` value, and the yamls carry all of it.
+`board-complaint` has no link to the Board yet: add it there when you have one. That changes the version, which is
+expected.
+
+**At the first start:** the log shows `Ensured the indexes of PrivacyConsent`, the unique `email` index. **Read-only,
+before the deploy and a week after it:**
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    return { database: n, users: d.user_details.countDocuments({}),
+      consents: d.privacy_consents.countDocuments({ given_at: { $exists: true } }),
+      noticed: d.privacy_consents.countDocuments({ noticed_at: { $exists: true } }),
+      unique: d.privacy_consents.getIndexes().filter(i => i.unique && i.key.email).length }; }) }])
+```
+
+Expected before: `consents` 0, `noticed` 0, `unique` 0. A week after: `unique` 1, and `consents` + `noticed` no more than
+`users`. Every account that signed in or registered since the deploy has a row. A second start or sign-in changes
+nothing: the index already exists, and a row is never written twice for one account. **Way back:** redeploy the earlier
+build. `privacy_consents` can stay (nothing else reads it) or be dropped (`db.privacy_consents.drop()`, after
+`mongodump --collection privacy_consents`), and nothing else changes.
+
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
 Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Encryption at rest is built (W-134, D-447; W-232 merged into it): §0.5 before the first deploy carrying it.**

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.shared.privacy.PrivacySettings;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import java.net.URI;
@@ -23,6 +24,9 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PrivacySettings privacy;
 
     private String baseUrl() {
         return "http://localhost:" + RestAssured.port;
@@ -46,6 +50,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         request.setEmail("newuser@test.com");
         request.setPassword("password123");
         request.setRole(com.thiru.wealthlens.auth.dto.AuthHelper.Role.USER);
+        request.setPrivacyNoticeVersion(privacy.notice().version());
 
         // WHEN / THEN
         given()

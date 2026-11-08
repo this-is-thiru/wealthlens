@@ -53,6 +53,27 @@ app:
     # sign-in. The owner's ruling (D-480), not a figure from the law: Rules r.8(1)'s periods bind only the Third Schedule's
     # classes, which WealthLens is not in; it must exceed erasure-hold, r.8(3)'s year
     purpose-lapse: P3Y
+    # W-250: the notice before consent (DPDP Act, 2023 s.5(1), egazette 2023/248045 p.4; DPDP Rules, 2025 r.3, G.S.R. 846(E),
+    # egazette 2025/267650 pp.24-25). Every word is part of the notice's version: a change asks new registrations for the new one
+    consent:
+      # r.3(b)(i): one entry per PersonalDataHolder, keyed by its noticePart()
+      personal-data:
+        - part: login
+          description: "Your sign-in: your email address, your password (kept only as a one-way BCrypt hash), your role, and when you last signed in"
+        - part: portfolio
+          description: "Your portfolio: your holdings, your trades (including those waiting on a corporate action) and their outcomes, your profit and loss, the broker and fund charges on each trade, your charge accounts, and which corporate actions were last applied to your holdings"
+        - part: insurance
+          description: "Your insurance policies, if you recorded any"
+        - part: tax-planning
+          description: "Your tax planning: each taxpayer profile (name, PAN, date of birth, and disability or date of death where given), salary details, tax computations and drafts, a record of each time a profile was read, and your requests to erase a profile"
+        - part: privacy-records
+          description: "Your privacy requests: grievances and their answers, notices to you of a personal data breach, a log of the requests made with your account, and the record of this notice and your consent"
+      # r.3(b)(ii)
+      purpose: "To track your investments (holdings, trades, profit and loss, and the charges on them), keep your insurance records and plan your income tax, for you, while you keep your account"
+      # Act s.6(4), r.3(c)(i): the account erasure request is the withdrawal (W-250 C3a, D-481)
+      withdrawal: "Withdraw your consent at any time by asking for your whole account to be erased (POST /privacy/erasure/user/{email}): one request, as registering was. All processing stops at once, and your data is erased as the right to erasure above describes"
+      # Act s.5(1)(iii), s.13(3), r.3(c)(iii), r.20: no address for the Board is in the Act or the Rules; the owner adds its link when given (W-250 C5a)
+      board-complaint: "If a grievance raised here is not resolved, you may complain to the Data Protection Board of India, which works as a digital office (DPDP Rules r.20). The Act asks you to raise it here first (s.13(3))"
   personal-data:
     data-key: ${TAX_DATA_KEY}
     digest-key: ${TAX_DIGEST_KEY}

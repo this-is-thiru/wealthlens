@@ -1,7 +1,12 @@
 package com.thiru.wealthlens.shared.privacy;
 
+import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.HexFormat;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -20,10 +25,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     (r.6(1)(e), r.8(3); W-237e)
  * @param purposeLapse how long after an account's last sign-in its purpose is no longer served, so it is erased (Act
  *     s.8(7)(a)); the owner's ruling, not a figure from the law (W-249, D-480)
+ * @param consent what the notice before consent adds (Act s.5(1); Rules r.3; W-250)
  */
 @ConfigurationProperties(prefix = "app.privacy")
 public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights, GrievancePeriod grievance,
-        BreachReporting breach, Period erasureHold, Period logRetention, Period purposeLapse) {
+        BreachReporting breach, Period erasureHold, Period logRetention, Period purposeLapse, ConsentNotice consent) {
 
     public PrivacySettings {
         if (contact == null || contact.isBlank()) {
@@ -47,6 +53,10 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
         requirePositive(logRetention, "app.privacy.log-retention must state how long logs of processing are kept"
                 + " (DPDP Rules r.6(1)(e), r.8(3))");
         requireLongerThanHold(purposeLapse, erasureHold);
+        if (consent == null) {
+            throw new IllegalStateException("app.privacy.consent must state what the notice before consent adds (DPDP Act"
+                    + " s.5(1), Rules r.3)");
+        }
         rights = List.copyOf(rights);
     }
 
@@ -67,8 +77,23 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
         }
     }
 
-    /** The notice published at {@code GET /privacy/rights}. */
+    /** The notice published at {@code GET /privacy/rights} and {@code GET /privacy}. */
     public PrivacyNotice notice() {
-        return new PrivacyNotice(rights, identifier, contact, grievance.responseDays(), purposeLapse);
+        String wording = TJsonMapper.writeValueAsString(List.of(rights, identifier, contact, grievance.responseDays(),
+                purposeLapse.toString(), consent));
+        return new PrivacyNotice(rights, identifier, contact, grievance.responseDays(), purposeLapse, consent, sha256(wording));
+    }
+
+    /*
+     * The version is derived from the wording rather than kept by hand, so no change of wording can keep an old version and no
+     * version can be bumped without one.
+     */
+    private static String sha256(String wording) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(wording.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is unavailable, so the privacy notice cannot be versioned", e);
+        }
     }
 }

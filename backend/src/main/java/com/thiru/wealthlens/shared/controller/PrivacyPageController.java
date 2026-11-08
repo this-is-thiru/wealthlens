@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.controller;
 
+import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
 import com.thiru.wealthlens.shared.privacy.PrivacySettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -18,7 +19,7 @@ public class PrivacyPageController {
 
     private final PrivacySettings privacy;
 
-    @GetMapping("/privacy")
+    @GetMapping(PrivacyNotice.PAGE)
     public String notice(Model model) {
         model.addAttribute("notice", privacy.notice());
         return "privacy/notice";

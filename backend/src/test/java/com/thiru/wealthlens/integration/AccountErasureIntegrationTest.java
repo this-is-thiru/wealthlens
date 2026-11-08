@@ -93,6 +93,12 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
 
         private final AtomicBoolean failNext = new AtomicBoolean();
 
+        /** Stands in for a store the notice already describes. */
+        @Override
+        public String noticePart() {
+            return "portfolio";
+        }
+
         @Override
         public void erase(String email) {
             if (failNext.getAndSet(false)) {

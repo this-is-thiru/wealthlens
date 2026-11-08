@@ -13,6 +13,11 @@ public class LoginErasure implements PersonalDataHolder {
     private final UserDetailsRepository repository;
 
     @Override
+    public String noticePart() {
+        return "login";
+    }
+
+    @Override
     public void erase(String email) {
         repository.deleteById(email);
     }
