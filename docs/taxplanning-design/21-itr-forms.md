@@ -25,6 +25,9 @@ That is the same mistake as the regime enum, one layer up — and the Rules them
 | **The kind of return selects a different form entirely** | r.165(1): an updated return under s.263(6) is on **ITR-UN**, not on ITR-1..7 |
 | **Nothing is attached to the return** | r.164(11): no computation statement, no TDS proof, no audit report accompanies it |
 
+> **Erratum (W-090, 2026-11-08):** ITR-V is not a form a return is furnished in but the verification sent after an electronic upload — r.164(12)'s manner "data electronically then ITR-V" — so it is a `FurnishingOption`, not an `ItrFormSpec`; the forms to select from are ITR-1 – ITR-7 and ITR-UN (D-516 C4a).
+> Verified by: r.164(2) – (10) name ITR-1 – ITR-7 as the forms a return "shall be in" (Gazette 271092 pp.1662 – 1663).
+
 `INFERENCE`: r.164(14) is decisive. It is the statute saying *"forms are versioned by tax year and old
 versions remain in force"* — precisely the extensibility question, answered by the Rules rather than
 by me. A design that hard-codes a form set cannot satisfy it even for the two years being shipped.
