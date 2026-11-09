@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxplanning.workspace.controller;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.api.DeclarationQuestion;
 import com.thiru.wealthlens.taxplanning.workspace.DraftConflictException;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatusRequest;
@@ -50,6 +51,12 @@ public class DraftController {
     public ResponseEntity<DraftView> create(@PathVariable String email, @PathVariable String profileId,
             @PathVariable int taxYear, @RequestBody Map<String, String> body) {
         return tagged(draftService.createDraft(email, profileId, taxYear, body.get("label")));
+    }
+
+    /** The questions the year's return asks that the engine cannot compute, for a draft's {@code /filing/declarations} (W-090a2). */
+    @GetMapping("/declarations/{taxYear}")
+    public List<DeclarationQuestion> declarations(@PathVariable String email, @PathVariable int taxYear) {
+        return draftService.declarations(taxYear);
     }
 
     @GetMapping("/drafts/{draftId}")

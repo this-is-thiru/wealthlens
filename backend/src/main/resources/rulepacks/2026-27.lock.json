@@ -7,8 +7,8 @@
       "checksum": "sha256:72d86e5ead4ea429f1fcdae7bd5198f32d1f96dc0f013f4a8b3d15f869e40ed9"
     },
     "exec": {
-      "version": "2026-27.exec.35",
-      "checksum": "sha256:3812c669caf3f1e95c83f8b4844f58d20c114828732fd0776693384a1f2c8639"
+      "version": "2026-27.exec.36",
+      "checksum": "sha256:455a2d431073b6d36c3680da03ba2b55f8f3ffe19c835e8bf9ea033717a2ceb9"
     },
     "forms": {
       "version": "2026-27.forms.2",

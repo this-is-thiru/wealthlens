@@ -1,0 +1,16 @@
+{
+  "code": "ASSETS_OUTSIDE_INDIA",
+  "_note": "r.164(3)(a) and (6)(a): \"has assets (including financial interest in any entity) located outside India\". The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2026-27 only: r.164(1) governs \"the tax year commencing on the 1st April, 2026\" (D-520 C3a).",
+  "question": "Did you hold any asset outside India, including a financial interest in an entity, at any time during the tax year?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2026-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(a), p.1662; r.164(6)(a), p.1663",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

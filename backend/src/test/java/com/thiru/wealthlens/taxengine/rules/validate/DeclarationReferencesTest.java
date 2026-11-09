@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Every condition reading a declaration names a question of the year's catalogue, in its kind (W-090a1). The shipped
- * TY 2026-27 pack asks none and reads none; each case adds a reading to {@code REBATE-NEW-TAX-REGIME}'s versions or a
+ * TY 2026-27 pack asks r.164's thirteen (W-090a2) and no rule reads one yet; each case adds a reading to {@code REBATE-NEW-TAX-REGIME}'s versions or a
  * condition set, and the catalogue as the case needs.
  */
 class DeclarationReferencesTest {
@@ -80,7 +80,7 @@ class DeclarationReferencesTest {
     @Test
     void check_whenTheShippedPackIsChecked_findsNothing() {
         // Given / When / Then
-        assertThat(PACK.declarations()).isEmpty();
+        assertThat(PACK.declarations()).hasSize(13);
         assertThat(problems(PACK)).isEmpty();
     }
 

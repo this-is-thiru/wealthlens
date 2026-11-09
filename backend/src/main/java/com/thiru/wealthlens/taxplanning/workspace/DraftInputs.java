@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
+import com.thiru.wealthlens.taxengine.input.Declaration;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FilingFacts;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,7 +27,7 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
     }
 
     static DraftInputs blank() {
-        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of()), LedgerSnapshot.empty(),
+        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of(), Map.of()), LedgerSnapshot.empty(),
                 ThirdParties.NONE);
     }
 
@@ -48,9 +50,17 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
         }
     }
 
-    /** The engine's {@link FilingFacts} once the due date is stated; {@code dueDate} and {@code furnishedOn} may be null until then. */
+    /**
+     * The engine's {@link FilingFacts} once the due date is stated; {@code dueDate} and {@code furnishedOn} may be null until
+     * then. {@code declarations} are the person's answers to the year's questions (W-090a2); none when absent, which every
+     * draft stored before W-090a2 is, since none could answer one.
+     */
     public record Filing(LocalDate dueDate, LocalDate furnishedOn, List<FilingFacts.Payment> advanceTaxPaid, Money taxAtSource,
-            List<FilingFacts.Payment> selfAssessmentPaid) {
+            List<FilingFacts.Payment> selfAssessmentPaid, Map<DeclarationCode, Declaration> declarations) {
+
+        public Filing {
+            declarations = declarations == null ? Map.of() : Map.copyOf(declarations);
+        }
 
         /** @throws IllegalArgumentException if no due date is stated */
         public FilingFacts toFilingFacts() {
@@ -58,7 +68,7 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
                 throw new IllegalArgumentException("A computation needs the draft's /filing/dueDate");
             }
             return new FilingFacts(dueDate, Optional.ofNullable(furnishedOn), advanceTaxPaid,
-                    taxAtSource == null ? Money.ZERO : taxAtSource, selfAssessmentPaid, Map.of());
+                    taxAtSource == null ? Money.ZERO : taxAtSource, selfAssessmentPaid, declarations);
         }
     }
 }

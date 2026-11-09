@@ -1,6 +1,9 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.api.DeclarationQuestion;
+import com.thiru.wealthlens.taxengine.api.TaxCalculator;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileReferenceService;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
@@ -11,6 +14,8 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +41,7 @@ public class DraftService {
     private final RegimeElectionHistoryRepository electionHistoryRepository;
     private final TaxAccessLog taxAccessLog;
     private final Clock clock;
+    private final TaxCalculator taxCalculator;
 
     /** The profile's workspace for the year, made on first asking. */
     public TaxYearWorkspace workspace(String email, String profileId, int taxYearStart) {
@@ -50,6 +56,14 @@ public class DraftService {
         workspace.setProfileId(profileId);
         workspace.setTaxYearStart(taxYearStart);
         return workspaceRepository.save(workspace);
+    }
+
+    /**
+     * The questions a draft for the year may answer at {@code /filing/declarations}; empty for a year no pack ships (W-090a2).
+     * The year's law, not the person's data, so no read is recorded.
+     */
+    public List<DeclarationQuestion> declarations(int taxYearStart) {
+        return taxCalculator.declarations(TaxYearId.of(taxYearStart));
     }
 
     /** The year's drafts, each read recorded: a draft's inputs carry claims such as medical spend ({@code DR 14} O1.1). */
@@ -130,7 +144,11 @@ public class DraftService {
         }
         JsonNode inputs = JsonPatchApplier.apply(DraftInputsMapper.tree(draft.getInputsJson()), patch);
         DraftInputsMapper.requireBinds(inputs);
-        requireNewThirdPartiesHeld(draft, DraftInputsMapper.read(DraftInputsMapper.text(inputs)).thirdParties());
+        DraftInputs bound = DraftInputsMapper.read(DraftInputsMapper.text(inputs));
+        requireNewThirdPartiesHeld(draft, bound.thirdParties());
+        // A patch may remove /filing whole; the draft then answers nothing, and compute asks for its due date
+        taxCalculator.requireAsked(TaxYearId.of(draft.getTaxYearStart()),
+                Optional.ofNullable(bound.filing()).map(DraftInputs.Filing::declarations).orElse(Map.of()));
         boolean reopened = draft.getStatus() == DraftStatus.READY;
         DraftRevision revision = revision(draft, expectedRevision + 1, email, reopened);
         revision.setChangeSetJson(DraftInputsMapper.text(patch));

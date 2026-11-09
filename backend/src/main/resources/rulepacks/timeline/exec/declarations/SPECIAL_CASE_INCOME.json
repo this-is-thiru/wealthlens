@@ -1,0 +1,16 @@
+{
+  "code": "SPECIAL_CASE_INCOME",
+  "_note": "r.164(3)(n) and (6)(o): \"has any income of the nature on which the tax is determinable as per the provisions of Part A of Chapter XIII of the Act\". Part A, \"Determination of tax in certain special cases\": s.190 (no tax payable on part), s.191 (provident-fund accumulated balance), s.192 (block assessment), s.193 (Global Depository Receipts), s.194 Table (winnings, patent royalty, carbon credits, virtual digital assets, online games, life insurance profits), s.195 (ss.102–106 income). The engine computes none of these (OtherSourceKind WINNINGS is refused), so the person answers it. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2026-27 only: r.164(1) governs \"the tax year commencing on the 1st April, 2026\" (D-520 C3a).",
+  "question": "Do you have any income taxed under the special cases of Chapter XIII Part A — such as winnings from lottery, games or betting, income from virtual digital assets, patent royalty, carbon credits or Global Depository Receipts?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2026-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(n), p.1663; r.164(6)(o), p.1663; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Chapter XIII Part A, ss.190–195, pp.214–219",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

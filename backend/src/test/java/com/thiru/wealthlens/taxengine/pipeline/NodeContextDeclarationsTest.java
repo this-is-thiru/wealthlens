@@ -137,10 +137,4 @@ class NodeContextDeclarationsTest {
                 .hasMessageContaining("SYNTHETIC_AMOUNT")
                 .hasMessageContaining("asks it as AMOUNT");
     }
-
-    @Test
-    void conditions_whenTheShippedPackIsUsed_asksNoQuestionYet() {
-        // Given / When / Then — the shipped rows are W-090a2's
-        assertThat(SHIPPED.declarations()).isEmpty();
-    }
 }

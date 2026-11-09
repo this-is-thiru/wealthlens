@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-090a1 done (D-518), committed (subject in Last item commit), not pushed
-Stage           : 6 → next: plan W-090a2 (§2 template), ask for approval; STOP before building
-Done today      : session 80: W-090a1 planned, approved, built, verified, committed
-Board           : W-090a1 D; W-090a2 ·; W-090b ·; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-246 K
-Next step       : resume at W-090a2: run the resume check, read plans/W-090a.md, plans/W-090a1.md and the W-090a2 row (03-WORK-ITEMS:1422). Fetch Gazette 271092 (Rules) and 265620 (Act) again (session-79 scratch copies are gone); read (l) s.393(3) Sl. 5, (m) s.391(2) / 392(3), (n) Chapter XIII Part A first. a2 needs the catalogue's answer kind from taxplanning, which sees only the engine's named interfaces, so it comes through api. W-259 placed (D-519): the synthetic generator keeps every row kind; Phase 14, board order.
-Owner actions   : push review/taxplanning (W-090a1 commit unpushed); earlier standing actions unchanged (session 79 list)
-Last verify     : W-090a1 unit 4989 / 0 / 0 (Checkstyle + Spotless on), integration 535 / 0 / 0
+Item            : none in flight — W-090a2 done (D-520), committed with api-collection, not pushed; W-090a closed
+Stage           : 6 → next: plan W-090b (§2 template), ask for approval; STOP before building
+Done today      : session 80: W-090a1 (9926ea64, D-518), W-259 placed (b9d45f2f, D-519), W-090a2 (D-520)
+Board           : W-090a —; W-090a1 D; W-090a2 D; W-090b ·; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-259 ·
+Next step       : resume at W-090b (the ITR form model, synthetic pack): run the resume check, read plans/W-090.md, the W-090b row and DR 21 I3 (21-itr-forms.md:49 – 95), then plan it in the §2 template
+Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f and the W-090a2 commit unpushed); adopt the 13 questions' wording; earlier standing actions unchanged
+Last verify     : W-090a2 unit 5002 / 0 / 0 (Checkstyle + Spotless on), integration 539 / 0 / 0
 Files touched   : none — all committed
-Last item commit: taxplanning W-090a1: add declarations, the questions the person answers that the engine cannot compute
-Updated         : 2026-11-09, session 80 — W-090a1 committed; next W-090a2
+Last item commit: taxplanning W-090a2: let a draft answer the year's declarations, refused on save when the year does not ask them
+Updated         : 2026-11-09, session 80 — W-090a2 committed; next W-090b
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

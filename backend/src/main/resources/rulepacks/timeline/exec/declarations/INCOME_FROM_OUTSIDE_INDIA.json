@@ -1,0 +1,16 @@
+{
+  "code": "INCOME_FROM_OUTSIDE_INDIA",
+  "_note": "r.164(3)(c) and (6)(c): \"has income from any source outside India\". The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2026-27 only: r.164(1) governs \"the tax year commencing on the 1st April, 2026\" (D-520 C3a).",
+  "question": "Did you have income from any source outside India?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2026-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(c), p.1662; r.164(6)(c), p.1663",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

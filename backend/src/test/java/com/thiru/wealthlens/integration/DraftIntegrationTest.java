@@ -152,6 +152,62 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
     }
 
+    private static final String ANSWER = """
+            [{"op": "add", "path": "/filing/declarations", "value": %s}]""";
+
+    @Test
+    void declarations_whenTy2026_listsTheThirteenQuestionsOfR164() {
+        // When
+        ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/declarations/2026", null, null);
+
+        // Then
+        JsonNode questions = JsonMapper.builder().build().readTree(read.getBody());
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(questions).hasSize(13);
+        assertThat(questions.get(0).get("code").asString()).isEqualTo("AGRICULTURAL_INCOME");
+        assertThat(questions.get(0).get("answerKind").asString()).isEqualTo("AMOUNT");
+    }
+
+    @Test
+    void patch_whenDeclarationsAreAnswered_savesThemAndReadsThemBack() {
+        // When
+        ResponseEntity<String> saved = save(ANSWER.formatted("""
+                {"DIRECTOR_IN_COMPANY": {"@type": "YesNo", "yes": true},
+                 "AGRICULTURAL_INCOME": {"@type": "Amount", "amount": {"amountInRupees": 4000}}}"""), "\"rev-0\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode read = JsonMapper.builder().build().readTree(
+                call(HttpMethod.GET, OWNER, "/drafts/" + draftId, null, null).getBody()).at("/inputs/filing/declarations");
+        assertThat(read.at("/DIRECTOR_IN_COMPANY/yes").asBoolean()).isTrue();
+        assertThat(read.at("/AGRICULTURAL_INCOME/amount/amountInRupees").decimalValue()).isEqualByComparingTo("4000");
+    }
+
+    @Test
+    void patch_whenAQuestionTheYearDoesNotAskIsAnswered_expected400NamingItAndStoresNothing() {
+        // When
+        ResponseEntity<String> refused = save(ANSWER.formatted("{\"NOT_ASKED\": {\"@type\": \"YesNo\", \"yes\": true}}"),
+                "\"rev-0\"");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("NOT_ASKED is not a question 2026-27 asks");
+        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+    }
+
+    @Test
+    void patch_whenAnAmountAnswersAYesOrNoQuestion_expected400NamingTheKindNeverTheAmount() {
+        // When
+        ResponseEntity<String> refused = save(ANSWER.formatted(
+                "{\"DIRECTOR_IN_COMPANY\": {\"@type\": \"Amount\", \"amount\": {\"amountInRupees\": 98765}}}"),
+                "\"rev-0\"");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("DIRECTOR_IN_COMPANY is answered as AMOUNT").doesNotContain("98765");
+        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+    }
+
     private String landlordOf(String ownerProfileId) {
         call(HttpMethod.POST, OWNER, "/profiles/" + ownerProfileId + "/landlords", """
                 {"name": "A landlord", "address": "1 Main Road", "pan": "ABCPL1234K"}""", null);

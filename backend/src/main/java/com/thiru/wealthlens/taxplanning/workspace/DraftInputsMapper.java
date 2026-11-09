@@ -3,8 +3,10 @@ package com.thiru.wealthlens.taxplanning.workspace;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.input.Declaration;
 import com.thiru.wealthlens.taxengine.input.FairMarketValueBasis;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import java.util.stream.Collectors;
 import tools.jackson.core.JacksonException;
@@ -24,11 +26,18 @@ final class DraftInputsMapper {
     static final JsonMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .addMixIn(FairMarketValueBasis.class, FairMarketValueBasisJson.class)
+            .addMixIn(Declaration.class, DeclarationJson.class)
             .addModule(new SimpleModule()
                     .addKeyDeserializer(ComponentCode.class, new KeyDeserializer() {
                         @Override
                         public Object deserializeKey(String key, DeserializationContext context) {
                             return new ComponentCode(key);
+                        }
+                    })
+                    .addKeyDeserializer(DeclarationCode.class, new KeyDeserializer() {
+                        @Override
+                        public Object deserializeKey(String key, DeserializationContext context) {
+                            return new DeclarationCode(key);
                         }
                     })
                     .addKeyDeserializer(TaxYearId.class, new KeyDeserializer() {
@@ -50,6 +59,12 @@ final class DraftInputsMapper {
         @JsonSubTypes.Type(FairMarketValueBasis.MerchantBankerValue.class)
     })
     private interface FairMarketValueBasisJson {
+    }
+
+    /** A person's answer to a question of the year (W-090a2), named in JSON as {@link FairMarketValueBasisJson} is. */
+    @JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME)
+    @JsonSubTypes({@JsonSubTypes.Type(Declaration.YesNo.class), @JsonSubTypes.Type(Declaration.Amount.class)})
+    private interface DeclarationJson {
     }
 
     static String blank() {

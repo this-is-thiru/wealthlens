@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.input.Declaration;
 import com.thiru.wealthlens.taxengine.input.FairMarketValueBasis;
 import com.thiru.wealthlens.taxengine.input.MonthOfPay;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
@@ -90,7 +92,7 @@ class EnteredFactsBindingTest {
         walk(DraftInputs.class, new HashSet<>(), abstractTypes, badMapKeys);
 
         // Then
-        assertThat(abstractTypes).containsExactly(FairMarketValueBasis.class);
+        assertThat(abstractTypes).containsExactlyInAnyOrder(FairMarketValueBasis.class, Declaration.class);
         assertThat(badMapKeys).isEmpty();
     }
 
@@ -121,7 +123,8 @@ class EnteredFactsBindingTest {
     private static void checkMapKey(ParameterizedType parameterized, Set<String> badMapKeys) {
         if (Map.class.isAssignableFrom((Class<?>) parameterized.getRawType())) {
             Type key = parameterized.getActualTypeArguments()[0];
-            boolean statable = key == String.class || key == Integer.class || key == ComponentCode.class || key == TaxYearId.class
+            boolean statable = key == String.class || key == Integer.class || key == ComponentCode.class || key == DeclarationCode.class
+                    || key == TaxYearId.class
                     || (key instanceof Class<?> keyClass && keyClass.isEnum());
             if (!statable) {
                 badMapKeys.add(parameterized.toString());

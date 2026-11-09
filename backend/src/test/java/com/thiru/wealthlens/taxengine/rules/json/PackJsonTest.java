@@ -842,7 +842,12 @@ class PackJsonTest {
                                     "exec/declarations.json", resource("exec/declarations.json")));
 
             assertThat(pack.rules()).hasSize(236);
-            assertThat(pack.declarations()).isEmpty();
+            // r.164(3), (6), read in Gazette 271092 pp.1662 – 1663 (W-090a2, D-520)
+            assertThat(pack.declarations().keySet().stream().map(Object::toString).sorted().toList()).containsExactly(
+                    "AGRICULTURAL_INCOME", "ASSETS_OUTSIDE_INDIA", "CASH_WITHDRAWAL_TAX_DEDUCTED", "DIRECTOR_IN_COMPANY",
+                    "DOUBLE_TAXATION_AGREEMENT_RELIEF", "INCOME_APPORTIONED_BETWEEN_SPOUSES", "INCOME_FROM_OUTSIDE_INDIA",
+                    "SIGNING_AUTHORITY_OUTSIDE_INDIA", "SPECIAL_CASE_INCOME", "START_UP_SHARE_TAX_DEFERRED",
+                    "TDS_ASSESSABLE_IN_ANOTHERS_HANDS", "UNILATERAL_FOREIGN_TAX_DEDUCTION", "UNLISTED_EQUITY_HELD");
             assertThat(pack.funds()).containsOnlyKeys(
                     new com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode("APPROVED_SUPERANNUATION_FUND"),
                     new com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode("NOTIFIED_PENSION_SCHEME"),

@@ -1,0 +1,16 @@
+{
+  "code": "UNILATERAL_FOREIGN_TAX_DEDUCTION",
+  "_note": "r.164(3)(i): \"... or deduction of tax under section 160\". s.160(1): a resident who paid income-tax on foreign income in a country with no agreement under s.159 is entitled to a deduction from Indian income-tax. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2026-27 only: r.164(1) governs \"the tax year commencing on the 1st April, 2026\" (D-520 C3a).",
+  "question": "Are you claiming a deduction for income-tax paid in a country with which India has no double-taxation agreement (section 160)?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2026-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(i), p.1662; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.160, p.189",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

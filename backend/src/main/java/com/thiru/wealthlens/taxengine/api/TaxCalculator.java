@@ -3,12 +3,14 @@ package com.thiru.wealthlens.taxengine.api;
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
 import com.thiru.wealthlens.taxengine.election.RegimeElection;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
+import com.thiru.wealthlens.taxengine.input.Declaration;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsTerm;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.optimise.SalaryOptimiser;
 import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
+import com.thiru.wealthlens.taxengine.pipeline.AskedDeclarations;
 import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.InterestAndFees;
@@ -22,6 +24,7 @@ import com.thiru.wealthlens.taxengine.result.ComputationReceipt;
 import com.thiru.wealthlens.taxengine.result.TaxComputation;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -31,6 +34,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -162,6 +166,38 @@ public class TaxCalculator {
             }
         });
         return current;
+    }
+
+    /**
+     * The questions the year's return asks the person and the engine cannot compute, in code order (W-090a2). Empty where
+     * the application ships no pack for the year, so a draft for such a year has nothing to answer.
+     */
+    public List<DeclarationQuestion> declarations(TaxYearId year) {
+        if (!rulePacks.availableYears().contains(year)) {
+            return List.of();
+        }
+        return rulePacks.load(year).declarations().values().stream()
+                .sorted(Comparator.comparing(definition -> definition.code().value()))
+                .map(definition -> new DeclarationQuestion(definition.code().value(), definition.question(),
+                        definition.answerKind().name(), definition.provenance().sourceDescription()))
+                .toList();
+    }
+
+    /**
+     * Refuses answers the year's catalogue does not ask, or answers in the wrong kind — the check a run makes, made when
+     * a draft is saved, so a wrong answer is never stored (D-520 C1a).
+     *
+     * @throws IllegalArgumentException naming the question, where an answer is not one the year asks
+     */
+    public void requireAsked(TaxYearId year, Map<DeclarationCode, Declaration> answers) {
+        if (answers.isEmpty()) {
+            return;
+        }
+        if (!rulePacks.availableYears().contains(year)) {
+            throw new IllegalArgumentException("No questions are asked for " + year.label()
+                    + ", since no rule pack ships for it; its declarations must be empty");
+        }
+        AskedDeclarations.of(answers, rulePacks.load(year));
     }
 
     /**
