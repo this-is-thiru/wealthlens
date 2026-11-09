@@ -21,8 +21,8 @@ import tools.jackson.databind.node.ObjectNode;
  * Invariant I27 / test T23-1 (property P3): the timeline's content — the section catalogue, the Acts' section lists
  * and the coverage register — changes no number. Every text in it is rewritten, or the whole of {@code content/}
  * removed, and each shipped year compiles to the same pack, file for file, so the engine reads exactly what it read
- * before (W-146). The timeline holds no {@code forms/}: that layer compiles empty in every year
- * ({@code RulePackCompiler}).
+ * before (W-146). The shipped timeline holds no {@code forms/} yet, so that layer compiles empty in every shipped
+ * year; W-090c brings the first forms and extends this perturbation to them (D-521).
  */
 class ContentPerturbationTest {
 

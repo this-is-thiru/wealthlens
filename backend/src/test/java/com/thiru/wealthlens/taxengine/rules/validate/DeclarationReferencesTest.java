@@ -8,10 +8,17 @@ import com.thiru.wealthlens.taxengine.rules.condition.Declared;
 import com.thiru.wealthlens.taxengine.rules.condition.DeclaredAmountAbove;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
+import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.declaration.AnswerKind;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
+import com.thiru.wealthlens.taxengine.rules.filing.FurnishingOption;
+import com.thiru.wealthlens.taxengine.rules.filing.ItrFormBar;
+import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
+import com.thiru.wealthlens.taxengine.rules.id.FurnishingManner;
+import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
+import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
@@ -74,7 +81,7 @@ class DeclarationReferencesTest {
                 row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), rules, PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
-                catalogue);
+                catalogue, Map.of());
     }
 
     @Test
@@ -131,10 +138,30 @@ class DeclarationReferencesTest {
         ConditionSet set = new ConditionSet(id, "A synthetic set", List.of(new IsResident(), new Declared(DIRECTOR)),
                 RuleIds.REBATE_NEW_TAX_REGIME, definition(DIRECTOR, AnswerKind.YES_NO).provenance());
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(id, set), PACK.funds(), Map.of());
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(id, set), PACK.funds(), Map.of(), Map.of());
 
         // When / Then
         assertThat(problems(pack)).containsExactly("condition set COND-SYNTHETIC reads declaration SYNTHETIC_YES_NO,"
                 + " which is not in the year's declaration catalogue");
+    }
+
+    @Test
+    void check_whenAFormReadsAQuestionTheYearDoesNotAsk_namesTheFormInEachPlace() {
+        // Given — a positive condition, a bar and a manner's condition, each reading an unasked question
+        Provenance source = definition(DIRECTOR, AnswerKind.YES_NO).provenance();
+        ItrFormSpec form = new ItrFormSpec(new ItrFormCode("SYN-1"), "A synthetic form", 1,
+                Set.of(PersonType.INDIVIDUAL), Set.of(new ReturnKind("SYN_ORIGINAL")), List.of(new Declared(DIRECTOR)),
+                List.of(new ItrFormBar("synthetic bar", new DeclaredAmountAbove(FARMING, Money.of("1000")), source)),
+                Set.of(), List.of(new FurnishingOption(new FurnishingManner("SYN_PAPER"),
+                        List.of(new Not(new Declared(new DeclarationCode("SYNTHETIC_PAPER")))), source)), source);
+        RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
+                Map.of(), Map.of(form.code(), form));
+
+        // When / Then
+        assertThat(problems(pack)).containsExactly(
+                "form SYN-1 reads declaration SYNTHETIC_YES_NO, which is not in the year's declaration catalogue",
+                "form SYN-1 reads declaration SYNTHETIC_AMOUNT, which is not in the year's declaration catalogue",
+                "form SYN-1 reads declaration SYNTHETIC_PAPER, which is not in the year's declaration catalogue");
     }
 }

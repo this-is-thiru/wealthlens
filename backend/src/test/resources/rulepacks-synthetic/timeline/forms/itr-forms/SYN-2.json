@@ -1,0 +1,46 @@
+{
+  "id": "SYN-2",
+  "_note": "Synthetic form for W-090b (D-521): not law, never shipped. Excluded where SYN-1 applies, as r.164(4) excludes ITR-2.",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2099-04-01"
+      },
+      "displayName": "Synthetic form two",
+      "cascadeOrder": 2,
+      "appliesTo": [
+        "INDIVIDUAL",
+        "HUF"
+      ],
+      "returnKinds": [
+        "SYN_ORIGINAL"
+      ],
+      "positiveConditions": [],
+      "bars": [],
+      "excludes": [
+        "SYN-1"
+      ],
+      "furnishing": [
+        {
+          "manner": "SYN_ELECTRONIC",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://example.invalid/w-090b-synthetic",
+            "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "UNVERIFIED",
+            "whatToCheck": "nothing: a synthetic form proving the model"
+          }
+        }
+      ],
+      "provenance": {
+        "sourceUrl": "https://example.invalid/w-090b-synthetic",
+        "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+        "accessedOn": "2026-11-09",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "nothing: a synthetic form proving the model"
+      }
+    }
+  ]
+}

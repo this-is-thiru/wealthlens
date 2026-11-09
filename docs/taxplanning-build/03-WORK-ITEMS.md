@@ -1433,6 +1433,12 @@ if that is not enough for the item in hand.
 > **Erratum (W-090, 2026-11-08):** W-090 names one file, `forms/itr-forms.json`, which predates the timeline packs — forms are one file per form under `rulepacks/timeline/law/itr-forms/`, versioned per tax year like the regimes (D-516 C2a).
 > Verified by: `ls backend/src/main/resources/rulepacks/timeline/law/` (rules, regimes, disallowances; condition sets per W-244).
 
+> **Erratum (W-090b, 2026-11-09):** the erratum above and the W-090b row put forms under `law/itr-forms/`, but a pack already has a `forms` layer — outside the compute cache key and versioned apart from `law` because form notifications follow their own dates — so forms are one file per form under `rulepacks/timeline/forms/itr-forms/`, compiled into the year's `forms/itr-forms.json` (D-521 C1a).
+> Verified by: `RulePackLayer.java:45` (`FORMS(false, "forms/itr-forms.json")`), `RulePackCompiler.java:94` (written empty before W-090b).
+
+> **Erratum (W-090b, 2026-11-09):** the W-090c row does not say that invariant I27 must reach the forms layer once a shipped form exists — `ContentPerturbationTest` perturbs `content/` only and states that the shipped timeline holds no `forms/` — so W-090c also extends I27's perturbation to `forms/itr-forms/` (D-521).
+> Verified by: `ContentPerturbationTest.java:20` – `25` (class Javadoc).
+
 ---
 
 ## Phase 11 — Persistence and API (16 items)

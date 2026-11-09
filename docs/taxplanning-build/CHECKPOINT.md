@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-090a2 done (D-520), committed with api-collection, not pushed; W-090a closed
-Stage           : 6 → next: plan W-090b (§2 template), ask for approval; STOP before building
-Done today      : session 80: W-090a1 (9926ea64, D-518), W-259 placed (b9d45f2f, D-519), W-090a2 (D-520)
-Board           : W-090a —; W-090a1 D; W-090a2 D; W-090b ·; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-259 ·
-Next step       : resume at W-090b (the ITR form model, synthetic pack): run the resume check, read plans/W-090.md, the W-090b row and DR 21 I3 (21-itr-forms.md:49 – 95), then plan it in the §2 template
-Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f and the W-090a2 commit unpushed); adopt the 13 questions' wording; earlier standing actions unchanged
-Last verify     : W-090a2 unit 5002 / 0 / 0 (Checkstyle + Spotless on), integration 539 / 0 / 0
+Item            : none in flight — W-090b done (D-521), committed, not pushed
+Stage           : 6 → next: plan W-090c (§2 template), ask for approval; STOP before building
+Done today      : session 81: W-090b planned, approved C1a – C4a, built and committed (D-521)
+Board           : W-090a —; W-090a1 D; W-090a2 D; W-090b D; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-259 ·
+Next step       : resume at W-090c (TY 2026-27 ITR-1 – 4 from r.164): run the resume check, read r.164(12)'s Table (Gazette 271092) first, the W-090c row and the two W-090b errata after Phase 10's table, then plan it
+Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f, 7f01234b and the W-090b commit unpushed); adopt the 13 questions' wording
+Last verify     : W-090b unit 5022 / 0 / 0 (Checkstyle + Spotless on), integration 539 / 0 / 0
 Files touched   : none — all committed
-Last item commit: taxplanning W-090a2: let a draft answer the year's declarations, refused on save when the year does not ask them
-Updated         : 2026-11-09, session 80 — W-090a2 committed; next W-090b
+Last item commit: taxplanning W-090b: hold a year's return forms as pack rows in the forms layer
+Updated         : 2026-11-09, session 81 — W-090b committed; next W-090c
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

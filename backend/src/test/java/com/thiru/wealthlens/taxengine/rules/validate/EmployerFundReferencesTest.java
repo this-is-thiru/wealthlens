@@ -44,7 +44,7 @@ class EmployerFundReferencesTest {
             funds.put(fund, changed);
         }
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds, Map.of());
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds, Map.of(), Map.of());
     }
 
     private static EmployerFundDefinition feeding(EmployerFundDefinition row, Set<RuleId> feedsInto) {

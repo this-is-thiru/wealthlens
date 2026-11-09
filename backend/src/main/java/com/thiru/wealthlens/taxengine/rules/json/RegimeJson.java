@@ -80,7 +80,7 @@ public final class RegimeJson {
                                 PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
-    private static Set<PersonType> personTypes(JsonNode node, String path) {
+    static Set<PersonType> personTypes(JsonNode node, String path) {
         Set<PersonType> types = new LinkedHashSet<>();
         for (String name : PackJson.array(node, "appliesTo", path, e -> e.node().asString())) {
             boolean matched = false;

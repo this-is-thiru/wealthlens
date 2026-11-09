@@ -839,9 +839,12 @@ class PackJsonTest {
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json"),
                                     "exec/funds.json", resource("exec/funds.json"),
-                                    "exec/declarations.json", resource("exec/declarations.json")));
+                                    "exec/declarations.json", resource("exec/declarations.json"),
+                                    "forms/itr-forms.json", resource("forms/itr-forms.json")));
 
             assertThat(pack.rules()).hasSize(236);
+            // No shipped form until W-090c; the forms layer is read and holds none (W-090b)
+            assertThat(pack.itrForms()).isEmpty();
             // r.164(3), (6), read in Gazette 271092 pp.1662 – 1663 (W-090a2, D-520)
             assertThat(pack.declarations().keySet().stream().map(Object::toString).sorted().toList()).containsExactly(
                     "AGRICULTURAL_INCOME", "ASSETS_OUTSIDE_INDIA", "CASH_WITHDRAWAL_TAX_DEDUCTED", "DIRECTOR_IN_COMPANY",
@@ -870,7 +873,8 @@ class PackJsonTest {
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json"),
                                     "exec/funds.json", resource("exec/funds.json"),
-                                    "exec/declarations.json", resource("exec/declarations.json")));
+                                    "exec/declarations.json", resource("exec/declarations.json"),
+                                    "forms/itr-forms.json", resource("forms/itr-forms.json")));
 
             var slab = pack.rule(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-TAX-REGIME"));
             var cap = slab.versions().getFirst().cap().orElseThrow();

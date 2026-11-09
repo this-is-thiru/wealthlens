@@ -6,9 +6,11 @@ import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.json.ItrFormJson;
 import com.thiru.wealthlens.taxengine.rules.json.PackJson;
 import com.thiru.wealthlens.taxengine.rules.json.RegimeJson;
 import com.thiru.wealthlens.taxengine.rules.json.RegistryJson;
@@ -39,8 +41,8 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Refuses the whole timeline, naming the file, rather than skip anything: a file in a directory
  * this reader does not know is content that would silently never reach a rule pack. Directories are
- * added with their first content and its reader (D-053) — {@code forms/} has none yet;
- * {@code exec/components} is read ahead of its first content, because each component arrives with the
+ * added with their first content and its reader (D-053) — {@code forms/itr-forms} is read ahead of the first shipped
+ * form (W-090b); {@code exec/components} is read ahead of its first content, because each component arrives with the
  * first rule that reads it (D-089); {@code content/} has the coverage register, the section catalogue and
  * the Acts' section lists.
  *
@@ -63,12 +65,14 @@ public final class TimelineReader {
     private static final String FUNDS = "exec/funds";
     /** The questions the person answers, one per file (W-090a1). */
     private static final String DECLARATIONS = "exec/declarations";
+    /** The return forms, one per file, a version per span of years (W-090b) — the {@code forms} layer. */
+    private static final String ITR_FORMS = "forms/itr-forms";
     /** The section catalogue, carried verbatim for its own reader (D-060). */
     private static final String SECTIONS = "content/sections";
     /** Each Act's section list, carried verbatim for the coverage register (D-066). */
     private static final String ACTS = "content/acts";
     private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, CONDITION_SETS, PIPELINES, COMPONENTS, FUNDS,
-            DECLARATIONS, SECTIONS, ACTS);
+            DECLARATIONS, ITR_FORMS, SECTIONS, ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
     /** The rule sets every year's pack declares; each rule row names its own (D-252). */
@@ -121,6 +125,7 @@ public final class TimelineReader {
         private final Map<EmployerFundCode, String> fundSources = new HashMap<>();
         private final Map<DeclarationCode, DeclarationDefinition> declarations = new HashMap<>();
         private final Map<DeclarationCode, String> declarationSources = new HashMap<>();
+        private final Map<ItrFormCode, String> itrFormSources = new HashMap<>();
         private final Map<NodeId, String> pipelineNodes = new HashMap<>();
         private final Map<String, String> sections = new HashMap<>();
         private final Map<String, String> acts = new HashMap<>();
@@ -145,6 +150,7 @@ public final class TimelineReader {
                 case COMPONENTS -> addComponent(path, stem, node, content);
                 case FUNDS -> addFund(path, stem, node, content);
                 case DECLARATIONS -> addDeclaration(path, stem, node, content);
+                case ITR_FORMS -> addItrForm(path, stem, node, content);
                 case SECTIONS -> addSection(path, stem, node, content);
                 case ACTS -> addAct(path, stem, node, content);
                 default -> throw new IllegalStateException(directory + " is a known directory with no reader");
@@ -213,6 +219,13 @@ public final class TimelineReader {
             declarationSources.put(declaration.code(), content);
         }
 
+        private void addItrForm(String path, String stem, JsonNode node, String content) {
+            ItrFormCode code = PackJson.construct(path, () -> new ItrFormCode(PackJson.text(node, "id", path)));
+            requireNamedFor(path, stem, code.value());
+            SetVersions.everyVersion(node, path, ItrFormJson::form);
+            itrFormSources.put(code, content);
+        }
+
         private void addSection(String path, String stem, JsonNode node, String content) {
             String key = PackJson.text(node, "key", path);
             requireNamedFor(path, stem, key);
@@ -228,7 +241,7 @@ public final class TimelineReader {
         Timeline timeline() {
             return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources,
                     conditionSetSources, components, componentSources,
-                    funds, fundSources, declarations, declarationSources, pipelineNodes, coverage, sections, acts);
+                    funds, fundSources, declarations, declarationSources, itrFormSources, pipelineNodes, coverage, sections, acts);
         }
     }
 

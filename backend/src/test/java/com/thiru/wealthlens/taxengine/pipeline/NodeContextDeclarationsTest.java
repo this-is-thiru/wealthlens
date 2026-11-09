@@ -54,7 +54,7 @@ class NodeContextDeclarationsTest {
         }
         return new RulePack(SHIPPED.taxYear(), SHIPPED.layers(), SHIPPED.instruments(), SHIPPED.rules(),
                 SHIPPED.ruleSets(), SHIPPED.components(), SHIPPED.regimes(), SHIPPED.disallowanceSets(),
-                SHIPPED.conditionSets(), SHIPPED.funds(), catalogue);
+                SHIPPED.conditionSets(), SHIPPED.funds(), catalogue, Map.of());
     }
 
     private static ConditionContext conditions(Map<DeclarationCode, Declaration> answers) {

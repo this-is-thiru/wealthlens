@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -91,7 +92,7 @@ public final class RulePackCompiler {
         files.put("exec/components.json", render(object().set("components", components)));
         files.put("exec/funds.json", render(object().set("funds", funds)));
         files.put("exec/declarations.json", render(object().set("declarations", declarations)));
-        files.put("forms/itr-forms.json", render(object().set("forms", MAPPER.createArrayNode())));
+        files.put("forms/itr-forms.json", render(object().set("forms", itrForms(timeline, taxYear))));
         files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
         return new CompiledPack(taxYear, files, ruleChecksums);
     }
@@ -116,6 +117,16 @@ public final class RulePackCompiler {
                     "law/disallowances/" + id.value() + ".json").ifPresent(disallowanceSets::add);
         }
         return disallowanceSets;
+    }
+
+    /** The return forms in force in the year, each as its year's version (W-090b, D-521 C3a). */
+    private static ArrayNode itrForms(Timeline timeline, TaxYearId taxYear) {
+        ArrayNode forms = MAPPER.createArrayNode();
+        for (ItrFormCode code : sorted(timeline.itrFormSources().keySet(), ItrFormCode::value)) {
+            SetVersions.forTaxYear(MAPPER.readTree(timeline.itrFormSources().get(code)), taxYear,
+                    "forms/itr-forms/" + code.value() + ".json").ifPresent(forms::add);
+        }
+        return forms;
     }
 
     /** The eligibility condition sets in force in the year, each as its year's version (W-244). */

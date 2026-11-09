@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -38,6 +39,7 @@ import java.util.Optional;
  * @param fundSources each fund's file verbatim, for the same reason
  * @param declarations every declaration the law has asked, by code (W-090a1)
  * @param declarationSources each declaration's file verbatim, for the same reason
+ * @param itrFormSources each return form's file verbatim, by code, versioned as a condition set is (W-090b)
  * @param pipelineNodes the exec node catalogue, each node's file verbatim. Nothing reads its fields
  *     yet; the item that generates node ids from it gives it a type (D-053)
  * @param coverage the coverage register ({@code content/coverage.json}) verbatim, where the timeline
@@ -63,6 +65,7 @@ public record Timeline(
         Map<EmployerFundCode, String> fundSources,
         Map<DeclarationCode, DeclarationDefinition> declarations,
         Map<DeclarationCode, String> declarationSources,
+        Map<ItrFormCode, String> itrFormSources,
         Map<NodeId, String> pipelineNodes,
         Optional<String> coverage,
         Map<String, String> sections,
@@ -82,6 +85,7 @@ public record Timeline(
         fundSources = Map.copyOf(fundSources);
         declarations = Map.copyOf(declarations);
         declarationSources = Map.copyOf(declarationSources);
+        itrFormSources = Map.copyOf(itrFormSources);
         pipelineNodes = Map.copyOf(pipelineNodes);
         coverage = Objects.requireNonNull(coverage, "coverage: Optional.empty() where the timeline has none");
         sections = Map.copyOf(sections);

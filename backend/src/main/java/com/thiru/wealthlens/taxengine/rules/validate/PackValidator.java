@@ -92,6 +92,7 @@ public final class PackValidator {
         CapitalGainsPartReferences.check(pack, problems);        // D-309
         EmployerFundReferences.check(pack, problems);            // W-238e
         DeclarationReferences.check(pack, problems);             // W-090a1
+        ItrFormReferences.check(pack, problems);                 // W-090b
         LiquidityCoverage.check(pack, problems);                 // W-238e1
 
         if (!problems.isEmpty()) {

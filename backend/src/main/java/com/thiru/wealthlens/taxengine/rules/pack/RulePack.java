@@ -3,9 +3,11 @@ package com.thiru.wealthlens.taxengine.rules.pack;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
+import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
  * @param conditionSets shared eligibility lists, by id — the s.205(2) pattern
  * @param funds the employer-fund registry, by code (W-238e)
  * @param declarations the questions the year asks the person and the engine cannot compute, by code (W-090a1)
+ * @param itrForms the year's return forms, by code — the {@code forms} layer (W-090b)
  */
 public record RulePack(
         TaxYearId taxYear,
@@ -56,7 +59,8 @@ public record RulePack(
         Map<DisallowanceSetId, DisallowanceSet> disallowanceSets,
         Map<ConditionSetId, ConditionSet> conditionSets,
         Map<EmployerFundCode, EmployerFundDefinition> funds,
-        Map<DeclarationCode, DeclarationDefinition> declarations) {
+        Map<DeclarationCode, DeclarationDefinition> declarations,
+        Map<ItrFormCode, ItrFormSpec> itrForms) {
 
     public RulePack {
         if (taxYear == null) {
@@ -75,6 +79,7 @@ public record RulePack(
         conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
         funds = funds == null ? Map.of() : Map.copyOf(funds);
         declarations = declarations == null ? Map.of() : Map.copyOf(declarations);
+        itrForms = itrForms == null ? Map.of() : Map.copyOf(itrForms);
 
         requireRulesFiledUnderTheirOwnIds(taxYear, rules);
         requireOnlyPublishedVersions(taxYear, rules);
