@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -206,6 +207,8 @@ class ConditionTest {
 
     private static final NodeId TOTAL_INCOME = new NodeId("total.income");
     private static final ComponentCode HRA = new ComponentCode("HRA");
+    private static final DeclarationCode SYNTHETIC_YES_NO = new DeclarationCode("SYNTHETIC_YES_NO");
+    private static final DeclarationCode SYNTHETIC_AMOUNT = new DeclarationCode("SYNTHETIC_AMOUNT");
 
     /** A context carrying computation facts as well as person facts. */
     private static ConditionContext claim(
@@ -222,7 +225,7 @@ class ConditionTest {
                 heads,
                 components,
                 evidence,
-                ItemFacts.NONE);
+                ItemFacts.NONE, Declarations.NONE);
     }
 
     private static ConditionContext withIncome(String totalIncome) {
@@ -698,8 +701,8 @@ class ConditionTest {
     class SealedFamily {
 
         /**
-         * An exhaustive switch with no {@code default} over all fifteen predicates. This does not
-         * merely pass — it <b>compiles</b>, and that is the assertion. A seventeenth {@code Condition}
+         * An exhaustive switch with no {@code default} over all seventeen predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. An eighteenth {@code Condition}
          * breaks this line, which is the whole reason the interface is sealed.
          *
          * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
@@ -721,6 +724,8 @@ class ConditionTest {
                     new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC"),
                     new ItemFactAtMost(ENGINE_CC, 1600),
                     new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2004, 10, 1)),
+                    new Declared(SYNTHETIC_YES_NO),
+                    new DeclaredAmountAbove(SYNTHETIC_AMOUNT, Money.of("1000")),
                     AllOf.of(new IsResident()),
                     AnyOf.of(new IsResident()),
                     new Not(new IsResident()));
@@ -739,6 +744,8 @@ class ConditionTest {
                     case ItemFactIs ignored -> "item";
                     case ItemFactAtMost ignored -> "item";
                     case ItemDateBefore ignored -> "item";
+                    case Declared ignored -> "declaration";
+                    case DeclaredAmountAbove ignored -> "declaration";
                     case AllOf ignored -> "composition";
                     case AnyOf ignored -> "composition";
                     case Not ignored -> "composition";
@@ -747,8 +754,8 @@ class ConditionTest {
             }
 
             // Part E's list, after the W-021 erratum: 12, not the 16 the backlog claimed (PaidOtherThanInCash removed,
-            // W-197); and the three item facts
-            assertThat(all).hasSize(15);
+            // W-197); the three item facts; and the two declarations (W-090a1)
+            assertThat(all).hasSize(17);
         }
     }
 
@@ -770,6 +777,8 @@ class ConditionTest {
                 Arguments.of(new HasIncomeUnderHead(HeadCode.SALARIES), false, Set.of()),
                 Arguments.of(new ComponentPresent(HRA), false, Set.of()),
                 Arguments.of(new EvidenceRecorded(EvidenceType.LANDLORD_PAN), false, Set.of()),
+                Arguments.of(new Declared(SYNTHETIC_YES_NO), false, Set.of()),
+                Arguments.of(new DeclaredAmountAbove(SYNTHETIC_AMOUNT, Money.of("1000")), false, Set.of()),
                 Arguments.of(new AllOf(List.of(new IsResident(), engineIs)), true, Set.of(VEHICLE_ENGINE)),
                 Arguments.of(new AnyOf(List.of(aged, new IsResident())), false, Set.of()),
                 Arguments.of(new Not(engineAtMost), true, Set.of(ENGINE_CC)));

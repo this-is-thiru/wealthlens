@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -57,7 +58,7 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
                 throw new IllegalArgumentException("A computation needs the draft's /filing/dueDate");
             }
             return new FilingFacts(dueDate, Optional.ofNullable(furnishedOn), advanceTaxPaid,
-                    taxAtSource == null ? Money.ZERO : taxAtSource, selfAssessmentPaid);
+                    taxAtSource == null ? Money.ZERO : taxAtSource, selfAssessmentPaid, Map.of());
         }
     }
 }

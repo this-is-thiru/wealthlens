@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.Declarations;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
@@ -108,7 +109,7 @@ class TaxYear2025RulePackTest {
         // for a person having income from business or profession; (b) in the return for one not having it
         ElectionProtocol optOut = pack().regimes().get(FIRST_SCHEDULE_RATES).election();
         ConditionContext taxpayer = new ConditionContext(true, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, 40),
-                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), ItemFacts.NONE);
+                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE);
 
         // When
         VehicleRoute route = optOut.vehicleFor(taxpayer);

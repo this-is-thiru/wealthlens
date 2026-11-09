@@ -46,14 +46,14 @@ class LiquidityCoverageTest {
         Map<EmployerFundCode, EmployerFundDefinition> funds = new LinkedHashMap<>(PACK.funds());
         funds.put(fund.code(), fund);
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds);
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds, Map.of());
     }
 
     private static RulePack withComponent(ComponentDefinition component) {
         Map<ComponentCode, ComponentDefinition> components = new LinkedHashMap<>(PACK.components());
         components.put(component.code(), component);
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                components, PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds());
+                components, PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(), Map.of());
     }
 
     private static EmployerFundDefinition fundWith(EmployerFundDefinition row, Liquidity liquidity) {

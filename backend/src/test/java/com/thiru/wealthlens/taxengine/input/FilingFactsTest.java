@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
@@ -23,7 +24,7 @@ class FilingFactsTest {
     @Test
     void construct_whenEveryFieldIsValid_isAccepted() {
         // When
-        FilingFacts valid = new FilingFacts(DUE, Optional.empty(), List.of(), Money.ZERO, List.of());
+        FilingFacts valid = new FilingFacts(DUE, Optional.empty(), List.of(), Money.ZERO, List.of(), Map.of());
 
         // Then
         assertThat(valid.dueDate()).isEqualTo(DUE);
@@ -33,16 +34,22 @@ class FilingFactsTest {
         return Stream.of(
                 refusal("payment amount null", () -> new FilingFacts.Payment(DUE, null),
                         "An advance-tax payment must carry an amount"),
-                refusal("dueDate null", () -> new FilingFacts(null, Optional.empty(), List.of(), Money.ZERO, List.of()),
+                refusal("dueDate null", () -> new FilingFacts(null, Optional.empty(), List.of(), Money.ZERO, List.of(), Map.of()),
                         "FilingFacts must carry a due date"),
-                refusal("advanceTaxPaid null", () -> new FilingFacts(DUE, Optional.empty(), null, Money.ZERO, List.of()),
+                refusal("advanceTaxPaid null", () -> new FilingFacts(DUE, Optional.empty(), null, Money.ZERO, List.of(), Map.of()),
                         "FilingFacts.advanceTaxPaid may not be null"),
-                refusal("taxAtSource null", () -> new FilingFacts(DUE, Optional.empty(), List.of(), null, List.of()),
+                refusal("taxAtSource null", () -> new FilingFacts(DUE, Optional.empty(), List.of(), null, List.of(), Map.of()),
                         "FilingFacts.taxAtSource must be nil or more"),
-                refusal("taxAtSource negative", () -> new FilingFacts(DUE, Optional.empty(), List.of(), Money.of("-1"), List.of()),
+                refusal("taxAtSource negative", () -> new FilingFacts(DUE, Optional.empty(), List.of(), Money.of("-1"), List.of(), Map.of()),
                         "FilingFacts.taxAtSource must be nil or more"),
-                refusal("selfAssessmentPaid null", () -> new FilingFacts(DUE, Optional.empty(), List.of(), Money.ZERO, null),
-                        "FilingFacts.selfAssessmentPaid may not be null"));
+                refusal("selfAssessmentPaid null", () -> new FilingFacts(DUE, Optional.empty(), List.of(), Money.ZERO, null, Map.of()),
+                        "FilingFacts.selfAssessmentPaid may not be null"),
+                refusal("declarations null", () -> new FilingFacts(DUE, Optional.empty(), List.of(), Money.ZERO, List.of(), null),
+                        "FilingFacts.declarations may not be null"),
+                refusal("declared amount negative", () -> new Declaration.Amount(Money.of("-1")),
+                        "A declared amount must be nil or more"),
+                refusal("declared amount null", () -> new Declaration.Amount(null),
+                        "A declared amount must be nil or more"));
     }
 
     @ParameterizedTest(name = "{0}")

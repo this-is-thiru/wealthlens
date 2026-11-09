@@ -2,7 +2,9 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
+import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -34,6 +36,8 @@ import java.util.Optional;
  * @param componentSources each component's file verbatim, for the reason {@code ruleSources} is kept
  * @param funds every employer fund, by code (W-238e)
  * @param fundSources each fund's file verbatim, for the same reason
+ * @param declarations every declaration the law has asked, by code (W-090a1)
+ * @param declarationSources each declaration's file verbatim, for the same reason
  * @param pipelineNodes the exec node catalogue, each node's file verbatim. Nothing reads its fields
  *     yet; the item that generates node ids from it gives it a type (D-053)
  * @param coverage the coverage register ({@code content/coverage.json}) verbatim, where the timeline
@@ -57,6 +61,8 @@ public record Timeline(
         Map<ComponentCode, String> componentSources,
         Map<EmployerFundCode, EmployerFundDefinition> funds,
         Map<EmployerFundCode, String> fundSources,
+        Map<DeclarationCode, DeclarationDefinition> declarations,
+        Map<DeclarationCode, String> declarationSources,
         Map<NodeId, String> pipelineNodes,
         Optional<String> coverage,
         Map<String, String> sections,
@@ -74,6 +80,8 @@ public record Timeline(
         componentSources = Map.copyOf(componentSources);
         funds = Map.copyOf(funds);
         fundSources = Map.copyOf(fundSources);
+        declarations = Map.copyOf(declarations);
+        declarationSources = Map.copyOf(declarationSources);
         pipelineNodes = Map.copyOf(pipelineNodes);
         coverage = Objects.requireNonNull(coverage, "coverage: Optional.empty() where the timeline has none");
         sections = Map.copyOf(sections);

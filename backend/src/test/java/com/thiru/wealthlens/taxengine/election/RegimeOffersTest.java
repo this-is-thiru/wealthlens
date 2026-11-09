@@ -50,7 +50,7 @@ class RegimeOffersTest {
         Map<ConditionSetId, ConditionSet> conditionSets = new HashMap<>(PACK.conditionSets());
         conditionSets.putAll(sets);
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(), PACK.components(),
-                regimes, PACK.disallowanceSets(), conditionSets, Map.of());
+                regimes, PACK.disallowanceSets(), conditionSets, Map.of(), Map.of());
     }
 
     private static RegimeSpec copy(RegimeSpec r, Set<ConditionSetId> eligibility, ElectionProtocol election,

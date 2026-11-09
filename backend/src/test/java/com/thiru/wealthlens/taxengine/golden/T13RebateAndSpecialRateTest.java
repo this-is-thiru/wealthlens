@@ -25,6 +25,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -139,7 +140,7 @@ class T13RebateAndSpecialRateTest {
         EngineInputs plain = inputs(basicPay("175000"), gains("1600000", "500000"));
         EngineInputs inputs = new EngineInputs(plain.taxYear(), plain.regime(), plain.temporal(), plain.entered(),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
-                new FilingFacts(plain.filing().dueDate(), Optional.empty(), List.of(), Money.of("75000"), List.of()));
+                new FilingFacts(plain.filing().dueDate(), Optional.empty(), List.of(), Money.of("75000"), List.of(), Map.of()));
 
         // When
         GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(inputs);

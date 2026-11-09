@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -73,6 +74,7 @@ public final class RulePackCompiler {
         ArrayNode conditionSets = conditionSets(timeline, taxYear);
         ArrayNode components = components(timeline, taxYear, ruleChecksums.keySet());
         ArrayNode funds = funds(timeline, taxYear, ruleChecksums.keySet());
+        ArrayNode declarations = declarations(timeline, taxYear);
         ArrayNode nodes = nodes(timeline);
 
         Map<String, String> files = new HashMap<>();
@@ -88,6 +90,7 @@ public final class RulePackCompiler {
                 .set("axes", object().set("bindings", MAPPER.createArrayNode()))));
         files.put("exec/components.json", render(object().set("components", components)));
         files.put("exec/funds.json", render(object().set("funds", funds)));
+        files.put("exec/declarations.json", render(object().set("declarations", declarations)));
         files.put("forms/itr-forms.json", render(object().set("forms", MAPPER.createArrayNode())));
         files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
         return new CompiledPack(taxYear, files, ruleChecksums);
@@ -147,6 +150,20 @@ public final class RulePackCompiler {
             }
         }
         return funds;
+    }
+
+    /**
+     * The declarations the law asks at any time in the year (W-090a1): a question added or dropped mid-year is still
+     * one the year's return can ask, so a row is kept where its validity overlaps the year, not only where it covers it.
+     */
+    private static ArrayNode declarations(Timeline timeline, TaxYearId taxYear) {
+        ArrayNode declarations = MAPPER.createArrayNode();
+        for (DeclarationCode code : sorted(timeline.declarations().keySet(), DeclarationCode::value)) {
+            if (timeline.declarations().get(code).validity().overlapsTaxYear(taxYear)) {
+                declarations.add(canonical(MAPPER.readTree(timeline.declarationSources().get(code))));
+            }
+        }
+        return declarations;
     }
 
     private static ArrayNode nodes(Timeline timeline) {

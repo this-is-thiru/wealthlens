@@ -2,7 +2,9 @@ package com.thiru.wealthlens.taxengine.rules.pack;
 
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
+import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -41,6 +43,7 @@ import java.util.stream.Collectors;
  * @param disallowanceSets shared disallowance lists, by id — the s.205(1) pattern
  * @param conditionSets shared eligibility lists, by id — the s.205(2) pattern
  * @param funds the employer-fund registry, by code (W-238e)
+ * @param declarations the questions the year asks the person and the engine cannot compute, by code (W-090a1)
  */
 public record RulePack(
         TaxYearId taxYear,
@@ -52,7 +55,8 @@ public record RulePack(
         Map<RegimeCode, RegimeSpec> regimes,
         Map<DisallowanceSetId, DisallowanceSet> disallowanceSets,
         Map<ConditionSetId, ConditionSet> conditionSets,
-        Map<EmployerFundCode, EmployerFundDefinition> funds) {
+        Map<EmployerFundCode, EmployerFundDefinition> funds,
+        Map<DeclarationCode, DeclarationDefinition> declarations) {
 
     public RulePack {
         if (taxYear == null) {
@@ -70,6 +74,7 @@ public record RulePack(
         disallowanceSets = disallowanceSets == null ? Map.of() : Map.copyOf(disallowanceSets);
         conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
         funds = funds == null ? Map.of() : Map.copyOf(funds);
+        declarations = declarations == null ? Map.of() : Map.copyOf(declarations);
 
         requireRulesFiledUnderTheirOwnIds(taxYear, rules);
         requireOnlyPublishedVersions(taxYear, rules);

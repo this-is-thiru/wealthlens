@@ -251,7 +251,7 @@ class CapitalGainsNodeTest {
         rules.put(rule.id(), new RuleRow(rule.id(), rule.axis(), versions, rule.midYearCombination(),
                 rule.midYearCombinationRule(), rule.prorationBasis(), rule.headProvenance()));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules, shipped.ruleSets(),
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of());
     }
 
     private static CapitalGainsParts.Declared part(CapitalGainsPart part, String term, boolean canAbsorbLongTermLoss) {

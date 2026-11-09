@@ -1,12 +1,18 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.input.Assessee;
+import com.thiru.wealthlens.taxengine.input.Declaration;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.FilingFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.Declarations;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
+import com.thiru.wealthlens.taxengine.rules.declaration.AnswerKind;
+import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -341,7 +347,35 @@ public final class NodeContext {
             individual.disability().ifPresent(severity -> disabilities.put(AgeSubject.SELF, severity));
         }
         boolean resident = assessee.residence() != Assessee.ResidentialStatus.NON_RESIDENT;
-        return new ConditionContext(resident, assessee.type(), ages, disabilities);
+        return new ConditionContext(resident, assessee.type(), ages, disabilities)
+                .answering(declarationsOf(inputs.filing(), pack));
+    }
+
+    /**
+     * The person's declarations as the rules read them (W-090a1, D-517), each checked against the year's catalogue: an
+     * answer to a question the year does not ask, or of the wrong kind, is refused here, naming it, since no condition
+     * would read it and the person would believe it counted.
+     *
+     * @throws IllegalArgumentException if an answer names a question the year's catalogue lacks, or answers it in the
+     *     wrong kind
+     */
+    private static Declarations declarationsOf(FilingFacts filing, RulePack pack) {
+        Map<DeclarationCode, Boolean> yesNo = new LinkedHashMap<>();
+        Map<DeclarationCode, Money> amounts = new LinkedHashMap<>();
+        filing.declarations().forEach((code, answer) -> {
+            DeclarationDefinition asked = Optional.ofNullable(pack.declarations().get(code))
+                    .orElseThrow(() -> new IllegalArgumentException("The declaration " + code + " is not a question "
+                            + pack.taxYear().label() + " asks; its catalogue holds "
+                            + pack.declarations().keySet()));
+            switch (answer) {
+                case Declaration.YesNo yes when asked.answerKind() == AnswerKind.YES_NO -> yesNo.put(code, yes.yes());
+                case Declaration.Amount amount when asked.answerKind() == AnswerKind.AMOUNT ->
+                        amounts.put(code, amount.amount());
+                default -> throw new IllegalArgumentException("The declaration " + code + " is answered "
+                        + answer + ", but " + pack.taxYear().label() + " asks it as " + asked.answerKind());
+            }
+        });
+        return new Declarations(yesNo, amounts);
     }
 
     /**

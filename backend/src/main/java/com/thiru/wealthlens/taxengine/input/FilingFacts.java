@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.taxengine.input;
 
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -28,10 +30,12 @@ import java.util.Optional;
  * @param advanceTaxPaid the payments, with their dates; may be empty, never null
  * @param taxAtSource the year's tax deducted or collected at source (2025 s.390(5); 1961 s.199(1)), nil where none
  * @param selfAssessmentPaid tax paid on the return (2025 s.266; 1961 s.140A), with dates; may be empty, never null
+ * @param declarations the person's answers to the questions the return asks and the engine cannot compute, by
+ *     question (W-090a1, D-517); a question not answered is absent; may be empty, never null
  */
 public record FilingFacts(
         LocalDate dueDate, Optional<LocalDate> furnishedOn, List<Payment> advanceTaxPaid, Money taxAtSource,
-        List<Payment> selfAssessmentPaid) {
+        List<Payment> selfAssessmentPaid, Map<DeclarationCode, Declaration> declarations) {
 
     /**
      * One advance-tax payment.
@@ -77,11 +81,16 @@ public record FilingFacts(
                     "FilingFacts.selfAssessmentPaid may not be null; pass an empty list where nothing was paid");
         }
         selfAssessmentPaid = List.copyOf(selfAssessmentPaid);
+        if (declarations == null) {
+            throw new IllegalArgumentException(
+                    "FilingFacts.declarations may not be null; pass an empty map where nothing was answered");
+        }
+        declarations = Map.copyOf(declarations);
     }
 
     /** A return not yet furnished, with nothing paid in advance. */
     public static FilingFacts notYetFurnished(LocalDate dueDate) {
-        return new FilingFacts(dueDate, Optional.empty(), List.of(), Money.ZERO, List.of());
+        return new FilingFacts(dueDate, Optional.empty(), List.of(), Money.ZERO, List.of(), Map.of());
     }
 
     /** Everything paid on the return, whenever paid. */

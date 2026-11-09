@@ -79,7 +79,7 @@ class SalaryDeductionNodeTest {
                         new DeprecationPolicy.HistoricalOnly()),
                 shipped.rule(RuleIds.SAL_SALARY_INCLUDES).headProvenance(), Liquidity.NONE));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
-                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
+                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of());
     }
 
     private static NodeResult run(int year, RegimeCode regime, String basic, String professionalTax) {
@@ -188,7 +188,7 @@ class SalaryDeductionNodeTest {
                 MidYearCombination.PRORATE_PER_SEGMENT, null, Optional.of(new CalendarMonths()),
                 row.headProvenance()));
         RulePack split = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules, shipped.ruleSets(),
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of());
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(2026);
         EngineInputs inputs = new EngineInputs(taxYear, FIRST_SCHEDULE_RATES,

@@ -271,7 +271,7 @@ class TaxByBasisNodeTest {
         rules.put(eighty.id(), new RuleRow(eighty.id(), eighty.axis(), List.of(overlapping),
                 eighty.midYearCombination(), eighty.midYearCombinationRule(), eighty.prorationBasis(), eighty.headProvenance()));
         RulePack overlap = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
-                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds());
+                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds(), Map.of());
 
         // When / Then
         assertThatThrownBy(() -> runFor(overlap, FIRST_SCHEDULE_RATES, "1000000",
@@ -298,7 +298,7 @@ class TaxByBasisNodeTest {
         rules.put(ladder.id(), new RuleRow(ladder.id(), ladder.axis(), List.of(first, second),
                 MidYearCombination.PRORATE_PER_SEGMENT, null, Optional.of(new Days()), ladder.headProvenance()));
         RulePack split = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
-                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds());
+                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds(), Map.of());
 
         // When / Then — a ladder's bands cannot be apportioned, so the node refuses rather than use year-end
         assertThatThrownBy(() -> NodeHarness.with(split)
@@ -394,7 +394,7 @@ class TaxByBasisNodeTest {
         rules.put(rule.id(), new RuleRow(rule.id(), rule.axis(), versions, rule.midYearCombination(),
                 rule.midYearCombinationRule(), rule.prorationBasis(), rule.headProvenance()));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules, shipped.ruleSets(),
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of());
     }
 
     private static RuleDefinition reordered(CapitalGainsParts declared, CapitalGainsPart... order) {

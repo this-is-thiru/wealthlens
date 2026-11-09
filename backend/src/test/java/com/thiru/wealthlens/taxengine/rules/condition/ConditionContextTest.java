@@ -22,7 +22,7 @@ class ConditionContextTest {
     void construct_whenEveryPartIsGiven_isAccepted() {
         // When
         ConditionContext valid = new ConditionContext(true, INDIVIDUAL, Map.of(), Map.of(), Map.of(), Set.of(), Set.of(),
-                Set.of(), ItemFacts.NONE);
+                Set.of(), ItemFacts.NONE, Declarations.NONE);
 
         // Then
         assertThat(valid.personType()).isEqualTo(INDIVIDUAL);
@@ -33,19 +33,21 @@ class ConditionContextTest {
         String collections = "ConditionContext collections may not be null";
         return Stream.of(
                 refusal("ages null", () -> new ConditionContext(true, INDIVIDUAL, null, Map.of(), Map.of(), Set.of(),
-                        Set.of(), Set.of(), ItemFacts.NONE), maps),
+                        Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE), maps),
                 refusal("disabilities null", () -> new ConditionContext(true, INDIVIDUAL, Map.of(), null, Map.of(),
-                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE), maps),
+                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE), maps),
                 refusal("nodeValues null", () -> new ConditionContext(true, INDIVIDUAL, Map.of(), Map.of(), null,
-                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE), collections),
+                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE), collections),
                 refusal("headsWithIncome null", () -> new ConditionContext(true, INDIVIDUAL, Map.of(), Map.of(),
-                        Map.of(), null, Set.of(), Set.of(), ItemFacts.NONE), collections),
+                        Map.of(), null, Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE), collections),
                 refusal("componentsPresent null", () -> new ConditionContext(true, INDIVIDUAL, Map.of(), Map.of(),
-                        Map.of(), Set.of(), null, Set.of(), ItemFacts.NONE), collections),
+                        Map.of(), Set.of(), null, Set.of(), ItemFacts.NONE, Declarations.NONE), collections),
                 refusal("evidenceRecorded null", () -> new ConditionContext(true, INDIVIDUAL, Map.of(), Map.of(),
-                        Map.of(), Set.of(), Set.of(), null, ItemFacts.NONE), collections),
+                        Map.of(), Set.of(), Set.of(), null, ItemFacts.NONE, Declarations.NONE), collections),
                 refusal("item null", () -> new ConditionContext(true, INDIVIDUAL, Map.of(), Map.of(), Map.of(),
-                        Set.of(), Set.of(), Set.of(), null), collections));
+                        Set.of(), Set.of(), Set.of(), null, Declarations.NONE), collections),
+                refusal("declarations null", () -> new ConditionContext(true, INDIVIDUAL, Map.of(), Map.of(), Map.of(),
+                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, null), collections));
     }
 
     @ParameterizedTest(name = "{0}")

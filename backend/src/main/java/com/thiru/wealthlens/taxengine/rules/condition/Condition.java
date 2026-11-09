@@ -35,7 +35,9 @@ import java.util.stream.Collectors;
  * thirteenth is {@link ItemFactIs}: a fact of the item a node is computing, so the row for a car or a payment is chosen in data
  * (W-088m2, D-253); the fourteenth, {@link ItemFactAtMost}, its counted facts (W-088n1, D-257); the fifteenth,
  * {@link ItemDateBefore}, its dated facts (W-088f2b, D-291). That last one dates a fact of the item — when a lot was
- * acquired — to decide whether a row applies, which is what a condition is for; it does not date the rule (V-2).
+ * acquired — to decide whether a row applies, which is what a condition is for; it does not date the rule (V-2). The
+ * sixteenth and seventeenth, {@link Declared} and {@link DeclaredAmountAbove}, read the person's answers to questions
+ * the engine cannot compute, so a form's bar is data (W-090a1, D-517).
  */
 public sealed interface Condition
         permits IsResident,
@@ -50,6 +52,8 @@ public sealed interface Condition
                 ItemFactIs,
                 ItemFactAtMost,
                 ItemDateBefore,
+                Declared,
+                DeclaredAmountAbove,
                 AllOf,
                 AnyOf,
                 Not {
@@ -72,7 +76,7 @@ public sealed interface Condition
             case AnyOf any -> any.any().stream().anyMatch(Condition::isAboutItem);
             case Not not -> not.condition().isAboutItem();
             case IsResident _, AgeAtLeast _, HasPersonType _, IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
-                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _ -> false;
+                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, Declared _, DeclaredAmountAbove _ -> false;
         };
     }
 
@@ -92,7 +96,8 @@ public sealed interface Condition
                     .collect(Collectors.toUnmodifiableSet());
             case Not not -> not.condition().itemFactsRead();
             case IsResident _, AgeAtLeast _, HasPersonType _, IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
-                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _ -> Set.of();
+                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, Declared _, DeclaredAmountAbove _ ->
+                    Set.of();
         };
     }
 }

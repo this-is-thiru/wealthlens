@@ -6,6 +6,8 @@ import com.thiru.wealthlens.taxengine.rules.condition.AllOf;
 import com.thiru.wealthlens.taxengine.rules.condition.AnyOf;
 import com.thiru.wealthlens.taxengine.rules.condition.ComponentPresent;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
+import com.thiru.wealthlens.taxengine.rules.condition.Declared;
+import com.thiru.wealthlens.taxengine.rules.condition.DeclaredAmountAbove;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.EvidenceRecorded;
 import com.thiru.wealthlens.taxengine.rules.condition.EvidenceType;
@@ -22,6 +24,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -31,7 +34,7 @@ import java.util.Set;
 import tools.jackson.databind.JsonNode;
 
 /**
- * All fifteen predicates of the condition algebra.
+ * All seventeen predicates of the condition algebra.
  *
  * <p>Each JSON field is named for the record component it fills, with one exception forced by the
  * format: {@link EvidenceRecorded}'s component is called {@code type}, which is also the
@@ -53,6 +56,8 @@ public final class ConditionJson {
         "ItemFactIs",
         "ItemFactAtMost",
         "ItemDateBefore",
+        "Declared",
+        "DeclaredAmountAbove",
         "AllOf",
         "AnyOf",
         "Not"
@@ -76,6 +81,9 @@ public final class ConditionJson {
                             new ItemFactId(PackJson.text(node, "fact", path)), PackJson.integer(node, "limit", path));
                     case "ItemDateBefore" -> new ItemDateBefore(
                             new ItemFactId(PackJson.text(node, "fact", path)), PackJson.date(node, "date", path));
+                    case "Declared" -> new Declared(new DeclarationCode(PackJson.text(node, "code", path)));
+                    case "DeclaredAmountAbove" -> new DeclaredAmountAbove(
+                            new DeclarationCode(PackJson.text(node, "code", path)), PackJson.money(node, "limit", path));
                     case "AllOf", "AnyOf", "Not" -> composition(tag, node, path);
                     default -> throw unhandled(tag, path);
                 });

@@ -104,7 +104,7 @@ class RegimeElectionSnapshotTest {
                     Optional.empty(),
                     List.of(
                             new Payment(LocalDate.of(2025, 6, 15), Money.of("30000")),
-                            new Payment(LocalDate.of(2026, 3, 15), Money.of("50000"))), Money.ZERO, List.of());
+                            new Payment(LocalDate.of(2026, 3, 15), Money.of("50000"))), Money.ZERO, List.of(), Map.of());
 
             assertThat(facts.totalAdvanceTaxPaid()).isEqualTo(Money.of("80000"));
         }
@@ -118,7 +118,7 @@ class RegimeElectionSnapshotTest {
                     Optional.empty(),
                     List.of(
                             new Payment(LocalDate.of(2026, 3, 31), Money.of("50000")),
-                            new Payment(LocalDate.of(2026, 4, 1), Money.of("20000"))), Money.ZERO, List.of());
+                            new Payment(LocalDate.of(2026, 4, 1), Money.of("20000"))), Money.ZERO, List.of(), Map.of());
 
             assertThat(facts.advanceTaxPaidBy(LocalDate.of(2026, 3, 31)))
                     .isEqualTo(Money.of("50000"));
@@ -135,8 +135,8 @@ class RegimeElectionSnapshotTest {
         @Test
         void notFurnishedIsDifferentFromFurnishedOnTime() {
             assertThat(FilingFacts.notYetFurnished(DUE).furnishedLate()).isFalse();
-            assertThat(new FilingFacts(DUE, Optional.of(DUE), List.of(), Money.ZERO, List.of()).furnishedLate()).isFalse();
-            assertThat(new FilingFacts(DUE, Optional.of(DUE.plusDays(1)), List.of(), Money.ZERO, List.of()).furnishedLate())
+            assertThat(new FilingFacts(DUE, Optional.of(DUE), List.of(), Money.ZERO, List.of(), Map.of()).furnishedLate()).isFalse();
+            assertThat(new FilingFacts(DUE, Optional.of(DUE.plusDays(1)), List.of(), Money.ZERO, List.of(), Map.of()).furnishedLate())
                     .isTrue();
         }
 
@@ -144,7 +144,7 @@ class RegimeElectionSnapshotTest {
         void thePaymentListIsDefensivelyCopied() {
             List<Payment> mutable = new ArrayList<>();
             mutable.add(new Payment(LocalDate.of(2025, 6, 15), Money.of("30000")));
-            FilingFacts facts = new FilingFacts(DUE, Optional.empty(), mutable, Money.ZERO, List.of());
+            FilingFacts facts = new FilingFacts(DUE, Optional.empty(), mutable, Money.ZERO, List.of(), Map.of());
 
             mutable.add(new Payment(LocalDate.of(2025, 9, 15), Money.of("999999")));
 
@@ -153,7 +153,7 @@ class RegimeElectionSnapshotTest {
 
         @Test
         void aNullFurnishedOnIsRejectedRatherThanMeaningToday() {
-            assertThatThrownBy(() -> new FilingFacts(DUE, null, List.of(), Money.ZERO, List.of()))
+            assertThatThrownBy(() -> new FilingFacts(DUE, null, List.of(), Money.ZERO, List.of(), Map.of()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not yet furnished");
         }

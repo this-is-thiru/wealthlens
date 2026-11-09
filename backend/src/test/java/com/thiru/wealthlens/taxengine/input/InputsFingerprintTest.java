@@ -195,13 +195,13 @@ class InputsFingerprintTest {
                                     List.of(new Payment(
                                             LocalDate.of(2026, 3, 15),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of(
-                                                    "25000"))), Money.ZERO, List.of())))),
+                                                    "25000"))), Money.ZERO, List.of(), Map.of())))),
                     Arguments.of(
                             "filing.furnishedOn",
                             mutate(in -> copy(in, r -> r.filing = new FilingFacts(
                                     LocalDate.of(2026, 7, 31),
                                     Optional.of(LocalDate.of(2026, 8, 1)),
-                                    List.of(), Money.ZERO, List.of())))));
+                                    List.of(), Money.ZERO, List.of(), Map.of())))));
         }
 
         @ParameterizedTest(name = "{0} changes the fingerprint")

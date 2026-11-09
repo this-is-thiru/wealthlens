@@ -33,6 +33,7 @@ import java.util.Set;
  * @param componentsPresent the pay lines present in this computation
  * @param evidenceRecorded the artefacts furnished for the claim this context describes
  * @param item the facts of the item a node is choosing a row for; {@link ItemFacts#NONE} where it chooses for none
+ * @param declarations the person's answers to the year's declarations; {@link Declarations#NONE} where none was given
  */
 public record ConditionContext(
         boolean resident,
@@ -43,7 +44,8 @@ public record ConditionContext(
         Set<HeadCode> headsWithIncome,
         Set<ComponentCode> componentsPresent,
         Set<EvidenceType> evidenceRecorded,
-        ItemFacts item) {
+        ItemFacts item,
+        Declarations declarations) {
 
     public ConditionContext {
         if (personType == null) {
@@ -53,7 +55,7 @@ public record ConditionContext(
             throw new IllegalArgumentException("ConditionContext maps may not be null");
         }
         if (nodeValues == null || headsWithIncome == null || componentsPresent == null
-                || evidenceRecorded == null || item == null) {
+                || evidenceRecorded == null || item == null || declarations == null) {
             throw new IllegalArgumentException("ConditionContext collections may not be null");
         }
         ages = Map.copyOf(ages);
@@ -71,13 +73,19 @@ public record ConditionContext(
             Map<AgeSubject, Integer> ages,
             Map<AgeSubject, DisabilitySeverity> disabilities) {
         this(resident, personType, ages, disabilities,
-                Map.of(), Set.of(), Set.of(), Set.of(), ItemFacts.NONE);
+                Map.of(), Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE);
     }
 
     /** The same facts, about the given item. */
     public ConditionContext about(ItemFacts facts) {
         return new ConditionContext(resident, personType, ages, disabilities, nodeValues, headsWithIncome,
-                componentsPresent, evidenceRecorded, facts);
+                componentsPresent, evidenceRecorded, facts, declarations);
+    }
+
+    /** The same facts, with the person's answers to the year's declarations. */
+    public ConditionContext answering(Declarations answers) {
+        return new ConditionContext(resident, personType, ages, disabilities, nodeValues, headsWithIncome,
+                componentsPresent, evidenceRecorded, item, answers);
     }
 
     /** A resident individual of the given age, with nothing else recorded. */

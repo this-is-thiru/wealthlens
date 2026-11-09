@@ -371,7 +371,7 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all fifteen")
+    @DisplayName("Condition — all seventeen")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
@@ -389,7 +389,11 @@ class PackJsonTest {
                     java.util.Set.of(new ComponentCode("HRA")),
                     java.util.Set.of(com.thiru.wealthlens.taxengine.rules.condition.EvidenceType.LANDLORD_PAN),
                     com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.of(
-                            new com.thiru.wealthlens.taxengine.rules.id.ItemFactId("vehicle.engine"), "ELECTRIC"));
+                            new com.thiru.wealthlens.taxengine.rules.id.ItemFactId("vehicle.engine"), "ELECTRIC"),
+                    new com.thiru.wealthlens.taxengine.rules.condition.Declarations(
+                            Map.of(new com.thiru.wealthlens.taxengine.rules.id.DeclarationCode("SYNTHETIC_YES_NO"), true),
+                            Map.of(new com.thiru.wealthlens.taxengine.rules.id.DeclarationCode("SYNTHETIC_AMOUNT"),
+                                    Money.of("1100"))));
         }
 
         private static boolean holds(String raw) {
@@ -416,6 +420,12 @@ class PackJsonTest {
             assertThat(holds("{\"type\": \"ComponentPresent\", \"code\": \"HRA\"}")).isTrue();
             assertThat(holds("{\"type\": \"EvidenceRecorded\", \"evidenceType\": \"LANDLORD_PAN\"}")).isTrue();
             assertThat(holds("{\"type\": \"Not\", \"condition\": {\"type\": \"IsResident\"}}")).isFalse();
+            // W-090a1: the synthetic taxpayer answered yes, and declared ₹1,100 — above ₹1,000, not above ₹1,100
+            assertThat(holds("{\"type\": \"Declared\", \"code\": \"SYNTHETIC_YES_NO\"}")).isTrue();
+            assertThat(holds("{\"type\": \"DeclaredAmountAbove\", \"code\": \"SYNTHETIC_AMOUNT\", \"limit\": \"1000\"}"))
+                    .isTrue();
+            assertThat(holds("{\"type\": \"DeclaredAmountAbove\", \"code\": \"SYNTHETIC_AMOUNT\", \"limit\": \"1100\"}"))
+                    .isFalse();
             assertThat(holds(
                             "{\"type\": \"AllOf\", \"all\": [{\"type\": \"IsResident\"}, {\"type\": \"ComponentPresent\", \"code\": \"HRA\"}]}"))
                     .isTrue();
@@ -828,9 +838,11 @@ class PackJsonTest {
                                     "law/rates.json", resource("law/rates.json"),
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json"),
-                                    "exec/funds.json", resource("exec/funds.json")));
+                                    "exec/funds.json", resource("exec/funds.json"),
+                                    "exec/declarations.json", resource("exec/declarations.json")));
 
             assertThat(pack.rules()).hasSize(236);
+            assertThat(pack.declarations()).isEmpty();
             assertThat(pack.funds()).containsOnlyKeys(
                     new com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode("APPROVED_SUPERANNUATION_FUND"),
                     new com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode("NOTIFIED_PENSION_SCHEME"),
@@ -852,7 +864,8 @@ class PackJsonTest {
                                     "law/rates.json", resource("law/rates.json"),
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json"),
-                                    "exec/funds.json", resource("exec/funds.json")));
+                                    "exec/funds.json", resource("exec/funds.json"),
+                                    "exec/declarations.json", resource("exec/declarations.json")));
 
             var slab = pack.rule(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-TAX-REGIME"));
             var cap = slab.versions().getFirst().cap().orElseThrow();

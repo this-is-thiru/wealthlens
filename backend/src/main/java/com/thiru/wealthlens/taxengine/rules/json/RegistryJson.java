@@ -9,7 +9,10 @@ import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.declaration.AnswerKind;
+import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
@@ -97,6 +100,32 @@ public final class RegistryJson {
                 ValueJson.dateRange(PackJson.object(node, "validity", where), where + ".validity"),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance"),
                 LiquidityJson.of(node, where)));
+    }
+
+    // ----------------------------------------------------------------- declarations
+
+    /** Every declaration in {@code exec/declarations.json}, keyed by code (W-090a1). */
+    public static Map<DeclarationCode, DeclarationDefinition> declarations(JsonNode root, String path) {
+        Map<DeclarationCode, DeclarationDefinition> byCode = new LinkedHashMap<>();
+        for (DeclarationDefinition definition :
+                PackJson.arrayOrEmpty(root, "declarations", path, e -> declaration(e.node(), e.path()))) {
+            if (byCode.put(definition.code(), definition) != null) {
+                throw new PackValidationException(path + " defines declaration " + definition.code() + " twice");
+            }
+        }
+        return byCode;
+    }
+
+    /** One declaration, from its own file on the timeline or an entry of a year's catalogue. */
+    public static DeclarationDefinition declaration(JsonNode node, String path) {
+        DeclarationCode code = PackJson.construct(path, () -> new DeclarationCode(PackJson.text(node, "code", path)));
+        String where = path + " (" + code + ")";
+        return PackJson.construct(where, () -> new DeclarationDefinition(
+                code,
+                PackJson.text(node, "question", where),
+                PackJson.enumValue(node, "answerKind", where, AnswerKind.class),
+                ValueJson.dateRange(PackJson.object(node, "validity", where), where + ".validity"),
+                ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
     static ComponentLifecycle lifecycle(JsonNode node, String path) {

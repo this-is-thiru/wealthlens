@@ -58,7 +58,7 @@ class AdvanceTaxAndInterestTest {
     private static FilingFacts filing(int year, Optional<LocalDate> furnishedOn, List<FilingFacts.Payment> selfAssessment) {
         return new FilingFacts(LocalDate.of(year + 1, 7, 31), furnishedOn,
                 List.of(paid(LocalDate.of(year, 9, 15), "30000"), paid(LocalDate.of(year + 1, 3, 15), "20000")),
-                Money.of("20000"), selfAssessment);
+                Money.of("20000"), selfAssessment, Map.of());
     }
 
     private static FilingFacts.Payment paid(LocalDate on, String amount) {
@@ -227,7 +227,7 @@ class AdvanceTaxAndInterestTest {
     void evaluate_whenAdvanceTaxIsEitherSideOfNinetyPercent_chargesShortfallInterestBelowIt(String paid, String interest) {
         // Given — assessed 80,000; 90 % = 72,000, and s.234B runs only on "less than ninety per cent."
         FilingFacts filing = new FilingFacts(LocalDate.of(2026, 7, 31), on(2026, 8, 31),
-                List.of(paid(LocalDate.of(2025, 9, 15), paid)), Money.of("20000"), List.of());
+                List.of(paid(LocalDate.of(2025, 9, 15), paid)), Money.of("20000"), List.of(), Map.of());
         EngineInputs inputs = inputs(2025, filing, LocalDate.of(2026, 8, 31), UNDER_SIXTY);
 
         // When

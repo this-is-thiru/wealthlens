@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.Declarations;
 import com.thiru.wealthlens.taxengine.rules.condition.HasIncomeUnderHead;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
@@ -256,7 +257,7 @@ class RegimeLifecycleTest {
                 java.util.Set.of(heads),
                 java.util.Set.of(),
                 java.util.Set.of(),
-                com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.NONE);
+                com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.NONE, Declarations.NONE);
     }
 
     /**
