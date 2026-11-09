@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-090b done (D-521), committed, not pushed
+Item            : none in flight — W-260 done (D-522), committed, not pushed
 Stage           : 6 → next: plan W-090c (§2 template), ask for approval; STOP before building
-Done today      : session 81: W-090b planned, approved C1a – C4a, built and committed (D-521)
-Board           : W-090a —; W-090a1 D; W-090a2 D; W-090b D; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-259 ·
+Done today      : session 81: W-090b (327e5a00, D-521); W-260 placed, built and committed (D-522)
+Board           : W-090a —; W-090a1 D; W-090a2 D; W-090b D; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-259 ·; W-260 D
 Next step       : resume at W-090c (TY 2026-27 ITR-1 – 4 from r.164): run the resume check, read r.164(12)'s Table (Gazette 271092) first, the W-090c row and the two W-090b errata after Phase 10's table, then plan it
-Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f, 7f01234b and the W-090b commit unpushed); adopt the 13 questions' wording
-Last verify     : W-090b unit 5022 / 0 / 0 (Checkstyle + Spotless on), integration 539 / 0 / 0
+Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f, 7f01234b, 327e5a00 and the W-260 commit unpushed); adopt the 13 questions' wording
+Last verify     : unit-tier-stamp-test.sh 10 / 10; unit-tier.sh 5022 / 0 / 0
 Files touched   : none — all committed
-Last item commit: taxplanning W-090b: hold a year's return forms as pack rows in the forms layer
-Updated         : 2026-11-09, session 81 — W-090b committed; next W-090c
+Last item commit: tooling W-260: run the commit gate's unit tier once per working tree, at low priority
+Updated         : 2026-11-09, session 81 — W-260 committed; next W-090c
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

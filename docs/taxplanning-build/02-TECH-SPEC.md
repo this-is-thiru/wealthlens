@@ -446,7 +446,7 @@ public enum TaxError {                     //  http  retryable  class
 ./mvnw clean install -pl backend -am -DskipTests
 ```
 
-A Claude Code session cannot `git commit` unless the unit tier passes (`.claude/hooks/pre-commit-gate.sh`).
+A Claude Code session cannot `git commit` unless the unit tier passes (`.claude/hooks/pre-commit-gate.sh`); a working tree it already passed on, unchanged since, is not run twice (`.claude/hooks/unit-tier.sh`, W-260).
 
 ---
 
@@ -600,3 +600,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-11-09 | T1 `condition/`: `Declared` and `DeclaredAmountAbove` (strict), the 16th and 17th predicates, read `Declarations` on `ConditionContext`; an unanswered question throws. T3 input: `FilingFacts.declarations` (`Declaration`: `YesNo`, `Amount`), checked against the year's catalogue in `NodeContext.conditions()`. T4 pack: `exec/declarations/<CODE>.json` → `exec/declarations.json` → `RulePack.declarations`; `DeclarationReferences` at build time; every lock relocked (EXEC) | `W-090a1`, D-518 |
 | 2026-11-09 | T4 pack: TY 2026-27's 13 declaration rows, r.164(3), (6) (`exec/declarations/`, valid 2026-04-01 – 2027-03-31). T3 `pipeline/`: `AskedDeclarations` — the one check of answers against the year's catalogue, naming the kind, never the amount; `NodeContext.conditions()` uses it. `api`: `TaxCalculator.declarations(year)` → `DeclarationQuestion`, `requireAsked(year, answers)`. T8 `workspace/`: `DraftInputs.Filing.declarations`, refused on save | `W-090a2`, D-520 |
 | 2026-11-09 | T1 `filing/`: `ItrFormSpec`, `ItrFormBar`, `FurnishingOption`; `id/`: `ReturnKind`, `FurnishingManner` (open codes). Forms are one file per form under `timeline/forms/itr-forms/`, versioned per tax year, compiled into the `forms` layer and held as `RulePack.itrForms`; `ItrFormReferences` checks exclusions and cascade order at build time; `DeclarationReferences` walks forms too. Synthetic pack only | D-521 (W-090b) |
+| 2026-11-09 | Commit gate: `unit-tier.sh` runs the unit tier at low priority (factor 0.5) and records the green working tree; the gate skips a recorded, unchanged tree | D-522 (W-260) |
