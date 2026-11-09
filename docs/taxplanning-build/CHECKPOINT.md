@@ -8,7 +8,7 @@ Item            : none in flight — W-090a1 done (D-518), committed (subject in
 Stage           : 6 → next: plan W-090a2 (§2 template), ask for approval; STOP before building
 Done today      : session 80: W-090a1 planned, approved, built, verified, committed
 Board           : W-090a1 D; W-090a2 ·; W-090b ·; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-246 K
-Next step       : resume at W-090a2: run the resume check, read plans/W-090a.md, plans/W-090a1.md and the W-090a2 row (03-WORK-ITEMS:1422). Fetch Gazette 271092 (Rules) and 265620 (Act) again (session-79 scratch copies are gone); read (l) s.393(3) Sl. 5, (m) s.391(2) / 392(3), (n) Chapter XIII Part A first. a2 needs the catalogue's answer kind from taxplanning, which sees only the engine's named interfaces, so it comes through api. Open question for the owner: tools/w146_synthetic_pack.py wipes the synthetic pack and writes neither funds nor declarations; place a row, or drop it?
+Next step       : resume at W-090a2: run the resume check, read plans/W-090a.md, plans/W-090a1.md and the W-090a2 row (03-WORK-ITEMS:1422). Fetch Gazette 271092 (Rules) and 265620 (Act) again (session-79 scratch copies are gone); read (l) s.393(3) Sl. 5, (m) s.391(2) / 392(3), (n) Chapter XIII Part A first. a2 needs the catalogue's answer kind from taxplanning, which sees only the engine's named interfaces, so it comes through api. W-259 placed (D-519): the synthetic generator keeps every row kind; Phase 14, board order.
 Owner actions   : push review/taxplanning (W-090a1 commit unpushed); earlier standing actions unchanged (session 79 list)
 Last verify     : W-090a1 unit 4989 / 0 / 0 (Checkstyle + Spotless on), integration 535 / 0 / 0
 Files touched   : none — all committed
