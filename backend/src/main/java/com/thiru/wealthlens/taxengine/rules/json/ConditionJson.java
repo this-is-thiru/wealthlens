@@ -15,6 +15,8 @@ import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.EvidenceRecorded;
 import com.thiru.wealthlens.taxengine.rules.condition.EvidenceType;
 import com.thiru.wealthlens.taxengine.rules.condition.HasIncomeUnderHead;
+import com.thiru.wealthlens.taxengine.rules.condition.HasLossBroughtForward;
+import com.thiru.wealthlens.taxengine.rules.condition.HasLossCarriedForward;
 import com.thiru.wealthlens.taxengine.rules.condition.HasLossUnderHead;
 import com.thiru.wealthlens.taxengine.rules.condition.HasPersonType;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
@@ -56,6 +58,8 @@ public final class ConditionJson {
         "IsOrdinarilyResident",
         "HousePropertiesOwnedAtMost",
         "HasLossUnderHead",
+        "HasLossBroughtForward",
+        "HasLossCarriedForward",
         "CapitalGainsOnlyInParts",
         "CapitalGainsPartAtMost",
         "DeductionAllowedUnder",
@@ -99,7 +103,8 @@ public final class ConditionJson {
                     case "Declared" -> new Declared(new DeclarationCode(PackJson.text(node, "code", path)));
                     case "DeclaredAmountAbove" -> new DeclaredAmountAbove(
                             new DeclarationCode(PackJson.text(node, "code", path)), PackJson.money(node, "limit", path));
-                    case "HasLossUnderHead", "CapitalGainsOnlyInParts", "CapitalGainsPartAtMost", "DeductionAllowedUnder" ->
+                    case "HasLossUnderHead", "HasLossBroughtForward", "HasLossCarriedForward", "CapitalGainsOnlyInParts",
+                            "CapitalGainsPartAtMost", "DeductionAllowedUnder" ->
                             returnFact(tag, node, path);
                     case "AllOf", "AnyOf", "Not" -> composition(tag, node, path);
                     default -> throw unhandled(tag, path);
@@ -122,10 +127,14 @@ public final class ConditionJson {
         };
     }
 
-    /** Facts of a computed return a form reads — the W-090c1b1 predicates. */
+    /** Facts of a computed return a form reads — the W-090c1b1 and W-090c1b2 predicates. */
     private static Condition returnFact(String tag, JsonNode node, String path) {
         return switch (tag) {
             case "HasLossUnderHead" -> new HasLossUnderHead(PackJson.enumValue(node, "head", path, HeadCode.class));
+            case "HasLossBroughtForward" ->
+                    new HasLossBroughtForward(PackJson.enumValue(node, "head", path, HeadCode.class));
+            case "HasLossCarriedForward" ->
+                    new HasLossCarriedForward(PackJson.enumValue(node, "head", path, HeadCode.class));
             case "CapitalGainsOnlyInParts" -> new CapitalGainsOnlyInParts(new LinkedHashSet<>(PackJson.array(
                     node, "parts", path, e -> new CapitalGainsPart(e.node().asString()))));
             case "CapitalGainsPartAtMost" -> new CapitalGainsPartAtMost(

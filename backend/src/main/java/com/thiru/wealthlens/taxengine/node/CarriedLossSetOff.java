@@ -88,6 +88,16 @@ final class CarriedLossSetOff {
             Optional<String> notDeterminedInTimeCitation) {
     }
 
+    /**
+     * What one ledger brought into the year and leaves carried, under the head its row sets it off against
+     * (W-090c1b2, D-528).
+     *
+     * @param broughtForward each carried year's remaining loss the law still carries into the year, before set-off
+     * @param stillCarried what of it is left, still carried forward
+     */
+    record LedgerTotals(Money broughtForward, Money stillCarried) {
+    }
+
     private final NodeContext ctx;
     private final Map<HeadCode, Money> income;
     private final CapitalGainsAbsorption parts;
@@ -101,13 +111,13 @@ final class CarriedLossSetOff {
         this.lines = lines;
     }
 
-    /** Sets {@code losses} off, lowering the head's income and, for capital gains, the parts. */
-    static void apply(NodeContext ctx, CarriedLosses losses, Map<HeadCode, Money> income,
+    /** Sets {@code losses} off, lowering the head's income and, for capital gains, the parts; returns its totals. */
+    static LedgerTotals apply(NodeContext ctx, CarriedLosses losses, Map<HeadCode, Money> income,
             CapitalGainsAbsorption parts, List<TraceLine> lines) {
-        new CarriedLossSetOff(ctx, income, parts, lines).apply(losses);
+        return new CarriedLossSetOff(ctx, income, parts, lines).apply(losses);
     }
 
-    private void apply(CarriedLosses losses) {
+    private LedgerTotals apply(CarriedLosses losses) {
         if (losses.carry().requiresReturnFiledInTime() && losses.texts().notDeterminedInTimeCitation().isEmpty()) {
             throw new IllegalArgumentException(losses.row() + " requires a return filed in time, but the "
                     + losses.texts().noun() + " ledger states no such fact to test; the row is a pack defect (D-263)");
@@ -115,6 +125,8 @@ final class CarriedLossSetOff {
         TaxYearId thisYear = ctx.inputs().taxYear();
         List<CarriedLoss> oldestFirst = losses.years().stream()
                 .sorted(Comparator.comparingInt(year -> year.arose().startYear())).toList();
+        Money broughtForward = Money.ZERO;
+        Money stillCarried = Money.ZERO;
         for (CarriedLoss year : oldestFirst) {
             if (year.arose().startYear() >= thisYear.startYear()) {
                 throw new IllegalArgumentException("A " + losses.texts().noun() + " carried forward from "
@@ -122,9 +134,11 @@ final class CarriedLossSetOff {
                         + "; a loss is carried only to later years");
             }
             if (year.remaining().isGreaterThan(Money.ZERO) && isCarried(losses, year, thisYear)) {
-                use(losses, year);
+                broughtForward = broughtForward.plus(year.remaining());
+                stillCarried = stillCarried.plus(use(losses, year));
             }
         }
+        return new LedgerTotals(broughtForward, stillCarried);
     }
 
     /** Whether the year's loss may be used at all; where not, the line saying why. */
@@ -149,8 +163,8 @@ final class CarriedLossSetOff {
         return true;
     }
 
-    /** The year's portions in turn; what is left is still carried. */
-    private void use(CarriedLosses losses, CarriedLoss year) {
+    /** The year's portions in turn; what is left is still carried, and returned. */
+    private Money use(CarriedLosses losses, CarriedLoss year) {
         Money left = Money.ZERO;
         for (Portion portion : year.portions()) {
             if (portion.amount().isGreaterThan(Money.ZERO)) {
@@ -162,6 +176,7 @@ final class CarriedLossSetOff {
                     .withLimitedBy("loss of " + year.arose().label() + " still carried forward ("
                             + losses.texts().stillCarriedCitation() + ")"));
         }
+        return left;
     }
 
     /** One portion: gone where the regime forbids it, else set off against the head; returns what is left of it. */

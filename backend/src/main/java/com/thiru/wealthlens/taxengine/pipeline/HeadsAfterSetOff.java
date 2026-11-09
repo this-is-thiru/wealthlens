@@ -15,18 +15,25 @@ import java.util.Map;
  * @param total every head's income after set-off, which gross total income is
  * @param capitalGains each capital-gains part held, after other heads' losses, nil or more; a part not held is nil
  * @param indexedGains each held part's qualifying gains, together no more than the part
+ * @param losses each head's loss brought forward into the year and left to carry forward (W-090c1b2, D-528)
  */
 public record HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capitalGains,
-        Map<CapitalGainsPart, List<IndexedGain>> indexedGains) implements NodeValue {
+        Map<CapitalGainsPart, List<IndexedGain>> indexedGains, LossesAcrossYears losses) implements NodeValue {
 
     public HeadsAfterSetOff {
-        if (total == null || capitalGains == null || indexedGains == null) {
-            throw new IllegalArgumentException("Heads after set-off need the total, the capital-gains parts and their"
-                    + " indexed measure");
+        if (total == null || capitalGains == null || indexedGains == null || losses == null) {
+            throw new IllegalArgumentException("Heads after set-off need the total, the capital-gains parts, their"
+                    + " indexed measure and the losses across years");
         }
         IndexedGain.requireHeld(capitalGains, indexedGains);
         capitalGains = Map.copyOf(capitalGains);
         indexedGains = IndexedGain.copied(indexedGains);
+    }
+
+    /** Heads that record no losses across years — a reader of the gains alone. */
+    public HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capitalGains,
+            Map<CapitalGainsPart, List<IndexedGain>> indexedGains) {
+        this(total, capitalGains, indexedGains, LossesAcrossYears.NONE);
     }
 
     /** Heads none of whose capital gains the cap on land or building reaches. */

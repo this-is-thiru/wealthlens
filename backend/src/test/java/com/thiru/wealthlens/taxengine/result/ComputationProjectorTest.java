@@ -6,10 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.InputsFingerprint;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -86,6 +89,11 @@ class ComputationProjectorTest {
         values.put(NodeIds.OTHERSOURCES_INCOME, MoneyValue.of(Money.ZERO));
         values.put(NodeIds.CAPITALGAINS_INCOME,
                 new CapitalGainsHead(Map.of(), Map.of(), Money.ZERO, Money.ZERO, List.of()));
+        // No loss brought forward or left to carry (W-090c1b2)
+        Map<HeadCode, Money> nil = Map.of(HeadCode.SALARIES, Money.ZERO, HeadCode.HOUSE_PROPERTY, Money.ZERO,
+                HeadCode.OTHER_SOURCES, Money.ZERO, HeadCode.CAPITAL_GAINS, Money.ZERO);
+        values.put(NodeIds.SETOFF, new HeadsAfterSetOff(TOTAL_INCOME_UNROUNDED, Map.of(), Map.of(),
+                new LossesAcrossYears(nil, nil)));
         return values;
     }
 

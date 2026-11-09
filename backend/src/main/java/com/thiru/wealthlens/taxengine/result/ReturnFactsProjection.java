@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.taxengine.result;
 
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
@@ -23,7 +25,7 @@ import java.util.Set;
  * <p>The heads are the four {@code SetOffNode} reads, before set-off; business income is not computed, so it is
  * absent. The capital gains are {@code capitalgains.income}'s parts. A deduction allowed is a {@code DEDUCTION} line
  * whose {@code out}, the amount allowed, is above nil — the trace being the result, a fact is read from it rather than
- * computed twice.
+ * computed twice. The losses across years are {@code setoff}'s ({@link LossesAcrossYears}; W-090c1b2, D-528).
  */
 final class ReturnFactsProjection {
 
@@ -37,7 +39,9 @@ final class ReturnFactsProjection {
         heads.put(HeadCode.HOUSE_PROPERTY, money(run, NodeIds.HOUSEPROPERTY_INCOME));
         heads.put(HeadCode.OTHER_SOURCES, money(run, NodeIds.OTHERSOURCES_INCOME));
         heads.put(HeadCode.CAPITAL_GAINS, capitalGains.total());
-        return ReturnFacts.of(heads, capitalGains.parts(), deductionsAllowed(run));
+        LossesAcrossYears losses = ((HeadsAfterSetOff) run.valueOf(NodeIds.SETOFF)).losses();
+        return ReturnFacts.of(heads, capitalGains.parts(), deductionsAllowed(run), losses.broughtForward(),
+                losses.toCarryForward());
     }
 
     private static Money money(PipelineRunner.Result run, NodeId node) {

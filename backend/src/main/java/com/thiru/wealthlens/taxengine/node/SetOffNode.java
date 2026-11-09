@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
+import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
@@ -64,6 +65,9 @@ import java.util.function.Function;
  * rest — after this year's set-off, as the return computes it (ITR-2 Schedule BFLA), and otherwise a declared default,
  * the Acts prescribing none (D-221); in the new regime that part is deemed given full effect to (S2 s.202(2)(b)(i),
  * (3)) (S2 s.110; 1961 s.71B; D-218). Last, the capital losses, term by term (S2 s.111; 1961 s.74; D-247).
+ *
+ * <p>Beside the heads it publishes each head's loss brought forward and left to carry forward ({@link LossesAcrossYears};
+ * W-090c1b2, D-528), the amounts the MEASURE lines explain.
  */
 public final class SetOffNode implements ComputationNode {
 
@@ -119,21 +123,37 @@ public final class SetOffNode implements ComputationNode {
         List<TraceLine> lines = new ArrayList<>();
         SetOffContext run = new SetOffContext(ctx, order, income,
                 new CapitalGainsAbsorption(order.capitalGainsOrder(), parts, indexedGains), lines);
+        Map<HeadCode, Money> broughtForward = nilUnder(heads.keySet());
+        Map<HeadCode, Money> toCarryForward = nilUnder(heads.keySet());
+        toCarryForward.put(HeadCode.CAPITAL_GAINS, capitalGains.shortTermLossLeft().plus(capitalGains.longTermLossLeft()));
         for (HeadCode lossHead : order.order().heads()) {
             Money loss = Money.ZERO.minus(heads.getOrDefault(lossHead, Money.ZERO));
             if (loss.isGreaterThan(Money.ZERO)) {
-                setOff(run, lossHead, loss);
+                toCarryForward.merge(lossHead, setOff(run, lossHead, loss), Money::plus);
             }
         }
-        CarriedLossSetOff.apply(ctx, carriedHousePropertyLosses(ctx, t), income, run.parts(), lines);
-        CarriedLossSetOff.apply(ctx, carriedCapitalLosses(ctx, t, order.capitalGainsOrder(),
-                DeclaredCapitalGainsParts.of(ctx)), income, run.parts(), lines);
+        for (CarriedLosses ledger : List.of(carriedHousePropertyLosses(ctx, t), carriedCapitalLosses(ctx, t,
+                order.capitalGainsOrder(), DeclaredCapitalGainsParts.of(ctx)))) {
+            CarriedLossSetOff.LedgerTotals totals = CarriedLossSetOff.apply(ctx, ledger, income, run.parts(), lines);
+            broughtForward.merge(ledger.carry().absorbedBy(), totals.broughtForward(), Money::plus);
+            toCarryForward.merge(ledger.carry().absorbedBy(), totals.stillCarried(), Money::plus);
+        }
         Money total = income.values().stream().reduce(Money.ZERO, Money::plus);
-        return new NodeResult(new HeadsAfterSetOff(total, parts, indexedGains), lines);
+        return new NodeResult(new HeadsAfterSetOff(total, parts, indexedGains,
+                new LossesAcrossYears(broughtForward, toCarryForward)), lines);
     }
 
-    /** One head's loss: what may be set off, set off against the others in order, and what is left. */
-    private static void setOff(SetOffContext run, HeadCode lossHead, Money loss) {
+    private static Map<HeadCode, Money> nilUnder(Set<HeadCode> heads) {
+        Map<HeadCode, Money> nil = new EnumMap<>(HeadCode.class);
+        heads.forEach(head -> nil.put(head, Money.ZERO));
+        return nil;
+    }
+
+    /**
+     * One head's loss: what may be set off, set off against the others in order, and what is left. Returns what is
+     * carried forward — a house-property loss's rest, where the regime allows its set-off; otherwise nil.
+     */
+    private static Money setOff(SetOffContext run, HeadCode lossHead, Money loss) {
         NodeContext ctx = run.ctx();
         TemporalContext t = ctx.inputs().temporal();
         List<TraceLine> lines = run.lines();
@@ -147,7 +167,7 @@ public final class SetOffNode implements ComputationNode {
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, loss)
                     .withLimitedBy("deemed to have been given"
                     + " full effect to, and not carried forward (S2 s.202(3); 1961 s.115BAC(3)): " + verdict.whyNot()));
-            return;
+            return Money.ZERO;
         }
         Money allowed = loss;
         if (houseProperty) {
@@ -163,6 +183,7 @@ public final class SetOffNode implements ComputationNode {
                     ? "not set off: carried forward against income from house property (S2 s.110; 1961 s.71B) — W-081b"
                     : "not set off, and not carried forward: S2 ss.110–115 carry no loss under other sources"));
         }
+        return houseProperty ? left : Money.ZERO;
     }
 
     /**

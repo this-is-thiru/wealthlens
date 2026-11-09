@@ -703,22 +703,15 @@ class ConditionTest {
     @DisplayName("the algebra is closed")
     class SealedFamily {
 
-        /**
-         * An exhaustive switch with no {@code default} over all twenty-three predicates. This does not
-         * merely pass — it <b>compiles</b>, and that is the assertion. A twenty-fourth {@code Condition}
-         * breaks this line, which is the whole reason the interface is sealed.
-         *
-         * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
-         * V-2, because a rule whose limit changes mid-year keeps one rule id — the id is the
-         * contract — and the change is a second RuleVersion, not a date-guarded twin.
-         */
-        @Test
-        void everyConditionIsAccountedFor() {
-            java.util.List<Condition> all = java.util.List.of(
+        /** One instance of each permitted predicate. */
+        private static java.util.List<Condition> oneOfEach() {
+            return java.util.List.of(
                     new IsResident(),
                     new IsOrdinarilyResident(),
                     new HousePropertiesOwnedAtMost(2),
                     new HasLossUnderHead(HeadCode.HOUSE_PROPERTY),
+                    new HasLossBroughtForward(HeadCode.HOUSE_PROPERTY),
+                    new HasLossCarriedForward(HeadCode.CAPITAL_GAINS),
                     new CapitalGainsOnlyInParts(Set.of(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY"))),
                     new CapitalGainsPartAtMost(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY"), Money.ZERO),
                     new DeductionAllowedUnder(Set.of(new RuleId("OS-BANKER-COMMISSION"))),
@@ -738,6 +731,20 @@ class ConditionTest {
                     AllOf.of(new IsResident()),
                     AnyOf.of(new IsResident()),
                     new Not(new IsResident()));
+        }
+
+        /**
+         * An exhaustive switch with no {@code default} over all twenty-five predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. A twenty-sixth {@code Condition}
+         * breaks this line, which is the whole reason the interface is sealed.
+         *
+         * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
+         * V-2, because a rule whose limit changes mid-year keeps one rule id — the id is the
+         * contract — and the change is a second RuleVersion, not a date-guarded twin.
+         */
+        @Test
+        void everyConditionIsAccountedFor() {
+            java.util.List<Condition> all = oneOfEach();
 
             for (Condition condition : all) {
                 String group = switch (condition) {
@@ -745,6 +752,8 @@ class ConditionTest {
                     case IsOrdinarilyResident ignored -> "person";
                     case HousePropertiesOwnedAtMost ignored -> "person";
                     case HasLossUnderHead ignored -> "return";
+                    case HasLossBroughtForward ignored -> "return";
+                    case HasLossCarriedForward ignored -> "return";
                     case CapitalGainsOnlyInParts ignored -> "return";
                     case CapitalGainsPartAtMost ignored -> "return";
                     case DeductionAllowedUnder ignored -> "return";
@@ -770,8 +779,8 @@ class ConditionTest {
 
             // Part E's list, after the W-021 erratum: 12, not the 16 the backlog claimed (PaidOtherThanInCash removed,
             // W-197); the three item facts; the two declarations (W-090a1); r.164(2)'s two person facts (W-090c1a); and the
-            // four facts of a computed return (W-090c1b1)
-            assertThat(all).hasSize(23);
+            // four facts of a computed return (W-090c1b1); its two losses across years (W-090c1b2)
+            assertThat(all).hasSize(25);
         }
     }
 

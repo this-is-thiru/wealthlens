@@ -371,7 +371,7 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all twenty-three")
+    @DisplayName("Condition — all twenty-five")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
@@ -399,7 +399,9 @@ class PackJsonTest {
                             Map.of(com.thiru.wealthlens.taxengine.rules.condition.HeadCode.HOUSE_PROPERTY, Money.of("-20000")),
                             Map.of(new com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart("LONG_TERM_LISTED_EQUITY"),
                                     Money.of("125000")),
-                            java.util.Set.of(new RuleId("OS-BANKER-COMMISSION"))));
+                            java.util.Set.of(new RuleId("OS-BANKER-COMMISSION")),
+                            Map.of(com.thiru.wealthlens.taxengine.rules.condition.HeadCode.HOUSE_PROPERTY, Money.of("40000")),
+                            Map.of(com.thiru.wealthlens.taxengine.rules.condition.HeadCode.HOUSE_PROPERTY, Money.ZERO)));
         }
 
         private static boolean holds(String raw) {
@@ -415,6 +417,9 @@ class PackJsonTest {
             assertThat(holds("{\"type\": \"HousePropertiesOwnedAtMost\", \"limit\": 1}")).isFalse();
             // The return: a house-property loss of ₹20,000, ₹1,25,000 of LONG_TERM_LISTED_EQUITY, a banker's commission
             assertThat(holds("{\"type\": \"HasLossUnderHead\", \"head\": \"HOUSE_PROPERTY\"}")).isTrue();
+            // ₹40,000 of house-property loss brought forward, all of it set off: none left to carry (W-090c1b2)
+            assertThat(holds("{\"type\": \"HasLossBroughtForward\", \"head\": \"HOUSE_PROPERTY\"}")).isTrue();
+            assertThat(holds("{\"type\": \"HasLossCarriedForward\", \"head\": \"HOUSE_PROPERTY\"}")).isFalse();
             assertThat(holds("{\"type\": \"CapitalGainsOnlyInParts\", \"parts\": [\"LONG_TERM_LISTED_EQUITY\"]}"))
                     .isTrue();
             assertThat(holds("{\"type\": \"CapitalGainsPartAtMost\", \"part\": \"LONG_TERM_LISTED_EQUITY\", \"limit\": \"124999\"}"))

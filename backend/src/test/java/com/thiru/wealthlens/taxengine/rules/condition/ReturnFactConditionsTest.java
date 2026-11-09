@@ -11,9 +11,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * The four conditions on a computed return's facts (W-090c1b1): r.164(2)(c)'s loss under a head, (d)'s "only
+ * The six conditions on a computed return's facts (W-090c1b1, W-090c1b2): r.164(2)(c)'s loss under a head, (d)'s "only
  * long-term capital gains under section 198 not exceeding ₹ 125000" and (3)(e)'s s.93 deduction — each a fact, with
- * the head, part, limit and rows as data. Figures chosen by hand.
+ * the head, part, limit and rows as data — and (2)(b) and (d)'s loss brought forward or to be carried forward.
+ * Figures chosen by hand.
  */
 class ReturnFactConditionsTest {
 
@@ -25,7 +26,12 @@ class ReturnFactConditionsTest {
     private static ConditionContext returning(Map<HeadCode, Money> heads, Map<CapitalGainsPart, Money> gains,
             Set<RuleId> deductions) {
         return new ConditionContext(ResidentialStatus.RESIDENT, PersonType.INDIVIDUAL, Map.of(), Map.of())
-                .reporting(ReturnFacts.of(heads, gains, deductions));
+                .reporting(ReturnFacts.of(heads, gains, deductions, Map.of(), Map.of()));
+    }
+
+    private static ConditionContext losses(Map<HeadCode, Money> broughtForward, Map<HeadCode, Money> toCarryForward) {
+        return new ConditionContext(ResidentialStatus.RESIDENT, PersonType.INDIVIDUAL, Map.of(), Map.of())
+                .reporting(ReturnFacts.of(Map.of(), Map.of(), Set.of(), broughtForward, toCarryForward));
     }
 
     private static ConditionContext gains(Map<CapitalGainsPart, Money> gains) {
@@ -51,6 +57,65 @@ class ReturnFactConditionsTest {
 
         // When / Then
         assertThatThrownBy(() -> new HasLossUnderHead(HeadCode.BUSINESS_OR_PROFESSION).holds(salaried))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("BUSINESS_OR_PROFESSION was not computed");
+    }
+
+    @Test
+    void hasLossUnderHead_whenTheHeadIsCapitalGains_refuses() {
+        // Given — the head's figure is never below nil; its loss of the year is a loss to carry forward (W-090c1b2)
+        // When / Then
+        assertThatThrownBy(() -> new HasLossUnderHead(HeadCode.CAPITAL_GAINS))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("HasLossCarriedForward");
+    }
+
+    @Test
+    void hasLossBroughtForward_whenOneRupeeWasBroughtForward_holds() {
+        // Given
+        ConditionContext one = losses(Map.of(HeadCode.HOUSE_PROPERTY, Money.of("1")), Map.of());
+
+        // When / Then
+        assertThat(new HasLossBroughtForward(HeadCode.HOUSE_PROPERTY).holds(one)).isTrue();
+    }
+
+    @Test
+    void hasLossBroughtForward_whenNilWasBroughtForward_fails() {
+        // Given
+        ConditionContext nil = losses(Map.of(HeadCode.HOUSE_PROPERTY, Money.ZERO), Map.of());
+
+        // When / Then
+        assertThat(new HasLossBroughtForward(HeadCode.HOUSE_PROPERTY).holds(nil)).isFalse();
+    }
+
+    @Test
+    void hasLossCarriedForward_whenOneRupeeIsLeftToCarry_holds() {
+        // Given
+        ConditionContext one = losses(Map.of(), Map.of(HeadCode.CAPITAL_GAINS, Money.of("1")));
+
+        // When / Then
+        assertThat(new HasLossCarriedForward(HeadCode.CAPITAL_GAINS).holds(one)).isTrue();
+    }
+
+    @Test
+    void hasLossCarriedForward_whenNilIsLeftToCarry_fails() {
+        // Given
+        ConditionContext nil = losses(Map.of(), Map.of(HeadCode.CAPITAL_GAINS, Money.ZERO));
+
+        // When / Then
+        assertThat(new HasLossCarriedForward(HeadCode.CAPITAL_GAINS).holds(nil)).isFalse();
+    }
+
+    @Test
+    void lossConditions_whenTheHeadWasNotComputed_throw() {
+        // Given — business income is not computed: unknown, never "no loss"
+        ConditionContext salaried = losses(Map.of(HeadCode.SALARIES, Money.ZERO), Map.of(HeadCode.SALARIES, Money.ZERO));
+
+        // When / Then
+        assertThatThrownBy(() -> new HasLossBroughtForward(HeadCode.BUSINESS_OR_PROFESSION).holds(salaried))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("BUSINESS_OR_PROFESSION was not computed");
+        assertThatThrownBy(() -> new HasLossCarriedForward(HeadCode.BUSINESS_OR_PROFESSION).holds(salaried))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("BUSINESS_OR_PROFESSION was not computed");
     }

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-090c1b1 done (D-527), committed with the W-090c1b split, not pushed
-Stage           : 6 → next: plan W-090c1b2 (§2 template), ask for approval; STOP before building
-Done today      : session 81: W-090b, W-260, W-090c1a, W-090c1b1 committed; splits D-523, D-524, D-526
-Board           : W-090c1a D; W-090c1b —; W-090c1b1 D; W-090c1b2 ·; W-090c2 ·; W-090c3 K
-Next step       : resume at W-090c1b2 (losses brought forward and to carry forward, published by SetOffNode / CarriedLossSetOff): run the resume check, read SetOffNode, CarriedLossSetOff and every reader of HeadsAfterSetOff, then plan it
-Owner actions   : push api-collection main first, then review/taxplanning (seven commits unpushed, ending with the W-090c1b1 commit); adopt the 13 questions' wording
-Last verify     : W-090c1b1 unit 5056 / 0 / 0, integration 539 / 0 / 0
+Item            : none in flight — W-090c1b2 done (D-528), committed, not pushed; W-090c1b closed
+Stage           : 6 → next: plan W-090c2 (§2 template), ask for approval; STOP before building
+Done today      : session 81: W-090b, W-260, W-090c1a, W-090c1b1; session 82: W-090c1b2 (D-528)
+Board           : W-090c1a D; W-090c1b —; W-090c1b1 D; W-090c1b2 D; W-090c2 ·; W-090c3 K
+Next step       : resume at W-090c2 (TY 2026-27 ITR-1 and ITR-2 as form rows, r.164(12) manners, I19/I20, I27 over forms/): run the resume check, read plans/W-090c.md and the W-090c2 row, then plan it
+Owner actions   : push api-collection main first, then review/taxplanning (eight commits unpushed, ending with the W-090c1b2 commit); adopt the 13 questions' wording
+Last verify     : W-090c1b2 unit 5069 / 0 / 0, integration 539 / 0 / 0; probes caught (3 fails), reverted byte for byte
 Files touched   : none — all committed
-Last item commit: taxplanning W-090c1b1: carry the year's facts a return form reads on the computation
-Updated         : 2026-11-09, session 81 — W-090c1b1 committed; next W-090c1b2
+Last item commit: taxplanning W-090c1b2: publish each head's loss brought forward and left to carry forward
+Updated         : 2026-11-09, session 82 — W-090c1b2 committed; next W-090c2
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
@@ -361,6 +362,13 @@ class SetOffNodeTest {
     /** As {@link #run}, TY 2026-27 old regime, with capital-gains parts and no carried losses. */
     private static NodeResult runWithCapitalGains(String salaries, String houseProperty, String otherSources,
             Map<CapitalGainsPart, Money> parts) {
+        return runWithCapitalGainsHead(salaries, houseProperty, otherSources,
+                new CapitalGainsHead(parts, Money.ZERO, Money.ZERO));
+    }
+
+    /** As {@link #runWithCapitalGains}, with the whole capital-gains head, its losses left included. */
+    private static NodeResult runWithCapitalGainsHead(String salaries, String houseProperty, String otherSources,
+            CapitalGainsHead capitalGains) {
         TaxYearId taxYear = TaxYearId.of(2026);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, OLD, TemporalContext.forTaxYear(taxYear, LocalDate.of(2026, 9, 21)),
@@ -370,7 +378,7 @@ class SetOffNodeTest {
                 .given(NodeIds.SALARY_INCOME, Money.of(salaries))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of(houseProperty))
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.of(otherSources))
-                .given(NodeIds.CAPITALGAINS_INCOME, new CapitalGainsHead(parts, Money.ZERO, Money.ZERO))
+                .given(NodeIds.CAPITALGAINS_INCOME, capitalGains)
                 .run(new SetOffNode());
     }
 
@@ -626,5 +634,74 @@ class SetOffNodeTest {
                 Map.of(TaxYearId.of(2026), capitalLoss("1000", "0", "0", true))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("carried only to later years");
+    }
+
+    private static LossesAcrossYears losses(NodeResult result) {
+        return ((HeadsAfterSetOff) result.value()).losses();
+    }
+
+    @Test
+    void evaluate_whenAHousePropertyLossExceedsTheLimitInTheOldRegime_publishesTheRestToCarryForward() {
+        // When — a 2,50,000 house-property loss against 10,00,000 salary; SETOFF-HOUSE-PROPERTY limits it to 2,00,000
+        NodeResult result = run(2026, OLD, "1000000", "-250000", "0");
+
+        // Then — 2,50,000 − 2,00,000 = 50,000 to carry forward (W-090c1b2); nothing was brought forward
+        assertThat(losses(result).toCarryForward()).containsEntry(HeadCode.HOUSE_PROPERTY, Money.of("50000"))
+                .containsEntry(HeadCode.CAPITAL_GAINS, Money.ZERO).containsEntry(HeadCode.OTHER_SOURCES, Money.ZERO)
+                .containsEntry(HeadCode.SALARIES, Money.ZERO);
+        assertThat(losses(result).broughtForward()).containsEntry(HeadCode.HOUSE_PROPERTY, Money.ZERO);
+    }
+
+    @Test
+    void evaluate_whenTheNewRegimeHasTheSameLoss_publishesNilToCarryForward() {
+        // When — the same loss in the new regime: deemed given full effect to, not carried (S2 s.202(3))
+        NodeResult result = run(2026, NEW, "1000000", "-250000", "0");
+
+        // Then
+        assertThat(losses(result).toCarryForward()).containsEntry(HeadCode.HOUSE_PROPERTY, Money.ZERO);
+    }
+
+    @Test
+    void evaluate_whenOneCarriedLossExpiredAndAnotherIsCarried_bringsForwardOnlyTheCarriedOne() {
+        // When — TY 2026-27: the 30,000 of 2016-17 is past its eight years (S2 s.110(2)); the 40,000 of 2024-25 is
+        // not; house-property income 30,000
+        NodeResult result = run(2026, OLD, "0", "30000", "0", Map.of(TaxYearId.of(2016), carried("30000", "0", "0"),
+                TaxYearId.of(2024), carried("40000", "0", "0")));
+
+        // Then — 40,000 brought forward; 30,000 of it set off, 10,000 still carried
+        assertThat(losses(result).broughtForward()).containsEntry(HeadCode.HOUSE_PROPERTY, Money.of("40000"));
+        assertThat(losses(result).toCarryForward()).containsEntry(HeadCode.HOUSE_PROPERTY, Money.of("10000"));
+    }
+
+    @Test
+    void evaluate_whenTheCapitalGainsHeadLeftAShortTermLoss_publishesItToCarryForward() {
+        // When — no part could absorb 15,000 of the year's short-term loss (S2 s.111(1))
+        NodeResult result = runWithCapitalGainsHead("500000", "0", "0",
+                new CapitalGainsHead(Map.of(), Money.of("15000"), Money.ZERO));
+
+        // Then
+        assertThat(losses(result).toCarryForward()).containsEntry(HeadCode.CAPITAL_GAINS, Money.of("15000"));
+    }
+
+    @Test
+    void evaluate_whenACarriedLongTermLossMeetsOnlyShortTermGains_bringsItForwardAndCarriesItAll() {
+        // When — C: a long-term loss of 1,00,000 from 2024-25; only short-term listed gains of 50,000
+        NodeResult result = runWithCarriedCapitalLoss(2026, OLD, Map.of(SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
+                Map.of(TaxYearId.of(2024), capitalLoss("0", "100000", "0", true)));
+
+        // Then — brought forward whole, none of it set off (S2 s.111(1)(a)(ii))
+        assertThat(losses(result).broughtForward()).containsEntry(HeadCode.CAPITAL_GAINS, Money.of("100000"));
+        assertThat(losses(result).toCarryForward()).containsEntry(HeadCode.CAPITAL_GAINS, Money.of("100000"));
+    }
+
+    @Test
+    void evaluate_whenACapitalLossWasNotDeterminedInTime_bringsNothingForward() {
+        // When — 40,000 short-term from 2024-25, its return not filed in time (S2 s.121)
+        NodeResult result = runWithCarriedCapitalLoss(2026, OLD, Map.of(SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
+                Map.of(TaxYearId.of(2024), capitalLoss("40000", "0", "0", false)));
+
+        // Then
+        assertThat(losses(result).broughtForward()).containsEntry(HeadCode.CAPITAL_GAINS, Money.ZERO);
+        assertThat(losses(result).toCarryForward()).containsEntry(HeadCode.CAPITAL_GAINS, Money.ZERO);
     }
 }

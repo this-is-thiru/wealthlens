@@ -41,13 +41,16 @@ import java.util.stream.Collectors;
  * {@link IsOrdinarilyResident} and {@link HousePropertiesOwnedAtMost}, read the person facts r.164(2) asks of a return
  * form (W-090c1a, D-525). The twentieth to twenty-third — {@link HasLossUnderHead}, {@link CapitalGainsOnlyInParts},
  * {@link CapitalGainsPartAtMost} and {@link DeductionAllowedUnder} — read the year's facts of a computed return
- * ({@link ReturnFacts}; W-090c1b1, D-527).
+ * ({@link ReturnFacts}; W-090c1b1, D-527). The twenty-fourth and twenty-fifth, {@link HasLossBroughtForward} and
+ * {@link HasLossCarriedForward}, read its losses across years (W-090c1b2, D-528).
  */
 public sealed interface Condition
         permits IsResident,
                 IsOrdinarilyResident,
                 HousePropertiesOwnedAtMost,
                 HasLossUnderHead,
+                HasLossBroughtForward,
+                HasLossCarriedForward,
                 CapitalGainsOnlyInParts,
                 CapitalGainsPartAtMost,
                 DeductionAllowedUnder,
@@ -86,6 +89,7 @@ public sealed interface Condition
             case AnyOf any -> any.any().stream().anyMatch(Condition::isAboutItem);
             case Not not -> not.condition().isAboutItem();
             case IsResident _, IsOrdinarilyResident _, HousePropertiesOwnedAtMost _, HasLossUnderHead _,
+                    HasLossBroughtForward _, HasLossCarriedForward _,
                     CapitalGainsOnlyInParts _, CapitalGainsPartAtMost _, DeductionAllowedUnder _, AgeAtLeast _, HasPersonType _,
                     IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
                     HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, Declared _, DeclaredAmountAbove _ -> false;
@@ -108,6 +112,7 @@ public sealed interface Condition
                     .collect(Collectors.toUnmodifiableSet());
             case Not not -> not.condition().itemFactsRead();
             case IsResident _, IsOrdinarilyResident _, HousePropertiesOwnedAtMost _, HasLossUnderHead _,
+                    HasLossBroughtForward _, HasLossCarriedForward _,
                     CapitalGainsOnlyInParts _, CapitalGainsPartAtMost _, DeductionAllowedUnder _, AgeAtLeast _, HasPersonType _,
                     IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
                     HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, Declared _, DeclaredAmountAbove _ ->

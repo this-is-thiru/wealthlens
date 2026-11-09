@@ -9,6 +9,8 @@ import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
@@ -40,7 +42,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * A run's {@link ReturnFacts} (W-090c1b1): the four heads before set-off, the capital-gains parts, and the rows whose
- * {@code DEDUCTION} line allowed more than nil. A hand-built run fixes every figure; one run of the whole shipped
+ * {@code DEDUCTION} line allowed more than nil, and {@code setoff}'s losses across years (W-090c1b2). A hand-built run fixes every figure; one run of the whole shipped
  * engine shows a real deduction line read the same way.
  */
 class ReturnFactsProjectionTest {
@@ -64,6 +66,10 @@ class ReturnFactsProjectionTest {
         values.put(NodeIds.OTHERSOURCES_INCOME, MoneyValue.of(Money.of("48000")));
         values.put(NodeIds.CAPITALGAINS_INCOME, new CapitalGainsHead(Map.of(LONG_LISTED, Money.of("125000")), Map.of(),
                 Money.ZERO, Money.ZERO, List.of()));
+        // House property ₹40,000 brought forward, ₹10,000 of it still carried; a capital loss of ₹15,000 left
+        values.put(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("1053000"), Map.of(LONG_LISTED, Money.of("125000")),
+                Map.of(), new LossesAcrossYears(Map.of(HeadCode.HOUSE_PROPERTY, Money.of("40000")),
+                        Map.of(HeadCode.HOUSE_PROPERTY, Money.of("10000"), HeadCode.CAPITAL_GAINS, Money.of("15000")))));
         // A banker's commission of ₹2,000 allowed in full; ₹1,000 of expenditure refused (a nil line)
         List<TraceLine> trace = List.of(deduction(1, COMMISSION, "2000", "2000"), deduction(2, EXPENDITURE, "1000", "0"));
         return new PipelineRunner.Result(List.copyOf(values.keySet()), values, trace, List.of(),
@@ -81,6 +87,17 @@ class ReturnFactsProjectionTest {
         assertThat(facts.incomeUnder(HeadCode.OTHER_SOURCES)).isEqualTo(Money.of("48000"));
         assertThat(facts.incomeUnder(HeadCode.CAPITAL_GAINS)).isEqualTo(Money.of("125000"));
         assertThat(facts.capitalGains().get(LONG_LISTED)).isEqualTo(Money.of("125000"));
+    }
+
+    @Test
+    void of_whenTheSetOffRecordsLossesAcrossYears_carriesThemByHead() {
+        // Given / When
+        ReturnFacts facts = ReturnFactsProjection.of(handBuilt());
+
+        // Then — as setoff published them (W-090c1b2)
+        assertThat(facts.lossBroughtForward(HeadCode.HOUSE_PROPERTY)).isEqualTo(Money.of("40000"));
+        assertThat(facts.lossToCarryForward(HeadCode.HOUSE_PROPERTY)).isEqualTo(Money.of("10000"));
+        assertThat(facts.lossToCarryForward(HeadCode.CAPITAL_GAINS)).isEqualTo(Money.of("15000"));
     }
 
     @Test
