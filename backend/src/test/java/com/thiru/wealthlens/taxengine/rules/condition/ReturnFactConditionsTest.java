@@ -182,4 +182,34 @@ class ReturnFactConditionsTest {
         assertThatThrownBy(() -> new CapitalGainsOnlyInParts(Set.of())).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new DeductionAllowedUnder(Set.of())).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void returnFacts_whenAnyCollectionIsNull_refuses() {
+        // Given — each of the five collections in turn; "absent" is an empty collection, never null (CLAUDE.md §2)
+        Map<HeadCode, Money> heads = Map.of();
+        Map<CapitalGainsPart, Money> parts = Map.of();
+        Set<RuleId> rows = Set.of();
+        String message = "ReturnFacts collections may not be null; pass empty ones";
+
+        // When / Then
+        assertThatThrownBy(() -> ReturnFacts.of(null, parts, rows, heads, heads)).hasMessage(message);
+        assertThatThrownBy(() -> ReturnFacts.of(heads, null, rows, heads, heads)).hasMessage(message);
+        assertThatThrownBy(() -> ReturnFacts.of(heads, parts, null, heads, heads)).hasMessage(message);
+        assertThatThrownBy(() -> ReturnFacts.of(heads, parts, rows, null, heads)).hasMessage(message);
+        assertThatThrownBy(() -> ReturnFacts.of(heads, parts, rows, heads, null)).hasMessage(message);
+    }
+
+    @Test
+    void constructors_whenWhatTheyReadIsNull_refuse() {
+        assertThatThrownBy(() -> new HasLossUnderHead(null)).hasMessage("HasLossUnderHead must name a head");
+        assertThatThrownBy(() -> new HasLossBroughtForward(null)).hasMessage("HasLossBroughtForward must name a head");
+        assertThatThrownBy(() -> new HasLossCarriedForward(null)).hasMessage("HasLossCarriedForward must name a head");
+        assertThatThrownBy(() -> new CapitalGainsOnlyInParts(null))
+                .hasMessage("CapitalGainsOnlyInParts must name at least one part");
+        assertThatThrownBy(() -> new DeductionAllowedUnder(null)).hasMessage("DeductionAllowedUnder must name at least one row");
+        assertThatThrownBy(() -> new CapitalGainsPartAtMost(null, Money.of("125000")))
+                .hasMessage("CapitalGainsPartAtMost must name a part and a limit");
+        assertThatThrownBy(() -> new CapitalGainsPartAtMost(LONG_LISTED, null))
+                .hasMessage("CapitalGainsPartAtMost must name a part and a limit");
+    }
 }

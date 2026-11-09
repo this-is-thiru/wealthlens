@@ -117,4 +117,37 @@ class ItrFormCoverageTest {
         // Then
         assertThat(problems).isEmpty();
     }
+
+    @Test
+    void check_whenTwoFormsServeOnePersonButDifferentKinds_findsNothing() {
+        // Given / When — an individual is offered SYN-1 for one kind and SYN-2 for the other, never both for one return
+        List<String> problems = problems(
+                form(ONE, 1, Set.of(PersonType.INDIVIDUAL), Set.of(ORIGINAL), List.of(), Set.of()),
+                form(TWO, 2, Set.of(PersonType.INDIVIDUAL), Set.of(ON_NOTICE), List.of(), Set.of()));
+
+        // Then
+        assertThat(problems).isEmpty();
+    }
+
+    @Test
+    void check_whenTheEarlierCodeExcludesTheLater_findsNothing() {
+        // Given / When — the exclusion read from either form of the pair separates them; its order is ItrFormReferences'
+        List<String> problems = problems(
+                form(ONE, 1, Set.of(PersonType.INDIVIDUAL), Set.of(ORIGINAL), List.of(), Set.of(TWO)),
+                form(TWO, 2, Set.of(PersonType.INDIVIDUAL), Set.of(ORIGINAL), List.of(), Set.of()));
+
+        // Then
+        assertThat(problems).isEmpty();
+    }
+
+    @Test
+    void check_whenTheNegationIsOnTheEarlierCode_findsNothing() {
+        // Given / When — non-residents to SYN-1, residents to SYN-2: the pair is separated whichever form holds the Not
+        List<String> problems = problems(
+                form(ONE, 1, Set.of(PersonType.INDIVIDUAL), Set.of(ORIGINAL), List.of(new Not(new IsResident())), Set.of()),
+                form(TWO, 2, Set.of(PersonType.INDIVIDUAL), Set.of(ORIGINAL), List.of(new IsResident()), Set.of()));
+
+        // Then
+        assertThat(problems).isEmpty();
+    }
 }
