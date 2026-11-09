@@ -3,11 +3,11 @@ package com.thiru.wealthlens.taxengine.input;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.lang.reflect.RecordComponent;

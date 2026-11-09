@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.Assessee;
 import com.thiru.wealthlens.taxengine.input.DisabledDependantSupport;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.input.Individual;
@@ -11,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
@@ -223,7 +223,7 @@ final class DisabilityDeduction {
     }
 
     private static boolean resident(NodeContext ctx) {
-        return ctx.inputs().assessee().residence() != Assessee.ResidentialStatus.NON_RESIDENT;
+        return ctx.inputs().assessee().residence() != ResidentialStatus.NON_RESIDENT;
     }
 
     private static boolean applies(NodeContext ctx, RuleId row, RuleVersion version) {

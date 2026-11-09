@@ -3,7 +3,6 @@ package com.thiru.wealthlens.taxengine.input;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
@@ -12,6 +11,7 @@ import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;

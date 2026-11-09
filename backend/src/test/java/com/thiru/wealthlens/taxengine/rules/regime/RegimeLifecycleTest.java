@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HasIncomeUnderHead;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -23,6 +24,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.DisplayName;
@@ -249,7 +251,7 @@ class RegimeLifecycleTest {
 
     private static ConditionContext taxpayerWith(HeadCode... heads) {
         return new ConditionContext(
-                true,
+                ResidentialStatus.RESIDENT,
                 PersonType.INDIVIDUAL,
                 java.util.Map.of(AgeSubject.SELF, 40),
                 java.util.Map.of(),
@@ -257,7 +259,7 @@ class RegimeLifecycleTest {
                 java.util.Set.of(heads),
                 java.util.Set.of(),
                 java.util.Set.of(),
-                com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.NONE, Declarations.NONE);
+                com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.NONE, Declarations.NONE, Optional.empty());
     }
 
     /**

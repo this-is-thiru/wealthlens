@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AccommodationProvider;
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -14,6 +13,7 @@ import com.thiru.wealthlens.taxengine.input.TransferredAssetKind;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;

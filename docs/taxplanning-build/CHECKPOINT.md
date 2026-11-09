@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-260 done (D-522), committed, not pushed
-Stage           : 6 → next: plan W-090c (§2 template), ask for approval; STOP before building
-Done today      : session 81: W-090b (327e5a00, D-521); W-260 placed, built and committed (D-522)
-Board           : W-090a —; W-090a1 D; W-090a2 D; W-090b D; W-090c ·; W-090d ·; W-090e K; W-258 ·; W-259 ·; W-260 D
-Next step       : resume at W-090c (TY 2026-27 ITR-1 – 4 from r.164): run the resume check, read r.164(12)'s Table (Gazette 271092) first, the W-090c row and the two W-090b errata after Phase 10's table, then plan it
-Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f, 7f01234b, 327e5a00 and the W-260 commit unpushed); adopt the 13 questions' wording
-Last verify     : unit-tier-stamp-test.sh 10 / 10; unit-tier.sh 5022 / 0 / 0
+Item            : none in flight — W-090c1a done (D-525), committed with the W-090c and W-090c1 splits, not pushed
+Stage           : 6 → next: plan W-090c1b (§2 template), ask for approval; STOP before building
+Done today      : session 81: W-090b (327e5a00), W-260 (ba8a439d), W-090c split (D-523), W-090c1 split (D-524), W-090c1a (D-525)
+Board           : W-090c —; W-090c1 —; W-090c1a D; W-090c1b ·; W-090c2 ·; W-090c3 K; W-090d ·; W-090e K
+Next step       : resume at W-090c1b (computed facts on TaxComputation + their conditions, incl. HasLossBroughtForward): run the resume check, read SetOffNode, CarriedLossSetOff, CapitalGainsHead, OtherSourcesNode's s.93 rows, then plan it; it may split
+Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f, 7f01234b, 327e5a00, ba8a439d and the W-090c1a commit unpushed); adopt the 13 questions' wording
+Last verify     : W-090c1a unit 5037 / 0 / 0, integration 539 / 0 / 0
 Files touched   : none — all committed
-Last item commit: tooling W-260: run the commit gate's unit tier once per working tree, at low priority
-Updated         : 2026-11-09, session 81 — W-260 committed; next W-090c
+Last item commit: taxplanning W-090c1a: let a form's condition read the residential status whole and the house properties owned
+Updated         : 2026-11-09, session 81 — W-090c1a committed; next W-090c1b
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

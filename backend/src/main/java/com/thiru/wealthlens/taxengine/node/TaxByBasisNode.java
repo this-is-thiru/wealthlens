@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
@@ -183,7 +184,7 @@ public final class TaxByBasisNode implements ComputationNode {
     private static Map<CapitalGainsPart, Money> shiftShortfall(NodeContext ctx, Map<CapitalGainsPart, Money> gains,
             Money shortfall, List<TraceLine> lines) {
         Assessee assessee = ctx.inputs().assessee();
-        boolean shifts = assessee.residence() != Assessee.ResidentialStatus.NON_RESIDENT
+        boolean shifts = assessee.residence() != ResidentialStatus.NON_RESIDENT
                 && (assessee instanceof Individual || assessee instanceof Huf);
         if (!shifts || !shortfall.isGreaterThan(Money.ZERO)) {
             return gains;

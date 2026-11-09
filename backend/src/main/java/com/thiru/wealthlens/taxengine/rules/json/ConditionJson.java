@@ -14,9 +14,11 @@ import com.thiru.wealthlens.taxengine.rules.condition.EvidenceType;
 import com.thiru.wealthlens.taxengine.rules.condition.HasIncomeUnderHead;
 import com.thiru.wealthlens.taxengine.rules.condition.HasPersonType;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.HousePropertiesOwnedAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.IncomeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.IncomeAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.IsCertifiedDisabled;
+import com.thiru.wealthlens.taxengine.rules.condition.IsOrdinarilyResident;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemDateBefore;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactAtMost;
@@ -45,6 +47,8 @@ public final class ConditionJson {
 
     private static final String[] TAGS = {
         "IsResident",
+        "IsOrdinarilyResident",
+        "HousePropertiesOwnedAtMost",
         "AgeAtLeast",
         "HasPersonType",
         "IsCertifiedDisabled",
@@ -71,7 +75,8 @@ public final class ConditionJson {
         String tag = PackJson.tag(node, path, TAGS);
         return PackJson.construct(path, () ->
         switch (tag) {
-                    case "IsResident", "AgeAtLeast", "HasPersonType", "IsCertifiedDisabled" ->
+                    case "IsResident", "IsOrdinarilyResident", "HousePropertiesOwnedAtMost", "AgeAtLeast", "HasPersonType",
+                            "IsCertifiedDisabled" ->
                             personFact(tag, node, path);
                     case "IncomeAtMost", "IncomeAtLeast", "HasIncomeUnderHead", "ComponentPresent",
                             "EvidenceRecorded" -> amountOrStructure(tag, node, path);
@@ -93,6 +98,8 @@ public final class ConditionJson {
     private static Condition personFact(String tag, JsonNode node, String path) {
         return switch (tag) {
             case "IsResident" -> new IsResident();
+            case "IsOrdinarilyResident" -> new IsOrdinarilyResident();
+            case "HousePropertiesOwnedAtMost" -> new HousePropertiesOwnedAtMost(PackJson.integer(node, "limit", path));
             case "AgeAtLeast" -> new AgeAtLeast(
                     PackJson.integer(node, "years", path),
                     PackJson.enumValue(node, "subject", path, AgeSubject.class));

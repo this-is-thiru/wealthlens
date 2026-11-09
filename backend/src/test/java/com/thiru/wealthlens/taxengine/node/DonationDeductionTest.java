@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.input.AgniveerCorpusFund;
 import com.thiru.wealthlens.taxengine.input.Assessee;
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.Donation;
 import com.thiru.wealthlens.taxengine.input.DonationClause;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -19,6 +18,7 @@ import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;

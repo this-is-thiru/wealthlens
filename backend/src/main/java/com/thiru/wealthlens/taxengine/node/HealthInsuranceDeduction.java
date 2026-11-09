@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
@@ -328,7 +329,9 @@ final class HealthInsuranceDeduction {
      */
     static boolean isSenior(NodeContext ctx, RuleVersion seniorRow, LocalDate born, boolean residentInIndia) {
         int age = Period.between(born, ctx.inputs().temporal().taxYearEnd()).getYears();
-        ConditionContext person = new ConditionContext(residentInIndia,
+        // The insured person's residence is entered as resident or not; only IsResident reads it here
+        ConditionContext person = new ConditionContext(
+                residentInIndia ? ResidentialStatus.RESIDENT : ResidentialStatus.NON_RESIDENT,
                 PersonType.INDIVIDUAL,
                 Map.of(AgeSubject.INSURED_PERSON, age), Map.of());
         return residentInIndia && seniorRow.conditions().stream()
@@ -341,7 +344,7 @@ final class HealthInsuranceDeduction {
     }
 
     private static boolean resident(Assessee assessee) {
-        return assessee.residence() != Assessee.ResidentialStatus.NON_RESIDENT;
+        return assessee.residence() != ResidentialStatus.NON_RESIDENT;
     }
 
     private static FamilySnapshot.Member member(NodeContext ctx, int position) {

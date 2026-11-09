@@ -324,10 +324,9 @@ public final class NodeContext {
     /**
      * What a rule's conditions are tested against, drawn from the inputs (D-072).
      *
-     * <p>Residence collapses to the boolean the conditions read here, at the point of use, as
-     * {@code Assessee.ResidentialStatus} says it should: a person "not ordinarily resident" is a
-     * resident, because the Act scopes such a person inside "a person, who is a resident" (S2
-     * s.5(1)(c)). An individual's age is the completed years on the last day of the tax year —
+     * <p>Residence reaches the conditions whole; each condition says which states it means ({@code IsResident},
+     * {@code IsOrdinarilyResident}; W-090c1a). Every entered house property is one owned, a share counting as owning
+     * it (r.164(2)(b), D-524 C2a). An individual's age is the completed years on the last day of the tax year —
      * the highest age reached in it — which is what "at any time during the tax year" asks
      * (S2 s.2(100)). An {@code Huf} has no age, so a condition that needs one fails loudly.
      */
@@ -340,9 +339,9 @@ public final class NodeContext {
                     Period.between(individual.dateOfBirth(), inputs.temporal().taxYearEnd()).getYears());
             individual.disability().ifPresent(severity -> disabilities.put(AgeSubject.SELF, severity));
         }
-        boolean resident = assessee.residence() != Assessee.ResidentialStatus.NON_RESIDENT;
-        return new ConditionContext(resident, assessee.type(), ages, disabilities)
-                .answering(AskedDeclarations.of(inputs.filing().declarations(), pack));
+        return new ConditionContext(assessee.residence(), assessee.type(), ages, disabilities)
+                .answering(AskedDeclarations.of(inputs.filing().declarations(), pack))
+                .owning(inputs.entered().houseProperties().size());
     }
 
     /**

@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
@@ -40,7 +41,7 @@ class ConditionTest {
 
     private static ConditionContext nonResident(int age) {
         return new ConditionContext(
-                false, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, age), Map.of());
+                ResidentialStatus.NON_RESIDENT, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, age), Map.of());
     }
 
     @Nested
@@ -83,7 +84,7 @@ class ConditionTest {
         void selfAndInsuredPersonAreDifferentQuestions() {
             // Given — DED-80D-007: the taxpayer is 45, the insured parent is 70
             ConditionContext ctx = new ConditionContext(
-                    true,
+                    ResidentialStatus.RESIDENT,
                     PersonType.INDIVIDUAL,
                     Map.of(AgeSubject.SELF, 45, AgeSubject.INSURED_PERSON, 70),
                     Map.of());
@@ -143,7 +144,7 @@ class ConditionTest {
 
         private static ConditionContext certified(DisabilitySeverity severity) {
             return new ConditionContext(
-                    true,
+                    ResidentialStatus.RESIDENT,
                     PersonType.INDIVIDUAL,
                     Map.of(AgeSubject.SELF, 40),
                     Map.of(AgeSubject.SELF, severity));
@@ -189,7 +190,7 @@ class ConditionTest {
             Map<AgeSubject, Integer> mutable = new java.util.HashMap<>();
             mutable.put(AgeSubject.SELF, 60);
             ConditionContext ctx =
-                    new ConditionContext(true, PersonType.INDIVIDUAL, mutable, Map.of());
+                    new ConditionContext(ResidentialStatus.RESIDENT, PersonType.INDIVIDUAL, mutable, Map.of());
 
             mutable.put(AgeSubject.SELF, 20);
 
@@ -198,7 +199,7 @@ class ConditionTest {
 
         @Test
         void construction_whenPersonTypeIsMissing_isRejected() {
-            assertThatThrownBy(() -> new ConditionContext(true, null, Map.of(), Map.of()))
+            assertThatThrownBy(() -> new ConditionContext(ResidentialStatus.RESIDENT, null, Map.of(), Map.of()))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -217,7 +218,7 @@ class ConditionTest {
             Set<ComponentCode> components,
             Set<EvidenceType> evidence) {
         return new ConditionContext(
-                true,
+                ResidentialStatus.RESIDENT,
                 PersonType.INDIVIDUAL,
                 Map.of(AgeSubject.SELF, 40),
                 Map.of(),
@@ -225,7 +226,7 @@ class ConditionTest {
                 heads,
                 components,
                 evidence,
-                ItemFacts.NONE, Declarations.NONE);
+                ItemFacts.NONE, Declarations.NONE, Optional.empty());
     }
 
     private static ConditionContext withIncome(String totalIncome) {
@@ -369,7 +370,7 @@ class ConditionTest {
             // 15-review-findings.md:533 — either the taxpayer or the insured person is 60 or over.
             // Taxpayer 45, insured parent 70.
             ConditionContext ctx = new ConditionContext(
-                    true,
+                    ResidentialStatus.RESIDENT,
                     PersonType.INDIVIDUAL,
                     Map.of(AgeSubject.SELF, 45, AgeSubject.INSURED_PERSON, 70),
                     Map.of());
@@ -384,7 +385,7 @@ class ConditionTest {
         @Test
         void anyOf_doesNotHold_whenNoLimbDoes() {
             ConditionContext ctx = new ConditionContext(
-                    true,
+                    ResidentialStatus.RESIDENT,
                     PersonType.INDIVIDUAL,
                     Map.of(AgeSubject.SELF, 45, AgeSubject.INSURED_PERSON, 50),
                     Map.of());
@@ -416,7 +417,7 @@ class ConditionTest {
         void nesting_composesToArbitraryDepth() {
             // resident AND (60+ OR certified disabled) — the shape DED-80U-001 needs
             ConditionContext ctx = new ConditionContext(
-                    true,
+                    ResidentialStatus.RESIDENT,
                     PersonType.INDIVIDUAL,
                     Map.of(AgeSubject.SELF, 45),
                     Map.of(AgeSubject.SELF, DisabilitySeverity.SEVERE_DISABILITY));
@@ -701,8 +702,8 @@ class ConditionTest {
     class SealedFamily {
 
         /**
-         * An exhaustive switch with no {@code default} over all seventeen predicates. This does not
-         * merely pass — it <b>compiles</b>, and that is the assertion. An eighteenth {@code Condition}
+         * An exhaustive switch with no {@code default} over all nineteen predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. A twentieth {@code Condition}
          * breaks this line, which is the whole reason the interface is sealed.
          *
          * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
@@ -713,6 +714,8 @@ class ConditionTest {
         void everyConditionIsAccountedFor() {
             java.util.List<Condition> all = java.util.List.of(
                     new IsResident(),
+                    new IsOrdinarilyResident(),
+                    new HousePropertiesOwnedAtMost(2),
                     new AgeAtLeast(60, AgeSubject.SELF),
                     new HasPersonType(Set.of(PersonType.INDIVIDUAL)),
                     new IsCertifiedDisabled(DisabilitySeverity.DISABILITY),
@@ -733,6 +736,8 @@ class ConditionTest {
             for (Condition condition : all) {
                 String group = switch (condition) {
                     case IsResident ignored -> "person";
+                    case IsOrdinarilyResident ignored -> "person";
+                    case HousePropertiesOwnedAtMost ignored -> "person";
                     case AgeAtLeast ignored -> "person";
                     case HasPersonType ignored -> "person";
                     case IsCertifiedDisabled ignored -> "person";
@@ -754,8 +759,8 @@ class ConditionTest {
             }
 
             // Part E's list, after the W-021 erratum: 12, not the 16 the backlog claimed (PaidOtherThanInCash removed,
-            // W-197); the three item facts; and the two declarations (W-090a1)
-            assertThat(all).hasSize(17);
+            // W-197); the three item facts; the two declarations (W-090a1); and r.164(2)'s two person facts (W-090c1a)
+            assertThat(all).hasSize(19);
         }
     }
 

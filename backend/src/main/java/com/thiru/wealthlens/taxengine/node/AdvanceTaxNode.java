@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.Assessee;
 import com.thiru.wealthlens.taxengine.input.FilingFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
@@ -8,6 +7,7 @@ import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.definition.AdvanceTaxLiability;
 import com.thiru.wealthlens.taxengine.rules.definition.InstalmentSchedule;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
@@ -90,7 +90,7 @@ public final class AdvanceTaxNode implements ComputationNode {
     /** Why a resident individual of the row's age is not liable, or empty where the person is not such a one. */
     private static Optional<String> exemptByAge(NodeContext ctx, AdvanceTaxLiability liability) {
         if (!(ctx.inputs().assessee() instanceof Individual individual)
-                || individual.residence() == Assessee.ResidentialStatus.NON_RESIDENT) {
+                || individual.residence() == ResidentialStatus.NON_RESIDENT) {
             return Optional.empty();
         }
         int ageAtYearEnd = Period.between(individual.dateOfBirth(), ctx.inputs().temporal().taxYearEnd()).getYears();

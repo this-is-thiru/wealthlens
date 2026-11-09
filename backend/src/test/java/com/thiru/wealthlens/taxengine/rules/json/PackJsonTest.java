@@ -371,12 +371,12 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all seventeen")
+    @DisplayName("Condition — all nineteen")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
             return new com.thiru.wealthlens.taxengine.rules.condition.ConditionContext(
-                    true,
+                    com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus.RESIDENT,
                     com.thiru.wealthlens.taxengine.rules.condition.PersonType.INDIVIDUAL,
                     Map.of(
                             com.thiru.wealthlens.taxengine.rules.condition.AgeSubject.SELF, 45,
@@ -393,7 +393,8 @@ class PackJsonTest {
                     new com.thiru.wealthlens.taxengine.rules.condition.Declarations(
                             Map.of(new com.thiru.wealthlens.taxengine.rules.id.DeclarationCode("SYNTHETIC_YES_NO"), true),
                             Map.of(new com.thiru.wealthlens.taxengine.rules.id.DeclarationCode("SYNTHETIC_AMOUNT"),
-                                    Money.of("1100"))));
+                                    Money.of("1100"))),
+                    java.util.Optional.of(2));
         }
 
         private static boolean holds(String raw) {
@@ -403,6 +404,10 @@ class PackJsonTest {
         @Test
         void everyVariantParsesAndEvaluates() {
             assertThat(holds("{\"type\": \"IsResident\"}")).isTrue();
+            assertThat(holds("{\"type\": \"IsOrdinarilyResident\"}")).isTrue();
+            // The taxpayer owns 2: a limit of 2 holds, of 1 does not (r.164(2)(b), W-090c1a)
+            assertThat(holds("{\"type\": \"HousePropertiesOwnedAtMost\", \"limit\": 2}")).isTrue();
+            assertThat(holds("{\"type\": \"HousePropertiesOwnedAtMost\", \"limit\": 1}")).isFalse();
             assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"SELF\"}")).isFalse();
             assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"INSURED_PERSON\"}"))
                     .isTrue();

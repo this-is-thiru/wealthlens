@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.input;
 
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 
 /**
  * A Hindu undivided family. It has no date of birth and no disability; its karta and members arrive

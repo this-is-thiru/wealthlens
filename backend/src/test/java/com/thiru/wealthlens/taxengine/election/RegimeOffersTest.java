@@ -3,12 +3,12 @@ package com.thiru.wealthlens.taxengine.election;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.thiru.wealthlens.taxengine.input.Assessee;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.Huf;
 import com.thiru.wealthlens.taxengine.input.RegimeElectionSnapshot;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
@@ -86,7 +86,7 @@ class RegimeOffersTest {
         // Given — both shipped regimes say INDIVIDUAL only
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs huf = new EngineInputs(plain.taxYear(), plain.regime(), plain.temporal(), plain.entered(),
-                new Huf(Assessee.ResidentialStatus.RESIDENT), plain.family(), plain.ledgers(), plain.elections(),
+                new Huf(ResidentialStatus.RESIDENT), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
 
         // When

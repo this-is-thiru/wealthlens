@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.input;
 
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 
 /**
  * Who is being assessed, as far as the rules are concerned: one record per assessee type, each
@@ -34,19 +35,4 @@ public sealed interface Assessee permits Individual, Huf {
     PersonType type();
 
     ResidentialStatus residence();
-
-    /**
-     * Residence, as {@code 05-domain-model.md:379} states it.
-     *
-     * <p>Three states, deliberately. {@code ConditionContext} collapses them to
-     * {@code boolean resident}, which is right for the predicates built so far but is <b>lossy</b>:
-     * a not-ordinarily-resident assessee is resident for some provisions and not others. The
-     * projection keeps what the profile knew; the collapse happens at the point of use, where it
-     * can be argued about.
-     */
-    enum ResidentialStatus {
-        RESIDENT,
-        RNOR,
-        NON_RESIDENT
-    }
 }

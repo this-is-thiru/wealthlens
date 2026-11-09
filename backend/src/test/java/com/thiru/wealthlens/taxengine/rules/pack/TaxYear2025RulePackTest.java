@@ -18,6 +18,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.Declarations;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -42,6 +43,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -108,8 +110,8 @@ class TaxYear2025RulePackTest {
         // Given — r.21AGA(1) (G.S.R. 452(E), Gazette 2023/246719 p.6): (a) Form No. 10-IEA by the s.139(1) due date
         // for a person having income from business or profession; (b) in the return for one not having it
         ElectionProtocol optOut = pack().regimes().get(FIRST_SCHEDULE_RATES).election();
-        ConditionContext taxpayer = new ConditionContext(true, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, 40),
-                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE);
+        ConditionContext taxpayer = new ConditionContext(ResidentialStatus.RESIDENT, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, 40),
+                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty());
 
         // When
         VehicleRoute route = optOut.vehicleFor(taxpayer);

@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.input;
 
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ import java.util.Optional;
  * where the fact would be silently discarded.
  *
  * @param dateOfBirth drives every age-dependent rule; see the class note on why it is not an age
- * @param residence three states, not a boolean — see {@link Assessee.ResidentialStatus}
+ * @param residence three states, not a boolean — see {@link ResidentialStatus}
  * @param disability the certified severity, where one is certified. {@code DED-80U-001} and
  *     {@code DED-80DD-001} read the severity and nothing else about the certificate
  * @param dateOfDeath {@code 13-edge-cases.md} B1-8 — carried, and not yet read by any rule

@@ -114,9 +114,9 @@ public final class MedicalTreatmentAbroadNode implements ComputationNode {
 
     /** The person facts, with the one computed amount the travel row's condition reads. */
     private static ConditionContext withIncomeBeforeTravel(ConditionContext person, Money incomeBeforeTravel) {
-        return new ConditionContext(person.resident(), person.personType(), person.ages(), person.disabilities(),
+        return new ConditionContext(person.residence(), person.personType(), person.ages(), person.disabilities(),
                 Map.of(NodeIds.SALARY_INCOMEBEFORETRAVEL, incomeBeforeTravel), Set.of(), Set.of(), Set.of(),
-                person.item(), person.declarations());
+                person.item(), person.declarations(), person.ownedHouseProperties());
     }
 
     private static void requireEnteredEmployment(NodeContext ctx, MedicalTreatmentAbroad claim) {

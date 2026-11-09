@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import java.time.LocalDate;
 
 /** What a client sends to create or replace a {@link TaxpayerProfile}. */

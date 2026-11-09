@@ -64,6 +64,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-228 | PARKED | The trade-outcome rebuild beside property sales | The deploy gate | No figure at risk (row read, D-445) |
 | W-251 | PARKED | A client's privacy duties: the notice linked, the copies offered, the notice before registration | When a website or app is started, else waived at the deploy gate (D-483) | No client exists; the app serves the notice at public `GET /privacy`, and registration needs its version (W-247, W-250) |
 | W-246 | PARKED | Eligibility that reads a computed income | When a regime whose eligibility reads an income is placed, else waived at the deploy gate (D-515) | No shipped regime's eligibility reads an income (`IncomeAtMost` only in `PERQ-MEDABROAD-TRAVEL`, a rule condition); one that did would be refused with a 400 naming the missing node, never priced wrongly |
+| W-090c3 | PARKED | TY 2026-27 ITR-3 and ITR-4 (r.164(5) – (7)) | When business income is computed, else waived at the deploy gate (D-523) | A person with business income is refused before any form is chosen, so no form is offered |
 | W-090e | PARKED | ITR-UN, the updated return (r.165) | When updated returns (s.263(6)) are computed, else waived at the deploy gate (D-516) | The engine computes original and belated returns only; no form is offered for an updated return |
 
 ## Noted

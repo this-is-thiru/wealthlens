@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxengine.test;
 
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
 import com.thiru.wealthlens.taxengine.input.Assessee;
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
@@ -20,6 +19,7 @@ import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;

@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import java.time.LocalDate;
 
 /** A profile as a client reads it: the PAN masked ({@code DR 14} O1.1), the storage shape not exposed (TS T10). */

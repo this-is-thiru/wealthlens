@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
-import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
@@ -15,6 +14,7 @@ import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
+import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
