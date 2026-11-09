@@ -237,15 +237,15 @@ no validator branch, because it would be unreachable.
 | I16 | a `PendingNotification` names an interim rule in the same pack | `PackValidator` (part of I2) | ✅ `W-029` |
 | I17 | every `ComponentCode` a draft references resolves in the target pack, or has a `DeprecationPolicy` | draft upcasting (runtime) | ⚠ UNOWNED |
 | I18 | a non-`TAX_YEAR` rule is always supplied its coordinate | `TemporalContext.on` / `RuleRow.versionAt` throw | ✅ `W-023`, asserted `W-039` |
-| I19 | at least one ITR form applies per `(PersonType, ReturnKind)` | pack load | ○ `W-090` |
-| I20 | no two ITR forms simultaneously eligible | pack load | ○ `W-090` |
+| I19 | at least one ITR form applies per `(PersonType, ReturnKind)` — the person types some regime serves (as I5) times the return kinds the year's forms name; a year with no forms names none | `PackValidator` (`ItrFormCoverage`) | ✅ `W-090c2` (D-529 C1a) |
+| I20 | no two ITR forms simultaneously eligible — decided on structure: two forms sharing a person type and return kind are separated by an exclusion or by a positive condition and its `Not` | `PackValidator` (`ItrFormCoverage`) | ✅ `W-090c2` (D-523 C4a) |
 | I21 | every `ScheduleRef`, `FromRule`, `FromNode` resolves | pack load | ○ `W-092` |
 | I22 | every ITR form has a satisfiable `FurnishingOption` | pack load | ○ `W-092` |
 | I23 | every claimable rule has a catalogue entry | pack load | ○ `W-117` |
 | I24 | a catalogue entry's channel matches its rule's Chapter VIII Part; Part C carries the s.122(5) late-return warning | pack load | ⚠ UNOWNED |
 | I25 | every `EvidenceRequirement` names what closes it | pack load | ⚠ UNOWNED |
 | I26 | every `ClaimStep` with a deadline resolves against the tax calendar | pack load | ⚠ UNOWNED |
-| I27 | perturbing `content/` and `forms/` changes no computed number | property test | ✅ `W-146` (`ContentPerturbationTest`; the timeline holds no `forms/`, which compiles empty) |
+| I27 | perturbing `content/` and `forms/` changes no computed number | property test | ✅ `W-146` (`ContentPerturbationTest`); `forms/` from `W-090c2` — its texts, limits and ages rewritten, or the layer removed, move only `forms/itr-forms.json` |
 | I28 | no occurrence of `ComputationStep` under `backend/src` | `ArchitectureTest` | ✅ `W-004` |
 | I29 | every `TaxEngineException` declares a `TaxError`; the advice switch is exhaustive | build (sealed switch) | ○ `W-105`, `W-106` |
 | I30 | `taxengine` depends on no repository, Spring Data or `taxplanning` type, and reads no clock | `ArchitectureTest` | ✅ `W-004` |
@@ -604,3 +604,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-11-09 | T1 `condition/`: `IsOrdinarilyResident` (r.164(2), `RESIDENT` only) and `HousePropertiesOwnedAtMost` (r.164(2)(b), a share counting as owning), the 18th and 19th predicates; `ConditionContext` carries `ResidentialStatus` whole (moved from `Assessee`, named interface `input` like `DisabilitySeverity`) and the count owned, filled by `NodeContext` | D-525 (W-090c1a) |
 | 2026-11-09 | T1 `condition/`: `ReturnFacts` and four predicates on it (`HasLossUnderHead`, `CapitalGainsOnlyInParts`, `CapitalGainsPartAtMost`, `DeductionAllowedUnder`), 23 in all; `ConditionContext.reporting`. T3 `result/`: `TaxComputation.returnFacts`, built by `ReturnFactsProjection` from the four heads, the capital-gains parts and the trace's `DEDUCTION` lines above nil (A6 erratum). `validate/`: `ReturnFactReferences` | D-527 (W-090c1b1) |
 | 2026-11-09 | T2 `pipeline/`: `HeadsAfterSetOff.losses` (`LossesAcrossYears`: each head's loss brought forward and left to carry forward), filled by `SetOffNode` from `CarriedLossSetOff`'s `LedgerTotals`, the year's house-property loss left and `CapitalGainsHead`'s losses left; no figure or line changes. T1 `condition/`: `HasLossBroughtForward`, `HasLossCarriedForward`, 25 in all; `ReturnFacts` carries both maps; `HasLossUnderHead` refuses `CAPITAL_GAINS`, whose figure is never below nil | D-528 (W-090c1b2) |
+| 2026-11-09 | T4 pack: TY 2026-27's first forms, `forms/itr-forms/ITR-1.json` (SAHAJ: r.164(2) as ten positive conditions, (3)(a) – (n) as fourteen bars, the r.164(12) Table's three electronic manners and paper at 80 or more) and `ITR-2.json` (r.164(4): individual or HUF, no business income, excluding ITR-1), return kinds `S263_1`, `S268_1_A`, `S280`, valid 2026-04-01 – 2027-03-31; forms layer 2026-27.forms.3. `validate/`: `ItrFormCoverage` (I19, I20). I27 extended to `forms/` | D-529 (W-090c2) |

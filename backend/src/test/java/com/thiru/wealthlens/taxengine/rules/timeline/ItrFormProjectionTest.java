@@ -83,11 +83,11 @@ class ItrFormProjectionTest {
     }
 
     @Test
-    void read_whenTheShippedTimelineIsRead_holdsNoForms() {
+    void read_whenTheShippedTimelineIsRead_holdsItr1AndItr2() {
         // Given / When
         Timeline timeline = TimelineReader.read(Path.of("src/main/resources/rulepacks/timeline"));
 
-        // Then
-        assertThat(timeline.itrFormSources()).isEmpty();
+        // Then — r.164(2) and (4)'s forms, the first shipped (W-090c2)
+        assertThat(timeline.itrFormSources()).containsOnlyKeys(new ItrFormCode("ITR-1"), new ItrFormCode("ITR-2"));
     }
 }

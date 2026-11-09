@@ -865,8 +865,10 @@ class PackJsonTest {
                                     "forms/itr-forms.json", resource("forms/itr-forms.json")));
 
             assertThat(pack.rules()).hasSize(236);
-            // No shipped form until W-090c; the forms layer is read and holds none (W-090b)
-            assertThat(pack.itrForms()).isEmpty();
+            // r.164(2) and (4)'s forms, in force for TY 2026-27 (W-090c2)
+            assertThat(pack.itrForms()).containsOnlyKeys(
+                    new com.thiru.wealthlens.taxengine.rules.id.ItrFormCode("ITR-1"),
+                    new com.thiru.wealthlens.taxengine.rules.id.ItrFormCode("ITR-2"));
             // r.164(3), (6), read in Gazette 271092 pp.1662 – 1663 (W-090a2, D-520)
             assertThat(pack.declarations().keySet().stream().map(Object::toString).sorted().toList()).containsExactly(
                     "AGRICULTURAL_INCOME", "ASSETS_OUTSIDE_INDIA", "CASH_WITHDRAWAL_TAX_DEDUCTED", "DIRECTOR_IN_COMPANY",
