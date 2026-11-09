@@ -4,14 +4,18 @@ import com.thiru.wealthlens.taxengine.rules.condition.AgeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.AllOf;
 import com.thiru.wealthlens.taxengine.rules.condition.AnyOf;
+import com.thiru.wealthlens.taxengine.rules.condition.CapitalGainsOnlyInParts;
+import com.thiru.wealthlens.taxengine.rules.condition.CapitalGainsPartAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.ComponentPresent;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.Declared;
 import com.thiru.wealthlens.taxengine.rules.condition.DeclaredAmountAbove;
+import com.thiru.wealthlens.taxengine.rules.condition.DeductionAllowedUnder;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.EvidenceRecorded;
 import com.thiru.wealthlens.taxengine.rules.condition.EvidenceType;
 import com.thiru.wealthlens.taxengine.rules.condition.HasIncomeUnderHead;
+import com.thiru.wealthlens.taxengine.rules.condition.HasLossUnderHead;
 import com.thiru.wealthlens.taxengine.rules.condition.HasPersonType;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.HousePropertiesOwnedAtMost;
@@ -25,10 +29,12 @@ import com.thiru.wealthlens.taxengine.rules.condition.ItemFactAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -49,6 +55,10 @@ public final class ConditionJson {
         "IsResident",
         "IsOrdinarilyResident",
         "HousePropertiesOwnedAtMost",
+        "HasLossUnderHead",
+        "CapitalGainsOnlyInParts",
+        "CapitalGainsPartAtMost",
+        "DeductionAllowedUnder",
         "AgeAtLeast",
         "HasPersonType",
         "IsCertifiedDisabled",
@@ -89,6 +99,8 @@ public final class ConditionJson {
                     case "Declared" -> new Declared(new DeclarationCode(PackJson.text(node, "code", path)));
                     case "DeclaredAmountAbove" -> new DeclaredAmountAbove(
                             new DeclarationCode(PackJson.text(node, "code", path)), PackJson.money(node, "limit", path));
+                    case "HasLossUnderHead", "CapitalGainsOnlyInParts", "CapitalGainsPartAtMost", "DeductionAllowedUnder" ->
+                            returnFact(tag, node, path);
                     case "AllOf", "AnyOf", "Not" -> composition(tag, node, path);
                     default -> throw unhandled(tag, path);
                 });
@@ -106,6 +118,20 @@ public final class ConditionJson {
             case "HasPersonType" -> new HasPersonType(personTypes(node, path));
             case "IsCertifiedDisabled" -> new IsCertifiedDisabled(
                     PackJson.enumValue(node, "minimum", path, DisabilitySeverity.class));
+            default -> throw unhandled(tag, path);
+        };
+    }
+
+    /** Facts of a computed return a form reads — the W-090c1b1 predicates. */
+    private static Condition returnFact(String tag, JsonNode node, String path) {
+        return switch (tag) {
+            case "HasLossUnderHead" -> new HasLossUnderHead(PackJson.enumValue(node, "head", path, HeadCode.class));
+            case "CapitalGainsOnlyInParts" -> new CapitalGainsOnlyInParts(new LinkedHashSet<>(PackJson.array(
+                    node, "parts", path, e -> new CapitalGainsPart(e.node().asString()))));
+            case "CapitalGainsPartAtMost" -> new CapitalGainsPartAtMost(
+                    new CapitalGainsPart(PackJson.text(node, "part", path)), PackJson.money(node, "limit", path));
+            case "DeductionAllowedUnder" -> new DeductionAllowedUnder(new LinkedHashSet<>(PackJson.array(
+                    node, "rows", path, e -> new RuleId(e.node().asString()))));
             default -> throw unhandled(tag, path);
         };
     }

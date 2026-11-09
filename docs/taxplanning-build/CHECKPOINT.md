@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-090c1a done (D-525), committed with the W-090c and W-090c1 splits, not pushed
-Stage           : 6 → next: plan W-090c1b (§2 template), ask for approval; STOP before building
-Done today      : session 81: W-090b (327e5a00), W-260 (ba8a439d), W-090c split (D-523), W-090c1 split (D-524), W-090c1a (D-525)
-Board           : W-090c —; W-090c1 —; W-090c1a D; W-090c1b ·; W-090c2 ·; W-090c3 K; W-090d ·; W-090e K
-Next step       : resume at W-090c1b (computed facts on TaxComputation + their conditions, incl. HasLossBroughtForward): run the resume check, read SetOffNode, CarriedLossSetOff, CapitalGainsHead, OtherSourcesNode's s.93 rows, then plan it; it may split
-Owner actions   : push api-collection main first, then review/taxplanning (9926ea64, b9d45f2f, 7f01234b, 327e5a00, ba8a439d and the W-090c1a commit unpushed); adopt the 13 questions' wording
-Last verify     : W-090c1a unit 5037 / 0 / 0, integration 539 / 0 / 0
+Item            : none in flight — W-090c1b1 done (D-527), committed with the W-090c1b split, not pushed
+Stage           : 6 → next: plan W-090c1b2 (§2 template), ask for approval; STOP before building
+Done today      : session 81: W-090b, W-260, W-090c1a, W-090c1b1 committed; splits D-523, D-524, D-526
+Board           : W-090c1a D; W-090c1b —; W-090c1b1 D; W-090c1b2 ·; W-090c2 ·; W-090c3 K
+Next step       : resume at W-090c1b2 (losses brought forward and to carry forward, published by SetOffNode / CarriedLossSetOff): run the resume check, read SetOffNode, CarriedLossSetOff and every reader of HeadsAfterSetOff, then plan it
+Owner actions   : push api-collection main first, then review/taxplanning (seven commits unpushed, ending with the W-090c1b1 commit); adopt the 13 questions' wording
+Last verify     : W-090c1b1 unit 5056 / 0 / 0, integration 539 / 0 / 0
 Files touched   : none — all committed
-Last item commit: taxplanning W-090c1a: let a form's condition read the residential status whole and the house properties owned
-Updated         : 2026-11-09, session 81 — W-090c1a committed; next W-090c1b
+Last item commit: taxplanning W-090c1b1: carry the year's facts a return form reads on the computation
+Updated         : 2026-11-09, session 81 — W-090c1b1 committed; next W-090c1b2
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

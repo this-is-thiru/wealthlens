@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.result;
 
 import com.thiru.wealthlens.taxengine.input.InputsFingerprint;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -48,6 +49,8 @@ import java.util.Map;
  *     because the rebate reads one and not the other
  * @param netPayableBeforeFilingEffects the bill the statute computes before anything that depends
  *     on when the return is furnished
+ * @param returnFacts the year's facts a return form reads — each head's income or loss, the capital gains by part, the
+ *     rows that allowed a deduction (W-090c1b1, D-527)
  */
 public record TaxComputation(
         ComputationId id,
@@ -58,7 +61,8 @@ public record TaxComputation(
         List<TraceLine> trace,
         Money totalIncome,
         TaxByBasis taxByBasis,
-        Money netPayableBeforeFilingEffects) {
+        Money netPayableBeforeFilingEffects,
+        ReturnFacts returnFacts) {
 
     public TaxComputation {
         requirePresent(id, "id");
@@ -70,6 +74,7 @@ public record TaxComputation(
         requirePresent(totalIncome, "totalIncome");
         requirePresent(taxByBasis, "taxByBasis");
         requirePresent(netPayableBeforeFilingEffects, "netPayableBeforeFilingEffects");
+        requirePresent(returnFacts, "returnFacts");
 
         if (lawAndExec.isEmpty()) {
             throw new IllegalArgumentException(

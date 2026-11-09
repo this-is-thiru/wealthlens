@@ -49,7 +49,8 @@ public final class ComputationProjector {
                 run.trace(),
                 anchor(run, NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount(),
                 anchor(run, NodeIds.TAX_BYBASIS, TaxByBasis.class),
-                anchor(run, NodeIds.TAX_NETPAYABLE, MoneyValue.class).amount());
+                anchor(run, NodeIds.TAX_NETPAYABLE, MoneyValue.class).amount(),
+                ReturnFactsProjection.of(run));
     }
 
     private static <T extends NodeValue> T anchor(PipelineRunner.Result run, NodeId slot, Class<T> kind) {

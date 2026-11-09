@@ -270,6 +270,9 @@ public record FilingPosition(
 > Verified by: `./mvnw test -pl backend -Dtest=TaxComputationTest` — 21 tests;
 > `grep -rc 'ItrSelection\|CalendarEntry' docs/` → this file only.
 
+> **Erratum (W-090c1b1, 2026-11-09):** the `TaxComputation` record above ends at `netPayableBeforeFilingEffects`, but a return form's selection needs the year's facts of the computed return — each head's income or loss, the capital gains by part, the rows that allowed a deduction — and they are date-independent, so they belong on this half: `TaxComputation` gains a tenth component, `ReturnFacts returnFacts` (D-526 C3a, D-527). `FilingPosition` keeps the date-dependent `form`; A6's rule is unchanged and still asserted against every JDK date type.
+> Verified by: `./mvnw test -pl backend -Dtest=TaxComputationTest` (`theComponentsAreA6sList`, `noComponentIsADateOrATime`).
+
 | | |
 |---|---|
 | **Cache key for `TaxComputation`** | `EngineInputs.fingerprint()` + `law` + `exec` version. **No date.** Cached indefinitely |

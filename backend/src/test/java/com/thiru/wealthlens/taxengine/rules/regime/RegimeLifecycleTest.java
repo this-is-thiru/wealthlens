@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
+import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -259,7 +260,7 @@ class RegimeLifecycleTest {
                 java.util.Set.of(heads),
                 java.util.Set.of(),
                 java.util.Set.of(),
-                com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.NONE, Declarations.NONE, Optional.empty());
+                com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE);
     }
 
     /**

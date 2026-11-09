@@ -38,6 +38,8 @@ import java.util.Set;
  * @param declarations the person's answers to the year's declarations; {@link Declarations#NONE} where none was given
  * @param ownedHouseProperties how many house properties the assessee owns, a share in one counting as owning it
  *     (r.164(2)(b), D-524 C2a); empty where not supplied, and then reading it throws
+ * @param returnFacts the year's facts of a computed return a form reads; {@link ReturnFacts#NONE} for a rule's
+ *     context, and then reading one throws (W-090c1b1)
  */
 public record ConditionContext(
         ResidentialStatus residence,
@@ -50,19 +52,14 @@ public record ConditionContext(
         Set<EvidenceType> evidenceRecorded,
         ItemFacts item,
         Declarations declarations,
-        Optional<Integer> ownedHouseProperties) {
+        Optional<Integer> ownedHouseProperties,
+        ReturnFacts returnFacts) {
 
     public ConditionContext {
         if (residence == null || personType == null) {
             throw new IllegalArgumentException("A ConditionContext must state the residential status and the person type");
         }
-        if (ownedHouseProperties == null) {
-            throw new IllegalArgumentException(
-                    "ConditionContext.ownedHouseProperties may not be null; pass Optional.empty() where not supplied");
-        }
-        ownedHouseProperties.filter(count -> count < 0).ifPresent(count -> {
-            throw new IllegalArgumentException("A person cannot own " + count + " house properties");
-        });
+        requireFormFacts(ownedHouseProperties, returnFacts);
         if (ages == null || disabilities == null) {
             throw new IllegalArgumentException("ConditionContext maps may not be null");
         }
@@ -78,6 +75,20 @@ public record ConditionContext(
         evidenceRecorded = Set.copyOf(evidenceRecorded);
     }
 
+    /** The facts a return form reads (W-090c1a, W-090c1b1): present, and a count owned never below nought. */
+    private static void requireFormFacts(Optional<Integer> ownedHouseProperties, ReturnFacts returnFacts) {
+        if (returnFacts == null) {
+            throw new IllegalArgumentException("ConditionContext.returnFacts may not be null; pass ReturnFacts.NONE");
+        }
+        if (ownedHouseProperties == null) {
+            throw new IllegalArgumentException(
+                    "ConditionContext.ownedHouseProperties may not be null; pass Optional.empty() where not supplied");
+        }
+        ownedHouseProperties.filter(count -> count < 0).ifPresent(count -> {
+            throw new IllegalArgumentException("A person cannot own " + count + " house properties");
+        });
+    }
+
     /** The person facts only — for a rule that asks nothing about the computation. */
     public ConditionContext(
             ResidentialStatus residence,
@@ -85,25 +96,31 @@ public record ConditionContext(
             Map<AgeSubject, Integer> ages,
             Map<AgeSubject, DisabilitySeverity> disabilities) {
         this(residence, personType, ages, disabilities,
-                Map.of(), Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty());
+                Map.of(), Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE);
     }
 
     /** The same facts, about the given item. */
     public ConditionContext about(ItemFacts facts) {
         return new ConditionContext(residence, personType, ages, disabilities, nodeValues, headsWithIncome,
-                componentsPresent, evidenceRecorded, facts, declarations, ownedHouseProperties);
+                componentsPresent, evidenceRecorded, facts, declarations, ownedHouseProperties, returnFacts);
     }
 
     /** The same facts, with the person's answers to the year's declarations. */
     public ConditionContext answering(Declarations answers) {
         return new ConditionContext(residence, personType, ages, disabilities, nodeValues, headsWithIncome,
-                componentsPresent, evidenceRecorded, item, answers, ownedHouseProperties);
+                componentsPresent, evidenceRecorded, item, answers, ownedHouseProperties, returnFacts);
     }
 
     /** The same facts, with the number of house properties the assessee owns (r.164(2)(b)). */
     public ConditionContext owning(int houseProperties) {
         return new ConditionContext(residence, personType, ages, disabilities, nodeValues, headsWithIncome,
-                componentsPresent, evidenceRecorded, item, declarations, Optional.of(houseProperties));
+                componentsPresent, evidenceRecorded, item, declarations, Optional.of(houseProperties), returnFacts);
+    }
+
+    /** The same facts, with the year's facts of the computed return a form reads (W-090c1b1). */
+    public ConditionContext reporting(ReturnFacts facts) {
+        return new ConditionContext(residence, personType, ages, disabilities, nodeValues, headsWithIncome,
+                componentsPresent, evidenceRecorded, item, declarations, ownedHouseProperties, facts);
     }
 
     /** A resident individual of the given age, with nothing else recorded. */

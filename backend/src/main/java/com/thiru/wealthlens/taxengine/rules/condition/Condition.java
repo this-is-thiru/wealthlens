@@ -39,12 +39,18 @@ import java.util.stream.Collectors;
  * sixteenth and seventeenth, {@link Declared} and {@link DeclaredAmountAbove}, read the person's answers to questions
  * the engine cannot compute, so a form's bar is data (W-090a1, D-517). The eighteenth and nineteenth,
  * {@link IsOrdinarilyResident} and {@link HousePropertiesOwnedAtMost}, read the person facts r.164(2) asks of a return
- * form (W-090c1a, D-525).
+ * form (W-090c1a, D-525). The twentieth to twenty-third — {@link HasLossUnderHead}, {@link CapitalGainsOnlyInParts},
+ * {@link CapitalGainsPartAtMost} and {@link DeductionAllowedUnder} — read the year's facts of a computed return
+ * ({@link ReturnFacts}; W-090c1b1, D-527).
  */
 public sealed interface Condition
         permits IsResident,
                 IsOrdinarilyResident,
                 HousePropertiesOwnedAtMost,
+                HasLossUnderHead,
+                CapitalGainsOnlyInParts,
+                CapitalGainsPartAtMost,
+                DeductionAllowedUnder,
                 AgeAtLeast,
                 HasPersonType,
                 IsCertifiedDisabled,
@@ -79,7 +85,8 @@ public sealed interface Condition
             case AllOf all -> all.all().stream().anyMatch(Condition::isAboutItem);
             case AnyOf any -> any.any().stream().anyMatch(Condition::isAboutItem);
             case Not not -> not.condition().isAboutItem();
-            case IsResident _, IsOrdinarilyResident _, HousePropertiesOwnedAtMost _, AgeAtLeast _, HasPersonType _,
+            case IsResident _, IsOrdinarilyResident _, HousePropertiesOwnedAtMost _, HasLossUnderHead _,
+                    CapitalGainsOnlyInParts _, CapitalGainsPartAtMost _, DeductionAllowedUnder _, AgeAtLeast _, HasPersonType _,
                     IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
                     HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, Declared _, DeclaredAmountAbove _ -> false;
         };
@@ -100,7 +107,8 @@ public sealed interface Condition
             case AnyOf any -> any.any().stream().flatMap(limb -> limb.itemFactsRead().stream())
                     .collect(Collectors.toUnmodifiableSet());
             case Not not -> not.condition().itemFactsRead();
-            case IsResident _, IsOrdinarilyResident _, HousePropertiesOwnedAtMost _, AgeAtLeast _, HasPersonType _,
+            case IsResident _, IsOrdinarilyResident _, HousePropertiesOwnedAtMost _, HasLossUnderHead _,
+                    CapitalGainsOnlyInParts _, CapitalGainsPartAtMost _, DeductionAllowedUnder _, AgeAtLeast _, HasPersonType _,
                     IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
                     HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, Declared _, DeclaredAmountAbove _ ->
                     Set.of();

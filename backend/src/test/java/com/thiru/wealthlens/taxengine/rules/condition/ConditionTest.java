@@ -4,10 +4,12 @@ import static com.thiru.wealthlens.taxengine.rules.RuleRefusals.refusal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
@@ -226,7 +228,7 @@ class ConditionTest {
                 heads,
                 components,
                 evidence,
-                ItemFacts.NONE, Declarations.NONE, Optional.empty());
+                ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE);
     }
 
     private static ConditionContext withIncome(String totalIncome) {
@@ -702,8 +704,8 @@ class ConditionTest {
     class SealedFamily {
 
         /**
-         * An exhaustive switch with no {@code default} over all nineteen predicates. This does not
-         * merely pass — it <b>compiles</b>, and that is the assertion. A twentieth {@code Condition}
+         * An exhaustive switch with no {@code default} over all twenty-three predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. A twenty-fourth {@code Condition}
          * breaks this line, which is the whole reason the interface is sealed.
          *
          * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
@@ -716,6 +718,10 @@ class ConditionTest {
                     new IsResident(),
                     new IsOrdinarilyResident(),
                     new HousePropertiesOwnedAtMost(2),
+                    new HasLossUnderHead(HeadCode.HOUSE_PROPERTY),
+                    new CapitalGainsOnlyInParts(Set.of(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY"))),
+                    new CapitalGainsPartAtMost(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY"), Money.ZERO),
+                    new DeductionAllowedUnder(Set.of(new RuleId("OS-BANKER-COMMISSION"))),
                     new AgeAtLeast(60, AgeSubject.SELF),
                     new HasPersonType(Set.of(PersonType.INDIVIDUAL)),
                     new IsCertifiedDisabled(DisabilitySeverity.DISABILITY),
@@ -738,6 +744,10 @@ class ConditionTest {
                     case IsResident ignored -> "person";
                     case IsOrdinarilyResident ignored -> "person";
                     case HousePropertiesOwnedAtMost ignored -> "person";
+                    case HasLossUnderHead ignored -> "return";
+                    case CapitalGainsOnlyInParts ignored -> "return";
+                    case CapitalGainsPartAtMost ignored -> "return";
+                    case DeductionAllowedUnder ignored -> "return";
                     case AgeAtLeast ignored -> "person";
                     case HasPersonType ignored -> "person";
                     case IsCertifiedDisabled ignored -> "person";
@@ -759,8 +769,9 @@ class ConditionTest {
             }
 
             // Part E's list, after the W-021 erratum: 12, not the 16 the backlog claimed (PaidOtherThanInCash removed,
-            // W-197); the three item facts; the two declarations (W-090a1); and r.164(2)'s two person facts (W-090c1a)
-            assertThat(all).hasSize(19);
+            // W-197); the three item facts; the two declarations (W-090a1); r.164(2)'s two person facts (W-090c1a); and the
+            // four facts of a computed return (W-090c1b1)
+            assertThat(all).hasSize(23);
         }
     }
 

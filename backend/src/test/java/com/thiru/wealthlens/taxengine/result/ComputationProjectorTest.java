@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.InputsFingerprint;
+import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
@@ -79,6 +80,12 @@ class ComputationProjectorTest {
         values.put(NodeIds.TAX_AFTERREBATE, TAX_AFTER_REBATE);
         values.put(NodeIds.TAX_NETPAYABLE, MoneyValue.of(NET_PAYABLE_UNROUNDED));
         values.put(NodeIds.ROUND_NETPAYABLE, MoneyValue.of(NET_PAYABLE_ROUNDED));
+        // The heads a return form reads (W-090c1b1): salary only, no capital gains
+        values.put(NodeIds.SALARY_INCOME, MoneyValue.of(TOTAL_INCOME_UNROUNDED));
+        values.put(NodeIds.HOUSEPROPERTY_INCOME, MoneyValue.of(Money.ZERO));
+        values.put(NodeIds.OTHERSOURCES_INCOME, MoneyValue.of(Money.ZERO));
+        values.put(NodeIds.CAPITALGAINS_INCOME,
+                new CapitalGainsHead(Map.of(), Map.of(), Money.ZERO, Money.ZERO, List.of()));
         return values;
     }
 

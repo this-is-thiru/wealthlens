@@ -371,7 +371,7 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all nineteen")
+    @DisplayName("Condition — all twenty-three")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
@@ -394,7 +394,12 @@ class PackJsonTest {
                             Map.of(new com.thiru.wealthlens.taxengine.rules.id.DeclarationCode("SYNTHETIC_YES_NO"), true),
                             Map.of(new com.thiru.wealthlens.taxengine.rules.id.DeclarationCode("SYNTHETIC_AMOUNT"),
                                     Money.of("1100"))),
-                    java.util.Optional.of(2));
+                    java.util.Optional.of(2),
+                    com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts.of(
+                            Map.of(com.thiru.wealthlens.taxengine.rules.condition.HeadCode.HOUSE_PROPERTY, Money.of("-20000")),
+                            Map.of(new com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart("LONG_TERM_LISTED_EQUITY"),
+                                    Money.of("125000")),
+                            java.util.Set.of(new RuleId("OS-BANKER-COMMISSION"))));
         }
 
         private static boolean holds(String raw) {
@@ -408,6 +413,13 @@ class PackJsonTest {
             // The taxpayer owns 2: a limit of 2 holds, of 1 does not (r.164(2)(b), W-090c1a)
             assertThat(holds("{\"type\": \"HousePropertiesOwnedAtMost\", \"limit\": 2}")).isTrue();
             assertThat(holds("{\"type\": \"HousePropertiesOwnedAtMost\", \"limit\": 1}")).isFalse();
+            // The return: a house-property loss of ₹20,000, ₹1,25,000 of LONG_TERM_LISTED_EQUITY, a banker's commission
+            assertThat(holds("{\"type\": \"HasLossUnderHead\", \"head\": \"HOUSE_PROPERTY\"}")).isTrue();
+            assertThat(holds("{\"type\": \"CapitalGainsOnlyInParts\", \"parts\": [\"LONG_TERM_LISTED_EQUITY\"]}"))
+                    .isTrue();
+            assertThat(holds("{\"type\": \"CapitalGainsPartAtMost\", \"part\": \"LONG_TERM_LISTED_EQUITY\", \"limit\": \"124999\"}"))
+                    .isFalse();
+            assertThat(holds("{\"type\": \"DeductionAllowedUnder\", \"rows\": [\"OS-BANKER-COMMISSION\"]}")).isTrue();
             assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"SELF\"}")).isFalse();
             assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"INSURED_PERSON\"}"))
                     .isTrue();

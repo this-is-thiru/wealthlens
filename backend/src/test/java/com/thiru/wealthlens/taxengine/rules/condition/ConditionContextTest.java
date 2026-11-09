@@ -23,7 +23,7 @@ class ConditionContextTest {
     void construct_whenEveryPartIsGiven_isAccepted() {
         // When
         ConditionContext valid = new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), Map.of(), Map.of(), Set.of(), Set.of(),
-                Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty());
+                Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE);
 
         // Then
         assertThat(valid.personType()).isEqualTo(INDIVIDUAL);
@@ -34,27 +34,27 @@ class ConditionContextTest {
         String collections = "ConditionContext collections may not be null";
         return Stream.of(
                 refusal("ages null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, null, Map.of(), Map.of(), Set.of(),
-                        Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty()), maps),
+                        Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE), maps),
                 refusal("disabilities null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), null, Map.of(),
-                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty()), maps),
+                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE), maps),
                 refusal("nodeValues null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), Map.of(), null,
-                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty()), collections),
+                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE), collections),
                 refusal("headsWithIncome null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), Map.of(),
-                        Map.of(), null, Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty()), collections),
+                        Map.of(), null, Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE), collections),
                 refusal("componentsPresent null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), Map.of(),
-                        Map.of(), Set.of(), null, Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty()), collections),
+                        Map.of(), Set.of(), null, Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE), collections),
                 refusal("evidenceRecorded null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), Map.of(),
-                        Map.of(), Set.of(), Set.of(), null, ItemFacts.NONE, Declarations.NONE, Optional.empty()), collections),
+                        Map.of(), Set.of(), Set.of(), null, ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE), collections),
                 refusal("item null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), Map.of(), Map.of(),
-                        Set.of(), Set.of(), Set.of(), null, Declarations.NONE, Optional.empty()), collections),
+                        Set.of(), Set.of(), Set.of(), null, Declarations.NONE, Optional.empty(), ReturnFacts.NONE), collections),
                 refusal("declarations null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL, Map.of(), Map.of(), Map.of(),
-                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, null, Optional.empty()), collections),
+                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, null, Optional.empty(), ReturnFacts.NONE), collections),
                 refusal("residence null", () -> new ConditionContext(null, INDIVIDUAL, Map.of(), Map.of(), Map.of(),
-                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty()),
+                        Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE, Optional.empty(), ReturnFacts.NONE),
                         "must state the residential status"),
                 refusal("ownedHouseProperties null", () -> new ConditionContext(ResidentialStatus.RESIDENT, INDIVIDUAL,
                         Map.of(), Map.of(), Map.of(), Set.of(), Set.of(), Set.of(), ItemFacts.NONE, Declarations.NONE,
-                        null), "ownedHouseProperties may not be null"));
+                        null, ReturnFacts.NONE), "ownedHouseProperties may not be null"));
     }
 
     @ParameterizedTest(name = "{0}")

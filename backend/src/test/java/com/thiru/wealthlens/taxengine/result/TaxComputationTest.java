@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.input.InputsFingerprint;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -98,7 +99,7 @@ class TaxComputationTest {
                 List.of(line(SLAB), line(STD)),
                 Money.of("1200000"),
                 TaxByBasis.atSlabRatesOnly(Money.of("60000")),
-                Money.of("62400"));
+                Money.of("62400"), ReturnFacts.NONE);
     }
 
     @Nested
@@ -133,7 +134,9 @@ class TaxComputationTest {
                             "trace",
                             "totalIncome",
                             "taxByBasis",
-                            "netPayableBeforeFilingEffects");
+                            "netPayableBeforeFilingEffects",
+                            // date-independent like the rest: the year's facts a return form reads (W-090c1b1, D-526 C3a)
+                            "returnFacts");
         }
 
         @Test
@@ -163,7 +166,7 @@ class TaxComputationTest {
                             List.of(),
                             Money.ZERO,
                             TaxByBasis.atSlabRatesOnly(Money.ZERO),
-                            Money.ZERO))
+                            Money.ZERO, ReturnFacts.NONE))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("G-11");
         }
@@ -179,7 +182,7 @@ class TaxComputationTest {
                             List.of(),
                             Money.ZERO,
                             TaxByBasis.atSlabRatesOnly(Money.ZERO),
-                            Money.ZERO))
+                            Money.ZERO, ReturnFacts.NONE))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("cannot be reproduced");
         }
@@ -206,7 +209,7 @@ class TaxComputationTest {
                     mutable,
                     Money.ZERO,
                     TaxByBasis.atSlabRatesOnly(Money.ZERO),
-                    Money.ZERO);
+                    Money.ZERO, ReturnFacts.NONE);
 
             mutable.add(line(STD));
 
