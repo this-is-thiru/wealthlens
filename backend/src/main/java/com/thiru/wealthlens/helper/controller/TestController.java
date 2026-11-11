@@ -28,6 +28,6 @@ public class TestController {
         AssetRequest assetRequest = dto.assetRequest();
         List<AssetEntity> stockEntities = dto.stockEntities();
 
-        portfolioService.updateQuantityBySavingReportAndProfitAndLoss1(UserMail.from(email), transactionId, stockEntities, assetRequest);
+        portfolioService.allocateSaleV2(UserMail.from(email), transactionId, stockEntities, assetRequest);
     }
 }

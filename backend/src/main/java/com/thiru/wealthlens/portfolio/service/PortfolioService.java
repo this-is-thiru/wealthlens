@@ -1,4 +1,5 @@
 package com.thiru.wealthlens.portfolio.service;
+
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
@@ -292,9 +293,9 @@ public class PortfolioService {
     }
 
     /**
-     * Reads all TEMPORARY transactions for a user and re-processes them.
-     * Per-item try/catch (Chunk 1) makes this resilient to individual failures;
-     * the @{@link Transactional} annotation is a best-effort wrapper.
+     * Reads all TEMPORARY transactions for a user and re-processes them, each through the flow that received it.
+     * A trade the rules refuse fails its own item and the rest go on; any other failure fails the redrive, which rolls
+     * back as one transaction (W-281 C2a).
      */
     @Transactional
     public RedriveResult redriveTemporaryTransactions(UserMail userMail) {
@@ -313,6 +314,8 @@ public class PortfolioService {
                 failed.put(tempTxn.getId(), "No asset request stored");
                 continue;
             }
+            // Checked here as well as inside processing on purpose: here a still-blocked trade is left as it is ("Still
+            // filtered"); inside, it would be stored again as a new temporary ("Re-filtered") — W-281 finding 3.
             if (temporaryTransactionService.filterOutTransaction(userMail, assetRequest, true)) {
                 log.info("Transaction {} still blocked by corporate action, skipping", tempTxn.getId());
                 stillFiltered.add(tempTxn.getId());
@@ -332,9 +335,12 @@ public class PortfolioService {
                 } else {
                     succeeded.add(tempTxn.getId());
                 }
-            } catch (Exception e) {
-                log.error("Failed to redrive temporary transaction {}: {}", tempTxn.getId(), e.getMessage(), e);
-                failed.put(tempTxn.getId(), e.getMessage());
+            } catch (IllegalArgumentException refused) {
+                // A trade the rules refuse is this item's failure. Anything else — the database, a collision — is not
+                // the item's: it propagates, the redrive's transaction rolls back, and TradeCollisionRetry retries a
+                // collision (W-281 C2a).
+                log.warn("Redrive of temporary transaction {} refused: {}", tempTxn.getId(), refused.getMessage());
+                failed.put(tempTxn.getId(), refused.getMessage());
             }
         }
 
@@ -360,30 +366,19 @@ public class PortfolioService {
     }
 
     private static String buildRedriveMessage(List<String> succeeded, Map<String, String> failed, List<String> stillFiltered, List<String> filteredOut) {
-        if (succeeded.isEmpty() && failed.isEmpty() && stillFiltered.isEmpty() && filteredOut.isEmpty()) {
-            return "No temporary transactions to redrive";
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("Redrive complete. ");
-        if (!succeeded.isEmpty()) {
-            sb.append("Succeeded: ").append(succeeded.size());
-        }
-        if (!failed.isEmpty()) {
-            if (!succeeded.isEmpty()) sb.append(", ");
-            sb.append("Failed: ").append(failed.size());
-        }
-        if (!stillFiltered.isEmpty()) {
-            if (!succeeded.isEmpty() || !failed.isEmpty()) sb.append(", ");
-            sb.append("Still filtered: ").append(stillFiltered.size());
-        }
-        if (!filteredOut.isEmpty()) {
-            if (!succeeded.isEmpty() || !failed.isEmpty() || !stillFiltered.isEmpty()) sb.append(", ");
-            sb.append("Re-filtered: ").append(filteredOut.size());
-        }
-        return sb.toString();
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        counts.put("Succeeded", succeeded.size());
+        counts.put("Failed", failed.size());
+        counts.put("Still filtered", stillFiltered.size());
+        counts.put("Re-filtered", filteredOut.size());
+        String outcomes = counts.entrySet().stream()
+                .filter(count -> count.getValue() > 0)
+                .map(count -> count.getKey() + ": " + count.getValue())
+                .collect(Collectors.joining(", "));
+        return outcomes.isEmpty() ? "No temporary transactions to redrive" : "Redrive complete. " + outcomes;
     }
 
-    public void buyStock(UserMail userMail, String transactionId, AssetRequest assetRequest) {
+    private void buyStock(UserMail userMail, String transactionId, AssetRequest assetRequest) {
 
         String email = userMail.getEmail();
         assetRequest.setEmail(email);
@@ -495,7 +490,7 @@ public class PortfolioService {
 
         List<AssetEntity> stockEntities = portfolioRepository.findEligibleHoldingsForSell(email, stockCode, brokerName, accountHolder, transactionDate);
         validateTransaction(stockEntities, assetRequest);
-        updateQuantityBySavingReportAndProfitAndLoss1(userMail, transactionId, stockEntities, assetRequest);
+        allocateSaleV2(userMail, transactionId, stockEntities, assetRequest);
 
         List<String> updatedStockEntities = TCollectionUtil.applyMap(stockEntities, PortfolioService::hasNothingLeft, AssetEntity::getId);
         portfolioRepository.saveAll(stockEntities);
@@ -518,7 +513,7 @@ public class PortfolioService {
 
         validateTransaction(stockEntities, assetRequest);
 
-        updateQuantityBySavingReportAndProfitAndLoss(userMail, transactionId, stockEntities, assetRequest);
+        allocateSale(userMail, transactionId, stockEntities, assetRequest);
 
         List<String> updatedStockEntities = TCollectionUtil.applyMap(stockEntities, PortfolioService::hasNothingLeft, AssetEntity::getId);
         portfolioRepository.saveAll(stockEntities);
@@ -539,10 +534,6 @@ public class PortfolioService {
         if (existingQuantity < requested && !DoubleUtil.equal(existingQuantity, requested)) {
             throw new IllegalArgumentException("Not enough stocks to sell for: " + assetRequest.getStockCode());
         }
-    }
-
-    private String addTransactionInternal(UserMail userMail, AssetRequest assetRequest) {
-        return transactionService.addTransaction(userMail, assetRequest);
     }
 
     public List<AssetResponse> getStockQuantity(UserMail userMail, String stockCode) {
@@ -663,7 +654,7 @@ public class PortfolioService {
     }
 
     @SuppressWarnings({"removal"})
-    private void updateQuantityBySavingReportAndProfitAndLoss(UserMail userMail, String transactionId, List<AssetEntity> stockEntities, AssetRequest assetRequest) {
+    private void allocateSale(UserMail userMail, String transactionId, List<AssetEntity> stockEntities, AssetRequest assetRequest) {
 
         double sellQuantity = assetRequest.getQuantity();
         Iterator<AssetEntity> stockEntitiesIterator = stockEntities.iterator();
@@ -707,7 +698,7 @@ public class PortfolioService {
         }
     }
 
-    public void updateBrokerChargesAndProfitAndLoss(UserMail userMail, String transactionId, AssetRequest assetRequest) {
+    private void updateBrokerChargesAndProfitAndLoss(UserMail userMail, String transactionId, AssetRequest assetRequest) {
         var profitLossContext = new ProfitLossContext(transactionId, assetRequest.getQuantity(), assetRequest.getTransactionDate(), assetRequest.getPrice(),
                 assetRequest.getStockCode(), assetRequest.getBrokerName(), assetRequest.getExchangeName(), assetRequest.getAssetType(), TransactionType.BUY,
                 null, assetRequest.getAccountType(), assetRequest.getAccountHolder(), Collections.emptyList(),
@@ -715,7 +706,7 @@ public class PortfolioService {
         profitAndLossService.updateProfitAndLoss(userMail, profitLossContext);
     }
 
-    public void updateQuantityBySavingReportAndProfitAndLoss1(UserMail userMail, String transactionId, List<AssetEntity> stockEntities, AssetRequest assetRequest) {
+    public void allocateSaleV2(UserMail userMail, String transactionId, List<AssetEntity> stockEntities, AssetRequest assetRequest) {
 
         double sellQuantity = assetRequest.getQuantity();
         Iterator<AssetEntity> stockEntitiesIterator = stockEntities.iterator();

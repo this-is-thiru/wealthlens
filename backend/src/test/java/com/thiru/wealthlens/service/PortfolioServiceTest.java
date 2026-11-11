@@ -51,6 +51,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 @ExtendWith(MockitoExtension.class)
 class PortfolioServiceTest {
@@ -324,6 +325,46 @@ class PortfolioServiceTest {
         verify(transactionRepository, never()).saveAll(anyList());
     }
 
+    @Test
+    void redriveTemporaryTransactions_whenATradeIsRefused_failsOnlyThatItem() {
+        // Given -- two temporaries; the first breaks a trade rule (quantity 0) (W-281 C2a)
+        TransactionEntity refused = new TransactionEntity();
+        refused.setId("temp-refused");
+        AssetRequest zero = createAssetRequest("STOCK1");
+        zero.setQuantity(0.0);
+        refused.setAssetRequest(zero);
+        TransactionEntity fine = new TransactionEntity();
+        fine.setId("temp-fine");
+        fine.setAssetRequest(createAssetRequest("STOCK2"));
+        when(temporaryTransactionService.getAllTemporaryTransactions(userMail)).thenReturn(List.of(refused, fine));
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), eq(true))).thenReturn(false);
+
+        // When
+        RedriveResult result = portfolioService.redriveTemporaryTransactions(userMail);
+
+        // Then -- the refused one failed with the rule's reason; the other succeeded
+        assertTrue(result.getFailed().get("temp-refused").startsWith("Quantity must be greater than zero"));
+        assertEquals(List.of("temp-fine"), result.getSucceeded());
+    }
+
+    @Test
+    void redriveTemporaryTransactions_whenTheDatabaseFails_abortsTheRedrive() {
+        // Given -- one temporary, and the transaction store failing (W-281 C2a)
+        TransactionEntity waiting = new TransactionEntity();
+        waiting.setId("temp-1");
+        waiting.setAssetRequest(createAssetRequest("STOCK1"));
+        when(temporaryTransactionService.getAllTemporaryTransactions(userMail)).thenReturn(List.of(waiting));
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), eq(true))).thenReturn(false);
+        DataAccessResourceFailureException down = new DataAccessResourceFailureException("database unreachable");
+        when(transactionService.recordTransaction(any(), any())).thenThrow(down);
+
+        // When / Then -- not reported as one item's failure: the redrive itself fails, so its transaction rolls back
+        DataAccessResourceFailureException thrown = assertThrows(DataAccessResourceFailureException.class,
+                () -> portfolioService.redriveTemporaryTransactions(userMail));
+        assertSame(down, thrown);
+        verify(transactionRepository, never()).saveAll(anyList());
+    }
+
     private AssetRequest createAssetRequest(String stockCode) {
         AssetRequest request = new AssetRequest();
         request.setStockCode(stockCode);
@@ -543,7 +584,7 @@ class PortfolioServiceTest {
     }
 
     @Test
-    void updateQuantityBySavingReportAndProfitAndLoss1_recordsTradeOutcomesForEveryConsumedLot() {
+    void allocateSaleV2_recordsTradeOutcomesForEveryConsumedLot() {
         // Given -- a 4-unit sell across a 3-unit lot and a 5-unit lot
         List<AssetEntity> lots = new ArrayList<>(List.of(
                 sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10)),
@@ -555,7 +596,7 @@ class PortfolioServiceTest {
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
 
         // When
-        portfolioService.updateQuantityBySavingReportAndProfitAndLoss1(userMail, "sell-1", lots, sell);
+        portfolioService.allocateSaleV2(userMail, "sell-1", lots, sell);
 
         // Then -- both lots reach the recorder, with the partially consumed one carrying its
         // original quantity so buy-side charges can be pro-rated against the right denominator
@@ -569,7 +610,7 @@ class PortfolioServiceTest {
     }
 
     @Test
-    void updateQuantityBySavingReportAndProfitAndLoss1_recordsTheSaleFromTheRowsTheRecorderSaved() {
+    void allocateSaleV2_recordsTheSaleFromTheRowsTheRecorderSaved() {
         // Given -- the recorder computes the sale's charges and net profit; the P&L must fold those rows (W-169)
         List<AssetEntity> lots = new ArrayList<>(List.of(sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10))));
         AssetRequest sell = createAssetRequest("STOCK1");
@@ -582,7 +623,7 @@ class PortfolioServiceTest {
         when(tradeOutcomeRecorder.record(any(), any(), any(), any(), any())).thenReturn(rows);
 
         // When
-        portfolioService.updateQuantityBySavingReportAndProfitAndLoss1(userMail, "sell-1", lots, sell);
+        portfolioService.allocateSaleV2(userMail, "sell-1", lots, sell);
 
         // Then -- priced, then recorded, then the P&L given those very rows
         InOrder order = inOrder(chargeRecordingGateway, tradeOutcomeRecorder, profitAndLossService);
@@ -593,7 +634,7 @@ class PortfolioServiceTest {
     }
 
     @Test
-    void updateQuantityBySavingReportAndProfitAndLoss_v1_doesNotRecordTradeOutcomesThroughTheNewPath() {
+    void allocateSale_doesNotRecordTradeOutcomesThroughTheNewPath() {
         // Given -- V1 is in live use and writes its outcomes through toTradeOutcomeContext.
         // If it ever reaches the recorder as well, every V1 sell is double-counted.
         List<AssetEntity> lots = new ArrayList<>(List.of(
