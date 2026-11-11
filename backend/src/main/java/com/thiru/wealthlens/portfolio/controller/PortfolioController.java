@@ -7,12 +7,12 @@ import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
+import com.thiru.wealthlens.portfolio.service.TradeCollisionRetry;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.portfolio.service.UserRecordsErasureService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,21 +33,22 @@ public class PortfolioController {
     private final PortfolioService portfolioService;
     private final UserRecordsErasureService userRecordsErasureService;
     private final TransactionService transactionService;
+    private final TradeCollisionRetry tradeCollisionRetry;
 
     @PostMapping("/transaction")
     public String addTransaction(@PathVariable String email, @RequestBody AssetRequest assetRequest) {
-        return portfolioService.addTransaction(UserMail.from(email), assetRequest, new ArrayList<>());
+        return tradeCollisionRetry.addTransaction(UserMail.from(email), assetRequest);
     }
 
     @PostMapping("/transaction/v2")
     public ResponseEntity<String> addTransactionV2(@PathVariable String email, @RequestBody AssetRequest assetRequest) {
-        return ResponseEntity.ok(portfolioService.addTransactionV2(UserMail.from(email), assetRequest, new ArrayList<>()));
+        return ResponseEntity.ok(tradeCollisionRetry.addTransactionV2(UserMail.from(email), assetRequest));
     }
 
     @PostMapping("/upload-transactions")
     public String uploadTransactions(@PathVariable String email, @RequestParam("quarter") String quarter,
                                                      @RequestParam("file") MultipartFile file) {
-        return portfolioService.uploadTransactions(UserMail.from(email), quarter, file);
+        return tradeCollisionRetry.uploadTransactions(UserMail.from(email), quarter, file);
     }
 
     @GetMapping("/profit-and-loss")

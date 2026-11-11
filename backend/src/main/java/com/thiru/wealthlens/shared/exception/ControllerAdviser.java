@@ -85,6 +85,12 @@ public class ControllerAdviser {
         return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), request);
     }
 
+    @ExceptionHandler(TradeCollisionException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(Exception ex, HttpServletRequest request) {
+        log(ex);
+        return buildErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage(), request);
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex, HttpServletRequest request) {
         log(ex);

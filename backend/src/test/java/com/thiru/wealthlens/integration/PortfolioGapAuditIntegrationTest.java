@@ -25,6 +25,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -409,6 +415,51 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         // Then — OWNER's one trade, none of OTHER's
         assertEquals(1, listed.length);
         assertEquals(OWNER, listed[0].getEmail());
+    }
+
+    @Test
+    void addTransaction_whenTenSameDayBuysArriveTogether_holdsEveryUnit() throws InterruptedException {
+        // Given — ten V1 buys on 5 Jan of 1, 2, … 10 units, posted at once (PS-7): 55 units in all
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        List<Callable<Integer>> buys = IntStream.rangeClosed(1, 10)
+                .mapToObj(units -> (Callable<Integer>) () -> post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+                        trade(TransactionType.BUY, units, 100.0, JAN_5)).getStatusCode().value())
+                .toList();
+
+        // When
+        List<Integer> statuses = pool.invokeAll(buys).stream().map(PortfolioGapAuditIntegrationTest::done).toList();
+        pool.shutdown();
+
+        // Then — every buy answered 200 and all 55 units are held
+        assertEquals(List.of(200, 200, 200, 200, 200, 200, 200, 200, 200, 200), statuses);
+        assertEquals(55.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum(),
+                () -> "lots: " + lotsOf(OWNER));
+    }
+
+    @Test
+    void addTransactionV2_whenTenBuysArriveTogether_holdsEveryUnit() throws InterruptedException {
+        // Given — ten V2 buys of 1, 2, … 10 units on ten different days in January, posted at once: 55 units
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        List<Callable<Integer>> buys = IntStream.rangeClosed(1, 10)
+                .mapToObj(units -> (Callable<Integer>) () -> postV2(OWNER,
+                        trade(TransactionType.BUY, units, 100.0, JAN_5.plusDays(units))).getStatusCode().value())
+                .toList();
+
+        // When
+        List<Integer> statuses = pool.invokeAll(buys).stream().map(PortfolioGapAuditIntegrationTest::done).toList();
+        pool.shutdown();
+
+        // Then
+        assertEquals(List.of(200, 200, 200, 200, 200, 200, 200, 200, 200, 200), statuses);
+        assertEquals(55.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum());
+    }
+
+    private static Integer done(Future<Integer> status) {
+        try {
+            return status.get();
+        } catch (InterruptedException | ExecutionException failure) {
+            throw new IllegalStateException(failure);
+        }
     }
 
     private static int columnOf(Row header, String name) {
