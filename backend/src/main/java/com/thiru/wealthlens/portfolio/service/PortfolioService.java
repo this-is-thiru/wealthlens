@@ -85,14 +85,15 @@ public class PortfolioService {
      */
     @Transactional
     public String addTransaction(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
-        validateAssetRequest(userMail, assetRequest);
         if (temporaryTransactionService.hasTemporaryTransactions(userMail)) {
             throw new BadRequestException("There are pending temporary transactions. Please redrive them before adding a new transaction.");
         }
         return processTransaction(userMail, assetRequest, filteredOutTransactions);
     }
 
+    /** V1's processing of one trade: the V1 route, every upload row and a V1 redrive pass here, so it checks the trade (W-277). */
     private String processTransaction(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
+        validateAssetRequest(userMail, assetRequest);
         sanitizeAssetRequest(assetRequest);
 
         String filteredOutTransactionId = temporaryTransactionService.filterOutTransaction(userMail, assetRequest, TradeFlow.V1);
@@ -127,12 +128,12 @@ public class PortfolioService {
 
     @Transactional
     public String addTransactionV2(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
-        validateAssetRequest(userMail, assetRequest);
         return processTransactionV2(userMail, assetRequest, filteredOutTransactions);
     }
 
     /** V2's twin of {@link #processTransaction}: shared by the V2 route and the redrive of a trade V2 received (W-270). */
     private String processTransactionV2(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
+        validateAssetRequest(userMail, assetRequest);
         sanitizeAssetRequest(assetRequest);
 
         String filteredOutTransaction = temporaryTransactionService.filterOutTransaction(userMail, assetRequest, TradeFlow.V2);
@@ -184,8 +185,10 @@ public class PortfolioService {
      *
      * <p>A land or building is refused outright, on the same twin footing ({@link AssetType#NOT_A_BROKER_TRADE};
      * W-088g5, D-433): the broker path cannot carry its purchase expenses into its cost, and its sale is entered through
-     * {@link PropertySaleService} (W-088g9). The redrive ({@code processTransaction}) is not guarded — with both entry points refusing,
-     * no land temporary transaction can exist.
+     * {@link PropertySaleService} (W-088g9).
+     *
+     * <p>Runs in {@code processTransaction} and {@code processTransactionV2}, so the upload and redrive are checked as the
+     * JSON routes are (W-277, PS-1).
      */
     private static void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {
         String requestEmail = assetRequest.getEmail();
@@ -248,7 +251,7 @@ public class PortfolioService {
             // The row's place in this file is its identity: two identical rows are two trades, and the same file sent
             // again replays every row instead of recording it twice (W-275). Unique across users, as the index is.
             assetRequest.setIdempotencyKey("upload:" + fileDigest + ":" + (row + 1));
-            if (REPLAYED_MESSAGE.equals(processTransaction(userMail, assetRequest, filteredOutTransactions))) {
+            if (REPLAYED_MESSAGE.equals(uploadTrade(userMail, assetRequest, filteredOutTransactions, row + 1))) {
                 repeated++;
             }
         }
@@ -260,6 +263,18 @@ public class PortfolioService {
             answer += "; held back for a corporate action: " + filteredOutTransactions;
         }
         return answer;
+    }
+
+    /**
+     * One upload row through V1's processing; a refusal names the trade, numbered by its place among the sheet's
+     * trades — the upload does not know the sheet's row (W-277 C2a).
+     */
+    private String uploadTrade(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions, int trade) {
+        try {
+            return processTransaction(userMail, assetRequest, filteredOutTransactions);
+        } catch (IllegalArgumentException refused) {
+            throw new BadRequestException("Trade " + trade + ": " + refused.getMessage());
+        }
     }
 
     /** The user, the quarter and the file's bytes, digested: the same file sent again by the same user digests the same. */

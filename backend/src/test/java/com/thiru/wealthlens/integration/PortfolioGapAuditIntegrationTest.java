@@ -876,6 +876,45 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals(0, lotsOf(OWNER).size());
     }
 
+    @Test
+    void uploadTransactions_whenATradeBreaksATradeRule_refusesTheFileNamingTheTrade() throws IOException {
+        // Given — three one-trade sheets: quantity 0, price −5, dated 1 Jan of next year (W-277, PS-1)
+        byte[] zeroQuantity = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).getCell(8).setCellValue(0.0));
+        byte[] negativePrice = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).getCell(7).setCellValue(-5.0));
+        LocalDate nextYear = LocalDate.of(LocalDate.now().getYear() + 1, 1, 1);
+        byte[] futureDate = edited(workbook(JAN_5, 1, true),
+                q1 -> q1.getRow(1).getCell(10).setCellValue(java.sql.Date.valueOf(nextYear)));
+
+        // When
+        ResponseEntity<String> zero = upload(OWNER, zeroQuantity, "Q1");
+        ResponseEntity<String> negative = upload(OWNER, negativePrice, "Q1");
+        ResponseEntity<String> future = upload(OWNER, futureDate, "Q1");
+
+        // Then — each refused, naming trade 1 and the rule; nothing stored
+        assertEquals(List.of(400, 400, 400), List.of(zero.getStatusCode().value(), negative.getStatusCode().value(),
+                future.getStatusCode().value()));
+        assertTrue(zero.getBody().contains("Trade 1: Quantity must be greater than zero"), zero.getBody());
+        assertTrue(negative.getBody().contains("Trade 1: Price must not be negative"), negative.getBody());
+        assertTrue(future.getBody().contains("Trade 1: A trade cannot be dated in the future"), future.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+        assertEquals(0, transactionsOf(OWNER).size());
+    }
+
+    @Test
+    void redrive_whenAWaitingTradeBreaksATradeRule_reportsItFailedAndChangesNothing() {
+        // Given — a stored V2 temporary buy of quantity 0 (W-277, PS-1)
+        waiting(trade(TransactionType.BUY, 0.0, 100.0, JAN_5), TradeFlow.V2);
+
+        // When
+        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+
+        // Then — failed with the rule's reason; no lot, the temporary stays
+        assertTrue(redriven.getBody().contains("Failed: 1"), redriven.getBody());
+        assertTrue(redriven.getBody().contains("Quantity must be greater than zero"), redriven.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+        assertEquals(TransactionStatus.TEMPORARY, transactionsOf(OWNER).getFirst().getStatus());
+    }
+
     private static byte[] edited(byte[] workbook, Consumer<Sheet> change) throws IOException {
         try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(workbook))) {
             change.accept(book.getSheet("Q1"));
