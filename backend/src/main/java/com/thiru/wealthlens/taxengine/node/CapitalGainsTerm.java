@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,6 +42,14 @@ public final class CapitalGainsTerm {
     private CapitalGainsTerm() {
     }
 
+    /**
+     * The first day a transfer is long-term for a lot acquired on {@code acquiredOn} under a period of {@code months}:
+     * the day after the same date that many months on (D-303). The one statement of that boundary.
+     */
+    public static LocalDate longTermFrom(LocalDate acquiredOn, int months) {
+        return acquiredOn.plusMonths(months).plusDays(1);
+    }
+
     /** The term of the bucket of {@code gain} and what decided it, its trace line added to {@code lines}. */
     public static BucketOutcome.TermDecision of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
         BucketFacts facts = bucket.facts();
@@ -54,7 +63,7 @@ public final class CapitalGainsTerm {
         }
         int months = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row.get(),
                 ctx.inputs().temporal()).definition(), ShortTermHoldingPeriod.class, row.get().id()).months();
-        boolean longTerm = facts.acquiredOn().plusMonths(months).isBefore(facts.transferredOn());
+        boolean longTerm = !facts.transferredOn().isBefore(longTermFrom(facts.acquiredOn(), months));
         Term term = longTerm ? Term.LONG_TERM : Term.SHORT_TERM;
         lines.add(ctx.traceLine(lines.size() + 1, row.get().id(), StepKind.MEASURE, gain, gain)
                 .withLimitedBy("Held " + facts.acquiredOn() + " → " + facts.transferredOn() + ": "

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-263 done (D-532), committed and pushed on the owner's "commit it and push"
-Stage           : 6 → next: plan W-262 (§2 template), ask for approval; STOP before building
-Done today      : session 83: W-265 marked D on the owner's word (CI green on d86d8012); W-263 planned, approved, built, committed
-Board           : W-265 D; W-263 D; W-262 ·; W-264 —; W-264a – d ·; W-090d ·
-Next step       : resume at W-262 (held assets by term, with Excel): run the resume check, read the W-262 row, D-370, D-444 and CapitalGainsViewService, then plan it; a local app may still run on 127.0.0.1:8080 (debug 5005) with container wl-local-mongo — stop both when the owner is done
-Owner actions   : rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-263 unit 5140 / 0 / 0; CI's verify in a worktree 5692 / 0 / 0, all coverage checks met; probes caught (15 red before the change; asOf 1 fail), restored
+Item            : none in flight — W-262 done (D-533), committed and pushed on the owner's "commit it and push"
+Stage           : 6 → next: plan W-264a (§2 template), ask for approval; STOP before building
+Done today      : session 83: W-265 marked D; W-263 (269ff30a) and W-262 committed and pushed; W-266 placed
+Board           : W-263 D; W-262 D; W-264 —; W-264a ·; W-264b ·; W-264c ·; W-264d ·; W-266 ·; W-090d ·
+Next step       : resume at W-264a (gap audit: portfolio — V1 and V2 buy and sell, FIFO lots, holdings views, temporary transactions and redrive, Excel import and export, idempotency): run the resume check, read the W-264 and W-264a rows and D-530, then plan the audit; a local app may still run on 127.0.0.1:8080 (debug 5005) with container wl-local-mongo — stop both when the owner is done
+Owner actions   : check the pipeline on the W-262 commit (full tiers were not run locally); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : W-262 targeted unit 156 / 0 / 0, integration (HeldAssets + DraftComputation) 48 / 0 / 0; probes caught (11, 1, 3 fails), restored; the commit gate's unit tier
 Files touched   : none — all committed
-Last item commit: taxplanning W-263: answer a caller's mistake with its own status
-Updated         : 2026-11-11, session 83 — W-263 committed and pushed; next W-262
+Last item commit: taxplanning W-262: list held assets by term, with Excel
+Updated         : 2026-11-11, session 83 — W-262 committed and pushed with api-collection; next W-264a
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

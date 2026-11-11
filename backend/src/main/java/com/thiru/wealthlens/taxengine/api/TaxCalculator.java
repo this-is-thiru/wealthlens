@@ -33,6 +33,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -105,7 +106,8 @@ public class TaxCalculator {
         NodeContext context = NodeContext.forRun(pack, spec(pack, inputs.regime()), inputs).forNode(new CapitalGainsNode());
         CapitalGainsInput.Bucket bucket = new CapitalGainsInput.Bucket(Money.ZERO, Money.ZERO, List.of(), facts, Optional.empty());
         BucketOutcome.TermDecision decision = CapitalGainsTerm.of(context, bucket, Money.ZERO, new ArrayList<>());
-        return new HeldTerm(decision.term().name(), decision.row().value(), decision.months());
+        return new HeldTerm(decision.term().name(), decision.row().value(), decision.months(),
+                CapitalGainsTerm.longTermFrom(facts.acquiredOn(), decision.months()));
     }
 
     /**
@@ -114,8 +116,9 @@ public class TaxCalculator {
      * @param term long or short
      * @param row the {@code RS-CG-TERM} row it met
      * @param months that row's holding period
+     * @param longTermFrom the first day a sale of the lot is long-term under that row
      */
-    public record HeldTerm(String term, String row, int months) {
+    public record HeldTerm(String term, String row, int months, LocalDate longTermFrom) {
     }
 
     /**
