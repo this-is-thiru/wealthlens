@@ -42,6 +42,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -60,7 +61,7 @@ public class TaxCalculator {
      * @throws IllegalArgumentException if the pack has no such regime, or the inputs are refused
      */
     public ComputedTax compute(EngineInputs inputs) {
-        RulePack pack = rulePacks.load(inputs.taxYear());
+        RulePack pack = shipped(inputs.taxYear());
         PipelineRunner.Result run = PipelineRunner.run(REGISTRY, pack, spec(pack, inputs.regime()), inputs);
         ComputationId id = ComputationId.fresh();
         TaxComputation computation = ComputationProjector.project(run, inputs, id);
@@ -75,7 +76,7 @@ public class TaxCalculator {
 
     /** Every candidate regime priced on these inputs. */
     public RegimeComparison compareRegimes(EngineInputs inputs) {
-        RulePack pack = rulePacks.load(inputs.taxYear());
+        RulePack pack = shipped(inputs.taxYear());
         var outcome = ElectionResolver.resolve(new RegimeElection(), REGISTRY, pack, spec(pack, inputs.regime()), inputs)
                 .outcome();
         return new RegimeComparison(outcome.chosen().value(), outcome.mode().name(), outcome.alternatives().stream()
@@ -88,7 +89,7 @@ public class TaxCalculator {
      * @throws IllegalArgumentException if the space does not fit the year's pack or the inputs
      */
     public Optimisation optimise(AllocationSpace space) {
-        RulePack pack = rulePacks.load(space.base().taxYear());
+        RulePack pack = shipped(space.base().taxYear());
         return SalaryOptimiser.optimise(REGISTRY, pack, spec(pack, space.base().regime()), space);
     }
 
@@ -100,7 +101,7 @@ public class TaxCalculator {
      * @throws IllegalArgumentException where no row covers the lot
      */
     public HeldTerm termIfSold(EngineInputs inputs, CapitalGainsInput.BucketFacts facts) {
-        RulePack pack = rulePacks.load(inputs.taxYear());
+        RulePack pack = shipped(inputs.taxYear());
         NodeContext context = NodeContext.forRun(pack, spec(pack, inputs.regime()), inputs).forNode(new CapitalGainsNode());
         CapitalGainsInput.Bucket bucket = new CapitalGainsInput.Bucket(Money.ZERO, Money.ZERO, List.of(), facts, Optional.empty());
         BucketOutcome.TermDecision decision = CapitalGainsTerm.of(context, bucket, Money.ZERO, new ArrayList<>());
@@ -117,9 +118,25 @@ public class TaxCalculator {
     public record HeldTerm(String term, String row, int months) {
     }
 
-    /** The regime the year's pack calls its default. */
+    /**
+     * The year's pack. A year none ships for is the caller's to correct, not a pack defect, so it is refused as their
+     * mistake and names the years they may ask for (W-263).
+     */
+    private RulePack shipped(TaxYearId year) {
+        if (!rulePacks.availableYears().contains(year)) {
+            throw new IllegalArgumentException("No rule pack ships for " + year.label() + "; the application ships "
+                    + new TreeSet<>(rulePacks.availableYears().stream().map(TaxYearId::label).toList()));
+        }
+        return rulePacks.load(year);
+    }
+
+    /**
+     * The regime the year's pack calls its default.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
     public RegimeCode defaultRegime(TaxYearId year) {
-        return rulePacks.load(year).regimes().values().stream().filter(RegimeSpec::isDefault).map(RegimeSpec::code)
+        return shipped(year).regimes().values().stream().filter(RegimeSpec::isDefault).map(RegimeSpec::code)
                 .findFirst().orElseThrow(() -> new IllegalStateException("The pack for " + year.label() + " has no default"));
     }
 

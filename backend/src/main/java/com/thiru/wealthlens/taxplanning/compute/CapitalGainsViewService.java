@@ -46,21 +46,29 @@ public class CapitalGainsViewService {
         LocalDate readOn = year.startsOn().plusMonths(5);
         List<ComputedTax.Bucket> realised = taxCalculator.compute(assembler.forCapitalGains(profile, year, regime, readOn,
                 capitalGainsAdapter.inputFor(email, year))).capitalGainsBuckets();
-        List<CapitalGainsView.HeldLot> held = heldAsOf
-                .map(date -> portfolioRepository.findByEmail(email).stream().map(lot -> heldLot(profile, lot, date)).toList())
-                .orElseGet(List::of);
+        List<CapitalGainsView.HeldLot> held = heldAsOf.map(date -> heldLots(email, profile, date)).orElseGet(List::of);
         return new CapitalGainsView(realised, heldAsOf.orElse(null), held);
     }
 
-    private CapitalGainsView.HeldLot heldLot(TaxpayerProfile profile, AssetEntity lot, LocalDate soldOn) {
+    /**
+     * Every held lot's term on {@code soldOn}. The date's year and regime are the request's, not a lot's, so a year no
+     * pack ships for refuses the request here rather than becoming each lot's note (W-263).
+     */
+    private List<CapitalGainsView.HeldLot> heldLots(String email, TaxpayerProfile profile, LocalDate soldOn) {
         TaxYearId year = TaxYearId.containing(soldOn);
+        RegimeCode regime = taxCalculator.defaultRegime(year);
+        return portfolioRepository.findByEmail(email).stream().map(lot -> heldLot(profile, lot, soldOn, year, regime)).toList();
+    }
+
+    private CapitalGainsView.HeldLot heldLot(TaxpayerProfile profile, AssetEntity lot, LocalDate soldOn, TaxYearId year,
+            RegimeCode regime) {
         CapitalGainsInput.BucketFacts facts = new CapitalGainsInput.BucketFacts(lot.getAssetType().name(), "UNKNOWN", "UNKNOWN",
                 "PURCHASE", Optional.empty(), lot.getTransactionDate(), soldOn, CapitalGainsInput.SideVenue.UNRECORDED,
                 new CapitalGainsInput.SideVenue(Optional.ofNullable(lot.getExchangeName()), Optional.empty()));
         CapitalGainsInput gains = CapitalGainsInput.none(soldOn.atStartOfDay(ZoneOffset.UTC).toInstant(), "held-lot-what-if");
         try {
             TaxCalculator.HeldTerm term = taxCalculator.termIfSold(
-                    assembler.forCapitalGains(profile, year, taxCalculator.defaultRegime(year), soldOn, gains), facts);
+                    assembler.forCapitalGains(profile, year, regime, soldOn, gains), facts);
             return new CapitalGainsView.HeldLot(lot.getStockCode(), lot.getQuantity(), lot.getTransactionDate(), term.term(), term.row(),
                     term.months(), null);
         } catch (IllegalArgumentException e) {

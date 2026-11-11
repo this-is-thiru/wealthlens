@@ -495,6 +495,67 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
                 .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    private void assertRefused(ResponseEntity<String> response, String message) {
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(JSON.readTree(response.getBody()).get("message").asString()).isEqualTo(message);
+    }
+
+    @Test
+    void capitalGains_whenTheTaxYearIsNotItsStartYear_expected400NamingAWholeNumber() {
+        // Given
+        String id = holderId();
+
+        // When / Then — the owner's request of 2026-11-09 (W-263): the path takes the start year, 2026
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026-27", null, null),
+                "Parameter 'taxYear' must be a whole number, but was '2026-27'");
+    }
+
+    @Test
+    void capitalGains_whenAsOfFallsInAYearNoPackShipsFor_expected400NamingTheYearsShipped() {
+        // Given — 1 June 2027 is in TY 2027-28 (1 April 2027 to 31 March 2028); the application ships 2025-26 and 2026-27
+        String id = holderId();
+        heldLot();
+
+        // When / Then
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026?asOf=2027-06-01", null, null),
+                "No rule pack ships for 2027-28; the application ships [2025-26, 2026-27]");
+    }
+
+    @Test
+    void capitalGains_whenTheYearItselfShipsNoPack_expected400NamingTheYearsShipped() {
+        // Given
+        String id = holderId();
+
+        // When / Then
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2030", null, null),
+                "No rule pack ships for 2030-31; the application ships [2025-26, 2026-27]");
+    }
+
+    @Test
+    void compute_whenTheDraftIsForAYearNoPackShipsFor_expected400NamingTheYearsShipped() {
+        // Given — a draft for TY 2024-25, which a person may keep though the application ships 2025-26 and 2026-27 only
+        String profileId = holderId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2024/drafts", "{\"label\": \"Old\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        assertThat(call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, ENTRIES.formatted("0"), "\"rev-0\"").getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        // When / Then
+        String refusal = "No rule pack ships for 2024-25; the application ships [2025-26, 2026-27]";
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute", REGIME, null), refusal);
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compare-regimes", null, null), refusal);
+    }
+
+    @Test
+    void capitalGains_whenAsOfIsNotADate_expected400NamingTheDateFormat() {
+        // Given
+        String id = holderId();
+
+        // When / Then
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026?asOf=June", null, null),
+                "Parameter 'asOf' must be a date as yyyy-MM-dd, but was 'June'");
+    }
+
     @Test
     void compareRegimes_whenARegimeWasElectedInAnEarlierYear_stillPricesBoth() {
         // Given — filed TY 2025-26 on FIRST_SCHEDULE_RATES; a person with no business income has the free annual choice

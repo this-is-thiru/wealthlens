@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-090c2 done (D-529), pushed; D-530 placed W-263, W-262, W-264a – d before W-090d (not committed)
-Stage           : 6 → next: plan W-263 (§2 template), ask for approval; STOP before building
-Done today      : session 81: W-090b, W-260, W-090c1a, W-090c1b1; session 82: W-090c1b2 (D-528), W-090c2 (D-529)
-Board           : W-090c2 D; W-261 K; W-263 ·; W-262 ·; W-264 —; W-264a ·; W-264b ·; W-264c ·; W-264d ·; W-090d ·
-Next step       : resume at W-263 (500s for a caller's mistake): run the resume check, read ControllerAdviser and grep every binding failure, then plan it; a local app may still run on 127.0.0.1:8080 (debug 5005) with container wl-local-mongo — stop both when the owner is done
+Item            : none in flight — W-263 done (D-532), committed and pushed on the owner's "commit it and push"
+Stage           : 6 → next: plan W-262 (§2 template), ask for approval; STOP before building
+Done today      : session 83: W-265 marked D on the owner's word (CI green on d86d8012); W-263 planned, approved, built, committed
+Board           : W-265 D; W-263 D; W-262 ·; W-264 —; W-264a – d ·; W-090d ·
+Next step       : resume at W-262 (held assets by term, with Excel): run the resume check, read the W-262 row, D-370, D-444 and CapitalGainsViewService, then plan it; a local app may still run on 127.0.0.1:8080 (debug 5005) with container wl-local-mongo — stop both when the owner is done
 Owner actions   : rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-090c2 unit 5103 / 0 / 0, integration 539 / 0 / 0; probes caught (I20 1 fail; boundary 1 fail with lock matched), reverted byte for byte
-Files touched   : 03-WORK-ITEMS.md (W-262 – W-264d rows), STATE.md (board, D-530) — placement, to commit with W-263
-Last item commit: taxplanning W-090c2: ship TY 2026-27's ITR-1 and ITR-2 as form rows
-Updated         : 2026-11-09, session 82 — all pushed at f5bef5b0; D-530 placed W-263, W-262, W-264a – d; next W-263
+Last verify     : W-263 unit 5140 / 0 / 0; CI's verify in a worktree 5692 / 0 / 0, all coverage checks met; probes caught (15 red before the change; asOf 1 fail), restored
+Files touched   : none — all committed
+Last item commit: taxplanning W-263: answer a caller's mistake with its own status
+Updated         : 2026-11-11, session 83 — W-263 committed and pushed; next W-262
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
