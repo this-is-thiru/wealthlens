@@ -8,6 +8,7 @@ import com.thiru.wealthlens.corporate.entity.LastlyPerformedCorporateAction;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -48,7 +49,7 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
         AssetRequest request = createBuyRequest(email, stockCode, txnDate);
 
         // WHEN
-        String tempTxnId = temporaryTransactionService.filterOutTransaction(userMail, request);
+        String tempTxnId = temporaryTransactionService.filterOutTransaction(userMail, request, TradeFlow.V1);
 
         // THEN
         assertNotNull(tempTxnId);
@@ -69,7 +70,7 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
         AssetRequest request = createBuyRequest(email, stockCode, txnDate);
 
         // WHEN
-        String tempTxnId = temporaryTransactionService.filterOutTransaction(userMail, request);
+        String tempTxnId = temporaryTransactionService.filterOutTransaction(userMail, request, TradeFlow.V1);
 
         // THEN
         assertNull(tempTxnId);

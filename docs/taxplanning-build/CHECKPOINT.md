@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-270 (redrive applies every waiting trade through V1) — next by board order; nothing written
-Stage           : 6 — W-269 DONE (D-554), committed and pushed
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 committed
-Board           : W-264a D; W-268 D; W-269 D; W-270 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-270 (plans/W-270.md), STOP for approval
+Item            : W-271 (V1 sells lots bought after the sale date) — next by board order; nothing written
+Stage           : 6 — W-270 DONE (D-555), committed and pushed; WL-A-2 republished
+Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 committed
+Board           : W-264a D; W-268 – W-270 D; W-271 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-271 (plans/W-271.md), STOP for approval
 Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); check the pipeline on 200ead80, 4f268a1c and the W-264a commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : scenarios 36, 37 green twice; probe failed both, restored; TradeCollisionRetryTest 5; 117 tests across affected classes green; validate clean
-Files touched   : none since the W-269 commit
-Last item commit: taxplanning W-269: record a trade that collided with another
-Updated         : 2026-11-11, session 84 — W-269 done; W-270 next
+Last verify     : first tests red then green; probes failed 4, restored; 212 tests across affected classes green; validate clean
+Files touched   : none since the W-270 commit
+Last item commit: taxplanning W-270: redrive a waiting trade through the flow that received it
+Updated         : 2026-11-11, session 84 — W-270 done; W-271 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

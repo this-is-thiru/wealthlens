@@ -16,6 +16,7 @@ import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -517,7 +518,7 @@ class PortfolioServiceTest {
         // Given
         AssetRequest request = buyRequest();
         request.setPrice(0D);
-        when(temporaryTransactionService.filterOutTransaction(any(), any())).thenReturn(null);
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), any(TradeFlow.class))).thenReturn(null);
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
 
         // When / Then

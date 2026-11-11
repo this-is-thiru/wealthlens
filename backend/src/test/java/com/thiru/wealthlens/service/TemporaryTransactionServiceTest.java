@@ -11,6 +11,7 @@ import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionR
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -71,7 +72,7 @@ class TemporaryTransactionServiceTest {
         )).thenReturn(List.of());
 
         // When
-        String tempId = service.filterOutTransaction(userMail, assetRequest);
+        String tempId = service.filterOutTransaction(userMail, assetRequest, TradeFlow.V1);
 
         // Then: no block found, so null is returned
         assertNull(tempId);
@@ -106,7 +107,7 @@ class TemporaryTransactionServiceTest {
         when(transactionRepository.save(any(TransactionEntity.class))).thenReturn(savedEntity);
 
         // When
-        String tempId = service.filterOutTransaction(userMail, assetRequest);
+        String tempId = service.filterOutTransaction(userMail, assetRequest, TradeFlow.V1);
 
         // Then
         assertEquals("temp-123", tempId);

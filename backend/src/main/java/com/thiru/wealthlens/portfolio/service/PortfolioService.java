@@ -13,6 +13,7 @@ import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -92,7 +93,7 @@ public class PortfolioService {
     private String processTransaction(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
         sanitizeAssetRequest(assetRequest);
 
-        String filteredOutTransactionId = temporaryTransactionService.filterOutTransaction(userMail, assetRequest);
+        String filteredOutTransactionId = temporaryTransactionService.filterOutTransaction(userMail, assetRequest, TradeFlow.V1);
         if (filteredOutTransactionId != null) {
             filteredOutTransactions.add(filteredOutTransactionId);
             return "Transaction stored as temporary transaction, needs to perform after corporate action ..!";
@@ -125,9 +126,14 @@ public class PortfolioService {
     @Transactional
     public String addTransactionV2(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
         validateAssetRequest(userMail, assetRequest);
+        return processTransactionV2(userMail, assetRequest, filteredOutTransactions);
+    }
+
+    /** V2's twin of {@link #processTransaction}: shared by the V2 route and the redrive of a trade V2 received (W-270). */
+    private String processTransactionV2(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
         sanitizeAssetRequest(assetRequest);
 
-        String filteredOutTransaction = temporaryTransactionService.filterOutTransaction(userMail, assetRequest);
+        String filteredOutTransaction = temporaryTransactionService.filterOutTransaction(userMail, assetRequest, TradeFlow.V2);
         if (filteredOutTransaction != null) {
             filteredOutTransactions.add(filteredOutTransaction);
             return "Transaction stored as temporary transaction, needs to perform after corporate action ..!";
@@ -278,7 +284,7 @@ public class PortfolioService {
                 log.info("Redriving transaction: {}", tempTxn.getId());
                 List<String> itemFiltered = new ArrayList<>();
                 assetRequest.setTempTransactionId(tempTxn.getId());
-                processTransaction(userMail, assetRequest, itemFiltered);
+                redriveThrough(tempTxn.getTradeFlow(), userMail, assetRequest, itemFiltered);
 
                 if (!itemFiltered.isEmpty()) {
                     // Transaction was re-filtered during redrive; a new temp record was created.
@@ -303,6 +309,15 @@ public class PortfolioService {
 
         String message = buildRedriveMessage(succeeded, failed, stillFiltered, filteredOut);
         return new RedriveResult(succeeded, failed, stillFiltered, filteredOut, message);
+    }
+
+    /** A temporary stored before W-270 records no flow and is redriven through V1, as it always was (D-555 C2a). */
+    private void redriveThrough(TradeFlow tradeFlow, UserMail userMail, AssetRequest assetRequest, List<String> itemFiltered) {
+        if (tradeFlow == TradeFlow.V2) {
+            processTransactionV2(userMail, assetRequest, itemFiltered);
+        } else {
+            processTransaction(userMail, assetRequest, itemFiltered);
+        }
     }
 
     private static String buildRedriveMessage(List<String> succeeded, Map<String, String> failed, List<String> stillFiltered, List<String> filteredOut) {

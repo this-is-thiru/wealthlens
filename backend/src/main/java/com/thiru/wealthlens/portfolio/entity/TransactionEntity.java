@@ -6,6 +6,7 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
@@ -157,6 +158,13 @@ public class TransactionEntity implements AuditableEntity {
 
 	@Field("asset_request")
 	private AssetRequest assetRequest;
+
+	/**
+	 * The flow that received a {@code TEMPORARY} trade, so its redrive uses the same one (W-270). Absent on a temporary
+	 * stored before W-270, which is redriven through V1 as before (D-555 C2a), and on every other transaction.
+	 */
+	@Field("trade_flow")
+	private TradeFlow tradeFlow;
 
 	@Field("audit_metadata")
 	@Setter(value = AccessLevel.NONE)

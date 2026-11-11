@@ -3,11 +3,14 @@ package com.thiru.wealthlens.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
+import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -460,6 +463,103 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         } catch (InterruptedException | ExecutionException failure) {
             throw new IllegalStateException(failure);
         }
+    }
+
+    @Test
+    void addTransactionV2_whenACorporateActionHoldsItBack_storesItWithTheV2Flow() {
+        // Given — a bonus recorded on 5 Jan, not yet performed for OWNER (W-270)
+        bonusRecordedOn(JAN_5);
+
+        // When — a V2 buy dated 5 Jan
+        ResponseEntity<String> held = postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+
+        // Then — held back, and the temporary says V2 received it
+        assertTrue(held.getBody().contains("temporary"), held.getBody());
+        assertEquals(TradeFlow.V2, transactionsOf(OWNER).getFirst().getTradeFlow());
+    }
+
+    @Test
+    void addTransaction_whenACorporateActionHoldsItBack_storesItWithTheV1Flow() {
+        // Given
+        bonusRecordedOn(JAN_5);
+
+        // When — a V1 buy dated 5 Jan
+        ResponseEntity<String> held = post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+                trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+
+        // Then
+        assertTrue(held.getBody().contains("temporary"), held.getBody());
+        assertEquals(TradeFlow.V1, transactionsOf(OWNER).getFirst().getTradeFlow());
+    }
+
+    @Test
+    void redrive_whenAV2BuyWaitedBesideASameDayV2Lot_keepsItAsItsOwnLot() {
+        // Given — a V2 lot of 10 @ 100 on 5 Jan, and a waiting V2 buy of 10 @ 120 on 5 Jan (W-264a scenario 13, G-8)
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        waiting(trade(TransactionType.BUY, 10.0, 120.0, JAN_5), TradeFlow.V2);
+
+        // When
+        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+
+        // Then — a lot per buy: 10 @ 100 and 10 @ 120
+        assertTrue(redriven.getBody().contains("Succeeded: 1"), redriven.getBody());
+        List<AssetEntity> lots = lotsOf(OWNER);
+        assertEquals(2, lots.size(), () -> "lots: " + lots);
+        assertEquals(List.of(100.0, 120.0), lots.stream().map(AssetEntity::getPrice).sorted().toList());
+    }
+
+    @Test
+    void redrive_whenAV2SaleIsDatedBeforeTheOnlyLot_leavesTheLotAlone() {
+        // Given — a V2 lot of 10 bought 5 Feb, and a waiting V2 sale of 5 dated 5 Jan
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, FEB_5));
+        waiting(trade(TransactionType.SELL, 5.0, 150.0, JAN_5), TradeFlow.V2);
+
+        // When
+        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+
+        // Then — nothing was held on 5 Jan: the item fails and the lot keeps 10
+        assertTrue(redriven.getBody().contains("Failed: 1"), redriven.getBody());
+        assertEquals(10.0, lotsOf(OWNER).getFirst().getQuantity());
+    }
+
+    @Test
+    void redrive_whenATemporaryRecordsNoFlow_recordsItThroughV1AsBefore() {
+        // Given — a V2 lot of 10 @ 100 on 5 Jan, and a waiting buy of 10 @ 120 on 5 Jan stored before W-270 (D-555 C2a)
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        waiting(trade(TransactionType.BUY, 10.0, 120.0, JAN_5), null);
+
+        // When
+        post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+
+        // Then — V1 merges it into the same-day lot: one lot of 20 @ (1000 + 1200) / 20 = ₹110
+        List<AssetEntity> lots = lotsOf(OWNER);
+        assertEquals(1, lots.size(), () -> "lots: " + lots);
+        assertEquals(20.0, lots.getFirst().getQuantity());
+        MoneyAssert.assertMoney(110.0, lots.getFirst().getPrice());
+    }
+
+    private void bonusRecordedOn(LocalDate recordDate) {
+        CorporateActionEntity bonus = new CorporateActionEntity();
+        bonus.setStockCode(STOCK);
+        bonus.setStockName("Infosys");
+        bonus.setType(CorporateActionType.BONUS);
+        bonus.setRecordDate(recordDate);
+        bonus.setExDate(recordDate);
+        bonus.setPriority(1);
+        bonus.setAssetType(AssetType.EQUITY);
+        mongoTemplate.save(bonus, "corporate_action");
+    }
+
+    private void waiting(Map<String, Object> trade, TradeFlow flow) {
+        TransactionEntity temp = new TransactionEntity();
+        temp.setEmail(OWNER);
+        temp.setStockCode(STOCK);
+        temp.setBrokerName(BrokerName.ZERODHA);
+        temp.setTransactionType(TransactionType.valueOf((String) trade.get("transactionType")));
+        temp.setStatus(TransactionStatus.TEMPORARY);
+        temp.setTradeFlow(flow);
+        temp.setAssetRequest(asRequest(trade));
+        mongoTemplate.save(temp, "transactions");
     }
 
     private static int columnOf(Row header, String name) {

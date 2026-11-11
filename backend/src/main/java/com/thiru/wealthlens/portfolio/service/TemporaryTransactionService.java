@@ -6,6 +6,7 @@ import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionR
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
@@ -36,11 +37,18 @@ public class TemporaryTransactionService {
     private final TransactionRepository transactionRepository;
     private final LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
 
-    public String filterOutTransaction(UserMail userMail, AssetRequest assetRequest) {
+    /**
+     * Holds the trade back as {@code TEMPORARY} when a corporate action blocks it, recording the flow that received it
+     * so its redrive records it the same way (W-270).
+     *
+     * @return the temporary's id, or {@code null} when nothing blocks the trade
+     */
+    public String filterOutTransaction(UserMail userMail, AssetRequest assetRequest, TradeFlow tradeFlow) {
         LocalDate txnDate = assetRequest.getTransactionDate();
         if (anyCorporateActionToPerform(userMail, assetRequest.getStockCode(), txnDate, assetRequest.getBrokerName())) {
             TransactionEntity entity = assetRequest.asTransaction();
             entity.setStatus(TransactionStatus.TEMPORARY);
+            entity.setTradeFlow(tradeFlow);
             entity.setAssetRequest(assetRequest);
             entity.setEmail(userMail.getEmail());
             TransactionEntity saved = transactionRepository.save(entity);
