@@ -953,6 +953,22 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertTrue(answer.getBody().contains("Name the entity to export"), answer.getBody());
     }
 
+    @Test
+    void addTransaction_whenTwoBuysMergeOnOneDay_recordsBothOrderTimes() {
+        // Given — a V1 buy of 10 @ 100 on 5 Jan (W-279, G-4, PS-3; scenario 9)
+        String path = "/portfolio/user/" + OWNER + "/transaction";
+        post(OWNER, path, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+
+        // When — another V1 buy of 10 @ 120 on 5 Jan, merged into the same lot
+        post(OWNER, path, trade(TransactionType.BUY, 10.0, 120.0, JAN_5));
+
+        // Then — one lot of 20 @ (1000 + 1200) / 20 = ₹110, whose order times account for all 20
+        AssetEntity lot = lotsOf(OWNER).getFirst();
+        assertEquals(20.0, lot.getQuantity());
+        MoneyAssert.assertMoney(110.0, lot.getPrice());
+        assertEquals(20.0, lot.getOrderTimeQuantities().stream().mapToDouble(time -> time.getQuantity()).sum());
+    }
+
     private static byte[] edited(byte[] workbook, Consumer<Sheet> change) throws IOException {
         try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(workbook))) {
             change.accept(book.getSheet("Q1"));

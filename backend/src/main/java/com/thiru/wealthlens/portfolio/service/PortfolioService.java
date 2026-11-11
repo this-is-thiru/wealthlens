@@ -415,7 +415,7 @@ public class PortfolioService {
             orderTimeQuantity.setOrderExecutionTime(assetRequest.orderExecutionDateTime());
             orderTimeQuantity.setQuantity(assetRequest.getQuantity());
 
-            assetRequest.getOrderTimeQuantities().add(orderTimeQuantity);
+            assetEntity.getOrderTimeQuantities().add(orderTimeQuantity);
         } else {
             assetEntity = assetRequest.asAsset();
 

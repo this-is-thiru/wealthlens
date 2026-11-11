@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-279 (a V1 same-day merge loses an order time) — next by board order; nothing written
-Stage           : 6 — W-278 DONE (D-564), committed and pushed
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 (1e7a4761), W-274 (39d1f739), W-275 (49b059dd), W-276 (6508d24a), W-277 (d1c6f4de), W-278 committed; W-285 placed
-Board           : W-264a D; W-268 – W-278 D; W-279 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-279 (plans/W-279.md), STOP for approval
-Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); check the pipeline on 200ead80, 4f268a1c and the W-264a commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : 3 first tests red then green; probe failed, restored; 213 tests across affected classes green; validate clean
-Files touched   : none since the W-278 commit
-Last item commit: taxplanning W-278: name the missing field instead of answering 500
-Updated         : 2026-11-11, session 84 — W-278 done; W-279 next
+Item            : W-280 (V1 records every trade as delivery, PS-13) — next by board order; nothing written
+Stage           : 6 — W-279 DONE (D-565), committed and pushed; WL-A-2 republished
+Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 (1e7a4761), W-274 (39d1f739), W-275 (49b059dd), W-276 (6508d24a), W-277 (d1c6f4de), W-278 (5e644e92), W-279 committed; W-285 placed; owner: pipeline green through 5e644e92
+Board           : W-264a D; W-268 – W-279 D; W-280 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-280 (plans/W-280.md), STOP for approval
+Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); run runbook 3.10 – 3.14 after deploy; check the pipeline on the W-279 commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : scenario 9 red then green; 147 tests across affected classes green; validate clean
+Files touched   : none since the W-279 commit
+Last item commit: taxplanning W-279: keep a merged buy's order time on its lot
+Updated         : 2026-11-11, session 84 — W-279 done; W-280 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
