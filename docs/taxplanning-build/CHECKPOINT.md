@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-276 (an upload row with an empty cell is misread; the hollow upload test) — next by board order; nothing written
-Stage           : 6 — W-275 DONE (D-561), committed and pushed
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 (1e7a4761), W-274 (39d1f739), W-275 committed; W-285 placed
-Board           : W-264a D; W-268 – W-275 D; W-276 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-276 (plans/W-276.md), STOP for approval
+Item            : W-277 (upload and redrive skip trade validation, PS-1) — next by board order; nothing written
+Stage           : 6 — W-276 DONE (D-562), committed and pushed
+Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 (1e7a4761), W-274 (39d1f739), W-275 (49b059dd), W-276 committed; W-285 placed
+Board           : W-264a D; W-268 – W-276 D; W-277 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-277 (plans/W-277.md), STOP for approval
 Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); check the pipeline on 200ead80, 4f268a1c and the W-264a commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : 2 first tests red then green, two-user case green throughout; probes failed 3, restored; 158 tests across affected classes green; validate clean
-Files touched   : none since the W-275 commit
-Last item commit: taxplanning W-275: record every uploaded row once
-Updated         : 2026-11-11, session 84 — W-275 done; W-276 next
+Last verify     : 4 first tests red then green; probe failed, restored; 149 tests across affected classes green; validate clean
+Files touched   : none since the W-276 commit
+Last item commit: taxplanning W-276: read each uploaded cell under its own header
+Updated         : 2026-11-11, session 84 — W-276 done; W-277 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -430,6 +430,9 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        AssetEntity stored = mongoTemplate.findAll(AssetEntity.class, "assets").stream()
+                .filter(asset -> "RELIANCE".equals(asset.getStockCode())).findFirst().orElseThrow();
+        assertEquals(10.0, stored.getQuantity());
     }
 
     @Test
@@ -500,6 +503,10 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        // The bonus is on another stock, so VALID_STOCK is recorded, not held back
+        AssetEntity stored = mongoTemplate.findAll(AssetEntity.class, "assets").stream()
+                .filter(asset -> "VALID_STOCK".equals(asset.getStockCode())).findFirst().orElseThrow();
+        assertEquals(5.0, stored.getQuantity());
     }
 
     @Test
@@ -1165,6 +1172,13 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // Excel with invalid date content
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "TEST_STOCK", "Test Stock Corp",
                 "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
+        // The date cell holds text, not a date
+        try (Workbook book = new XSSFWorkbook(new java.io.ByteArrayInputStream(excelContent));
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            book.getSheet("Q1").getRow(1).getCell(10).setCellValue("not-a-date");
+            book.write(out);
+            excelContent = out.toByteArray();
+        }
 
         String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/upload-transactions?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
@@ -1183,9 +1197,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         RestTemplate rt = createRestTemplate();
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
 
-        // Parser may return 200 or 400 depending on how it handles malformed data
-        assertTrue(response.getStatusCode().value() == HttpStatus.OK.value()
-                || response.getStatusCode().value() == HttpStatus.BAD_REQUEST.value());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertTrue(response.getBody().contains("Row 1, TRANSACTION DATE: expected a date"), response.getBody());
     }
 
     // === addTransactionV2 ===
@@ -1396,7 +1409,9 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
             workbook.createSheet("Q2");
             workbook.createSheet("Q3");
             workbook.createSheet("Q4");
-            Sheet sheet = workbook.getSheet(quarterFromDate(LocalDate.now()));
+            // The callers upload quarter=Q1, so the row goes on the Q1 sheet, dated inside Q1 of this year — never in
+            // the future. It used to go on today's quarter's sheet, so from October nothing was parsed (W-276 C3a).
+            Sheet sheet = workbook.getSheet("Q1");
             Row headerRow = sheet.createRow(0);
 
             // Header row: EMAIL first (required by parser), then all other fields
@@ -1431,7 +1446,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
             CellStyle dateStyle = workbook.createCellStyle();
             dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("yyyy-MM-dd"));
             Cell dateCell = dataRow.createCell(10);
-            dateCell.setCellValue(java.sql.Date.valueOf(LocalDate.now()));
+            dateCell.setCellValue(java.sql.Date.valueOf(UPLOAD_DATE));
             dateCell.setCellStyle(dateStyle);
 
             dataRow.createCell(11).setCellValue(0.0); // BROKER_CHARGES
@@ -1443,11 +1458,6 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         return outputStream.toByteArray();
     }
 
-    private static String quarterFromDate(LocalDate date) {
-        int month = date.getMonthValue();
-        if (month <= 3) return "Q1";
-        if (month <= 6) return "Q2";
-        if (month <= 9) return "Q3";
-        return "Q4";
-    }
+    private static final LocalDate UPLOAD_DATE = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+
 }

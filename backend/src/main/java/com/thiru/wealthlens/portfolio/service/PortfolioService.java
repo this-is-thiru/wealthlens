@@ -237,13 +237,8 @@ public class PortfolioService {
             throw new BadRequestException("There are pending temporary transactions. Please redrive them before uploading transactions. Some transactions may be blocked due to pending corporate actions during upload.");
         }
 
-        List<String> errors = new ArrayList<>();
         AssetRequestParser assetRequestParser = new AssetRequestParser(quarter);
-        List<AssetRequest> assetRequests = assetRequestParser.parse(file, errors);
-
-        if (!errors.isEmpty()) {
-            return "No transaction uploaded. Errors: " + errors;
-        }
+        List<AssetRequest> assetRequests = assetRequestParser.parse(file);
 
         String fileDigest = uploadDigest(userMail, quarter, file);
         List<String> filteredOutTransactions = new ArrayList<>();

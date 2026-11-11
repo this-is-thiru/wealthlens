@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -815,6 +816,73 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
             book.write(out);
         }
         return out.toByteArray();
+    }
+
+    @Test
+    void uploadTransactions_whenAnEquityRowLeavesItsOptionalCellsUntouched_recordsIt() throws IOException {
+        // Given — one equity buy of 10 whose maturity date and comment cells were never written (W-276, G-10; scenario 16)
+        byte[] sheet = workbook(JAN_5, 1, false);
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then — an equity trade has no maturity date: recorded, 10 held
+        assertEquals(200, uploaded.getStatusCode().value(), uploaded.getBody());
+        assertEquals(10.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum(), uploaded.getBody());
+    }
+
+    @Test
+    void uploadTransactions_whenACellDoesNotFitItsColumn_namesTheRowAndColumn() throws IOException {
+        // Given — the first data row's PRICE holds text
+        byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).getCell(7).setCellValue("abc"));
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then — 400 naming row 1 and PRICE; nothing stored
+        assertEquals(400, uploaded.getStatusCode().value(), uploaded.getBody());
+        assertTrue(uploaded.getBody().contains("Row 1, PRICE"), uploaded.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+    }
+
+    @Test
+    void uploadTransactions_whenAnEmptyRowFollowsTheData_skipsIt() throws IOException {
+        // Given — one trade, then a row with only blank cells, as a spreadsheet keeps after formatting
+        byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> {
+            Row empty = q1.createRow(2);
+            empty.createCell(0);
+            empty.createCell(7);
+        });
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then — the trade is recorded and the empty row ignored
+        assertEquals(200, uploaded.getStatusCode().value(), uploaded.getBody());
+        assertEquals(10.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum(), uploaded.getBody());
+    }
+
+    @Test
+    void uploadTransactions_whenAValueSitsUnderNoHeader_isRefused() throws IOException {
+        // Given — the first data row has a value one column past COMMENTS, the last header (column 15)
+        byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).createCell(14).setCellValue("stray"));
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then
+        assertEquals(400, uploaded.getStatusCode().value(), uploaded.getBody());
+        assertTrue(uploaded.getBody().contains("Row 1") && uploaded.getBody().contains("column 15"), uploaded.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+    }
+
+    private static byte[] edited(byte[] workbook, Consumer<Sheet> change) throws IOException {
+        try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(workbook))) {
+            change.accept(book.getSheet("Q1"));
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            book.write(out);
+            return out.toByteArray();
+        }
     }
 
     private void bonusRecordedOn(LocalDate recordDate) {
