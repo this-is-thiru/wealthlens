@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Blocks `git commit` from a Claude Code session unless the unit tier passes. The unit tier's
-# `validate` phase runs Checkstyle and spotless:check, so this one call enforces CLAUDE.md
-# "Engineering standards" as far as the build can (decision D-045, item W-045a). A working tree the unit tier
-# already passed on, unchanged since, is not run twice (W-260, D-522).
+# Blocks `git commit` from a Claude Code session unless Maven's `validate` phase passes: Checkstyle and
+# spotless:check, the enforced half of CLAUDE.md "Engineering standards" (decision D-045, item W-045a). It runs no
+# test: the pipeline runs every tier, and the owner does not want them run again on the laptop at each commit
+# (W-267, D-534). A failing test is therefore found by the pipeline, not here.
 set -uo pipefail
 
 command=$(jq -r '.tool_input.command // empty')
@@ -17,21 +17,15 @@ if ! cd "$root" 2>/dev/null; then
     exit 2
 fi
 
-# shellcheck source=working-tree.sh
-source "$root/.claude/hooks/working-tree.sh"
-stamp=$(unit_tier_stamp)
-# A tree the unit tier already passed on, unchanged since, needs no second run (W-260, D-522)
-if [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$(working_tree_id)" ]; then
-    exit 0
-fi
-
-if output=$("$root/.claude/hooks/unit-tier.sh" -q 2>&1); then
+# The test seam: pre-commit-gate-test.sh points this at a stand-in, so the gate is tested without a build.
+mvnw="${COMMIT_GATE_MVNW:-./mvnw}"
+if output=$("$mvnw" -q validate 2>&1); then
     exit 0
 fi
 
 {
     echo "Commit blocked by .claude/hooks/pre-commit-gate.sh (CLAUDE.md Engineering standards, W-045a)."
-    echo "The unit tier (.claude/hooks/unit-tier.sh) failed. Fix the cause; do not bypass the gate."
+    echo "Checkstyle or spotless:check failed (./mvnw validate). Fix the cause; do not bypass the gate."
     echo "--- last 60 lines ---"
     echo "$output" | tail -60
 } >&2
