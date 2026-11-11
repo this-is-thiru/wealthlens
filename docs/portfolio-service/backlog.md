@@ -1,5 +1,7 @@
 # PortfolioService — review backlog
 
+> **2026-11-11 (W-264a, D-535):** every entry was checked against the code and by request; the open ones are now fix rows W-273, W-274 and W-277 – W-281 in `../taxplanning-build/03-WORK-ITEMS.md` (PS-6 not reproduced, PS-7 superseded by W-269, PS-8 a question for the owner). Status per entry: `../taxplanning-build/reviews/2026-11-11-portfolio-gap-audit.md` §4. This file is no longer the list.
+
 Findings from a read of `portfolio/service/PortfolioService.java` (910 lines) at `55024ad`,
 2026-09-18. Nothing here is fixed. Each entry says what it is, why it matters, what done looks
 like, and — where the answer is not obvious — why it was not done at the time.

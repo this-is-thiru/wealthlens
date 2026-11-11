@@ -1,0 +1,484 @@
+package com.thiru.wealthlens.integration;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.AssetResponse;
+import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
+import com.thiru.wealthlens.testsupport.MoneyAssert;
+import io.restassured.RestAssured;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * W-264a's scenarios: the portfolio module driven through its HTTP API, each expected answer worked by hand
+ * from the scenario's own inputs before the run (D-535 C1a, C2a). Only scenarios whose expected answer the
+ * code already gives are kept here; each one that exposed a gap is quoted in the audit report instead.
+ */
+class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
+
+    private static final String OWNER = "audit-owner@example.com";
+    private static final String OTHER = "audit-other@example.com";
+    private static final String STOCK = "INFY";
+    private static final LocalDate JAN_5 = LocalDate.of(2026, 1, 5);
+    private static final LocalDate FEB_5 = LocalDate.of(2026, 2, 5);
+    private static final LocalDate MAR_5 = LocalDate.of(2026, 3, 5);
+
+    private final RestTemplate rest = lenientRestTemplate();
+
+    @Test
+    void addTransactionV2_whenSellTakesFifoAcrossTwoLots_leavesTheLaterLotPartlyHeld() {
+        // Given — buy 10 @ 100 on 5 Jan, 10 @ 120 on 5 Feb
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 120.0, FEB_5));
+
+        // When — sell 15 @ 150 on 5 Mar: FIFO takes all 10 of January, then 5 of February
+        ResponseEntity<String> sold = postV2(OWNER, trade(TransactionType.SELL, 15.0, 150.0, MAR_5));
+
+        // Then — one lot left: 5 @ 120 dated 5 Feb; the January lot is gone
+        assertEquals(200, sold.getStatusCode().value(), sold.getBody());
+        List<AssetEntity> lots = lotsOf(OWNER);
+        assertEquals(1, lots.size());
+        assertEquals(FEB_5, lots.getFirst().getTransactionDate());
+        assertEquals(5.0, lots.getFirst().getQuantity());
+        MoneyAssert.assertMoney(120.0, lots.getFirst().getPrice());
+    }
+
+    @Test
+    void getAllStocks_afterAFifoSale_showsTheRemainingQuantityAtItsOwnPrice() {
+        // Given — the same three trades: 5 left, all from the ₹120 lot
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 120.0, FEB_5));
+        postV2(OWNER, trade(TransactionType.SELL, 15.0, 150.0, MAR_5));
+
+        // When
+        AssetResponse[] rows = get(OWNER, "/portfolio/user/" + OWNER + "/stocks/all", AssetResponse[].class).getBody();
+
+        // Then — one row: quantity 5, average price 5 × 120 / 5 = ₹120
+        assertEquals(1, rows.length);
+        assertEquals(5.0, rows[0].getQuantity());
+        MoneyAssert.assertMoney(120.0, rows[0].getPrice());
+    }
+
+    @Test
+    void addTransactionV2_whenSaleIsDatedBeforeTheOnlyLot_answers400AndChangesNothing() {
+        // Given — the only lot is bought 5 Feb
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, FEB_5));
+
+        // When — a sale dated 5 Jan, before it
+        ResponseEntity<String> sold = postV2(OWNER, trade(TransactionType.SELL, 5.0, 150.0, JAN_5));
+
+        // Then — no lot is eligible on 5 Jan, so 400; the lot keeps 10
+        assertEquals(400, sold.getStatusCode().value(), sold.getBody());
+        assertEquals(10.0, lotsOf(OWNER).getFirst().getQuantity());
+    }
+
+    @Test
+    void addTransactionV2_whenSellingMoreThanHeld_answers400AndChangesNothing() {
+        // Given
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+
+        // When — 11 asked of 10 held
+        ResponseEntity<String> sold = postV2(OWNER, trade(TransactionType.SELL, 11.0, 150.0, FEB_5));
+
+        // Then
+        assertEquals(400, sold.getStatusCode().value(), sold.getBody());
+        assertEquals(10.0, lotsOf(OWNER).getFirst().getQuantity());
+    }
+
+    @Test
+    void addTransactionV2_whenTheSameTradeIsPostedTwiceWithinTheWindow_appliesItOnce() {
+        // Given
+        Map<String, Object> buy = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        postV2(OWNER, buy);
+
+        // When — the same body again, seconds later, with no idempotency key
+        ResponseEntity<String> retry = postV2(OWNER, buy);
+
+        // Then — treated as a retry: one transaction, one lot of 10
+        assertEquals(200, retry.getStatusCode().value());
+        assertTrue(retry.getBody().contains("repeat"), retry.getBody());
+        assertEquals(1, transactionsOf(OWNER).size());
+        assertEquals(10.0, lotsOf(OWNER).getFirst().getQuantity());
+    }
+
+    @Test
+    void uploadTransactions_whenTheFileIsNotAWorkbook_answers400() {
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, "not a workbook".getBytes(), "Q1");
+
+        // Then
+        assertEquals(400, uploaded.getStatusCode().value(), uploaded.getBody());
+    }
+
+    @Test
+    void getAllStocks_whenTheTokenIsAnotherUsers_isRefused() {
+        // Given — OTHER holds a lot
+        postV2(OTHER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+
+        // When — OWNER's token on OTHER's path
+        ResponseEntity<String> answer = rest.exchange(URI.create(url("/portfolio/user/" + OTHER + "/stocks/all")),
+                HttpMethod.GET, new HttpEntity<>(headers(OWNER)), String.class);
+
+        // Then — refused (401 or 403), nothing of OTHER's shown
+        assertTrue(answer.getStatusCode().value() == 401 || answer.getStatusCode().value() == 403,
+                () -> answer.getStatusCode() + " " + answer.getBody());
+    }
+
+    @Test
+    void getUserTransaction_afterThreeTrades_listsEachOnceForTheCallerOnly() {
+        // Given — buy, buy, sell for OWNER; one buy for OTHER
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 120.0, FEB_5));
+        postV2(OWNER, trade(TransactionType.SELL, 15.0, 150.0, MAR_5));
+        postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
+
+        // When
+        TransactionResponse[] listed = get(OWNER, "/transactions/user/" + OWNER, TransactionResponse[].class).getBody();
+
+        // Then — three rows, three distinct ids, all OWNER's
+        assertEquals(3, listed.length);
+        assertEquals(3, Arrays.stream(listed).map(TransactionResponse::getTransactionId).distinct().count());
+        assertTrue(Arrays.stream(listed).allMatch(row -> OWNER.equals(row.getEmail())));
+    }
+
+    @Test
+    void downloadPortfolio_whenAssetsAreAsked_matchesTheHoldingsView() throws IOException {
+        // Given — 5 left at ₹120 after the FIFO sale
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 120.0, FEB_5));
+        postV2(OWNER, trade(TransactionType.SELL, 15.0, 150.0, MAR_5));
+
+        // When
+        ResponseEntity<byte[]> file = rest.exchange(URI.create(url("/portfolio/user/" + OWNER + "/stocks/download")),
+                HttpMethod.POST, new HttpEntity<>(Map.of("entityName", "assets"), headers(OWNER)), byte[].class);
+
+        // Then — one data row whose QUANTITY is 5, as /stocks/all says
+        assertEquals(200, file.getStatusCode().value());
+        try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(file.getBody()))) {
+            Sheet sheet = book.getSheetAt(0);
+            assertEquals(1, sheet.getLastRowNum());
+            int quantityColumn = columnOf(sheet.getRow(0), ExcelHeaders.QUANTITY);
+            assertEquals(5.0, sheet.getRow(1).getCell(quantityColumn).getNumericCellValue());
+        }
+    }
+
+    @Test
+    void downloadPortfolio_whenAColumnIsUnknown_answers400() {
+        // When
+        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/stocks/download",
+                Map.of("entityName", "assets", "selectedColumns", List.of("quantity", "notAColumn")));
+
+        // Then
+        assertEquals(400, answer.getStatusCode().value(), answer.getBody());
+    }
+
+    @Test
+    void addTransactionV2_whenTheSameTradeComesAfterTheWindow_appliesBoth() {
+        // Given — a buy of 10 recorded two minutes ago (the window is 60 s)
+        Map<String, Object> buy = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        postV2(OWNER, buy);
+        TransactionEntity first = transactionsOf(OWNER).getFirst();
+        first.setSubmittedAt(first.getSubmittedAt().minusMinutes(2));
+        mongoTemplate.save(first, "transactions");
+
+        // When — the same body again
+        postV2(OWNER, buy);
+
+        // Then — a second real trade: two transactions, 20 held
+        assertEquals(2, transactionsOf(OWNER).size());
+        assertEquals(20.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum());
+    }
+
+    @Test
+    void addTransactionV2_whenTwoTradesDifferOnlyInPrice_appliesBoth() {
+        // Given
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+
+        // When — the same trade at ₹101, within the window
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 101.0, JAN_5));
+
+        // Then — not a retry: 20 held
+        assertEquals(20.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum());
+    }
+
+    @Test
+    void addTransactionV2_whenIdempotencyKeysDecide_appliesOncePerKey() {
+        // Given — identical trades under keys k1, k1, k2
+        Map<String, Object> first = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        first.put("idempotencyKey", "k1");
+        Map<String, Object> second = new HashMap<>(first);
+        second.put("idempotencyKey", "k2");
+
+        // When
+        postV2(OWNER, first);
+        postV2(OWNER, first);
+        postV2(OWNER, second);
+
+        // Then — k1 once, k2 once: 20 held
+        assertEquals(2, transactionsOf(OWNER).size());
+        assertEquals(20.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum());
+    }
+
+    @Test
+    void clearAll_whenTwoUsersHoldRecords_clearsOnlyTheCallers() {
+        // Given
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
+
+        // When
+        ResponseEntity<String> cleared = post(OWNER, "/portfolio/user/" + OWNER + "/clear/all", null);
+
+        // Then — OWNER has nothing; OTHER keeps the lot of 7 and its transaction
+        assertEquals(200, cleared.getStatusCode().value(), cleared.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+        assertEquals(0, transactionsOf(OWNER).size());
+        assertEquals(7.0, lotsOf(OTHER).getFirst().getQuantity());
+        assertEquals(1, transactionsOf(OTHER).size());
+    }
+
+    @Test
+    void addTransactionV2_whenTheBodyIsMalformed_answers400() {
+        // Given — not JSON, a quantity that is not a number, a transaction type that does not exist
+        Map<String, Object> wordQuantity = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        wordQuantity.put("quantity", "ten");
+        Map<String, Object> unknownType = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        unknownType.put("transactionType", "HOLD");
+
+        // When
+        int notJson = post(OWNER, "/portfolio/user/" + OWNER + "/transaction/v2", "{not json").getStatusCode().value();
+        int word = postV2(OWNER, wordQuantity).getStatusCode().value();
+        int unknown = postV2(OWNER, unknownType).getStatusCode().value();
+
+        // Then
+        assertEquals(List.of(400, 400, 400), List.of(notJson, word, unknown));
+    }
+
+    @Test
+    void getStockQuantity_whenNothingIsHeld_answers400() {
+        // When
+        ResponseEntity<String> answer = get(OWNER, "/portfolio/user/" + OWNER + "/stock/NOPE/all", String.class);
+
+        // Then
+        assertEquals(400, answer.getStatusCode().value(), answer.getBody());
+    }
+
+    @Test
+    void searchAssets_whenAFilterNamesAFieldNotAllowed_answers400() {
+        // When
+        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/request2",
+                Map.of("queryFilters", List.of(Map.of("filterKey", "password", "operation", "EQUALS", "value", "x"))));
+
+        // Then
+        assertEquals(400, answer.getStatusCode().value(), answer.getBody());
+    }
+
+    @Test
+    void uploadTransactions_whenTheQuarterIsMissingOrUnknown_answers400() {
+        // When
+        int unknown = upload(OWNER, "x".getBytes(), "Q5").getStatusCode().value();
+        HttpHeaders headers = headers(OWNER);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new ByteArrayResource("x".getBytes()) {
+            @Override
+            public String getFilename() {
+                return "trades.xlsx";
+            }
+        });
+        int missing = rest.exchange(URI.create(url("/portfolio/user/" + OWNER + "/upload-transactions")), HttpMethod.POST,
+                new HttpEntity<>(body, headers), String.class).getStatusCode().value();
+
+        // Then
+        assertEquals(List.of(400, 400), List.of(unknown, missing));
+    }
+
+    @Test
+    void redrive_whenAnItemFailsAfterItsTransactionIsRecorded_leavesNoTransactionForIt() {
+        // Given — a stored temporary sale of a stock not held (PS-6)
+        TransactionEntity temp = new TransactionEntity();
+        temp.setEmail(OWNER);
+        temp.setStockCode(STOCK);
+        temp.setBrokerName(BrokerName.ZERODHA);
+        temp.setTransactionType(TransactionType.SELL);
+        temp.setStatus(TransactionStatus.TEMPORARY);
+        temp.setAssetRequest(asRequest(trade(TransactionType.SELL, 5.0, 150.0, JAN_5)));
+        mongoTemplate.save(temp, "transactions");
+
+        // When
+        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+
+        // Then — the item failed, and the only transaction is still the temporary one
+        assertTrue(redriven.getBody().contains("Failed: 1"), redriven.getBody());
+        assertEquals(1, transactionsOf(OWNER).size(), () -> "transactions: " + transactionsOf(OWNER));
+    }
+
+    @Test
+    void redrive_whenOneItemFailsBesideOneThatSucceeds_keepsTheSuccess() {
+        // Given — a stored temporary buy of 10 (good) and a stored temporary sale of a stock not held (fails)
+        TransactionEntity good = new TransactionEntity();
+        good.setEmail(OWNER);
+        good.setStockCode(STOCK);
+        good.setBrokerName(BrokerName.ZERODHA);
+        good.setTransactionType(TransactionType.BUY);
+        good.setStatus(TransactionStatus.TEMPORARY);
+        good.setAssetRequest(asRequest(trade(TransactionType.BUY, 10.0, 100.0, JAN_5)));
+        mongoTemplate.save(good, "transactions");
+        TransactionEntity bad = new TransactionEntity();
+        bad.setEmail(OWNER);
+        bad.setStockCode("TCS");
+        bad.setBrokerName(BrokerName.ZERODHA);
+        bad.setTransactionType(TransactionType.SELL);
+        bad.setStatus(TransactionStatus.TEMPORARY);
+        Map<String, Object> sale = trade(TransactionType.SELL, 5.0, 150.0, FEB_5);
+        sale.put("stockCode", "TCS");
+        bad.setAssetRequest(asRequest(sale));
+        mongoTemplate.save(bad, "transactions");
+
+        // When
+        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+
+        // Then — reported as one succeeded, one failed; the buy's 10 are held and its temporary is PROCESSED
+        assertTrue(redriven.getBody().contains("Succeeded: 1") && redriven.getBody().contains("Failed: 1"),
+                redriven.getBody());
+        assertEquals(10.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum(),
+                () -> redriven.getBody() + " lots: " + lotsOf(OWNER));
+        assertEquals(TransactionStatus.PROCESSED, mongoTemplate.findById(good.getId(), TransactionEntity.class,
+                "transactions").getStatus());
+    }
+
+    private static int columnOf(Row header, String name) {
+        for (Cell cell : header) {
+            if (name.equals(cell.getStringCellValue())) {
+                return cell.getColumnIndex();
+            }
+        }
+        throw new IllegalStateException("No column " + name);
+    }
+
+    private static AssetRequest asRequest(Map<String, Object> body) {
+        AssetRequest request = new AssetRequest();
+        request.setStockCode((String) body.get("stockCode"));
+        request.setStockName((String) body.get("stockName"));
+        request.setExchangeName((String) body.get("exchangeName"));
+        request.setBrokerName(BrokerName.valueOf((String) body.get("brokerName")));
+        request.setAssetType(AssetType.valueOf((String) body.get("assetType")));
+        request.setPrice((Double) body.get("price"));
+        request.setQuantity((Double) body.get("quantity"));
+        request.setTransactionType(TransactionType.valueOf((String) body.get("transactionType")));
+        request.setAccountHolder((String) body.get("accountHolder"));
+        request.setTransactionDate(LocalDate.parse((String) body.get("transactionDate")));
+        return request;
+    }
+
+    private static RestTemplate lenientRestTemplate() {
+        RestTemplate template = new RestTemplate();
+        template.setErrorHandler(new DefaultResponseErrorHandler() {
+            @Override
+            public boolean hasError(ClientHttpResponse response) {
+                return false;
+            }
+        });
+        return template;
+    }
+
+    private static Map<String, Object> trade(TransactionType type, double quantity, double price, LocalDate date) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("stockCode", STOCK);
+        body.put("stockName", "Infosys");
+        body.put("exchangeName", "NSE");
+        body.put("brokerName", BrokerName.ZERODHA.name());
+        body.put("assetType", AssetType.EQUITY.name());
+        body.put("price", price);
+        body.put("quantity", quantity);
+        body.put("transactionType", type.name());
+        body.put("accountType", AccountType.SELF.name());
+        body.put("accountHolder", "Self");
+        body.put("transactionDate", date.toString());
+        return body;
+    }
+
+    private String url(String path) {
+        return "http://localhost:" + RestAssured.port + path;
+    }
+
+    private HttpHeaders headers(String email) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(generateToken(email));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
+    private ResponseEntity<String> post(String email, String path, Object body) {
+        return rest.exchange(URI.create(url(path)), HttpMethod.POST, new HttpEntity<>(body, headers(email)), String.class);
+    }
+
+    private ResponseEntity<String> postV2(String email, Map<String, Object> body) {
+        return post(email, "/portfolio/user/" + email + "/transaction/v2", body);
+    }
+
+    private <T> ResponseEntity<T> get(String email, String path, Class<T> type) {
+        return rest.exchange(URI.create(url(path)), HttpMethod.GET, new HttpEntity<>(headers(email)), type);
+    }
+
+    private ResponseEntity<String> upload(String email, byte[] content, String quarter) {
+        HttpHeaders headers = headers(email);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new ByteArrayResource(content) {
+            @Override
+            public String getFilename() {
+                return "trades.xlsx";
+            }
+        });
+        String path = "/portfolio/user/" + email + "/upload-transactions?quarter=" + quarter;
+        return rest.exchange(URI.create(url(path)), HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
+    }
+
+    private List<AssetEntity> lotsOf(String email) {
+        return mongoTemplate.findAll(AssetEntity.class, "assets").stream()
+                .filter(lot -> email.equals(lot.getEmail()))
+                .sorted(Comparator.comparing(AssetEntity::getTransactionDate))
+                .toList();
+    }
+
+    private List<TransactionEntity> transactionsOf(String email) {
+        return mongoTemplate.findAll(TransactionEntity.class, "transactions").stream()
+                .filter(transaction -> email.equals(transaction.getEmail()))
+                .toList();
+    }
+
+}

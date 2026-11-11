@@ -1,5 +1,7 @@
 # Trade ledger — backlog
 
+> **2026-11-11 (W-264a, D-535):** B-1, B-2, B-4 and B-9 are now fix rows W-282, W-284, W-283 and W-268 in `../taxplanning-build/03-WORK-ITEMS.md`; status per entry: `../taxplanning-build/reviews/2026-11-11-portfolio-gap-audit.md` §4. This file is no longer the list.
+
 Things found during TL-1..TL-7 that are real, are not blocking, and were deliberately not done.
 Each says what it is, why it was left, and what "done" would look like.
 
