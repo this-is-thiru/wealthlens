@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-273 (holdings merge account holders into one row) — next by board order; nothing written
-Stage           : 6 — W-272 DONE (D-557), committed and pushed
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 committed
-Board           : W-264a D; W-268 – W-272 D; W-273 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-273 (plans/W-273.md), STOP for approval
+Item            : W-274 (fractional quantities compared exactly) — next by board order; nothing written
+Stage           : 6 — W-273 DONE (D-558), committed and pushed
+Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 committed; W-285 placed
+Board           : W-264a D; W-268 – W-273 D; W-274 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-274 (plans/W-274.md), STOP for approval
 Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); check the pipeline on 200ead80, 4f268a1c and the W-264a commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : scenario 11 red then green; probe failed, restored; 196 tests across affected classes green; validate clean
-Files touched   : none since the W-272 commit
-Last item commit: taxplanning W-272: merge a V1 buy into the oldest lot of its day
-Updated         : 2026-11-11, session 84 — W-272 done; W-273 next
+Last verify     : 2 first tests red then green; probe failed both, restored; affected classes green; validate clean
+Files touched   : none since the W-273 commit
+Last item commit: taxplanning W-273: show a holding per account holder
+Updated         : 2026-11-11, session 84 — W-273 done; W-274 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

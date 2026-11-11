@@ -5,6 +5,7 @@ public class ExcelHeaders {
     public static final String EMAIL = "EMAIL";
     public static final String STOCK_CODE = "STOCK CODE";
     public static final String STOCK_NAME = "STOCK NAME";
+    public static final String ACCOUNT_HOLDER = "ACCOUNT HOLDER";
     public static final String ORDER_ID = "ORDER ID";
     public static final String ORDER_EXECUTION_TIME = "ORDER EXECUTION TIME";
     public static final String TIME_ZONE = "TIME ZONE";

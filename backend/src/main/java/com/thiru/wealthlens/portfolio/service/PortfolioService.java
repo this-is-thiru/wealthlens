@@ -43,7 +43,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -539,7 +538,7 @@ public class PortfolioService {
      * and the realised rows are each one query, whatever the size of the portfolio.
      */
     private List<AssetResponse> groupedWithCharges(UserMail userMail, List<AssetEntity> assetEntities) {
-        Map<String, List<AssetEntity>> assetMap = TCollectionUtil.groupingBy(assetEntities, stockWithCodeAndBroker());
+        Map<Holding, List<AssetEntity>> assetMap = TCollectionUtil.groupingBy(assetEntities, Holding::of);
         ChargeViewAssembler.ChargeLookup lookup = chargeViewAssembler.forLots(userMail.getEmail(), assetEntities);
         return TCollectionUtil.map(assetMap.values(), lots -> {
             AssetResponse assetResponse = combineAllDetailsOfEntities(lots);
@@ -842,8 +841,15 @@ public class PortfolioService {
         portfolioRepository.saveAll(stocks);
     }
 
-    private Function<AssetEntity, String> stockWithCodeAndBroker() {
-        return asset -> asset.getStockCode() + asset.getBrokerName().name();
+    /**
+     * What makes lots one holding in the views: the stock, the broker and whose it is. A record rather than a joined
+     * string, so no two holdings can share a key (W-273, PS-14); a missing holder is one value of its own.
+     */
+    private record Holding(String stockCode, BrokerName brokerName, String accountHolder) {
+
+        private static Holding of(AssetEntity lot) {
+            return new Holding(lot.getStockCode(), lot.getBrokerName(), lot.getAccountHolder());
+        }
     }
 
     private List<AssetResponse> getStockEntities(UserMail userMail, Collection<String> stockCodes) {

@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 class PortfolioExcelExporterTest {
 
     private static final List<String> ASSET_COLUMNS = List.of(
-            "EMAIL", "STOCK NAME", "STOCK CODE", "QUANTITY", "TOTAL QUANTITY", "PRICE",
+            "EMAIL", "STOCK NAME", "STOCK CODE", "ACCOUNT HOLDER", "QUANTITY", "TOTAL QUANTITY", "PRICE",
             "TOTAL VALUE", "EXCHANGE NAME", "BROKER NAME", "ASSET TYPE", "MATURITY DATE",
             "BROKER CHARGES", "MISC CHARGES",
             "COMPUTED BUY CHARGES", "COMPUTED SELL CHARGES", "TOTAL COMPUTED CHARGES");
@@ -116,7 +116,7 @@ class PortfolioExcelExporterTest {
         asset.setBrokerCharges(-2.505);
         Row row = sheet(PortfolioExcelExporter.assets(List.of(asset), List.of(), false), 0).getRow(1);
 
-        assertMoney(TMoney.scale(-2.505), row.getCell(11).getNumericCellValue());
+        assertMoney(TMoney.scale(-2.505), row.getCell(12).getNumericCellValue());
     }
 
     @Test
@@ -137,10 +137,10 @@ class PortfolioExcelExporterTest {
 
         Row row = sheet(PortfolioExcelExporter.assets(List.of(asset), List.of(), false), 0).getRow(1);
 
-        assertMoney(23.60, row.getCell(11).getNumericCellValue());
-        assertMoney(20.00, row.getCell(13).getNumericCellValue());
-        assertMoney(30.00, row.getCell(14).getNumericCellValue());
-        assertMoney(50.00, row.getCell(15).getNumericCellValue());
+        assertMoney(23.60, row.getCell(12).getNumericCellValue());
+        assertMoney(20.00, row.getCell(14).getNumericCellValue());
+        assertMoney(30.00, row.getCell(15).getNumericCellValue());
+        assertMoney(50.00, row.getCell(16).getNumericCellValue());
     }
 
     @Test
@@ -148,8 +148,8 @@ class PortfolioExcelExporterTest {
     void assets_whenNeverPriced_writesZeroes() throws IOException {
         Row row = sheet(PortfolioExcelExporter.assets(List.of(asset()), List.of(), false), 0).getRow(1);
 
-        assertMoney(0.0, row.getCell(13).getNumericCellValue());
-        assertMoney(0.0, row.getCell(15).getNumericCellValue());
+        assertMoney(0.0, row.getCell(14).getNumericCellValue());
+        assertMoney(0.0, row.getCell(16).getNumericCellValue());
     }
 
     /** The second sheet declared BROKER NAME twice and wrote the transaction date into it. */
@@ -251,6 +251,7 @@ class PortfolioExcelExporterTest {
         asset.setEmail("test@example.com");
         asset.setStockCode("INFY");
         asset.setStockName("Infosys");
+        asset.setAccountHolder("Self");
         asset.setExchangeName("NSE");
         asset.setBrokerName(BrokerName.ZERODHA);
         asset.setAssetType(AssetType.EQUITY);

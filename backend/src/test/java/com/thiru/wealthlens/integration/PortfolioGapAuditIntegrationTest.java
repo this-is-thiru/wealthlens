@@ -589,6 +589,49 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         MoneyAssert.assertMoney(140.0, lots.get(1).getPrice());
     }
 
+    @Test
+    void getAllStocks_whenTwoAccountHoldersHoldOneStockAtOneBroker_showsARowEach() {
+        // Given — 10 @ 100 for "Self", 10 @ 200 for "Spouse", same stock and broker (W-273, G-7; W-264a scenario 12)
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        Map<String, Object> spouse = trade(TransactionType.BUY, 10.0, 200.0, JAN_5);
+        spouse.put("accountHolder", "Spouse");
+        postV2(OWNER, spouse);
+
+        // When
+        AssetResponse[] rows = get(OWNER, "/portfolio/user/" + OWNER + "/stocks/all", AssetResponse[].class).getBody();
+
+        // Then — a row each: Self 10 @ ₹100, Spouse 10 @ ₹200
+        assertEquals(2, rows.length, () -> "rows: " + List.of(rows));
+        List<AssetResponse> byHolder = Arrays.stream(rows).sorted(Comparator.comparing(AssetResponse::getAccountHolder)).toList();
+        assertEquals(List.of("Self", "Spouse"), byHolder.stream().map(AssetResponse::getAccountHolder).toList());
+        assertEquals(List.of(10.0, 10.0), byHolder.stream().map(AssetResponse::getQuantity).toList());
+        MoneyAssert.assertMoney(100.0, byHolder.get(0).getPrice());
+        MoneyAssert.assertMoney(200.0, byHolder.get(1).getPrice());
+    }
+
+    @Test
+    void downloadPortfolio_whenTwoAccountHoldersHoldOneStock_namesEachRowsHolder() throws IOException {
+        // Given — the same two holdings (W-273 C2a)
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        Map<String, Object> spouse = trade(TransactionType.BUY, 10.0, 200.0, JAN_5);
+        spouse.put("accountHolder", "Spouse");
+        postV2(OWNER, spouse);
+
+        // When
+        ResponseEntity<byte[]> file = rest.exchange(URI.create(url("/portfolio/user/" + OWNER + "/stocks/download")),
+                HttpMethod.POST, new HttpEntity<>(Map.of("entityName", "assets"), headers(OWNER)), byte[].class);
+
+        // Then — two data rows, ACCOUNT HOLDER Self and Spouse
+        try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(file.getBody()))) {
+            Sheet sheet = book.getSheetAt(0);
+            assertEquals(2, sheet.getLastRowNum());
+            int holderColumn = columnOf(sheet.getRow(0), ExcelHeaders.ACCOUNT_HOLDER);
+            List<String> holders = List.of(sheet.getRow(1).getCell(holderColumn).getStringCellValue(),
+                    sheet.getRow(2).getCell(holderColumn).getStringCellValue());
+            assertEquals(List.of("Self", "Spouse"), holders.stream().sorted().toList());
+        }
+    }
+
     private void bonusRecordedOn(LocalDate recordDate) {
         CorporateActionEntity bonus = new CorporateActionEntity();
         bonus.setStockCode(STOCK);

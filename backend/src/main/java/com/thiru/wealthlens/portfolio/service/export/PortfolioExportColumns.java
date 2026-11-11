@@ -37,6 +37,7 @@ public final class PortfolioExportColumns {
             ExcelColumn.text("email", ExcelHeaders.EMAIL, AssetResponse::getEmail),
             ExcelColumn.text("stockName", ExcelHeaders.STOCK_NAME, AssetResponse::getStockName),
             ExcelColumn.text("stockCode", ExcelHeaders.STOCK_CODE, AssetResponse::getStockCode),
+            ExcelColumn.text("accountHolder", ExcelHeaders.ACCOUNT_HOLDER, AssetResponse::getAccountHolder),
             ExcelColumn.quantity("quantity", ExcelHeaders.QUANTITY, AssetResponse::getQuantity),
             ExcelColumn.quantity("totalQuantity", ExcelHeaders.TOTAL_QUANTITY, AssetResponse::getTotalQuantity),
             ExcelColumn.money("price", ExcelHeaders.PRICE, AssetResponse::getPrice),
