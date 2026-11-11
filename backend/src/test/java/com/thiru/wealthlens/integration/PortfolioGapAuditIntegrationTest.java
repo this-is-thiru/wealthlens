@@ -21,6 +21,7 @@ import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import io.restassured.RestAssured;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDate;
@@ -36,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -720,6 +722,99 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         Map<String, Object> body = trade(type, quantity, price, date);
         body.put("assetType", AssetType.MUTUAL_FUND.name());
         return body;
+    }
+
+    @Test
+    void uploadTransactions_whenTwoRowsAreTheSameTrade_recordsBoth() throws IOException {
+        // Given — a sheet with two identical buys of 10 on 5 Jan: two orders, filled alike (W-275, G-9; scenario 15)
+        byte[] sheet = workbook(JAN_5, 2, true);
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then — both rows recorded: two transactions, 20 held, and the answer says 2 recorded
+        assertEquals(200, uploaded.getStatusCode().value(), uploaded.getBody());
+        assertEquals(2, transactionsOf(OWNER).size(), uploaded.getBody());
+        assertEquals(20.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum());
+        assertTrue(uploaded.getBody().contains("2 recorded"), uploaded.getBody());
+    }
+
+    @Test
+    void uploadTransactions_whenTheSameFileIsSentAgain_recordsNothingTwice() throws IOException {
+        // Given — the two-row sheet, uploaded once
+        byte[] sheet = workbook(JAN_5, 2, true);
+        upload(OWNER, sheet, "Q1");
+
+        // When — the same file again
+        ResponseEntity<String> again = upload(OWNER, sheet, "Q1");
+
+        // Then — still two transactions and 20 held; the answer says both were already recorded
+        assertEquals(200, again.getStatusCode().value(), again.getBody());
+        assertEquals(2, transactionsOf(OWNER).size(), again.getBody());
+        assertEquals(20.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum());
+        assertTrue(again.getBody().contains("0 recorded") && again.getBody().contains("2 already recorded"),
+                again.getBody());
+    }
+
+    @Test
+    void uploadTransactions_whenTwoUsersSendTheSameFile_eachRecordsTheirOwn() throws IOException {
+        // Given — one sheet's bytes
+        byte[] sheet = workbook(JAN_5, 1, true);
+
+        // When
+        ResponseEntity<String> mine = upload(OWNER, sheet, "Q1");
+        ResponseEntity<String> theirs = upload(OTHER, sheet, "Q1");
+
+        // Then — the derived keys differ by user, so neither collides on the unique index
+        assertEquals(200, mine.getStatusCode().value(), mine.getBody());
+        assertEquals(200, theirs.getStatusCode().value(), theirs.getBody());
+        assertEquals(1, transactionsOf(OWNER).size());
+        assertEquals(1, transactionsOf(OTHER).size());
+    }
+
+    /**
+     * A sheet of {@code rows} identical buys of 10 INFY @ ₹100 on {@code date}, on the Q1 sheet. The maturity date and
+     * comment are written as blank cells, or left untouched as a spreadsheet program leaves an empty cell.
+     */
+    private static byte[] workbook(LocalDate date, int rows, boolean blankOptionalCells) throws IOException {
+        String[] header = {"EMAIL", "STOCK CODE", "STOCK NAME", "EXCHANGE NAME", "BROKER NAME", "ASSET TYPE",
+            "MATURITY DATE", "PRICE", "QUANTITY", "TRANSACTION TYPE", "TRANSACTION DATE", "BROKER CHARGES",
+            "MISC CHARGES", "COMMENTS"};
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (Workbook book = new XSSFWorkbook()) {
+            List.of("Q1", "Q2", "Q3", "Q4").forEach(book::createSheet);
+            Sheet sheet = book.getSheet("Q1");
+            Row top = sheet.createRow(0);
+            for (int i = 0; i < header.length; i++) {
+                top.createCell(i).setCellValue(header[i]);
+            }
+            CellStyle dateStyle = book.createCellStyle();
+            dateStyle.setDataFormat(book.getCreationHelper().createDataFormat().getFormat("yyyy-MM-dd"));
+            for (int r = 1; r <= rows; r++) {
+                Row row = sheet.createRow(r);
+                row.createCell(0).setCellValue(OWNER);
+                row.createCell(1).setCellValue(STOCK);
+                row.createCell(2).setCellValue("Infosys");
+                row.createCell(3).setCellValue("NSE");
+                row.createCell(4).setCellValue("ZERODHA");
+                row.createCell(5).setCellValue("EQUITY");
+                if (blankOptionalCells) {
+                    row.createCell(6);
+                }
+                row.createCell(7).setCellValue(100.0);
+                row.createCell(8).setCellValue(10.0);
+                row.createCell(9).setCellValue("BUY");
+                row.createCell(10).setCellValue(java.sql.Date.valueOf(date));
+                row.getCell(10).setCellStyle(dateStyle);
+                row.createCell(11).setCellValue(0.0);
+                row.createCell(12).setCellValue(0.0);
+                if (blankOptionalCells) {
+                    row.createCell(13);
+                }
+            }
+            book.write(out);
+        }
+        return out.toByteArray();
     }
 
     private void bonusRecordedOn(LocalDate recordDate) {

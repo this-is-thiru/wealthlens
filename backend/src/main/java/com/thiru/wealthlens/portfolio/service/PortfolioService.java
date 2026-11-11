@@ -32,9 +32,12 @@ import com.thiru.wealthlens.shared.util.math.DoubleUtil;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -242,13 +245,36 @@ public class PortfolioService {
             return "No transaction uploaded. Errors: " + errors;
         }
 
+        String fileDigest = uploadDigest(userMail, quarter, file);
         List<String> filteredOutTransactions = new ArrayList<>();
-        TCollectionUtil.map(assetRequests, assetRequest -> processTransaction(userMail, assetRequest, filteredOutTransactions));
-
-        if (!filteredOutTransactions.isEmpty()) {
-            return String.format("Filtered out transactions: %s", filteredOutTransactions);
+        int repeated = 0;
+        for (int row = 0; row < assetRequests.size(); row++) {
+            AssetRequest assetRequest = assetRequests.get(row);
+            // The row's place in this file is its identity: two identical rows are two trades, and the same file sent
+            // again replays every row instead of recording it twice (W-275). Unique across users, as the index is.
+            assetRequest.setIdempotencyKey("upload:" + fileDigest + ":" + (row + 1));
+            if (REPLAYED_MESSAGE.equals(processTransaction(userMail, assetRequest, filteredOutTransactions))) {
+                repeated++;
+            }
         }
-        return "All transactions uploaded successfully from: " + file.getOriginalFilename() + ", quarter: " + quarter;
+
+        int recorded = assetRequests.size() - repeated - filteredOutTransactions.size();
+        String answer = "From " + file.getOriginalFilename() + ", quarter " + quarter + ": " + recorded + " recorded, "
+                + repeated + " already recorded by an earlier send of this file";
+        if (!filteredOutTransactions.isEmpty()) {
+            answer += "; held back for a corporate action: " + filteredOutTransactions;
+        }
+        return answer;
+    }
+
+    /** The user, the quarter and the file's bytes, digested: the same file sent again by the same user digests the same. */
+    private static String uploadDigest(UserMail userMail, String quarter, MultipartFile file) {
+        try {
+            return TradeFingerprint.sha256(String.join("\u001f", userMail.getEmail(), quarter,
+                    Base64.getEncoder().encodeToString(file.getBytes())));
+        } catch (IOException unreadable) {
+            throw new UncheckedIOException("The uploaded file could not be read a second time", unreadable);
+        }
     }
 
     /**
