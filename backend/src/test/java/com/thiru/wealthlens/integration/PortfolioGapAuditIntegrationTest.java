@@ -571,6 +571,24 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals(List.of(10.0, 10.0, 10.0), lots.stream().map(AssetEntity::getQuantity).toList());
     }
 
+    @Test
+    void addTransaction_whenV2BoughtTwiceThatDay_mergesIntoTheOldestLot() {
+        // Given — two V2 buys on 5 Jan: 10 @ 100 (first stored) and 10 @ 140 (W-272, G-6; W-264a scenario 11)
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 140.0, JAN_5));
+
+        // When — a V1 buy of 10 @ 120 on 5 Jan
+        ResponseEntity<String> bought = post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+                trade(TransactionType.BUY, 10.0, 120.0, JAN_5));
+
+        // Then — recorded into the oldest lot: 20 @ (1000 + 1200) / 20 = ₹110; the other keeps 10 @ ₹140
+        assertEquals(200, bought.getStatusCode().value(), bought.getBody());
+        List<AssetEntity> lots = lotsOf(OWNER).stream().sorted(Comparator.comparing(AssetEntity::getId)).toList();
+        assertEquals(List.of(20.0, 10.0), lots.stream().map(AssetEntity::getQuantity).toList());
+        MoneyAssert.assertMoney(110.0, lots.get(0).getPrice());
+        MoneyAssert.assertMoney(140.0, lots.get(1).getPrice());
+    }
+
     private void bonusRecordedOn(LocalDate recordDate) {
         CorporateActionEntity bonus = new CorporateActionEntity();
         bonus.setStockCode(STOCK);

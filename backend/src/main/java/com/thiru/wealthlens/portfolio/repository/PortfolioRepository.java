@@ -14,8 +14,9 @@ public interface PortfolioRepository extends MongoRepository<AssetEntity, String
 
     List<AssetEntity> findByEmail(String email);
 
-    Optional<AssetEntity> findByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDate(String email,
-                                                                                                 String stockCode, BrokerName brokerName, String accountHolder, LocalDate transactionDate);
+    /** The oldest lot of a stock bought on a day — the one V1's buy merges into; V2 may have bought several (W-272). */
+    Optional<AssetEntity> findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDateOrderByIdAsc(
+            String email, String stockCode, BrokerName brokerName, String accountHolder, LocalDate transactionDate);
 
     @Query(
             value = "{ 'email': ?0, 'stock_code': ?1, 'broker_name': ?2, 'accountHolder': ?3, 'transaction_date': { $lte: ?4 } }",

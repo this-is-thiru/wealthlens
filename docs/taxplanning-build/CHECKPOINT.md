@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-272 (a V1 buy answers 500 after two V2 buys that day) — next by board order; nothing written
-Stage           : 6 — W-271 DONE (D-556), committed and pushed; WL-A-2 republished
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 committed
-Board           : W-264a D; W-268 – W-271 D; W-272 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-272 (plans/W-272.md), STOP for approval
+Item            : W-273 (holdings merge account holders into one row) — next by board order; nothing written
+Stage           : 6 — W-272 DONE (D-557), committed and pushed
+Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 committed
+Board           : W-264a D; W-268 – W-272 D; W-273 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-273 (plans/W-273.md), STOP for approval
 Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); check the pipeline on 200ead80, 4f268a1c and the W-264a commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : 2 first tests red then green; probe failed both, restored; 208 tests across affected classes green; validate clean
-Files touched   : none since the W-271 commit
-Last item commit: taxplanning W-271: sell on V1 only what was held on the sale date
-Updated         : 2026-11-11, session 84 — W-271 done; W-272 next
+Last verify     : scenario 11 red then green; probe failed, restored; 196 tests across affected classes green; validate clean
+Files touched   : none since the W-272 commit
+Last item commit: taxplanning W-272: merge a V1 buy into the oldest lot of its day
+Updated         : 2026-11-11, session 84 — W-272 done; W-273 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

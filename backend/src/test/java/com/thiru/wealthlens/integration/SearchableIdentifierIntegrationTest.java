@@ -54,7 +54,7 @@ class SearchableIdentifierIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         assertThat(portfolioRepository.findByEmail(USER)).singleElement()
                 .satisfies(asset -> assertThat(asset.getAccountHolder()).isEqualTo(HOLDER));
-        assertThat(portfolioRepository.findByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDate(USER, "INFY",
+        assertThat(portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDateOrderByIdAsc(USER, "INFY",
                 BrokerName.ZERODHA, HOLDER, BOUGHT)).isPresent();
     }
 
