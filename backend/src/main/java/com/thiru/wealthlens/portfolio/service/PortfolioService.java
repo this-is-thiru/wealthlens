@@ -21,6 +21,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.parser.AssetRequestParser;
+import com.thiru.wealthlens.shared.dto.DateRangeFilter;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -201,6 +202,9 @@ public class PortfolioService {
             throw new BadRequestException("Quantity must be greater than zero, but was: " + quantity);
         }
 
+        if (assetRequest.getPrice() == null) {
+            throw new BadRequestException("Price is required; it may be 0 for a free allotment");
+        }
         if (assetRequest.getPrice() < 0) {
             throw new BadRequestException("Price must not be negative, but was: " + assetRequest.getPrice());
         }
@@ -586,7 +590,12 @@ public class PortfolioService {
         });
     }
 
-    public List<AssetResponse> getStocksWithDateRange(UserMail userMail, LocalDate startDate, LocalDate endDate) {
+    public List<AssetResponse> getStocksWithDateRange(UserMail userMail, DateRangeFilter dateRange) {
+        if (dateRange == null || dateRange.getStartDate() == null || dateRange.getEndDate() == null) {
+            throw new BadRequestException("A date range is required: dateRange with startDate and endDate");
+        }
+        LocalDate startDate = dateRange.getStartDate();
+        LocalDate endDate = dateRange.getEndDate();
 
         String email = userMail.getEmail();
         List<AssetEntity> stockEntities = portfolioRepository.findByEmailAndTransactionDateBetween(email, startDate, endDate);

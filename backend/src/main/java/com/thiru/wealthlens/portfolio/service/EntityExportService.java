@@ -43,6 +43,9 @@ public class EntityExportService {
     public FileStream export(UserMail userMail, EntityExportRequest exportRequest) {
         String entityName = exportRequest.getEntityName();
         List<String> columns = exportRequest.getSelectedColumns();
+        if (entityName == null) {
+            throw new BadRequestException("Name the entity to export: one of assets, transactions, transactions-template");
+        }
 
         return switch (entityName) {
             case "assets" -> stream("portfolio-", PortfolioExcelExporter.assets(

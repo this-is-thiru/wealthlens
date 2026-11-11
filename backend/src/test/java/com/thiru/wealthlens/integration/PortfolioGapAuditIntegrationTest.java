@@ -915,6 +915,44 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals(TransactionStatus.TEMPORARY, transactionsOf(OWNER).getFirst().getStatus());
     }
 
+    @Test
+    void addTransactionV2_whenPriceIsMissing_answers400NamingIt() {
+        // Given — a buy with no price (W-278, G-1, PS-2; scenario 5)
+        Map<String, Object> body = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        body.remove("price");
+
+        // When
+        ResponseEntity<String> answer = postV2(OWNER, body);
+
+        // Then — the caller's mistake, named; nothing stored
+        assertEquals(400, answer.getStatusCode().value(), answer.getBody());
+        assertTrue(answer.getBody().contains("Price is required"), answer.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+    }
+
+    @Test
+    void getStocks_whenTheDateRangeIsMissingOrIncomplete_answers400NamingIt() {
+        // When — no dateRange at all (scenario 29), and one without its end date
+        ResponseEntity<String> none = post(OWNER, "/portfolio/user/" + OWNER + "/stocks", Map.of());
+        ResponseEntity<String> noEnd = post(OWNER, "/portfolio/user/" + OWNER + "/stocks",
+                Map.of("dateRange", Map.of("startDate", "2026-01-01")));
+
+        // Then
+        assertEquals(List.of(400, 400), List.of(none.getStatusCode().value(), noEnd.getStatusCode().value()));
+        assertTrue(none.getBody().contains("A date range is required"), none.getBody());
+        assertTrue(noEnd.getBody().contains("A date range is required"), noEnd.getBody());
+    }
+
+    @Test
+    void downloadPortfolio_whenNoEntityIsNamed_answers400NamingTheChoices() {
+        // When — the body names no entity (scenario 24)
+        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/stocks/download", Map.of());
+
+        // Then
+        assertEquals(400, answer.getStatusCode().value(), answer.getBody());
+        assertTrue(answer.getBody().contains("Name the entity to export"), answer.getBody());
+    }
+
     private static byte[] edited(byte[] workbook, Consumer<Sheet> change) throws IOException {
         try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(workbook))) {
             change.accept(book.getSheet("Q1"));

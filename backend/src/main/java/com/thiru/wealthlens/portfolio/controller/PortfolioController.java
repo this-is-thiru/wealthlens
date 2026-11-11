@@ -87,10 +87,7 @@ public class PortfolioController {
     @PostMapping("/stocks")
     public List<AssetResponse> getStocks(@PathVariable String email,
                                                          @RequestBody BulkGetRequest bulkGetRequest) {
-
-        LocalDate startDate = bulkGetRequest.getDateRange().getStartDate();
-        LocalDate endDate = bulkGetRequest.getDateRange().getEndDate();
-        return portfolioService.getStocksWithDateRange(UserMail.from(email), startDate, endDate);
+        return portfolioService.getStocksWithDateRange(UserMail.from(email), bulkGetRequest.getDateRange());
     }
 
     @GetMapping("/stock/{stockCode}/all")
