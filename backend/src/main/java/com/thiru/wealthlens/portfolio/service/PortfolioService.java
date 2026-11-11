@@ -457,7 +457,7 @@ public class PortfolioService {
         validateTransaction(stockEntities, assetRequest);
         updateQuantityBySavingReportAndProfitAndLoss1(userMail, transactionId, stockEntities, assetRequest);
 
-        List<String> updatedStockEntities = TCollectionUtil.applyMap(stockEntities, asset -> DoubleUtil.equal(0, asset.getQuantity()), AssetEntity::getId);
+        List<String> updatedStockEntities = TCollectionUtil.applyMap(stockEntities, PortfolioService::hasNothingLeft, AssetEntity::getId);
         portfolioRepository.saveAll(stockEntities);
 
         if (!updatedStockEntities.isEmpty()) {
@@ -480,7 +480,7 @@ public class PortfolioService {
 
         updateQuantityBySavingReportAndProfitAndLoss(userMail, transactionId, stockEntities, assetRequest);
 
-        List<String> updatedStockEntities = TCollectionUtil.applyMap(stockEntities, asset -> asset.getQuantity() == 0, AssetEntity::getId);
+        List<String> updatedStockEntities = TCollectionUtil.applyMap(stockEntities, PortfolioService::hasNothingLeft, AssetEntity::getId);
         portfolioRepository.saveAll(stockEntities);
 
         if (!updatedStockEntities.isEmpty()) {
@@ -495,7 +495,8 @@ public class PortfolioService {
 
         double existingQuantity = TCollectionUtil.mapToDouble(stockEntities, AssetEntity::getQuantity).sum();
 
-        if (existingQuantity < assetRequest.getQuantity()) {
+        double requested = assetRequest.getQuantity();
+        if (existingQuantity < requested && !DoubleUtil.equal(existingQuantity, requested)) {
             throw new IllegalArgumentException("Not enough stocks to sell for: " + assetRequest.getStockCode());
         }
     }
@@ -538,8 +539,10 @@ public class PortfolioService {
      * and the realised rows are each one query, whatever the size of the portfolio.
      */
     private List<AssetResponse> groupedWithCharges(UserMail userMail, List<AssetEntity> assetEntities) {
-        Map<Holding, List<AssetEntity>> assetMap = TCollectionUtil.groupingBy(assetEntities, Holding::of);
-        ChargeViewAssembler.ChargeLookup lookup = chargeViewAssembler.forLots(userMail.getEmail(), assetEntities);
+        // A lot with nothing left is not held, and a group of only such lots would price at 0 / 0 (W-274, PS-11).
+        List<AssetEntity> held = TCollectionUtil.filter(assetEntities, lot -> !hasNothingLeft(lot));
+        Map<Holding, List<AssetEntity>> assetMap = TCollectionUtil.groupingBy(held, Holding::of);
+        ChargeViewAssembler.ChargeLookup lookup = chargeViewAssembler.forLots(userMail.getEmail(), held);
         return TCollectionUtil.map(assetMap.values(), lots -> {
             AssetResponse assetResponse = combineAllDetailsOfEntities(lots);
             assetResponse.setCharges(chargeViewAssembler.assetCharges(lookup, lots));
@@ -619,7 +622,7 @@ public class PortfolioService {
 
         double sellQuantity = assetRequest.getQuantity();
         Iterator<AssetEntity> stockEntitiesIterator = stockEntities.iterator();
-        while (sellQuantity > 0) {
+        while (isLeftToSell(sellQuantity)) {
 
             AssetEntity assetEntity = stockEntitiesIterator.next();
             assetEntity.getSellTransactionIds().add(transactionId);
@@ -627,7 +630,8 @@ public class PortfolioService {
 
             TradeOutcomeContext tradeOutcomeContext;
             ProfitAndLossContext profitAndLossContext;
-            double sellQty = Math.min(sellQuantity, assetQuantity);
+            boolean wholeLot = takesWholeLot(sellQuantity, assetQuantity);
+            double sellQty = wholeLot ? assetQuantity : sellQuantity;
 
             // Deducted ONCE per sell and handed to both records (B-8). The trade outcome and the
             // profit-and-loss entry describe the same allocation, so if each asked for its own the
@@ -638,7 +642,7 @@ public class PortfolioService {
             double buyBrokerCharges = LotChargeAllocator.deductBroker(assetEntity, sellQty, assetQuantity);
             double buyMiscCharges = LotChargeAllocator.deductMisc(assetEntity, sellQty, assetQuantity);
 
-            if (sellQuantity >= assetQuantity) {
+            if (wholeLot) {
                 tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, assetQuantity, transactionId, buyBrokerCharges, buyMiscCharges);
                 profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, assetQuantity, buyBrokerCharges, buyMiscCharges);
 
@@ -671,12 +675,12 @@ public class PortfolioService {
         Iterator<AssetEntity> stockEntitiesIterator = stockEntities.iterator();
         List<BuyContext> buyContexts = new ArrayList<>();
         List<TradeOutcomeRecorder.MatchedLot> matchedLots = new ArrayList<>();
-        while (sellQuantity > 0) {
+        while (isLeftToSell(sellQuantity)) {
             AssetEntity assetEntity = stockEntitiesIterator.next();
             assetEntity.getSellTransactionIds().add(transactionId);
             Double assetQuantity = assetEntity.getQuantity();
 
-            if (sellQuantity >= assetQuantity) {
+            if (takesWholeLot(sellQuantity, assetQuantity)) {
                 buyContexts.add(new BuyContext(assetEntity.getQuantity(), assetEntity.getTransactionDate(), assetEntity.getPrice(),
                         Optional.ofNullable(assetEntity.getAssetType())));
                 matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, assetQuantity, assetQuantity));
@@ -839,6 +843,23 @@ public class PortfolioService {
 
     public void saveCorporateActionProcessedStocks(List<AssetEntity> stocks) {
         portfolioRepository.saveAll(stocks);
+    }
+
+    /**
+     * Quantities on the sell path are compared within {@link DoubleUtil}'s tolerance, never exactly: fractional units
+     * summed as doubles drift (0.1 + 0.7 is 0.7999999999999999), which refused a full sale and left 1e-17-unit lots
+     * behind (W-274).
+     */
+    private static boolean takesWholeLot(double sellQuantity, double lotQuantity) {
+        return sellQuantity >= lotQuantity || DoubleUtil.equal(sellQuantity, lotQuantity);
+    }
+
+    private static boolean isLeftToSell(double sellQuantity) {
+        return sellQuantity > 0 && !DoubleUtil.equal(sellQuantity, 0);
+    }
+
+    private static boolean hasNothingLeft(AssetEntity lot) {
+        return DoubleUtil.equal(0, lot.getQuantity());
     }
 
     /**

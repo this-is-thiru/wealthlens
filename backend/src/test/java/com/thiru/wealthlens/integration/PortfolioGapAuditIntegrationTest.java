@@ -14,6 +14,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
@@ -630,6 +631,95 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                     sheet.getRow(2).getCell(holderColumn).getStringCellValue());
             assertEquals(List.of("Self", "Spouse"), holders.stream().sorted().toList());
         }
+    }
+
+    @Test
+    void addTransactionV2_whenFractionalLotsSumBelowTheirTrueTotal_sellsTheWholeHolding() {
+        // Given — units 0.1 and 0.7 on two days: 0.8 held, summing to 0.7999999999999999 (W-274, G-2; scenario 6)
+        postV2(OWNER, fundTrade(TransactionType.BUY, 0.1, 100.0, JAN_5));
+        postV2(OWNER, fundTrade(TransactionType.BUY, 0.7, 100.0, FEB_5));
+
+        // When — sell all 0.8
+        ResponseEntity<String> sold = postV2(OWNER, fundTrade(TransactionType.SELL, 0.8, 110.0, MAR_5));
+
+        // Then — sold, nothing left
+        assertEquals(200, sold.getStatusCode().value(), sold.getBody());
+        assertEquals(0, lotsOf(OWNER).size(), () -> "lots left: " + lotsOf(OWNER));
+    }
+
+    @Test
+    void addTransaction_whenFractionalLotsSumBelowTheirTrueTotal_sellsTheWholeHolding() {
+        // Given — the same on V1
+        String path = "/portfolio/user/" + OWNER + "/transaction";
+        post(OWNER, path, fundTrade(TransactionType.BUY, 0.1, 100.0, JAN_5));
+        post(OWNER, path, fundTrade(TransactionType.BUY, 0.7, 100.0, FEB_5));
+
+        // When
+        ResponseEntity<String> sold = post(OWNER, path, fundTrade(TransactionType.SELL, 0.8, 110.0, MAR_5));
+
+        // Then
+        assertEquals(200, sold.getStatusCode().value(), sold.getBody());
+        assertEquals(0, lotsOf(OWNER).size(), () -> "lots left: " + lotsOf(OWNER));
+    }
+
+    @Test
+    void addTransaction_whenFractionalSaleEmptiesTheLots_leavesNoHolding() {
+        // Given — V1 units 0.1 on 5 Jan and 0.2 on 5 Feb (W-274, G-5, PS-5; scenario 10)
+        String path = "/portfolio/user/" + OWNER + "/transaction";
+        post(OWNER, path, fundTrade(TransactionType.BUY, 0.1, 100.0, JAN_5));
+        post(OWNER, path, fundTrade(TransactionType.BUY, 0.2, 100.0, FEB_5));
+
+        // When — sell all 0.3
+        ResponseEntity<String> sold = post(OWNER, path, fundTrade(TransactionType.SELL, 0.3, 110.0, MAR_5));
+
+        // Then — nothing is held, not a 2.8e-17-unit lot
+        assertEquals(200, sold.getStatusCode().value(), sold.getBody());
+        assertEquals(0, lotsOf(OWNER).size(), () -> "lots left: " + lotsOf(OWNER));
+        // and the sale is recorded against each lot whole — 0.1 and 0.2, not 0.19999999999999998
+        List<Double> recorded = mongoTemplate.findAll(TradeOutcomeEntity.class, "trade_outcomes").stream()
+                .filter(row -> OWNER.equals(row.getEmail()))
+                .map(TradeOutcomeEntity::getSellQuantity)
+                .sorted()
+                .toList();
+        assertEquals(List.of(0.1, 0.2), recorded);
+    }
+
+    @Test
+    void addTransactionV2_whenTheSaleExceedsTheHoldingByAWholeUnitFraction_isStillRefused() {
+        // Given — 0.7 units held
+        postV2(OWNER, fundTrade(TransactionType.BUY, 0.7, 100.0, JAN_5));
+
+        // When — 0.8 asked, 0.1 more than held: far above the 1e-9 tolerance
+        ResponseEntity<String> sold = postV2(OWNER, fundTrade(TransactionType.SELL, 0.8, 110.0, FEB_5));
+
+        // Then
+        assertEquals(400, sold.getStatusCode().value(), sold.getBody());
+        assertEquals(0.7, lotsOf(OWNER).getFirst().getQuantity());
+    }
+
+    @Test
+    void getMutualFunds_whenAStoredLotHasNothingLeft_leavesItOut() {
+        // Given — one fund lot of 0.5 units and a residue lot of 2.7755575615628914E-17 units left by a past V1 sale
+        postV2(OWNER, fundTrade(TransactionType.BUY, 0.5, 100.0, JAN_5));
+        Map<String, Object> other = fundTrade(TransactionType.BUY, 0.2, 100.0, FEB_5);
+        other.put("stockCode", "OTHERFUND");
+        postV2(OWNER, other);
+        AssetEntity residue = lotsOf(OWNER).stream().filter(lot -> "OTHERFUND".equals(lot.getStockCode())).findFirst()
+                .orElseThrow();
+        residue.setQuantity(2.7755575615628914E-17);
+        mongoTemplate.save(residue, "assets");
+
+        // When
+        AssetResponse[] rows = get(OWNER, "/portfolio/user/" + OWNER + "/mfs", AssetResponse[].class).getBody();
+
+        // Then — only the fund actually held (W-274 C2a, PS-11)
+        assertEquals(List.of(STOCK), Arrays.stream(rows).map(AssetResponse::getStockCode).toList());
+    }
+
+    private static Map<String, Object> fundTrade(TransactionType type, double quantity, double price, LocalDate date) {
+        Map<String, Object> body = trade(type, quantity, price, date);
+        body.put("assetType", AssetType.MUTUAL_FUND.name());
+        return body;
     }
 
     private void bonusRecordedOn(LocalDate recordDate) {
