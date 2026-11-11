@@ -108,8 +108,8 @@ public class TradeOutcomeRecorder {
         for (int i = 0; i < lots.size(); i++) {
             perLot.add(new LinkedHashMap<>());
         }
-        breakup.forEach((code, amount) -> {
-            double total = amount == null ? 0.0 : amount;
+        // The breakup comes from ChargeComputation.amountByCode, whose toMap refuses a null amount (W-282).
+        breakup.forEach((code, total) -> {
             double cumulativeQuantity = 0;
             double allocated = 0;
             for (int i = 0; i < lots.size(); i++) {

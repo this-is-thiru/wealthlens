@@ -559,4 +559,88 @@ class TradeOutcomeRecorderTest {
         // Then
         MoneyAssert.assertMoney(0.0, row.getSellBrokerCharges());
     }
+
+    @Test
+    void record_whenTheSaleMatchedNoQuantity_recordsNothing() {
+        // Given -- no lot matched (W-282)
+        // When
+        List<TradeOutcomeContext> rows = recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY),
+                "sell-1", List.of(), Optional.empty());
+
+        // Then -- no row returned or saved
+        assertEquals(List.of(), rows);
+        verify(tradeOutcomeService, times(0)).saveTradeOutcome(any(UserMail.class), any());
+    }
+
+    @Test
+    void record_whenTheBuyChargeRowHasNoBreakdown_writesAnEmptyOne() {
+        // Given -- a stored buy charge row whose amount_by_code is absent (W-282)
+        UserChargeEntity buyCharges = new UserChargeEntity();
+        buyCharges.setAmountByCode(null);
+        when(userChargeService.findOptionalForTransaction(EMAIL, "buy-1")).thenReturn(Optional.of(buyCharges));
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 20.0), 1.0, 1.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY), "sell-1", lots, Optional.empty());
+
+        // Then
+        assertEquals(Map.of(), captureSaved(1).getFirst().getBuyChargeBreakup());
+    }
+
+    @Test
+    void record_whenAStoredBuyChargeHasNoAmount_readsItAsNil() {
+        // Given -- a stored buy breakdown with BROKERAGE 20.00 and an STT entry with no amount (W-282)
+        Map<String, Double> stored = new LinkedHashMap<>();
+        stored.put("BROKERAGE", 20.0);
+        stored.put("STT", null);
+        UserChargeEntity buyCharges = new UserChargeEntity();
+        buyCharges.setAmountByCode(stored);
+        when(userChargeService.findOptionalForTransaction(EMAIL, "buy-1")).thenReturn(Optional.of(buyCharges));
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 20.0), 1.0, 1.0));
+
+        // When -- the whole lot sold, so its share is 1
+        recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY), "sell-1", lots, Optional.empty());
+
+        // Then -- BROKERAGE 20.00 × 1, STT 0.00
+        Map<String, Double> row = captureSaved(1).getFirst().getBuyChargeBreakup();
+        MoneyAssert.assertMoney(20.0, row.get("BROKERAGE"));
+        MoneyAssert.assertMoney(0.0, row.get("STT"));
+    }
+
+    @Test
+    void record_whenTheLotWasFree_recordsAProfitPercentageOfNil() {
+        // Given -- a bonus lot: price 0, no charges, so nothing was paid (W-282)
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("bonus-1", 0.0, 0.0, 0.0), 2.0, 2.0));
+
+        // When -- 2 sold at ₹50, no sell charge
+        recorder.record(UserMail.from(EMAIL), sell(2.0, 50.0, TradeSegment.DELIVERY), "sell-1", lots, Optional.empty());
+
+        // Then -- buy value 0, net profit 2 × 50 = ₹100, and no percentage of nothing
+        TradeOutcomeContext row = captureSaved(1).getFirst();
+        MoneyAssert.assertMoney(100.0, row.getNetProfit());
+        assertEquals(0.0, row.getProfitPercentage());
+    }
+
+    @Test
+    void record_whenALotHasNoOriginalQuantity_takesNoShareOfItsBuyCharges() {
+        // Given -- two lots matched; the second's original quantity is 0, so it has no share of its buy charges
+        UserChargeEntity buyCharges = new UserChargeEntity();
+        buyCharges.setAmountByCode(new LinkedHashMap<>(Map.of("BROKERAGE", 20.0)));
+        when(userChargeService.findOptionalForTransaction(anyString(), anyString())).thenReturn(Optional.of(buyCharges));
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 0.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 0.0, 100.0, 0.0), 0.0, 0.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY), "sell-1", lots, Optional.empty());
+
+        // Then -- the first lot carries BROKERAGE 20.00 × 1, the second 20.00 × 0
+        List<TradeOutcomeContext> rows = captureSaved(2);
+        MoneyAssert.assertMoney(20.0, rows.get(0).getBuyChargeBreakup().get("BROKERAGE"));
+        MoneyAssert.assertMoney(0.0, rows.get(1).getBuyChargeBreakup().get("BROKERAGE"));
+    }
+
 }

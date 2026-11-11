@@ -17,6 +17,7 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.exception.TradeCollisionException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -118,6 +119,34 @@ class TradeCollisionRetryTest {
         // When / Then
         assertTrue(TradeCollisionRetry.isCollision(collision()));
         assertEquals(false, TradeCollisionRetry.isCollision(unlabelled));
+    }
+
+    @Test
+    void addTransactionV2_whenTheTradeThrowsAnError_letsItThrough() {
+        // Given -- not an exception a trade has, but a JVM error (W-282)
+        StackOverflowError error = new StackOverflowError("deep");
+        when(portfolioService.addTransactionV2(eq(USER), any(), anyList())).thenThrow(error);
+
+        // When / Then -- the same error, one attempt
+        assertSame(error, assertThrows(StackOverflowError.class, () -> tradeCollisionRetry.addTransactionV2(USER, request())));
+        verify(portfolioService, times(1)).addTransactionV2(eq(USER), any(), anyList());
+    }
+
+    @Test
+    void addTransactionV2_whenTheTradeThrowsACheckedException_wrapsIt() {
+        // Given -- no trade path declares one, so reaching here is a defect (W-282)
+        Exception checked = new IOException("unexpected");
+        when(portfolioService.addTransactionV2(eq(USER), any(), anyList())).thenAnswer(call -> {
+            throw checked;
+        });
+
+        // When
+        IllegalStateException wrapped = assertThrows(IllegalStateException.class,
+                () -> tradeCollisionRetry.addTransactionV2(USER, request()));
+
+        // Then -- wrapped once, the cause kept
+        assertSame(checked, wrapped.getCause());
+        verify(portfolioService, times(1)).addTransactionV2(eq(USER), any(), anyList());
     }
 
     private static DataIntegrityViolationException collision() {
