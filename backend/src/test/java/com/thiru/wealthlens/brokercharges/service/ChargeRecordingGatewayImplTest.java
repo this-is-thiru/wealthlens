@@ -69,12 +69,12 @@ class ChargeRecordingGatewayImplTest {
 
     private static ProfitLossContext buy(AssetType assetType) {
         return new ProfitLossContext(TRANSACTION_ID, 10, TRADE_DATE, 100.0, STOCK_CODE, BrokerName.ZERODHA,
-                "NSE", assetType, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER, List.of());
+                "NSE", assetType, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER, List.of(), TradeSegment.DELIVERY);
     }
 
     private static ProfitLossContext sell(List<BuyContext> buyContexts) {
         return new ProfitLossContext(TRANSACTION_ID, 10, TRADE_DATE, 150.0, STOCK_CODE, BrokerName.ZERODHA,
-                "NSE", AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER, buyContexts);
+                "NSE", AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER, buyContexts, TradeSegment.DELIVERY);
     }
 
     private static ChargeComputation computed() {
@@ -189,7 +189,7 @@ class ChargeRecordingGatewayImplTest {
         when(userChargeService.computeAndRecord(any())).thenReturn(computed());
         ProfitLossContext context = new ProfitLossContext(TRANSACTION_ID, 10, TRADE_DATE, 100.0, STOCK_CODE,
                 BrokerName.ZERODHA, "NSE", AssetType.EQUITY, TransactionType.BUY, CorporateActionType.BONUS,
-                AccountType.SELF, ACCOUNT_HOLDER, List.of());
+                AccountType.SELF, ACCOUNT_HOLDER, List.of(), TradeSegment.DELIVERY);
 
         // When
         gateway(true).record(userMail(), context);
@@ -307,7 +307,7 @@ class ChargeRecordingGatewayImplTest {
         // Given
         ProfitLossContext sideless = new ProfitLossContext(TRANSACTION_ID, 10, TRADE_DATE, 100.0, STOCK_CODE,
                 BrokerName.ZERODHA, "NSE", AssetType.EQUITY, null, null, AccountType.SELF, ACCOUNT_HOLDER,
-                List.of());
+                List.of(), TradeSegment.DELIVERY);
 
         // When
         Optional<ChargeComputation> result;
@@ -327,7 +327,7 @@ class ChargeRecordingGatewayImplTest {
         when(userChargeService.computeAndRecord(any())).thenReturn(computed());
         ProfitLossContext noLots = new ProfitLossContext(TRANSACTION_ID, 10, TRADE_DATE, 150.0, STOCK_CODE,
                 BrokerName.ZERODHA, "NSE", AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF,
-                ACCOUNT_HOLDER, null);
+                ACCOUNT_HOLDER, null, TradeSegment.DELIVERY);
 
         // When
         gateway(true).record(userMail(), noLots);

@@ -710,7 +710,8 @@ public class PortfolioService {
     public void updateBrokerChargesAndProfitAndLoss(UserMail userMail, String transactionId, AssetRequest assetRequest) {
         var profitLossContext = new ProfitLossContext(transactionId, assetRequest.getQuantity(), assetRequest.getTransactionDate(), assetRequest.getPrice(),
                 assetRequest.getStockCode(), assetRequest.getBrokerName(), assetRequest.getExchangeName(), assetRequest.getAssetType(), TransactionType.BUY,
-                null, assetRequest.getAccountType(), assetRequest.getAccountHolder(), Collections.emptyList());
+                null, assetRequest.getAccountType(), assetRequest.getAccountHolder(), Collections.emptyList(),
+                assetRequest.getSegment());
         profitAndLossService.updateProfitAndLoss(userMail, profitLossContext);
     }
 

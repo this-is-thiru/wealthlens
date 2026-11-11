@@ -3,6 +3,8 @@ package com.thiru.wealthlens.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
@@ -11,6 +13,7 @@ import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -44,6 +47,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -71,6 +75,9 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     private static final LocalDate MAR_5 = LocalDate.of(2026, 3, 5);
 
     private final RestTemplate rest = lenientRestTemplate();
+
+    @Autowired
+    private ChargeSeederService chargeSeederService;
 
     @Test
     void addTransactionV2_whenSellTakesFifoAcrossTwoLots_leavesTheLaterLotPartlyHeld() {
@@ -967,6 +974,24 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals(20.0, lot.getQuantity());
         MoneyAssert.assertMoney(110.0, lot.getPrice());
         assertEquals(20.0, lot.getOrderTimeQuantities().stream().mapToDouble(time -> time.getQuantity()).sum());
+    }
+
+    @Test
+    void addTransaction_whenTheTradeIsIntraday_isPricedOnTheIntradayCard() {
+        // Given — the seeded rate cards; on 5 Jan 2026 Zerodha's equity cards in force are the 2025-04 ones (W-280, PS-13)
+        chargeSeederService.seed("integration-test");
+        Map<String, Object> intraday = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        intraday.put("segment", TradeSegment.INTRADAY.name());
+
+        // When — a V1 intraday buy
+        ResponseEntity<String> bought = post(OWNER, "/portfolio/user/" + OWNER + "/transaction", intraday);
+
+        // Then — recorded as intraday, on the intraday card, not the delivery one
+        assertEquals(200, bought.getStatusCode().value(), bought.getBody());
+        UserChargeEntity charge = mongoTemplate.findAll(UserChargeEntity.class, "user_charges").stream()
+                .filter(row -> OWNER.equals(row.getEmail())).findFirst().orElseThrow();
+        assertEquals(TradeSegment.INTRADAY, charge.getSegment());
+        assertEquals("ZERODHA_EQ_INTRADAY_2025_04", charge.getScheduleCode());
     }
 
     private static byte[] edited(byte[] workbook, Consumer<Sheet> change) throws IOException {

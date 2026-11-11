@@ -91,7 +91,7 @@ class ProfitAndLossServiceTest {
                 "txn-124", 10.0, buyDate, 100.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.MUTUAL_FUND, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of()
-        );
+        , TradeSegment.DELIVERY);
 
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
@@ -127,7 +127,7 @@ class ProfitAndLossServiceTest {
                 "txn-sell-3", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of(buyContext1, buyContext2)
-        );
+        , TradeSegment.DELIVERY);
 
         // Dec 15, 2023 -> FY 2023-2024
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
@@ -163,7 +163,7 @@ class ProfitAndLossServiceTest {
                 "txn-sell-4", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of(buyContext)
-        );
+        , TradeSegment.DELIVERY);
 
         // Dec 15, 2023 -> FY 2023-2024
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
@@ -193,7 +193,7 @@ class ProfitAndLossServiceTest {
                 "txn-125", 10.0, buyDate, 100.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of()
-        );
+        , TradeSegment.DELIVERY);
 
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
@@ -222,7 +222,7 @@ class ProfitAndLossServiceTest {
                 "txn-invalid", 10.0, date, 100.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, null, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of()
-        );
+        , TradeSegment.DELIVERY);
 
         // When
         profitAndLossService.updateProfitAndLoss(userMail, context);
@@ -243,7 +243,7 @@ class ProfitAndLossServiceTest {
                 "txn-sell-ca", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, CorporateActionType.BONUS, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of(buyContext)
-        );
+        , TradeSegment.DELIVERY);
 
         // When
         profitAndLossService.updateProfitAndLoss(userMail, context);
@@ -273,7 +273,7 @@ class ProfitAndLossServiceTest {
                 "txn-shadow-buy", 10.0, buyDate, 100.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of()
-        );
+        , TradeSegment.DELIVERY);
 
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
@@ -296,7 +296,7 @@ class ProfitAndLossServiceTest {
                 "txn-shadow-sell", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0, Optional.empty()))
-        );
+        , TradeSegment.DELIVERY);
 
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2024-2025")))
                 .thenReturn(Optional.empty());
@@ -324,7 +324,7 @@ class ProfitAndLossServiceTest {
                 "txn-shadow-mf", 10.0, buyDate, 100.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.MUTUAL_FUND, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of()
-        );
+        , TradeSegment.DELIVERY);
 
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
@@ -351,7 +351,7 @@ class ProfitAndLossServiceTest {
                 "txn-shadow-ignored", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
                 List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0, Optional.empty()))
-        );
+        , TradeSegment.DELIVERY);
 
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(
                 new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
@@ -392,7 +392,7 @@ class ProfitAndLossServiceTest {
                 "txn-shadow-ca", 10.0, LocalDate.of(2024, 6, 15), 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, CorporateActionType.BONUS, AccountType.SELF,
                 ACCOUNT_HOLDER, List.of()
-        );
+        , TradeSegment.DELIVERY);
 
         // When
         profitAndLossService.updateProfitAndLoss(userMail, context);
@@ -437,7 +437,7 @@ class ProfitAndLossServiceTest {
 
     private static ProfitLossContext buyOn(LocalDate date, AssetType assetType, AccountType accountType) {
         return new ProfitLossContext("txn-sum", 10.0, date, 100.0, STOCK_CODE, BROKER, EXCHANGE,
-                assetType, TransactionType.BUY, null, accountType, ACCOUNT_HOLDER, List.of());
+                assetType, TransactionType.BUY, null, accountType, ACCOUNT_HOLDER, List.of(), TradeSegment.DELIVERY);
     }
 
     @Test
@@ -599,7 +599,7 @@ class ProfitAndLossServiceTest {
         expectNoExistingPnl("2025-2026");
         ProfitLossContext sell = new ProfitLossContext("txn-cut1", 10.0, LocalDate.of(2025, 6, 15), 150.0,
                 STOCK_CODE, BROKER, EXCHANGE, AssetType.EQUITY, TransactionType.SELL, null,
-                AccountType.SELF, ACCOUNT_HOLDER, List.of(new BuyContext(10.0, LocalDate.of(2025, 1, 5), 100.0, Optional.empty())));
+                AccountType.SELF, ACCOUNT_HOLDER, List.of(new BuyContext(10.0, LocalDate.of(2025, 1, 5), 100.0, Optional.empty())), TradeSegment.DELIVERY);
 
         // When
         profitAndLossService.recordSale(UserMail.from(TEST_EMAIL), sell, Optional.empty(), rowsOf(sell));
