@@ -9,7 +9,6 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
-import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
@@ -24,8 +23,6 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
-import com.thiru.wealthlens.portfolio.service.ChargeViewAssembler;
-import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
@@ -37,12 +34,10 @@ import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.money.TMoney;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,9 +61,6 @@ class PortfolioServiceTest {
     private ProfitAndLossService profitAndLossService;
 
     @Mock
-    private MongoTemplateService mongoTemplateService;
-
-    @Mock
     private TradeOutcomeService tradeOutcomeService;
 
     @Mock
@@ -79,9 +71,6 @@ class PortfolioServiceTest {
 
     @Mock
     private ChargeRecordingGateway chargeRecordingGateway;
-
-    @Mock
-    private ChargeViewAssembler chargeViewAssembler;
 
     @Mock
     private TradeOutcomeRecorder tradeOutcomeRecorder;
@@ -107,12 +96,10 @@ class PortfolioServiceTest {
                 portfolioRepository,
                 transactionService,
                 profitAndLossService,
-                mongoTemplateService,
                 tradeOutcomeService,
                 transactionRepository,
                 temporaryTransactionService,
                 chargeRecordingGateway,
-                chargeViewAssembler,
                 properties,
                 tradeOutcomeRecorder
         );
@@ -127,17 +114,15 @@ class PortfolioServiceTest {
                 PortfolioRepository portfolioRepository,
                 TransactionService transactionService,
                 ProfitAndLossService profitAndLossService,
-                MongoTemplateService mongoTemplateService,
                 TradeOutcomeService tradeOutcomeService,
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
-                ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
                 TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
-                    mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                    tradeOutcomeService, transactionRepository,
+                    temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
                     tradeOutcomeRecorder);
         }
@@ -176,17 +161,15 @@ class PortfolioServiceTest {
                 PortfolioRepository portfolioRepository,
                 TransactionService transactionService,
                 ProfitAndLossService profitAndLossService,
-                MongoTemplateService mongoTemplateService,
                 TradeOutcomeService tradeOutcomeService,
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
-                ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
                 TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
-                    mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                    tradeOutcomeService, transactionRepository,
+                    temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
                     tradeOutcomeRecorder);
         }
@@ -203,8 +186,8 @@ class PortfolioServiceTest {
         // Given: use real service so check is exercised
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
-                mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
                 new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
@@ -221,8 +204,8 @@ class PortfolioServiceTest {
         // Given: use real service so check is exercised
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
-                mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
                 new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
@@ -688,8 +671,8 @@ class PortfolioServiceTest {
                 .thenReturn(TransactionRecord.replayOf("txn-first-redrive"));
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
-                mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
                 new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
 
         // When
@@ -868,31 +851,4 @@ class PortfolioServiceTest {
         assertEquals(TradeSegment.INTRADAY, captor.getValue().getSellSegment());
     }
 
-    @Test
-    void getAllStocks_whenAHoldingWasBoughtOnTwoDates_reportsTheDaysHeldForEach() {
-        // Given -- 5 bought 400 days ago and 3 bought 30 days ago, one stock at one broker
-        LocalDate today = TLocalDate.today();
-        when(portfolioRepository.findByEmail(userMail.getEmail()))
-                .thenReturn(List.of(lot(today.minusDays(400), 5.0), lot(today.minusDays(30), 3.0)));
-
-        // When
-        List<AssetResponse> holdings = portfolioService.getAllStocks(userMail);
-
-        // Then
-        assertEquals(1, holdings.size());
-        assertEquals(Map.of(today.minusDays(400).toString(), 400L, today.minusDays(30).toString(), 30L),
-                holdings.getFirst().getDaysHeld());
-        assertEquals(List.copyOf(holdings.getFirst().getTransactionQuantities().keySet()),
-                List.copyOf(holdings.getFirst().getDaysHeld().keySet()));
-    }
-
-    private static AssetEntity lot(LocalDate boughtOn, double quantity) {
-        AssetEntity lot = new AssetEntity();
-        lot.setStockCode("STOCK1");
-        lot.setBrokerName(BrokerName.ZERODHA);
-        lot.setPrice(100.0);
-        lot.setQuantity(quantity);
-        lot.setTransactionDate(boughtOn);
-        return lot;
-    }
 }

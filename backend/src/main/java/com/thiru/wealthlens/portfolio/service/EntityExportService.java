@@ -37,7 +37,7 @@ public class EntityExportService {
     private static final String FILE_NAME_DATE_FORMAT = "dd-MMMM-yyyy--hh-mm-ss-a";
 
     private final Environment env;
-    private final PortfolioService portfolioService;
+    private final PortfolioQueryService portfolioQueryService;
     private final TransactionService transactionService;
 
     public FileStream export(UserMail userMail, EntityExportRequest exportRequest) {
@@ -49,7 +49,7 @@ public class EntityExportService {
 
         return switch (entityName) {
             case "assets" -> stream("portfolio-", PortfolioExcelExporter.assets(
-                    portfolioService.getExportEntities(userMail, exportRequest.getQueryFilters()), columns, false));
+                    portfolioQueryService.getExportEntities(userMail, exportRequest.getQueryFilters()), columns, false));
             case "transactions" -> stream("transaction-", PortfolioExcelExporter.transactions(
                     transactionService.getUserTransactions(userMail), columns));
             // The template's name is fixed: it is a blank form, not a dated extract of anything, and

@@ -6,7 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.ErasureReport;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.service.PortfolioService;
+import com.thiru.wealthlens.portfolio.service.PortfolioQueryService;
 import com.thiru.wealthlens.portfolio.service.TradeCollisionRetry;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.portfolio.service.UserRecordsErasureService;
@@ -30,7 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController()
 public class PortfolioController {
 
-    private final PortfolioService portfolioService;
+    private final PortfolioQueryService portfolioQueryService;
     private final UserRecordsErasureService userRecordsErasureService;
     private final TransactionService transactionService;
     private final TradeCollisionRetry tradeCollisionRetry;
@@ -54,7 +54,7 @@ public class PortfolioController {
     @GetMapping("/profit-and-loss")
     public ProfitAndLossResponse getProfitAndLoss(@PathVariable String email,
                                                                   @RequestParam String financialYear) {
-        return portfolioService.getProfitAndLoss(UserMail.from(email), financialYear);
+        return portfolioQueryService.getProfitAndLoss(UserMail.from(email), financialYear);
     }
 
     /**
@@ -76,24 +76,24 @@ public class PortfolioController {
 
     @GetMapping("/stocks/all")
     public List<AssetResponse> getAllStocks(@PathVariable String email) {
-        return portfolioService.getAllStocks(UserMail.from(email));
+        return portfolioQueryService.getAllStocks(UserMail.from(email));
     }
 
     @GetMapping("/mfs")
     public List<AssetResponse> getAllMutualFunds(@PathVariable String email) {
-        return portfolioService.getMutualFunds(UserMail.from(email));
+        return portfolioQueryService.getMutualFunds(UserMail.from(email));
     }
 
     @PostMapping("/stocks")
     public List<AssetResponse> getStocks(@PathVariable String email,
                                                          @RequestBody BulkGetRequest bulkGetRequest) {
-        return portfolioService.getStocksWithDateRange(UserMail.from(email), bulkGetRequest.getDateRange());
+        return portfolioQueryService.getStocksWithDateRange(UserMail.from(email), bulkGetRequest.getDateRange());
     }
 
     @GetMapping("/stock/{stockCode}/all")
     public List<AssetResponse> getAllStocks(@PathVariable String email,
                                                             @PathVariable String stockCode) {
-        return portfolioService.getStockQuantity(UserMail.from(email), stockCode);
+        return portfolioQueryService.getStockQuantity(UserMail.from(email), stockCode);
     }
 
     @GetMapping("/all/transactions")
@@ -115,7 +115,7 @@ public class PortfolioController {
     @PostMapping("/request2")
     public List<AssetEntity> testRequest(@PathVariable String email,
                                                          @RequestBody BulkGetRequest bulkGetRequest) {
-        return portfolioService.searchAssets(UserMail.from(email), bulkGetRequest.getQueryFilters());
+        return portfolioQueryService.searchAssets(UserMail.from(email), bulkGetRequest.getQueryFilters());
     }
 
 }

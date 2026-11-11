@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-286 (split PortfolioService into command and query services) — next by board order; nothing written
-Stage           : 6 — W-281 DONE (D-567), committed and pushed
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 (1e7a4761), W-274 (39d1f739), W-275 (49b059dd), W-276 (6508d24a), W-277 (d1c6f4de), W-278 (5e644e92), W-279 (e4c1c919), W-280 (5b457406), W-281 committed; W-285, W-286 placed
-Board           : W-264a D; W-268 – W-281 D; W-286 ·; W-282 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-286 (plans/W-286.md), STOP for approval
-Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); run runbook 3.10 – 3.15 after deploy; check the pipeline on e4c1c919 and the W-280 commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : C2a test red then green; 224 tests across affected classes green; validate clean
-Files touched   : none since the W-281 commit
-Last item commit: taxplanning W-281: tidy PortfolioService and narrow redrive's catch
-Updated         : 2026-11-11, session 84 — W-281 done; W-286 next
+Item            : W-282 (coverage floor on trade-ledger code, B-1) — next by board order; nothing written
+Stage           : 6 — W-286 DONE (D-569), committed and pushed
+Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 (1e7a4761), W-274 (39d1f739), W-275 (49b059dd), W-276 (6508d24a), W-277 (d1c6f4de), W-278 (5e644e92), W-279 (e4c1c919), W-280 (5b457406), W-281 (b8969264), W-286 committed; W-285, W-286 placed; owner: pipeline green through b8969264
+Board           : W-264a D; W-268 – W-281 D; W-286 D; W-282 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-282 (plans/W-282.md), STOP for approval
+Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); run runbook 3.10 – 3.15 after deploy; check the pipeline on the W-286 commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : 231 tests across affected classes green; validate clean
+Files touched   : none since the W-286 commit
+Last item commit: taxplanning W-286: move the portfolio reads to PortfolioQueryService
+Updated         : 2026-11-11, session 84 — W-286 done; W-282 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
