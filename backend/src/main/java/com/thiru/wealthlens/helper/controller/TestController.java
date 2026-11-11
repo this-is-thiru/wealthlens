@@ -7,6 +7,7 @@ import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
     private final PortfolioService portfolioService;
 
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/transact/sell")
     public void getUserTransaction(@PathVariable String email, @RequestBody ProfitLossDto dto) {
 

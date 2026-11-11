@@ -313,46 +313,6 @@ public class TransactionIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void updateTransactions_backfillsNullAssetType() {
-        // GIVEN
-        String email = "updateasset@test.com";
-
-        TransactionEntity txn1 = new TransactionEntity();
-        txn1.setEmail(email);
-        txn1.setStockCode("HDFC");
-        txn1.setStockName("HDFC Ltd");
-        txn1.setPrice(2800.0);
-        txn1.setQuantity(5.0);
-        txn1.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn1.setTransactionDate(LocalDate.of(2024, 3, 1));
-        txn1.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-        txn1.setAssetType(null);
-        transactionRepository.save(txn1);
-
-        TransactionEntity txn2 = new TransactionEntity();
-        txn2.setEmail(email);
-        txn2.setStockCode("ICICI");
-        txn2.setStockName("ICICI Bank");
-        txn2.setPrice(1100.0);
-        txn2.setQuantity(12.0);
-        txn2.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.SELL);
-        txn2.setTransactionDate(LocalDate.of(2024, 3, 15));
-        txn2.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.UPSTOX);
-        txn2.setAssetType(com.thiru.wealthlens.portfolio.dto.enums.AssetType.EQUITY);
-        transactionRepository.save(txn2);
-
-        // WHEN
-        transactionService.updateTransactions();
-
-        // THEN
-        List<TransactionEntity> updated = transactionRepository.findByEmail(email);
-        assertEquals(com.thiru.wealthlens.portfolio.dto.enums.AssetType.MUTUAL_FUND,
-                updated.stream().filter(t -> t.getStockCode().equals("HDFC")).findFirst().orElseThrow().getAssetType());
-        assertEquals(com.thiru.wealthlens.portfolio.dto.enums.AssetType.EQUITY,
-                updated.stream().filter(t -> t.getStockCode().equals("ICICI")).findFirst().orElseThrow().getAssetType());
-    }
-
-    @Test
     void deleteTransactions_deletesByEmail() {
         // GIVEN
         String email = "deletetest@test.com";

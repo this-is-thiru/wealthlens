@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-268 (maintenance and test routes reach other users' data) — next by board order; nothing written
-Stage           : 6 — W-264a DONE (D-535), committed and pushed
-Done today      : session 84: W-264a built and committed (17 fix rows W-268 – W-284 placed, D-536 – D-552)
-Board           : W-264a D; W-268 – W-284 · (before W-264b); W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-268 (plans/W-268.md), STOP for approval
+Item            : W-269 (trades posted at the same time answer 500) — next by board order; nothing written
+Stage           : 6 — W-268 DONE (D-553), committed and pushed; WL-A-2 republished
+Done today      : session 84: W-264a (7ae723b2; W-268 – W-284 placed), W-268 committed
+Board           : W-264a D; W-268 D; W-269 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-269 (plans/W-269.md), STOP for approval
 Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); check the pipeline on 200ead80, 4f268a1c and the W-264a commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : PortfolioGapAuditIntegrationTest 20 / 20; failing scenarios reproduced twice (11 + 5); ./mvnw validate clean
-Files touched   : none since the W-264a commit
-Last item commit: taxplanning W-264a: audit the portfolio module through its API
-Updated         : 2026-11-11, session 84 — W-264a done; W-268 next
+Last verify     : first tests red then green; 2 probes failed and restored; PortfolioGapAudit 22, HelperSell 2, Transaction 10, Portfolio 43, Architecture, Modulith — 102 green; validate clean
+Files touched   : none since the W-268 commit
+Last item commit: taxplanning W-268: keep other users' portfolio records out of reach
+Updated         : 2026-11-11, session 84 — W-268 done; W-269 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

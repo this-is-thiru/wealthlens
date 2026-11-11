@@ -380,6 +380,37 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                 "transactions").getStatus());
     }
 
+    @Test
+    void update_whenAnOrdinaryUserCallsIt_leavesOtherUsersRecordsAlone() {
+        // Given — OTHER's lot stored with no asset type (W-268, G-11)
+        postV2(OTHER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        AssetEntity lot = lotsOf(OTHER).getFirst();
+        lot.setAssetType(null);
+        mongoTemplate.save(lot, "assets");
+
+        // When — OWNER, an ordinary user, calls the former backfill on OWNER's own path
+        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/update", null);
+
+        // Then — no such route, and OTHER's lot is not rewritten
+        assertEquals(404, answer.getStatusCode().value(), answer.getBody());
+        assertEquals(null, lotsOf(OTHER).getFirst().getAssetType());
+    }
+
+    @Test
+    void allTransactions_whenAnotherUserHasTraded_listsOnlyTheCallersOwn() {
+        // Given — one trade each (W-268, G-12)
+        postV2(OWNER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
+
+        // When
+        TransactionEntity[] listed = get(OWNER, "/portfolio/user/" + OWNER + "/all/transactions", TransactionEntity[].class)
+                .getBody();
+
+        // Then — OWNER's one trade, none of OTHER's
+        assertEquals(1, listed.length);
+        assertEquals(OWNER, listed[0].getEmail());
+    }
+
     private static int columnOf(Row header, String name) {
         for (Cell cell : header) {
             if (name.equals(cell.getStringCellValue())) {

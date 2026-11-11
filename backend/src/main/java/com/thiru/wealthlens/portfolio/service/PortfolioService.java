@@ -843,21 +843,4 @@ public class PortfolioService {
         log.info("Fetch holding Mutual Funds of {}", userMail.getEmail());
         return responseEntities;
     }
-
-    public void updateTransactions() {
-
-        log.info("Initiated update of all records of user: {}", "userMail.getEmail()");
-
-        List<AssetEntity> all = portfolioRepository.findAll();
-        all.forEach(transaction -> {
-            AssetType assetType = transaction.getAssetType();
-            transaction.setAssetType(assetType == null ? AssetType.MUTUAL_FUND : assetType);
-        });
-        portfolioRepository.saveAll(all);
-
-        log.info("Updated all portfolio stocks");
-        log.info("ReportService.updateReports() removed — TradeOutcomeEntity uses typed schema");
-        transactionService.updateTransactions();
-        log.info("Updated all transactions");
-    }
 }

@@ -100,9 +100,7 @@ public class PortfolioController {
 
     @GetMapping("/all/transactions")
     public List<TransactionEntity> allTransactions(@PathVariable String email) {
-
-        UserMail.from(email);
-        return transactionService.allTransactions();
+        return transactionService.getUserTransactions(UserMail.from(email));
     }
 
     // Note: Below this comment is for testing purpose only

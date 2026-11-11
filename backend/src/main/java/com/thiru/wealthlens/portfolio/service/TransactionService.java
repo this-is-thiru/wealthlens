@@ -4,7 +4,6 @@ import com.thiru.wealthlens.portfolio.config.IdempotencyProperties;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
-import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
@@ -176,22 +175,7 @@ public class TransactionService {
         }).toList();
     }
 
-    public void updateTransactions() {
-        List<TransactionEntity> transactionEntities = transactionRepository.findAll();
-
-        transactionEntities.forEach(transaction -> {
-                    AssetType assetType = transaction.getAssetType();
-                    transaction.setAssetType(assetType == null ? AssetType.MUTUAL_FUND : assetType);
-                }
-        );
-        transactionRepository.saveAll(transactionEntities);
-    }
-
     public void deleteTransactions(UserMail userMail) {
         transactionRepository.deleteByEmail(userMail.getEmail());
-    }
-
-    public List<TransactionEntity> allTransactions() {
-        return transactionRepository.findAll();
     }
 }

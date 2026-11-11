@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.integration;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import io.restassured.http.ContentType;
@@ -62,9 +63,29 @@ class HelperSellIntegrationTest extends AbstractIntegrationTest {
                 }
                 """;
 
-        // When / Then
-        given().header("Authorization", "Bearer " + generateToken(EMAIL)).contentType(ContentType.JSON).body(body)
+        // When / Then — the hook is the operator's (W-268 C3a)
+        given().header("Authorization", "Bearer " + generateToken(EMAIL, "SUPER_USER")).contentType(ContentType.JSON)
+                .body(body)
                 .when().post("/test/user/" + EMAIL + "/transact/sell")
                 .then().statusCode(200);
+    }
+
+    @Test
+    void sell_whenTheCallerIsAnOrdinaryUser_answers403AndRecordsNothing() {
+        // Given — an ordinary user's token; the hook writes P&L for lots the caller supplies (B-9)
+        String body = """
+                {"transactionId": "transactionId_w268",
+                 "assetRequest": {"stockCode": "TESTCODE1", "brokerName": "ZERODHA", "assetType": "EQUITY",
+                   "price": 20.00, "quantity": 30.00, "transactionType": "SELL", "accountType": "SELF",
+                   "transactionDate": "2025-10-23"},
+                 "stockEntities": [{"stockCode": "TESTCODE1", "brokerName": "ZERODHA", "price": 10.00,
+                   "quantity": 30.00, "assetType": "EQUITY", "transactionDate": "2025-10-01", "accountType": "SELF"}]}
+                """;
+
+        // When / Then — refused, and no profit-and-loss document written
+        given().header("Authorization", "Bearer " + generateToken(EMAIL)).contentType(ContentType.JSON).body(body)
+                .when().post("/test/user/" + EMAIL + "/transact/sell")
+                .then().statusCode(403);
+        assertEquals(0, mongoTemplate.getCollection("profit_and_loss").countDocuments());
     }
 }
