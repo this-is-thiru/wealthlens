@@ -604,8 +604,7 @@ class PortfolioServiceTest {
         sell.setTransactionDate(LocalDate.of(2025, 8, 10));
 
         when(portfolioRepository
-                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(
-                        any(), any(), any(), any()))
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
                 .thenReturn(lots);
 
         // When
@@ -684,7 +683,7 @@ class PortfolioServiceTest {
         AssetEntity asset = sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10));
         asset.setBrokerCharges(10.0);
         when(portfolioRepository
-                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
 
         // When -- three successive single-unit sells
@@ -716,7 +715,7 @@ class PortfolioServiceTest {
         asset.setBrokerCharges(10.0);
         asset.setMiscCharges(2.0);
         when(portfolioRepository
-                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
         AssetRequest sell = createAssetRequest("STOCK1");
         sell.setAccountType(AccountType.OUTSOURCED);
@@ -783,7 +782,7 @@ class PortfolioServiceTest {
         AssetEntity asset = sellableLot("buy-1", 3.0, 0.0, LocalDate.of(2020, 1, 10));
         asset.setCorporateActionType(CorporateActionType.BONUS);
         when(portfolioRepository
-                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
         AssetRequest sell = createAssetRequest("STOCK1");
         sell.setQuantity(1.0);
@@ -807,7 +806,7 @@ class PortfolioServiceTest {
         asset.setExchangeName("BSE");
         asset.setSegment(TradeSegment.DELIVERY);
         when(portfolioRepository
-                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
         AssetRequest sell = createAssetRequest("STOCK1");
         sell.setQuantity(1.0);

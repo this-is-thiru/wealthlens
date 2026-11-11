@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-271 (V1 sells lots bought after the sale date) — next by board order; nothing written
-Stage           : 6 — W-270 DONE (D-555), committed and pushed; WL-A-2 republished
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 committed
-Board           : W-264a D; W-268 – W-270 D; W-271 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-271 (plans/W-271.md), STOP for approval
+Item            : W-272 (a V1 buy answers 500 after two V2 buys that day) — next by board order; nothing written
+Stage           : 6 — W-271 DONE (D-556), committed and pushed; WL-A-2 republished
+Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 committed
+Board           : W-264a D; W-268 – W-271 D; W-272 – W-284 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : plan W-272 (plans/W-272.md), STOP for approval
 Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); check the pipeline on 200ead80, 4f268a1c and the W-264a commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : first tests red then green; probes failed 4, restored; 212 tests across affected classes green; validate clean
-Files touched   : none since the W-270 commit
-Last item commit: taxplanning W-270: redrive a waiting trade through the flow that received it
-Updated         : 2026-11-11, session 84 — W-270 done; W-271 next
+Last verify     : 2 first tests red then green; probe failed both, restored; 208 tests across affected classes green; validate clean
+Files touched   : none since the W-271 commit
+Last item commit: taxplanning W-271: sell on V1 only what was held on the sale date
+Updated         : 2026-11-11, session 84 — W-271 done; W-272 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

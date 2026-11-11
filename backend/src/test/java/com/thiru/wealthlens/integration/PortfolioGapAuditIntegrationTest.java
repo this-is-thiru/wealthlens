@@ -538,6 +538,39 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         MoneyAssert.assertMoney(110.0, lots.getFirst().getPrice());
     }
 
+    @Test
+    void addTransaction_whenSaleIsDatedBeforeTheOnlyLot_answers400AndChangesNothing() {
+        // Given — a V1 lot bought 5 Feb (W-271, G-3; W-264a scenario 8)
+        post(OWNER, "/portfolio/user/" + OWNER + "/transaction", trade(TransactionType.BUY, 10.0, 100.0, FEB_5));
+
+        // When — a V1 sale dated 5 Jan
+        ResponseEntity<String> sold = post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+                trade(TransactionType.SELL, 5.0, 150.0, JAN_5));
+
+        // Then — nothing was held on 5 Jan: 400, the lot keeps 10
+        assertEquals(400, sold.getStatusCode().value(), sold.getBody());
+        assertEquals(10.0, lotsOf(OWNER).getFirst().getQuantity());
+    }
+
+    @Test
+    void addTransaction_whenALaterLotExists_sellsOnlyLotsHeldOnTheSaleDate() {
+        // Given — V1 lots of 10 on 5 Jan, 10 on 5 Feb and 10 on 5 Apr
+        String path = "/portfolio/user/" + OWNER + "/transaction";
+        LocalDate apr5 = LocalDate.of(2026, 4, 5);
+        post(OWNER, path, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        post(OWNER, path, trade(TransactionType.BUY, 10.0, 120.0, FEB_5));
+        post(OWNER, path, trade(TransactionType.BUY, 10.0, 130.0, apr5));
+
+        // When — a V1 sale of 25 on 5 Mar, when only 10 + 10 = 20 were held
+        ResponseEntity<String> sold = post(OWNER, path, trade(TransactionType.SELL, 25.0, 150.0, MAR_5));
+
+        // Then — refused; all three lots keep 10, April's included
+        assertEquals(400, sold.getStatusCode().value(), sold.getBody());
+        List<AssetEntity> lots = lotsOf(OWNER);
+        assertEquals(List.of(JAN_5, FEB_5, apr5), lots.stream().map(AssetEntity::getTransactionDate).toList());
+        assertEquals(List.of(10.0, 10.0, 10.0), lots.stream().map(AssetEntity::getQuantity).toList());
+    }
+
     private void bonusRecordedOn(LocalDate recordDate) {
         CorporateActionEntity bonus = new CorporateActionEntity();
         bonus.setStockCode(STOCK);

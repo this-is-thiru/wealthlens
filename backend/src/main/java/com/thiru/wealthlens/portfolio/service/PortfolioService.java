@@ -472,8 +472,10 @@ public class PortfolioService {
         String stockCode = assetRequest.getStockCode();
         BrokerName brokerName = assetRequest.getBrokerName();
         String accountHolder = assetRequest.getAccountHolder();
+        LocalDate transactionDate = assetRequest.getTransactionDate();
 
-        List<AssetEntity> stockEntities = portfolioRepository.findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(email, stockCode, brokerName, accountHolder);
+        // Only lots held on the sale's date, as V2 reads them: a sale cannot take shares bought after it (W-271).
+        List<AssetEntity> stockEntities = portfolioRepository.findEligibleHoldingsForSell(email, stockCode, brokerName, accountHolder, transactionDate);
 
         validateTransaction(stockEntities, assetRequest);
 
