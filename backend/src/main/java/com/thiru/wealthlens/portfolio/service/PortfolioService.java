@@ -378,7 +378,8 @@ public class PortfolioService {
         String accountHolder = assetRequest.getAccountHolder();
         LocalDate transactionDate = assetRequest.getTransactionDate();
 
-        Optional<AssetEntity> optionalStock = portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDateOrderByIdAsc(email, stockCode, brokerName, accountHolder, transactionDate);
+        Optional<AssetEntity> optionalStock = portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByIdAsc(
+                email, stockCode, brokerName, accountHolder, assetRequest.getSegment(), transactionDate);
         AssetEntity assetEntity;
         if (optionalStock.isPresent()) {
             assetEntity = optionalStock.get();

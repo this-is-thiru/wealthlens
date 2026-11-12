@@ -390,6 +390,25 @@ class TradeMatchingServiceTest {
     }
 
     @Test
+    void buildLotsFromBuys_whenSameDayBuysWereOfDifferentSegments_keepsThemApart() {
+        // Given -- a delivery buy of 10 @ 100 and an intraday buy of 10 @ 120, one stock, one day (W-296, D-593)
+        TransactionEntity delivery = infy("buy-1", LocalDate.of(2026, 1, 5), 10, 100, null);
+        delivery.setSegment(TradeSegment.DELIVERY);
+        TransactionEntity intraday = infy("buy-2", LocalDate.of(2026, 1, 5), 10, 120, null);
+        intraday.setSegment(TradeSegment.INTRADAY);
+
+        // When
+        List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(List.of(delivery, intraday));
+
+        // Then -- two lots, each of its own segment and price, not one of 20 @ 110
+        assertEquals(2, lots.size());
+        BuyLot intradayLot = lots.stream().filter(lot -> lot.getBuyTransactionIds().equals(List.of("buy-2")))
+                .findFirst().orElseThrow();
+        assertEquals(TradeSegment.INTRADAY, intradayLot.getVenue().segment().orElseThrow());
+        MoneyAssert.assertMoney(120.0, intradayLot.getBuyPrice());
+    }
+
+    @Test
     void buildLotsFromBuys_whenBuysShareADayButNotAHolder_mergesOnlyTheSameKey() {
         // Given — two buys on 2024-02-05 under one key, one that day for another holder, one a day earlier
         LocalDate day = LocalDate.of(2024, 2, 5);

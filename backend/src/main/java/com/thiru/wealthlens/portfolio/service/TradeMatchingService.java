@@ -35,7 +35,7 @@ public class TradeMatchingService {
      * exactly like PortfolioService.buyStock().
      */
     public List<BuyLot> buildLotsFromBuys(List<TransactionEntity> buyTransactions) {
-        // Group by composite key: email + stockCode + brokerName + accountHolder + transactionDate
+        // Group by composite key: email + stockCode + brokerName + accountHolder + segment + transactionDate
         Map<String, List<TransactionEntity>> grouped = buyTransactions.stream()
                 .collect(Collectors.groupingBy(txn -> buildCompositeKey(txn)));
 
@@ -128,6 +128,7 @@ public class TradeMatchingService {
                 + txn.getStockCode() + "|"
                 + txn.getBrokerName() + "|"
                 + txn.getAccountHolder() + "|"
+                + txn.getSegment() + "|"
                 + txn.getTransactionDate();
     }
 

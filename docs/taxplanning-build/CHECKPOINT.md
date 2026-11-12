@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-296 (V1 merges same-day buys of different segments) — next by board order; nothing written
-Stage           : W-295 DONE (D-595), committed and pushed; W-296 not started
-Done today      : session 86: W-292, W-295 built, committed and pushed; W-295 – W-298 placed, W-297 widened (D-592 – D-597)
-Board           : W-292 D; W-295 D; W-296, W-297 ·; W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check below; then plan W-296 (red test first), STOP for approval
+Item            : W-297 (correct stored transactions' and outcome rows' segment) — next by board order; nothing written
+Stage           : W-296 DONE (D-598), committed and pushed; full tiers NOT run locally — pipeline runs only on a PR/push to master; W-297 not started
+Done today      : session 86: W-292, W-295, W-296 committed and pushed; W-295 – W-298 placed, W-297 widened (D-591 – D-598)
+Board           : W-295 D; W-296 D; W-297 ·; W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check below; confirm W-296's tiers (pipeline run, or a local run if none); then plan W-297, STOP for approval
 Owner actions   : after deploy: §3.18, §3.19 (read-only; no §2.11 for a §3.19 user before W-297); §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-295 unit 5,198 / 0, integration 636 / 0 (61 classes); validate 0
+Last verify     : W-296 targeted 7 classes 147 / 0; validate 0; full tiers not run locally (pipeline)
 Files touched   : none
-Last item commit: taxplanning W-295: record the sale's segment on every outcome row
-Updated         : 2026-11-12, session 86 — W-295 done; W-296 next
+Last item commit: taxplanning W-296: merge a V1 same-day buy only into a lot of its segment
+Updated         : 2026-11-12, session 86 — W-296 done; W-297 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

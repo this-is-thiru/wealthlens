@@ -98,6 +98,22 @@ class LotLedgerTest {
     }
 
     @Test
+    void buy_whenSameDayV1BuysWereOfDifferentSegments_keepsThemApart() {
+        // Given -- a V1 delivery buy of 10 @ 100 (W-296, D-593)
+        ledger.buy(trade("a", TransactionType.BUY, 10, 100, JAN_5), TradeFlow.V1, OptionalDouble.empty());
+        TransactionEntity intraday = trade("b", TransactionType.BUY, 10, 120, JAN_5);
+        intraday.setSegment(TradeSegment.INTRADAY);
+
+        // When -- a V1 intraday buy the same day
+        ledger.buy(intraday, TradeFlow.V1, OptionalDouble.empty());
+
+        // Then -- two lots, not one of 20 @ 110
+        assertEquals(2, ledger.lots().size());
+        assertEquals(TradeSegment.INTRADAY, ledger.lots().get(1).getSegment());
+        assertMoney(120.0, ledger.lots().get(1).getPrice());
+    }
+
+    @Test
     void sell_whenAnySale_recordsTheSoldShareOfTheLotsCharges() {
         // Given -- 3 units carrying ₹30
         TransactionEntity buy = trade("a", TransactionType.BUY, 3, 100, JAN_5);

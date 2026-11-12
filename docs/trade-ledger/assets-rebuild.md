@@ -46,7 +46,7 @@ All events are sorted by date. On one date, the corporate actions come first, th
 | The buy's `trade_flow` | Lot |
 |---|---|
 | `V2` | its own lot (`buyStockV2`) |
-| `V1` | merged into the lot with the same email, stock, broker, account holder and date if one exists, else its own. A merge uses a weighted-average price and adds the charges and order time (`PortfolioService:372 – 420`) |
+| `V1` | merged into the lot with the same email, stock, broker, account holder, segment (W-296, D-598) and date if one exists, else its own. A merge uses a weighted-average price and adds the charges and order time (`PortfolioService:372 – 420`) |
 | absent (stored before W-283a1) | read from the stored lots. Buys listed together in one stored lot's `buy_transaction_ids` form one merged lot, as V1. A buy listed alone is its own lot. A buy no stored lot lists is its own lot and is **listed in the report** |
 
 A buy that no stored lot lists was usually fully sold, since a lot with nothing left is deleted (`hasNothingLeft`,

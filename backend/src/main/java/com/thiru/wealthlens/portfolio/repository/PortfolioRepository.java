@@ -2,6 +2,7 @@ package com.thiru.wealthlens.portfolio.repository;
 
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -14,9 +15,13 @@ public interface PortfolioRepository extends MongoRepository<AssetEntity, String
 
     List<AssetEntity> findByEmail(String email);
 
-    /** The oldest lot of a stock bought on a day — the one V1's buy merges into; V2 may have bought several (W-272). */
-    Optional<AssetEntity> findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDateOrderByIdAsc(
-            String email, String stockCode, BrokerName brokerName, String accountHolder, LocalDate transactionDate);
+    /**
+     * The oldest lot of a stock bought on a day in a segment — the one V1's buy merges into; V2 may have bought several
+     * (W-272). A buy of another segment that day is a lot of its own (W-296).
+     */
+    Optional<AssetEntity> findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByIdAsc(
+            String email, String stockCode, BrokerName brokerName, String accountHolder, TradeSegment segment,
+            LocalDate transactionDate);
 
     @Query(
             value = "{ 'email': ?0, 'stock_code': ?1, 'broker_name': ?2, 'accountHolder': ?3, 'transaction_date': { $lte: ?4 } }",

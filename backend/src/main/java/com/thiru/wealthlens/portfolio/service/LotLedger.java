@@ -49,6 +49,7 @@ final class LotLedger {
     void buy(TransactionEntity buy, TradeFlow lotShape, OptionalDouble brokerCharges) {
         if (lotShape == TradeFlow.V1) {
             AssetEntity sameDay = lots.stream().filter(lot -> sameHolding(lot, buy)
+                    && Objects.equals(lot.getSegment(), buy.getSegment())
                     && Objects.equals(lot.getTransactionDate(), buy.getTransactionDate())).findFirst().orElse(null);
             if (sameDay != null) {
                 mergeInto(sameDay, buy);

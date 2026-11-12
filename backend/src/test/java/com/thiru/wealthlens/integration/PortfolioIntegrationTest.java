@@ -113,7 +113,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void addTransaction_buyExisting_whenSecondPurchase_expectedAvgPriceCalculated() {
         String token = generateToken(TEST_EMAIL);
         AssetRequest first = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2000.0);
-        // Use same transaction date so the findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDateOrderByIdAsc
+        // Use same transaction date so the findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByIdAsc
         // query in buyStock() matches the same record for averaging
         first.setTransactionDate(LocalDate.now());
         portfolioService.addTransaction(

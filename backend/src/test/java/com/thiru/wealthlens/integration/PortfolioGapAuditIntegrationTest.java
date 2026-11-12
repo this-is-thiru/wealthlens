@@ -998,6 +998,28 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void addTransaction_whenSameDayBuysWereOfDifferentSegments_keepsThemInTwoLots() {
+        // Given -- a V1 delivery buy of 10 @ 100 on 5 Jan (W-296, D-593)
+        chargeSeederService.seed("integration-test");
+        String path = "/portfolio/user/" + OWNER + "/transaction";
+        post(OWNER, path, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
+        Map<String, Object> intraday = trade(TransactionType.BUY, 10.0, 120.0, JAN_5);
+        intraday.put("segment", TradeSegment.INTRADAY.name());
+
+        // When -- a V1 intraday buy of 10 @ 120 the same day
+        ResponseEntity<String> bought = post(OWNER, path, intraday);
+
+        // Then -- two lots, 10 @ 100 delivery and 10 @ 120 intraday, not one of (1000 + 1200) / 20 = ₹110
+        assertEquals(200, bought.getStatusCode().value(), bought.getBody());
+        List<AssetEntity> lots = lotsOf(OWNER);
+        assertEquals(2, lots.size(), () -> "lots: " + lots);
+        AssetEntity intradayLot = lots.stream().filter(lot -> lot.getSegment() == TradeSegment.INTRADAY)
+                .findFirst().orElseThrow();
+        assertEquals(10.0, intradayLot.getQuantity());
+        MoneyAssert.assertMoney(120.0, intradayLot.getPrice());
+    }
+
+    @Test
     void addTransactionV2_whenTheBuyIsIntraday_recordsTheSegmentOnTheTransactionAndTheLot() {
         // Given — the seeded rate cards (W-292, D-585)
         chargeSeederService.seed("integration-test");

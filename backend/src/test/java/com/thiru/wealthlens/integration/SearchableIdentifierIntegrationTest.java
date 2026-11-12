@@ -5,6 +5,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import java.time.LocalDate;
@@ -54,8 +55,8 @@ class SearchableIdentifierIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         assertThat(portfolioRepository.findByEmail(USER)).singleElement()
                 .satisfies(asset -> assertThat(asset.getAccountHolder()).isEqualTo(HOLDER));
-        assertThat(portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndTransactionDateOrderByIdAsc(USER, "INFY",
-                BrokerName.ZERODHA, HOLDER, BOUGHT)).isPresent();
+        assertThat(portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByIdAsc(
+                USER, "INFY", BrokerName.ZERODHA, HOLDER, TradeSegment.DELIVERY, BOUGHT)).isPresent();
     }
 
     @Test
