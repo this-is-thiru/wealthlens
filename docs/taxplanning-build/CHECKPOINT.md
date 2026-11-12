@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-298 (remove the uncalled TradeMatchingService.toTradeOutcomeContext) — next by board order; nothing written
-Stage           : W-297 DONE (D-599), committed and pushed; integration tier on the PR pipeline (check its run); W-298 not started
-Done today      : session 86: W-292, W-295, W-296, W-297 committed and pushed; W-295 – W-299 placed (D-591 – D-600, WL-46)
-Board           : W-296 D; W-297 D; W-299 · (placed, D-600, WL-46); W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check below; record W-297's pipeline run (head_sha = the W-297 commit); then plan W-298, STOP for approval. Tiers on the pipeline only (owner, 2026-11-12)
+Item            : W-299 (retire §2.14, remove the segment correction) — next by board order; BLOCKED by design until §2.14 is logged for every database; nothing written
+Stage           : W-298 DONE (D-601), committed and pushed; W-297 and W-298 pipeline runs being watched
+Done today      : session 86: W-292, W-295, W-296, W-297, W-298 committed and pushed; W-295 – W-300 placed (D-591 – D-602, WL-46)
+Board           : W-297 D; W-298 D; W-300 · (placed, D-602); W-299 · (placed, D-600, WL-46); W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check; record the W-297 (43258642541) and W-298 pipeline runs; W-299 waits for §2.14's run log, so ask the owner whether to take W-300 next; STOP
 Owner actions   : after deploy: §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-297 unit 5,200 / 0; validate clean; SegmentCorrectionIntegrationTest 7 / 0; integration tier not run locally (pipeline); W-296 pipeline run 43255624955 success
+Last verify     : W-298 TradeMatchingServiceTest 20 / 0, validate 0; W-297 PR run not yet seen (check by hand); W-296 run 43255624955 success
 Files touched   : none
-Last item commit: taxplanning W-297: restore the segment stored before W-292 and W-295 from what stored data records
-Updated         : 2026-11-12, session 86 — W-297 done; W-298 next
+Last item commit: taxplanning W-298: remove the uncalled TradeMatchingService.toTradeOutcomeContext
+Updated         : 2026-11-12, session 86 — W-298 done; W-299 waits on the run log
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -2,7 +2,6 @@ package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.TradeVenue;
-import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
@@ -226,49 +225,6 @@ public class TradeMatchingService {
         double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
         return new TradeFigures(buyBrokerCharges, buyMiscCharges, sellBrokerCharges, sellMiscCharges,
                 totalBuyValue, totalSellValue, netProfit, profitPercentage);
-    }
-
-    /**
-     * Converts a MatchedTrade to a TradeOutcomeContext.
-     */
-    public TradeOutcomeContext toTradeOutcomeContext(MatchedTrade trade) {
-        return TradeOutcomeContext.builder()
-                .email(trade.getEmail())
-                .stockCode(trade.getStockCode())
-                .stockName(trade.getStockName())
-                .exchangeName(trade.getExchangeName())
-                .brokerName(trade.getBrokerName())
-                .assetType(trade.getAssetType())
-                .accountType(trade.getAccountType())
-                .accountHolder(trade.getAccountHolder())
-                .originalBuyPrice(trade.getOriginalBuyPrice())
-                .corporateActionAdjustedBuyPrice(trade.getCorporateActionAdjustedBuyPrice())
-                .buyQuantity(trade.getBuyQuantity())
-                .buyDate(trade.getBuyDate())
-                .buyBrokerCharges(trade.getBuyBrokerCharges())
-                .buyMiscCharges(trade.getBuyMiscCharges())
-                .sellPrice(trade.getSellPrice())
-                .sellQuantity(trade.getSellQuantity())
-                .sellDate(trade.getSellDate())
-                .sellBrokerCharges(trade.getSellBrokerCharges())
-                .sellMiscCharges(trade.getSellMiscCharges())
-                .totalBuyValue(trade.getTotalBuyValue())
-                .totalSellValue(trade.getTotalSellValue())
-                .netProfit(trade.getNetProfit())
-                .profitPercentage(trade.getProfitPercentage())
-                .holdingPeriodDays(trade.getHoldingPeriodDays())
-                .financialYear(trade.getFinancialYear())
-                .sourceSellTransactionId(trade.getSourceSellTransactionId())
-                .sourceBuyLotId(trade.getSourceBuyLotId())
-                .corporateActionDerived(trade.isCorporateActionDerived())
-                .appliedCorporateActions(trade.getAppliedCorporateActions())
-                .acquisitionMode(trade.getAcquisition().mode())
-                .acquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null))
-                .buyExchangeName(trade.getBuyVenue().exchange().orElse(null))
-                .buySegment(trade.getBuyVenue().segment().orElse(null))
-                .sellExchangeName(trade.getSellVenue().exchange().orElse(null))
-                .sellSegment(trade.getSellVenue().segment().orElse(null))
-                .build();
     }
 
     /**
