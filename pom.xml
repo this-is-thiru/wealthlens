@@ -594,7 +594,8 @@
                             <targetClasses>
                                 <param>com.thiru.wealthlens.brokercharges.engine.*</param>
                                 <param>com.thiru.wealthlens.brokercharges.service.*</param>
-                                <param>com.thiru.wealthlens.taxplanning.engine.*</param>
+                                <!-- Not taxplanning.engine: the legacy compute path, deleted by W-159; taxengine has its own
+                                     profile above (W-288, D-574). -->
                                 <param>com.thiru.wealthlens.portfolio.service.TradeOutcomeRecorder*</param>
                                 <param>com.thiru.wealthlens.portfolio.service.TransactionService*</param>
                             </targetClasses>
