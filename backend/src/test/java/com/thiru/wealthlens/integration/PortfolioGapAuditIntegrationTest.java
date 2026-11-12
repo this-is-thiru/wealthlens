@@ -997,6 +997,59 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals("ZERODHA_EQ_INTRADAY_2025_04", charge.getScheduleCode());
     }
 
+    @Test
+    void addTransactionV2_whenTheBuyIsIntraday_recordsTheSegmentOnTheTransactionAndTheLot() {
+        // Given — the seeded rate cards (W-292, D-585)
+        chargeSeederService.seed("integration-test");
+        Map<String, Object> intraday = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        intraday.put("segment", TradeSegment.INTRADAY.name());
+
+        // When — a V2 intraday buy
+        ResponseEntity<String> bought = postV2(OWNER, intraday);
+
+        // Then — the transaction and the lot say intraday, not the entities' delivery default
+        assertEquals(200, bought.getStatusCode().value(), bought.getBody());
+        assertEquals(TradeSegment.INTRADAY, transactionsOf(OWNER).getFirst().getSegment());
+        assertEquals(TradeSegment.INTRADAY, lotsOf(OWNER).getFirst().getSegment());
+    }
+
+    @Test
+    void addTransaction_whenTheBuyIsIntraday_recordsTheSegmentOnTheTransactionAndTheLot() {
+        // Given — the seeded rate cards (W-292, D-585)
+        chargeSeederService.seed("integration-test");
+        Map<String, Object> intraday = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        intraday.put("segment", TradeSegment.INTRADAY.name());
+
+        // When — a V1 intraday buy
+        ResponseEntity<String> bought = post(OWNER, "/portfolio/user/" + OWNER + "/transaction", intraday);
+
+        // Then — the transaction and the lot say intraday
+        assertEquals(200, bought.getStatusCode().value(), bought.getBody());
+        assertEquals(TradeSegment.INTRADAY, transactionsOf(OWNER).getFirst().getSegment());
+        assertEquals(TradeSegment.INTRADAY, lotsOf(OWNER).getFirst().getSegment());
+    }
+
+    @Test
+    void addTransactionV2_whenAnIntradayLotIsSold_recordsTheBuySegmentOnTheOutcomeRow() {
+        // Given — a V2 intraday buy of 10 on 5 Jan (W-292, D-585)
+        chargeSeederService.seed("integration-test");
+        Map<String, Object> buy = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        buy.put("segment", TradeSegment.INTRADAY.name());
+        postV2(OWNER, buy);
+        Map<String, Object> sell = trade(TransactionType.SELL, 10.0, 101.0, JAN_5);
+        sell.put("segment", TradeSegment.INTRADAY.name());
+
+        // When — the same 10 sold intraday the same day
+        ResponseEntity<String> sold = postV2(OWNER, sell);
+
+        // Then — the row's buy side is the lot's segment, which is now intraday
+        assertEquals(200, sold.getStatusCode().value(), sold.getBody());
+        TradeOutcomeEntity row = mongoTemplate.findAll(TradeOutcomeEntity.class, "trade_outcomes").stream()
+                .filter(outcome -> OWNER.equals(outcome.getEmail())).findFirst().orElseThrow();
+        assertEquals(TradeSegment.INTRADAY, row.getBuySegment());
+        assertEquals(TradeSegment.INTRADAY, row.getSellSegment());
+    }
+
     private static byte[] edited(byte[] workbook, Consumer<Sheet> change) throws IOException {
         try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(workbook))) {
             change.accept(book.getSheet("Q1"));

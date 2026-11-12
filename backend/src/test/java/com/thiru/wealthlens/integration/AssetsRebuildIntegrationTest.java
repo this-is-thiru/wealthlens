@@ -12,6 +12,7 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
@@ -173,6 +174,21 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
         assertThat(portfolioRepository.findByEmail(FIXED)).extracting(AssetEntity::getBrokerCharges)
                 .containsExactlyInAnyOrder(30.0, 0.0);
         rebuild(FIXED, "", "SUPER_USER").statusCode(200).body("lotsDiffering", equalTo(0)).body("lots", hasSize(2));
+    }
+
+    @Test
+    void rebuild_whenALotWasBoughtIntraday_writesItBackIntraday() {
+        // Given -- a V2 intraday buy of 10 @ 100 (5 Jan 2026): its lot is stored intraday (W-292, D-585)
+        Map<String, Object> buy = trade(TransactionType.BUY, 10, 100, LocalDate.of(2026, 1, 5));
+        buy.put("segment", TradeSegment.INTRADAY.name());
+        post(FIXED, "/transaction/v2", buy);
+
+        // When -- a real rebuild, which writes the replay's lot in place of the stored one
+        rebuild(FIXED, "?dryRun=false", "SUPER_USER").statusCode(200).body("lotsWritten", equalTo(1));
+
+        // Then -- the written lot still says intraday: the replay takes the segment from the transaction
+        assertThat(portfolioRepository.findByEmail(FIXED)).extracting(AssetEntity::getSegment)
+                .containsExactly(TradeSegment.INTRADAY);
     }
 
     @Test

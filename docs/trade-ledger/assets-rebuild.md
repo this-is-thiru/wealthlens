@@ -120,8 +120,9 @@ It never means a fix.
 - **A bonus lot** is a copy of the first lot held. Since W-291 (D-589) both live and the replay reset it to an
   allotment: nil charges and allocated charges, no sales, and only the bonus among its actions
   (`CorporateActionService.asAllotment`).
-- **Segment:** `AssetRequest.asAsset` and `asTransaction` do not copy `segment`, so every lot and transaction holds
-  the default `DELIVERY`. This is W-292.
+- **Segment:** a lot takes its transaction's segment, as `AssetRequest.asAsset` does (W-292, D-591). Lots and
+  transactions stored before W-292 say `DELIVERY` whatever was traded; W-297 corrects the transactions, and a rebuild
+  then carries the correction to the lots.
 - **Not compared:**
   - a lot's order times, which a V2 lot takes from the request and a transaction does not keep;
   - its list of corporate actions. W-283a3 keeps both from the matched stored lot.

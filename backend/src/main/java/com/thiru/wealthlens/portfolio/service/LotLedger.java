@@ -185,6 +185,7 @@ final class LotLedger {
         lot.setMaturityDate(trade.getMaturityDate());
         lot.setOrderId(trade.getOrderId());
         lot.setTransactionDate(trade.getTransactionDate());
+        lot.setSegment(trade.getSegment());
         lot.setAccountType(trade.getAccountType());
         lot.setAccountHolder(trade.getAccountHolder());
         lot.setOrderTimeQuantities(new ArrayList<>());

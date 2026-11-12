@@ -116,6 +116,7 @@ public class AssetRequest implements AssetEntityProtoType, TransactionEntityProt
         transactionEntity.setAccountHolder(accountHolder);
         transactionEntity.setTransactionType(transactionType);
         transactionEntity.setTransactionDate(transactionDate);
+        transactionEntity.setSegment(segment);
         if (tempTransactionId != null) {
             transactionEntity.setSourceTempTransactionId(tempTransactionId);
         }
@@ -140,6 +141,7 @@ public class AssetRequest implements AssetEntityProtoType, TransactionEntityProt
         assetEntity.setMaturityDate(maturityDate);
         assetEntity.setOrderId(orderId);
         assetEntity.setTransactionDate(transactionDate);
+        assetEntity.setSegment(segment);
         assetEntity.setAccountType(accountType);
         assetEntity.setAccountHolder(accountHolder);
         assetEntity.setOrderTimeQuantities(orderTimeQuantities);

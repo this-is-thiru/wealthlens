@@ -9,6 +9,7 @@ import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -81,6 +82,19 @@ class LotLedgerTest {
         // Then
         assertEquals(2, ledger.lots().size());
         assertMoney(23.60, ledger.lots().getFirst().getBrokerCharges());
+    }
+
+    @Test
+    void buy_whenTheTradeIsIntraday_givesAnIntradayLot() {
+        // Given -- an intraday buy (W-292, D-585)
+        TransactionEntity buy = trade("a", TransactionType.BUY, 10, 100, JAN_5);
+        buy.setSegment(TradeSegment.INTRADAY);
+
+        // When
+        ledger.buy(buy, TradeFlow.V2, OptionalDouble.empty());
+
+        // Then -- the lot carries the transaction's segment, as asAsset now does
+        assertEquals(TradeSegment.INTRADAY, ledger.lots().getFirst().getSegment());
     }
 
     @Test
