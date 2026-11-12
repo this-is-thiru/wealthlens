@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-299 (retire §2.14, remove the segment correction) — next by board order; BLOCKED by design until §2.14 is logged for every database; nothing written
-Stage           : W-298 DONE (D-601), committed and pushed; W-297 and W-298 pipeline runs being watched
-Done today      : session 86: W-292, W-295, W-296, W-297, W-298 committed and pushed; W-295 – W-300 placed (D-591 – D-602, WL-46)
-Board           : W-297 D; W-298 D; W-300 · (placed, D-602); W-299 · (placed, D-600, WL-46); W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check; record the W-297 (43258642541) and W-298 pipeline runs; W-299 waits for §2.14's run log, so ask the owner whether to take W-300 next; STOP
+Item            : W-284 (stored trade_outcomes may still hold FY-prefixed years) — next workable by board order (W-299 waits for §2.14's run log); nothing written
+Stage           : W-300 DONE (D-603), committed and pushed; PR pipeline run being watched (2 min)
+Done today      : session 86: W-292, W-295 – W-298, W-300 committed and pushed; W-295 – W-300 placed (D-591 – D-603, WL-46)
+Board           : W-298 D; W-300 D; W-299 · (waits); W-300 · (placed, D-602); W-299 · (placed, D-600, WL-46); W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check; record W-300's pipeline run (it shows Analytics before the gap-audit class with the fix); then plan W-284, STOP for approval
 Owner actions   : after deploy: §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-298 TradeMatchingServiceTest 20 / 0, validate 0; W-297 PR run not yet seen (check by hand); W-296 run 43255624955 success
+Last verify     : pipeline run 43259440268 on 664529ca (W-297 + W-298): success; 43258642541 (c553a41e) cancelled by it
 Files touched   : none
-Last item commit: taxplanning W-298: remove the uncalled TradeMatchingService.toTradeOutcomeContext
-Updated         : 2026-11-12, session 86 — W-298 done; W-299 waits on the run log
+Last item commit: taxplanning W-300: keep the indexes a test cleared away
+Updated         : 2026-11-12, session 86 — W-300 done; W-284 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

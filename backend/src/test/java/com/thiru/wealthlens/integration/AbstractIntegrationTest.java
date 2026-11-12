@@ -122,8 +122,9 @@ public abstract class AbstractIntegrationTest {
      * Clears every collection except the seeded reference data.
      *
      * <p>Uses {@code deleteMany} rather than {@code drop} deliberately: dropping a collection
-     * also drops its indexes, forcing a rebuild on the next write. Deleting documents is faster
-     * and keeps index behaviour under test realistic.
+     * also drops its indexes, and nothing recreates them until the next startup
+     * ({@code PortfolioIndexInitializer}), so every later class in the shared container would run
+     * without its unique indexes (W-300). {@code ArchitectureTest.nothing_drops_a_collection} holds it.
      */
     @AfterEach
     void cleanDatabase() {

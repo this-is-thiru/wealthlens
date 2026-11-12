@@ -9,6 +9,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.mongodb.client.MongoCollection;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.MongoOperations;
 
 /**
  * The conventions documented in CLAUDE.md, made executable.
@@ -493,5 +495,33 @@ class ArchitectureTest {
         assertThat(duplicates)
                 .as("top-level classes sharing a simple name — rename one to the concept it states")
                 .isEmpty();
+    }
+
+    /**
+     * A dropped collection loses its indexes, and they are created only at startup ({@code PortfolioIndexInitializer},
+     * {@code @PostConstruct}). A test that dropped {@code profit_and_loss} left every later class in the shared
+     * container without {@code pnl_user_year_idx}, and ten simultaneous buys then stored two documents for one year
+     * (W-300, D-603). Main and test classes alike: clear with {@code deleteMany}.
+     */
+    @Test
+    void nothing_drops_a_collection() {
+        List<String> drops = new ClassFileImporter()
+                .importPackages("com.thiru.wealthlens")
+                .stream()
+                .flatMap(javaClass -> javaClass.getMethodCallsFromSelf().stream())
+                .filter(call -> isCollectionDrop(call.getTarget().getOwner(), call.getTarget().getName()))
+                .map(call -> call.getOrigin().getFullName())
+                .distinct()
+                .sorted()
+                .toList();
+
+        assertThat(drops)
+                .as("calls that drop a MongoDB collection, and with it its indexes — clear it with deleteMany instead")
+                .isEmpty();
+    }
+
+    private static boolean isCollectionDrop(JavaClass owner, String method) {
+        return owner.isAssignableTo(MongoCollection.class) && method.equals("drop")
+                || owner.isAssignableTo(MongoOperations.class) && method.equals("dropCollection");
     }
 }

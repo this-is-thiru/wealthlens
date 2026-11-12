@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,10 +62,10 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void clearCollections() {
-        mongoTemplate.getDb().getCollection("transactions").drop();
-        mongoTemplate.getDb().getCollection("assets").drop();
-        mongoTemplate.getDb().getCollection("trade_outcomes").drop();
-        mongoTemplate.getDb().getCollection("profit_and_loss").drop();
+        mongoTemplate.getDb().getCollection("transactions").deleteMany(new Document());
+        mongoTemplate.getDb().getCollection("assets").deleteMany(new Document());
+        mongoTemplate.getDb().getCollection("trade_outcomes").deleteMany(new Document());
+        mongoTemplate.getDb().getCollection("profit_and_loss").deleteMany(new Document());
     }
 
     private void seedData_BuyAndSell() {
