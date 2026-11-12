@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-283a (rebuild assets) — next by board order; nothing written
-Stage           : W-283 DONE (D-575), committed and pushed; W-283a not started
-Done today      : session 85: W-287 9f681494 (D-572), W-288 397250a7 (D-574), W-283 (D-575, W-283a placed D-576) + api-collection request
-Board           : W-283 D; W-283a ·; W-284, W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check below; then plan W-283a (design first: lot shape, corporate-action replay), STOP for approval
-Owner actions   : run runbook §2.11 when a P&L needs correcting; Q-1 (PS-8); runbook 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : unit tier 5,179 / 0; integration tier 642 / 0 (W-283)
+Item            : W-283a1 (record trade_flow on every transaction) — next by board order; nothing written
+Stage           : W-283a DONE (D-577), committed and pushed; W-283a1 not started
+Done today      : session 85: W-287, W-288, W-283, W-283a (design docs/trade-ledger/assets-rebuild.md) pushed; W-283a1, W-283a2, W-289 placed
+Board           : W-283a D; W-283a1 ·; W-283a2 ·; W-289 ·; W-284, W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check below; then plan W-283a1, STOP for approval
+Owner actions   : Q-1 (PS-8); runbook §2.11 when needed; runbook 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : W-283 unit 5,179 / 0, integration 642 / 0; W-283a docs only
 Files touched   : none
-Last item commit: taxplanning W-283: rebuild a user's profit and loss from stored rows
-Updated         : 2026-11-12, session 85 — W-283 done; W-283a next
+Last item commit: taxplanning W-283a: design the assets rebuild
+Updated         : 2026-11-12, session 85 — W-283a done; W-283a1 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
