@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-287 (mutation testing for the trade ledger) — next by board order; nothing written
-Stage           : 6 — W-282 DONE (D-570), committed and pushed
-Done today      : session 84: W-264a (7ae723b2), W-268 (2303dba2, api e7130f8), W-269 (f58a3857), W-270 (e2e2e92a), W-271 (577adf84), W-272 (34da75c7), W-273 (1e7a4761), W-274 (39d1f739), W-275 (49b059dd), W-276 (6508d24a), W-277 (d1c6f4de), W-278 (5e644e92), W-279 (e4c1c919), W-280 (5b457406), W-281 (b8969264), W-286 (5fa13795), W-282 committed; W-285 – W-287 placed
-Board           : W-264a D; W-268 – W-282 D; W-286 D; W-287 ·; W-283 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : plan W-287 (plans/W-287.md), STOP for approval
-Owner actions   : answer Q-1 (should V2 refuse a trade while a temporary is pending? PS-8); run runbook 3.10 – 3.15 after deploy; check the pipeline on the W-286 commit; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : full clean verify 5,774 tests, 0 failures, all four JaCoCo gates met; probe failed the new gate; PIT 57 % (reverted)
-Files touched   : none since the W-282 commit
-Last item commit: taxplanning W-282: hold the trade ledger to the charge engine's coverage floor
-Updated         : 2026-11-11, session 84 — W-282 done; W-287 next
+Item            : W-288 (mutation score of the tax-planning engine) — next by board order; nothing written
+Stage           : W-287 DONE (D-572), committed and pushed; W-288 not started
+Done today      : session 85: W-287 built and committed (D-572); W-288 placed (D-573)
+Board           : W-287 D; W-288 ·; W-283 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check below; then plan W-288 (why taxplanning.engine's mutants live; tests to lift the profile to 85), STOP for approval
+Owner actions   : answer Q-1 (PS-8); run runbook 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : unit tier 5,176 / 0; W-287 scoped PIT 99 %; whole mutation profile 79 % (W-288)
+Files touched   : none
+Last item commit: taxplanning W-287: put the trade ledger under mutation testing
+Updated         : 2026-11-12, session 85 — W-287 done; W-288 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

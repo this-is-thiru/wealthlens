@@ -210,4 +210,44 @@ class TransactionServiceIdempotencyTest {
         verify(transactionRepository, never())
                 .findFirstByEmailAndTradeFingerprintAndSubmittedAtAfterOrderBySubmittedAtDesc(any(), any(), any());
     }
+
+    @Test
+    @DisplayName("a V2 trade sent without a date is recorded as today's")
+    void recordTransaction_whenNoDateIsGiven_recordsToday() {
+        // Given (W-287)
+        AssetRequest request = trade();
+        request.setTransactionDate(null);
+        LocalDate before = LocalDate.now();
+
+        // When
+        transactionService.recordTransaction(USER, request);
+
+        // Then -- bounded on both sides so a run across midnight still holds
+        LocalDate stored = storedTransaction().getTransactionDate();
+        LocalDate after = LocalDate.now();
+        assertFalse(stored.isBefore(before));
+        assertFalse(stored.isAfter(after));
+    }
+
+    @Test
+    @DisplayName("a V2 trade is stored under the caller's email with the client's key")
+    void recordTransaction_whenNew_storesTheCallersEmailAndKey() {
+        // Given (W-287)
+        AssetRequest request = trade();
+        request.setIdempotencyKey("key-1");
+
+        // When
+        transactionService.recordTransaction(USER, request);
+
+        // Then
+        TransactionEntity stored = storedTransaction();
+        assertEquals(EMAIL, stored.getEmail());
+        assertEquals("key-1", stored.getIdempotencyKey());
+    }
+
+    private TransactionEntity storedTransaction() {
+        ArgumentCaptor<TransactionEntity> captor = ArgumentCaptor.forClass(TransactionEntity.class);
+        verify(transactionRepository).save(captor.capture());
+        return captor.getValue();
+    }
 }

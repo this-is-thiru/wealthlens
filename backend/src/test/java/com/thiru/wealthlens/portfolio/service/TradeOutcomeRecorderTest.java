@@ -2,6 +2,7 @@ package com.thiru.wealthlens.portfolio.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -641,6 +642,55 @@ class TradeOutcomeRecorderTest {
         List<TradeOutcomeContext> rows = captureSaved(2);
         MoneyAssert.assertMoney(20.0, rows.get(0).getBuyChargeBreakup().get("BROKERAGE"));
         MoneyAssert.assertMoney(0.0, rows.get(1).getBuyChargeBreakup().get("BROKERAGE"));
+    }
+
+    @Test
+    void record_whenTheOnlyLotMatchedNothing_recordsNothing() {
+        // Given -- a lot was matched, but for a quantity of 0, so the sale's total is 0 (W-287)
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 0.0), 0.0, 10.0));
+
+        // When
+        List<TradeOutcomeContext> rows = recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY),
+                "sell-1", lots, Optional.empty());
+
+        // Then -- the same as matching no lot: no row returned or saved
+        assertEquals(List.of(), rows);
+        verify(tradeOutcomeService, times(0)).saveTradeOutcome(any(UserMail.class), any());
+    }
+
+    @Test
+    void record_whenTwoLotsMatched_returnsTheRowsItSaved() {
+        // Given -- two lots of 1 each (W-287)
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 0.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 0.0, 100.0, 0.0), 1.0, 1.0));
+
+        // When
+        List<TradeOutcomeContext> rows = recorder.record(UserMail.from(EMAIL), sell(2.0, 200.0, TradeSegment.DELIVERY),
+                "sell-1", lots, Optional.empty());
+
+        // Then -- the P&L folds what is returned, so it must be the saved rows themselves, in lot order
+        List<TradeOutcomeContext> saved = captureSaved(2);
+        assertEquals(2, rows.size());
+        assertSame(saved.get(0), rows.get(0));
+        assertSame(saved.get(1), rows.get(1));
+        assertEquals("asset-buy-1", rows.get(0).getSourceBuyLotId());
+        assertEquals("asset-buy-2", rows.get(1).getSourceBuyLotId());
+    }
+
+    @Test
+    void record_whenTheLotHasNoSourceBuy_recordsItsOwnPriceAsTheOriginal() {
+        // Given -- a lot at ₹120 that names no buy transaction (W-287)
+        AssetEntity orphan = lot("buy-1", 0.0, 120.0, 0.0);
+        orphan.getBuyTransactionIds().clear();
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(new TradeOutcomeRecorder.MatchedLot(orphan, 1.0, 1.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY), "sell-1", lots, Optional.empty());
+
+        // Then -- nothing to look the paid price up from, so the lot's own ₹120 stands as the original
+        MoneyAssert.assertMoney(120.0, captureSaved(1).getFirst().getOriginalBuyPrice());
     }
 
 }

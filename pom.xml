@@ -595,10 +595,17 @@
                                 <param>com.thiru.wealthlens.brokercharges.engine.*</param>
                                 <param>com.thiru.wealthlens.brokercharges.service.*</param>
                                 <param>com.thiru.wealthlens.taxplanning.engine.*</param>
+                                <param>com.thiru.wealthlens.portfolio.service.TradeOutcomeRecorder*</param>
+                                <param>com.thiru.wealthlens.portfolio.service.TransactionService*</param>
                             </targetClasses>
                             <targetTests>
                                 <param>com.thiru.wealthlens.brokercharges.*</param>
                                 <param>com.thiru.wealthlens.taxplanning.*</param>
+                                <!-- The trade ledger's own unit tests by name, not the whole portfolio suite (W-287, D-572). -->
+                                <param>com.thiru.wealthlens.portfolio.service.TradeOutcomeRecorderTest</param>
+                                <param>com.thiru.wealthlens.portfolio.service.TransactionServiceIdempotencyTest</param>
+                                <param>com.thiru.wealthlens.portfolio.service.TransactionServiceChargesTest</param>
+                                <param>com.thiru.wealthlens.service.TransactionServiceTest</param>
                             </targetTests>
                             <excludedGroups>
                                 <excludedGroup>integration</excludedGroup>
