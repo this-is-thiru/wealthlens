@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
@@ -15,6 +17,7 @@ import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.portfolio.dto.AssetsRebuildReport;
 import com.thiru.wealthlens.portfolio.dto.AssetsRebuildReport.LotComparison;
 import com.thiru.wealthlens.portfolio.dto.AssetsRebuildReport.LotFigures;
+import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
@@ -27,6 +30,7 @@ import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -86,7 +91,7 @@ class AssetsRebuildTest {
                 List.of(new PerformedCorporateActions.BrokerAction(split, BrokerName.ZERODHA)), List.of()));
 
         // When
-        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL));
+        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL), true);
 
         // Then -- split first: A 10 → 20 @ 50, B 6 → 12 @ 55; then 4 sold from A → 16. Sale first would leave
         // A (10 − 4) × 2 = 12
@@ -121,7 +126,7 @@ class AssetsRebuildTest {
         when(tradeOutcomeRepository.findByEmail(EMAIL)).thenReturn(List.of(row));
 
         // When
-        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL));
+        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL), true);
 
         // Then -- merged: 20 @ 110; V1 sale of 5 records ₹30 × 5 / 20 = ₹7.50 on the lot; 15 left
         LotFigures merged = rebuilt(report, "x");
@@ -140,12 +145,65 @@ class AssetsRebuildTest {
         transactions(trade("a", TransactionType.BUY, 10, 100, JAN_5, TradeFlow.V2), waiting);
 
         // When
-        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL));
+        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL), true);
 
         // Then -- one rebuilt lot, the temporary counted, never applied
         assertEquals(1, report.temporariesSkipped());
         assertEquals(1, report.lots().size());
         assertEquals(10.0, rebuilt(report, "a").quantity(), 1e-9);
+    }
+
+    @Test
+    void rebuild_whenWritten_keepsAPairedLotsIdOrderTimesActionsAndCreation() {
+        // Given -- a V2 buy of 10 stored as lot-1 with a wrong quantity of 8, an order time, an action and a creation
+        transactions(trade("a", TransactionType.BUY, 10, 100, JAN_5, TradeFlow.V2));
+        AssetEntity storedLot = new AssetEntity();
+        storedLot.setId("lot-1");
+        storedLot.setStockCode("INFY");
+        storedLot.setBrokerName(BrokerName.ZERODHA);
+        storedLot.setAccountHolder("Self");
+        storedLot.setTransactionDate(JAN_5);
+        storedLot.setQuantity(8.0);
+        storedLot.setPrice(100);
+        storedLot.setBuyTransactionIds(new ArrayList<>(List.of("a")));
+        OrderTimeQuantity orderTime = new OrderTimeQuantity();
+        orderTime.setQuantity(10.0);
+        storedLot.setOrderTimeQuantities(new ArrayList<>(List.of(orderTime)));
+        storedLot.getCorporateActions().add(new CorporateActionEntity());
+        storedLot.getAuditMetadata().setCreatedAt(LocalDateTime.of(2026, 1, 5, 10, 0));
+        when(portfolioRepository.findByEmail(EMAIL)).thenReturn(List.of(storedLot));
+
+        // When
+        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL), false);
+
+        // Then -- the user's lots replaced by one: lot-1's id, order time, action and creation; the replay's 10 (C2a)
+        verify(portfolioRepository).deleteByEmail(EMAIL);
+        ArgumentCaptor<List<AssetEntity>> saved = ArgumentCaptor.captor();
+        verify(portfolioRepository).saveAll(saved.capture());
+        AssetEntity written = saved.getValue().getFirst();
+        assertEquals("lot-1", written.getId());
+        assertEquals(10.0, written.getQuantity(), 1e-9);
+        assertEquals(List.of(orderTime), written.getOrderTimeQuantities());
+        assertEquals(1, written.getCorporateActions().size());
+        assertEquals(LocalDateTime.of(2026, 1, 5, 10, 0), written.getAuditMetadata().getCreatedAt());
+        assertEquals(1, report.lotsWritten());
+        assertEquals(1, report.lotsKeptById());
+        assertEquals(List.of(), report.newLots());
+    }
+
+    @Test
+    void rebuild_whenADryRun_writesNothing() {
+        // Given
+        transactions(trade("a", TransactionType.BUY, 10, 100, JAN_5, TradeFlow.V2));
+
+        // When
+        AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL), true);
+
+        // Then -- the lot would be new, and nothing is touched
+        verify(portfolioRepository, never()).deleteByEmail(any());
+        verify(portfolioRepository, never()).saveAll(any());
+        assertEquals(0, report.lotsWritten());
+        assertEquals(1, report.newLots().size());
     }
 
     private void transactions(TransactionEntity... trades) {

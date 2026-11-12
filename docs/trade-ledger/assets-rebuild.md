@@ -102,8 +102,14 @@ rebuild exists to surface.
 ## Lot ids, and the read-only first step
 
 - **W-283a2** compares only, and writes nothing.
-- **W-283a3** writes. A rebuilt lot whose `buy_transaction_ids` equal a stored lot's keeps that lot's id, so
-  `trade_outcomes.source_buy_lot_id` keeps pointing at it. Any other lot gets a new id and is listed (C3a, D-582).
+- **W-283a3** writes (`dryRun=false`, D-586). In one transaction it deletes the user's lots and saves the rebuilt ones.
+  - A rebuilt lot paired with a stored one keeps that lot's id, so `trade_outcomes.source_buy_lot_id` keeps pointing
+    at it (C3a, D-582).
+  - It also keeps the stored lot's order times, its list of corporate actions and its creation (C2a, D-586). Its
+    figures are the replay's.
+  - Any other lot gets a new id and is listed (`newLots`).
+  - It writes even when the replay listed readings it could not confirm (C1a), so read the dry run first (runbook
+    §2.12).
 - The comparison matches lots by stock, broker, account holder, date and buy transactions, not by id. A demerged lot
   lists no buy, so two demerged from different parents on one date share a key and are compared in order.
 

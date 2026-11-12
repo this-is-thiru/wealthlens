@@ -7,11 +7,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * One user's lots as stored against a replay of their transactions (W-283a2, D-582). Read-only for now: it writes
- * nothing, and the write, with a {@code dryRun} flag defaulting to true, is W-283a3. A {@code SUPER_USER} asks.
+ * One user's lots as stored against a replay of their transactions and, with {@code dryRun=false}, replaced by it
+ * (W-283a2, D-582; W-283a3, D-586). A {@code SUPER_USER} asks; {@code dryRun} defaults to true, so the call that
+ * writes is the one that says so (as D-284, D-575).
  */
 @RequiredArgsConstructor
 @RestController
@@ -21,7 +23,8 @@ public class AssetsRebuildController {
 
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/portfolio/user/{email}/assets/rebuild")
-    public AssetsRebuildReport rebuild(@PathVariable String email) {
-        return rebuild.rebuild(UserMail.from(email));
+    public AssetsRebuildReport rebuild(@PathVariable String email,
+                                       @RequestParam(defaultValue = "true") boolean dryRun) {
+        return rebuild.rebuild(UserMail.from(email), dryRun);
     }
 }

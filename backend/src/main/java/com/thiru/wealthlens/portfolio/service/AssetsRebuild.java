@@ -31,12 +31,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Replays one user's transactions into lots and compares them with the stored {@code assets}, writing nothing
- * (W-283a2, D-582; {@code docs/trade-ledger/assets-rebuild.md}). The write is W-283a3.
+ * Replays one user's transactions into lots, compares them with the stored {@code assets} and, unless a dry run,
+ * replaces the stored lots with them (W-283a2, D-582; W-283a3, D-586; {@code docs/trade-ledger/assets-rebuild.md}).
  *
  * <p>Events run by date; on one date the corporate actions come first, because a trade dated on a record date is held
  * until the action is performed. Each trade takes the flow it recorded (W-283a1); one stored before that is shaped
@@ -44,7 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
  * every such reading is listed in the report.
  */
 @Service
-@Transactional(readOnly = true)
+@Log4j2
+@Transactional
 @RequiredArgsConstructor
 public class AssetsRebuild {
 
@@ -75,9 +77,11 @@ public class AssetsRebuild {
     }
 
     /**
+     * @param dryRun whether to compare only; a real run replaces the user's lots in this transaction (C1a: even when
+     *     the replay listed trades it could not confirm — the dry run named them)
      * @throws IllegalArgumentException if a sale finds less held than it sold, or a split's ratio does not parse
      */
-    public AssetsRebuildReport rebuild(UserMail userMail) {
+    public AssetsRebuildReport rebuild(UserMail userMail, boolean dryRun) {
         String email = userMail.getEmail();
         List<TransactionEntity> all = transactionRepository.findByEmail(email);
         List<TransactionEntity> trades = all.stream().filter(trade -> trade.getStatus() != TransactionStatus.TEMPORARY)
@@ -88,6 +92,26 @@ public class AssetsRebuild {
 
         LotLedger ledger = new LotLedger(corporateActionService::demergeLots);
         Readings readings = Readings.empty();
+        replayAll(ledger, actions, trades, sources, readings);
+
+        List<LotComparisons.LotPair> pairs = LotComparisons.pairs(stored, ledger.lots());
+        List<AssetsRebuildReport.LotComparison> lots = LotComparisons.of(pairs);
+        int differing = (int) lots.stream().filter(lot -> !lot.differingFields().isEmpty()).count();
+        int kept = (int) pairs.stream().filter(pair -> pair.stored().isPresent() && pair.rebuilt().isPresent()).count();
+        List<String> newLots = pairs.stream().filter(pair -> pair.stored().isEmpty())
+                .map(pair -> labelOf(pair.either())).toList();
+        int written = dryRun ? 0 : write(email, pairs);
+        return new AssetsRebuildReport(email, dryRun, differing, written, kept, newLots, lots,
+                readings.shapeFromStoredLots(), readings.shapeNotFound(), readings.saleFlowFromOutcomes(),
+                readings.saleFlowUnknown(),
+                actions.performed().stream().map(PerformedCorporateActions.BrokerAction::label).toList(),
+                actions.pending().stream().map(PerformedCorporateActions.BrokerAction::label).toList(),
+                all.size() - trades.size());
+    }
+
+    /** Every event, by date, corporate actions first on a date. */
+    private void replayAll(LotLedger ledger, PerformedCorporateActions.Replay actions, List<TransactionEntity> trades,
+                           Sources sources, Readings readings) {
         List<Event> events = new ArrayList<>();
         for (PerformedCorporateActions.BrokerAction performed : actions.performed()) {
             CorporateActionEntity action = performed.action();
@@ -105,14 +129,39 @@ public class AssetsRebuild {
         }
         events.sort(Comparator.comparing(Event::date).thenComparingInt(Event::rank).thenComparing(Event::order));
         events.forEach(event -> event.apply().run());
+    }
 
-        List<AssetsRebuildReport.LotComparison> lots = LotComparisons.of(stored, ledger.lots());
-        int differing = (int) lots.stream().filter(lot -> !lot.differingFields().isEmpty()).count();
-        return new AssetsRebuildReport(email, differing, lots, readings.shapeFromStoredLots(), readings.shapeNotFound(),
-                readings.saleFlowFromOutcomes(), readings.saleFlowUnknown(),
-                actions.performed().stream().map(PerformedCorporateActions.BrokerAction::label).toList(),
-                actions.pending().stream().map(PerformedCorporateActions.BrokerAction::label).toList(),
-                all.size() - trades.size());
+    /**
+     * Replaces the user's lots with the rebuilt ones. A lot paired with a stored one keeps its id, so the
+     * {@code trade_outcomes} naming it still do (C3a of D-582), and what the replay cannot rebuild: its order times, its
+     * list of corporate actions and when it was created (C2a of D-586). Its figures are the replay's.
+     */
+    private int write(String email, List<LotComparisons.LotPair> pairs) {
+        List<AssetEntity> lots = new ArrayList<>();
+        for (LotComparisons.LotPair pair : pairs) {
+            if (pair.rebuilt().isEmpty()) {
+                continue;
+            }
+            AssetEntity rebuilt = pair.rebuilt().get();
+            pair.stored().ifPresent(stored -> keepFrom(stored, rebuilt));
+            lots.add(rebuilt);
+        }
+        portfolioRepository.deleteByEmail(email);
+        portfolioRepository.saveAll(lots);
+        log.info("Rebuilt assets for {}: {} lots written", email, lots.size());
+        return lots.size();
+    }
+
+    private static void keepFrom(AssetEntity stored, AssetEntity rebuilt) {
+        rebuilt.setId(stored.getId());
+        rebuilt.setOrderTimeQuantities(stored.getOrderTimeQuantities());
+        rebuilt.setCorporateActions(stored.getCorporateActions());
+        rebuilt.getAuditMetadata().setCreatedAt(stored.getAuditMetadata().getCreatedAt());
+        rebuilt.getAuditMetadata().setCreatedBy(stored.getAuditMetadata().getCreatedBy());
+    }
+
+    private static String labelOf(AssetEntity lot) {
+        return lot.getStockCode() + " " + lot.getTransactionDate() + " " + lot.getBuyTransactionIds();
     }
 
     private Sources sourcesFor(String email, List<TransactionEntity> trades, List<AssetEntity> stored) {

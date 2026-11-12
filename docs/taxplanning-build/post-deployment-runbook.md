@@ -60,7 +60,7 @@ against the named database.
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.0 – 2.11 | Tax planning, by hand, in order | per step | per step |
+| 2.0 – 2.12 | Tax planning, by hand, in order | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -1400,6 +1400,55 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
 documents with the same fold, so a second run writes the same documents (`ProfitAndLossRebuildIntegrationTest`).
 **Way back:** delete the user's documents and `mongoimport --uri "<uri>" --db <db> --collection profit_and_loss
 --file pnl-<user>-backup.json`.
+
+### 2.12 W-283a3 (D-586) — rebuild one user's `assets` from `transactions` · `SUPER_USER` · **when needed, not once**
+
+**Why.** `assets` (the lots) is derived. This replays one user's transactions into lots
+(`docs/trade-ledger/assets-rebuild.md`; W-283a2, D-582) and replaces the stored ones, instead of hand-editing quantities
+and charges after a correction (B-4). A **standing operation**, not removed after use; never automatic.
+
+**When:** after a correction to a user's `transactions`, or when a dry run shows drift. Run order with the other two
+rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, then §2.11 (`profit_and_loss`).
+
+**Know this:**
+- A lot the replay pairs with a stored one, by stock, broker, holder, date and buys, keeps its id, so
+  `trade_outcomes.source_buy_lot_id` still names it. It also keeps its order times, its list of corporate actions and
+  its creation time. Its figures are the replay's (D-582 C3a, D-586 C2a).
+- Any other lot gets a new id and is listed in `newLots`.
+- A trade stored before W-283a1 has no recorded flow; its shape is read from the stored lots or its outcome rows. Each
+  such reading is listed (`shapeFromStoredLots`, `shapeNotFound`, `saleFlowFromOutcomes`, `saleFlowUnknown`), and a
+  real run writes regardless (C1a). **Read those lists in the dry run.**
+- Splits and demergers are replayed only when performed for the user (`actionsApplied`); later ones stay pending
+  (`actionsPending`). The rebuild never performs one.
+- A bonus lot and segments are rebuilt as live builds them (W-291, W-292).
+- A sale that finds less held than it sold refuses the whole call (400, naming it and the shortfall). That usually
+  means a missing buy or an unperformed action; correct it first.
+
+1. **Before (read-only):** back up the user's lots, and note how many there are:
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection assets \
+     --query '{ "email": "<stored user email>" }' --out assets-<user>-backup.json   # §0.7 for the stored form
+   ```
+   `db.assets.countDocuments({ email: "<stored user email>" })`
+2. **Dry run** (the default):
+   ```bash
+   curl -sS -X POST "$BASE/portfolio/user/<email>/assets/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+   - Read `lotsDiffering`, then each entry of `lots` with non-empty `differingFields`; `stored` and `rebuilt` sit side
+     by side.
+   - Read `newLots` and the reading lists. Decide before writing.
+3. **Write:** the same call with `?dryRun=false`. `lotsWritten` is the number of lots the user now has.
+4. **Verify (read-only):**
+   - the count above now equals `lotsWritten`;
+   - a second dry run reports `lotsDiffering` 0 and `newLots` empty;
+   - `GET /portfolio/user/<email>/stocks/all` (and `/mfs`) shows the holdings (`PortfolioController:77 – 86`).
+
+**Second run:** safe, including after one that failed part-way. The write is one transaction that deletes and saves
+the user's lots, so a failure leaves them as they were, and a second run writes the same lots under the same ids
+(`AssetsRebuildIntegrationTest`).
+
+**Way back:** delete the user's lots and
+`mongoimport --uri "<uri>" --db <db> --collection assets --file assets-<user>-backup.json`.
 
 ---
 

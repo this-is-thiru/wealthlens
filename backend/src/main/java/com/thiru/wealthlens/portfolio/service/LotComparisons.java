@@ -21,27 +21,45 @@ final class LotComparisons {
     private LotComparisons() {
     }
 
-    static List<LotComparison> of(List<AssetEntity> stored, List<AssetEntity> rebuilt) {
+    /** A stored lot and the rebuilt lot paired with it; either side is empty when the lot exists only on the other. */
+    record LotPair(Optional<AssetEntity> stored, Optional<AssetEntity> rebuilt) {
+
+        AssetEntity either() {
+            return stored.or(() -> rebuilt).orElseThrow();
+        }
+    }
+
+    /** The pairing the report shows and the write keeps ids by (W-283a3 C3a of D-582). */
+    static List<LotPair> pairs(List<AssetEntity> stored, List<AssetEntity> rebuilt) {
         Map<String, List<AssetEntity>> storedByKey = byKey(stored);
         Map<String, List<AssetEntity>> rebuiltByKey = byKey(rebuilt);
-        Map<String, AssetEntity> anyByKey = new LinkedHashMap<>();
-        storedByKey.forEach((key, lots) -> anyByKey.put(key, lots.getFirst()));
-        rebuiltByKey.forEach((key, lots) -> anyByKey.putIfAbsent(key, lots.getFirst()));
+        List<String> keys = new ArrayList<>(storedByKey.keySet());
+        rebuiltByKey.keySet().stream().filter(key -> !storedByKey.containsKey(key)).forEach(keys::add);
 
-        List<LotComparison> comparisons = new ArrayList<>();
-        anyByKey.forEach((key, sample) -> {
+        List<LotPair> pairs = new ArrayList<>();
+        for (String key : keys) {
             List<AssetEntity> storedLots = storedByKey.getOrDefault(key, List.of());
             List<AssetEntity> rebuiltLots = rebuiltByKey.getOrDefault(key, List.of());
             for (int i = 0; i < Math.max(storedLots.size(), rebuiltLots.size()); i++) {
-                Optional<LotFigures> storedFigures = figuresAt(storedLots, i);
-                Optional<LotFigures> rebuiltFigures = figuresAt(rebuiltLots, i);
-                comparisons.add(new LotComparison(sample.getStockCode(), sample.getBrokerName(),
-                        sample.getAccountHolder(), sample.getTransactionDate(),
-                        sample.getBuyTransactionIds().stream().sorted().toList(), storedFigures, rebuiltFigures,
-                        differences(storedFigures, rebuiltFigures)));
+                pairs.add(new LotPair(at(storedLots, i), at(rebuiltLots, i)));
             }
-        });
-        return comparisons;
+        }
+        return pairs;
+    }
+
+    static List<LotComparison> of(List<LotPair> pairs) {
+        return pairs.stream().map(pair -> {
+            AssetEntity sample = pair.either();
+            Optional<LotFigures> storedFigures = pair.stored().map(LotComparisons::figuresOf);
+            Optional<LotFigures> rebuiltFigures = pair.rebuilt().map(LotComparisons::figuresOf);
+            return new LotComparison(sample.getStockCode(), sample.getBrokerName(), sample.getAccountHolder(),
+                    sample.getTransactionDate(), sample.getBuyTransactionIds().stream().sorted().toList(), storedFigures,
+                    rebuiltFigures, differences(storedFigures, rebuiltFigures));
+        }).toList();
+    }
+
+    private static Optional<AssetEntity> at(List<AssetEntity> lots, int index) {
+        return index < lots.size() ? Optional.of(lots.get(index)) : Optional.empty();
     }
 
     private static Map<String, List<AssetEntity>> byKey(List<AssetEntity> lots) {
@@ -53,14 +71,10 @@ final class LotComparisons {
         return byKey;
     }
 
-    private static Optional<LotFigures> figuresAt(List<AssetEntity> lots, int index) {
-        if (index >= lots.size()) {
-            return Optional.empty();
-        }
-        AssetEntity lot = lots.get(index);
-        return Optional.of(new LotFigures(lot.getQuantity(), lot.getPrice(), lot.getBrokerCharges(), lot.getMiscCharges(),
+    private static LotFigures figuresOf(AssetEntity lot) {
+        return new LotFigures(lot.getQuantity(), lot.getPrice(), lot.getBrokerCharges(), lot.getMiscCharges(),
                 lot.getAllocatedBuyCharges(), lot.getAllocatedBuyMiscCharges(),
-                Optional.ofNullable(lot.getCorporateActionType())));
+                Optional.ofNullable(lot.getCorporateActionType()));
     }
 
     private static List<String> differences(Optional<LotFigures> stored, Optional<LotFigures> rebuilt) {

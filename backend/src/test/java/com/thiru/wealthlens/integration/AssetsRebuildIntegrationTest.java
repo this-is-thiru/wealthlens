@@ -14,7 +14,9 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
+import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
@@ -34,6 +36,7 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
 
     private static final String MIXED = "rebuild-mixed@example.com";
     private static final String SPLIT = "rebuild-split@example.com";
+    private static final String FIXED = "rebuild-fixed@example.com";
     private static final String ADMIN = "rebuild-admin@example.com";
 
     @Autowired
@@ -41,6 +44,9 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CorporateActionService corporateActionService;
+
+    @Autowired
+    private TradeOutcomeRepository tradeOutcomeRepository;
 
     @Test
     void rebuild_whenLotsCameThroughBothFlows_rebuildsEveryLotAsStoredAndWritesNothing() {
@@ -88,6 +94,47 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void rebuild_whenAStoredLotWasCorrupted_restoresItUnderItsIdAndKeepsTheSalesLink() {
+        // Given -- V2 buy 10 @ 100 (5 Jan 2026), V2 sells 4 (10 Feb): one lot of 6, named by the sale's outcome row;
+        // then its quantity is corrupted to 8
+        post(FIXED, "/transaction/v2", trade(TransactionType.BUY, 10, 100, LocalDate.of(2026, 1, 5)));
+        post(FIXED, "/transaction/v2", trade(TransactionType.SELL, 4, 150, LocalDate.of(2026, 2, 10)));
+        AssetEntity lot = portfolioRepository.findByEmail(FIXED).getFirst();
+        lot.setQuantity(8.0);
+        portfolioRepository.save(lot);
+
+        // When -- a dry run, then a real one, then a second dry run
+        rebuild(FIXED, "", "SUPER_USER").statusCode(200).body("lotsDiffering", equalTo(1)).body("lotsWritten", equalTo(0));
+        double afterDryRun = portfolioRepository.findByEmail(FIXED).getFirst().getQuantity();
+        rebuild(FIXED, "?dryRun=false", "SUPER_USER").statusCode(200)
+                .body("lotsWritten", equalTo(1)).body("lotsKeptById", equalTo(1)).body("newLots", hasSize(0));
+
+        // Then -- 8 untouched by the dry run; 10 − 4 = 6 restored under the same id, which the outcome row still names
+        assertThat(afterDryRun).isEqualTo(8.0);
+        List<AssetEntity> lots = portfolioRepository.findByEmail(FIXED);
+        assertThat(lots).hasSize(1);
+        assertThat(lots.getFirst().getId()).isEqualTo(lot.getId());
+        assertThat(lots.getFirst().getQuantity()).isEqualTo(6.0);
+        assertThat(tradeOutcomeRepository.findByEmail(FIXED)).extracting(TradeOutcomeEntity::getSourceBuyLotId)
+                .containsExactly(lot.getId());
+        rebuild(FIXED, "", "SUPER_USER").statusCode(200).body("lotsDiffering", equalTo(0));
+    }
+
+    @Test
+    void rebuild_whenAStoredLotWasLost_restoresItUnderANewIdAndListsIt() {
+        // Given -- V2 buy 10 @ 100 (5 Jan 2026); its lot then deleted
+        post(FIXED, "/transaction/v2", trade(TransactionType.BUY, 10, 100, LocalDate.of(2026, 1, 5)));
+        portfolioRepository.deleteAll(portfolioRepository.findByEmail(FIXED));
+
+        // When
+        rebuild(FIXED, "?dryRun=false", "SUPER_USER").statusCode(200)
+                .body("lotsWritten", equalTo(1)).body("lotsKeptById", equalTo(0)).body("newLots", hasSize(1));
+
+        // Then
+        assertThat(portfolioRepository.findByEmail(FIXED)).extracting(AssetEntity::getQuantity).containsExactly(10.0);
+    }
+
+    @Test
     void rebuild_whenAUserAsksForTheirOwn_isForbidden() {
         given().header("Authorization", "Bearer " + generateToken(MIXED, "USER"))
                 .post("/portfolio/user/" + MIXED + "/assets/rebuild").then().statusCode(403);
@@ -99,8 +146,12 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
     }
 
     private ValidatableResponse rebuild(String email, String role) {
+        return rebuild(email, "", role);
+    }
+
+    private ValidatableResponse rebuild(String email, String query, String role) {
         return given().header("Authorization", "Bearer " + generateToken(ADMIN, role))
-                .post("/portfolio/user/" + email + "/assets/rebuild").then();
+                .post("/portfolio/user/" + email + "/assets/rebuild" + query).then();
     }
 
     private static Map<String, Object> trade(TransactionType type, double quantity, double price, LocalDate date) {
