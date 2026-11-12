@@ -60,7 +60,7 @@ against the named database.
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.0 – 2.13 | Tax planning, by hand, in order | per step | per step |
+| 2.0 – 2.14 | Tax planning, by hand, in order | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -1382,7 +1382,7 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
 - The rebuilt documents list every folded row in `pnl_backfilled_outcome_ids`, so §2.8 never adds them again.
 - A row is filed under its own `segment`. A V1 or §2.2-rebuilt row stored before W-295 has none and is filed under
   delivery, even when its sale was intraday. **Run §3.19 first, and do not rebuild a user it lists until W-297 has
-  corrected their rows** (W-295, D-595).
+  corrected their rows** (W-295, D-595). W-297's §2.14 is that correction.
 
 1. **Before (read-only):** note the user's documents and back them up:
    ```bash
@@ -1487,6 +1487,53 @@ submitted. The charges also feed §2.2's `trade_outcomes` rebuild, so they are c
 
 **Retired after use:** W-294 / WL-45, once this is logged for every database. There is no code to remove.
 
+### 2.14 W-297 (D-599) — restore the segment stored before W-292 / W-295 · `SUPER_USER` · **every database · once · outstanding**
+
+**Why.** Until W-292 no transaction or lot stored its segment, so every one says `DELIVERY`. Until W-295 a V1 or
+§2.2-rebuilt outcome row held no row-level `segment`, and §2.11 files such a row under delivery. This restores the
+segment wherever stored data records it:
+1. A transaction takes the segment its BUY or SELL `user_charges` row was priced under, where that is not delivery.
+2. An outcome row's `segment` and `sell_segment` take its sale transaction's, where that is not delivery. Failing
+   that, an absent `segment` takes the row's own `sell_segment`.
+3. Its `buy_segment` takes the segment of the holding's buys on its buy date, where they all agree. Where they
+   disagree (a same-day mix merged before W-296) the row is listed in `rowsWithMixedBuys` and left as it is.
+
+A trade no stored fact records stays as stored: a V1 buy before W-280, or a trade recorded with the engine off.
+**Do not use §2.2 for these users.** Its rows carry no charge breakdown, so the capital-gains summary would refuse
+them (§2.2 "Know this").
+
+**When:** after the deploy that carries W-292 – W-297, before any §2.11 for a user §3.19 lists.
+
+1. **Before (read-only):** §3.18 and §3.19. Note each one's users.
+2. **Dry run** (the default):
+   ```bash
+   curl -sS -X POST "$BASE/transactions/segment/correct" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+   Read `transactionsCorrected`, `rowsCorrected`, `users` and `rowsWithMixedBuys`. The users should be those §3.18
+   and §3.19 listed.
+3. **Backup:**
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection transactions --out transactions-segment-backup.json
+   mongoexport --uri "<uri>" --db <db> --collection trade_outcomes --out trade-outcomes-segment-backup.json
+   ```
+4. **Write:** the same call with `?dryRun=false`.
+5. **After (read-only):** §3.18 and §3.19 list none of the users corrected. A second dry run reports 0 and 0, and
+   `rowsWithMixedBuys` as before.
+6. **Then, per user in `users`:**
+   - if `transactions` > 0: §2.12 (lots; a same-day mix is now split), then §2.11 (P&L);
+   - if only `rows` > 0: §2.11.
+
+   §2.11's W-295 warning no longer applies to a user once this has run.
+
+**Second run:** safe, including after one that failed part-way. Each rule reads the transactions as step 1 leaves
+them, and only moves a stored value to a recorded non-delivery fact. A second run therefore finds nothing left
+(`SegmentCorrectionIntegrationTest`).
+**Way back:** `mongoimport --uri "<uri>" --db <db> --collection transactions --mode upsert --file
+transactions-segment-backup.json`, and the same for `trade_outcomes`.
+
+**Retired after use:** W-299 / WL-46, once this is logged for every database. The code
+(`SegmentCorrection`, its controller, report and test) is removed then.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
@@ -1513,8 +1560,8 @@ Any repair would be a new work item with its own section-2 entry.
 | 3.15 | **W-280** (D-566 C2a) | A V1 buy is now priced and recorded under its own segment. Until W-280 V1's buy passed `DELIVERY` whatever the trade said, so a V1 intraday buy was priced on the delivery card and its `user_charges` row says `DELIVERY` while its transaction says `INTRADAY` (V2 always passed the segment, so such a pair is always a V1 buy). Reported, not corrected — re-pricing would be its own row (ADR-32). **This count matched nothing before W-292 and still matches nothing for a trade stored before it** (W-292, D-591): until then no transaction stored its segment, so none said `INTRADAY`. A V1 intraday buy made before W-280 cannot be found from stored data at all, because its charge row was priced as `DELIVERY` too. §3.18 counts the transactions whose charge row knows better | `db.transactions.aggregate([{ $match: { transaction_type: "BUY", segment: "INTRADAY" } }, { $lookup: { from: "user_charges", let: { id: { $toString: "$_id" } }, pipeline: [{ $match: { $expr: { $eq: ["$transaction_id", "$$id"] } } }], as: "charge" } }, { $match: { "charge.segment": "DELIVERY" } }, { $count: "priced_as_delivery" }])`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.16 | **W-289** (D-587 C2a) | A trade now waits for a split, bonus or demerger recorded in an earlier quarter and not yet performed, when the user holds lots it reaches. Until W-289 only an action in the trade's own quarter held it, so a sale in a later quarter could be applied to pre-split units before the action was performed: holding 10, a 2:1 split, selling 4 left 12, not 16. The count lists **candidates** — users with a sale dated after an action's record date, of a stock they bought with that broker before it. Same-quarter and correctly ordered ones are included, so each user is checked with §2.12's dry run, which shows the actual drift, and corrected through §2.12 then §2.11 | `db.corporate_action.aggregate([{ $match: { type: { $in: ["STOCK_SPLIT", "BONUS", "DEMERGER"] } } }, { $lookup: { from: "transactions", let: { s: "$stock_code", r: "$record_date" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$stock_code", "$$s"] }, { $eq: ["$transaction_type", "SELL"] }, { $gt: ["$transaction_date", "$$r"] }] } } }], as: "sale" } }, { $unwind: "$sale" }, { $lookup: { from: "transactions", let: { s: "$stock_code", r: "$record_date", e: "$sale.email", b: "$sale.broker_name" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$stock_code", "$$s"] }, { $eq: ["$email", "$$e"] }, { $eq: ["$broker_name", "$$b"] }, { $eq: ["$transaction_type", "BUY"] }, { $lt: ["$transaction_date", "$$r"] }] } } }, { $limit: 1 }], as: "bought_before" } }, { $match: { bought_before: { $ne: [] } } }, { $group: { _id: "$sale.email", sales: { $sum: 1 } } }])` — one row per candidate user (the stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.17 | **W-291** (D-589 C2a) | A bonus lot and its transaction now carry only the bonus. Until W-291 the lot copied the first held lot's charges, allocated charges, sales and actions, and the transaction copied the first buy's charges and identifiers. A sale of bonus shares therefore charged buy charges paid once already, overstating cost and understating the gain. And a bonus could not be performed at all for a user whose first buy carried an idempotency key or came from a redrive (a duplicate key). The count lists users with bonus lots carrying charges. §2.13 corrects the transactions; then each user listed is put through §2.12 → §2.2 → §2.11 | `db.assets.aggregate([{ $match: { corporate_action: "BONUS", $or: [{ broker_charges: { $gt: 0 } }, { misc_charges: { $gt: 0 } }, { allocated_buy_charges: { $gt: 0 } }, { allocated_buy_misc_charges: { $gt: 0 } }] } }, { $group: { _id: "$email", bonus_lots_with_charges: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
-| 3.18 | **W-292** (D-591 C2a) | A transaction and a lot now record the segment the trade was entered in. Until W-292 neither did (`AssetRequest.asTransaction`, `asAsset`), so every stored one says `DELIVERY`, and an outcome row's `buy_segment` (taken from the lot) and a §2.2 rebuild's venues (taken from the transactions) say it too. The trade's `user_charges` row was priced under the request's segment (V2 always, V1 since W-280), so it knows better. The count lists users with transactions whose charge row says another segment. Reported, not corrected: the correction is W-297, after W-295, because §2.2 → §2.11 still files a rebuilt sale under delivery until W-295 | `db.transactions.aggregate([{ $lookup: { from: "user_charges", let: { id: { $toString: "$_id" } }, pipeline: [{ $match: { $expr: { $eq: ["$transaction_id", "$$id"] } } }], as: "charge" } }, { $unwind: "$charge" }, { $match: { $expr: { $ne: ["$segment", "$charge.segment"] } } }, { $group: { _id: "$email", segment_differs: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
-| 3.19 | **W-295** (D-595 C3a) | An outcome row now records the segment of its sale whichever flow wrote it. Until W-295 only V2 did: a V1 row and a row rebuilt by §2.2 held `sell_segment` but no `segment`, and §2.11 files a row under `segment`, reading an absent one as delivery. So a §2.11 rebuild moved such a sale out of intraday (live P&L was right). The count lists users with rows whose `sell_segment` is not `DELIVERY` and that have no `segment`; those are the rows filed wrongly. Reported, not corrected: W-297 sets `segment` from `sell_segment`, then runs §2.11 for each user listed. **Until then, do not run §2.11 for a user this lists** | `db.trade_outcomes.aggregate([{ $match: { segment: null, sell_segment: { $nin: [null, "DELIVERY"] } } }, { $group: { _id: "$email", rows_filed_as_delivery: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
+| 3.18 | **W-292** (D-591 C2a) | A transaction and a lot now record the segment the trade was entered in. Until W-292 neither did (`AssetRequest.asTransaction`, `asAsset`), so every stored one says `DELIVERY`, and an outcome row's `buy_segment` (taken from the lot) and a §2.2 rebuild's venues (taken from the transactions) say it too. The trade's `user_charges` row was priced under the request's segment (V2 always, V1 since W-280), so it knows better. The count lists users with transactions whose charge row says another segment. Reported here; §2.14 (W-297) corrects it | `db.transactions.aggregate([{ $lookup: { from: "user_charges", let: { id: { $toString: "$_id" } }, pipeline: [{ $match: { $expr: { $eq: ["$transaction_id", "$$id"] } } }], as: "charge" } }, { $unwind: "$charge" }, { $match: { $expr: { $ne: ["$segment", "$charge.segment"] } } }, { $group: { _id: "$email", segment_differs: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
+| 3.19 | **W-295** (D-595 C3a) | An outcome row now records the segment of its sale whichever flow wrote it. Until W-295 only V2 did: a V1 row and a row rebuilt by §2.2 held `sell_segment` but no `segment`, and §2.11 files a row under `segment`, reading an absent one as delivery. So a §2.11 rebuild moved such a sale out of intraday (live P&L was right). The count lists users with rows whose `sell_segment` is not `DELIVERY` and that have no `segment`; those are the rows filed wrongly. Reported here; §2.14 (W-297) corrects it. **Until §2.14 has run, do not run §2.11 for a user this lists** | `db.trade_outcomes.aggregate([{ $match: { segment: null, sell_segment: { $nin: [null, "DELIVERY"] } } }, { $group: { _id: "$email", rows_filed_as_delivery: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
