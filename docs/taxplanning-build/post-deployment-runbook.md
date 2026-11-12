@@ -1415,9 +1415,9 @@ rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, the
   `trade_outcomes.source_buy_lot_id` still names it. It also keeps its order times, its list of corporate actions and
   its creation time. Its figures are the replay's (D-582 C3a, D-586 C2a).
 - Any other lot gets a new id and is listed in `newLots`.
-- A trade stored before W-283a1 has no recorded flow; its shape is read from the stored lots or its outcome rows. Each
-  such reading is listed (`shapeFromStoredLots`, `shapeNotFound`, `saleFlowFromOutcomes`, `saleFlowUnknown`), and a
-  real run writes regardless (C1a). **Read those lists in the dry run.**
+- A buy stored before W-283a1 has no recorded flow; its lot shape is read from the stored lots. Each such reading is
+  listed (`shapeFromStoredLots`, `shapeNotFound`), and a real run writes regardless (C1a). **Read those lists in the
+  dry run.** A sale needs no flow: V1 and V2 both record their share of a lot's buy charges on it (W-293, D-588).
 - Splits and demergers are replayed only when performed for the user (`actionsApplied`); later ones stay pending
   (`actionsPending`). The rebuild never performs one.
 - A bonus lot and segments are rebuilt as live builds them (W-291, W-292).

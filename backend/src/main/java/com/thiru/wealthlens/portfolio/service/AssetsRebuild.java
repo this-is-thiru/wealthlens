@@ -12,10 +12,8 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
-import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
@@ -29,7 +27,6 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -40,9 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
  * replaces the stored lots with them (W-283a2, D-582; W-283a3, D-586; {@code docs/trade-ledger/assets-rebuild.md}).
  *
  * <p>Events run by date; on one date the corporate actions come first, because a trade dated on a record date is held
- * until the action is performed. Each trade takes the flow it recorded (W-283a1); one stored before that is shaped
- * from what survives of it — the stored lot that lists a buy, the {@code trade_outcomes} rows of a sale (C2a) — and
- * every such reading is listed in the report.
+ * until the action is performed. A buy takes the flow it recorded (W-283a1); one stored before that is shaped from
+ * the stored lot that lists it, and every such reading is listed in the report. A sale needs no flow: both record
+ * their share of a lot's buy charges the same way (W-293, D-588).
  */
 @Service
 @Log4j2
@@ -52,7 +49,6 @@ public class AssetsRebuild {
 
     private final TransactionRepository transactionRepository;
     private final PortfolioRepository portfolioRepository;
-    private final TradeOutcomeRepository tradeOutcomeRepository;
     private final UserChargeService userChargeService;
     private final PerformedCorporateActions performedCorporateActions;
     private final CorporateActionService corporateActionService;
@@ -63,17 +59,15 @@ public class AssetsRebuild {
     }
 
     /** What the replay read from somewhere other than the trade, listed in the report. */
-    private record Readings(List<String> shapeFromStoredLots, List<String> shapeNotFound,
-                            List<String> saleFlowFromOutcomes, List<String> saleFlowUnknown) {
+    private record Readings(List<String> shapeFromStoredLots, List<String> shapeNotFound) {
 
         static Readings empty() {
-            return new Readings(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+            return new Readings(new ArrayList<>(), new ArrayList<>());
         }
     }
 
-    /** The stored rows that shape a trade without a recorded flow. */
-    private record Sources(Map<String, AssetEntity> storedLotByBuy, Map<String, UserChargeEntity> buyCharges,
-                           Set<String> v2Sales, Set<String> salesWithRows) {
+    /** The stored rows that shape a buy without a recorded flow, and a V2 buy's computed charges. */
+    private record Sources(Map<String, AssetEntity> storedLotByBuy, Map<String, UserChargeEntity> buyCharges) {
     }
 
     /**
@@ -102,8 +96,7 @@ public class AssetsRebuild {
                 .map(pair -> labelOf(pair.either())).toList();
         int written = dryRun ? 0 : write(email, pairs);
         return new AssetsRebuildReport(email, dryRun, differing, written, kept, newLots, lots,
-                readings.shapeFromStoredLots(), readings.shapeNotFound(), readings.saleFlowFromOutcomes(),
-                readings.saleFlowUnknown(),
+                readings.shapeFromStoredLots(), readings.shapeNotFound(),
                 actions.performed().stream().map(PerformedCorporateActions.BrokerAction::label).toList(),
                 actions.pending().stream().map(PerformedCorporateActions.BrokerAction::label).toList(),
                 all.size() - trades.size());
@@ -169,11 +162,7 @@ public class AssetsRebuild {
         stored.forEach(lot -> lot.getBuyTransactionIds().forEach(buyId -> storedLotByBuy.put(buyId, lot)));
         List<String> buyIds = trades.stream().filter(trade -> trade.getTransactionType() == TransactionType.BUY)
                 .map(TransactionEntity::getId).toList();
-        Set<String> v2Sales = tradeOutcomeRepository.findByEmailAndSellChargeBreakupExists(email, true).stream()
-                .map(TradeOutcomeEntity::getSourceSellTransactionId).collect(Collectors.toSet());
-        Set<String> salesWithRows = tradeOutcomeRepository.findByEmail(email).stream()
-                .map(TradeOutcomeEntity::getSourceSellTransactionId).collect(Collectors.toSet());
-        return new Sources(storedLotByBuy, userChargeService.findForTransactions(email, buyIds), v2Sales, salesWithRows);
+        return new Sources(storedLotByBuy, userChargeService.findForTransactions(email, buyIds));
     }
 
     private static Map<String, Set<BrokerName>> brokersByStock(List<TransactionEntity> trades) {
@@ -185,7 +174,7 @@ public class AssetsRebuild {
 
     private void replay(LotLedger ledger, TransactionEntity trade, Sources sources, Readings readings) {
         if (trade.getTransactionType() == TransactionType.SELL) {
-            ledger.sell(trade, saleFlowOf(trade, sources, readings));
+            ledger.sell(trade);
             return;
         }
         Optional<CorporateActionEntity> bonus = bonusOf(trade);
@@ -220,22 +209,6 @@ public class AssetsRebuild {
                 || row.getResolution() != null && !row.getResolution().isUnresolved());
         return chargeEngineProperties.authoritative() && hasFigure
                 ? OptionalDouble.of(row.getTotalCharges()) : OptionalDouble.empty();
-    }
-
-    private static TradeFlow saleFlowOf(TransactionEntity sale, Sources sources, Readings readings) {
-        if (sale.getTradeFlow() != null) {
-            return sale.getTradeFlow();
-        }
-        if (sources.v2Sales().contains(sale.getId())) {
-            readings.saleFlowFromOutcomes().add(sale.getId());
-            return TradeFlow.V2;
-        }
-        if (sources.salesWithRows().contains(sale.getId())) {
-            readings.saleFlowFromOutcomes().add(sale.getId());
-            return TradeFlow.V1;
-        }
-        readings.saleFlowUnknown().add(sale.getId());
-        return TradeFlow.V2;
     }
 
     /** A bonus allotment is a BUY marked BONUS, carrying the action it came from (CorporateActionService:327 – 345). */

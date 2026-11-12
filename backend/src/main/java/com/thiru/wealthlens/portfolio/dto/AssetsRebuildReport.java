@@ -19,24 +19,20 @@ import java.util.Optional;
  * @param lotsDiffering lots whose figures differ, or that exist on one side only
  * @param shapeFromStoredLots buys with no recorded flow whose lot shape was read from the stored lot listing them
  * @param shapeNotFound buys with no recorded flow that no stored lot lists, given their own lot
- * @param saleFlowFromOutcomes sales with no recorded flow whose flow was read from their {@code trade_outcomes} rows
- * @param saleFlowUnknown sales with no recorded flow and no rows, replayed as V2 (charges left whole)
  * @param actionsApplied splits and demergers replayed, as "type stock record-date broker"
  * @param actionsPending splits and demergers not yet performed for the user, left out
  * @param temporariesSkipped trades still waiting on a corporate action
  */
 public record AssetsRebuildReport(String email, boolean dryRun, int lotsDiffering, int lotsWritten, int lotsKeptById,
         List<String> newLots, List<LotComparison> lots,
-        List<String> shapeFromStoredLots, List<String> shapeNotFound, List<String> saleFlowFromOutcomes,
-        List<String> saleFlowUnknown, List<String> actionsApplied, List<String> actionsPending, int temporariesSkipped) {
+        List<String> shapeFromStoredLots, List<String> shapeNotFound, List<String> actionsApplied,
+        List<String> actionsPending, int temporariesSkipped) {
 
     public AssetsRebuildReport {
         newLots = List.copyOf(newLots);
         lots = List.copyOf(lots);
         shapeFromStoredLots = List.copyOf(shapeFromStoredLots);
         shapeNotFound = List.copyOf(shapeNotFound);
-        saleFlowFromOutcomes = List.copyOf(saleFlowFromOutcomes);
-        saleFlowUnknown = List.copyOf(saleFlowUnknown);
         actionsApplied = List.copyOf(actionsApplied);
         actionsPending = List.copyOf(actionsPending);
     }

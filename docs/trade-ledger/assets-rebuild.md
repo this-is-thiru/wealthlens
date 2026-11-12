@@ -88,13 +88,12 @@ A sale draws the lots of its stock, broker and account holder dated on or before
 gives what it holds until the sale's quantity is met. This is the FIFO both flows share since W-271. Each lot drawn
 records the sale in `sell_transaction_ids`, and a lot with nothing left is removed.
 
-**A sale's flow changes the lot too** (found building W-283a2, D-582).
-- A V1 sale records its share of each lot's buy charges on the lot, in `allocated_buy_charges` and
-  `allocated_buy_misc_charges`, through `LotChargeAllocator` (`PortfolioService:549 – 550`).
-- A V2 sale leaves those untouched. Its share is worked out from the original quantity when the outcome row is built.
-- A sale stored from W-283a1 records its flow. An older one takes it from its `trade_outcomes` rows (C2a): a row
-  with `sell_charge_breakup` means V2, rows without it mean V1. A sale with no rows is listed and replayed as V2,
-  which leaves the lot's charges whole.
+**Every sale records its share of a lot's buy charges** in `allocated_buy_charges` and `allocated_buy_misc_charges`,
+through `LotChargeAllocator`. V1 does it in `allocateSale` (`PortfolioService:549 – 550`), and V2 in
+`TradeOutcomeRecorder.rowFigures` (`:166 – 167`) on the lots `sellStockV2` then saves. So a sale needs no flow.
+
+*Erratum (W-293, D-588):* W-283a2 first held that a V2 sale left those untouched, and read an older sale's flow from
+its `trade_outcomes` rows (D-582 C2a). Both were wrong and are removed.
 
 A sale that finds less than its quantity is refused, naming the transaction and the shortfall. That is what a
 rebuild exists to surface.
@@ -132,7 +131,6 @@ The report has one entry per lot, giving the stored figures against the rebuilt 
 misc charges, both allocated charges, and the corporate-action type. Each entry names the fields that differ. It
 also lists:
 - every buy whose shape was read from a stored lot, or not found;
-- every sale whose flow was read from its rows, or not found;
 - every corporate action applied;
 - every pending action left;
 - every temporary skipped.

@@ -26,7 +26,7 @@ import java.util.function.BiFunction;
  * {@code assets} rebuild (W-283a2, D-582; {@code docs/trade-ledger/assets-rebuild.md}).
  *
  * <p>Nothing here reads or writes a store, so a replay can be compared with what is stored before anything changes.
- * Every rule that also runs live is called, not copied: V1's sale allocation ({@link LotChargeAllocator}), the sale
+ * Every rule that also runs live is called, not copied: a sale's allocation ({@link LotChargeAllocator}), the sale
  * tolerances ({@link PortfolioService#takesWholeLot}), a split ({@link CorporateActionService#splitLots}) and a
  * demerger (passed in, {@link CorporateActionService#demergeLots}). The ordering of events is the caller's.
  */
@@ -93,12 +93,13 @@ final class LotLedger {
 
     /**
      * A sale, FIFO over the lots of its stock, broker and account holder dated on or before it, oldest first and in
-     * the order they were made on one date. A V1 sale records its share of each lot's buy charges on the lot; a V2
-     * sale leaves them whole. A lot with nothing left is removed, as live.
+     * the order they were made on one date. Every sale records its share of each lot's buy charges on the lot — V1 in
+     * {@code allocateSale}, V2 in {@code TradeOutcomeRecorder.rowFigures} (W-293, D-588). A lot with nothing left is
+     * removed, as live.
      *
      * @throws IllegalArgumentException if the lots hold less than the sale, naming it and the shortfall
      */
-    void sell(TransactionEntity sale, TradeFlow saleShape) {
+    void sell(TransactionEntity sale) {
         List<AssetEntity> eligible = lots.stream()
                 .filter(lot -> sameHolding(lot, sale) && !lot.getTransactionDate().isAfter(sale.getTransactionDate()))
                 .sorted(Comparator.comparing(AssetEntity::getTransactionDate))
@@ -117,10 +118,8 @@ final class LotLedger {
             double lotQuantity = lot.getQuantity();
             double taken = PortfolioService.takesWholeLot(left, lotQuantity) ? lotQuantity : left;
             lot.getSellTransactionIds().add(sale.getId());
-            if (saleShape == TradeFlow.V1) {
-                LotChargeAllocator.deductBroker(lot, taken, lotQuantity);
-                LotChargeAllocator.deductMisc(lot, taken, lotQuantity);
-            }
+            LotChargeAllocator.deductBroker(lot, taken, lotQuantity);
+            LotChargeAllocator.deductMisc(lot, taken, lotQuantity);
             lot.setQuantity(taken == lotQuantity ? 0D : lotQuantity - taken);
             left -= taken;
         }

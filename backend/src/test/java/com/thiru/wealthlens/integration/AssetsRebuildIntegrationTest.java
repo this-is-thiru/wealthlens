@@ -62,7 +62,7 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
         // When / Then -- two lots, each the same on both sides
         rebuild(MIXED, "SUPER_USER").statusCode(200)
                 .body("lotsDiffering", equalTo(0)).body("lots", hasSize(2))
-                .body("shapeNotFound", hasSize(0)).body("saleFlowUnknown", hasSize(0));
+                .body("shapeNotFound", hasSize(0));
         assertThat(portfolioRepository.findByEmail(MIXED)).usingRecursiveFieldByFieldElementComparator()
                 .containsExactlyInAnyOrderElementsOf(before);
         assertThat(before).extracting(AssetEntity::getQuantity).containsExactlyInAnyOrder(5.0, 6.0);
@@ -132,6 +132,21 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(portfolioRepository.findByEmail(FIXED)).extracting(AssetEntity::getQuantity).containsExactly(10.0);
+    }
+
+    @Test
+    void rebuild_whenAV2SaleTookAShareOfTheLotsCharges_rebuildsTheShare() {
+        // Given -- V2 buy 10 @ 100 with ₹30 charges entered (5 Jan 2026), V2 sells 4 (10 Feb): the recorder records
+        // ₹30 × 4 / 10 = ₹12 on the lot (TradeOutcomeRecorder.rowFigures)
+        Map<String, Object> buy = trade(TransactionType.BUY, 10, 100, LocalDate.of(2026, 1, 5));
+        buy.put("brokerCharges", 30.0);
+        post(FIXED, "/transaction/v2", buy);
+        post(FIXED, "/transaction/v2", trade(TransactionType.SELL, 4, 150, LocalDate.of(2026, 2, 10)));
+
+        // When / Then -- stored ₹12 allocated; the replay agrees
+        assertThat(portfolioRepository.findByEmail(FIXED)).extracting(AssetEntity::getAllocatedBuyCharges)
+                .containsExactly(12.0);
+        rebuild(FIXED, "", "SUPER_USER").statusCode(200).body("lotsDiffering", equalTo(0));
     }
 
     @Test

@@ -23,10 +23,8 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
-import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
@@ -57,7 +55,6 @@ class AssetsRebuildTest {
 
     @Mock private TransactionRepository transactionRepository;
     @Mock private PortfolioRepository portfolioRepository;
-    @Mock private TradeOutcomeRepository tradeOutcomeRepository;
     @Mock private UserChargeService userChargeService;
     @Mock private PerformedCorporateActions performedCorporateActions;
     @Mock private CorporateActionService corporateActionService;
@@ -68,8 +65,6 @@ class AssetsRebuildTest {
     @BeforeEach
     void setUp() {
         when(portfolioRepository.findByEmail(EMAIL)).thenReturn(List.of());
-        when(tradeOutcomeRepository.findByEmail(EMAIL)).thenReturn(List.of());
-        when(tradeOutcomeRepository.findByEmailAndSellChargeBreakupExists(EMAIL, true)).thenReturn(List.of());
         when(userChargeService.findForTransactions(eq(EMAIL), any())).thenReturn(Map.of());
         when(performedCorporateActions.of(anyString(), any()))
                 .thenReturn(new PerformedCorporateActions.Replay(List.of(), List.of()));
@@ -106,8 +101,8 @@ class AssetsRebuildTest {
 
     @Test
     void rebuild_whenTradesPredateTheFlow_readsTheirShapeFromWhatIsStored() {
-        // Given -- two buys with no flow listed together on one stored lot (a V1 merge), and a sale whose row
-        // carries no sell_charge_breakup (V1); the buy carries ₹30 over 20 units
+        // Given -- two buys with no flow listed together on one stored lot (a V1 merge), and a sale of 5; the buy
+        // carries ₹30 over 20 units
         TransactionEntity first = trade("x", TransactionType.BUY, 10, 100, JAN_5, null);
         first.setBrokerCharges(30);
         transactions(first, trade("y", TransactionType.BUY, 10, 120, JAN_5, null),
@@ -121,20 +116,16 @@ class AssetsRebuildTest {
         storedLot.setPrice(110);
         storedLot.setBuyTransactionIds(new ArrayList<>(List.of("x", "y")));
         when(portfolioRepository.findByEmail(EMAIL)).thenReturn(List.of(storedLot));
-        TradeOutcomeEntity row = new TradeOutcomeEntity();
-        row.setSourceSellTransactionId("z");
-        when(tradeOutcomeRepository.findByEmail(EMAIL)).thenReturn(List.of(row));
 
         // When
         AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL), true);
 
-        // Then -- merged: 20 @ 110; V1 sale of 5 records ₹30 × 5 / 20 = ₹7.50 on the lot; 15 left
+        // Then -- merged: 20 @ 110; the sale of 5 records ₹30 × 5 / 20 = ₹7.50 on the lot; 15 left
         LotFigures merged = rebuilt(report, "x");
         assertEquals(15.0, merged.quantity(), 1e-9);
         assertMoney(110.0, merged.priceRupees());
         assertMoney(7.50, merged.allocatedBuyChargesRupees());
         assertEquals(List.of("x", "y"), report.shapeFromStoredLots());
-        assertEquals(List.of("z"), report.saleFlowFromOutcomes());
     }
 
     @Test

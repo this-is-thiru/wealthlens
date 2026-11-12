@@ -34,12 +34,12 @@ class LotLedgerTest {
         ledger.buy(trade("a", TransactionType.BUY, 10, 100, JAN_5), TradeFlow.V2, OptionalDouble.empty());
         ledger.buy(trade("b", TransactionType.BUY, 6, 110, LocalDate.of(2026, 1, 20)), TradeFlow.V2,
                 OptionalDouble.empty());
-        ledger.sell(trade("s1", TransactionType.SELL, 4, 130, LocalDate.of(2026, 2, 1)), TradeFlow.V2);
+        ledger.sell(trade("s1", TransactionType.SELL, 4, 130, LocalDate.of(2026, 2, 1)));
 
         // When -- split 2:1 recorded 10 Feb, then buy 5 @ 60 on 10 Feb, then sell 15 on 15 Feb
         ledger.split(split(FEB_10), BrokerName.ZERODHA);
         ledger.buy(trade("c", TransactionType.BUY, 5, 60, FEB_10), TradeFlow.V2, OptionalDouble.empty());
-        ledger.sell(trade("s2", TransactionType.SELL, 15, 70, LocalDate.of(2026, 2, 15)), TradeFlow.V2);
+        ledger.sell(trade("s2", TransactionType.SELL, 15, 70, LocalDate.of(2026, 2, 15)));
 
         // Then -- A 6 → 12 @ 50, B 6 → 12 @ 55; C (dated R) not split; 15 sold: A 12, B 3 → B 9 @ 55, C 5 @ 60
         List<AssetEntity> lots = ledger.lots();
@@ -84,14 +84,14 @@ class LotLedgerTest {
     }
 
     @Test
-    void sell_whenV1_recordsTheSoldShareOfTheLotsCharges() {
+    void sell_whenAnySale_recordsTheSoldShareOfTheLotsCharges() {
         // Given -- 3 units carrying ₹30
         TransactionEntity buy = trade("a", TransactionType.BUY, 3, 100, JAN_5);
         buy.setBrokerCharges(30);
         ledger.buy(buy, TradeFlow.V1, OptionalDouble.empty());
 
-        // When -- 1 sold through V1
-        ledger.sell(trade("s", TransactionType.SELL, 1, 120, FEB_10), TradeFlow.V1);
+        // When -- 1 sold; V1 and V2 both record the share (W-293, D-588)
+        ledger.sell(trade("s", TransactionType.SELL, 1, 120, FEB_10));
 
         // Then -- ₹30 × 1 / 3 = ₹10 allocated; the charge itself stays whole
         AssetEntity lot = ledger.lots().getFirst();
@@ -101,27 +101,13 @@ class LotLedgerTest {
     }
 
     @Test
-    void sell_whenV2_leavesTheLotsChargesUnallocated() {
-        // Given
-        TransactionEntity buy = trade("a", TransactionType.BUY, 3, 100, JAN_5);
-        buy.setBrokerCharges(30);
-        ledger.buy(buy, TradeFlow.V2, OptionalDouble.empty());
-
-        // When
-        ledger.sell(trade("s", TransactionType.SELL, 1, 120, FEB_10), TradeFlow.V2);
-
-        // Then -- V2 works its share out from the original quantity instead (allocateSaleV2)
-        assertMoney(0.0, ledger.lots().getFirst().getAllocatedBuyCharges());
-    }
-
-    @Test
     void sell_whenTheLotsHoldTooLittle_isRefusedNamingTheShortfall() {
         // Given -- 5 held
         ledger.buy(trade("a", TransactionType.BUY, 5, 100, JAN_5), TradeFlow.V2, OptionalDouble.empty());
 
         // When / Then -- 6 sold: 1 short
         IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
-                () -> ledger.sell(trade("s", TransactionType.SELL, 6, 120, FEB_10), TradeFlow.V2));
+                () -> ledger.sell(trade("s", TransactionType.SELL, 6, 120, FEB_10)));
         assertTrue(refused.getMessage().contains("Sale s") && refused.getMessage().contains("1.0 short"),
                 refused.getMessage());
     }
