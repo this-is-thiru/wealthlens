@@ -659,7 +659,8 @@ public class PortfolioService {
                 .brokerName(assetEntity.getBrokerName())
                 .assetType(assetEntity.getAssetType())
                 .accountType(assetRequest.getAccountType())
-                .accountHolder(assetRequest.getAccountHolder());
+                .accountHolder(assetRequest.getAccountHolder())
+                .segment(assetRequest.getSegment());
         v1BuySide(row, assetEntity, sellQuantity, figures);
         return row
                 .sellPrice(assetRequest.getPrice())

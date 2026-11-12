@@ -1030,6 +1030,27 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void addTransaction_whenAnIntradayLotIsSold_recordsTheSaleSegmentOnTheOutcomeRow() {
+        // Given -- a V1 intraday buy of 10 on 5 Jan (W-295, D-592)
+        chargeSeederService.seed("integration-test");
+        String path = "/portfolio/user/" + OWNER + "/transaction";
+        Map<String, Object> buy = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        buy.put("segment", TradeSegment.INTRADAY.name());
+        post(OWNER, path, buy);
+        Map<String, Object> sell = trade(TransactionType.SELL, 10.0, 101.0, JAN_5);
+        sell.put("segment", TradeSegment.INTRADAY.name());
+
+        // When -- the same 10 sold intraday through V1
+        ResponseEntity<String> sold = post(OWNER, path, sell);
+
+        // Then -- the row carries the segment P&L files it under, as a V2 row does
+        assertEquals(200, sold.getStatusCode().value(), sold.getBody());
+        TradeOutcomeEntity row = mongoTemplate.findAll(TradeOutcomeEntity.class, "trade_outcomes").stream()
+                .filter(outcome -> OWNER.equals(outcome.getEmail())).findFirst().orElseThrow();
+        assertEquals(TradeSegment.INTRADAY, row.getSegment());
+    }
+
+    @Test
     void addTransactionV2_whenAnIntradayLotIsSold_recordsTheBuySegmentOnTheOutcomeRow() {
         // Given — a V2 intraday buy of 10 on 5 Jan (W-292, D-585)
         chargeSeederService.seed("integration-test");

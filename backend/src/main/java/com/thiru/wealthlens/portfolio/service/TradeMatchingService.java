@@ -284,6 +284,7 @@ public class TradeMatchingService {
         entity.setAssetType(trade.getAssetType());
         entity.setAccountType(trade.getAccountType());
         entity.setAccountHolder(trade.getAccountHolder());
+        entity.setSegment(trade.getSellVenue().segment().orElse(null));
         entity.setOriginalBuyPrice(trade.getOriginalBuyPrice());
         entity.setCorporateActionAdjustedBuyPrice(trade.getCorporateActionAdjustedBuyPrice());
         entity.setBuyQuantity(trade.getBuyQuantity());

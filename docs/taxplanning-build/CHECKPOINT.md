@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-295 (a V1 or rebuilt outcome row records no segment) — next by board order; nothing written
-Stage           : W-292 DONE (D-591), committed and pushed; W-295 not started
-Done today      : session 86: W-292 built, committed and pushed; W-295 – W-297 placed (D-592 – D-594)
-Board           : W-291 D; W-292 D; W-295 – W-297 · (placed, D-592 – D-594); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check below; then plan W-295 (red test first), STOP for approval
-Owner actions   : after deploy: §3.18 (read-only); §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-292 unit 5,197 / 0, integration 634 / 0 (61 classes); validate 0
+Item            : W-296 (V1 merges same-day buys of different segments) — next by board order; nothing written
+Stage           : W-295 DONE (D-595), committed and pushed; W-296 not started
+Done today      : session 86: W-292, W-295 built, committed and pushed; W-295 – W-298 placed, W-297 widened (D-592 – D-597)
+Board           : W-292 D; W-295 D; W-296, W-297 ·; W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check below; then plan W-296 (red test first), STOP for approval
+Owner actions   : after deploy: §3.18, §3.19 (read-only; no §2.11 for a §3.19 user before W-297); §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : W-295 unit 5,198 / 0, integration 636 / 0 (61 classes); validate 0
 Files touched   : none
-Last item commit: taxplanning W-292: record the segment a trade was entered in on its transaction and lot
-Updated         : 2026-11-12, session 86 — W-292 done; W-295 next
+Last item commit: taxplanning W-295: record the sale's segment on every outcome row
+Updated         : 2026-11-12, session 86 — W-295 done; W-296 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

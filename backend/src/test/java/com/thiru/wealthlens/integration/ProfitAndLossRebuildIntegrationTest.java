@@ -15,9 +15,11 @@ import com.thiru.wealthlens.portfolio.dto.ProfitAndLossRebuildReport;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossRebuildReport.YearComparison;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
+import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
@@ -183,6 +185,26 @@ class ProfitAndLossRebuildIntegrationTest extends AbstractIntegrationTest {
         assertThat(recordedTradeCharges).isGreaterThan(0.0);
         assertMoney(0.0, year.stored().chargesRupees());
         assertMoney(recordedTradeCharges, year.rebuilt().chargesRupees());
+    }
+
+    @Test
+    void rebuild_whenAV1SaleWasIntraday_filesItUnderIntraday() {
+        // Given -- a V1 intraday buy of 10 @ 100 and its intraday sale @ 110, both 5 Jan 2026 (W-295, D-592)
+        Map<String, Object> buy = trade(TransactionType.BUY, 10.0, 100.0, LocalDate.of(2026, 1, 5));
+        buy.put("segment", TradeSegment.INTRADAY.name());
+        post(V1_USER, "/transaction", buy);
+        Map<String, Object> sell = trade(TransactionType.SELL, 10.0, 110.0, LocalDate.of(2026, 1, 5));
+        sell.put("segment", TradeSegment.INTRADAY.name());
+        post(V1_USER, "/transaction", sell);
+
+        // When -- the year rebuilt from the stored rows and written
+        rebuild(V1_USER, "?dryRun=false", "SUPER_USER").statusCode(200);
+
+        // Then -- the sale (10 × 110 = ₹1,100) is filed under intraday, and nothing under delivery
+        Map<TradeSegment, FinancialReport> equity = profitAndLossRepository.findByEmailAndFinancialYear(V1_USER, YEAR)
+                .orElseThrow().getRealisedProfits().getGainsByAssetAndSegment().get(AssetType.EQUITY);
+        assertThat(equity).containsOnlyKeys(TradeSegment.INTRADAY);
+        assertMoney(1100.0, equity.get(TradeSegment.INTRADAY).getSellAmount());
     }
 
     @Test

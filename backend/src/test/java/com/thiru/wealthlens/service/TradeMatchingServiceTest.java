@@ -843,6 +843,21 @@ class TradeMatchingServiceTest {
     }
 
     @Test
+    void toTradeOutcomeEntity_whenTheSaleWasIntraday_recordsTheRowsSegment() {
+        // Given -- an intraday buy and its intraday sale (W-295, D-592)
+        TransactionEntity buy = infy("buy-1", LocalDate.of(2025, 1, 10), 10, 100, null);
+        buy.setSegment(TradeSegment.INTRADAY);
+        TransactionEntity sell = infy("sell-1", LocalDate.of(2025, 1, 10), 10, 110, null);
+        sell.setSegment(TradeSegment.INTRADAY);
+
+        // When
+        TradeOutcomeEntity row = rowsOf(List.of(buy), sell).getFirst();
+
+        // Then -- the segment P&L files the row under is the sale's
+        assertEquals(TradeSegment.INTRADAY, row.getSegment());
+    }
+
+    @Test
     void toTradeOutcomeEntity_whenSameDayBuysWereOnDifferentExchanges_recordsNoExchangeForTheLot() {
         // Given -- two same-day buys merged into one lot, one on NSE and one on BSE, both delivery
         TransactionEntity first = infy("buy-1", LocalDate.of(2021, 1, 10), 5, 100, null);
