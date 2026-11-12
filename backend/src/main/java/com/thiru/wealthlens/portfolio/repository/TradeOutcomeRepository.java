@@ -30,4 +30,10 @@ public interface TradeOutcomeRepository extends MongoRepository<TradeOutcomeEnti
     void deleteByEmail(String email);
 
     long countByEmail(String email);
+
+    /**
+     * A user's rows that carry {@code sell_charge_breakup}: the V2 recorder writes it, V1 and the rebuild do not
+     * ({@code ProfitAndLossV2Backfill}). The entity defaults the map to empty, so only the stored field tells (W-283a2).
+     */
+    List<TradeOutcomeEntity> findByEmailAndSellChargeBreakupExists(String email, boolean exists);
 }

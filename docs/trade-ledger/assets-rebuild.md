@@ -88,14 +88,45 @@ A sale draws the lots of its stock, broker and account holder dated on or before
 gives what it holds until the sale's quantity is met. This is the FIFO both flows share since W-271. Each lot drawn
 records the sale in `sell_transaction_ids`, and a lot with nothing left is removed.
 
+**A sale's flow changes the lot too** (found building W-283a2, D-582).
+- A V1 sale records its share of each lot's buy charges on the lot, in `allocated_buy_charges` and
+  `allocated_buy_misc_charges`, through `LotChargeAllocator` (`PortfolioService:549 – 550`).
+- A V2 sale leaves those untouched. Its share is worked out from the original quantity when the outcome row is built.
+- A sale stored from W-283a1 records its flow. An older one takes it from its `trade_outcomes` rows (C2a): a row
+  with `sell_charge_breakup` means V2, rows without it mean V1. A sale with no rows is listed and replayed as V2,
+  which leaves the lot's charges whole.
+
 A sale that finds less than its quantity is refused, naming the transaction and the shortfall. That is what a
 rebuild exists to surface.
 
+## Lot ids, and the read-only first step
+
+- **W-283a2** compares only, and writes nothing.
+- **W-283a3** writes. A rebuilt lot whose `buy_transaction_ids` equal a stored lot's keeps that lot's id, so
+  `trade_outcomes.source_buy_lot_id` keeps pointing at it. Any other lot gets a new id and is listed (C3a, D-582).
+- The comparison matches lots by stock, broker, account holder, date and buy transactions, not by id. A demerged lot
+  lists no buy, so two demerged from different parents on one date share a key and are compared in order.
+
+## Copied as live, not compared
+
+The replay builds what the live paths build, even where that looks wrong, so a difference in the report means drift.
+It never means a fix.
+
+- **A bonus lot** is a copy of the first lot held, so it keeps that lot's `broker_charges`, `misc_charges`, allocated
+  charges and `sell_transaction_ids` (`CorporateActionService:297 – 304` resets none of them). This is W-291.
+- **Segment:** `AssetRequest.asAsset` and `asTransaction` do not copy `segment`, so every lot and transaction holds
+  the default `DELIVERY`. This is W-292.
+- **Not compared:**
+  - a lot's order times, which a V2 lot takes from the request and a transaction does not keep;
+  - its list of corporate actions. W-283a3 keeps both from the matched stored lot.
+
 ## The report
 
-The report has one entry per stock, broker and account holder, giving the stored lots against the rebuilt lots
-(quantity, price, charges, date). It also lists:
+The report has one entry per lot, giving the stored figures against the rebuilt ones: quantity, price, broker and
+misc charges, both allocated charges, and the corporate-action type. Each entry names the fields that differ. It
+also lists:
 - every buy whose shape was read from a stored lot, or not found;
+- every sale whose flow was read from its rows, or not found;
 - every corporate action applied;
 - every pending action left;
 - every temporary skipped.

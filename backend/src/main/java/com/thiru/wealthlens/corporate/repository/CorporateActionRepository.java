@@ -9,6 +9,9 @@ import org.springframework.data.mongodb.repository.Query;
 public interface CorporateActionRepository extends MongoRepository<CorporateActionEntity, String> {
     List<CorporateActionEntity> findByType(CorporateActionType type);
 
+    /** Every action of these types on a stock, whatever its date: the {@code assets} rebuild sorts them (W-283a2). */
+    List<CorporateActionEntity> findByStockCodeAndTypeIn(String stockCode, List<CorporateActionType> types);
+
     /**
      * Corporate actions to perform before the transaction date
      */

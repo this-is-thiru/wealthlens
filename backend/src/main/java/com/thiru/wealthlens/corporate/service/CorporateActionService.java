@@ -407,17 +407,34 @@ public class CorporateActionService {
     }
 
     private void applySplit(CorporateActionEntity corporateAction, SplitRatio ratio, List<AssetEntity> lots) {
+        splitLots(corporateAction, ratio, lots);
+        portfolioService.saveCorporateActionProcessedStocks(lots);
+    }
+
+    /**
+     * A split's effect on lots, nothing saved: the step the {@code assets} rebuild replays, so it cannot split
+     * differently from a performed one (W-283a2, D-582).
+     */
+    public static void splitLots(CorporateActionEntity corporateAction, SplitRatio ratio, List<AssetEntity> lots) {
         for (AssetEntity lot : lots) {
             lot.setQuantity(ratio.quantityAfter(lot.getQuantity()));
             lot.setPrice(ratio.priceAfter(lot.getPrice()));
             lot.getCorporateActions().add(TJsonMapper.copy(corporateAction, CorporateActionEntity.class));
         }
-        portfolioService.saveCorporateActionProcessedStocks(lots);
     }
 
     private void processDemergerOfShares(CorporateActionEntity corporateAction, BrokerName brokerName, List<AssetEntity> stockEntities) {
+        portfolioService.saveCorporateActionProcessedStocks(demergeLots(corporateAction, stockEntities));
+        log.info("Demerger of shares added for symbol: {} in Broker: {}", corporateAction.getStockCode(), brokerName);
+    }
 
-        String stockCode = corporateAction.getStockCode();
+    /**
+     * A demerger's effect on lots, nothing saved: each lot repriced and renamed to the main stock, and a new lot per
+     * demerged stock; returns them all. The step the {@code assets} rebuild replays (W-283a2, D-582).
+     *
+     * @throws IllegalArgumentException if the demerger names other than one demerged stock
+     */
+    public List<AssetEntity> demergeLots(CorporateActionEntity corporateAction, List<AssetEntity> stockEntities) {
         var demergerDetail = corporateAction.getDemergerDetail();
         String[] demergerRatio = demergerDetail.getDemergerRatio().split(":");
         int mainStockRatio = Integer.parseInt(demergerRatio[0]);
@@ -443,9 +460,7 @@ public class CorporateActionService {
             demergedStocks.parallelStream().forEach(a -> a.getCorporateActions().add(action));
             finalDemergedStocks.addAll(demergedStocks);
         }
-
-        portfolioService.saveCorporateActionProcessedStocks(finalDemergedStocks);
-        log.info("Demerger of shares added for symbol: {} in Broker: {}", stockCode, brokerName);
+        return finalDemergedStocks;
     }
 
     public List<AssetEntity> processDemergerForEachAssetEntry(DemergerContext demergerContext) {

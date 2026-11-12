@@ -752,11 +752,11 @@ public class PortfolioService {
      * summed as doubles drift (0.1 + 0.7 is 0.7999999999999999), which refused a full sale and left 1e-17-unit lots
      * behind (W-274).
      */
-    private static boolean takesWholeLot(double sellQuantity, double lotQuantity) {
+    static boolean takesWholeLot(double sellQuantity, double lotQuantity) {
         return sellQuantity >= lotQuantity || DoubleUtil.equal(sellQuantity, lotQuantity);
     }
 
-    private static boolean isLeftToSell(double sellQuantity) {
+    static boolean isLeftToSell(double sellQuantity) {
         return sellQuantity > 0 && !DoubleUtil.equal(sellQuantity, 0);
     }
 
