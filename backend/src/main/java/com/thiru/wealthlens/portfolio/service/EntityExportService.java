@@ -84,6 +84,7 @@ public class EntityExportService {
         transaction.setStockName("Stock Name");
         transaction.setExchangeName("NSE");
         transaction.setBrokerName(BrokerName.ZERODHA);
+        transaction.setAccountHolder("Self");
         transaction.setAssetType(AssetType.EQUITY);
         transaction.setMaturityDate(LocalDate.now());
         transaction.setTransactionType(TransactionType.BUY);

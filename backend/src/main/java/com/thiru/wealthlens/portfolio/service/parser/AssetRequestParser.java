@@ -32,6 +32,7 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         dataTypeMap.put(ExcelHeaders.STOCK_NAME, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.EXCHANGE_NAME, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.BROKER_NAME, ExcelDataType.STRING);
+        dataTypeMap.put(ExcelHeaders.ACCOUNT_HOLDER, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.ASSET_TYPE, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.MATURITY_DATE, ExcelDataType.LOCAL_DATE);
         dataTypeMap.put(ExcelHeaders.PRICE, ExcelDataType.DOUBLE);
@@ -57,6 +58,7 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         setStockName(assetRequest, record);
         setExchangeName(assetRequest, record);
         setBrokerName(assetRequest, record);
+        setAccountHolder(assetRequest, record);
         setAssetType(assetRequest, record, inputRecord.getRecordNumber());
         setPrice(assetRequest, record);
         setQuantity(assetRequest, record);
@@ -96,6 +98,16 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         CellDetail cellDetail = record.get(ExcelHeaders.BROKER_NAME);
         String brokerName = (String) cellDetail.getCellValue();
         assetRequest.setBrokerName(BrokerName.valueOf(brokerName));
+    }
+
+    /**
+     * The holder the row names; a workbook without the column, or a blank cell, names none, as a JSON trade without one
+     * does (W-285, D-605).
+     */
+    private static void setAccountHolder(AssetRequest assetRequest, Map<String, CellDetail> record) {
+
+        CellDetail cellDetail = record.getOrDefault(ExcelHeaders.ACCOUNT_HOLDER, CellDetail.def());
+        assetRequest.setAccountHolder((String) cellDetail.getCellValue());
     }
 
     /** The row's asset type; a land or building is refused with its row, as the JSON paths refuse it (W-088g5). */

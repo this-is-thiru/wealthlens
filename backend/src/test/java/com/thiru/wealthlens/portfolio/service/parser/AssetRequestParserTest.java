@@ -106,4 +106,29 @@ class AssetRequestParserTest {
         // Then
         assertNull(request.getMaturityDate());
     }
+    @Test
+    void toRequest_whenTheRowNamesAnAccountHolder_keepsIt() {
+        // Given -- a row with an ACCOUNT HOLDER cell (W-285, D-559)
+        InputRecord record = row(2, "EQUITY", CellDetail.def());
+        record.getRecord().put(ExcelHeaders.ACCOUNT_HOLDER, CellDetail.of(ExcelDataType.STRING, "Lakshmi"));
+
+        // When
+        AssetRequest request = parser.toRequest(record);
+
+        // Then
+        assertEquals("Lakshmi", request.getAccountHolder());
+    }
+
+    @Test
+    void toRequest_whenTheRowHasNoAccountHolder_leavesItAbsentAsJsonDoes() {
+        // Given -- a workbook made before the column existed
+        InputRecord record = row(2, "EQUITY", CellDetail.def());
+
+        // When
+        AssetRequest request = parser.toRequest(record);
+
+        // Then -- no holder, as a JSON trade without one
+        assertNull(request.getAccountHolder());
+    }
+
 }

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-285 (the upload never records an account holder) — next by board order; nothing written
-Stage           : W-284 closed (D-604), committed and pushed; W-285 not started
-Done today      : session 86: W-292, W-295 – W-298, W-300 built, W-284 closed; all pushed (D-591 – D-604, WL-46)
-Board           : W-284 —; W-285 ·; W-299 · (waits); W-300 · (placed, D-602); W-299 · (placed, D-600, WL-46); W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check; record W-300's pipeline run (43262396233) and this commit's; then plan W-285, STOP for approval
+Item            : W-301 (the upload reads no segment or account type) — next by board order; nothing written
+Stage           : W-285 DONE (D-605), committed and pushed; PR run watched (2 min); W-301 not started
+Done today      : session 86: W-292, W-295 – W-298, W-300, W-285 built, W-284 closed; all pushed (D-591 – D-606, WL-46)
+Board           : W-285 D; W-301 · (placed, D-606); W-299 · (waits); W-300 · (placed, D-602); W-299 · (placed, D-600, WL-46); W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check; record W-285's pipeline run; then plan W-301, STOP for approval
 Owner actions   : after deploy: §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : pipeline run 43259440268 on 664529ca (W-297 + W-298): success; 43258642541 (c553a41e) cancelled by it
+Last verify     : pipeline run 43263010173 on c8923ee7 (carries W-300): success, Analytics then gap audit 13 / 0, 58 / 0; W-285 touched classes 7 / 15 / 59, validate 0
 Files touched   : none
-Last item commit: taxplanning W-284: close as covered by runbook §2.3
-Updated         : 2026-11-12, session 86 — W-284 closed; W-285 next
+Last item commit: taxplanning W-285: record the account holder an uploaded row names
+Updated         : 2026-11-12, session 86 — W-285 done; W-301 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

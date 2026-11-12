@@ -91,6 +91,7 @@ public final class PortfolioExportColumns {
             ExcelColumn.text("assetType", ExcelHeaders.ASSET_TYPE, txn -> name(txn.getAssetType())),
             ExcelColumn.text("exchangeName", ExcelHeaders.EXCHANGE_NAME, TransactionEntity::getExchangeName),
             ExcelColumn.text("brokerName", ExcelHeaders.BROKER_NAME, txn -> name(txn.getBrokerName())),
+            ExcelColumn.text("accountHolder", ExcelHeaders.ACCOUNT_HOLDER, TransactionEntity::getAccountHolder),
             ExcelColumn.text("transactionType", ExcelHeaders.TRANSACTION_TYPE, txn -> name(txn.getTransactionType())),
             ExcelColumn.quantity("quantity", ExcelHeaders.QUANTITY, TransactionEntity::getQuantity),
             ExcelColumn.money("price", ExcelHeaders.PRICE, TransactionEntity::getPrice),

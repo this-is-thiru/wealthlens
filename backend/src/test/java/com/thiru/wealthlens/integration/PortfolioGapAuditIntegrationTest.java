@@ -856,6 +856,22 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void uploadTransactions_whenTheRowNamesAnAccountHolder_recordsItOnTheLot() throws IOException {
+        // Given -- one trade with an ACCOUNT HOLDER column (W-285, D-559)
+        byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> {
+            q1.getRow(0).createCell(14).setCellValue("ACCOUNT HOLDER");
+            q1.getRow(1).createCell(14).setCellValue("Lakshmi");
+        });
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then -- the lot is held by the holder the row named, not by nobody
+        assertEquals(200, uploaded.getStatusCode().value(), uploaded.getBody());
+        assertEquals(List.of("Lakshmi"), lotsOf(OWNER).stream().map(AssetEntity::getAccountHolder).toList());
+    }
+
+    @Test
     void uploadTransactions_whenAnEmptyRowFollowsTheData_skipsIt() throws IOException {
         // Given — one trade, then a row with only blank cells, as a spreadsheet keeps after formatting
         byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> {

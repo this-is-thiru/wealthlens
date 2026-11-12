@@ -208,7 +208,7 @@ class PortfolioExcelExporterTest {
         Sheet sheet = sheet(PortfolioExcelExporter.transactionTemplate(List.of(transaction()), List.of()), 0);
 
         assertEquals(List.of("EMAIL", "STOCK CODE", "STOCK NAME", "ASSET TYPE", "EXCHANGE NAME",
-                        "BROKER NAME", "TRANSACTION TYPE", "QUANTITY", "PRICE", "TRANSACTION DATE",
+                        "BROKER NAME", "ACCOUNT HOLDER", "TRANSACTION TYPE", "QUANTITY", "PRICE", "TRANSACTION DATE",
                         "MATURITY DATE", "BROKER CHARGES", "MISC CHARGES", "COMMENTS"),
                 valuesOf(sheet.getRow(0)));
     }
