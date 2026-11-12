@@ -58,6 +58,8 @@ rows are rewritten. Harmless until something groups by the field.
 
 ## B-4 — `profit_and_loss` and `assets` cannot be rebuilt from `transactions`
 
+> **2026-11-12 (W-283, D-575):** `profit_and_loss` half done — `POST /portfolio/user/{email}/profit-and-loss/rebuild` (`SUPER_USER`, dry run by default) folds `trade_outcomes` and the buys' and sales' `user_charges` as recorded; runbook §2.11. `assets` is W-283a (D-576).
+
 `transactions` is the source of truth. `assets` (holdings) and `profit_and_loss` are derived from it,
 and there is no way to recompute either — so any correction to them is a careful manual edit against
 a nested document.

@@ -60,7 +60,7 @@ against the named database.
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.0 – 2.10 | Tax planning, by hand, in order | per step | per step |
+| 2.0 – 2.11 | Tax planning, by hand, in order | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -137,7 +137,8 @@ db.transactions.find({ _id: dup })    // note its email, stock_code, transaction
   `assets` document listing `dup` in `sell_transaction_ids`, remove `dup` from that array, then delete the
   `trade_outcomes`, `user_charges` and `transactions` rows.
 - **Either.** The period's `profit_and_loss` totals include the duplicate. There is no recompute from `transactions`
-  for `profit_and_loss` or `assets` (trade-ledger backlog **B-4**), so correct the period by hand or accept it.
+  for `assets` (W-283a), so correct it by hand. `profit_and_loss` is rebuilt per user by §2.11 once the
+  `transactions`, `user_charges` and `trade_outcomes` rows are right (W-283).
   `trade_outcomes` can be recomputed: after the duplicate `transactions` rows are gone, back up and delete **that
   user's** rows, then run §2.2's rebuild for them.
 
@@ -1285,7 +1286,10 @@ purchase and sale only.
 5. **Verify:** a second dry run reports `placed` empty and `alreadyCounted` equal to step 4's `placed`.
 
 **Second run:** safe, including after a run that failed part-way: a row whose id is in the document's set is never
-added again (`ProfitAndLossV2BackfillIntegrationTest`). **Way back:** `mongoimport --mode upsert` of the step-3 file.
+added again (`ProfitAndLossV2BackfillIntegrationTest`). Before W-283 a live save of the document dropped that set, so a
+second run after any trade in the year could add a sale again; the set is now kept on save, and a §2.11 rebuild fills
+it with every row it folds (C3a, D-575). A document saved between a first run and W-283's deploy may have lost it:
+read `placed` on a second dry run before writing. **Way back:** `mongoimport --mode upsert` of the step-3 file.
 
 **Removed after use:** W-173 / WL-38, which also unsets `pnl_backfilled_outcome_ids`, once this is logged for every
 database and its `unplaced` list is placed.
@@ -1358,6 +1362,44 @@ second run finishes what is left or changes nothing (`modifiedCount` 0). **Way b
 <db> --collection charge_catalogue --mode merge --file charge_catalogue-deductibility-backup.json`. No code would read it.
 
 **Retired after use:** W-175 / WL-40, once this is logged for every database. There is no code to remove.
+
+### 2.11 W-283 (D-575) — rebuild one user's `profit_and_loss` from stored rows · `SUPER_USER` · **when needed, not once**
+
+**Why.** `profit_and_loss` is derived; this recomputes one user's documents from `trade_outcomes` (gains) and the
+`user_charges` rows of buys and sales (charges), as recorded. Nothing is priced again (ADR-32). It replaces hand edits
+of the nested P&L after a correction (B-4). A **standing operation**, not removed after use; never automatic.
+
+**When:** after a correction to a user's `transactions` (§0.2 duplicates, §3 findings). In order: correct
+`transactions` and `user_charges`; if that user's `trade_outcomes` are wrong too, back them up, delete them and run
+§2.2 for the user; then this.
+
+**Know this:**
+- V1 trades' recorded charges are folded too, which V1 never did (C2a), so a V1 user's `chargesRupees` can rise; their
+  gains come from their `trade_outcomes` rows, as V2's do.
+- An AMC cycle and the other account events are not folded, as the live P&L does not fold them.
+- A charge row naming a transaction that is not stored refuses the whole call (400, naming it): delete that
+  `user_charges` row or restore the transaction.
+- The rebuilt documents list every folded row in `pnl_backfilled_outcome_ids`, so §2.8 never adds them again.
+
+1. **Before (read-only):** note the user's documents and back them up:
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss \
+     --query '{ "email": "<stored user email>" }' --out pnl-<user>-backup.json   # §0.7 for the stored form
+   ```
+2. **Dry run** (the default):
+   ```bash
+   curl -sS -X POST "$BASE/portfolio/user/<email>/profit-and-loss/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+   Read `years`: per financial year, `stored` against `rebuilt`. For a V2-only user they agree to the paisa; any
+   difference is the correction, or a V1 figure (above). Decide before writing.
+3. **Write:** the same call with `?dryRun=false`.
+4. **Verify (read-only):** `db.profit_and_loss.countDocuments({ email: "<stored user email>" })` equals the number of
+   rebuilt years, and a second dry run reports every year's `stored` equal to its `rebuilt`.
+
+**Second run:** safe, including after one that failed part-way: the write is one transaction that replaces the user's
+documents with the same fold, so a second run writes the same documents (`ProfitAndLossRebuildIntegrationTest`).
+**Way back:** delete the user's documents and `mongoimport --uri "<uri>" --db <db> --collection profit_and_loss
+--file pnl-<user>-backup.json`.
 
 ---
 

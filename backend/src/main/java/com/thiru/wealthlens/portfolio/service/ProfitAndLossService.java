@@ -374,7 +374,7 @@ public class ProfitAndLossService {
         for (int i = 0; i < rows.size(); i++) {
             AssetType assetType = assetTypeOf(Optional.ofNullable(profitLossContext.assetType()),
                     lots.get(i).assetType(), profitLossContext.stockCode());
-            updateProfitAndLossReport(profitAndLossEntity, profitLossContext,
+            updateProfitAndLossReport(profitAndLossEntity, profitLossContext.accountType(),
                     InternalContext.of(rows.get(i), transactionDate, assetType, profitLossContext.segment()));
         }
 
@@ -384,9 +384,21 @@ public class ProfitAndLossService {
         profitAndLossRepository.save(profitAndLossEntity);
     }
 
-    private static void updateProfitAndLossReport(ProfitAndLossEntity profitAndLossEntity, ProfitLossContext profitLossContext, InternalContext internalContext) {
+    /**
+     * Folds one stored trade-outcome row into its year's document by the steps a live sale takes, so a rebuild cannot
+     * compute differently from the trade that wrote the row (W-283, D-575). The row's own date, account type, asset type
+     * and segment place it, as the sale's did.
+     *
+     * @throws IllegalArgumentException if the row records no asset type
+     */
+    public static void foldSale(ProfitAndLossEntity profitAndLossEntity, TradeOutcomeContext row) {
+        AssetType assetType = assetTypeOf(Optional.ofNullable(row.getAssetType()), Optional.empty(), row.getStockCode());
+        updateProfitAndLossReport(profitAndLossEntity, row.getAccountType(),
+                InternalContext.of(row, row.getSellDate(), assetType, row.getSegment()));
+    }
 
-        AccountType accountType = profitLossContext.accountType();
+    private static void updateProfitAndLossReport(ProfitAndLossEntity profitAndLossEntity, AccountType accountType,
+                                                  InternalContext internalContext) {
         if (accountType == AccountType.SELF) {
             RealisedProfits existingRealisedProfits = TOptional.mapO(profitAndLossEntity.getRealisedProfits(), RealisedProfits.empty());
             RealisedProfits calculatedProfitDetails = calculateProfitDetails(existingRealisedProfits, internalContext);
@@ -540,12 +552,21 @@ public class ProfitAndLossService {
         if (precomputed.isEmpty()) {
             return;
         }
-        Map<String, Double> amountByCode = precomputed.get().amountByCode();
+        foldCharges(profitAndLossEntity, profitLossContext.accountType(), profitLossContext.date(),
+                precomputed.get().amountByCode());
+    }
+
+    /**
+     * Folds one trade's charges into its year's document, as a live V2 trade's computation is (W-283, D-575): nothing
+     * when there is no amount.
+     */
+    public static void foldCharges(ProfitAndLossEntity profitAndLossEntity, AccountType accountType,
+                                   LocalDate tradeDate, Map<String, Double> amountByCode) {
         if (amountByCode.isEmpty()) {
             return;
         }
 
-        boolean self = profitLossContext.accountType() == AccountType.SELF;
+        boolean self = accountType == AccountType.SELF;
         RealisedProfits realisedProfits = self
                 ? TOptional.mapO(profitAndLossEntity.getRealisedProfits(), RealisedProfits.empty())
                 : TOptional.mapO(profitAndLossEntity.getOutSourcedRealisedProfits(), RealisedProfits.empty());
@@ -556,7 +577,7 @@ public class ProfitAndLossService {
             realisedProfits.setYearlyChargeSummary(yearly);
         }
         yearly.merge(amountByCode);
-        mergeIntoMonth(yearly, profitLossContext.date(), amountByCode);
+        mergeIntoMonth(yearly, tradeDate, amountByCode);
 
         if (self) {
             profitAndLossEntity.setRealisedProfits(realisedProfits);

@@ -5,6 +5,8 @@ import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -84,6 +86,17 @@ public class ProfitAndLossEntity implements AuditableEntity {
     @Field("audit_metadata")
     @Setter(AccessLevel.NONE)
     private AuditMetadata auditMetadata = new AuditMetadata();
+
+    /**
+     * The {@code trade_outcomes} rows already in this document's figures, which the one-time V2 backfill
+     * ({@code ProfitAndLossV2Backfill}, runbook §2.8) skips. Mapped here so a save keeps it: a save replaces the whole
+     * document, and an unmapped field went with it, so the backfill's second run could add a sale again. A rebuild
+     * fills it with every row it folds (W-283 C3a, D-575). Removed with the backfill (W-173).
+     */
+    @JsonIgnore
+    @Field("pnl_backfilled_outcome_ids")
+    @Setter(AccessLevel.NONE)
+    private List<String> backfilledOutcomeIds = new ArrayList<>();
 
     public ProfitAndLossEntity(String email) {
         this.email = email;

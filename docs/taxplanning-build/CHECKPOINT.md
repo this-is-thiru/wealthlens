@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-283 — next by board order; nothing written
-Stage           : W-288 DONE (D-574), committed and pushed; W-283 not started
-Done today      : session 85: W-287 9f681494 (D-572); W-288 placed (D-573) and done (D-574) — mutation profile 99 % without the legacy engines
-Board           : W-287 D; W-288 D; W-283 – W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check below; then plan W-283, STOP for approval
-Owner actions   : answer Q-1 (PS-8); run runbook 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : whole mutation profile 99 % (678/680), exit 0; probe exit 1; validate green
+Item            : W-283a (rebuild assets) — next by board order; nothing written
+Stage           : W-283 DONE (D-575), committed and pushed; W-283a not started
+Done today      : session 85: W-287 9f681494 (D-572), W-288 397250a7 (D-574), W-283 (D-575, W-283a placed D-576) + api-collection request
+Board           : W-283 D; W-283a ·; W-284, W-285 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check below; then plan W-283a (design first: lot shape, corporate-action replay), STOP for approval
+Owner actions   : run runbook §2.11 when a P&L needs correcting; Q-1 (PS-8); runbook 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : unit tier 5,179 / 0; integration tier 642 / 0 (W-283)
 Files touched   : none
-Last item commit: taxplanning W-288: take the legacy engines out of the mutation profile
-Updated         : 2026-11-12, session 85 — W-288 done; W-283 next
+Last item commit: taxplanning W-283: rebuild a user's profit and loss from stored rows
+Updated         : 2026-11-12, session 85 — W-283 done; W-283a next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
