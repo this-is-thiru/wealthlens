@@ -872,6 +872,27 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void uploadTransactions_whenTheRowNamesItsSegmentAndAccountType_recordsBoth() throws IOException {
+        // Given -- one trade marked intraday, for an outsourced account (W-301, D-606)
+        byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> {
+            q1.getRow(0).createCell(14).setCellValue("SEGMENT");
+            q1.getRow(0).createCell(15).setCellValue("ACCOUNT TYPE");
+            q1.getRow(1).createCell(14).setCellValue("INTRADAY");
+            q1.getRow(1).createCell(15).setCellValue("OUTSOURCED");
+        });
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then -- the transaction and the lot carry what the row said, not the defaults
+        assertEquals(200, uploaded.getStatusCode().value(), uploaded.getBody());
+        TransactionEntity transaction = transactionsOf(OWNER).getFirst();
+        assertEquals(TradeSegment.INTRADAY, transaction.getSegment());
+        assertEquals(AccountType.OUTSOURCED, transaction.getAccountType());
+        assertEquals(TradeSegment.INTRADAY, lotsOf(OWNER).getFirst().getSegment());
+    }
+
+    @Test
     void uploadTransactions_whenAnEmptyRowFollowsTheData_skipsIt() throws IOException {
         // Given — one trade, then a row with only blank cells, as a spreadsheet keeps after formatting
         byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> {

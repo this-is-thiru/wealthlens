@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.InputRecord;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.enums.ExcelDataType;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.parser.CellDetail;
@@ -129,6 +131,48 @@ class AssetRequestParserTest {
 
         // Then -- no holder, as a JSON trade without one
         assertNull(request.getAccountHolder());
+    }
+
+    @Test
+    void toRequest_whenTheRowNamesItsSegmentAndAccountType_keepsBoth() {
+        // Given -- an intraday row for an outsourced account (W-301, D-606)
+        InputRecord record = row(2, "EQUITY", CellDetail.def());
+        record.getRecord().put(ExcelHeaders.SEGMENT, CellDetail.of(ExcelDataType.STRING, "INTRADAY"));
+        record.getRecord().put(ExcelHeaders.ACCOUNT_TYPE, CellDetail.of(ExcelDataType.STRING, "OUTSOURCED"));
+
+        // When
+        AssetRequest request = parser.toRequest(record);
+
+        // Then
+        assertEquals(TradeSegment.INTRADAY, request.getSegment());
+        assertEquals(AccountType.OUTSOURCED, request.getAccountType());
+    }
+
+    @Test
+    void toRequest_whenTheRowHasNoSegmentOrAccountType_takesTheDefaultsJsonDoes() {
+        // Given -- a workbook made before the columns existed
+        InputRecord record = row(2, "EQUITY", CellDetail.def());
+
+        // When
+        AssetRequest request = parser.toRequest(record);
+
+        // Then -- delivery, on the user's own account, as a JSON trade without them
+        assertEquals(TradeSegment.DELIVERY, request.getSegment());
+        assertEquals(AccountType.SELF, request.getAccountType());
+    }
+
+    @Test
+    void toRequest_whenTheSegmentIsNotOne_refusesNamingTheRowAndTheWords() {
+        // Given
+        InputRecord record = row(3, "EQUITY", CellDetail.def());
+        record.getRecord().put(ExcelHeaders.SEGMENT, CellDetail.of(ExcelDataType.STRING, "intra"));
+
+        // When
+        BadRequestException refusal = assertThrows(BadRequestException.class, () -> parser.toRequest(record));
+
+        // Then
+        assertEquals("Row 3, SEGMENT: \"intra\" is not one of [DELIVERY, INTRADAY, FUTURES, OPTIONS, NA]",
+                refusal.getMessage());
     }
 
 }

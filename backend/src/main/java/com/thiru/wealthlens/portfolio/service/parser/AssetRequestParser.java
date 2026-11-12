@@ -3,11 +3,13 @@ package com.thiru.wealthlens.portfolio.service.parser;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.service.parser.model.AbstractRequestParser;
 import com.thiru.wealthlens.portfolio.service.parser.model.AssetRequestParserImpl;
 import com.thiru.wealthlens.portfolio.service.parser.model.ExcelParser;
 import com.thiru.wealthlens.shared.dto.InputRecord;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.enums.ExcelDataType;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
@@ -15,8 +17,10 @@ import com.thiru.wealthlens.shared.util.parser.CellDetail;
 import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
 
@@ -33,6 +37,8 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         dataTypeMap.put(ExcelHeaders.EXCHANGE_NAME, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.BROKER_NAME, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.ACCOUNT_HOLDER, ExcelDataType.STRING);
+        dataTypeMap.put(ExcelHeaders.SEGMENT, ExcelDataType.STRING);
+        dataTypeMap.put(ExcelHeaders.ACCOUNT_TYPE, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.ASSET_TYPE, ExcelDataType.STRING);
         dataTypeMap.put(ExcelHeaders.MATURITY_DATE, ExcelDataType.LOCAL_DATE);
         dataTypeMap.put(ExcelHeaders.PRICE, ExcelDataType.DOUBLE);
@@ -59,6 +65,10 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         setExchangeName(assetRequest, record);
         setBrokerName(assetRequest, record);
         setAccountHolder(assetRequest, record);
+        constantOf(TradeSegment.class, record, ExcelHeaders.SEGMENT, inputRecord.getRecordNumber())
+                .ifPresent(assetRequest::setSegment);
+        constantOf(AccountType.class, record, ExcelHeaders.ACCOUNT_TYPE, inputRecord.getRecordNumber())
+                .ifPresent(assetRequest::setAccountType);
         setAssetType(assetRequest, record, inputRecord.getRecordNumber());
         setPrice(assetRequest, record);
         setQuantity(assetRequest, record);
@@ -108,6 +118,24 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
 
         CellDetail cellDetail = record.getOrDefault(ExcelHeaders.ACCOUNT_HOLDER, CellDetail.def());
         assetRequest.setAccountHolder((String) cellDetail.getCellValue());
+    }
+
+    /**
+     * The constant a cell names. A blank cell names none, so the request keeps the default a JSON trade without it gets;
+     * a word that is not a constant is refused with its row and the words accepted (W-301, D-607).
+     */
+    private static <E extends Enum<E>> Optional<E> constantOf(Class<E> type, Map<String, CellDetail> record,
+                                                              String header, Integer recordNumber) {
+        String word = (String) record.getOrDefault(header, CellDetail.def()).getCellValue();
+        if (word == null) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Enum.valueOf(type, word));
+        } catch (IllegalArgumentException notAConstant) {
+            throw new BadRequestException("Row " + recordNumber + ", " + header + ": \"" + word + "\" is not one of "
+                    + Arrays.toString(type.getEnumConstants()));
+        }
     }
 
     /** The row's asset type; a land or building is refused with its row, as the JSON paths refuse it (W-088g5). */

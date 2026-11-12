@@ -207,8 +207,8 @@ class PortfolioExcelExporterTest {
     void transactionTemplate_whenWritten_carriesTheParsedColumns() throws IOException {
         Sheet sheet = sheet(PortfolioExcelExporter.transactionTemplate(List.of(transaction()), List.of()), 0);
 
-        assertEquals(List.of("EMAIL", "STOCK CODE", "STOCK NAME", "ASSET TYPE", "EXCHANGE NAME",
-                        "BROKER NAME", "ACCOUNT HOLDER", "TRANSACTION TYPE", "QUANTITY", "PRICE", "TRANSACTION DATE",
+        assertEquals(List.of("EMAIL", "STOCK CODE", "STOCK NAME", "ASSET TYPE", "EXCHANGE NAME", "SEGMENT",
+                        "BROKER NAME", "ACCOUNT TYPE", "ACCOUNT HOLDER", "TRANSACTION TYPE", "QUANTITY", "PRICE", "TRANSACTION DATE",
                         "MATURITY DATE", "BROKER CHARGES", "MISC CHARGES", "COMMENTS"),
                 valuesOf(sheet.getRow(0)));
     }

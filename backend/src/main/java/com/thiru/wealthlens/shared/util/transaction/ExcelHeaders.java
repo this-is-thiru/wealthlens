@@ -5,11 +5,13 @@ public class ExcelHeaders {
     public static final String EMAIL = "EMAIL";
     public static final String STOCK_CODE = "STOCK CODE";
     public static final String STOCK_NAME = "STOCK NAME";
+    public static final String ACCOUNT_TYPE = "ACCOUNT TYPE";
     public static final String ACCOUNT_HOLDER = "ACCOUNT HOLDER";
     public static final String ORDER_ID = "ORDER ID";
     public static final String ORDER_EXECUTION_TIME = "ORDER EXECUTION TIME";
     public static final String TIME_ZONE = "TIME ZONE";
     public static final String EXCHANGE_NAME = "EXCHANGE NAME";
+    public static final String SEGMENT = "SEGMENT";
     public static final String BROKER_NAME = "BROKER NAME";
     public static final String ASSET_TYPE = "ASSET TYPE";
     public static final String MATURITY_DATE = "MATURITY DATE";
