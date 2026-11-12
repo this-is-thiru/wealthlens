@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
@@ -36,6 +37,7 @@ public class TemporaryTransactionService {
     private final CorporateActionRepository corporateActionRepository;
     private final TransactionRepository transactionRepository;
     private final LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
+    private final PortfolioRepository portfolioRepository;
 
     /**
      * Holds the trade back as {@code TEMPORARY} when a corporate action blocks it, recording the flow that received it
@@ -73,6 +75,12 @@ public class TemporaryTransactionService {
         return anyCorporateActionToPerform(userMail, assetRequest.getStockCode(), txnDate, assetRequest.getBrokerName());
     }
 
+    /**
+     * Whether a split, bonus or demerger not yet performed for this user and broker must be applied before a trade on
+     * {@code txnDate}: one recorded in the trade's quarter up to its date, or one recorded in an earlier quarter that
+     * reaches a lot the user holds with this broker — the lots it reshapes are those dated before its record date
+     * (W-289, D-587 C1a). An earlier one that reaches nothing held does not hold the trade.
+     */
     public boolean anyCorporateActionToPerform(UserMail userMail, String stockCode, LocalDate txnDate, BrokerName brokerName) {
         LocalDate quarterStart = getQuarterStart(txnDate);
         List<CorporateActionEntity> corporateActions = corporateActionRepository
@@ -83,7 +91,21 @@ public class TemporaryTransactionService {
                 return true;
             }
         }
+        List<CorporateActionEntity> earlier = corporateActionRepository.findByStockCodeAndTypeInAndRecordDateBefore(
+                stockCode, CorporateActionType.FILTERABLE_CORPORATE_ACTIONS, quarterStart);
+        for (CorporateActionEntity corporateAction : earlier) {
+            if (isCorporateActionToPerform(userMail, corporateAction, brokerName)
+                    && reachesHeldLots(userMail, corporateAction, brokerName)) {
+                return true;
+            }
+        }
         return false;
+    }
+
+    private boolean reachesHeldLots(UserMail userMail, CorporateActionEntity corporateAction, BrokerName brokerName) {
+        return portfolioRepository.findByEmailAndStockCodeAndTransactionDateBefore(userMail.getEmail(),
+                        corporateAction.getStockCode(), corporateAction.getRecordDate()).stream()
+                .anyMatch(lot -> lot.getBrokerName() == brokerName);
     }
 
     public boolean isCorporateActionToPerform(UserMail userMail, CorporateActionEntity corporateAction, BrokerName brokerName) {

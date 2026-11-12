@@ -179,4 +179,4 @@ later split multiplies what is left. For example:
 - live: (10 − 4) × 2 = 12;
 - correct, and this design: 10 × 2 − 4 = 16.
 
-The rebuild follows record-date order, so its dry run shows such a user's difference. The live gap is W-289.
+The rebuild follows record-date order, so its dry run shows such a user's difference. **Closed by W-289 (D-587):** the trade is now held when such an action reaches a lot the user holds with that broker; runbook §3.16 counts the users who may already be affected.

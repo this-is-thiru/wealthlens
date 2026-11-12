@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-289 (a trade not held for an earlier quarter's unperformed corporate action) — next by board order; nothing written
-Stage           : W-283a3 DONE (D-586), committed and pushed; B-4 closed; W-289 not started
-Done today      : session 85: W-287, W-288, W-283, W-283a, W-283a1, W-283a2, W-283a3 pushed; W-289 – W-292 placed
-Board           : W-283a3 D; W-289 ·; W-291 ·; W-292 ·; W-284, W-285 ·; W-290 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check below; then plan W-289 (first a red test proving it), STOP for approval
-Owner actions   : Q-1 (PS-8); runbook §2.11 / §2.12 when needed; runbook 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-283a3 unit 5,193 / 0, integration 624 / 0 (59 classes)
+Item            : W-291 (a bonus lot copies the first lot's charges and sales) — next by board order; nothing written
+Stage           : W-289 DONE (D-587), committed and pushed; W-291 not started
+Done today      : session 85: W-287, W-288, W-283, W-283a, W-283a1, W-283a2, W-283a3, W-289 pushed; W-290 – W-292 placed
+Board           : W-289 D; W-291 ·; W-292 ·; W-284, W-285 ·; W-290 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check below; then plan W-291 (first a red test, and trace the V2 sale's effect), STOP for approval
+Owner actions   : run runbook §3.16 after deploy; Q-1 (PS-8); runbook §2.11 / §2.12 when needed; 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : W-289 unit 5,195 / 0, integration 626 / 0 (60 classes)
 Files touched   : none
-Last item commit: taxplanning W-283a3: write the rebuilt assets
-Updated         : 2026-11-12, session 85 — W-283a3 done; W-289 next
+Last item commit: taxplanning W-289: hold a trade for an earlier quarter's unperformed corporate action
+Updated         : 2026-11-12, session 85 — W-289 done; W-291 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
