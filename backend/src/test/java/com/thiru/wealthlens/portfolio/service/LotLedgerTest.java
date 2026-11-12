@@ -123,7 +123,7 @@ class LotLedgerTest {
         // When
         boolean copied = ledger.allot(trade("bonus", TransactionType.BUY, 10, 0, LocalDate.of(2026, 1, 17)), bonus);
 
-        // Then -- 10 @ 0 dated by the allotment; the copy keeps the first lot's ₹20, as live does
+        // Then -- 10 @ 0 dated by the allotment, with nil cost: none of the first lot's ₹20 (W-291)
         AssetEntity allotted = ledger.lots().get(1);
         assertTrue(copied);
         assertEquals(10.0, allotted.getQuantity(), 1e-9);
@@ -131,7 +131,7 @@ class LotLedgerTest {
         assertEquals(LocalDate.of(2026, 1, 17), allotted.getTransactionDate());
         assertEquals(CorporateActionType.BONUS, allotted.getCorporateActionType());
         assertEquals(List.of("bonus"), allotted.getBuyTransactionIds());
-        assertMoney(20.0, allotted.getBrokerCharges());
+        assertMoney(0.0, allotted.getBrokerCharges());
     }
 
     @Test

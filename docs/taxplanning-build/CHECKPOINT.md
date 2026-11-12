@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-291 (a bonus lot copies the first lot's charges and sales) — next by board order; nothing written
-Stage           : W-293 DONE (D-588), committed and pushed; W-291 not started
-Done today      : session 85: W-287, W-288, W-283, W-283a, W-283a1, W-283a2, W-283a3, W-289, W-293 pushed; W-290 – W-292 placed
-Board           : W-293 D; W-291 ·; W-292 ·; W-284, W-285 ·; W-290 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check below; then plan W-291 (red test first; V2 sale effect now known: it allocates from the copied charges too), STOP for approval
-Owner actions   : run §3.16 after deploy; Q-1 (PS-8); runbook §2.11 / §2.12 when needed (§2.12 only with W-293 deployed); 3.10 – 3.15 after deploy; rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-293 unit 5,194 / 0, integration 627 / 0 (60 classes)
+Item            : W-292 (no transaction or lot records its segment) — next by board order; nothing written
+Stage           : W-291 DONE (D-589), committed and pushed; W-292 not started
+Done today      : session 85: W-287, W-288, W-283, W-283a, W-283a1 – a3, W-289, W-293, W-291 pushed; W-290, W-292, W-294 placed (WL-45)
+Board           : W-291 D; W-292 ·; W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
+Next step       : resume: run the resume check below; then plan W-292 (red test first), STOP for approval
+Owner actions   : after deploy: §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : W-291 unit 5,194 / 0, integration 630 / 0 (61 classes)
 Files touched   : none
-Last item commit: taxplanning W-293: record every sale's share of a lot's charges in the replay
-Updated         : 2026-11-12, session 85 — W-293 done; W-291 next
+Last item commit: taxplanning W-291: give a bonus lot and transaction only what the bonus is
+Updated         : 2026-11-12, session 85 — W-291 done; W-292 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

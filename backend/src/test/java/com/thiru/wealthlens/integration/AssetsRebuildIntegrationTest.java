@@ -150,6 +150,32 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void rebuild_whenABonusWasAllottedFromAChargedLot_rebuildsItAsAllotted() {
+        // Given -- V2 buy 10 @ 100 with ₹30 entered (5 Jan 2026); a 1:1 bonus recorded 15 Jan, allotted 17 Jan, performed
+        Map<String, Object> buy = trade(TransactionType.BUY, 10, 100, LocalDate.of(2026, 1, 5));
+        buy.put("brokerCharges", 30.0);
+        post(FIXED, "/transaction/v2", buy);
+        CorporateActionEntity bonus = new CorporateActionEntity();
+        bonus.setStockCode("INFY");
+        bonus.setStockName("Infosys");
+        bonus.setType(CorporateActionType.BONUS);
+        bonus.setAssetType(AssetType.EQUITY);
+        bonus.setRecordDate(LocalDate.of(2026, 1, 15));
+        bonus.setExDate(LocalDate.of(2026, 1, 15));
+        bonus.setAllotmentDate(LocalDate.of(2026, 1, 17));
+        bonus.setRatio("1:1");
+        bonus.setPriority(1);
+        mongoTemplate.save(bonus);
+        corporateActionService.performPendingCorporateActions(FIXED,
+                new CorporateActionPerformDto("JANUARY", 2026, BrokerName.ZERODHA), false);
+
+        // When / Then -- the bought lot keeps ₹30, the allotted 10 carry ₹0, and the replay builds the same two
+        assertThat(portfolioRepository.findByEmail(FIXED)).extracting(AssetEntity::getBrokerCharges)
+                .containsExactlyInAnyOrder(30.0, 0.0);
+        rebuild(FIXED, "", "SUPER_USER").statusCode(200).body("lotsDiffering", equalTo(0)).body("lots", hasSize(2));
+    }
+
+    @Test
     void rebuild_whenAUserAsksForTheirOwn_isForbidden() {
         given().header("Authorization", "Bearer " + generateToken(MIXED, "USER"))
                 .post("/portfolio/user/" + MIXED + "/assets/rebuild").then().statusCode(403);

@@ -66,8 +66,9 @@ final class LotLedger {
 
     /**
      * A bonus allotment, built as {@code CorporateActionService.processBonusShares} builds it: a copy of the first lot
-     * of the stock and broker held before the record date, at price 0, dated by the allotment, every such lot and the
-     * new one marked with the action. With no such lot, the allotment is its own lot.
+     * of the stock and broker held before the record date, at price 0, dated by the allotment, with nil cost, no sales
+     * and no earlier actions ({@code asAllotment}, W-291); every such lot and the new one marked with the action. With
+     * no such lot, the allotment is its own lot.
      *
      * @return whether a held lot was found to copy
      */
@@ -85,6 +86,7 @@ final class LotLedger {
         allotted.setOrderTimeQuantities(new ArrayList<>());
         allotted.setCorporateActionType(CorporateActionType.BONUS);
         allotted.setBuyTransactionIds(new ArrayList<>(List.of(bonus.getId())));
+        CorporateActionService.asAllotment(allotted);
         held.add(allotted);
         held.forEach(lot -> lot.getCorporateActions().add(TJsonMapper.copy(action, CorporateActionEntity.class)));
         lots.add(allotted);

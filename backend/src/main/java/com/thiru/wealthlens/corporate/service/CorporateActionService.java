@@ -302,6 +302,7 @@ public class CorporateActionService {
         bonusSharesEntity.setOrderTimeQuantities(List.of());
         bonusSharesEntity.setCorporateActionType(CorporateActionType.BONUS);
         bonusSharesEntity.setBuyTransactionIds(newTransactionIds);
+        asAllotment(bonusSharesEntity);
         stockEntities.add(bonusSharesEntity);
 
         for (AssetEntity assetEntity : stockEntities) {
@@ -312,6 +313,20 @@ public class CorporateActionService {
         portfolioService.saveCorporateActionProcessedStocks(stockEntities);
 
         log.info("Bonus shares: {} added for symbol: {} in Broker: {}", newTransactionIds.getFirst(), stockCode, brokerName);
+    }
+
+    /**
+     * A bonus lot copied from a held lot keeps only what an allotment is: it cost nothing, was never sold from, and has
+     * been through this bonus alone (W-291, D-589). Copied charges were charged again on every sale of bonus shares.
+     * Public and static so the {@code assets} replay builds the same lot ({@code LotLedger.allot}).
+     */
+    public static void asAllotment(AssetEntity bonusLot) {
+        bonusLot.setBrokerCharges(0);
+        bonusLot.setMiscCharges(0);
+        bonusLot.setAllocatedBuyCharges(0);
+        bonusLot.setAllocatedBuyMiscCharges(0);
+        bonusLot.setSellTransactionIds(new ArrayList<>());
+        bonusLot.setCorporateActions(new ArrayList<>());
     }
 
     public List<String> processBonusSharesTxns(String email, int bonusSharesCount, CorporateActionEntity corporateAction, BrokerName brokerName) {
@@ -333,6 +348,16 @@ public class CorporateActionService {
         bonusSharesTransaction.setTotalValue(0);
         bonusSharesTransaction.setTransactionDate(corporateAction.getAllotmentDate());
         bonusSharesTransaction.setCorporateActionType(CorporateActionType.BONUS);
+        // Allotted, not ordered or submitted: nothing of the buy's cost or identity is the bonus's (W-291 C1a). The key
+        // and the redrive link are unique indexes, so copying them refused the bonus outright.
+        bonusSharesTransaction.setBrokerCharges(0);
+        bonusSharesTransaction.setMiscCharges(0);
+        bonusSharesTransaction.setOrderId(null);
+        bonusSharesTransaction.setOrderExecutionTime(null);
+        bonusSharesTransaction.setIdempotencyKey(null);
+        bonusSharesTransaction.setTradeFingerprint(null);
+        bonusSharesTransaction.setSubmittedAt(null);
+        bonusSharesTransaction.setSourceTempTransactionId(null);
         transactionEntities.add(bonusSharesTransaction);
 
         for (TransactionEntity transactionEntity : transactionEntities) {

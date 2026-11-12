@@ -117,8 +117,9 @@ rebuild exists to surface.
 The replay builds what the live paths build, even where that looks wrong, so a difference in the report means drift.
 It never means a fix.
 
-- **A bonus lot** is a copy of the first lot held, so it keeps that lot's `broker_charges`, `misc_charges`, allocated
-  charges and `sell_transaction_ids` (`CorporateActionService:297 – 304` resets none of them). This is W-291.
+- **A bonus lot** is a copy of the first lot held. Since W-291 (D-589) both live and the replay reset it to an
+  allotment: nil charges and allocated charges, no sales, and only the bonus among its actions
+  (`CorporateActionService.asAllotment`).
 - **Segment:** `AssetRequest.asAsset` and `asTransaction` do not copy `segment`, so every lot and transaction holds
   the default `DELIVERY`. This is W-292.
 - **Not compared:**

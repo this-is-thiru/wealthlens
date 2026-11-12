@@ -60,7 +60,7 @@ against the named database.
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.0 – 2.12 | Tax planning, by hand, in order | per step | per step |
+| 2.0 – 2.13 | Tax planning, by hand, in order | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -1450,6 +1450,40 @@ the user's lots, so a failure leaves them as they were, and a second run writes 
 **Way back:** delete the user's lots and
 `mongoimport --uri "<uri>" --db <db> --collection assets --file assets-<user>-backup.json`.
 
+### 2.13 W-291 (D-589) — clear what bonus transactions copied from a buy · owner, `mongosh` · **every database · once · outstanding**
+
+**Why.** Until W-291 a bonus transaction was a copy of the user's first buy. It kept that buy's `broker_charges`,
+`misc_charges`, `order_id`, `order_execution_time`, and its submission identifiers (`idempotency_key`,
+`trade_fingerprint`, `submitted_at`, `source_temp_transaction_id`). A bonus costs nothing and was never ordered or
+submitted. The charges also feed §2.2's `trade_outcomes` rebuild, so they are cleared before it runs. The bonus
+*lots* are corrected per user by §2.12 afterwards.
+
+**When:** after the W-291 deploy, after §3.17 shows the count, before the per-user step below.
+
+1. **Before (read-only):**
+   ```js
+   db.transactions.countDocuments({ corporate_action: "BONUS", $or: [ { broker_charges: { $gt: 0 } }, { misc_charges: { $gt: 0 } },
+     { order_id: { $exists: true } }, { order_execution_time: { $exists: true } }, { idempotency_key: { $exists: true } },
+     { trade_fingerprint: { $exists: true } }, { submitted_at: { $exists: true } }, { source_temp_transaction_id: { $exists: true } } ] })
+   ```
+2. **Backup:**
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection transactions --query '{ "corporate_action": "BONUS" }' --out bonus-transactions-backup.json
+   ```
+3. **Correct:**
+   ```js
+   db.transactions.updateMany({ corporate_action: "BONUS" }, { $set: { broker_charges: 0, misc_charges: 0 },
+     $unset: { order_id: "", order_execution_time: "", idempotency_key: "", trade_fingerprint: "", submitted_at: "", source_temp_transaction_id: "" } })
+   ```
+4. **After (read-only):** step 1's count is 0.
+5. **Then, per user §3.17 lists:** §2.12 (lots) → §2.2 (that user's `trade_outcomes`, backed up and deleted first,
+   only if they sold bonus shares) → §2.11 (P&L).
+
+**Second run:** safe. It matches only bonus transactions and sets the same values, so a second run changes nothing.
+**Way back:** `mongoimport --uri "<uri>" --db <db> --collection transactions --mode upsert --file bonus-transactions-backup.json`.
+
+**Retired after use:** W-294 / WL-45, once this is logged for every database. There is no code to remove.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
@@ -1475,6 +1509,7 @@ Any repair would be a new work item with its own section-2 entry.
 | 3.14 | **W-279** (D-565 C2a) | A V1 buy merged into the day's lot now keeps its order time on the lot. Until W-279 the merge dropped it, so a lot built from several V1 buys lists order times for the first only. Lots with two or more buy transactions are V1 merges (V2 writes a lot per buy); one never sold from whose order times sum below its quantity lost some. The lost times are on each buy's transaction row, not the lot. Reported, not corrected — a correction would be its own row | `db.assets.countDocuments({ "buy_transaction_ids.1": { $exists: true }, sell_transaction_ids: { $size: 0 }, $expr: { $lt: [ { $sum: "$order_time_quantities.quantity" }, "$quantity" ] } })`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.15 | **W-280** (D-566 C2a) | A V1 buy is now priced and recorded under its own segment. Until W-280 V1's buy passed `DELIVERY` whatever the trade said, so a V1 intraday buy was priced on the delivery card and its `user_charges` row says `DELIVERY` while its transaction says `INTRADAY` (V2 always passed the segment, so such a pair is always a V1 buy). Reported, not corrected — re-pricing would be its own row (ADR-32) | `db.transactions.aggregate([{ $match: { transaction_type: "BUY", segment: "INTRADAY" } }, { $lookup: { from: "user_charges", let: { id: { $toString: "$_id" } }, pipeline: [{ $match: { $expr: { $eq: ["$transaction_id", "$$id"] } } }], as: "charge" } }, { $match: { "charge.segment": "DELIVERY" } }, { $count: "priced_as_delivery" }])`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.16 | **W-289** (D-587 C2a) | A trade now waits for a split, bonus or demerger recorded in an earlier quarter and not yet performed, when the user holds lots it reaches. Until W-289 only an action in the trade's own quarter held it, so a sale in a later quarter could be applied to pre-split units before the action was performed: holding 10, a 2:1 split, selling 4 left 12, not 16. The count lists **candidates** — users with a sale dated after an action's record date, of a stock they bought with that broker before it. Same-quarter and correctly ordered ones are included, so each user is checked with §2.12's dry run, which shows the actual drift, and corrected through §2.12 then §2.11 | `db.corporate_action.aggregate([{ $match: { type: { $in: ["STOCK_SPLIT", "BONUS", "DEMERGER"] } } }, { $lookup: { from: "transactions", let: { s: "$stock_code", r: "$record_date" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$stock_code", "$$s"] }, { $eq: ["$transaction_type", "SELL"] }, { $gt: ["$transaction_date", "$$r"] }] } } }], as: "sale" } }, { $unwind: "$sale" }, { $lookup: { from: "transactions", let: { s: "$stock_code", r: "$record_date", e: "$sale.email", b: "$sale.broker_name" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$stock_code", "$$s"] }, { $eq: ["$email", "$$e"] }, { $eq: ["$broker_name", "$$b"] }, { $eq: ["$transaction_type", "BUY"] }, { $lt: ["$transaction_date", "$$r"] }] } } }, { $limit: 1 }], as: "bought_before" } }, { $match: { bought_before: { $ne: [] } } }, { $group: { _id: "$sale.email", sales: { $sum: 1 } } }])` — one row per candidate user (the stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
+| 3.17 | **W-291** (D-589 C2a) | A bonus lot and its transaction now carry only the bonus. Until W-291 the lot copied the first held lot's charges, allocated charges, sales and actions, and the transaction copied the first buy's charges and identifiers. A sale of bonus shares therefore charged buy charges paid once already, overstating cost and understating the gain. And a bonus could not be performed at all for a user whose first buy carried an idempotency key or came from a redrive (a duplicate key). The count lists users with bonus lots carrying charges. §2.13 corrects the transactions; then each user listed is put through §2.12 → §2.2 → §2.11 | `db.assets.aggregate([{ $match: { corporate_action: "BONUS", $or: [{ broker_charges: { $gt: 0 } }, { misc_charges: { $gt: 0 } }, { allocated_buy_charges: { $gt: 0 } }, { allocated_buy_misc_charges: { $gt: 0 } }] } }, { $group: { _id: "$email", bonus_lots_with_charges: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
