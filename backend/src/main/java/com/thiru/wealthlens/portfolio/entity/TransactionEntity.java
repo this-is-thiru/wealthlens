@@ -160,8 +160,10 @@ public class TransactionEntity implements AuditableEntity {
 	private AssetRequest assetRequest;
 
 	/**
-	 * The flow that received a {@code TEMPORARY} trade, so its redrive uses the same one (W-270). Absent on a temporary
-	 * stored before W-270, which is redriven through V1 as before (D-555 C2a), and on every other transaction.
+	 * The flow that received the trade: on a {@code TEMPORARY} one so its redrive uses the same flow (W-270), and on
+	 * every stored trade so the lot shape it was given can be told — V1 merges a same-day buy, V2 does not — when
+	 * {@code assets} is rebuilt (W-283a1, D-580). Absent on a bonus allotment, which no flow received, and on a
+	 * transaction stored before W-283a1 (a temporary before W-270 is redriven through V1, D-555 C2a).
 	 */
 	@Field("trade_flow")
 	private TradeFlow tradeFlow;

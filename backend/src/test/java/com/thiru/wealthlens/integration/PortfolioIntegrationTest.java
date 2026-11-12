@@ -10,6 +10,7 @@ import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -104,6 +105,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertNotNull(savedAsset);
         assertEquals(10.0, savedAsset.getQuantity());
         assertEquals(2500.0, savedAsset.getPrice());
+        // V1 merges a same-day buy into its lot; the rebuild needs to know that (W-283a1, D-580)
+        assertEquals(TradeFlow.V1, mongoTemplate.findAll(TransactionEntity.class, "transactions").getFirst().getTradeFlow());
     }
 
     @Test
@@ -433,6 +436,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetEntity stored = mongoTemplate.findAll(AssetEntity.class, "assets").stream()
                 .filter(asset -> "RELIANCE".equals(asset.getStockCode())).findFirst().orElseThrow();
         assertEquals(10.0, stored.getQuantity());
+        // the upload is served by V1's flow (W-283a1, D-580)
+        assertEquals(TradeFlow.V1, mongoTemplate.findAll(TransactionEntity.class, "transactions").getFirst().getTradeFlow());
     }
 
     @Test
@@ -1226,6 +1231,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                         Criteria.where("email").is(TEST_EMAIL).and("stock_code").is(TEST_STOCK_CODE)),
                 AssetEntity.class, "assets");
         assertNotNull(savedAsset, "Asset should be created via v2 endpoint");
+        assertEquals(TradeFlow.V2, mongoTemplate.findAll(TransactionEntity.class, "transactions").getFirst().getTradeFlow());
         assertEquals(10.0, savedAsset.getQuantity());
         // The superseded implementation is deleted (Chunk 11), so user_broker_charges cannot be
         // written by anything. Asserted on the raw collection rather than a mapped type, because

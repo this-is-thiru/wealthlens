@@ -15,6 +15,7 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
@@ -86,7 +87,7 @@ class TransactionServiceIdempotencyTest {
     @DisplayName("a first submission is recorded and is not a replay")
     void recordTransaction_whenNew_writesIt() {
         // Given / When
-        TransactionRecord record = transactionService.recordTransaction(USER, trade());
+        TransactionRecord record = transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
 
         // Then
         assertEquals("txn-new", record.transactionId());
@@ -104,7 +105,7 @@ class TransactionServiceIdempotencyTest {
                 .thenReturn(Optional.of(existing("txn-original")));
 
         // When
-        TransactionRecord record = transactionService.recordTransaction(USER, request);
+        TransactionRecord record = transactionService.recordTransaction(USER, request, TradeFlow.V2);
 
         // Then
         assertEquals("txn-original", record.transactionId());
@@ -120,7 +121,7 @@ class TransactionServiceIdempotencyTest {
                 eq(EMAIL), any(), any())).thenReturn(Optional.of(existing("txn-seconds-ago")));
 
         // When
-        TransactionRecord record = transactionService.recordTransaction(USER, trade());
+        TransactionRecord record = transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
 
         // Then
         assertEquals("txn-seconds-ago", record.transactionId());
@@ -136,7 +137,7 @@ class TransactionServiceIdempotencyTest {
                 eq(EMAIL), any(), any())).thenReturn(Optional.empty());
 
         // When
-        TransactionRecord record = transactionService.recordTransaction(USER, trade());
+        TransactionRecord record = transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
 
         // Then
         assertFalse(record.replay());
@@ -152,7 +153,7 @@ class TransactionServiceIdempotencyTest {
         when(transactionRepository.findByEmailAndIdempotencyKey(EMAIL, "row-2")).thenReturn(Optional.empty());
 
         // When
-        TransactionRecord record = transactionService.recordTransaction(USER, request);
+        TransactionRecord record = transactionService.recordTransaction(USER, request, TradeFlow.V2);
 
         // Then
         assertFalse(record.replay());
@@ -170,7 +171,7 @@ class TransactionServiceIdempotencyTest {
                 .thenReturn(Optional.of(existing("txn-first-redrive")));
 
         // When
-        TransactionRecord record = transactionService.recordTransaction(USER, request);
+        TransactionRecord record = transactionService.recordTransaction(USER, request, TradeFlow.V2);
 
         // Then
         assertEquals("txn-first-redrive", record.transactionId());
@@ -184,7 +185,7 @@ class TransactionServiceIdempotencyTest {
         LocalDateTime before = LocalDateTime.now();
 
         // When
-        transactionService.recordTransaction(USER, trade());
+        transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
 
         // Then
         ArgumentCaptor<TransactionEntity> captor = ArgumentCaptor.forClass(TransactionEntity.class);
@@ -203,7 +204,7 @@ class TransactionServiceIdempotencyTest {
                 chargeViewAssembler);
 
         // When
-        TransactionRecord record = transactionService.recordTransaction(USER, trade());
+        TransactionRecord record = transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
 
         // Then
         assertFalse(record.replay());
@@ -220,7 +221,7 @@ class TransactionServiceIdempotencyTest {
         LocalDate before = LocalDate.now();
 
         // When
-        transactionService.recordTransaction(USER, request);
+        transactionService.recordTransaction(USER, request, TradeFlow.V2);
 
         // Then -- bounded on both sides so a run across midnight still holds
         LocalDate stored = storedTransaction().getTransactionDate();
@@ -237,12 +238,22 @@ class TransactionServiceIdempotencyTest {
         request.setIdempotencyKey("key-1");
 
         // When
-        transactionService.recordTransaction(USER, request);
+        transactionService.recordTransaction(USER, request, TradeFlow.V2);
 
         // Then
         TransactionEntity stored = storedTransaction();
         assertEquals(EMAIL, stored.getEmail());
         assertEquals("key-1", stored.getIdempotencyKey());
+    }
+
+    @Test
+    @DisplayName("a trade is stored with the flow that received it")
+    void recordTransaction_whenNew_storesTheFlowThatReceivedIt() {
+        // When (W-283a1, D-580)
+        transactionService.recordTransaction(USER, trade(), TradeFlow.V1);
+
+        // Then
+        assertEquals(TradeFlow.V1, storedTransaction().getTradeFlow());
     }
 
     private TransactionEntity storedTransaction() {

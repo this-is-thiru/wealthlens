@@ -83,7 +83,7 @@ class PortfolioServiceTest {
         portfolioService = testableService(new ChargeEngineProperties(true, true, false));
         userMail = UserMail.from("test@example.com");
         // Every trade is a first submission unless a test says otherwise (TL-7).
-        lenient().when(transactionService.recordTransaction(any(), any()))
+        lenient().when(transactionService.recordTransaction(any(), any(), any()))
                 .thenAnswer(invocation -> TransactionRecord.created("txn-new"));
     }
 
@@ -339,7 +339,7 @@ class PortfolioServiceTest {
         when(temporaryTransactionService.getAllTemporaryTransactions(userMail)).thenReturn(List.of(waiting));
         when(temporaryTransactionService.filterOutTransaction(any(), any(), eq(true))).thenReturn(false);
         DataAccessResourceFailureException down = new DataAccessResourceFailureException("database unreachable");
-        when(transactionService.recordTransaction(any(), any())).thenThrow(down);
+        when(transactionService.recordTransaction(any(), any(), any())).thenThrow(down);
 
         // When / Then -- not reported as one item's failure: the redrive itself fails, so its transaction rolls back
         DataAccessResourceFailureException thrown = assertThrows(DataAccessResourceFailureException.class,
@@ -648,7 +648,7 @@ class PortfolioServiceTest {
         // Given
         AssetRequest request = createAssetRequest("STOCK1");
         request.setTransactionType(TransactionType.BUY);
-        when(transactionService.recordTransaction(any(), any()))
+        when(transactionService.recordTransaction(any(), any(), any()))
                 .thenReturn(TransactionRecord.replayOf("txn-original"));
 
         // When
@@ -667,7 +667,7 @@ class PortfolioServiceTest {
         AssetRequest request = createAssetRequest("STOCK1");
         request.setTransactionType(TransactionType.BUY);
         request.setTempTransactionId("temp-1");
-        when(transactionService.recordTransaction(any(), any()))
+        when(transactionService.recordTransaction(any(), any(), any()))
                 .thenReturn(TransactionRecord.replayOf("txn-first-redrive"));
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
@@ -689,7 +689,7 @@ class PortfolioServiceTest {
         // Given
         AssetRequest request = createAssetRequest("STOCK1");
         request.setTransactionType(TransactionType.BUY);
-        when(transactionService.recordTransaction(any(), any()))
+        when(transactionService.recordTransaction(any(), any(), any()))
                 .thenReturn(TransactionRecord.created("txn-new"));
 
         // When

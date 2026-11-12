@@ -3,6 +3,7 @@ package com.thiru.wealthlens.integration;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.CorporateActionPerformDto;
@@ -15,6 +16,7 @@ import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionR
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -25,6 +27,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -873,6 +876,27 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .filter(txn -> txn.getCorporateActionType() == CorporateActionType.BONUS).toList();
         assertEquals(1, bonusTransactions.size());
         assertEquals(LocalDate.of(2024, 1, 17), bonusTransactions.getFirst().getTransactionDate());
+    }
+
+    @Test
+    void performPendingCorporateActions_whenABonusCopiesAV1Buy_recordsNoFlowOnTheBonus() {
+        // GIVEN -- the holding's buy came through V1; the bonus transaction is a copy of it (W-283a1 C1a, D-580)
+        mongoTemplate.save(bonus(LocalDate.of(2024, 1, 17)));
+        saveHolding();
+        TransactionEntity buy = mongoTemplate.findAll(TransactionEntity.class).getFirst();
+        buy.setTradeFlow(TradeFlow.V1);
+        mongoTemplate.save(buy);
+        CorporateActionPerformDto performDto = new CorporateActionPerformDto("JANUARY", 2024, BrokerName.UPSTOX);
+
+        // WHEN
+        corporateActionService.performPendingCorporateActions("test@example.com", performDto, false);
+
+        // THEN -- no flow received the bonus; the buy keeps its own
+        Map<Boolean, List<TransactionEntity>> byBonus = mongoTemplate.findAll(TransactionEntity.class).stream()
+                .collect(Collectors.partitioningBy(txn -> txn.getCorporateActionType() == CorporateActionType.BONUS));
+        assertEquals(1, byBonus.get(true).size());
+        assertNull(byBonus.get(true).getFirst().getTradeFlow());
+        assertEquals(TradeFlow.V1, byBonus.get(false).getFirst().getTradeFlow());
     }
 
     @Test

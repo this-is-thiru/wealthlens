@@ -97,7 +97,7 @@ public class PortfolioService {
 
         TransactionType transactionType = assetRequest.getTransactionType();
         // Add transaction
-        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest);
+        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest, TradeFlow.V1);
         if (record.replay()) {
             // This submission was already applied. Before TL-7 the duplicate transaction row was
             // suppressed here and the trade was then applied to the portfolio a second time anyway,
@@ -137,7 +137,7 @@ public class PortfolioService {
 
         TransactionType transactionType = assetRequest.getTransactionType();
         // Add transaction
-        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest);
+        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest, TradeFlow.V2);
         if (record.replay()) {
             return REPLAYED_MESSAGE;
         }

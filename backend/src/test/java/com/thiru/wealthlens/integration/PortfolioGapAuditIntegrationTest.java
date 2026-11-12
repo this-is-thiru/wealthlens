@@ -517,6 +517,8 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         List<AssetEntity> lots = lotsOf(OWNER);
         assertEquals(2, lots.size(), () -> "lots: " + lots);
         assertEquals(List.of(100.0, 120.0), lots.stream().map(AssetEntity::getPrice).sorted().toList());
+        // the transaction it became records the flow it went through (W-283a1, D-580)
+        assertEquals(List.of(TradeFlow.V2), redrivenFlows());
     }
 
     @Test
@@ -547,6 +549,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, lots.size(), () -> "lots: " + lots);
         assertEquals(20.0, lots.getFirst().getQuantity());
         MoneyAssert.assertMoney(110.0, lots.getFirst().getPrice());
+        assertEquals(List.of(TradeFlow.V1), redrivenFlows());
     }
 
     @Test
@@ -1013,6 +1016,14 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         bonus.setPriority(1);
         bonus.setAssetType(AssetType.EQUITY);
         mongoTemplate.save(bonus, "corporate_action");
+    }
+
+    /** The flow on each transaction a redrive stored, told apart from its temporary by the link back to it. */
+    private List<TradeFlow> redrivenFlows() {
+        return mongoTemplate.findAll(TransactionEntity.class, "transactions").stream()
+                .filter(transaction -> transaction.getSourceTempTransactionId() != null)
+                .map(TransactionEntity::getTradeFlow)
+                .toList();
     }
 
     private void waiting(Map<String, Object> trade, TradeFlow flow) {

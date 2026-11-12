@@ -326,6 +326,8 @@ public class CorporateActionService {
         TransactionEntity first = TCollectionUtil.filter(transactionEntities, transaction -> TransactionType.BUY.equals(transaction.getTransactionType())).getFirst();
         TransactionEntity bonusSharesTransaction = TJsonMapper.copy(first, TransactionEntity.class);
         bonusSharesTransaction.setId(null);
+        // A copy of the buy, but no trade flow received it (W-283a1 C1a, D-580).
+        bonusSharesTransaction.setTradeFlow(null);
         bonusSharesTransaction.setPrice(0);
         bonusSharesTransaction.setQuantity((double) bonusSharesCount);
         bonusSharesTransaction.setTotalValue(0);

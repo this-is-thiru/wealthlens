@@ -5,6 +5,7 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -46,8 +47,11 @@ public class TransactionService {
      * a heuristic and says so.
      *
      * <p>Callers <b>must</b> honour {@link TransactionRecord#replay()} and skip applying the trade.
+     *
+     * @param tradeFlow the flow that received the trade, stored on it so the lot shape it was given can be told later
+     *     (W-283a1, D-580)
      */
-    public TransactionRecord recordTransaction(UserMail userMail, AssetRequest assetRequest) {
+    public TransactionRecord recordTransaction(UserMail userMail, AssetRequest assetRequest, TradeFlow tradeFlow) {
         if (assetRequest.getTransactionDate() == null) {
             assetRequest.setTransactionDate(LocalDate.now());
         }
@@ -87,6 +91,7 @@ public class TransactionService {
         TransactionEntity entity = assetRequest.asTransaction();
         entity.setEmail(email);
         entity.setIdempotencyKey(assetRequest.getIdempotencyKey());
+        entity.setTradeFlow(tradeFlow);
         entity.setTradeFingerprint(fingerprint);
         entity.setSubmittedAt(LocalDateTime.now());
         log.info("Transaction: {}, Stock: '{}' on '{}' noted successfully for: {}", entity.getTransactionType(),

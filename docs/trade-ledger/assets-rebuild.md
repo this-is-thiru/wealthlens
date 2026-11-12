@@ -16,7 +16,7 @@ A dry run comes first. A real run replaces the user's lots, the same report-then
 | Input | Used for |
 |---|---|
 | `transactions` of the user, `status` not `TEMPORARY` | buys, sales and bonus allotments, in order |
-| `trade_flow` on each transaction (W-283a1) | lot shape (below) |
+| `trade_flow` on each transaction (recorded from W-283a1's deploy, D-580; absent before it and on a bonus) | lot shape (below) |
 | the user's stored `assets` | lot shape and charges for a transaction with no `trade_flow` (C1a) |
 | `corporate_actions` of type `STOCK_SPLIT` or `DEMERGER` | applied between trades (C2a) |
 | `last_performed_corporate_actions` of the user | which of those were performed |
