@@ -135,10 +135,7 @@ public class CorporateActionService {
 
     private void performPendingCorporateActions(String email, CorporateActionPerformDto actionPerformDto, BrokerName brokerName) {
 
-        Month quarterStart = Month.valueOf(actionPerformDto.month());
-        if (!QUARTER_START_MONTHS.contains(quarterStart)) {
-            throw new IllegalArgumentException("Invalid month: " + actionPerformDto.month());
-        }
+        Month quarterStart = quarterStart(actionPerformDto.month());
 
         LocalDate fromDate = LocalDate.of(actionPerformDto.year(), quarterStart, ONE);
         LocalDate toDate;
@@ -158,6 +155,15 @@ public class CorporateActionService {
         }
 
         log.info(corporateActions);
+    }
+
+    /** The month a quarter starts in, by its name; anything else is refused naming the four (W-315). */
+    private static Month quarterStart(String month) {
+        return QUARTER_START_MONTHS.stream()
+                .filter(start -> start.name().equals(month))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("A quarter starts in one of " + QUARTER_START_MONTHS
+                        + ", but the month was '" + month + "'"));
     }
 
     private List<CorporateActionEntity> getCurrentQuarterCorporateActions(LocalDate start, LocalDate transactionDate) {

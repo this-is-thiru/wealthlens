@@ -285,4 +285,20 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(quantity("INFY")).isEqualTo(40.0);
         assertMoney(1000.0, cost("INFY"));
     }
+
+    // Scenario 10 (W-315)
+    @Test
+    void perform_whenTheMonthIsNotAQuarterStart_answers400NamingTheMonths() {
+        // When
+        ResponseEntity<String> lowercase = perform("april", 2026);
+        ResponseEntity<String> february = perform("FEBRUARY", 2026);
+
+        // Then -- the caller is told the four months a quarter starts in
+        assertThat(lowercase.getStatusCode().value()).isEqualTo(400);
+        assertThat(JSON.readTree(lowercase.getBody()).get("message").asString())
+                .isEqualTo("A quarter starts in one of [JANUARY, APRIL, JULY, OCTOBER], but the month was 'april'");
+        assertThat(february.getStatusCode().value()).isEqualTo(400);
+        assertThat(JSON.readTree(february.getBody()).get("message").asString())
+                .isEqualTo("A quarter starts in one of [JANUARY, APRIL, JULY, OCTOBER], but the month was 'FEBRUARY'");
+    }
 }
