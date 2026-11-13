@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-264d (gap audit: P&L, reports and analytics) — next by board order; nothing written
-Stage           : W-316 DONE (D-640), committed and pushed; W-264c's six fixes all closed; W-264d not started
-Done today      : session 89: Phase 10 frozen; W-304, W-305, W-306, W-309, W-264c; batches W-317/W-315/W-314, W-313/W-312/W-266; W-316 (D-622 – D-640)
-Board           : W-316 D; W-264d · next; W-090d ·; W-091 – W-094 ·; W-299, W-294 · (wait run logs); W-307, W-308 K; W-311 · (after Phase 10)
-Next step       : record W-316's pipeline run in D-640; plan W-264d (audit, probe-first scenarios), STOP for approval
+Item            : batch W-318 – W-322 (XIRR unpriced holdings, held trades in analytics, P&L year form, duplicate price, win/loss ratio) — next; nothing written
+Stage           : W-264d DONE (D-641), committed and pushed; W-264 closed (all four audits); W-318 – W-322 ruled into Phase 10 as one batch
+Done today      : session 89: freeze; W-304, W-305, W-306, W-309, W-264c, W-264d; batches W-317/W-315/W-314, W-313/W-312/W-266; W-316 (D-622 – D-646)
+Board           : W-264d D; W-318 – W-322 · next (one batch); W-090d ·; W-091 – W-094 ·; W-299, W-294 · (wait run logs); W-307, W-308 K; W-311 · (after Phase 10, widened)
+Next step       : record W-264d's pipeline run in D-641; plan the batch W-318 – W-322 with a probe run first, STOP for approval
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-316: red 1; 10 classes 258 / 0 (probe, same code); probe fails, restored; §3.24 on a throwaway mongo as by hand; WL-A-2 read back; validate 0
+Last verify     : W-316 pipeline 43384783225 success (D-640); W-264d kept class 6 / 0, validate 0, guards 0
 Files touched   : none (all committed)
-Last item commit: taxplanning W-316: stop holding trades for rights issues and buybacks the run cannot apply
-Updated         : 2026-11-13, session 89 — W-316 done; next W-264d
+Last item commit: taxplanning W-264d: audit the P&L read and the analytics through the HTTP API
+Updated         : 2026-11-13, session 89 — W-264d done; next batch W-318 – W-322
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
