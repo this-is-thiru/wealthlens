@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.analytics.StockPerformance;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrResponse;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
@@ -46,7 +47,7 @@ public class AnalyticsService {
         String email = userMail.getEmail();
 
         List<AssetEntity> assets = portfolioRepository.findByEmail(email);
-        List<TransactionEntity> transactions = transactionRepository.findByEmail(email);
+        List<TransactionEntity> transactions = recorded(transactionRepository.findByEmail(email));
         List<ProfitAndLossEntity> pnlList = profitAndLossRepository.findAllByEmail(email);
 
         double totalInvested = assets.stream()
@@ -197,7 +198,7 @@ public class AnalyticsService {
 
     public XirrResponse calculateXirr(UserMail userMail, XirrRequest request) {
         String email = userMail.getEmail();
-        List<TransactionEntity> transactions = transactionRepository.findByEmail(email);
+        List<TransactionEntity> transactions = recorded(transactionRepository.findByEmail(email));
         List<AssetEntity> assets = portfolioRepository.findByEmail(email);
 
         List<CashFlow> cashFlows = new ArrayList<>();
@@ -275,5 +276,10 @@ public class AnalyticsService {
                 .message(e.getMessage())
                 .build();
         }
+    }
+
+    /** The trades that happened: one held behind a corporate action is not recorded yet (W-319). */
+    private static List<TransactionEntity> recorded(List<TransactionEntity> transactions) {
+        return transactions.stream().filter(txn -> txn.getStatus() != TransactionStatus.TEMPORARY).toList();
     }
 }

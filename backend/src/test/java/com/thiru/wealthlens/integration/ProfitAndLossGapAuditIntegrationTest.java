@@ -66,6 +66,21 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         trade("/transaction/v2", stockCode, side, quantity, price, date);
     }
 
+    private void holdABuyBehindAPendingBonus(String stockCode) {
+        Map<String, Object> bonus = new HashMap<>();
+        bonus.put("stockCode", stockCode);
+        bonus.put("stockName", stockCode);
+        bonus.put("type", "BONUS");
+        bonus.put("assetType", "EQUITY");
+        bonus.put("ratio", "1:1");
+        bonus.put("priority", 1);
+        bonus.put("recordDate", "2026-03-20");
+        bonus.put("exDate", "2026-03-20");
+        bonus.put("allotmentDate", "2026-03-22");
+        assertThat(call(HttpMethod.POST, "/corporate-action/add", "SUPER_USER", bonus).getStatusCode().value()).isEqualTo(200);
+        v2(stockCode, "BUY", 3, 100, "2026-03-25");
+    }
+
     private JsonNode profitAndLoss(String financialYear) {
         return JSON.readTree(call(HttpMethod.GET, "/portfolio/user/" + EMAIL + "/profit-and-loss?financialYear=" + financialYear,
                 "USER", null).getBody());
@@ -188,6 +203,22 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(untraded.getStatusCode().value()).isEqualTo(200);
     }
 
+    // Scenario 6 (W-319)
+    @Test
+    void portfolioSummary_whenATradeIsHeld_countsOnlyRecordedTrades() {
+        // Given -- scenario 1, then a buy held behind a pending bonus
+        v2("TCS", "BUY", 10, 100, "2026-01-10");
+        v2("TCS", "SELL", 4, 150, "2026-03-05");
+        holdABuyBehindAPendingBonus("TCS");
+
+        // When
+        JsonNode summary = analytics("portfolio-summary");
+
+        // Then -- two trades recorded; ₹600 still invested
+        assertThat(summary.get("totalTrades").asLong()).isEqualTo(2);
+        assertMoney(600.0, summary.get("totalInvested").asDouble());
+    }
+
     // Scenario 8 (W-322)
     @Test
     void performanceMetrics_whenThereAreWinsAndNoLosses_giveNoWinLossRatio() {
@@ -202,6 +233,22 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(performance.get("winCount").asLong()).isEqualTo(1);
         assertThat(performance.get("lossCount").asLong()).isEqualTo(0);
         assertThat(performance.get("winLossRatio").isNull()).as(performance.toString()).isTrue();
+    }
+
+    // Scenario 10 (W-319)
+    @Test
+    void xirr_whenATradeIsHeld_leavesItOut() {
+        // Given -- scenario 9, plus a buy of TCS held behind a pending bonus
+        v2("TCS", "BUY", 10, 100, "2025-01-01");
+        v2("TCS", "SELL", 10, 110, "2026-01-01");
+        holdABuyBehindAPendingBonus("TCS");
+
+        // When
+        JsonNode result = JSON.readTree(xirr(List.of()).getBody());
+
+        // Then -- the held buy is not a cash flow yet
+        assertThat(result.get("cashFlowsCount").asInt()).isEqualTo(2);
+        assertThat(result.get("xirr").asDouble()).isCloseTo(0.10, org.assertj.core.data.Offset.offset(1e-6));
     }
 
 }
