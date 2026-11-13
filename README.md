@@ -352,8 +352,8 @@ the same engine using `ChargeEvent.AMC_CYCLE`, and is idempotent per account and
 | Flag | Ships | Effect |
 |---|---|---|
 | `engine-enabled` | `true` | Master kill switch. `false` → `POST /charges/simulate`, `GET /charge-accounts/due` and `POST /charges/amc/impose` answer **503**, and nothing is shadow-recorded. Reads of already-recorded charges keep working |
-| `shadow-recording` | `false` | The trade path prices and records every V2 trade; the result is ignored |
-| `authoritative` | `false` | The computed total becomes the cost basis on a V2 buy |
+| `shadow-recording` | `true` | The trade path prices and records every V2 trade and every V1 buy; only V2 hands the result to the P&L charge summary, and V1's sale is not priced |
+| `authoritative` | `true` | The computed total becomes the cost basis on a V2 buy; a V1 buy keeps the entered figure |
 
 ### Parallel P&L Reporting Hierarchy
 

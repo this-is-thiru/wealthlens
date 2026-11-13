@@ -423,7 +423,7 @@ public class PortfolioService {
     /**
      * The V2 buy. Deliberately no longer shares {@link #updateBrokerChargesAndProfitAndLoss} with
      * V1 {@code buyStock}: the charge is computed <b>before</b> the lot is written so the computed
-     * total can become the cost basis, and V1 is unused and left exactly as it was.
+     * total can become the cost basis. V1 keeps the entered figure as its cost.
      */
     public void buyStockV2(UserMail userMail, String transactionId, AssetRequest assetRequest) {
 

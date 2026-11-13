@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-306 (CLAUDE.md says the charge engine is wired into V2 only, G-4) — next by board order; nothing written
-Stage           : W-305 DONE (D-624), committed and pushed; W-306 not started
-Done today      : session 89: Phase 10 frozen (D-622), W-304 (D-623), W-305 (D-624)
-Board           : W-305 D; W-306 · next; W-309 ·; W-307, W-308 K; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-091 – W-094 ·
-Next step       : record W-305's pipeline run in D-624; plan W-306 (doc only), STOP for approval
+Item            : W-309 (derive the charge summary from user_charges, checklist :457) — next by board order; nothing written
+Stage           : W-306 DONE (D-625), committed and pushed; W-309 not started
+Done today      : session 89: Phase 10 frozen (D-622), W-304 (D-623), W-305 (D-624), W-306 (D-625)
+Board           : W-306 D; W-309 · next; W-307, W-308 K; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-091 – W-094 ·
+Next step       : record W-306's pipeline run in D-625; plan W-309 with a probe run first, STOP for approval
 Owner actions   : after deploy: §3.21 (W-304) and §3.20 (W-303), read-only, each database; §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-305 local: red 14; 28 classes + ArchitectureTest green (485 run, 1 test-input fix, re-run 21 / 0); probe 14 fail, restored; validate 0
+Last verify     : W-305 pipeline 43372109985 success (D-624); W-306 validate 0, compile 0
 Files touched   : none (all committed)
-Last item commit: taxplanning W-305: answer an unreadable request body by naming the field and what it accepts
-Updated         : 2026-11-13, session 89 — W-305 done; next W-306
+Last item commit: taxplanning W-306: say which trade flows the charge engine prices
+Updated         : 2026-11-13, session 89 — W-306 done; next W-309
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
