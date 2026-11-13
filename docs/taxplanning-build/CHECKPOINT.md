@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-302 (the upload's existing type columns answer a wrong word with Java's message) — next by board order; nothing written
-Stage           : W-301 DONE (D-607), committed and pushed; PR run watched (2 min); W-302 not started
-Done today      : session 86: W-292, W-295 – W-298, W-300, W-285, W-301 built, W-284 closed; all pushed (D-591 – D-608, WL-46)
-Board           : W-301 D; W-302 · (placed, D-608); W-301 · (placed, D-606); W-299 · (waits); W-300 · (placed, D-602); W-299 · (placed, D-600, WL-46); W-298 · (placed, D-596); W-284, W-285 ·; W-290 ·; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·
-Next step       : resume: run the resume check; record W-301's pipeline run; then plan W-302, STOP for approval
+Item            : W-290 — next by board order (W-299 waits for §2.14's run log); nothing written
+Stage           : W-302 DONE (stage 6, D-609), committed and pushed; W-290 not started
+Done today      : session 87: W-302 planned, approved (C1a, C2a), built; red 6 → green; probe red then restored
+Board           : W-302 D; W-299 · (waits for §2.14's run log, WL-46); W-290 · next; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·; W-149 B (waits for §2.3 on prod)
+Next step       : record W-302's pipeline run in D-609; then plan W-290, STOP for approval
 Owner actions   : after deploy: §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-285 run 43264523200 (a3027478): success; W-301 touched classes 10 / 15 / 60, validate 0
-Files touched   : none
-Last item commit: taxplanning W-301: read the segment and account type an uploaded row names
-Updated         : 2026-11-12, session 86 — W-301 done; W-302 next
+Last verify     : local: AssetRequestParserTest 15, PortfolioGapAuditIntegrationTest 61, 4 upload classes 82, 0 failures; validate 0
+Files touched   : none (all committed with W-302)
+Last item commit: taxplanning W-302: name the row and the words when an upload's type column is refused
+Updated         : 2026-11-13, session 87 — W-302 done; next W-290
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -175,4 +175,68 @@ class AssetRequestParserTest {
                 refusal.getMessage());
     }
 
+    @Test
+    void toRequest_whenTheBrokerIsNotOne_refusesNamingTheRowAndTheWords() {
+        // Given -- the broker in the wrong case (W-302, D-608)
+        InputRecord record = row(3, "EQUITY", CellDetail.def());
+        record.getRecord().put(ExcelHeaders.BROKER_NAME, CellDetail.of(ExcelDataType.STRING, "Zerodha"));
+
+        // When
+        BadRequestException refusal = assertThrows(BadRequestException.class, () -> parser.toRequest(record));
+
+        // Then
+        assertEquals("Row 3, BROKER NAME: \"Zerodha\" is not one of [UPSTOX, FYERS, ZERODHA]", refusal.getMessage());
+    }
+
+    @Test
+    void toRequest_whenTheAssetTypeIsNotOne_refusesNamingTheRowAndTheWords() {
+        // Given
+        InputRecord record = row(3, "STOCK", CellDetail.def());
+
+        // When
+        BadRequestException refusal = assertThrows(BadRequestException.class, () -> parser.toRequest(record));
+
+        // Then -- every constant is listed; a LAND_OR_BUILDING row is refused on its own (D-609 C2a)
+        assertEquals("Row 3, ASSET TYPE: \"STOCK\" is not one of "
+                + "[EQUITY, MUTUAL_FUND, BOND, GOLD_BOND, FD, INSURANCE, LAND_OR_BUILDING]", refusal.getMessage());
+    }
+
+    @Test
+    void toRequest_whenTheTransactionTypeIsNotOne_refusesNamingTheRowAndTheWords() {
+        // Given
+        InputRecord record = row(3, "EQUITY", CellDetail.def());
+        record.getRecord().put(ExcelHeaders.TRANSACTION_TYPE, CellDetail.of(ExcelDataType.STRING, "buy"));
+
+        // When
+        BadRequestException refusal = assertThrows(BadRequestException.class, () -> parser.toRequest(record));
+
+        // Then
+        assertEquals("Row 3, TRANSACTION TYPE: \"buy\" is not one of [BUY, SELL]", refusal.getMessage());
+    }
+
+    @Test
+    void toRequest_whenTheBrokerIsBlank_refusesRatherThanStoringNone() {
+        // Given -- a required column has no JSON default to fall back on (D-609 C1a)
+        InputRecord record = row(3, "EQUITY", CellDetail.def());
+        record.getRecord().put(ExcelHeaders.BROKER_NAME, CellDetail.def());
+
+        // When
+        BadRequestException refusal = assertThrows(BadRequestException.class, () -> parser.toRequest(record));
+
+        // Then
+        assertEquals("Row 3, BROKER NAME: blank; one of [UPSTOX, FYERS, ZERODHA] is needed", refusal.getMessage());
+    }
+
+    @Test
+    void toRequest_whenTheWorkbookHasNoTransactionTypeColumn_refusesRatherThanStoringNone() {
+        // Given
+        InputRecord record = row(3, "EQUITY", CellDetail.def());
+        record.getRecord().remove(ExcelHeaders.TRANSACTION_TYPE);
+
+        // When
+        BadRequestException refusal = assertThrows(BadRequestException.class, () -> parser.toRequest(record));
+
+        // Then
+        assertEquals("Row 3, TRANSACTION TYPE: blank; one of [BUY, SELL] is needed", refusal.getMessage());
+    }
 }

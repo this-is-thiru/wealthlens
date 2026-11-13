@@ -856,6 +856,21 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void uploadTransactions_whenTheBrokerCellIsBlank_answers400NamingTheRow() throws IOException {
+        // Given -- the first data row has no broker (W-302, D-609 C1a)
+        byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).getCell(4).setBlank());
+
+        // When
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then -- refused with what is missing, not a 500; nothing stored
+        assertEquals(400, uploaded.getStatusCode().value(), uploaded.getBody());
+        assertTrue(uploaded.getBody().contains("Row 1, BROKER NAME: blank; one of [UPSTOX, FYERS, ZERODHA] is needed"),
+                uploaded.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+    }
+
+    @Test
     void uploadTransactions_whenTheRowNamesAnAccountHolder_recordsItOnTheLot() throws IOException {
         // Given -- one trade with an ACCOUNT HOLDER column (W-285, D-559)
         byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> {

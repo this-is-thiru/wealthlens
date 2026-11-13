@@ -63,7 +63,8 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         setStockCode(assetRequest, record);
         setStockName(assetRequest, record);
         setExchangeName(assetRequest, record);
-        setBrokerName(assetRequest, record);
+        assetRequest.setBrokerName(requiredConstantOf(BrokerName.class, record, ExcelHeaders.BROKER_NAME,
+                inputRecord.getRecordNumber()));
         setAccountHolder(assetRequest, record);
         constantOf(TradeSegment.class, record, ExcelHeaders.SEGMENT, inputRecord.getRecordNumber())
                 .ifPresent(assetRequest::setSegment);
@@ -72,7 +73,8 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         setAssetType(assetRequest, record, inputRecord.getRecordNumber());
         setPrice(assetRequest, record);
         setQuantity(assetRequest, record);
-        setTransactionType(assetRequest, record);
+        assetRequest.setTransactionType(requiredConstantOf(TransactionType.class, record, ExcelHeaders.TRANSACTION_TYPE,
+                inputRecord.getRecordNumber()));
         setTransactionDate(assetRequest, record);
         setMaturityDate(assetRequest, record, inputRecord.getRecordNumber());
         setBrokerCharges(assetRequest, record);
@@ -103,13 +105,6 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         assetRequest.setExchangeName((String) cellDetail.getCellValue());
     }
 
-    private static void setBrokerName(AssetRequest assetRequest, Map<String, CellDetail> record) {
-
-        CellDetail cellDetail = record.get(ExcelHeaders.BROKER_NAME);
-        String brokerName = (String) cellDetail.getCellValue();
-        assetRequest.setBrokerName(BrokerName.valueOf(brokerName));
-    }
-
     /**
      * The holder the row names; a workbook without the column, or a blank cell, names none, as a JSON trade without one
      * does (W-285, D-605).
@@ -138,11 +133,21 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         }
     }
 
+    /**
+     * The constant a required cell names. These columns have no JSON default, so a blank cell or an absent column is
+     * refused with its row rather than stored as none (W-302, D-609 C1a).
+     */
+    private static <E extends Enum<E>> E requiredConstantOf(Class<E> type, Map<String, CellDetail> record,
+                                                            String header, Integer recordNumber) {
+        return constantOf(type, record, header, recordNumber).orElseThrow(() -> new BadRequestException("Row "
+                + recordNumber + ", " + header + ": blank; one of " + Arrays.toString(type.getEnumConstants())
+                + " is needed"));
+    }
+
     /** The row's asset type; a land or building is refused with its row, as the JSON paths refuse it (W-088g5). */
     private static void setAssetType(AssetRequest assetRequest, Map<String, CellDetail> record, Integer recordNumber) {
 
-        CellDetail cellDetail = record.get(ExcelHeaders.ASSET_TYPE);
-        AssetType assetType = AssetType.valueOf((String) cellDetail.getCellValue());
+        AssetType assetType = requiredConstantOf(AssetType.class, record, ExcelHeaders.ASSET_TYPE, recordNumber);
         if (assetType == AssetType.LAND_OR_BUILDING) {
             throw new BadRequestException("Row " + recordNumber + ": " + AssetType.NOT_A_BROKER_TRADE);
         }
@@ -179,13 +184,6 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
 
         CellDetail cellDetail = record.get(ExcelHeaders.TRANSACTION_DATE);
         assetRequest.setTransactionDate((LocalDate) cellDetail.getCellValue());
-    }
-
-    private static void setTransactionType(AssetRequest assetRequest, Map<String, CellDetail> record) {
-
-        CellDetail cellDetail = record.get(ExcelHeaders.TRANSACTION_TYPE);
-        String transactionType = (String) cellDetail.getCellValue();
-assetRequest.setTransactionType(TransactionType.valueOf(transactionType));
     }
 
     private static void setBrokerCharges(AssetRequest assetRequest, Map<String, CellDetail> record) {
