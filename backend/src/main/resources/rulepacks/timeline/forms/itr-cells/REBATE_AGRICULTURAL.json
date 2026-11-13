@@ -1,0 +1,9 @@
+{
+  "code": "REBATE_AGRICULTURAL",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Rebate on agricultural income",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Agricultural income is a declared amount and is not computed into tax; enter the rebate if it applies"
+  }
+}

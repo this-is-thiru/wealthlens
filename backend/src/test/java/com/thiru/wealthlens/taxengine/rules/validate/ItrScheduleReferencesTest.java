@@ -65,7 +65,7 @@ class ItrScheduleReferencesTest {
         List<String> problems = problems(
                 cell("SYN_GROSS", new FieldSource.FromNodes(List.of(new NodeId("salary.gross")))),
                 cell("SYN_DEDUCTION", new FieldSource.FromRules(List.of(new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME")))),
-                cell("SYN_GAIN", new FieldSource.FromCapitalGainsPart(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY"))),
+                cell("SYN_GAIN", new FieldSource.FromCapitalGainsParts(List.of(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY")))),
                 cell("SYN_NET", new FieldSource.SumOf(List.of(new FieldSource.SumOf.Term(new CellCode("SYN_GROSS"), false)))),
                 cell("SYN_TAN", new FieldSource.ManualEntry("Enter it")));
 
@@ -78,7 +78,7 @@ class ItrScheduleReferencesTest {
         // When
         List<String> problems = problems(
                 cell("SYN_RULE", new FieldSource.FromRules(List.of(new RuleId("SYN-NOT-A-RULE")))),
-                cell("SYN_PART", new FieldSource.FromCapitalGainsPart(new CapitalGainsPart("SYN_NOT_A_PART"))),
+                cell("SYN_PART", new FieldSource.FromCapitalGainsParts(List.of(new CapitalGainsPart("SYN_NOT_A_PART")))),
                 cell("SYN_SUM", new FieldSource.SumOf(List.of(new FieldSource.SumOf.Term(new CellCode("SYN_ABSENT"), true)))));
 
         // Then

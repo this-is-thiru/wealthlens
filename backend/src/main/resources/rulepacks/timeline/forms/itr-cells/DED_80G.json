@@ -1,0 +1,12 @@
+{
+  "code": "DED_80G",
+  "_note": "The qualifying, cash and unreported rows feed these two and are left out. Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Deduction u/s 80G",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "DED-DONATION-WHOLE",
+      "DED-DONATION-HALF"
+    ]
+  }
+}

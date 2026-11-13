@@ -1504,7 +1504,7 @@ if that is not enough for the item in hand.
 | W-091 | `ItrFormSelector` | `DR 21` I4 | deterministic **cascade**; return **all** verdicts |
 | W-092 | `ItrSchedule`, `FieldSource`, `forms/itr-schedules.json` | `DR 21` I5 | schedules **shared by reference** |
 | W-093 | `ScheduleMapper` | `DR 21` I5 | a **fold**, not a per-form mapper |
-| W-093a | **ITR-2's remaining schedules as cells** *(W-092 C1a, D-654)*: Schedules CG (271435 pp.42 – 48), CYLA, BFLA, CFL (pp.55 – 57), SI (p.61) and EI (p.62) for TY 2025-26, read from `sources/2026-11-13-itr-schedules-ty-2025-26.md`, each cell sourced or a ManualEntry with its reason | `DR 21` I5; W-092 | after W-092 / W-093 |
+| W-093a | **ITR-2's remaining schedules as cells** *(W-092 C1a, D-654)*: Schedules CG (271435 pp.42 – 48), CYLA, BFLA, CFL (pp.55 – 57), SI (p.61) and EI (p.62) for TY 2025-26, read from `sources/2026-11-13-itr-schedules-ty-2025-26.md`, each cell sourced or a ManualEntry with its reason; **widened by W-092's second pass (Q10, D-655):** ITR-2 Schedule HP per property (1a – 1k), Schedule OS items 1 – 3 by kind, and ITR-1 C3(a)(i), (ii) (sale and cost) — each needs a source that reads one item's line (a property, an interest kind, a bucket) | `DR 21` I5; W-092 | after W-092 / W-093 |
 | W-094 | **T21 tests** | `DR 21` I8 | T21-1 … T21-16 |
 | W-095 | ArchUnit: `@Valid` on every `@RequestBody`; no `@Document` returned | TS T10 | **Built (D-444):** no `@Document` returned, `/tax/**` controllers only; `@Valid` dropped from T10 |
 

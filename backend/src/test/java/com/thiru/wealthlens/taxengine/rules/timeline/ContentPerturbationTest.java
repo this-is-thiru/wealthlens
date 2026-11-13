@@ -37,7 +37,8 @@ class ContentPerturbationTest {
     private static final Set<String> IDENTITY = Set.of("key", "act");
 
     /** A form's free texts, and the values its conditions compare: what a form may change without breaking its row. */
-    private static final Set<String> FORM_TEXTS = Set.of("_note", "displayName", "reason", "sourceDescription");
+    private static final Set<String> FORM_TEXTS = Set.of("_note", "displayName", "reason", "sourceDescription", "label",
+            "guidance");
 
     private static final Set<String> FORM_LIMITS = Set.of("limit", "years");
 
@@ -97,7 +98,8 @@ void compile_whenEveryFormTextAndLimitIsRewritten_movesOnlyTheFormsFile(int year
     // When
     CompiledPack perturbed = RulePackCompiler.compile(TimelineReader.read(root), taxYear);
 
-    // Then — both shipped forms were rewritten, and nothing outside the forms layer moved
+    // Then — both shipped forms (and every cell their schedules place, W-092) were rewritten, and nothing outside the
+    // forms layer moved
     assertThat(rewritten).isEqualTo(2);
     assertThat(withoutForms(perturbed)).isEqualTo(withoutForms(shipped));
     assertThat(perturbed.ruleChecksums()).isEqualTo(shipped.ruleChecksums());
@@ -133,7 +135,10 @@ private static Map<String, String> withoutForms(CompiledPack pack) {
     return files;
 }
 
-/** Rewrites every form's texts and moves every limit and age by one; returns the files rewritten. */
+/**
+ * Rewrites every forms-layer file's texts — each form's and each cell's — and moves every limit and age by one; returns
+ * the form files rewritten.
+ */
 private static int rewriteForms(Path root) throws IOException {
     int count = 0;
     try (Stream<Path> files = Files.walk(root.resolve("forms"))) {
@@ -141,7 +146,9 @@ private static int rewriteForms(Path root) throws IOException {
             JsonNode node = MAPPER.readTree(Files.readString(file));
             rewriteForm(node);
             Files.writeString(file, MAPPER.writeValueAsString(node));
-            count++;
+            if (file.getParent().getFileName().toString().equals("itr-forms")) {
+                count++;
+            }
         }
     }
     return count;

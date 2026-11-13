@@ -1,0 +1,11 @@
+{
+  "code": "DED_80TTB",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Deduction u/s 80TTB",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "DED-DEPOSIT-INTEREST-SENIOR"
+    ]
+  }
+}

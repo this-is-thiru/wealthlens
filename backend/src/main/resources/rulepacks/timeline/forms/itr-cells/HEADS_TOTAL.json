@@ -1,0 +1,14 @@
+{
+  "code": "HEADS_TOTAL",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Total of head wise income",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "SALARY_INCOME",
+      "HOUSE_PROPERTY_INCOME_NIL_IF_LOSS",
+      "CG_TOTAL",
+      "OTHER_SOURCES_INCOME_NIL_IF_LOSS"
+    ]
+  }
+}

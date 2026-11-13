@@ -243,4 +243,67 @@ class ItrFormChoiceTest {
         assertThat(read).isNotEmpty();
         assertThat(produced).containsAll(read);
     }
+    /** Anand in TY 2025-26 under the old regime, filing on {@code furnishedOn} for a due date of 31 July 2026. */
+    private static EngineInputs anandOldRegimeFiling(LocalDate furnishedOn) {
+        EngineInputs moved = answered(inTy2025(Fixtures.anand()), Map.of());
+        FilingFacts filed = moved.filing();
+        return new EngineInputs(moved.taxYear(), new RegimeCode("FIRST_SCHEDULE_RATES"), moved.temporal(), moved.entered(),
+                moved.assessee(), moved.family(), moved.ledgers(), moved.elections(), moved.capitalGains(),
+                new FilingFacts(LocalDate.of(2026, 7, 31), Optional.of(furnishedOn), List.of(), Money.ZERO, List.of(),
+                        filed.declarations()));
+    }
+
+    @Test
+    void chooseForm_whenAnandFilesTy2025_fillsItr1sPartDByHand() {
+        // When — new regime: slab tax ₹11,450, all rebated (as above); nothing paid, nothing late
+        ItrFormChoice choice = CALCULATOR.chooseForm(answered(inTy2025(Fixtures.anand()), Map.of()), ORIGINAL_2025);
+
+        // Then — D1 is slab plus special rates (none), D3 = D1 − D2, D5 = D3 + D4, D11 = D5 + D7 + D8 + D9 + D10
+        Map<String, String> expected = Map.of("TAX_ON_TOTAL_INCOME", "11450", "TAX_AFTER_REBATE", "0",
+                "TAX_LIABILITY", "0", "TOTAL_LIABILITY", "0", "AMOUNT_PAYABLE", "0", "REFUND", "0");
+        expected.forEach((code, rupees) -> assertThat(cell(choice, code).amount()).as(code).contains(Money.of(rupees)));
+        assertThat(cell(choice, "TAX_ON_TOTAL_INCOME").path()).isEqualTo("D1");
+        assertThat(cell(choice, "RELIEF_89").unavailableBecause()).isPresent();
+    }
+
+    @Test
+    void chooseForm_whenAnandClaimsUnderTheOldRegime_placesEachSectionsDeductionAndTheyMakeTheTotal() {
+        // When — the probe's lines: 80D ₹40,000 (DED-HEALTH-FAMILY-SENIOR), 80TTB ₹1,04,000 capped at ₹50,000
+        ItrFormChoice choice = CALCULATOR.chooseForm(anandOldRegimeFiling(LocalDate.of(2026, 7, 31)), ORIGINAL_2025);
+
+        // Then
+        assertThat(choice.form()).contains("ITR-1");
+        assertThat(cell(choice, "DED_80D").amount()).contains(Money.of("40000"));
+        assertThat(cell(choice, "DED_80TTB").amount()).contains(Money.of("50000"));
+        assertThat(cell(choice, "DED_80D").path()).isEqualTo("C.80D");
+        Money sections = choice.cells().stream().filter(cell -> cell.cell().startsWith("DED_"))
+                .flatMap(cell -> cell.amount().stream()).reduce(Money.ZERO, Money::plus);
+        assertThat(sections).isEqualTo(Money.of("90000"));
+        assertThat(cell(choice, "DEDUCTIONS_VI_A").amount()).contains(Money.of("90000"));
+        assertThat(cell(choice, "DED_80CCC").unavailableBecause()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("Included under 80C"));
+    }
+
+    @Test
+    void chooseForm_whenTheReturnIsLate_carriesInterestAndTheFeeIntoTheAmountPayable() {
+        // When — filed 15 September 2026, after the 31 July due date, with nothing paid; round.netpayable rounds the
+        // balance with interest and fees (RoundNetPayableNode), so the payable must agree with D11
+        ItrFormChoice choice = CALCULATOR.chooseForm(anandOldRegimeFiling(LocalDate.of(2026, 9, 15)), ORIGINAL_2025);
+
+        // Then — FEE-LATE-RETURN 2025-26: ₹5,000 where total income exceeds ₹5,00,000 (Anand's is ₹5,64,000)
+        assertThat(cell(choice, "FEE_234F").amount()).contains(Money.of("5000"));
+        Money tax = cell(choice, "TAX_LIABILITY").amount().orElseThrow();
+        Money interestAndFee = java.util.stream.Stream.of("INTEREST_234A", "INTEREST_234B", "INTEREST_234C", "FEE_234F")
+                .map(code -> cell(choice, code).amount().orElseThrow()).reduce(Money.ZERO, Money::plus);
+        assertThat(cell(choice, "TOTAL_LIABILITY").amount()).contains(tax.plus(interestAndFee));
+        // s.288B: to the nearest ₹10, five rupees or more rounding up
+        long owed = tax.plus(interestAndFee).toString().contains(".")
+                ? new java.math.BigDecimal(tax.plus(interestAndFee).toString()).longValue()
+                : Long.parseLong(tax.plus(interestAndFee).toString());
+        long rounded = owed % 10 >= 5 ? owed - owed % 10 + 10 : owed - owed % 10;
+        assertThat(cell(choice, "AMOUNT_PAYABLE").amount()).contains(Money.of(Long.toString(rounded)));
+        assertThat(rounded).isGreaterThan(Long.parseLong(new java.math.BigDecimal(tax.toString()).setScale(0,
+                java.math.RoundingMode.DOWN).toPlainString()) + 5000 - 10);
+        assertThat(cell(choice, "REFUND").amount()).contains(Money.ZERO);
+    }
 }

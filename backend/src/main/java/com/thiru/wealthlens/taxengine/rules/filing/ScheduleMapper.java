@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.filing;
 
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
-import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromNodes;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromRules;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromTaxBasis;
@@ -35,7 +35,7 @@ public final class ScheduleMapper {
      * @param returned the return's facts, for the capital gains by part
      * @param taxAtSlabRates tax before rebate at the slab rates, where the run computed it
      * @param taxAtSpecialRates tax before rebate at each special rate, by the rate's code
-     */
+         */
     public record Figures(Map<NodeId, Money> nodes, Map<RuleId, Money> rules, ReturnFacts returned,
             Optional<Money> taxAtSlabRates, Map<String, Money> taxAtSpecialRates) {
         public Figures {
@@ -85,8 +85,9 @@ public final class ScheduleMapper {
             case FromNodes nodes -> fromNodes(nodes, figures);
             case FromTaxBasis basis -> fromTaxBasis(basis, figures);
             case FromRules rules -> fromRules(rules, figures);
-            case FromCapitalGainsPart part ->
-                    Reading.of(figures.returned().capitalGains().getOrDefault(part.part(), Money.ZERO));
+            case FromCapitalGainsParts parts -> Reading.of(parts.parts().stream()
+                    .map(part -> figures.returned().capitalGains().getOrDefault(part, Money.ZERO))
+                    .reduce(Money.ZERO, Money::plus));
             case SumOf sum -> sumOf(sum, cells, figures, read);
             case ManualEntry manual -> Reading.unavailable(manual.guidance());
         }, cell.sign());
@@ -122,9 +123,12 @@ public final class ScheduleMapper {
         if (figures.taxAtSlabRates().isEmpty()) {
             return Reading.unavailable("The tax by basis was not computed in this run");
         }
-        return Reading.of(source.specialRate()
-                .map(rate -> figures.taxAtSpecialRates().getOrDefault(rate, Money.ZERO))
-                .orElse(figures.taxAtSlabRates().get()));
+        return Reading.of(switch (source.basis()) {
+            case SLAB_RATES -> figures.taxAtSlabRates().get();
+            case SPECIAL_RATE -> figures.taxAtSpecialRates().getOrDefault(source.specialRate().orElseThrow(), Money.ZERO);
+            case ALL_SPECIAL_RATES -> figures.taxAtSpecialRates().values().stream().reduce(Money.ZERO, Money::plus);
+            case ALL_RATES -> figures.taxAtSpecialRates().values().stream().reduce(figures.taxAtSlabRates().get(), Money::plus);
+        });
     }
 
     private static Reading fromRules(FromRules source, Figures figures) {

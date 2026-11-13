@@ -1,0 +1,9 @@
+{
+  "code": "TAXES_PAID_BY_KIND",
+  "_note": "B-TTI 15a – 15d. Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Advance tax, TDS, TCS and self-assessment tax",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Taxes paid are credited in total; split them by kind from your Form 26AS"
+  }
+}

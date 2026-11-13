@@ -3,6 +3,7 @@
   "_note": "tax.bybasis at slab rates, before rebate (Q3a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
   "label": "Tax at normal rates",
   "source": {
-    "type": "FromTaxBasis"
+    "type": "FromTaxBasis",
+    "basis": "SLAB_RATES"
   }
 }

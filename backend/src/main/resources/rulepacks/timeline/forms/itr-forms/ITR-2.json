@@ -158,6 +158,110 @@
           }
         },
         {
+          "code": "VI-A",
+          "displayName": "Schedule VI-A — Deductions under Chapter VI-A",
+          "fields": [
+            {
+              "path": "VI-A.a",
+              "cell": "DED_80C"
+            },
+            {
+              "path": "VI-A.b",
+              "cell": "DED_80CCC"
+            },
+            {
+              "path": "VI-A.c",
+              "cell": "DED_80CCD_1"
+            },
+            {
+              "path": "VI-A.d",
+              "cell": "DED_80CCD_1B"
+            },
+            {
+              "path": "VI-A.e",
+              "cell": "DED_80CCD_2"
+            },
+            {
+              "path": "VI-A.f",
+              "cell": "DED_80D"
+            },
+            {
+              "path": "VI-A.g",
+              "cell": "DED_80DD"
+            },
+            {
+              "path": "VI-A.h",
+              "cell": "DED_80DDB"
+            },
+            {
+              "path": "VI-A.i",
+              "cell": "DED_80E"
+            },
+            {
+              "path": "VI-A.j",
+              "cell": "DED_80EE"
+            },
+            {
+              "path": "VI-A.k",
+              "cell": "DED_80EEA"
+            },
+            {
+              "path": "VI-A.l",
+              "cell": "DED_80EEB"
+            },
+            {
+              "path": "VI-A.m",
+              "cell": "DED_80G"
+            },
+            {
+              "path": "VI-A.n",
+              "cell": "DED_80GG"
+            },
+            {
+              "path": "VI-A.o",
+              "cell": "DED_80GGA"
+            },
+            {
+              "path": "VI-A.p",
+              "cell": "DED_80GGC"
+            },
+            {
+              "path": "VI-A.q",
+              "cell": "DED_80QQB"
+            },
+            {
+              "path": "VI-A.r",
+              "cell": "DED_80RRB"
+            },
+            {
+              "path": "VI-A.s",
+              "cell": "DED_80TTA"
+            },
+            {
+              "path": "VI-A.t",
+              "cell": "DED_80TTB"
+            },
+            {
+              "path": "VI-A.u",
+              "cell": "DED_80U"
+            },
+            {
+              "path": "VI-A.ua",
+              "cell": "DED_80CCH"
+            },
+            {
+              "path": "VI-A.v",
+              "cell": "DEDUCTIONS_VI_A"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule VI-A, p.58",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
           "code": "PART-B-TI",
           "displayName": "Part B-TI — Computation of total income",
           "fields": [
@@ -170,16 +274,80 @@
               "cell": "HOUSE_PROPERTY_INCOME_NIL_IF_LOSS"
             },
             {
+              "path": "B-TI.3a.i",
+              "cell": "STCG_111A"
+            },
+            {
+              "path": "B-TI.3a.ii",
+              "cell": "STCG_30"
+            },
+            {
+              "path": "B-TI.3a.iii",
+              "cell": "STCG_APPLICABLE_RATE"
+            },
+            {
+              "path": "B-TI.3a.iv",
+              "cell": "STCG_DTAA"
+            },
+            {
+              "path": "B-TI.3a.v",
+              "cell": "STCG_TOTAL"
+            },
+            {
               "path": "B-TI.3b.i",
-              "cell": "LTCG_112A"
+              "cell": "LTCG_AT_12_5"
+            },
+            {
+              "path": "B-TI.3b.ii",
+              "cell": "LTCG_DTAA"
+            },
+            {
+              "path": "B-TI.3b.iii",
+              "cell": "LTCG_TOTAL"
+            },
+            {
+              "path": "B-TI.3c",
+              "cell": "CG_SHORT_AND_LONG"
+            },
+            {
+              "path": "B-TI.3d",
+              "cell": "CG_115BBH"
+            },
+            {
+              "path": "B-TI.3e",
+              "cell": "CG_TOTAL"
             },
             {
               "path": "B-TI.4a",
               "cell": "OTHER_SOURCES_INCOME_NIL_IF_LOSS"
             },
             {
+              "path": "B-TI.4d",
+              "cell": "OTHER_SOURCES_INCOME_NIL_IF_LOSS"
+            },
+            {
+              "path": "B-TI.5",
+              "cell": "HEADS_TOTAL"
+            },
+            {
+              "path": "B-TI.6",
+              "cell": "SETOFF_CURRENT_YEAR"
+            },
+            {
+              "path": "B-TI.7",
+              "cell": "BALANCE_AFTER_SETOFF"
+            },
+            {
+              "path": "B-TI.8",
+              "cell": "SETOFF_BROUGHT_FORWARD"
+            },
+            {
               "path": "B-TI.9",
               "cell": "GROSS_TOTAL_INCOME"
+            },
+            {
+              "path": "B-TI.10",
+              "cell": "SPECIAL_RATE_INCOME"
             },
             {
               "path": "B-TI.11",
@@ -206,16 +374,92 @@
               "cell": "TAX_AT_NORMAL_RATES"
             },
             {
+              "path": "B-TTI.2b",
+              "cell": "TAX_AT_SPECIAL_RATES"
+            },
+            {
+              "path": "B-TTI.2c",
+              "cell": "REBATE_AGRICULTURAL"
+            },
+            {
+              "path": "B-TTI.2d",
+              "cell": "TAX_ON_TOTAL_INCOME"
+            },
+            {
               "path": "B-TTI.3",
               "cell": "TAX_REBATE_87A"
+            },
+            {
+              "path": "B-TTI.4",
+              "cell": "TAX_AFTER_REBATE"
+            },
+            {
+              "path": "B-TTI.5i-iii",
+              "cell": "TAX_SURCHARGE_SPLIT"
+            },
+            {
+              "path": "B-TTI.5iv",
+              "cell": "TAX_SURCHARGE"
             },
             {
               "path": "B-TTI.6",
               "cell": "TAX_CESS"
             },
             {
+              "path": "B-TTI.7",
+              "cell": "GROSS_TAX_LIABILITY"
+            },
+            {
+              "path": "B-TTI.8",
+              "cell": "GROSS_TAX_PAYABLE"
+            },
+            {
+              "path": "B-TTI.8a-8c",
+              "cell": "ESOP_TAX_DEFERRED"
+            },
+            {
+              "path": "B-TTI.9-10",
+              "cell": "CREDIT_115JD"
+            },
+            {
+              "path": "B-TTI.11a",
+              "cell": "RELIEF_89"
+            },
+            {
+              "path": "B-TTI.11b-11d",
+              "cell": "RELIEF_90_91"
+            },
+            {
+              "path": "B-TTI.12",
+              "cell": "TAX_LIABILITY"
+            },
+            {
+              "path": "B-TTI.13a",
+              "cell": "INTEREST_234A"
+            },
+            {
+              "path": "B-TTI.13b",
+              "cell": "INTEREST_234B"
+            },
+            {
+              "path": "B-TTI.13c",
+              "cell": "INTEREST_234C"
+            },
+            {
               "path": "B-TTI.13d",
               "cell": "FEE_234F"
+            },
+            {
+              "path": "B-TTI.13e",
+              "cell": "INTEREST_AND_FEE"
+            },
+            {
+              "path": "B-TTI.14",
+              "cell": "TOTAL_LIABILITY"
+            },
+            {
+              "path": "B-TTI.15a-15d",
+              "cell": "TAXES_PAID_BY_KIND"
             },
             {
               "path": "B-TTI.15e",

@@ -1,0 +1,14 @@
+{
+  "code": "INTEREST_AND_FEE",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Total interest and fee payable",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "INTEREST_234A",
+      "INTEREST_234B",
+      "INTEREST_234C",
+      "FEE_234F"
+    ]
+  }
+}

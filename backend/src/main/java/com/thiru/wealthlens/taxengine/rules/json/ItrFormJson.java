@@ -66,16 +66,17 @@ public final class ItrFormJson {
     }
 
     private static FieldSource source(JsonNode node, String path) {
-        return switch (PackJson.tag(node, path, "FromNodes", "FromTaxBasis", "FromRules", "FromCapitalGainsPart", "SumOf",
+        return switch (PackJson.tag(node, path, "FromNodes", "FromTaxBasis", "FromRules", "FromCapitalGainsParts", "SumOf",
                 "ManualEntry")) {
             case "FromNodes" -> PackJson.construct(path, () -> new FieldSource.FromNodes(PackJson.array(node, "nodes", path,
                     e -> PackJson.construct(e.path(), () -> new NodeId(e.node().asString())))));
             case "FromTaxBasis" -> PackJson.construct(path,
-                    () -> new FieldSource.FromTaxBasis(PackJson.optionalText(node, "specialRate", path)));
+                    () -> new FieldSource.FromTaxBasis(FieldSource.FromTaxBasis.Basis.valueOf(PackJson.text(node, "basis", path)),
+                            PackJson.optionalText(node, "specialRate", path)));
             case "FromRules" -> PackJson.construct(path, () -> new FieldSource.FromRules(PackJson.array(node, "rules", path,
                     e -> PackJson.construct(e.path(), () -> new RuleId(e.node().asString())))));
-            case "FromCapitalGainsPart" -> PackJson.construct(path,
-                    () -> new FieldSource.FromCapitalGainsPart(new CapitalGainsPart(PackJson.text(node, "part", path))));
+            case "FromCapitalGainsParts" -> PackJson.construct(path, () -> new FieldSource.FromCapitalGainsParts(
+                    PackJson.array(node, "parts", path, e -> new CapitalGainsPart(e.node().asString()))));
             case "SumOf" -> PackJson.construct(path, () -> new FieldSource.SumOf(PackJson.array(node, "cells", path,
                     e -> term(e.node().asString(), e.path()))));
             default -> PackJson.construct(path, () -> new FieldSource.ManualEntry(PackJson.text(node, "guidance", path)));

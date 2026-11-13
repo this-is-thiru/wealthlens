@@ -6,7 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
-import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromNodes;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromRules;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromTaxBasis;
@@ -51,7 +51,7 @@ class ScheduleMapperTest {
     private static final ScheduleCell NET = new ScheduleCell(new CellCode("SYN_NET"), "Net salary",
             new SumOf(List.of(new SumOf.Term(GROSS.code(), false), new SumOf.Term(DEDUCTION.code(), true))), ScheduleCell.Sign.AS_COMPUTED);
     private static final ScheduleCell GAIN = new ScheduleCell(new CellCode("SYN_GAIN"), "Long-term gains",
-            new FromCapitalGainsPart(LONG), ScheduleCell.Sign.AS_COMPUTED);
+            new FromCapitalGainsParts(List.of(LONG)), ScheduleCell.Sign.AS_COMPUTED);
     private static final ScheduleCell EMPLOYER = new ScheduleCell(new CellCode("SYN_EMPLOYER"), "TAN of employer",
             new ManualEntry("Enter the employer's TAN from Form 16; the computation does not hold it"),
             ScheduleCell.Sign.AS_COMPUTED);
@@ -144,9 +144,9 @@ class ScheduleMapperTest {
         ScheduleCell withTravel = new ScheduleCell(new CellCode("SYN_GROSS_ALL"), "Gross salary",
                 new FromNodes(List.of(GROSS_NODE, TRAVEL_NODE)), ScheduleCell.Sign.AS_COMPUTED);
         ScheduleCell slab = new ScheduleCell(new CellCode("SYN_SLAB"), "Tax at normal rates",
-                new FromTaxBasis(Optional.empty()), ScheduleCell.Sign.AS_COMPUTED);
+                new FromTaxBasis(FromTaxBasis.Basis.SLAB_RATES, Optional.empty()), ScheduleCell.Sign.AS_COMPUTED);
         ScheduleCell special = new ScheduleCell(new CellCode("SYN_SPECIAL"), "Tax at 12.5%",
-                new FromTaxBasis(Optional.of("RATE_CG_LONG_LISTED_EQUITY")), ScheduleCell.Sign.AS_COMPUTED);
+                new FromTaxBasis(FromTaxBasis.Basis.SPECIAL_RATE, Optional.of("RATE_CG_LONG_LISTED_EQUITY")), ScheduleCell.Sign.AS_COMPUTED);
 
         // When
         List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(withTravel, slab, special)),

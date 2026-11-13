@@ -419,20 +419,168 @@
           }
         },
         {
+          "code": "PART-C",
+          "displayName": "Part C — Deductions and Taxable Total Income",
+          "fields": [
+            {
+              "path": "C.80C",
+              "cell": "DED_80C"
+            },
+            {
+              "path": "C.80CCC",
+              "cell": "DED_80CCC"
+            },
+            {
+              "path": "C.80CCD(1)",
+              "cell": "DED_80CCD_1"
+            },
+            {
+              "path": "C.80CCD(1B)",
+              "cell": "DED_80CCD_1B"
+            },
+            {
+              "path": "C.80CCD(2)",
+              "cell": "DED_80CCD_2"
+            },
+            {
+              "path": "C.80CCH",
+              "cell": "DED_80CCH"
+            },
+            {
+              "path": "C.80D",
+              "cell": "DED_80D"
+            },
+            {
+              "path": "C.80DD",
+              "cell": "DED_80DD"
+            },
+            {
+              "path": "C.80DDB",
+              "cell": "DED_80DDB"
+            },
+            {
+              "path": "C.80E",
+              "cell": "DED_80E"
+            },
+            {
+              "path": "C.80EE",
+              "cell": "DED_80EE"
+            },
+            {
+              "path": "C.80EEA",
+              "cell": "DED_80EEA"
+            },
+            {
+              "path": "C.80EEB",
+              "cell": "DED_80EEB"
+            },
+            {
+              "path": "C.80G",
+              "cell": "DED_80G"
+            },
+            {
+              "path": "C.80GG",
+              "cell": "DED_80GG"
+            },
+            {
+              "path": "C.80GGA",
+              "cell": "DED_80GGA"
+            },
+            {
+              "path": "C.80GGC",
+              "cell": "DED_80GGC"
+            },
+            {
+              "path": "C.80TTA",
+              "cell": "DED_80TTA"
+            },
+            {
+              "path": "C.80TTB",
+              "cell": "DED_80TTB"
+            },
+            {
+              "path": "C.80U",
+              "cell": "DED_80U"
+            },
+            {
+              "path": "C1",
+              "cell": "DEDUCTIONS_VI_A"
+            },
+            {
+              "path": "C2",
+              "cell": "TOTAL_INCOME"
+            },
+            {
+              "path": "C3(a).i",
+              "cell": "LTCG_112A_SALE"
+            },
+            {
+              "path": "C3(a).ii",
+              "cell": "LTCG_112A_COST"
+            },
+            {
+              "path": "C3(a).iii",
+              "cell": "LTCG_112A_GAIN"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, FORM ITR-1 SAHAJ, Part C, pp.17 – 18",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
           "code": "PART-D",
           "displayName": "Part D — Computation of Tax Payable",
           "fields": [
             {
+              "path": "D1",
+              "cell": "TAX_ON_TOTAL_INCOME"
+            },
+            {
               "path": "D2",
               "cell": "TAX_REBATE_87A"
+            },
+            {
+              "path": "D3",
+              "cell": "TAX_AFTER_REBATE"
             },
             {
               "path": "D4",
               "cell": "TAX_CESS"
             },
             {
+              "path": "D5",
+              "cell": "TAX_LIABILITY"
+            },
+            {
+              "path": "D6",
+              "cell": "RELIEF_89"
+            },
+            {
+              "path": "D7",
+              "cell": "INTEREST_234A"
+            },
+            {
+              "path": "D8",
+              "cell": "INTEREST_234B"
+            },
+            {
+              "path": "D9",
+              "cell": "INTEREST_234C"
+            },
+            {
               "path": "D10",
               "cell": "FEE_234F"
+            },
+            {
+              "path": "D10(a)",
+              "cell": "FEE_234I"
+            },
+            {
+              "path": "D11",
+              "cell": "TOTAL_LIABILITY"
             },
             {
               "path": "D12",

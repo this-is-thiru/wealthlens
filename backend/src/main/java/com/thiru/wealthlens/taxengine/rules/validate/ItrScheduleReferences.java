@@ -39,12 +39,9 @@ final class ItrScheduleReferences {
             case FieldSource.FromRules rules -> rules.rules().stream().filter(rule -> !pack.rules().containsKey(rule))
                     .forEach(rule -> problems.add(reader + " (" + cell.code() + ") reads rule " + rule
                             + ", which is not a rule of " + pack.taxYear().label() + " (I21)"));
-            case FieldSource.FromCapitalGainsPart part -> {
-                if (!declared.contains(part.part())) {
-                    problems.add(reader + " (" + cell.code() + ") reads capital-gains part " + part.part()
-                            + ", which the year's CapitalGainsParts does not declare (I21)");
-                }
-            }
+            case FieldSource.FromCapitalGainsParts parts -> parts.parts().stream().filter(part -> !declared.contains(part))
+                    .forEach(part -> problems.add(reader + " (" + cell.code() + ") reads capital-gains part " + part
+                            + ", which the year's CapitalGainsParts does not declare (I21)"));
             case FieldSource.SumOf sum -> sum.terms().stream().filter(term -> !placed.contains(term.cell()))
                     .forEach(term -> problems.add(reader + " (" + cell.code() + ") sums cell " + term.cell()
                             + ", which the form does not place (I21)"));

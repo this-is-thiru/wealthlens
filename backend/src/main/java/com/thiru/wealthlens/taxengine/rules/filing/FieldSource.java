@@ -27,13 +27,20 @@ public sealed interface FieldSource {
     }
 
     /**
-     * Tax before rebate on one basis (Q3a, D-654): at the slab rates where {@code specialRate} is empty, otherwise at
-     * that special rate, as {@code tax.bybasis} keeps it.
+     * Tax before rebate on one basis, as {@code tax.bybasis} keeps it (Q3a, D-654; Q7a, D-655): at the slab rates, at one
+     * special rate, at every special rate together, or at every rate — slab and special — together (ITR-1 D1).
+     *
+     * @param basis which of the three
+     * @param specialRate the rate, present exactly for {@link Basis#SPECIAL_RATE}
      */
-    record FromTaxBasis(Optional<String> specialRate) implements FieldSource {
+    record FromTaxBasis(Basis basis, Optional<String> specialRate) implements FieldSource {
+
+        /** The part of the tax by basis a cell reads. */
+        public enum Basis { SLAB_RATES, SPECIAL_RATE, ALL_SPECIAL_RATES, ALL_RATES }
+
         public FromTaxBasis {
-            if (specialRate == null) {
-                throw new IllegalArgumentException("FromTaxBasis says its special rate, or empty for the slab rates");
+            if (basis == null || specialRate == null || specialRate.isPresent() != (basis == Basis.SPECIAL_RATE)) {
+                throw new IllegalArgumentException("FromTaxBasis names a special rate exactly when its basis is SPECIAL_RATE");
             }
         }
     }
@@ -51,12 +58,16 @@ public sealed interface FieldSource {
         }
     }
 
-    /** One part of the year's capital gains, as the computed return states it. */
-    record FromCapitalGainsPart(CapitalGainsPart part) implements FieldSource {
-        public FromCapitalGainsPart {
-            if (part == null) {
-                throw new IllegalArgumentException("FromCapitalGainsPart names a part");
+    /**
+     * The sum of parts of the year's capital gains, as the computed return states them — several where the form groups
+     * them by rate, as "long-term chargeable @ 12.5%" holds s.112A's part and s.112's (Q8a, D-655).
+     */
+    record FromCapitalGainsParts(List<CapitalGainsPart> parts) implements FieldSource {
+        public FromCapitalGainsParts {
+            if (parts == null || parts.isEmpty()) {
+                throw new IllegalArgumentException("FromCapitalGainsParts names at least one part");
             }
+            parts = List.copyOf(parts);
         }
     }
 
