@@ -114,7 +114,7 @@ public class AnalyticsService {
                     .breakevenCount(0L)
                     .averageProfitPerWin(0.0)
                     .averageLossPerLoss(0.0)
-                    .winLossRatio(0.0)
+                    .winLossRatio(null)
                     .averageHoldingPeriodDays(0.0)
                     .portfolioTurnover(0.0)
                     .build();
@@ -140,7 +140,8 @@ public class AnalyticsService {
         double avgProfit = wins.stream().mapToDouble(TradeOutcomeEntity::getNetProfit).average().orElse(0.0);
         double avgLoss = losses.stream().mapToDouble(o -> Math.abs(o.getNetProfit())).average().orElse(0.0);
 
-        double winLossRatio = lossCount > 0 ? (double) winCount / lossCount : 0.0;
+        // With no losses there is no ratio; 0.0 would read as no wins (W-322)
+        Double winLossRatio = lossCount > 0 ? (double) winCount / lossCount : null;
         double avgHolding = outcomes.stream().mapToDouble(TradeOutcomeEntity::getHoldingPeriodDays).average().orElse(0.0);
 
         // Portfolio turnover = total sell value / total buy value

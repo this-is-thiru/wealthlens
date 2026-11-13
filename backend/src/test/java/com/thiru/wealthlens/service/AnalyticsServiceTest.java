@@ -323,7 +323,7 @@ class AnalyticsServiceTest {
         assertEquals(0L, result.getBreakevenCount());
         assertEquals(0.0, result.getAverageProfitPerWin());
         assertEquals(0.0, result.getAverageLossPerLoss());
-        assertEquals(0.0, result.getWinLossRatio());
+        assertNull(result.getWinLossRatio());
         assertEquals(0.0, result.getAverageHoldingPeriodDays());
         assertEquals(0.0, result.getPortfolioTurnover());
     }

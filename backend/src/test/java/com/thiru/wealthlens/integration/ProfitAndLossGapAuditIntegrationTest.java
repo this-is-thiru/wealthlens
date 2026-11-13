@@ -188,4 +188,20 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(untraded.getStatusCode().value()).isEqualTo(200);
     }
 
+    // Scenario 8 (W-322)
+    @Test
+    void performanceMetrics_whenThereAreWinsAndNoLosses_giveNoWinLossRatio() {
+        // Given -- scenario 1: one win of ₹200
+        v2("TCS", "BUY", 10, 100, "2026-01-10");
+        v2("TCS", "SELL", 4, 150, "2026-03-05");
+
+        // When
+        JsonNode performance = analytics("performance-metrics");
+
+        // Then -- a ratio with no losses has no value; 0.0 would say no wins
+        assertThat(performance.get("winCount").asLong()).isEqualTo(1);
+        assertThat(performance.get("lossCount").asLong()).isEqualTo(0);
+        assertThat(performance.get("winLossRatio").isNull()).as(performance.toString()).isTrue();
+    }
+
 }
