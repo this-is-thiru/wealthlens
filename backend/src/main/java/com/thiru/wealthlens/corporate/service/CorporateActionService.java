@@ -17,6 +17,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -283,7 +285,30 @@ public class CorporateActionService {
 
     }
 
+    /**
+     * Allots a bonus to each account holder at the broker from their own lots, as a depository credits each demat
+     * account: one holder's entitlement is never another's (W-312).
+     */
     public void processBonusShares(String email, CorporateActionEntity corporateAction, BrokerName brokerName, List<AssetEntity> stockEntities) {
+        Map<Holder, List<AssetEntity>> lotsByHolder = TCollectionUtil.groupingBy(stockEntities, Holder::of);
+        for (Map.Entry<Holder, List<AssetEntity>> holderLots : lotsByHolder.entrySet()) {
+            allotBonus(email, corporateAction, brokerName, holderLots.getKey(), new ArrayList<>(holderLots.getValue()));
+        }
+    }
+
+    /** One account holder's lots at a broker, as a depository keeps them. */
+    private record Holder(AccountType accountType, String accountHolder) {
+        static Holder of(AssetEntity lot) {
+            return new Holder(lot.getAccountType(), lot.getAccountHolder());
+        }
+
+        boolean holds(TransactionEntity transaction) {
+            return accountType == transaction.getAccountType() && Objects.equals(accountHolder, transaction.getAccountHolder());
+        }
+    }
+
+    private void allotBonus(String email, CorporateActionEntity corporateAction, BrokerName brokerName, Holder holder,
+                            List<AssetEntity> stockEntities) {
         String stockCode = corporateAction.getStockCode();
 
         int totalShares = TCollectionUtil.map(stockEntities, assetEntity -> assetEntity.getQuantity().intValue()).stream().reduce(0, Integer::sum);
@@ -292,7 +317,7 @@ public class CorporateActionService {
         int denominator = Integer.parseInt(splitRatio[1]);
         int bonusSharesCount = totalShares * numerator / denominator;
 
-        List<String> newTransactionIds = processBonusSharesTxns(email, bonusSharesCount, corporateAction, brokerName);
+        List<String> newTransactionIds = processBonusSharesTxns(email, bonusSharesCount, corporateAction, brokerName, holder);
         if (newTransactionIds.size() != 1) {
             log.warn("Bonus shares txns: {} added for symbol: {} in Broker: {} with multiple transactions", newTransactionIds, stockCode, brokerName);
             throw new IllegalArgumentException("Multiple transactions added for bonus shares: " + newTransactionIds);
@@ -335,13 +360,15 @@ public class CorporateActionService {
         bonusLot.setCorporateActions(new ArrayList<>());
     }
 
-    public List<String> processBonusSharesTxns(String email, int bonusSharesCount, CorporateActionEntity corporateAction, BrokerName brokerName) {
+    private List<String> processBonusSharesTxns(String email, int bonusSharesCount, CorporateActionEntity corporateAction, BrokerName brokerName,
+                                                Holder holder) {
 
         String stockCode = corporateAction.getStockCode();
         LocalDate recordDate = corporateAction.getRecordDate();
 
         // Transaction update
-        List<TransactionEntity> transactionEntities = transactionService.testTransactionsForCorporateActions(email, stockCode, brokerName, recordDate);
+        List<TransactionEntity> transactionEntities = TCollectionUtil.filter(
+                transactionService.testTransactionsForCorporateActions(email, stockCode, brokerName, recordDate), holder::holds);
         List<String> existingTransactionIds = TCollectionUtil.map(transactionEntities, TransactionEntity::getId);
 
         TransactionEntity first = TCollectionUtil.filter(transactionEntities, transaction -> TransactionType.BUY.equals(transaction.getTransactionType())).getFirst();

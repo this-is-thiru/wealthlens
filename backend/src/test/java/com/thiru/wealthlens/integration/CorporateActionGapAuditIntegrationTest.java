@@ -140,6 +140,11 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         return lots(stockCode).stream().mapToDouble(lot -> lot.get("quantity").asDouble()).sum();
     }
 
+    private double quantityOf(String stockCode, String holder) {
+        return lots(stockCode).stream().filter(lot -> holder.equals(lot.get("accountHolder").asString()))
+                .mapToDouble(lot -> lot.get("quantity").asDouble()).sum();
+    }
+
     private double cost(String stockCode) {
         return lots(stockCode).stream().mapToDouble(lot -> lot.get("quantity").asDouble() * lot.get("price").asDouble()).sum();
     }
@@ -319,6 +324,38 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(performedForAll.getStatusCode().value()).isEqualTo(403);
         assertThat(tested.getStatusCode().value()).isEqualTo(403);
         assertThat(reprioritised.getStatusCode().value()).isEqualTo(403);
+    }
+
+    // Scenario 1 (W-312)
+    @Test
+    void perform_whenTwoHoldersHoldTheStockAtOneBroker_givesEachHolderTheirOwnBonus() {
+        // Given -- Self 10 and Mother 6, both before the record date; bonus 1:1
+        buy("HDFCBANK", 10, 100, "2026-01-05", "Self");
+        buy("HDFCBANK", 6, 100, "2026-01-06", "Mother");
+        assertThat(addAction("HDFCBANK", "BONUS", "1:1", "2026-01-15", "2026-01-17").getStatusCode().value()).isEqualTo(200);
+
+        // When
+        perform("JANUARY", 2026);
+
+        // Then -- each holder's entitlement is their own: 10 + 10 and 6 + 6
+        assertThat(quantityOf("HDFCBANK", "Self")).isEqualTo(20.0);
+        assertThat(quantityOf("HDFCBANK", "Mother")).isEqualTo(12.0);
+    }
+
+    // Scenario 1b (W-312)
+    @Test
+    void perform_whenEachHolderHasAFractionalEntitlement_roundsEachDownOnItsOwn() {
+        // Given -- Self 3 and Mother 3; bonus 1:2: 1.5 each, whole shares per demat account: 1 each (pooled: 3)
+        buy("MSWIL", 3, 100, "2026-01-05", "Self");
+        buy("MSWIL", 3, 100, "2026-01-06", "Mother");
+        addAction("MSWIL", "BONUS", "1:2", "2026-01-15", "2026-01-17");
+
+        // When
+        perform("JANUARY", 2026);
+
+        // Then
+        assertThat(quantityOf("MSWIL", "Self")).isEqualTo(4.0);
+        assertThat(quantityOf("MSWIL", "Mother")).isEqualTo(4.0);
     }
 
     // Scenario 6 (W-313)
