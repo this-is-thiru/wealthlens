@@ -251,4 +251,19 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(result.get("xirr").asDouble()).isCloseTo(0.10, org.assertj.core.data.Offset.offset(1e-6));
     }
 
+    // Scenario 12 (W-321)
+    @Test
+    void xirr_whenAStockIsPricedTwice_answers400NamingIt() {
+        // Given
+        v2("TCS", "BUY", 10, 100, "2025-01-01");
+
+        // When
+        ResponseEntity<String> response = xirr(List.of(Map.of("stockCode", "TCS", "price", 110.0),
+                Map.of("stockCode", "TCS", "price", 120.0)));
+
+        // Then
+        assertThat(response.getStatusCode().value()).as(response.getBody()).isEqualTo(400);
+        assertThat(JSON.readTree(response.getBody()).get("message").asString())
+                .isEqualTo("currentPrices names TCS more than once; give one price per stock");
+    }
 }

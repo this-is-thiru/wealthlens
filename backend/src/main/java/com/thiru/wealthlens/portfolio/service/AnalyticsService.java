@@ -25,6 +25,7 @@ import com.thiru.wealthlens.shared.util.calculator.XirrCalculator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -218,8 +219,7 @@ public class AnalyticsService {
         String message = null;
 
         if (request != null && request.getCurrentPrices() != null && !request.getCurrentPrices().isEmpty()) {
-            Map<String, Double> priceMap = request.getCurrentPrices().stream()
-                .collect(Collectors.toMap(MarketPriceEntry::getStockCode, MarketPriceEntry::getPrice));
+            Map<String, Double> priceMap = currentPrices(request);
 
             double totalCurrentValue = 0.0;
             for (AssetEntity asset : assets) {
@@ -281,5 +281,21 @@ public class AnalyticsService {
     /** The trades that happened: one held behind a corporate action is not recorded yet (W-319). */
     private static List<TransactionEntity> recorded(List<TransactionEntity> transactions) {
         return transactions.stream().filter(txn -> txn.getStatus() != TransactionStatus.TEMPORARY).toList();
+    }
+
+    /** One price per stock; a stock priced twice is refused, since either price would be a guess (W-321). */
+    private static Map<String, Double> currentPrices(XirrRequest request) {
+        Map<String, Double> prices = new HashMap<>();
+        if (request == null || request.getCurrentPrices() == null) {
+            return prices;
+        }
+        for (MarketPriceEntry entry : request.getCurrentPrices()) {
+            if (prices.containsKey(entry.getStockCode())) {
+                throw new IllegalArgumentException("currentPrices names " + entry.getStockCode()
+                        + " more than once; give one price per stock");
+            }
+            prices.put(entry.getStockCode(), entry.getPrice());
+        }
+        return prices;
     }
 }
