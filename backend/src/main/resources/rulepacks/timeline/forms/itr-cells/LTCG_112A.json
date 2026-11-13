@@ -1,0 +1,9 @@
+{
+  "code": "LTCG_112A",
+  "_note": "The s.112A part (CG-PART-LONG-LISTED, 2025-26). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Long-term capital gains chargeable @ 12.5%",
+  "source": {
+    "type": "FromCapitalGainsPart",
+    "part": "LONG_TERM_LISTED_EQUITY"
+  }
+}

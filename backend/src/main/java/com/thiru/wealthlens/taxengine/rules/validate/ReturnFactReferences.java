@@ -73,7 +73,7 @@ final class ReturnFactReferences {
         }
     }
 
-    private static Set<CapitalGainsPart> declaredParts(RulePack pack) {
+    static Set<CapitalGainsPart> declaredParts(RulePack pack) {
         Set<CapitalGainsPart> parts = new LinkedHashSet<>();
         pack.rules().values().stream().flatMap(row -> row.versions().stream())
                 .filter(version -> PackValidator.coversAnyOf(version, pack.taxYear().startsOn(), pack.taxYear().endsOn()))

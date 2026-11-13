@@ -47,7 +47,7 @@ class ItrFormCoverageTest {
     private static ItrFormSpec form(ItrFormCode code, int order, Set<PersonType> appliesTo, Set<ReturnKind> kinds,
             List<Condition> positive, Set<ItrFormCode> excludes) {
         return new ItrFormSpec(code, "Synthetic " + code, order, appliesTo, kinds, positive, List.of(), excludes,
-                List.of(new FurnishingOption(new FurnishingManner("SYN_ELECTRONIC"), List.of(), SOURCE)), SOURCE);
+                List.of(new FurnishingOption(new FurnishingManner("SYN_ELECTRONIC"), List.of(), SOURCE)), List.of(), SOURCE);
     }
 
     private static List<String> problems(ItrFormSpec... forms) {

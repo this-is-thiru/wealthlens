@@ -26,6 +26,8 @@ import java.util.Set;
  * @param bars any of which disqualifies; may be empty
  * @param excludes earlier forms that, where eligible, exclude this one
  * @param furnishing the manners it may be furnished in; never empty
+ * @param schedules its parts and schedules, each cell with its source (W-092); empty where the form's layout is not
+ *     yet read
  * @param provenance where it was read
  */
 public record ItrFormSpec(
@@ -38,6 +40,7 @@ public record ItrFormSpec(
         List<ItrFormBar> bars,
         Set<ItrFormCode> excludes,
         List<FurnishingOption> furnishing,
+        List<ItrSchedule> schedules,
         Provenance provenance) {
 
     public ItrFormSpec {
@@ -56,6 +59,10 @@ public record ItrFormSpec(
         positiveConditions = List.copyOf(required(code, "positiveConditions", positiveConditions));
         bars = List.copyOf(required(code, "bars", bars));
         excludes = Set.copyOf(required(code, "excludes", excludes));
+        schedules = List.copyOf(required(code, "schedules", schedules));
+        if (schedules.stream().map(ItrSchedule::code).distinct().count() != schedules.size()) {
+            throw new IllegalArgumentException(code + " lists a schedule twice");
+        }
         if (excludes.contains(code)) {
             throw new IllegalArgumentException(code + " excludes itself; a form is excluded only by an earlier one");
         }

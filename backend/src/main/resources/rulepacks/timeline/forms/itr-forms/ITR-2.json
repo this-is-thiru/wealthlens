@@ -1,6 +1,6 @@
 {
   "id": "ITR-2",
-  "_note": "Income-tax Rules, 2026 r.164(4), (12) (Gazette 271092 pp.1663 – 1664), for the tax year commencing 1 April 2026 only (r.164(1), (14)): \"an individual not being an individual to whom sub-rule (2) applies or a Hindu undivided family, where the total income does not include income under the head business or profession\". Excluded wherever ITR-1 applies. Furnishing: Table Sl. 3's three manners; Sl. 4's paper form names only ITR-1 and ITR-4. TY 2025-26 (W-090d, D-652): Income-tax Rules, 1962 r.12(1)(c): \"an individual [not being an individual to whom clause (a) applies] or a Hindu undivided family where the total income does not include income under the head\" business or profession (2017; 2018). Kinds s.139(1), s.142(1)(i), s.148 (C1a). Furnishing r.12(3) Table Sl. 1 item (c) (2017); item (b)'s paper form names only ITR-1 and ITR-4.",
+  "_note": "Income-tax Rules, 2026 r.164(4), (12) (Gazette 271092 pp.1663 – 1664), for the tax year commencing 1 April 2026 only (r.164(1), (14)): \"an individual not being an individual to whom sub-rule (2) applies or a Hindu undivided family, where the total income does not include income under the head business or profession\". Excluded wherever ITR-1 applies. Furnishing: Table Sl. 3's three manners; Sl. 4's paper form names only ITR-1 and ITR-4. TY 2025-26 (W-090d, D-652): Income-tax Rules, 1962 r.12(1)(c): \"an individual [not being an individual to whom clause (a) applies] or a Hindu undivided family where the total income does not include income under the head\" business or profession (2017; 2018). Kinds s.139(1), s.142(1)(i), s.148 (C1a). Furnishing r.12(3) Table Sl. 1 item (c) (2017); item (b)'s paper form names only ITR-1 and ITR-4. Schedules (W-092, D-654): TY 2025-26's version places the cells of the owner-adopted table (reviews/2026-11-13-w092-cell-table.md); TY 2026-27's forms are not located, so its version places none.",
   "versions": [
     {
       "validity": {
@@ -59,6 +59,180 @@
           "provenance": {
             "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
             "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1, item (c), p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "schedules": [
+        {
+          "code": "S",
+          "displayName": "Schedule S — Details of Income from Salary",
+          "fields": [
+            {
+              "path": "S.1",
+              "cell": "SALARY_GROSS_PER_EMPLOYER"
+            },
+            {
+              "path": "S.1a",
+              "cell": "SALARY_17_1"
+            },
+            {
+              "path": "S.1b",
+              "cell": "SALARY_PERQUISITES"
+            },
+            {
+              "path": "S.1c",
+              "cell": "SALARY_17_3"
+            },
+            {
+              "path": "S.1d",
+              "cell": "SALARY_89A_NOTIFIED"
+            },
+            {
+              "path": "S.1e",
+              "cell": "SALARY_89A_OTHER"
+            },
+            {
+              "path": "S.1f",
+              "cell": "SALARY_89A_EARLIER_RELIEF"
+            },
+            {
+              "path": "S.2",
+              "cell": "SALARY_GROSS"
+            },
+            {
+              "path": "S.3",
+              "cell": "SALARY_EXEMPT_U10"
+            },
+            {
+              "path": "S.3a",
+              "cell": "SALARY_89A_RELIEF"
+            },
+            {
+              "path": "S.4",
+              "cell": "SALARY_NET"
+            },
+            {
+              "path": "S.5",
+              "cell": "SALARY_DEDUCTIONS_16"
+            },
+            {
+              "path": "S.5a",
+              "cell": "SALARY_STANDARD_DEDUCTION"
+            },
+            {
+              "path": "S.5b",
+              "cell": "SALARY_ENTERTAINMENT"
+            },
+            {
+              "path": "S.5c",
+              "cell": "SALARY_PROFESSIONAL_TAX"
+            },
+            {
+              "path": "S.6",
+              "cell": "SALARY_INCOME"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule S, p.41",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "HP",
+          "displayName": "Schedule HP — Details of Income from House Property",
+          "fields": [
+            {
+              "path": "HP.3",
+              "cell": "HOUSE_PROPERTY_INCOME"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule HP, pp.41 – 42",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "PART-B-TI",
+          "displayName": "Part B-TI — Computation of total income",
+          "fields": [
+            {
+              "path": "B-TI.1",
+              "cell": "SALARY_INCOME"
+            },
+            {
+              "path": "B-TI.2",
+              "cell": "HOUSE_PROPERTY_INCOME_NIL_IF_LOSS"
+            },
+            {
+              "path": "B-TI.3b.i",
+              "cell": "LTCG_112A"
+            },
+            {
+              "path": "B-TI.4a",
+              "cell": "OTHER_SOURCES_INCOME_NIL_IF_LOSS"
+            },
+            {
+              "path": "B-TI.9",
+              "cell": "GROSS_TOTAL_INCOME"
+            },
+            {
+              "path": "B-TI.11",
+              "cell": "DEDUCTIONS_VI_A"
+            },
+            {
+              "path": "B-TI.12",
+              "cell": "TOTAL_INCOME"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Part B-TI, pp.67 – 68",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "PART-B-TTI",
+          "displayName": "Part B-TTI — Computation of tax liability on total income",
+          "fields": [
+            {
+              "path": "B-TTI.2a",
+              "cell": "TAX_AT_NORMAL_RATES"
+            },
+            {
+              "path": "B-TTI.3",
+              "cell": "TAX_REBATE_87A"
+            },
+            {
+              "path": "B-TTI.6",
+              "cell": "TAX_CESS"
+            },
+            {
+              "path": "B-TTI.13d",
+              "cell": "FEE_234F"
+            },
+            {
+              "path": "B-TTI.15e",
+              "cell": "TAXES_PAID"
+            },
+            {
+              "path": "B-TTI.16",
+              "cell": "AMOUNT_PAYABLE"
+            },
+            {
+              "path": "B-TTI.17",
+              "cell": "REFUND"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Part B-TTI, pp.68 – 70",
             "accessedOn": "2026-11-13",
             "verificationLevel": "SOURCE_CHECKED"
           }

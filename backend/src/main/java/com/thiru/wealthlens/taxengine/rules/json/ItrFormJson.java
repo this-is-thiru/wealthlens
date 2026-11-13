@@ -1,11 +1,20 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource;
 import com.thiru.wealthlens.taxengine.rules.filing.FurnishingOption;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormBar;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
+import com.thiru.wealthlens.taxengine.rules.filing.ItrSchedule;
+import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
+import com.thiru.wealthlens.taxengine.rules.filing.ScheduleField;
+import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.FurnishingManner;
 import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.ScheduleCode;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -22,10 +31,12 @@ public final class ItrFormJson {
     private ItrFormJson() {
     }
 
-    /** The year's forms, by code. */
+    /** The year's forms, by code, their schedules' cells resolved from the file's {@code cells} catalogue (W-092). */
     public static Map<ItrFormCode, ItrFormSpec> forms(JsonNode root, String path) {
+        Map<CellCode, ScheduleCell> cells = cells(PackJson.arrayOrEmpty(root, "cells", path, e -> cell(e.node(), e.path())),
+                path);
         Map<ItrFormCode, ItrFormSpec> byCode = new LinkedHashMap<>();
-        for (ItrFormSpec form : PackJson.arrayOrEmpty(root, "forms", path, e -> form(e.node(), e.path()))) {
+        for (ItrFormSpec form : PackJson.arrayOrEmpty(root, "forms", path, e -> form(e.node(), e.path(), cells))) {
             if (byCode.put(form.code(), form) != null) {
                 throw new PackValidationException(path + " defines form " + form.code() + " twice");
             }
@@ -33,8 +44,56 @@ public final class ItrFormJson {
         return byCode;
     }
 
-    /** One form, as a year's pack holds it — and as the timeline reads each version of one. */
-    public static ItrFormSpec form(JsonNode node, String path) {
+    /** The cells, by code; a code defined twice is refused. */
+    public static Map<CellCode, ScheduleCell> cells(java.util.List<ScheduleCell> cells, String path) {
+        Map<CellCode, ScheduleCell> byCode = new LinkedHashMap<>();
+        for (ScheduleCell cell : cells) {
+            if (byCode.put(cell.code(), cell) != null) {
+                throw new PackValidationException(path + " defines cell " + cell.code() + " twice");
+            }
+        }
+        return byCode;
+    }
+
+    /** One cell: its code, label and source (W-092 C2a, C3a). */
+    public static ScheduleCell cell(JsonNode node, String path) {
+        CellCode code = PackJson.construct(path, () -> new CellCode(PackJson.text(node, "code", path)));
+        String where = path + " (" + code + ")";
+        return PackJson.construct(where, () -> new ScheduleCell(code, PackJson.text(node, "label", where),
+                source(PackJson.object(node, "source", where), where + ".source"),
+                PackJson.optionalText(node, "sign", where).map(ScheduleCell.Sign::valueOf)
+                        .orElse(ScheduleCell.Sign.AS_COMPUTED)));
+    }
+
+    private static FieldSource source(JsonNode node, String path) {
+        return switch (PackJson.tag(node, path, "FromNodes", "FromTaxBasis", "FromRules", "FromCapitalGainsPart", "SumOf",
+                "ManualEntry")) {
+            case "FromNodes" -> PackJson.construct(path, () -> new FieldSource.FromNodes(PackJson.array(node, "nodes", path,
+                    e -> PackJson.construct(e.path(), () -> new NodeId(e.node().asString())))));
+            case "FromTaxBasis" -> PackJson.construct(path,
+                    () -> new FieldSource.FromTaxBasis(PackJson.optionalText(node, "specialRate", path)));
+            case "FromRules" -> PackJson.construct(path, () -> new FieldSource.FromRules(PackJson.array(node, "rules", path,
+                    e -> PackJson.construct(e.path(), () -> new RuleId(e.node().asString())))));
+            case "FromCapitalGainsPart" -> PackJson.construct(path,
+                    () -> new FieldSource.FromCapitalGainsPart(new CapitalGainsPart(PackJson.text(node, "part", path))));
+            case "SumOf" -> PackJson.construct(path, () -> new FieldSource.SumOf(PackJson.array(node, "cells", path,
+                    e -> term(e.node().asString(), e.path()))));
+            default -> PackJson.construct(path, () -> new FieldSource.ManualEntry(PackJson.text(node, "guidance", path)));
+        };
+    }
+
+    /** A sum's term: a cell's code, taken away where it starts with a minus sign. */
+    private static FieldSource.SumOf.Term term(String text, String path) {
+        boolean subtract = text.startsWith("-");
+        return PackJson.construct(path, () -> new FieldSource.SumOf.Term(new CellCode(subtract ? text.substring(1) : text),
+                subtract));
+    }
+
+    /**
+     * One form, as a year's pack holds it — and as the timeline reads each version of one — its schedules' cells resolved
+     * from {@code cells}.
+     */
+    public static ItrFormSpec form(JsonNode node, String path, Map<CellCode, ScheduleCell> cells) {
         ItrFormCode code = PackJson.construct(path, () -> new ItrFormCode(PackJson.text(node, "id", path)));
         String where = path + " (" + code + ")";
         return PackJson.construct(where, () -> new ItrFormSpec(
@@ -49,7 +108,25 @@ public final class ItrFormJson {
                 new LinkedHashSet<>(PackJson.arrayOrEmpty(node, "excludes", where,
                         e -> PackJson.construct(e.path(), () -> new ItrFormCode(e.node().asString())))),
                 PackJson.array(node, "furnishing", where, e -> furnishing(e.node(), e.path())),
+                PackJson.arrayOrEmpty(node, "schedules", where, e -> schedule(e.node(), e.path(), cells)),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
+    }
+
+    private static ItrSchedule schedule(JsonNode node, String path, Map<CellCode, ScheduleCell> cells) {
+        ScheduleCode code = PackJson.construct(path, () -> new ScheduleCode(PackJson.text(node, "code", path)));
+        String where = path + " (" + code + ")";
+        return PackJson.construct(where, () -> new ItrSchedule(code, PackJson.text(node, "displayName", where),
+                PackJson.array(node, "fields", where, e -> field(e.node(), e.path(), cells)),
+                ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
+    }
+
+    private static ScheduleField field(JsonNode node, String path, Map<CellCode, ScheduleCell> cells) {
+        CellCode code = PackJson.construct(path, () -> new CellCode(PackJson.text(node, "cell", path)));
+        ScheduleCell cell = cells.get(code);
+        if (cell == null) {
+            throw new PackValidationException(path + " places cell " + code + ", which no cell file defines");
+        }
+        return PackJson.construct(path, () -> new ScheduleField(PackJson.text(node, "path", path), cell));
     }
 
     private static ItrFormBar bar(JsonNode node, String path) {

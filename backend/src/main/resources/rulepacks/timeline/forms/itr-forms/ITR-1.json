@@ -1,6 +1,6 @@
 {
   "id": "ITR-1",
-  "_note": "Income-tax Rules, 2026 r.164(2) – (3), (12) (Gazette 271092 pp.1662 – 1664), for the tax year commencing 1 April 2026 only (r.164(1), (14)). Positive conditions, all of which hold: a resident other than not ordinarily resident; total income under (a) – (d) only, so no business income (D-523 C5a); (b) \"does not own more than two house property and does not have any brought forward loss or loss to be carried forward under the head\", the limit holding whether or not the head's income is nil (D-529 C3a); (c) \"does not have any loss under the head\" — its exception, \"except winnings from lottery or income from race horses\", is unwritten because the engine computes neither (OtherSourceKind.WINNINGS is refused; no input carries race-horse income) and is W-261 (D-529 C2a); (d) \"only long-term capital gains under section 198 not exceeding ₹ 125000\" — the LONG_TERM_LISTED_EQUITY part (CG-PART-LONG-LISTED, s.198(1)) — and no loss brought forward or to be carried forward. Bars r.164(3)(a) – (n): eleven clauses are the year's declarations ((i) is two), (e) the s.93 rows other than the family-pension (1)(d) rows, (k) total income as rounded under s.516. Furnishing: Table Sl. 3's three manners, and Sl. 4's paper form for an individual of eighty years or more at any time during the tax year; Sl. 2 (accounts audited under s.63) reaches only a person carrying on business, whom this form does not serve. TY 2025-26 (W-090d, D-652): Income-tax Rules, 1962 r.12(1)(a), kept live by the Income-tax Rules, 2026 r.164(14), as in force for AY 2026-27, rebuilt from its Gazette amendment chain (sources/2026-11-13-itr-forms-ty-2025-26.md) and the Gazette FORM ITR-1 (271423 p.16) under the owner's closing ruling. Positive conditions as TY 2026-27's: (a) \"an individual who is a resident other than not ordinarily resident\" (2018); (ii) not more than two house properties (2026) and no loss brought forward or to be carried forward under the head (2018); (iii) other sources with no loss under the head (2013), its lottery and race-horse exception unwritten as W-261 holds; (iv) only long-term capital gains under s.112A up to ₹1,25,000, no loss brought forward or carried forward (2025). Bars (I) – (VIII); (ID) reads the rows whose 1961 provision is s.57 other than (iia) — commuted pension and death gratuity are s.10 exemptions in the 1961 Act, not s.57 deductions. Kinds s.139(1), s.142(1)(i), s.148 (C1a). Furnishing r.12(3) Table Sl. 1 (2017; item (b) 2019): the three electronic manners, and paper at eighty or more on ITR-1.",
+  "_note": "Income-tax Rules, 2026 r.164(2) – (3), (12) (Gazette 271092 pp.1662 – 1664), for the tax year commencing 1 April 2026 only (r.164(1), (14)). Positive conditions, all of which hold: a resident other than not ordinarily resident; total income under (a) – (d) only, so no business income (D-523 C5a); (b) \"does not own more than two house property and does not have any brought forward loss or loss to be carried forward under the head\", the limit holding whether or not the head's income is nil (D-529 C3a); (c) \"does not have any loss under the head\" — its exception, \"except winnings from lottery or income from race horses\", is unwritten because the engine computes neither (OtherSourceKind.WINNINGS is refused; no input carries race-horse income) and is W-261 (D-529 C2a); (d) \"only long-term capital gains under section 198 not exceeding ₹ 125000\" — the LONG_TERM_LISTED_EQUITY part (CG-PART-LONG-LISTED, s.198(1)) — and no loss brought forward or to be carried forward. Bars r.164(3)(a) – (n): eleven clauses are the year's declarations ((i) is two), (e) the s.93 rows other than the family-pension (1)(d) rows, (k) total income as rounded under s.516. Furnishing: Table Sl. 3's three manners, and Sl. 4's paper form for an individual of eighty years or more at any time during the tax year; Sl. 2 (accounts audited under s.63) reaches only a person carrying on business, whom this form does not serve. TY 2025-26 (W-090d, D-652): Income-tax Rules, 1962 r.12(1)(a), kept live by the Income-tax Rules, 2026 r.164(14), as in force for AY 2026-27, rebuilt from its Gazette amendment chain (sources/2026-11-13-itr-forms-ty-2025-26.md) and the Gazette FORM ITR-1 (271423 p.16) under the owner's closing ruling. Positive conditions as TY 2026-27's: (a) \"an individual who is a resident other than not ordinarily resident\" (2018); (ii) not more than two house properties (2026) and no loss brought forward or to be carried forward under the head (2018); (iii) other sources with no loss under the head (2013), its lottery and race-horse exception unwritten as W-261 holds; (iv) only long-term capital gains under s.112A up to ₹1,25,000, no loss brought forward or carried forward (2025). Bars (I) – (VIII); (ID) reads the rows whose 1961 provision is s.57 other than (iia) — commuted pension and death gratuity are s.10 exemptions in the 1961 Act, not s.57 deductions. Kinds s.139(1), s.142(1)(i), s.148 (C1a). Furnishing r.12(3) Table Sl. 1 (2017; item (b) 2019): the three electronic manners, and paper at eighty or more on ITR-1. Schedules (W-092, D-654): TY 2025-26's version places the cells of the owner-adopted table (reviews/2026-11-13-w092-cell-table.md); TY 2026-27's forms are not located, so its version places none.",
   "versions": [
     {
       "validity": {
@@ -344,6 +344,112 @@
           "provenance": {
             "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/201697.pdf",
             "sourceDescription": "egazette 2019/201697, Income-tax (Second Amendment) Rules, 2019, G.S.R. 279(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1 item (b), p.251; the four manners of item (b) in egazette 2017/175133, p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "schedules": [
+        {
+          "code": "PART-B",
+          "displayName": "Part B — Gross Total Income",
+          "fields": [
+            {
+              "path": "B1.i",
+              "cell": "SALARY_GROSS"
+            },
+            {
+              "path": "B1.ia",
+              "cell": "SALARY_17_1"
+            },
+            {
+              "path": "B1.ib",
+              "cell": "SALARY_PERQUISITES"
+            },
+            {
+              "path": "B1.ic",
+              "cell": "SALARY_17_3"
+            },
+            {
+              "path": "B1.ii",
+              "cell": "SALARY_EXEMPT_U10"
+            },
+            {
+              "path": "B1.iii",
+              "cell": "SALARY_NET"
+            },
+            {
+              "path": "B1.iv",
+              "cell": "SALARY_DEDUCTIONS_16"
+            },
+            {
+              "path": "B1.iva",
+              "cell": "SALARY_STANDARD_DEDUCTION"
+            },
+            {
+              "path": "B1.ivb",
+              "cell": "SALARY_ENTERTAINMENT"
+            },
+            {
+              "path": "B1.ivc",
+              "cell": "SALARY_PROFESSIONAL_TAX"
+            },
+            {
+              "path": "B1.v",
+              "cell": "SALARY_INCOME"
+            },
+            {
+              "path": "B2",
+              "cell": "HOUSE_PROPERTY_INCOME"
+            },
+            {
+              "path": "B3",
+              "cell": "OTHER_SOURCES_INCOME"
+            },
+            {
+              "path": "B4",
+              "cell": "GROSS_TOTAL_INCOME"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, FORM ITR-1 SAHAJ, Part B, p.17",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "PART-D",
+          "displayName": "Part D — Computation of Tax Payable",
+          "fields": [
+            {
+              "path": "D2",
+              "cell": "TAX_REBATE_87A"
+            },
+            {
+              "path": "D4",
+              "cell": "TAX_CESS"
+            },
+            {
+              "path": "D10",
+              "cell": "FEE_234F"
+            },
+            {
+              "path": "D12",
+              "cell": "TAXES_PAID"
+            },
+            {
+              "path": "D13",
+              "cell": "AMOUNT_PAYABLE"
+            },
+            {
+              "path": "D14",
+              "cell": "REFUND"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, FORM ITR-1 SAHAJ, Part D, p.18",
             "accessedOn": "2026-11-13",
             "verificationLevel": "SOURCE_CHECKED"
           }

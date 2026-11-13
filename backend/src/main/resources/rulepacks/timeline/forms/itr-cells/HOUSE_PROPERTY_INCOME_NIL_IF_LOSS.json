@@ -1,0 +1,12 @@
+{
+  "code": "HOUSE_PROPERTY_INCOME_NIL_IF_LOSS",
+  "_note": "ITR-2 Part B-TI item 2 (Q4a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Income from house property (enter nil if loss)",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "houseproperty.income"
+    ]
+  },
+  "sign": "NIL_IF_LOSS"
+}

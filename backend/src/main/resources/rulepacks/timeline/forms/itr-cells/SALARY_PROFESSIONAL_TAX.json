@@ -1,0 +1,11 @@
+{
+  "code": "SALARY_PROFESSIONAL_TAX",
+  "_note": "A nil line in the new regime, which disallows it. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Professional tax u/s 16(iii)",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "SAL-TAX-ON-EMPLOYMENT"
+    ]
+  }
+}

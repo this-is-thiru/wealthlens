@@ -1,0 +1,11 @@
+{
+  "code": "DEDUCTIONS_VI_A",
+  "_note": "The Chapter VI-A total, limited as the node limits it. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Deductions under Chapter VI-A",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "chapterviii"
+    ]
+  }
+}

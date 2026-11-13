@@ -1,0 +1,13 @@
+{
+  "code": "SALARY_PERQUISITES",
+  "_note": "Each node is a s.17(2) perquisite in the 1961 Act: accommodation and benefits (PerquisiteNode), the employer-contribution excess (s.17(2)(vii), EmployerContributionNode), medical treatment abroad (s.17(2) proviso (vi), MedicalTreatmentAbroadNode) (Q1a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Value of perquisites as per section 17(2)",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "salary.perquisites",
+      "employer.contrib.charges",
+      "salary.medicaltravel"
+    ]
+  }
+}

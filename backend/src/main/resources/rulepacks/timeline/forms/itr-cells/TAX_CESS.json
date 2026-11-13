@@ -1,0 +1,11 @@
+{
+  "code": "TAX_CESS",
+  "_note": "4% of tax and surcharge. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Health and education cess",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "tax.cess"
+    ]
+  }
+}

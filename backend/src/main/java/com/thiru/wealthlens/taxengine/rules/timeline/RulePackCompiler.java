@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
+import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
@@ -92,7 +93,12 @@ public final class RulePackCompiler {
         files.put("exec/components.json", render(object().set("components", components)));
         files.put("exec/funds.json", render(object().set("funds", funds)));
         files.put("exec/declarations.json", render(object().set("declarations", declarations)));
-        files.put("forms/itr-forms.json", render(object().set("forms", itrForms(timeline, taxYear))));
+        ObjectNode forms = object();
+        if (!timeline.itrCellSources().isEmpty()) {
+            // Written only once a cell exists, so a pack with none compiles as it did before W-092
+            forms.set("cells", itrCells(timeline));
+        }
+        files.put("forms/itr-forms.json", render(forms.set("forms", itrForms(timeline, taxYear))));
         files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
         return new CompiledPack(taxYear, files, ruleChecksums);
     }
@@ -117,6 +123,14 @@ public final class RulePackCompiler {
                     "law/disallowances/" + id.value() + ".json").ifPresent(disallowanceSets::add);
         }
         return disallowanceSets;
+    }
+
+    /** Every cell the forms' schedules may place, defined once (W-092 C2a); a cell has no year of its own. */
+    private static ArrayNode itrCells(Timeline timeline) {
+        ArrayNode cells = MAPPER.createArrayNode();
+        sorted(timeline.itrCellSources().keySet(), CellCode::value)
+                .forEach(code -> cells.add(canonical(MAPPER.readTree(timeline.itrCellSources().get(code)))));
+        return cells;
     }
 
     /** The return forms in force in the year, each as its year's version (W-090b, D-521 C3a). */

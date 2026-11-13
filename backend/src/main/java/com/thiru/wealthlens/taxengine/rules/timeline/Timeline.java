@@ -3,6 +3,8 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
+import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
+import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
@@ -40,6 +42,8 @@ import java.util.Optional;
  * @param declarations every declaration the law has asked, by code (W-090a1)
  * @param declarationSources each declaration's file verbatim, for the same reason
  * @param itrFormSources each return form's file verbatim, by code, versioned as a condition set is (W-090b)
+ * @param itrCells the cells the forms' schedules place, by code, defined once (W-092 C2a)
+ * @param itrCellSources each cell's file verbatim, by code
  * @param pipelineNodes the exec node catalogue, each node's file verbatim. Nothing reads its fields
  *     yet; the item that generates node ids from it gives it a type (D-053)
  * @param coverage the coverage register ({@code content/coverage.json}) verbatim, where the timeline
@@ -66,6 +70,8 @@ public record Timeline(
         Map<DeclarationCode, DeclarationDefinition> declarations,
         Map<DeclarationCode, String> declarationSources,
         Map<ItrFormCode, String> itrFormSources,
+        Map<CellCode, ScheduleCell> itrCells,
+        Map<CellCode, String> itrCellSources,
         Map<NodeId, String> pipelineNodes,
         Optional<String> coverage,
         Map<String, String> sections,
@@ -86,6 +92,8 @@ public record Timeline(
         declarations = Map.copyOf(declarations);
         declarationSources = Map.copyOf(declarationSources);
         itrFormSources = Map.copyOf(itrFormSources);
+        itrCells = Map.copyOf(itrCells);
+        itrCellSources = Map.copyOf(itrCellSources);
         pipelineNodes = Map.copyOf(pipelineNodes);
         coverage = Objects.requireNonNull(coverage, "coverage: Optional.empty() where the timeline has none");
         sections = Map.copyOf(sections);

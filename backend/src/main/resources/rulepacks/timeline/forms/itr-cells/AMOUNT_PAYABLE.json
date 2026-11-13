@@ -1,0 +1,12 @@
+{
+  "code": "AMOUNT_PAYABLE",
+  "_note": "The net payable rounded under s.288B, where positive (Q4a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Amount payable",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "round.netpayable"
+    ]
+  },
+  "sign": "POSITIVE_PART"
+}

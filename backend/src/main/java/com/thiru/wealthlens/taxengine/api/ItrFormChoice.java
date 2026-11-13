@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.api;
 
+import com.thiru.wealthlens.taxengine.rules.filing.FilledCell;
 import com.thiru.wealthlens.taxengine.rules.filing.FormVerdict;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormBar;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
@@ -10,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,9 +28,11 @@ import java.util.stream.Stream;
  * @param furnishing the manners of furnishing the chosen form open to the person
  * @param verdicts each candidate form's verdict, in cascade order
  * @param message why no form is chosen; empty when one is
+ * @param cells the chosen form's schedules as the return fills them, each a figure or why it has none (W-093); empty
+ *     when no form is chosen
  */
 public record ItrFormChoice(String taxYear, String regime, String returnKind, Optional<String> form,
-        List<String> furnishing, List<Verdict> verdicts, Optional<String> message) {
+        List<String> furnishing, List<Verdict> verdicts, Optional<String> message, List<Cell> cells) {
 
     /**
      * One form's verdict.
@@ -44,12 +48,28 @@ public record ItrFormChoice(String taxYear, String regime, String returnKind, Op
             Optional<String> excludedBy, List<String> unanswered) {
     }
 
+    /**
+     * One cell of the chosen form.
+     *
+     * @param schedule the part or schedule, as the form names it
+     * @param path where the form prints it
+     * @param cell the cell, the same in every form that places it
+     * @param label what the figure is
+     * @param amount the figure, where the return gives one
+     * @param unavailableBecause why there is no figure
+     */
+    public record Cell(String schedule, String path, String cell, String label, Optional<Money> amount,
+            Optional<String> unavailableBecause) {
+    }
+
     static ItrFormChoice of(TaxYearId year, RegimeCode regime, ReturnKind kind, ItrSelection selection,
-            Map<ItrFormCode, ItrFormSpec> forms) {
+            Map<ItrFormCode, ItrFormSpec> forms, List<FilledCell> filled) {
         List<Verdict> verdicts = selection.verdicts().stream().map(verdict -> verdictOf(verdict, forms)).toList();
         return new ItrFormChoice(year.label(), regime.value(), kind.value(), selection.chosen().map(ItrFormCode::value),
                 selection.furnishing().stream().map(FurnishingManner::value).toList(), verdicts,
-                selection.chosen().isPresent() ? Optional.empty() : Optional.of(whyNone(year, selection)));
+                selection.chosen().isPresent() ? Optional.empty() : Optional.of(whyNone(year, selection)),
+                filled.stream().map(cell -> new Cell(cell.schedule().value(), cell.path(), cell.cell().value(), cell.label(),
+                        cell.amount(), cell.unavailableBecause())).toList());
     }
 
     private static Verdict verdictOf(FormVerdict verdict, Map<ItrFormCode, ItrFormSpec> forms) {

@@ -29,7 +29,7 @@ class ItrFormSpecTest {
     private static ItrFormSpec form(int order, Set<PersonType> appliesTo, Set<ItrFormCode> excludes,
             List<FurnishingOption> furnishing) {
         return new ItrFormSpec(FORM, "Synthetic form", order, appliesTo, Set.of(new ReturnKind("SYN_ORIGINAL")),
-                List.of(new IsResident()), List.of(), excludes, furnishing, SOURCE);
+                List.of(new IsResident()), List.of(), excludes, furnishing, List.of(), SOURCE);
     }
 
     @Test
@@ -76,7 +76,7 @@ class ItrFormSpecTest {
     /** Every part given, any one replaced by the test: the constructor's refusals one at a time (W-265). */
     private static ItrFormSpec spec(ItrFormCode code, String displayName, List<Condition> positive, Provenance provenance) {
         return new ItrFormSpec(code, displayName, 1, Set.of(PersonType.INDIVIDUAL), Set.of(new ReturnKind("SYN_ORIGINAL")),
-                positive, List.of(), Set.of(), ELECTRONIC, provenance);
+                positive, List.of(), Set.of(), ELECTRONIC, List.of(), provenance);
     }
 
     @Test

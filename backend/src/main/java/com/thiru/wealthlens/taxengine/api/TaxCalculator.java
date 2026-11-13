@@ -18,6 +18,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
+import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.result.ComputationId;
 import com.thiru.wealthlens.taxengine.result.ComputationProjector;
 import com.thiru.wealthlens.taxengine.result.ComputationReceipt;
@@ -26,7 +27,10 @@ import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
+import com.thiru.wealthlens.taxengine.rules.filing.FilledCell;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSelector;
+import com.thiru.wealthlens.taxengine.rules.filing.ItrSelection;
+import com.thiru.wealthlens.taxengine.rules.filing.ScheduleMapper;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
@@ -104,8 +108,29 @@ public class TaxCalculator {
         ConditionContext facts = NodeContext.forRun(pack, regime, inputs).conditions()
                 .reporting(returned)
                 .having(computedAmounts(run), headsWithIncome(returned));
-        return ItrFormChoice.of(inputs.taxYear(), inputs.regime(), kind,
-                ItrFormSelector.select(pack.itrForms().values(), inputs.assessee().type(), kind, facts), pack.itrForms());
+        ItrSelection selection = ItrFormSelector.select(pack.itrForms().values(), inputs.assessee().type(), kind, facts);
+        List<FilledCell> cells = selection.chosen()
+                .map(form -> ScheduleMapper.fill(pack.itrForms().get(form),
+                        figures(run, returned)))
+                .orElse(List.of());
+        return ItrFormChoice.of(inputs.taxYear(), inputs.regime(), kind, selection, pack.itrForms(), cells);
+    }
+
+    private static ScheduleMapper.Figures figures(PipelineRunner.Result run, ReturnFacts returned) {
+        Optional<TaxByBasis> byBasis = Optional.ofNullable(run.values().get(NodeIds.TAX_BYBASIS))
+                .filter(TaxByBasis.class::isInstance).map(TaxByBasis.class::cast);
+        Map<String, Money> special = new java.util.HashMap<>();
+        byBasis.ifPresent(tax -> tax.atSpecialRates().forEach((rate, amount) -> special.put(rate.value(), amount)));
+        return new ScheduleMapper.Figures(computedAmounts(run), tracedAmounts(run), returned,
+                byBasis.map(TaxByBasis::atSlabRates), special);
+    }
+
+    /** Each rule's figures in the run's trace, summed — a schedule cell's {@code FromRules} (W-093). */
+    private static Map<RuleId, Money> tracedAmounts(PipelineRunner.Result run) {
+        Map<RuleId, Money> byRule = new java.util.HashMap<>();
+        run.trace().stream().filter(line -> line.out() instanceof MoneyValue)
+                .forEach(line -> byRule.merge(line.rule(), ((MoneyValue) line.out()).amount(), Money::plus));
+        return byRule;
     }
 
     private static Map<NodeId, Money> computedAmounts(PipelineRunner.Result run) {

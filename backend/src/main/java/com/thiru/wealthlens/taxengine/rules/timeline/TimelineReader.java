@@ -3,6 +3,8 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
+import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
+import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
@@ -67,12 +69,14 @@ public final class TimelineReader {
     private static final String DECLARATIONS = "exec/declarations";
     /** The return forms, one per file, a version per span of years (W-090b) — the {@code forms} layer. */
     private static final String ITR_FORMS = "forms/itr-forms";
+    /** The cells the forms' schedules place, one per file (W-092 C2a). */
+    private static final String ITR_CELLS = "forms/itr-cells";
     /** The section catalogue, carried verbatim for its own reader (D-060). */
     private static final String SECTIONS = "content/sections";
     /** Each Act's section list, carried verbatim for the coverage register (D-066). */
     private static final String ACTS = "content/acts";
     private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, CONDITION_SETS, PIPELINES, COMPONENTS, FUNDS,
-            DECLARATIONS, ITR_FORMS, SECTIONS, ACTS);
+            DECLARATIONS, ITR_FORMS, ITR_CELLS, SECTIONS, ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
     /** The rule sets every year's pack declares; each rule row names its own (D-252). */
@@ -126,6 +130,9 @@ public final class TimelineReader {
         private final Map<DeclarationCode, DeclarationDefinition> declarations = new HashMap<>();
         private final Map<DeclarationCode, String> declarationSources = new HashMap<>();
         private final Map<ItrFormCode, String> itrFormSources = new HashMap<>();
+        private final Map<ItrFormCode, FormFile> itrFormFiles = new HashMap<>();
+        private final Map<CellCode, ScheduleCell> itrCells = new HashMap<>();
+        private final Map<CellCode, String> itrCellSources = new HashMap<>();
         private final Map<NodeId, String> pipelineNodes = new HashMap<>();
         private final Map<String, String> sections = new HashMap<>();
         private final Map<String, String> acts = new HashMap<>();
@@ -150,7 +157,7 @@ public final class TimelineReader {
                 case COMPONENTS -> addComponent(path, stem, node, content);
                 case FUNDS -> addFund(path, stem, node, content);
                 case DECLARATIONS -> addDeclaration(path, stem, node, content);
-                case ITR_FORMS -> addItrForm(path, stem, node, content);
+                case ITR_FORMS, ITR_CELLS -> addFormsLayer(directory, path, stem, node, content);
                 case SECTIONS -> addSection(path, stem, node, content);
                 case ACTS -> addAct(path, stem, node, content);
                 default -> throw new IllegalStateException(directory + " is a known directory with no reader");
@@ -219,11 +226,27 @@ public final class TimelineReader {
             declarationSources.put(declaration.code(), content);
         }
 
+        /** The forms layer's files: a form, or a cell its schedules place (W-092). */
+        private void addFormsLayer(String directory, String path, String stem, JsonNode node, String content) {
+            if (ITR_CELLS.equals(directory)) {
+                addItrCell(path, stem, node, content);
+            } else {
+                addItrForm(path, stem, node, content);
+            }
+        }
+
         private void addItrForm(String path, String stem, JsonNode node, String content) {
             ItrFormCode code = PackJson.construct(path, () -> new ItrFormCode(PackJson.text(node, "id", path)));
             requireNamedFor(path, stem, code.value());
-            SetVersions.everyVersion(node, path, ItrFormJson::form);
+            itrFormFiles.put(code, new FormFile(path, node));
             itrFormSources.put(code, content);
+        }
+
+        private void addItrCell(String path, String stem, JsonNode node, String content) {
+            ScheduleCell cell = ItrFormJson.cell(node, path);
+            requireNamedFor(path, stem, cell.code().value());
+            itrCells.put(cell.code(), cell);
+            itrCellSources.put(cell.code(), content);
         }
 
         private void addSection(String path, String stem, JsonNode node, String content) {
@@ -239,10 +262,17 @@ public final class TimelineReader {
         }
 
         Timeline timeline() {
+            // Each form version is read once every cell is, since its schedules place cells by code (W-092)
+            itrFormFiles.values().forEach(file -> SetVersions.everyVersion(file.node(), file.path(),
+                    (version, where) -> ItrFormJson.form(version, where, itrCells)));
             return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources,
                     conditionSetSources, components, componentSources,
-                    funds, fundSources, declarations, declarationSources, itrFormSources, pipelineNodes, coverage, sections, acts);
+                    funds, fundSources, declarations, declarationSources, itrFormSources, itrCells, itrCellSources, pipelineNodes, coverage, sections, acts);
         }
+    }
+
+    /** A form's file, kept until every cell is read. */
+    private record FormFile(String path, JsonNode node) {
     }
 
     private static void requireNamedFor(String path, String stem, String identity) {

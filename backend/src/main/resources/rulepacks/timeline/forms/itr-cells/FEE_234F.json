@@ -1,0 +1,11 @@
+{
+  "code": "FEE_234F",
+  "_note": "The late-return fee. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Fee u/s 234F",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "FEE-LATE-RETURN"
+    ]
+  }
+}

@@ -42,7 +42,7 @@ class ItrFormReferencesTest {
 
     private static ItrFormSpec form(ItrFormCode code, int order, Set<PersonType> appliesTo, Set<ItrFormCode> excludes) {
         return new ItrFormSpec(code, "Synthetic " + code, order, appliesTo, Set.of(ORIGINAL), List.of(), List.of(),
-                excludes, List.of(new FurnishingOption(new FurnishingManner("SYN_ELECTRONIC"), List.of(), SOURCE)),
+                excludes, List.of(new FurnishingOption(new FurnishingManner("SYN_ELECTRONIC"), List.of(), SOURCE)), List.of(),
                 SOURCE);
     }
 

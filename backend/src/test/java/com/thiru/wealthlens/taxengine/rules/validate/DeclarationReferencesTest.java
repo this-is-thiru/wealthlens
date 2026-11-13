@@ -153,7 +153,7 @@ class DeclarationReferencesTest {
                 Set.of(PersonType.INDIVIDUAL), Set.of(new ReturnKind("SYN_ORIGINAL")), List.of(new Declared(DIRECTOR)),
                 List.of(new ItrFormBar("synthetic bar", new DeclaredAmountAbove(FARMING, Money.of("1000")), source)),
                 Set.of(), List.of(new FurnishingOption(new FurnishingManner("SYN_PAPER"),
-                        List.of(new Not(new Declared(new DeclarationCode("SYNTHETIC_PAPER")))), source)), source);
+                        List.of(new Not(new Declared(new DeclarationCode("SYNTHETIC_PAPER")))), source)), List.of(), source);
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
                 Map.of(), Map.of(form.code(), form));

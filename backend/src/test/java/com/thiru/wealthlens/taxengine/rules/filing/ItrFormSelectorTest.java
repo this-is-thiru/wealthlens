@@ -48,7 +48,7 @@ class ItrFormSelectorTest {
         List<FurnishingOption> furnishing = List.of(new FurnishingOption(ELECTRONIC, List.of(), SOURCE),
                 new FurnishingOption(PAPER, List.of(new AgeAtLeast(80, AgeSubject.SELF)), SOURCE));
         return new ItrFormSpec(code, code.value(), order, appliesTo, Set.of(ORIGINAL), positive, bars, excludes,
-                furnishing, SOURCE);
+                furnishing, List.of(), SOURCE);
     }
 
     private static ItrFormSpec syn1() {
