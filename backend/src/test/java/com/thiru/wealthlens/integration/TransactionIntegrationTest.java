@@ -2,7 +2,6 @@ package com.thiru.wealthlens.integration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
@@ -42,90 +41,6 @@ public class TransactionIntegrationTest extends AbstractIntegrationTest {
             }
         });
         return rt;
-    }
-
-    @Test
-    void addTransaction_nullDate_defaultsToToday() {
-        // GIVEN
-        String email = "datetest@test.com";
-        AssetRequest request = new AssetRequest();
-        request.setStockCode("RELIANCE");
-        request.setStockName("Reliance Industries");
-        request.setPrice(2500.0);
-        request.setQuantity(10.0);
-        request.setTransactionDate(null);
-        request.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-
-        // WHEN
-        String transactionId = transactionService.addTransaction(UserMail.from(email), request);
-
-        // THEN
-        assertNotNull(transactionId);
-        TransactionEntity saved = transactionRepository.findById(transactionId).orElseThrow();
-        assertEquals(LocalDate.now(), saved.getTransactionDate());
-    }
-
-    @Test
-    void addTransaction_withNewTempTransactionId() {
-        // GIVEN
-        String email = "temptxn@test.com";
-        String tempId = "TEMP-" + System.currentTimeMillis();
-
-        AssetRequest request = new AssetRequest();
-        request.setTempTransactionId(tempId);
-        request.setStockCode("TCS");
-        request.setStockName("Tata Consultancy Services");
-        request.setPrice(3500.0);
-        request.setQuantity(5.0);
-        request.setTransactionDate(LocalDate.now());
-        request.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.UPSTOX);
-
-        // WHEN
-        String transactionId = transactionService.addTransaction(UserMail.from(email), request);
-
-        // THEN
-        assertNotNull(transactionId);
-        TransactionEntity saved = transactionRepository.findById(transactionId).orElseThrow();
-        assertEquals(tempId, saved.getSourceTempTransactionId());
-    }
-
-    @Test
-    void addTransaction_duplicateTempTransactionId_returnsExisting() {
-        // GIVEN
-        String email = "dupetemp@test.com";
-        String tempId = "TEMP-DUP-" + System.currentTimeMillis();
-
-        AssetRequest request1 = new AssetRequest();
-        request1.setTempTransactionId(tempId);
-        request1.setStockCode("INFOSYS");
-        request1.setStockName("Infosys Ltd");
-        request1.setPrice(1500.0);
-        request1.setQuantity(20.0);
-        request1.setTransactionDate(LocalDate.now());
-        request1.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request1.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.FYERS);
-
-        String firstId = transactionService.addTransaction(UserMail.from(email), request1);
-
-        AssetRequest request2 = new AssetRequest();
-        request2.setTempTransactionId(tempId);
-        request2.setStockCode("INFOSYS");
-        request2.setStockName("Infosys Ltd");
-        request2.setPrice(1500.0);
-        request2.setQuantity(20.0);
-        request2.setTransactionDate(LocalDate.now());
-        request2.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request2.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.FYERS);
-
-        // WHEN
-        String secondId = transactionService.addTransaction(UserMail.from(email), request2);
-
-        // THEN
-        assertEquals(firstId, secondId);
-        long count = transactionRepository.findByEmail(email).size();
-        assertEquals(1, count);
     }
 
     @Test

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-290 — next by board order (W-299 waits for §2.14's run log); nothing written
-Stage           : W-302 DONE (stage 6, D-609), committed and pushed; W-290 not started
-Done today      : session 87: W-302 planned, approved (C1a, C2a), built; red 6 → green; probe red then restored
-Board           : W-302 D; W-299 · (waits for §2.14's run log, WL-46); W-290 · next; W-294 ·; W-264b – d ·; W-266 ·; W-090d ·; W-149 B (waits for §2.3 on prod)
-Next step       : record W-302's pipeline run in D-609; then plan W-290, STOP for approval
+Item            : W-294 — next by board order (W-299 waits for §2.14's run log); nothing written
+Stage           : W-290 DONE (stage 6, D-610), committed and pushed; W-294 not started
+Done today      : session 87: W-302 (695ac428, run 43358981189 success, D-609), W-290 (D-610) done and pushed
+Board           : W-290 D; W-299 · (waits for §2.14's run log, WL-46); W-294 · next; W-264b – d ·; W-266 ·; W-090d ·; W-149 B (waits for §2.3 on prod)
+Next step       : record W-290's pipeline run in D-610; then plan W-294, STOP for approval
 Owner actions   : after deploy: §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : local: AssetRequestParserTest 15, PortfolioGapAuditIntegrationTest 61, 4 upload classes 82, 0 failures; validate 0
-Files touched   : none (all committed with W-302)
-Last item commit: taxplanning W-302: name the row and the words when an upload's type column is refused
-Updated         : 2026-11-13, session 87 — W-302 done; next W-290
+Last verify     : W-290 local: TransactionServiceTest 6, TransactionServiceIdempotencyTest 12, TransactionIntegrationTest 7, 0 failures; validate 0; pipeline pending
+Files touched   : none (all committed with W-290)
+Last item commit: taxplanning W-290: remove the uncalled TransactionService.addTransaction
+Updated         : 2026-11-13, session 87 — W-290 done; next W-294
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -99,35 +99,6 @@ public class TransactionService {
         return TransactionRecord.created(transactionRepository.save(entity).getId());
     }
 
-    /**
-     * @deprecated the id alone cannot tell a caller that nothing was written, so a caller that acts
-     *     on it applies a replayed trade to the portfolio a second time. Use
-     *     {@link #recordTransaction} and honour its {@code replay} flag. Retained because the V1
-     *     flow is in live use.
-     */
-    @Deprecated
-    public String addTransaction(UserMail userMail, AssetRequest assetRequest) {
-
-        if (assetRequest.getTransactionDate() == null) {
-            assetRequest.setTransactionDate(LocalDate.now());
-        }
-        if (assetRequest.getTempTransactionId() != null) {
-            Optional<TransactionEntity> existing = transactionRepository
-                .findByEmailAndSourceTempTransactionId(userMail.getEmail(), assetRequest.getTempTransactionId());
-            if (existing.isPresent()) {
-                log.warn("Duplicate transaction suppressed for sourceTempTransactionId {}", assetRequest.getTempTransactionId());
-                return existing.get().getId();
-            }
-        }
-        TransactionEntity transactionEntity = assetRequest.asTransaction();
-        transactionEntity.setEmail(userMail.getEmail());
-
-        log.info("Transaction: {}, Stock: '{}' on '{}' noted successfully for: {}", transactionEntity.getTransactionType(),
-                transactionEntity.getStockName(), transactionEntity.getTransactionDate(), userMail.getEmail());
-        TransactionEntity savedTransactionEntity = transactionRepository.save(transactionEntity);
-        return savedTransactionEntity.getId();
-    }
-
     public List<TransactionEntity> transactionsForCorporateActions(String stockCode, LocalDate recordDate) {
         return transactionRepository.findByStockCodeAndTransactionDateBeforeOrderByTransactionDateDesc(stockCode, recordDate);
     }

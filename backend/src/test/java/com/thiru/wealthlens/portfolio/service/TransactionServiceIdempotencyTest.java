@@ -231,6 +231,22 @@ class TransactionServiceIdempotencyTest {
     }
 
     @Test
+    @DisplayName("a dated trade keeps its date and is stored under the caller's email")
+    void recordTransaction_whenDated_keepsTheDateAndStoresTheCallersEmail() {
+        // Given -- a trade dated 5 Jan 2026; moved here from the removed addTransaction's test (W-290)
+        AssetRequest request = trade();
+        request.setTransactionDate(LocalDate.of(2026, 1, 5));
+
+        // When
+        transactionService.recordTransaction(USER, request, TradeFlow.V1);
+
+        // Then
+        TransactionEntity stored = storedTransaction();
+        assertEquals(LocalDate.of(2026, 1, 5), stored.getTransactionDate());
+        assertEquals(EMAIL, stored.getEmail());
+    }
+
+    @Test
     @DisplayName("a V2 trade is stored under the caller's email with the client's key")
     void recordTransaction_whenNew_storesTheCallersEmailAndKey() {
         // Given (W-287)
