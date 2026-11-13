@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-303 (exit load on the redemption value, G-2) — next by board order; nothing written
-Stage           : W-264b DONE (stage 6, D-611), committed and pushed; W-303 not started; Q-2 (AMC periods) open for the owner
-Done today      : session 87: W-302, W-290 done and pushed (D-609, D-610); W-294 set waiting (§2.13 log); W-264b audited: G-1 – G-4, CE-3, CE-4, checklist :457 → W-303 – W-309
-Board           : W-264b D; W-303 · next; W-304 – W-309 ·; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-149 B (waits for §2.3 on prod)
-Next step       : record W-264b's pipeline run in D-611; then plan W-303 (first test: audit report §6.1), STOP for approval
-Owner actions   : after deploy: §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-264b kept classes 11 / 0 locally; validate 0; pipeline pending
-Files touched   : none (all committed with W-264b)
-Last item commit: taxplanning W-264b: audit the charge engine through its HTTP API
-Updated         : 2026-11-13, session 87 — W-264b done; next W-303
+Item            : W-304 (a trade no broker card covers is reported as priced, G-1) — next by board order; nothing written
+Stage           : W-303 DONE (stage 6, D-619), committed and pushed; W-304 not started; Q-2 (AMC periods) still open
+Done today      : session 87: W-302, W-290, W-264b done and pushed (D-609 – D-618); W-303 built (D-619)
+Board           : W-303 D; W-304 · next; W-305 – W-309 ·; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-149 B
+Next step       : record W-303's pipeline run in D-619; then plan W-304 (first test: W-264b report §6.2), STOP for approval
+Owner actions   : after deploy: §3.20 (W-303, read-only, each database); §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
+Last verify     : W-303 local: 7 charge classes 219 / 0; validate 0; pipeline pending
+Files touched   : none (all committed with W-303)
+Last item commit: taxplanning W-303: charge exit load on the redemption value
+Updated         : 2026-11-13, session 87 — W-303 done; next W-304
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

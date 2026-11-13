@@ -473,9 +473,42 @@ class ChargeEngineTest {
                 new LotSlice(100, LocalDate.of(2024, 1, 1), 900),
                 new LotSlice(50, LocalDate.of(2025, 5, 1), 1000)));
 
-        // Then — 1% of each lot's own turnover, not of the transaction's
+        // Then — 1% of what each lot's units fetched at the sale's ₹1,000: 1,000 + 500 (W-303, D-619 C3a; was
+        // 900 + 500, the lots' cost)
         assertThat(computation.lines()).hasSize(2);
-        assertMoney(900.0 + 500.0, computation.amountOf("EXIT_LOAD"));
+        assertMoney(1000.0 + 500.0, computation.amountOf("EXIT_LOAD"));
+    }
+
+    @Test
+    void compute_whenALotWasBoughtBelowTheSalePrice_chargesItOnTheRedemptionValue() {
+        // Given — an exit load is a % of redemption value (prd.md:89), not of the lot's cost (W-303)
+        ChargeRule exitLoad = formulaRule("EXIT_LOAD", 10);
+        exitLoad.setPerLot(true);
+        givenSchedule(exitLoad);
+
+        // When — 100 units bought at ₹900, sold at the trade's ₹1,000
+        ChargeComputation computation = engine().compute(sellFromLots(
+                new LotSlice(100, LocalDate.of(2025, 5, 1), 900)));
+
+        // Then — 1% × 100 × ₹1,000
+        assertMoney(1000.0, computation.amountOf("EXIT_LOAD"));
+    }
+
+    @Test
+    void compute_whenAPerLotPredicateReadsThePrice_seesTheSalePrice() {
+        // Given — inside a lot, #price is what the units fetched; the lot's cost is a fact of the lot (W-303 C1a).
+        // Read through an eligibility predicate, which the real evaluator answers (the FORMULA stub ignores formulas)
+        ChargeRule exitLoad = formulaRule("EXIT_LOAD", 10);
+        exitLoad.setPerLot(true);
+        exitLoad.setEligibility("#price == 1000");
+        givenSchedule(exitLoad);
+
+        // When — 100 units bought at ₹900, sold at the trade's ₹1,000
+        ChargeComputation computation = engine().compute(sellFromLots(
+                new LotSlice(100, LocalDate.of(2025, 5, 1), 900)));
+
+        // Then — the predicate saw ₹1,000, so the lot is charged: 1% × 100 × ₹1,000
+        assertMoney(1000.0, computation.amountOf("EXIT_LOAD"));
     }
 
     @Test

@@ -171,4 +171,32 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         assertEquals("Date range starts after it ends: 2026-01-01 is after 2025-01-01",
                 json(response).get("message").asString());
     }
+
+    @Test
+    void tradeV2_whenAFundIsRedeemedInsideItsExitLoadWindow_chargesTheLoadOnTheRedemptionValue() {
+        // Given -- 60 units bought 10 Apr 2025 and 40 bought 10 Jun 2025, both at ₹100; 100 redeemed at ₹110 on
+        // 1 May 2026 (W-264b G-2, W-303)
+        tradeV2(fund("BUY", 60, 100, "2025-04-10"));
+        tradeV2(fund("BUY", 40, 100, "2025-06-10"));
+        assertEquals(200, tradeV2(fund("SELL", 100, 110, "2026-05-01")).getStatusCode().value());
+
+        // When
+        JsonNode sale = null;
+        for (JsonNode row : json(get("/user-charges/user/" + EMAIL))) {
+            if ("SELL".equals(row.get("event").asString())) {
+                sale = row;
+            }
+        }
+
+        // Then -- the 386-day lot pays nothing; the 325-day lot pays 1 % of its redemption value, 40 × ₹110 = ₹44.00
+        // (prd.md:89 "% of redemption value"; was ₹40.00, 1 % of its cost)
+        assertMoney(44.0, amounts(sale).get("EXIT_LOAD"));
+    }
+
+    private static Map<String, Object> fund(String side, double quantity, double price, String date) {
+        Map<String, Object> body = trade("PARAGPARIKHFLEXICAP", "DELIVERY", side, quantity, price, date);
+        body.put("assetType", "MUTUAL_FUND");
+        body.remove("segment");
+        return body;
+    }
 }

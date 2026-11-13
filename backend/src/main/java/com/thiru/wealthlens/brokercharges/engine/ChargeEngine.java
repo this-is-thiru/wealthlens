@@ -396,17 +396,18 @@ public class ChargeEngine {
     /**
      * The trade as one lot sees it.
      *
-     * <p>Turnover is restated from the lot's own quantity and price, and {@code holdingDays} is
-     * published so an eligibility predicate can ask how long <em>this</em> lot was held. The other
-     * amount bases are carried through unchanged; none of them is per-lot in the cash segment,
-     * which is the only segment Phase A prices.
+     * <p>Turnover is restated as what the lot's units fetched — its quantity at the sale's price — because a
+     * holding-period charge such as an exit load is a percentage of the redemption value (PRD §3), not of what the
+     * lot cost; the lot's own price, its cost, stays on the lot (W-303, D-619). {@code holdingDays} is published so
+     * an eligibility predicate can ask how long <em>this</em> lot was held. The other amount bases are carried
+     * through unchanged; none of them is per-lot in the cash segment, which is the only segment Phase A prices.
      */
     private static ChargeContext lotContext(ChargeContext context, LotSlice lot) {
         Map<AmountBasis, Double> baseAmounts = new EnumMap<>(AmountBasis.class);
         if (context.baseAmounts() != null) {
             baseAmounts.putAll(context.baseAmounts());
         }
-        baseAmounts.put(AmountBasis.TURNOVER, lot.quantity() * lot.price());
+        baseAmounts.put(AmountBasis.TURNOVER, lot.quantity() * context.price());
 
         Map<String, Object> attributes = new HashMap<>();
         if (context.attributes() != null) {
@@ -418,7 +419,7 @@ public class ChargeEngine {
                 context.email(), context.transactionId(), context.orderId(), context.stockCode(), context.accountHolder(),
                 context.brokerName(), context.assetType(), context.segment(), context.exchange(),
                 context.planCode(), context.event(), context.transactionDate(), context.corporateActionType(),
-                lot.quantity(), lot.price(), context.lotSize(), baseAmounts, List.of(lot), attributes);
+                lot.quantity(), context.price(), context.lotSize(), baseAmounts, List.of(lot), attributes);
     }
 
     /**
