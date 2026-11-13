@@ -1,7 +1,76 @@
 {
   "id": "ITR-2",
-  "_note": "Income-tax Rules, 2026 r.164(4), (12) (Gazette 271092 pp.1663 – 1664), for the tax year commencing 1 April 2026 only (r.164(1), (14)): \"an individual not being an individual to whom sub-rule (2) applies or a Hindu undivided family, where the total income does not include income under the head business or profession\". Excluded wherever ITR-1 applies. Furnishing: Table Sl. 3's three manners; Sl. 4's paper form names only ITR-1 and ITR-4.",
+  "_note": "Income-tax Rules, 2026 r.164(4), (12) (Gazette 271092 pp.1663 – 1664), for the tax year commencing 1 April 2026 only (r.164(1), (14)): \"an individual not being an individual to whom sub-rule (2) applies or a Hindu undivided family, where the total income does not include income under the head business or profession\". Excluded wherever ITR-1 applies. Furnishing: Table Sl. 3's three manners; Sl. 4's paper form names only ITR-1 and ITR-4. TY 2025-26 (W-090d, D-652): Income-tax Rules, 1962 r.12(1)(c): \"an individual [not being an individual to whom clause (a) applies] or a Hindu undivided family where the total income does not include income under the head\" business or profession (2017; 2018). Kinds s.139(1), s.142(1)(i), s.148 (C1a). Furnishing r.12(3) Table Sl. 1 item (c) (2017); item (b)'s paper form names only ITR-1 and ITR-4.",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "displayName": "ITR-2",
+      "cascadeOrder": 2,
+      "appliesTo": [
+        "INDIVIDUAL",
+        "HUF"
+      ],
+      "returnKinds": [
+        "S139_1",
+        "S142_1_I",
+        "S148"
+      ],
+      "positiveConditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasIncomeUnderHead",
+            "head": "BUSINESS_OR_PROFESSION"
+          }
+        }
+      ],
+      "bars": [],
+      "excludes": [
+        "ITR-1"
+      ],
+      "furnishing": [
+        {
+          "manner": "DIGITAL_SIGNATURE",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1, item (c), p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "ELECTRONIC_VERIFICATION_CODE",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1, item (c), p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "ELECTRONIC_WITH_ITR_V",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1, item (c), p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+        "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(1)(c), p.163; \"derived from a proprietory\" → \"under the head\" by egazette 2018/184509, p.177",
+        "accessedOn": "2026-11-13",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
     {
       "validity": {
         "type": "Between",

@@ -1,15 +1,15 @@
 {
   "code": "AGRICULTURAL_INCOME",
-  "_note": "r.164(3)(j) and (6)(m): \"has agricultural income, exceeding ₹ 5000\" — the limit is the bar's, W-090c's data; this row asks the amount. The engine does not bring agricultural income into the rates (W-258), so the amount serves the bar only. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2026-27 only: r.164(1) governs \"the tax year commencing on the 1st April, 2026\" (D-520 C3a).",
+  "_note": "r.164(3)(j) and (6)(m): \"has agricultural income, exceeding ₹ 5000\" — the limit is the bar's, W-090c's data; this row asks the amount. The engine does not bring agricultural income into the rates (W-258), so the amount serves the bar only. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (III) (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
   "question": "How much agricultural income did you have in the tax year?",
   "answerKind": "AMOUNT",
   "validity": {
-    "from": "2026-04-01",
+    "from": "2025-04-01",
     "to": "2027-03-31"
   },
   "provenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(j), p.1662; r.164(6)(m), p.1663",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(j), p.1662; r.164(6)(m), p.1663; Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, G.S.R. 226(E), Income-tax Rules, 1962 r.12(1)(a) proviso (III), FORM ITR-1 header, p.16",
     "accessedOn": "2026-11-09",
     "verificationLevel": "SOURCE_CHECKED"
   }

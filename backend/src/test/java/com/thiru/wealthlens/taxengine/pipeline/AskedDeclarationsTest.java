@@ -48,14 +48,15 @@ class AskedDeclarationsTest {
     }
 
     @Test
-    void of_whenTheYearAsksNoQuestions_refusesAnyAnswer() {
-        // Given — TY 2025-26's questions are W-090d's; its pack asks none (D-520 C3a)
+    void of_whenTheYearDoesNotAskTheQuestion_refusesTheAnswer() {
+        // Given — r.164(3)(n)'s question is TY 2026-27's; TY 2025-26's r.12 has no such item (W-090d, D-652)
         RulePack earlier = PACKS.load(TY_2025_26);
+        DeclarationCode specialCase = new DeclarationCode("SPECIAL_CASE_INCOME");
 
         // When / Then
-        assertThat(earlier.declarations()).isEmpty();
-        assertThatThrownBy(() -> AskedDeclarations.of(Map.of(DIRECTOR, new Declaration.YesNo(false)), earlier))
+        assertThat(PACK.declarations()).containsKey(specialCase);
+        assertThatThrownBy(() -> AskedDeclarations.of(Map.of(specialCase, new Declaration.YesNo(false)), earlier))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("DIRECTOR_IN_COMPANY is not a question 2025-26 asks");
+                .hasMessageContaining("SPECIAL_CASE_INCOME is not a question 2025-26 asks");
     }
 }

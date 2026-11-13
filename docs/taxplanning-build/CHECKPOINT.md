@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-090d (TY 2025-26 forms from the Income-tax Rules r.12) — next by board order; Gazette copy first
-Stage           : batch W-318 – W-322 DONE (D-647 – D-651), committed and pushed; W-090d not started
-Done today      : session 89: freeze; W-304, W-305, W-306, W-309, W-264c, W-264d; batches W-317/W-315/W-314, W-313/W-312/W-266, W-318 – W-322; W-316 (D-622 – D-651)
-Board           : W-318 – W-322 D; W-090d · next; W-091 – W-094 · (one batch); W-299, W-294 · (wait run logs); W-307, W-308 K; W-311 · (after Phase 10, widened)
-Next step       : record the batch's pipeline run in D-647; W-090d: locate the Gazette copy of r.12 as amended for TY 2025-26 (memory egazette-locate-by-scan), then plan, STOP
+Item            : W-090d (TY 2025-26 ITR-1, ITR-2 from 1962 r.12) — done (D-652), committed and pushed
+Stage           : closed; owner "commit it and push" (session 91)
+Done today      : session 91: W-090d built and closed (D-652; C1a – C4a, G1a, T1a; 34/2013 URL read)
+Board           : W-090d D; W-091 – W-094 · next (one batch); W-299, W-294 · (wait run logs); W-307, W-308 K; W-311 · (after Phase 10, widened)
+Next step       : plan the W-091 – W-094 batch (probe first, memory probe-before-plan); check board order on line 61 first
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : batch: red 6; 9 classes 164 / 0; probes ×5 each fail their own tests, restored; validate 0
+Last verify     : W-090d targeted 373/0, validate clean (session 91); pipeline run for the push to be recorded
 Files touched   : none (all committed)
-Last item commit: taxplanning W-318: leave an unpriced holding out of XIRR whole and name it
-Updated         : 2026-11-13, session 89 — batch W-318 – W-322 done; next W-090d
+Last item commit: taxplanning W-090d: give TY 2025-26 its ITR-1 and ITR-2 from the Income-tax Rules, 1962 r.12
+Updated         : 2026-11-13, session 91 — W-090d closed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -1,15 +1,15 @@
 {
   "code": "DOUBLE_TAXATION_AGREEMENT_RELIEF",
-  "_note": "r.164(3)(i): \"has claimed any relief of tax under section 159 or deduction of tax under section 160\"; (6)(l): \"relief of tax under section 159 or deduction of tax under clause (d) of sub-section (1) of the said\" — s.160(1) has no clause (d), so (6)(l)'s second limb is W-090c's to read (D-520). s.159: agreements with another country or specified territory for relief of double taxation. Split from UNILATERAL_FOREIGN_TAX_DEDUCTION because they are two facts (D-520). The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2026-27 only: r.164(1) governs \"the tax year commencing on the 1st April, 2026\" (D-520 C3a).",
-  "question": "Are you claiming relief of tax under a double-taxation agreement (section 159)?",
+  "_note": "r.164(3)(i): \"has claimed any relief of tax under section 159 or deduction of tax under section 160\"; (6)(l): \"relief of tax under section 159 or deduction of tax under clause (d) of sub-section (1) of the said\" — s.160(1) has no clause (d), so (6)(l)'s second limb is W-090c's to read (D-520). s.159: agreements with another country or specified territory for relief of double taxation. Split from UNILATERAL_FOREIGN_TAX_DEDUCTION because they are two facts (D-520). The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (II), \"sections 90 or 90A\" (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
+  "question": "Are you claiming relief of tax under a double-taxation agreement?",
   "answerKind": "YES_NO",
   "validity": {
-    "from": "2026-04-01",
+    "from": "2025-04-01",
     "to": "2027-03-31"
   },
   "provenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(i), p.1662; r.164(6)(l), p.1663; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.159, p.187",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(i), p.1662; r.164(6)(l), p.1663; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.159, p.187; CBDT Notification 34/2013, Income-tax (3rd Amendment) Rules, 2013, S.O. 1111(E), 1 May 2013 — the Department copy (https://www.incometax.gov.in/iec/foportal/sites/default/files/2020-08/Notification_No.342013.pdf), READ under the owner's pre-October-2013 ruling (D-652), Income-tax Rules, 1962 r.12(1)(a) proviso (II), p.2",
     "accessedOn": "2026-11-09",
     "verificationLevel": "SOURCE_CHECKED"
   }

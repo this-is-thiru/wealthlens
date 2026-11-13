@@ -1,15 +1,15 @@
 {
   "code": "CASH_WITHDRAWAL_TAX_DEDUCTED",
-  "_note": "r.164(3)(l): \"is a person in whose case tax has been deducted under section 393(3) [Table : Sl No. 5]\". s.393(3) Table Sl. 5: any sum paid in cash from one or more accounts, by a banking company, a co-operative society carrying on banking or a post office, 2%, above three crore rupees for a co-operative society recipient or one crore rupees for any other. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2026-27 only: r.164(1) governs \"the tax year commencing on the 1st April, 2026\" (D-520 C3a).",
+  "_note": "r.164(3)(l): \"is a person in whose case tax has been deducted under section 393(3) [Table : Sl No. 5]\". s.393(3) Table Sl. 5: any sum paid in cash from one or more accounts, by a banking company, a co-operative society carrying on banking or a post office, 2%, above three crore rupees for a co-operative society recipient or one crore rupees for any other. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (VII), \"section 194N\" (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
   "question": "Did a bank, co-operative bank or post office deduct tax on cash you withdrew from your accounts during the tax year?",
   "answerKind": "YES_NO",
   "validity": {
-    "from": "2026-04-01",
+    "from": "2025-04-01",
     "to": "2027-03-31"
   },
   "provenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(l), p.1663; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.393(3) Table Sl. No. 5, p.409",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(l), p.1663; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.393(3) Table Sl. No. 5, p.409; egazette 2021/226336, Income-tax (7th Amendment) Rules, 2021, G.S.R. 242(E), Income-tax Rules, 1962 r.12(1)(a) proviso (VII), p.219",
     "accessedOn": "2026-11-09",
     "verificationLevel": "SOURCE_CHECKED"
   }

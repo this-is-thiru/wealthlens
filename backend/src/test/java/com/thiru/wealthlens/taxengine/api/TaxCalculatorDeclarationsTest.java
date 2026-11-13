@@ -41,8 +41,19 @@ class TaxCalculatorDeclarationsTest {
     }
 
     @Test
-    void declarations_whenTheYearAsksNone_isEmpty() {
-        assertThat(CALCULATOR.declarations(TY_2025_26)).isEmpty();
+    void declarations_whenTy2025_listsRule12sFourteenInCodeOrder() {
+        // When — r.12(1)(a)'s proviso as in force for AY 2026-27 (W-090d, D-652)
+        List<DeclarationQuestion> questions = CALCULATOR.declarations(TY_2025_26);
+
+        // Then — r.164(3)(n)'s SPECIAL_CASE_INCOME is not this year's; (V) and (VI) are
+        assertThat(questions).extracting(DeclarationQuestion::code).containsExactly(
+                "AGRICULTURAL_INCOME", "ASSETS_OUTSIDE_INDIA", "CASH_WITHDRAWAL_TAX_DEDUCTED", "DIRECTOR_IN_COMPANY",
+                "DOUBLE_TAXATION_AGREEMENT_RELIEF", "INCOME_APPORTIONED_BETWEEN_SPOUSES", "INCOME_FROM_OUTSIDE_INDIA",
+                "INCOME_TAXABLE_UNDER_S115BBDA", "SIGNING_AUTHORITY_OUTSIDE_INDIA", "START_UP_SHARE_TAX_DEFERRED",
+                "TDS_ASSESSABLE_IN_ANOTHERS_HANDS", "UNEXPLAINED_INCOME_S115BBE", "UNILATERAL_FOREIGN_TAX_DEDUCTION",
+                "UNLISTED_EQUITY_HELD");
+        DeclarationQuestion director = questions.get(3);
+        assertThat(director.source()).contains("r.12(1)(a) proviso (IE)");
     }
 
     @Test
