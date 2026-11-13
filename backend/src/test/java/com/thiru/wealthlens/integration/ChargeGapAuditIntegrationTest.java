@@ -3,6 +3,7 @@ package com.thiru.wealthlens.integration;
 import static com.thiru.wealthlens.testsupport.MoneyAssert.assertBreakdown;
 import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -159,6 +160,49 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         assertEquals(1, billed);
         assertEquals(0, billedAgain);
         assertMoney(354.0, charge.get("totalCharges").asDouble());
+    }
+
+    @Test
+    void simulate_whenNoBrokerCardCoversTheDate_isNotReportedAsResolved() {
+        // Given -- the open Zerodha delivery card closed on 1 Jul 2026 with no successor
+        call(HttpMethod.PATCH, "/charge-schedules/ZERODHA_EQ_DELIVERY_2026_06/close?endDate=2026-07-01", admin(), null);
+
+        // When -- a delivery buy on 1 Aug 2026
+        JsonNode breakdown = json(simulate(simulation("DELIVERY", "BUY", 10, 1000, "2026-08-01")));
+
+        // Then -- the maintenance card, which bills AMC cycles only, does not stand in for it (W-304, G-1)
+        assertEquals("NO_SCHEDULE", breakdown.get("resolution").asString(), breakdown.toString());
+        assertEquals(Map.of(), amounts(breakdown));
+    }
+
+    @Test
+    void tradeV2_whenNoBrokerCardCoversTheDate_isListedAsAGap() {
+        // Given -- the open Zerodha delivery card closed on 1 Jul 2026 with no successor
+        call(HttpMethod.PATCH, "/charge-schedules/ZERODHA_EQ_DELIVERY_2026_06/close?endDate=2026-07-01", admin(), null);
+        assertEquals(200, tradeV2(trade("TCS", "DELIVERY", "BUY", 10, 1000, "2026-08-01")).getStatusCode().value());
+
+        // When
+        JsonNode gaps = json(get("/user-charges/user/" + EMAIL + "/gaps"));
+
+        // Then
+        assertEquals(1, gaps.size(), gaps.toString());
+        assertEquals("NO_SCHEDULE", gaps.get(0).get("resolution").asString());
+    }
+
+    @Test
+    void simulate_whenNoStatutoryCardCoversTheDate_isReportedAsMissingTheLaw() {
+        // Given -- the statutory delivery card closed on 1 Jul 2026 with no successor; the account card, GST on AMC
+        // cycles only, is still open
+        call(HttpMethod.PATCH, "/charge-schedules/STATUTORY_EQ_DELIVERY_2025_04/close?endDate=2026-07-01", admin(),
+                null);
+
+        // When -- a delivery buy on 1 Aug 2026
+        JsonNode breakdown = json(simulate(simulation("DELIVERY", "BUY", 10, 1000, "2026-08-01")));
+
+        // Then -- the broker's card prices its lines; the law's are reported missing, not charged as nil
+        assertEquals("NO_STATUTORY_SCHEDULE", breakdown.get("resolution").asString(), breakdown.toString());
+        assertEquals("ZERODHA_EQ_DELIVERY_2026_06", breakdown.get("scheduleCode").asString());
+        assertFalse(amounts(breakdown).containsKey("STT"), breakdown.toString());
     }
 
     @Test

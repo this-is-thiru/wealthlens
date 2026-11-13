@@ -67,6 +67,8 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-090c3 | PARKED | TY 2026-27 ITR-3 and ITR-4 (r.164(5) – (7)) | When business income is computed, else waived at the deploy gate (D-523) | A person with business income is refused before any form is chosen, so no form is offered |
 | W-261 | PARKED | ITR-1’s bar for lottery winnings and race-horse income (r.164(2)(c)) | When lottery winnings or race-horse income is computed, else waived at the deploy gate (D-529) | Neither income can be entered, so no computable return holds it |
 | W-090e | PARKED | ITR-UN, the updated return (r.165) | When updated returns (s.263(6)) are computed, else waived at the deploy gate (D-516) | The engine computes original and belated returns only; no form is offered for an updated return |
+| W-307 | PARKED | Bound the schedule resolver cache and give it a TTL (CE-3) | Before a second app instance or a multi-year backfill, else waived at the deploy gate (D-622) | Correct as deployed: one instance, and the cache is evicted on every card write |
+| W-308 | PARKED | `UserChargeService.record` under concurrent pricing of one transaction (CE-4) | When a recompute route runs beside live trades, else waived at the deploy gate (D-622) | Row says not reachable by a current caller |
 
 ## Noted
 

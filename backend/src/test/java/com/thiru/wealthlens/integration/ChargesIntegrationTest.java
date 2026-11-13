@@ -130,14 +130,20 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         scheduleRepository.save(equityCard("IT_EQ_2025", LocalDate.of(2025, 1, 1), null, 0.0));
 
         // Every shipped scope has a statutory card (D-382), and a trade without one is a gap. This
-        // class's own cards still carry their statutory lines, so its statutory card carries none:
-        // unscoped, it is found for every trade and the AMC cycle, and adds nothing. A test that
-        // publishes a scoped statutory card outranks it.
-        ChargeScheduleEntity noStatutoryRules = new ChargeScheduleEntity();
-        noStatutoryRules.setScheduleCode("IT_STATUTORY_NONE");
-        noStatutoryRules.setStartDate(LocalDate.of(2025, 1, 1));
-        noStatutoryRules.setStatus(EntityStatus.ACTIVE);
-        scheduleRepository.save(noStatutoryRules);
+        // class's own cards still carry their statutory lines, so its statutory card prices nothing:
+        // unscoped, it is found for every trade and the AMC cycle, and adds nothing. A card is chosen
+        // only for an event one of its active rules declares (W-304), so its one rule declares every
+        // event this class prices and is never eligible. A test that publishes a scoped statutory
+        // card outranks it.
+        ChargeRule neverEligible = flatRule("STAMP_DUTY", ChargeCategory.STATUTORY, 0.0, 10);
+        neverEligible.setEvents(Set.of(ChargeEvent.BUY, ChargeEvent.SELL, ChargeEvent.AMC_CYCLE));
+        neverEligible.setEligibility("false");
+        ChargeScheduleEntity noStatutoryCharges = new ChargeScheduleEntity();
+        noStatutoryCharges.setScheduleCode("IT_STATUTORY_NONE");
+        noStatutoryCharges.setStartDate(LocalDate.of(2025, 1, 1));
+        noStatutoryCharges.setStatus(EntityStatus.ACTIVE);
+        noStatutoryCharges.setRules(new java.util.ArrayList<>(List.of(neverEligible)));
+        scheduleRepository.save(noStatutoryCharges);
     }
 
     // ------------------------------------------------------------ Tier H — persistence

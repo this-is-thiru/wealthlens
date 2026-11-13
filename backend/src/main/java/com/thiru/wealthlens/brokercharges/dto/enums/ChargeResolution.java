@@ -59,12 +59,11 @@ public enum ChargeResolution {
     /**
      * The resolutions under which the engine did not reach an answer it stands behind.
      *
-     * <p>{@code NO_MATCHING_RULES} belongs here because a card can resolve and still price nothing.
-     * An unscoped card — a maintenance card is the obvious one, since an AMC cycle carries no asset
-     * type to scope against — matches every dimension of a trade whose asset type has no card of its
-     * own. It wins by default, none of its rules declare that trade's event, and the result is a
-     * zero that looks deliberate. That is the failure this design exists to prevent, reached by a
-     * different route than a missing card.
+     * <p>{@code NO_MATCHING_RULES} belongs here because a card can resolve and still price nothing: it
+     * has an active rule for the event, but none that applies, because of the trade's side or a rule's
+     * eligibility condition. A card with no active rule for the event is not chosen at all (W-304), so
+     * an unscoped maintenance card no longer stands in for a missing trade card; that trade is
+     * {@code NO_SCHEDULE}.
      *
      * <p>{@code CORPORATE_ACTION_EXEMPT} is deliberately absent: a bonus allotment charging nothing
      * is an answer, not a gap.

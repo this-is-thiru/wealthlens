@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-304 (a trade no broker card covers is reported as priced, G-1) — next by board order; nothing written
-Stage           : W-310 DONE (stage 6, D-621), committed and pushed; W-304 not started; Q-2 (AMC periods) still open
-Done today      : session 88: W-303 pipeline green on re-run (D-619); W-310 placed (D-620) and built (D-621)
-Board           : W-310 D; W-304 · next; W-305 – W-309 ·; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-149 B
-Next step       : record W-310's pipeline run in D-621; then plan W-304 (first test: W-264b report §6.2; groundwork in session 88: event filter in ChargeScheduleResolver.agreeing + event in ScopeKey, statutory twin), STOP for approval
-Owner actions   : after deploy: §3.20 (W-303, read-only, each database); §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-310 local: 5 classes 78 / 0; validate 0; pipeline pending
-Files touched   : none (all committed with W-310)
-Last item commit: taxplanning W-310: run a draft save again when it collides with another save of its revision
-Updated         : 2026-11-13, session 88 — W-310 done; next W-304
+Item            : W-305 (an unreadable request body is answered with Jackson's text, G-3) — next by board order; nothing written
+Stage           : W-304 DONE (D-623), committed and pushed; Phase 10 frozen (D-622); W-305 not started
+Done today      : session 88: W-303 (D-619), W-310 (D-621); session 89: Phase 10 frozen (D-622), W-304 built (D-623)
+Board           : W-304 D; W-305 · next; W-306, W-309 ·; W-307, W-308 K; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-091 – W-094 ·
+Next step       : record W-304's pipeline run; plan W-305 with a probe run first (memory probe-before-plan), STOP for approval
+Owner actions   : after deploy: §3.21 (W-304) and §3.20 (W-303), read-only, each database; §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
+Last verify     : W-304 local: 15 charge classes 322 / 0, 3 flag classes 0 failures, probes 8 and 1 fail then restored, ParkedRows + FinishedPlan 0, validate 0
+Files touched   : none (all committed)
+Last item commit: taxplanning W-304: choose a rate card only for an event one of its active rules declares
+Updated         : 2026-11-13, session 89 — W-304 done; next W-305
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

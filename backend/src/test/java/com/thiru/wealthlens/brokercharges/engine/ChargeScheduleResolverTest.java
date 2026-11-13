@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.brokercharges.engine;
 
 import static com.thiru.wealthlens.brokercharges.engine.ChargeFixtures.TRADE_DATE;
+import static com.thiru.wealthlens.brokercharges.engine.ChargeFixtures.rule;
 import static com.thiru.wealthlens.brokercharges.engine.ChargeFixtures.trade;
 import static com.thiru.wealthlens.brokercharges.engine.ChargeFixtures.tradeInScope;
+import static com.thiru.wealthlens.brokercharges.engine.ChargeFixtures.tradeOn;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,6 +12,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeBasis;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
+import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -20,6 +25,7 @@ import com.thiru.wealthlens.testsupport.LogCapture;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -218,6 +224,56 @@ class ChargeScheduleResolverTest {
         verify(chargeScheduleRepository, times(2)).findCandidates(any(), any());
     }
 
+    @Test
+    void resolve_whenTheOnlyAgreeingCardHasNoRuleForTheEvent_isEmptyAndWarns() {
+        // Given -- an unscoped maintenance card agrees with every dimension of the sale, but bills AMC cycles only
+        givenCandidates(withRulesFor(card("MAINTENANCE", null, null, null, null, TRADE_DATE), ChargeEvent.AMC_CYCLE));
+
+        // When / Then -- standing in for the missing equity card would read as priced (W-304, G-1)
+        try (LogCapture logs = LogCapture.on(ChargeScheduleResolver.class)) {
+            assertThat(resolver.resolve(trade())).isEmpty();
+            assertThat(logs.warnings()).singleElement().asString().contains("event=SELL");
+        }
+    }
+
+    @Test
+    void resolve_whenAMoreSpecificCardHasNoRuleForTheEvent_fallsBackToOneThatHas() {
+        // Given -- the equity card names more, but has no rule for a sale
+        givenCandidates(
+                withRulesFor(card("EQUITY", AssetType.EQUITY, null, null, null, TRADE_DATE), ChargeEvent.AMC_CYCLE),
+                card("GENERIC", null, null, null, null, TRADE_DATE));
+
+        // When / Then
+        assertThat(codeOf(resolver.resolve(trade()))).isEqualTo("GENERIC");
+    }
+
+    @Test
+    void resolve_whenTheCardsOnlyRuleForTheEventIsInactive_isEmpty() {
+        // Given -- a switched-off rule prices nothing, so it does not make the card cover the sale
+        ChargeScheduleEntity switchedOff = card("EXACT", AssetType.EQUITY, TradeSegment.DELIVERY, "NSE", null, TRADE_DATE);
+        switchedOff.getRules().getFirst().setActive(false);
+        givenCandidates(switchedOff);
+
+        // When / Then
+        assertThat(resolver.resolve(trade())).isEmpty();
+    }
+
+    @Test
+    void resolve_keepsEventsApartInTheCache() {
+        // Given -- one scope and date, a card per event
+        givenCandidates(
+                withRulesFor(card("MAINTENANCE", null, null, null, null, TRADE_DATE), ChargeEvent.AMC_CYCLE),
+                card("EXACT", AssetType.EQUITY, TradeSegment.DELIVERY, "NSE", null, TRADE_DATE));
+
+        // When
+        String cycle = codeOf(resolver.resolve(tradeOn(ChargeEvent.AMC_CYCLE)));
+        String sale = codeOf(resolver.resolve(trade()));
+
+        // Then -- a key without the event would answer the sale from the cycle
+        assertThat(cycle).isEqualTo("MAINTENANCE");
+        assertThat(sale).isEqualTo("EXACT");
+    }
+
     // ---------------------------------------------------------------- the statutory card (D-380, D-381)
 
     @Test
@@ -278,6 +334,22 @@ class ChargeScheduleResolverTest {
         verify(chargeScheduleRepository, times(2)).findStatutoryCandidates(TRADE_DATE);
     }
 
+    @Test
+    void resolveStatutory_whenTheOnlyAgreeingCardHasNoRuleForTheEvent_isEmpty() {
+        // Given -- the account card taxes AMC cycles only; no statutory card covers the sale
+        givenStatutoryCandidates(withRulesFor(statutoryCard("ACCOUNT", null, null, TRADE_DATE), ChargeEvent.AMC_CYCLE));
+
+        // When / Then -- reported as a missing statutory card, not as the law charging nothing
+        assertThat(resolver.resolveStatutory(trade())).isEmpty();
+    }
+
+    private static ChargeScheduleEntity withRulesFor(ChargeScheduleEntity schedule, ChargeEvent event) {
+        ChargeRule onlyRule = rule(schedule.getScheduleCode(), ChargeBasis.TURNOVER);
+        onlyRule.setEvents(Set.of(event));
+        schedule.setRules(List.of(onlyRule));
+        return schedule;
+    }
+
     private void givenStatutoryCandidates(ChargeScheduleEntity... candidates) {
         when(chargeScheduleRepository.findStatutoryCandidates(TRADE_DATE)).thenReturn(List.of(candidates));
     }
@@ -309,6 +381,7 @@ class ChargeScheduleResolverTest {
         schedule.setExchange(exchange);
         schedule.setPlanCode(planCode);
         schedule.setStartDate(startDate);
+        schedule.setRules(List.of(rule("BROKERAGE", ChargeBasis.TURNOVER)));
         return schedule;
     }
 }
