@@ -467,9 +467,10 @@ public class CorporateActionService {
      */
     public List<AssetEntity> demergeLots(CorporateActionEntity corporateAction, List<AssetEntity> stockEntities) {
         var demergerDetail = corporateAction.getDemergerDetail();
+        // new:held, as the market writes it (W-313): "1:10" allots one new share for every ten held
         String[] demergerRatio = demergerDetail.getDemergerRatio().split(":");
-        int mainStockRatio = Integer.parseInt(demergerRatio[0]);
-        int secondaryStockRatio = Integer.parseInt(demergerRatio[1]);
+        int newShares = Integer.parseInt(demergerRatio[0]);
+        int heldShares = Integer.parseInt(demergerRatio[1]);
 
         String[] demergerPriceRatio = demergerDetail.getDemergerPriceRatio().split(":");
         double mainStockPriceRatio = Double.parseDouble(demergerPriceRatio[0]);
@@ -480,11 +481,11 @@ public class CorporateActionService {
         }
 
         var newDemergerStock = demergerDetail.getDemergerStocks().getFirst();
-        var demergedStockContext = new DemergedStockContext(newDemergerStock.getStockCode(), newDemergerStock.getStockName(), secondaryStockPriceRatio, secondaryStockRatio);
+        var demergedStockContext = new DemergedStockContext(newDemergerStock.getStockCode(), newDemergerStock.getStockName(), secondaryStockPriceRatio, newShares, heldShares);
 
         List<AssetEntity> finalDemergedStocks = new ArrayList<>();
         for (AssetEntity assetEntity : stockEntities) {
-            var demergerContext = new DemergerContext(demergerDetail.getMainStockCode(), demergerDetail.getMainStockName(), mainStockPriceRatio, mainStockRatio, assetEntity, new ArrayList<>(Collections.singleton(demergedStockContext)));
+            var demergerContext = new DemergerContext(demergerDetail.getMainStockCode(), demergerDetail.getMainStockName(), mainStockPriceRatio, assetEntity, new ArrayList<>(Collections.singleton(demergedStockContext)));
             List<AssetEntity> demergedStocks = processDemergerForEachAssetEntry(demergerContext);
 
             CorporateActionEntity action = TJsonMapper.copy(corporateAction, CorporateActionEntity.class);
@@ -528,8 +529,10 @@ public class CorporateActionService {
 
         newEntity.setStockCode(demergerContext.stockCode());
         newEntity.setStockName(demergerContext.stockName());
-        newEntity.setQuantity(demergerContext.quantityRatio() * entity.getQuantity());
-        newEntity.setPrice(demergerContext.pricePercentage() * (entity.getPrice() / 100));
+        // The lot's cost share, spread over the shares allotted for it: quantity × price is the parent's cost × the share
+        newEntity.setQuantity(entity.getQuantity() * demergerContext.newShares() / demergerContext.heldShares());
+        newEntity.setPrice(entity.getPrice() * demergerContext.pricePercentage() / 100
+                * demergerContext.heldShares() / demergerContext.newShares());
         newEntity.setCorporateActionType(CorporateActionType.DEMERGER);
         return newEntity;
     }
@@ -566,9 +569,9 @@ public class CorporateActionService {
         String[] demergerRatios = demergerRatio.split(":");
         String[] demergerPriceRatios = demergerPriceRatio.split(":");
 
-        // TODO(W-214): come to this for uneven ratios
-        if (demergerRatios.length != 2) {
-            throw new IllegalArgumentException("Invalid demerger ratio format");
+        if (!demergerRatio.matches("[1-9][0-9]{0,8}:[1-9][0-9]{0,8}")) {
+            throw new IllegalArgumentException("A demerger's ratio is new shares to shares held, two whole numbers above nil"
+                    + " such as 1:10, but it was " + demergerRatio);
         }
 
         if (demergerRatios.length != demergerDetail.demergerStocks().size() + 1) {

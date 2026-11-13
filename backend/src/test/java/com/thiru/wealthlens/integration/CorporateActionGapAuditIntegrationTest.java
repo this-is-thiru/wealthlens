@@ -320,4 +320,49 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(tested.getStatusCode().value()).isEqualTo(403);
         assertThat(reprioritised.getStatusCode().value()).isEqualTo(403);
     }
+
+    // Scenario 6 (W-313)
+    @Test
+    void perform_whenADemergerIsOneForTen_allotsOneNewShareForEveryTenHeld() {
+        // Given -- ITC's own demerger: 1,000 ITC @ ₹400, 1:10 (new:held), cost 86.49:13.51
+        buy("ITC", 1000, 400, "2026-01-05", "Self");
+        addDemerger("ITC", "ITCHOTELS", "1:10", "86.49:13.51", "2026-01-15");
+
+        // When
+        perform("JANUARY", 2026);
+
+        // Then -- ITC 1,000 (₹3,45,960); ITC Hotels 100 @ ₹540.40 (₹54,040); ₹4,00,000 kept
+        assertThat(quantity("ITC")).isEqualTo(1000.0);
+        assertMoney(345960.0, cost("ITC"));
+        assertThat(quantity("ITCHOTELS")).isEqualTo(100.0);
+        assertMoney(540.40, lots("ITCHOTELS").getFirst().get("price").asDouble());
+        assertMoney(54040.0, cost("ITCHOTELS"));
+    }
+
+    // W-313: the ratio is refused at entry when it is not two whole numbers
+    @Test
+    void addDemerger_whenTheRatioIsNotTwoWholeNumbers_answers400NamingTheForm() {
+        // Given
+        Map<String, Object> detail = new HashMap<>();
+        detail.put("demergerRatio", "1.5:10");
+        detail.put("demergerPriceRatio", "86.49:13.51");
+        detail.put("mainStockCode", "ITC");
+        detail.put("mainStockName", "ITC");
+        detail.put("demergerStocks", List.of(Map.of("stockCode", "ITCHOTELS", "stockName", "ITCHOTELS")));
+        Map<String, Object> body = new HashMap<>();
+        body.put("stockCode", "ITC");
+        body.put("type", "DEMERGER");
+        body.put("priority", ++priority);
+        body.put("recordDate", "2026-01-15");
+        body.put("exDate", "2026-01-15");
+        body.put("demergerDetail", detail);
+
+        // When
+        ResponseEntity<String> added = call(HttpMethod.POST, "/corporate-action/add", "SUPER_USER", body);
+
+        // Then
+        assertThat(added.getStatusCode().value()).isEqualTo(400);
+        assertThat(JSON.readTree(added.getBody()).get("message").asString()).isEqualTo(
+                "A demerger's ratio is new shares to shares held, two whole numbers above nil such as 1:10, but it was 1.5:10");
+    }
 }

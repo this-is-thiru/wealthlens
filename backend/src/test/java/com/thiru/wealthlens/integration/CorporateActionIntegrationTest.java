@@ -200,7 +200,9 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> corporateActionService.addCorporateAction(dto));
 
-        assertEquals("Invalid demerger ratio format", exception.getMessage());
+        // The ratio is refused at entry by its form (W-313)
+        assertEquals("A demerger's ratio is new shares to shares held, two whole numbers above nil such as 1:10, but it was INVALID",
+                exception.getMessage());
     }
 
     // ========== VALIDATION: addCorporateAction DEMERGER mismatched ratios vs stocks count ==========
@@ -227,7 +229,9 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> corporateActionService.addCorporateAction(dto));
 
-        assertEquals("Invalid demerger ratio format", exception.getMessage());
+        // The ratio is refused at entry by its form (W-313)
+        assertEquals("A demerger's ratio is new shares to shares held, two whole numbers above nil such as 1:10, but it was 1:1:1",
+                exception.getMessage());
     }
 
     // ========== VALIDATION: addCorporateAction DEMERGER price ratio length mismatch ==========

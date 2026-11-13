@@ -39,7 +39,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-211 | PARKED | Brokerage by holder type — HUF and NRI | The deploy gate | **Wrong, small:** HUF and NRI brokerage unselectable |
 | W-212 | PARKED | A buyback order's fee | The deploy gate | **Wrong, small:** a buyback's ₹20 uncharged |
 | W-213 | NOW 3 | A stock split's arithmetic on the two perform flows | This switch | Done first |
-| W-214 | PARKED | The untracked TODOs | The deploy gate | No figure at risk (row read, D-445) |
+| W-214 | PARKED | The untracked TODOs (the demerger's "uneven ratios" one done by W-313, D-637; `AssetEntity`'s remains) | The deploy gate | No figure at risk (row read, D-445) |
 | W-215 | PARKED | The dead members no build check covers | The deploy gate | No figure at risk (row read, D-445) |
 | W-230 | NOW 5 | A V2 sale's entered charge lost where no card prices it | This switch | Done first |
 | W-234 | NOW | Cross-year facts from stored data | The deploy gate | Built: a draft\'s `brought` (D-445) |
