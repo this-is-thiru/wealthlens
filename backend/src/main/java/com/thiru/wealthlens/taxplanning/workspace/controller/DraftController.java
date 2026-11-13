@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxplanning.workspace.controller;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.taxengine.api.DeclarationQuestion;
 import com.thiru.wealthlens.taxplanning.workspace.DraftConflictException;
+import com.thiru.wealthlens.taxplanning.workspace.DraftSaveRetry;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatusRequest;
 import com.thiru.wealthlens.taxplanning.workspace.DraftView;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +36,7 @@ public class DraftController {
     private static final Pattern REVISION = Pattern.compile("^\"rev-(\\d{1,9})\"$");
 
     private final DraftService draftService;
+    private final DraftSaveRetry draftSaveRetry;
 
     @GetMapping("/profiles/{profileId}/workspaces/{taxYear}")
     public WorkspaceResponse workspace(@PathVariable String email, @PathVariable String profileId, @PathVariable int taxYear) {
@@ -68,11 +69,9 @@ public class DraftController {
     public ResponseEntity<?> patch(@PathVariable String email, @PathVariable String draftId,
             @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch, @RequestBody JsonNode patch) {
         try {
-            return tagged(draftService.patch(email, draftId, revisionIn(ifMatch), patch));
+            return tagged(draftSaveRetry.patch(email, draftId, revisionIn(ifMatch), patch));
         } catch (DraftConflictException e) {
             return conflict(e.conflict());
-        } catch (DataIntegrityViolationException e) {
-            return conflict(draftService.conflictAfterRace(email, draftId, revisionIn(ifMatch), patch));
         }
     }
 

@@ -233,11 +233,13 @@ public class DraftService {
     }
 
     /**
-     * The conflict for a save that lost a race, read after that save's transaction has ended: inside it, nothing more can be read.
+     * The conflict for a save that collided on every attempt ({@link DraftSaveRetry}): the other save had not
+     * committed, so which paths it changes is not yet known and the revision has not visibly moved.
      */
     @Transactional(readOnly = true)
-    public DraftConflictException.DraftConflict conflictAfterRace(String email, String draftId, int expectedRevision, JsonNode patch) {
-        return stale(owned(email, draftId), expectedRevision, patch).conflict();
+    public DraftConflictException conflictAfterRace(String email, String draftId) {
+        return new DraftConflictException("Another save of this draft had not finished; read the draft and send again",
+                DraftView.of(owned(email, draftId)), List.of());
     }
 
     private DraftConflictException stale(FilingDraft current, int expectedRevision, JsonNode patch) {

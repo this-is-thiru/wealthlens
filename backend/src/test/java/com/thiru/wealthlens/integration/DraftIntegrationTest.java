@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
+import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
@@ -16,12 +17,16 @@ import io.restassured.RestAssured;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,6 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.JsonNode;
@@ -45,6 +51,12 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
               "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": %s}}],
               "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
               "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}}]""";
+
+    @Autowired
+    private DraftService draftService;
+
+    @Autowired
+    private MongoTransactionManager transactionManager;
 
     private String profileId;
     private String draftId;
@@ -382,6 +394,66 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Test
+    void patch_whenTheWinningSaveCommitsDuringTheRetry_namesTheConflictingPath() throws Exception {
+        // Given — W-310: revision 1 written by another save whose transaction has not committed
+        ExecutorService threads = Executors.newFixedThreadPool(2);
+        CountDownLatch written = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        Future<?> winner = threads.submit(() -> heldSave(written, release));
+        assertThat(written.await(10, TimeUnit.SECONDS)).isTrue();
+
+        // When — the winner commits 100 ms after the loser is sent, inside the loser's retries
+        Future<ResponseEntity<String>> loser = threads.submit(() -> save(ADD_EMPLOYMENT.formatted("2"), "\"rev-0\""));
+        Thread.sleep(100);
+        release.countDown();
+        ResponseEntity<String> answer = loser.get(10, TimeUnit.SECONDS);
+        winner.get(10, TimeUnit.SECONDS);
+        threads.shutdown();
+
+        // Then
+        assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(answer.getBody()).contains("moved on to revision 1", "\"conflictingPaths\":[\"/entered/employments/-\"]");
+        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+    }
+
+    @Test
+    void patch_whenTheWinningSaveOutlastsEveryRetry_saysItHadNotFinished() throws Exception {
+        // Given — W-310: revision 1 written by another save held open until the loser has its answer
+        ExecutorService threads = Executors.newSingleThreadExecutor();
+        CountDownLatch written = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        Future<?> winner = threads.submit(() -> heldSave(written, release));
+        assertThat(written.await(10, TimeUnit.SECONDS)).isTrue();
+
+        // When
+        ResponseEntity<String> answer = save(ADD_EMPLOYMENT.formatted("2"), "\"rev-0\"");
+        release.countDown();
+        winner.get(10, TimeUnit.SECONDS);
+        threads.shutdown();
+
+        // Then
+        assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(answer.getBody()).contains("Another save of this draft had not finished; read the draft and send again")
+                .doesNotContain("moved on to revision");
+        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+    }
+
+    /** Writes revision 1 inside a transaction that stays open until released, so the race is the same on every run. */
+    private void heldSave(CountDownLatch written, CountDownLatch release) {
+        JsonNode patch = JsonMapper.builder().build().readTree(ADD_EMPLOYMENT.formatted("1"));
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            draftService.patch(OWNER, draftId, 0, patch);
+            written.countDown();
+            try {
+                assertThat(release.await(10, TimeUnit.SECONDS)).isTrue();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            }
+        });
     }
 
     @Test

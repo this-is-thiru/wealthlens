@@ -5,15 +5,15 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-304 (a trade no broker card covers is reported as priced, G-1) — next by board order; nothing written
-Stage           : W-303 DONE (stage 6, D-619), committed and pushed; W-304 not started; Q-2 (AMC periods) still open
-Done today      : session 87: W-302, W-290, W-264b done and pushed (D-609 – D-618); W-303 built (D-619)
-Board           : W-303 D; W-304 · next; W-305 – W-309 ·; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-149 B
-Next step       : record W-303's pipeline run in D-619; then plan W-304 (first test: W-264b report §6.2), STOP for approval
+Stage           : W-310 DONE (stage 6, D-621), committed and pushed; W-304 not started; Q-2 (AMC periods) still open
+Done today      : session 88: W-303 pipeline green on re-run (D-619); W-310 placed (D-620) and built (D-621)
+Board           : W-310 D; W-304 · next; W-305 – W-309 ·; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-149 B
+Next step       : record W-310's pipeline run in D-621; then plan W-304 (first test: W-264b report §6.2; groundwork in session 88: event filter in ChargeScheduleResolver.agreeing + event in ScopeKey, statutory twin), STOP for approval
 Owner actions   : after deploy: §3.20 (W-303, read-only, each database); §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-303 local: 7 charge classes 219 / 0; validate 0; pipeline pending
-Files touched   : none (all committed with W-303)
-Last item commit: taxplanning W-303: charge exit load on the redemption value
-Updated         : 2026-11-13, session 87 — W-303 done; next W-304
+Last verify     : W-310 local: 5 classes 78 / 0; validate 0; pipeline pending
+Files touched   : none (all committed with W-310)
+Last item commit: taxplanning W-310: run a draft save again when it collides with another save of its revision
+Updated         : 2026-11-13, session 88 — W-310 done; next W-304
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
