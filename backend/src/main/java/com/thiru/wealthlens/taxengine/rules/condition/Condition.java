@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.condition;
 
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -117,6 +118,29 @@ public sealed interface Condition
                     IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
                     HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, Declared _, DeclaredAmountAbove _ ->
                     Set.of();
+        };
+    }
+
+    /**
+     * The year's questions this condition reads — so a form whose bar reads a question the person has not answered is
+     * reported undetermined, naming it, rather than refused or passed (W-091 C3a, D-653). A composition reads what its
+     * limbs read.
+     */
+    default Set<DeclarationCode> declarationsRead() {
+        return switch (this) {
+            case Declared declared -> Set.of(declared.code());
+            case DeclaredAmountAbove above -> Set.of(above.code());
+            case AllOf all -> all.all().stream().flatMap(limb -> limb.declarationsRead().stream())
+                    .collect(Collectors.toUnmodifiableSet());
+            case AnyOf any -> any.any().stream().flatMap(limb -> limb.declarationsRead().stream())
+                    .collect(Collectors.toUnmodifiableSet());
+            case Not not -> not.condition().declarationsRead();
+            case IsResident _, IsOrdinarilyResident _, HousePropertiesOwnedAtMost _, HasLossUnderHead _,
+                    HasLossBroughtForward _, HasLossCarriedForward _,
+                    CapitalGainsOnlyInParts _, CapitalGainsPartAtMost _, DeductionAllowedUnder _, AgeAtLeast _, HasPersonType _,
+                    IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
+                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, ItemFactIs _, ItemFactAtMost _,
+                    ItemDateBefore _ -> Set.of();
         };
     }
 }

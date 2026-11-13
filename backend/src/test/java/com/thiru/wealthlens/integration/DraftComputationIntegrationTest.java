@@ -495,6 +495,39 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
                 .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    void itrForm_whenTheYearsQuestionsAreUnanswered_choosesNoneNamingThemAndStoresNothing() {
+        // Given — the draft answers none of r.164(3)'s questions (W-091 C3a, D-653)
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> chosen = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/itr-form",
+                "{\"regime\": \"NEW_TAX_REGIME\", \"returnKind\": \"S263_1\"}", null);
+
+        // Then
+        assertThat(chosen.getStatusCode()).as(chosen.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode choice = JSON.readTree(chosen.getBody());
+        assertThat(choice.get("form").isNull()).as(chosen.getBody()).isTrue();
+        assertThat(choice.get("verdicts").get(0).get("form").asString()).isEqualTo("ITR-1");
+        assertThat(choice.get("verdicts").get(0).get("standing").asString()).isEqualTo("UNDETERMINED");
+        assertThat(choice.get("message").asString()).endsWith("to settle whether ITR-1 serves this return");
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void itrForm_whenTheReturnKindIsMissingOrNotTheYears_expected400NamingIt() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When / Then
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/itr-form",
+                "{\"regime\": \"NEW_TAX_REGIME\"}", null),
+                "A form choice needs a returnKind, the provision the return is furnished under, such as S263_1");
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/itr-form",
+                "{\"regime\": \"NEW_TAX_REGIME\", \"returnKind\": \"S139_1\"}", null),
+                "No form for 2026-27 serves the return kind S139_1; the year's kinds are [S263_1, S268_1_A, S280]");
+    }
+
     private void assertRefused(ResponseEntity<String> response, String message) {
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(JSON.readTree(response.getBody()).get("message").asString()).isEqualTo(message);

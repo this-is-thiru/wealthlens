@@ -22,10 +22,16 @@ import com.thiru.wealthlens.taxengine.result.ComputationId;
 import com.thiru.wealthlens.taxengine.result.ComputationProjector;
 import com.thiru.wealthlens.taxengine.result.ComputationReceipt;
 import com.thiru.wealthlens.taxengine.result.TaxComputation;
+import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
+import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSelector;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -44,6 +50,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -73,6 +80,46 @@ public class TaxCalculator {
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
                 computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation),
                 buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)));
+    }
+
+    /**
+     * The form the inputs' return of {@code kind} is furnished in, and every form's verdict (DR 21 I4; W-091, D-653). The
+     * forms read the person's facts and answers, and the computed return: its node values, the heads it has income
+     * under and its return facts.
+     *
+     * @throws IllegalArgumentException if no pack ships for the year, the regime is not the year's, the inputs are
+     *     refused, or no form of the year serves {@code kind}
+     */
+    public ItrFormChoice chooseForm(EngineInputs inputs, ReturnKind kind) {
+        RulePack pack = shipped(inputs.taxYear());
+        Set<String> kinds = new TreeSet<>(pack.itrForms().values().stream()
+                .flatMap(form -> form.returnKinds().stream()).map(ReturnKind::value).toList());
+        if (!kinds.contains(kind.value())) {
+            throw new IllegalArgumentException("No form for " + inputs.taxYear().label() + " serves the return kind "
+                    + kind.value() + "; the year's kinds are " + kinds);
+        }
+        RegimeSpec regime = spec(pack, inputs.regime());
+        PipelineRunner.Result run = PipelineRunner.run(REGISTRY, pack, regime, inputs);
+        ReturnFacts returned = ComputationProjector.project(run, inputs, ComputationId.fresh()).returnFacts();
+        ConditionContext facts = NodeContext.forRun(pack, regime, inputs).conditions()
+                .reporting(returned)
+                .having(computedAmounts(run), headsWithIncome(returned));
+        return ItrFormChoice.of(inputs.taxYear(), inputs.regime(), kind,
+                ItrFormSelector.select(pack.itrForms().values(), inputs.assessee().type(), kind, facts), pack.itrForms());
+    }
+
+    private static Map<NodeId, Money> computedAmounts(PipelineRunner.Result run) {
+        return run.values().entrySet().stream()
+                .filter(entry -> entry.getValue() instanceof MoneyValue)
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> ((MoneyValue) entry.getValue()).amount()));
+    }
+
+    /** The heads the return computed a figure under, income or loss — a loss is still income under the head. */
+    private static Set<HeadCode> headsWithIncome(ReturnFacts returned) {
+        return returned.incomeByHead().entrySet().stream()
+                .filter(entry -> entry.getValue().isGreaterThan(Money.ZERO) || entry.getValue().isLessThan(Money.ZERO))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
     }
 
     /** Every candidate regime priced on these inputs. */

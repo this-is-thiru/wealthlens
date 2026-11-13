@@ -123,6 +123,15 @@ public record ConditionContext(
                 componentsPresent, evidenceRecorded, item, declarations, ownedHouseProperties, facts);
     }
 
+    /**
+     * The same facts, with a computed return's node values and the heads it has income under — what a form's
+     * conditions read beside the person's own facts (W-091, D-653).
+     */
+    public ConditionContext having(Map<NodeId, Money> computedValues, Set<HeadCode> headsWithComputedIncome) {
+        return new ConditionContext(residence, personType, ages, disabilities, computedValues, headsWithComputedIncome,
+                componentsPresent, evidenceRecorded, item, declarations, ownedHouseProperties, returnFacts);
+    }
+
     /** A resident individual of the given age, with nothing else recorded. */
     public static ConditionContext residentIndividualAged(int years) {
         return new ConditionContext(

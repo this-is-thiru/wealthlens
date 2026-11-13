@@ -33,6 +33,11 @@ public record Declarations(Map<DeclarationCode, Boolean> yesNo, Map<DeclarationC
         }
     }
 
+    /** Whether the person answered the question, in either kind. */
+    public boolean isAnswered(DeclarationCode code) {
+        return yesNo.containsKey(code) || amounts.containsKey(code);
+    }
+
     /**
      * Whether the person answered yes.
      *

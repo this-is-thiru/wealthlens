@@ -3,10 +3,12 @@ package com.thiru.wealthlens.taxplanning.compute;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
 import com.thiru.wealthlens.taxengine.api.ComputedTax;
+import com.thiru.wealthlens.taxengine.api.ItrFormChoice;
 import com.thiru.wealthlens.taxengine.api.Optimisation;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
@@ -88,6 +90,27 @@ public class DraftComputationService {
         int year = draftService.ownedDraft(email, draftId).draft().getTaxYearStart();
         RegimeCode regime = taxCalculator.defaultRegime(TaxYearId.of(year));
         return taxCalculator.compareRegimes(assembler.assemble(email, draftId, regime, LocalDate.now(clock)).inputs());
+    }
+
+    /**
+     * The form the draft's return of {@code returnKind} is furnished in under {@code regimeCode}, with every form's
+     * verdict (W-091, D-653 C2a); the draft is unchanged and nothing is stored.
+     *
+     * @throws IllegalArgumentException if either is missing, the draft is not this account's, or no form of the year
+     *     serves the kind
+     */
+    @Transactional(readOnly = true)
+    public ItrFormChoice chooseForm(String email, String draftId, String regimeCode, String returnKind) {
+        if (regimeCode == null || regimeCode.isBlank()) {
+            throw new BadRequestException("A form choice needs a regime, since total income depends on it");
+        }
+        if (returnKind == null || returnKind.isBlank()) {
+            throw new BadRequestException("A form choice needs a returnKind, the provision the return is furnished under,"
+                    + " such as S263_1");
+        }
+        EngineInputsAssembler.Assembled assembled = assembler.assemble(email, draftId, new RegimeCode(regimeCode),
+                LocalDate.now(clock));
+        return taxCalculator.chooseForm(assembled.inputs(), new ReturnKind(returnKind));
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxplanning.compute.controller;
 
+import com.thiru.wealthlens.taxengine.api.ItrFormChoice;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
@@ -37,6 +38,12 @@ public class DraftComputationController {
     @PostMapping("/drafts/{draftId}/compare-regimes")
     public RegimeComparison compare(@PathVariable String email, @PathVariable String draftId) {
         return service.compare(email, draftId);
+    }
+
+    @PostMapping("/drafts/{draftId}/itr-form")
+    public ItrFormChoice chooseForm(@PathVariable String email, @PathVariable String draftId,
+            @RequestBody Map<String, String> body) {
+        return service.chooseForm(email, draftId, body.get("regime"), body.get("returnKind"));
     }
 
     @PostMapping("/drafts/{draftId}/optimise")
