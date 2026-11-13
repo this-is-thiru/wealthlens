@@ -135,7 +135,7 @@ class ReturnFactsProjectionTest {
         RulePack pack = ShippedRulePacks.compile("rulepacks", Set.of(TY_2026_27)).load(TY_2026_27);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         OtherSourceItem pension = new OtherSourceItem(OtherSourceKind.FAMILY_PENSION, Money.of("300000"), Money.ZERO,
-                Money.ZERO, Money.ZERO, false);
+                Money.ZERO, Money.ZERO, false, Optional.empty());
         EngineInputs inputs = new EngineInputs(plain.taxYear(), plain.regime(), plain.temporal(),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(pension), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),

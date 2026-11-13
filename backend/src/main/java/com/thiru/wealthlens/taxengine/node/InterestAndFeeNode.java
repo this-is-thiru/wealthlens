@@ -41,8 +41,8 @@ import java.util.Set;
  * <p>The three interests are measured on three different amounts, as the sections define them: late filing on tax less
  * advance tax and tax at source; the shortfall and deferment on tax less tax at source only. The period ends on the date the
  * return was furnished, or, for a return not yet furnished, on the as-of date, as if it were furnished and paid that day
- * (D-446 C2a). Not computed, and said so where the figure is shown: the s.425(4) / s.234C relief for capital gains and
- * dividends (W-112a), an Assessing Officer's order, interest on a refund (W-112b).
+ * (D-446 C2a). Deferment carries the s.425(4) / s.234C relief for income arising after a date ({@link DefermentRelief};
+ * W-112a). Not computed, and said so where the figure is shown: an Assessing Officer's order, interest on a refund (W-112b).
  */
 public final class InterestAndFeeNode implements ComputationNode {
 
@@ -187,26 +187,42 @@ public final class InterestAndFeeNode implements ComputationNode {
             RuleRow row = ctx.ruleOf(RuleSetIds.RS_INT_DEFERMENT);
             DefermentInterest rule = definition(ctx, RuleSetIds.RS_INT_DEFERMENT, DefermentInterest.class);
             Money due = bill.minus(filing.taxAtSource()).floorAtZero();
+            DefermentRelief relief = new DefermentRelief(ctx, rule, due);
             Money total = Money.ZERO;
             for (DefermentInterest.Step step : rule.steps()) {
                 LocalDate dueOn = AdvanceTaxNode.inFinancialYear(ctx, step.dueOn());
                 Money paid = filing.advanceTaxPaidBy(dueOn);
                 boolean reached = !dueOn.isAfter(end);
-                boolean harboured = step.noInterestFrom().filter(share -> !paid.isLessThan(share.of(due))).isPresent();
-                Money base = calculation.base(step.share().of(due).minus(paid));
+                DefermentRelief.AtDate relieved = advance.liable() && reached ? relief.at(dueOn) : DefermentRelief.AtDate.NONE;
+                Money dueHere = due.minus(relieved.leftOut());
+                boolean harboured = step.noInterestFrom().filter(share -> !paid.isLessThan(share.of(dueHere))).isPresent();
+                Money base = calculation.base(step.share().of(dueHere).minus(paid));
                 Money interest = advance.liable() && reached && !harboured ? step.interest().of(base) : Money.ZERO;
                 total = total.plus(interest);
-                lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INTEREST, base, interest).withLimitedBy(
-                        !advance.liable() ? "not liable to advance tax" : !reached ? "by " + dueOn + ", not yet reached"
-                                : harboured ? "by " + dueOn + ", paid enough" : "short by " + dueOn));
+                String why = deferredBecause(reached, harboured, dueOn);
+                lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INTEREST, base, interest)
+                        .withLimitedBy(relieved.reason().map(reason -> why + "; " + reason).orElse(why)));
                 flagIfCharged(interest);
             }
             if (total.isGreaterThan(Money.ZERO)) {
                 items.add(new InterestAndFees.Item(row.id(), InterestAndFees.Kind.INTEREST, total));
-                annotate(new Notice(Severity.ATTENTION, "Less, or none, may be due where the shortfall comes from capital"
-                        + " gains or dividends whose tax was paid in a later instalment; that relief is not computed",
-                        List.of(row.id())));
             }
+            if (total.isGreaterThan(Money.ZERO) && relief.hasUndatedDividend()) {
+                annotate(new Notice(Severity.ATTENTION, "A dividend entered without the date it was received cannot be"
+                        + " relieved; less, or none, may be due if it arose after an instalment date and its tax was paid"
+                        + " later", List.of(row.id())));
+            }
+        }
+
+        /** What a deferment date's line says of it, before any relief. */
+        private String deferredBecause(boolean reached, boolean harboured, LocalDate dueOn) {
+            if (!advance.liable()) {
+                return "not liable to advance tax";
+            }
+            if (!reached) {
+                return "by " + dueOn + ", not yet reached";
+            }
+            return harboured ? "by " + dueOn + ", paid enough" : "short by " + dueOn;
         }
 
         /** s.428 / s.234F: a fee where the return is furnished after its due date, on the total income. */

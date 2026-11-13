@@ -259,7 +259,10 @@ public final class DefinitionJson {
                                 PackJson.rate(e.node(), "sharePercent", e.path()),
                                 PackJson.rate(e.node(), "interestPercent", e.path()),
                                 PackJson.optionalRate(e.node(), "noInterestFromPercent", e.path()))));
-                yield PackJson.construct(path, () -> new DefermentInterest(steps));
+                List<DefermentInterest.RelievedIncome> relieved = PackJson.array(node, "relievedIncomes", path,
+                        e -> PackJson.enumValue(e.node(), "income", e.path(), DefermentInterest.RelievedIncome.class));
+                MonthDay paidBy = monthDay(node, "relievedIfPaidBy", path);
+                yield PackJson.construct(path, () -> new DefermentInterest(steps, relieved, paidBy));
             }
             case "MonthlyInterest" -> PackJson.construct(path, () -> new MonthlyInterest(
                     PackJson.rate(node, "perMonthPercent", path), PackJson.bool(node, "statesPartOfMonth", path)));
@@ -276,11 +279,15 @@ public final class DefinitionJson {
 
     /** A day of the year written {@code "06-15"}, as the Tables write "15th June". */
     private static MonthDay monthDay(JsonNode node, String path) {
-        String text = PackJson.text(node, "dueOn", path);
+        return monthDay(node, "dueOn", path);
+    }
+
+    private static MonthDay monthDay(JsonNode node, String field, String path) {
+        String text = PackJson.text(node, field, path);
         try {
             return MonthDay.parse("--" + text);
         } catch (DateTimeParseException e) {
-            throw new PackValidationException(path + ".dueOn must read like \"06-15\", but was \"" + text + "\"");
+            throw new PackValidationException(path + "." + field + " must read like \"06-15\", but was \"" + text + "\"");
         }
     }
 

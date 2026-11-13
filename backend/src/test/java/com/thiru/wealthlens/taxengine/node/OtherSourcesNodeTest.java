@@ -67,7 +67,7 @@ class OtherSourcesNodeTest {
     private static OtherSourceItem item(OtherSourceKind kind, String received, String commission, String interest,
             String other) {
         return new OtherSourceItem(kind, Money.of(received), Money.of(commission), Money.of(interest), Money.of(other),
-                false);
+                false, Optional.empty());
     }
 
     private static NodeResult run(int year, List<OtherSourceItem> items) {
@@ -259,7 +259,7 @@ class OtherSourcesNodeTest {
     void evaluate_whenAnExpenseIsPayableOutsideIndiaUntaxed_deductsNothingForIt() {
         // Given — interest on securities of 1,00,000 with 10,000 of expenditure payable abroad untaxed
         OtherSourceItem untaxed = new OtherSourceItem(OtherSourceKind.INTEREST_ON_SECURITIES, Money.of("100000"),
-                Money.ZERO, Money.ZERO, Money.of("10000"), true);
+                Money.ZERO, Money.ZERO, Money.of("10000"), true, Optional.empty());
 
         // When
         NodeResult result = run(2026, List.of(untaxed));
@@ -274,7 +274,7 @@ class OtherSourcesNodeTest {
     void evaluate_whenEveryExpenseOnSecuritiesIsPayableOutsideIndiaUntaxed_nilsBothRows() {
         // Given — the commission row and the expenditure row both reach interest on securities
         OtherSourceItem untaxed = new OtherSourceItem(OtherSourceKind.INTEREST_ON_SECURITIES, Money.of("10000"),
-                Money.of("100"), Money.of("200"), Money.of("400"), true);
+                Money.of("100"), Money.of("200"), Money.of("400"), true, Optional.empty());
 
         // When
         NodeResult result = run(2026, List.of(untaxed));

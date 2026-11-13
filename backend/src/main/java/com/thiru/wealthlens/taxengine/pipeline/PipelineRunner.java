@@ -187,6 +187,24 @@ public final class PipelineRunner {
             }
             return answer;
         }
+
+        /**
+         * {@code target} on {@code other} inputs: {@code target} and every slot it is computed from run again, in the run's
+         * order, in a store of their own that cannot re-enter. The run itself is untouched.
+         */
+        @Override
+        public NodeValue recomputeOn(NodeId target, EngineInputs other) {
+            Set<NodeId> needed = ancestorsOf(target, ordered);
+            NodeContext store = NodeContext.forRun(pack, regime, other);
+            NodeValue answer = null;
+            for (ComputationNode node : ordered) {
+                if (needed.contains(node.produces())) {
+                    answer = node.evaluate(store.forNode(node)).value();
+                    store.put(node.produces(), answer);
+                }
+            }
+            return answer;
+        }
     }
 
     /** Every slot computed, directly or through others, from {@code slot}. */

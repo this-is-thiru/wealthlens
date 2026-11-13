@@ -217,7 +217,7 @@ final class GoldenCaseRunner {
     private static EngineInputs interestOnly(TaxYearId year, Money interest) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         OtherSourceItem item = new OtherSourceItem(OtherSourceKind.OTHER_INTEREST, interest, Money.ZERO, Money.ZERO,
-                Money.ZERO, false);
+                Money.ZERO, false, Optional.empty());
         return new EngineInputs(year, plain.regime(),
                 TemporalContext.forTaxYear(year, computedOn(year)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
@@ -236,7 +236,7 @@ final class GoldenCaseRunner {
         nodes.add(new TotalIncomeNode());
         EngineInputs plain = NodeHarness.plainTaxpayer();
         OtherSourceItem item = new OtherSourceItem(OtherSourceKind.OTHER_INTEREST, interest, Money.ZERO, Money.ZERO,
-                Money.ZERO, false);
+                Money.ZERO, false, Optional.empty());
         EngineInputs inputs = new EngineInputs(year, regime,
                 TemporalContext.forTaxYear(year, computedOn(year)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), houses, List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),

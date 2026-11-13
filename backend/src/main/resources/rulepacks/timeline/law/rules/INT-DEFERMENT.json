@@ -1,7 +1,7 @@
 {
   "ruleId": "INT-DEFERMENT",
   "ruleSet": "RS-INT-DEFERMENT",
-  "_note": "Interest for deferring advance tax, at each date on the shortfall from the share of the tax due on the returned income; none at June or September if 12 % or 36 % was paid. 2025 s.425(1) Table states 3 %; 1961 s.234C(1)(a)(i) states 'one per cent. per month for a period of three months', the same 3 %. The s.425(4) / s.234C carve-out for capital gains and dividends is not modelled (W-112a): a notice says so. Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
+  "_note": "Interest for deferring advance tax, at each date on the shortfall from the share of the tax due on the returned income; none at June or September if 12 % or 36 % was paid. 2025 s.425(1) Table states 3 %; 1961 s.234C(1)(a)(i) states 'one per cent. per month for a period of three months', the same 3 %. The s.425(4) / s.234C first-proviso relief is computed (W-112a, D-660): relievedIncomes and relievedIfPaidBy as the sections name them (2025 s.2(49)(n) is winnings, Gazette 265620 p.13); only capital gains and dividends with a received date can reach a computation. Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -16,12 +16,12 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "reference": "s.234C(1)(a)(i), (ii), proviso",
+        "reference": "s.234C(1)(a)(i), (ii), proviso; s.234C(1) first proviso (a) – (d), Explanation 2",
         "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",
-        "reference": "s.425(1) Table, (2), (5)",
+        "reference": "s.425(1) Table, (2), (4), (5), (6)",
         "presence": "PRESENT"
       },
       "definition": {
@@ -49,11 +49,18 @@
             "sharePercent": "100",
             "interestPercent": "1"
           }
-        ]
+        ],
+        "relievedIncomes": [
+          { "income": "CAPITAL_GAINS" },
+          { "income": "WINNINGS" },
+          { "income": "FIRST_TIME_BUSINESS_INCOME" },
+          { "income": "DIVIDEND" }
+        ],
+        "relievedIfPaidBy": "03-31"
       },
       "conditions": [],
       "introducedBy": {
-        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.234C(1)(a)(i), (ii), proviso, as in the thc.nic.in consolidation",
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.234C(1)(a)(i), (ii), proviso and first proviso, as in the thc.nic.in consolidation; proviso (d) and Explanation 2 as substituted by the Finance Act, 2021 s.59",
         "gazetteRef": "Act 43 of 1961 (assent 13-9-1961), the date the repo's other as-enacted rows carry; the section's later insertion and substitutions as in the thc.nic.in consolidation; the Gazette issue not read",
         "notifiedOn": "1961-09-13",
         "effectiveFrom": "1962-04-01",
@@ -65,7 +72,7 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.234C(1)(a)(i), (ii), proviso p.696–697; amending Acts 2019 – 2026 searched (sources row list)",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.234C(1)(a)(i), (ii), proviso and first proviso p.696–697; Finance Act, 2021 s.59 (Gazette 2021/226208 pp.44–45) for proviso (d) and Explanation 2; amending Acts 2019 – 2026 searched (sources row list)",
         "accessedOn": "2026-11-06",
         "verificationLevel": "SOURCE_CHECKED"
       }
@@ -80,12 +87,12 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "reference": "s.234C(1)(a)(i), (ii), proviso",
+        "reference": "s.234C(1)(a)(i), (ii), proviso; s.234C(1) first proviso (a) – (d), Explanation 2",
         "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",
-        "reference": "s.425(1) Table, (2), (5)",
+        "reference": "s.425(1) Table, (2), (4), (5), (6)",
         "presence": "PRESENT"
       },
       "definition": {
@@ -113,11 +120,18 @@
             "sharePercent": "100",
             "interestPercent": "1"
           }
-        ]
+        ],
+        "relievedIncomes": [
+          { "income": "CAPITAL_GAINS" },
+          { "income": "WINNINGS" },
+          { "income": "FIRST_TIME_BUSINESS_INCOME" },
+          { "income": "DIVIDEND" }
+        ],
+        "relievedIfPaidBy": "03-31"
       },
       "conditions": [],
       "introducedBy": {
-        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.425(1) Table, (2), (5)",
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.425(1) Table, (2), (4), (5), (6)",
         "gazetteRef": "CG-DL-E-22082025-265620",
         "notifiedOn": "2025-08-21",
         "effectiveFrom": "2026-04-01",
@@ -129,7 +143,7 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.425(1) Table, (2), (5) p.447–448; s.425(5)(f) as substituted by the Finance Act, 2026 s.95 (CG-DL-E-31032026-271439 p.58)",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.425(1) Table, (2), (4), (5), (6) p.447–448; s.425(5)(f) as substituted by the Finance Act, 2026 s.95 (CG-DL-E-31032026-271439 p.58)",
         "accessedOn": "2026-11-06",
         "verificationLevel": "SOURCE_CHECKED"
       }
@@ -137,7 +151,7 @@
   ],
   "headProvenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.425(1) Table, (2), (5) p.447–448; s.425(5)(f) as substituted by the Finance Act, 2026 s.95 (CG-DL-E-31032026-271439 p.58)",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.425(1) Table, (2), (4), (5), (6) p.447–448; s.425(5)(f) as substituted by the Finance Act, 2026 s.95 (CG-DL-E-31032026-271439 p.58)",
     "accessedOn": "2026-11-06",
     "verificationLevel": "SOURCE_CHECKED"
   }

@@ -29,7 +29,7 @@
 29 | advance.tax | ADV-INSTALMENTS | MEASURE | still owed by 2027-03-15
 30 | interest.and.fees | INT-LATE-RETURN | INTEREST | not yet due: runs from 2027-08-01
 31 | interest.and.fees | INT-ADVANCE-SHORTFALL | INTEREST | not yet due: runs from 2027-04-01
-32 | interest.and.fees | INT-DEFERMENT | INTEREST | short by 2026-06-15
+32 | interest.and.fees | INT-DEFERMENT | INTEREST | short by 2026-06-15; not relieved: the 87750.00 of tax on income arising after 2026-06-15 was not paid after it by 2027-03-31 (0.00 was)
 33 | interest.and.fees | INT-DEFERMENT | INTEREST | short by 2026-09-15
 34 | interest.and.fees | INT-DEFERMENT | INTEREST | by 2026-12-15, not yet reached
 35 | interest.and.fees | INT-DEFERMENT | INTEREST | by 2027-03-15, not yet reached

@@ -185,6 +185,20 @@ public final class NodeContext {
         return recomputation.recompute(target, pinned, value);
     }
 
+    /**
+     * A slot this node declared, as the pipeline computes it on {@code other} inputs — the tax due without income that had
+     * not yet arisen, for the deferment relief (W-112a). The run is not changed.
+     *
+     * @throws IllegalStateException if the node did not declare the slot, or if this context cannot re-run
+     */
+    public NodeValue recomputedOn(NodeId target, EngineInputs other) {
+        requireDeclared(target);
+        if (other == null) {
+            throw new IllegalArgumentException("Recomputing " + target + " on other inputs needs those inputs");
+        }
+        return recomputation.recomputeOn(target, other);
+    }
+
     private void requireDeclared(NodeId node) {
         if (!declared.requires().contains(node)) {
             throw new IllegalStateException(

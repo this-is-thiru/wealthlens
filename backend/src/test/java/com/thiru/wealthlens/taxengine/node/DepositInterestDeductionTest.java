@@ -68,7 +68,7 @@ class DepositInterestDeductionTest {
     }
 
     private static OtherSourceItem interest(OtherSourceKind kind, String interest) {
-        return new OtherSourceItem(kind, Money.of(interest), Money.ZERO, Money.ZERO, Money.ZERO, false);
+        return new OtherSourceItem(kind, Money.of(interest), Money.ZERO, Money.ZERO, Money.ZERO, false, Optional.empty());
     }
 
     private static NodeResult run(int year, RegimeCode regime, Assessee assessee, List<OtherSourceItem> items) {
@@ -238,7 +238,7 @@ class DepositInterestDeductionTest {
     private static OtherSourceItem expensed(OtherSourceKind kind, String interest, String expenditure,
             boolean payableOutsideIndiaUntaxed) {
         return new OtherSourceItem(kind, Money.of(interest), Money.ZERO, Money.ZERO, Money.of(expenditure),
-                payableOutsideIndiaUntaxed);
+                payableOutsideIndiaUntaxed, Optional.empty());
     }
 
     private static Money deducted(NodeResult result, RuleId row) {
@@ -303,7 +303,7 @@ class DepositInterestDeductionTest {
     void evaluate_whenAnExpenseIsEnteredInTheNewRegime_isNotRefused() {
         // Given — the new regime allows no s.153 deduction, so the open question does not arise
         OtherSourceItem expensed = new OtherSourceItem(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, Money.of("14000"),
-                Money.ZERO, Money.ZERO, Money.of("1000"), false);
+                Money.ZERO, Money.ZERO, Money.of("1000"), false, Optional.empty());
 
         // When
         NodeResult result = run(2026, NEW, UNDER_SIXTY, List.of(expensed));

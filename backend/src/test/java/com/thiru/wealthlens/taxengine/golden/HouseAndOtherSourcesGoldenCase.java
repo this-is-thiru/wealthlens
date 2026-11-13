@@ -100,7 +100,7 @@ record HouseAndOtherSourcesGoldenCase(
         List<OtherSourceItem> items = new ArrayList<>();
         node.path("otherSources").forEach(item -> items.add(new OtherSourceItem(
                 OtherSourceKind.valueOf(item.get("kind").asString()), Money.of(item.get("received").asString()),
-                Money.ZERO, Money.of(item.path("interestExpense").asString("0")), Money.ZERO, false)));
+                Money.ZERO, Money.of(item.path("interestExpense").asString("0")), Money.ZERO, false, Optional.empty())));
         JsonNode expected = node.get("expected");
         return new HouseAndOtherSourcesGoldenCase(
                 node.get("id").asString(),

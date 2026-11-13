@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-311 done (D-659), committed and pushed; api-collection 1733ad3
-Stage           : closed (owner "commit it and push", session 92); watch the push's pipeline and record its run in D-659
-Done today      : session 92: W-311 (D-659)
-Board           : W-311 D; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); W-307, W-308 K; Phase 12 next: W-112a
-Next step       : confirm the pipeline for the W-311 push and record it in D-659; then W-112a by board order (or W-299 / W-294 once the owner has the run logs)
+Item            : W-112a done (D-660), committed and pushed; api-collection a481d96; W-323 placed (D-661)
+Stage           : closed (owner "commit it and push", session 92); watch the push's pipeline and record its run in D-660
+Done today      : session 92: W-311 (D-659), W-112a (D-660), W-323 placed (D-661)
+Board           : W-311, W-112a D; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-323, then W-112b
+Next step       : confirm the W-112a push's pipeline, record it in D-660; then W-323 by board order
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-311 targeted 133 / 0, validate 0; pipeline pending
+Last verify     : W-112a targeted 4,221 / 0, validate 0; pipeline pending
 Files touched   : none beyond this file after the commit
-Last item commit: taxplanning W-311: remove the test routes — the sale replay, /request — and serve /request2's asset filter at /assets/search
-Updated         : 2026-11-13, session 92 — W-311 closed and pushed
+Last item commit: taxplanning W-112a: relieve deferment interest on the tax of capital gains and dividends arising after an instalment date
+Updated         : 2026-11-13, session 92 — W-112a closed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

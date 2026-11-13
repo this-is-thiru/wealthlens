@@ -239,4 +239,15 @@ class PipelineRecomputationTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("cannot re-enter");
     }
+
+    @Test
+    void recomputeOn_whenTheRecomputationIsNotTheRunners_isRefused() {
+        // Given — a re-entry that can only pin a slot, as a node test supplies
+        Recomputation pinningOnly = (target, pinned, value) -> value;
+
+        // When / Then — re-running on other inputs is the runner's alone (W-112a)
+        assertThatThrownBy(() -> pinningOnly.recomputeOn(NodeIds.TAX_NETPAYABLE, NodeHarness.plainTaxpayer()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cannot re-run the computation on other inputs");
+    }
 }

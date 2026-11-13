@@ -294,7 +294,7 @@ class SurchargeNodeTest {
     }
 
     private static OtherSourceItem item(OtherSourceKind kind, String received, String interestExpense) {
-        return new OtherSourceItem(kind, Money.of(received), Money.ZERO, Money.of(interestExpense), Money.ZERO, false);
+        return new OtherSourceItem(kind, Money.of(received), Money.ZERO, Money.of(interestExpense), Money.ZERO, false, Optional.empty());
     }
 
     /** A taxpayer whose only entries are these items of income from other sources. */
@@ -530,7 +530,7 @@ class SurchargeNodeTest {
 
         // When
         boolean reached = OtherSourcesNode.reaches(ctx, ctx.ruleIdOf(RuleSetIds.RS_RATE_SUR_LIMIT),
-                new OtherSourceItem(kind, Money.of("1000"), Money.ZERO, Money.ZERO, Money.ZERO, false));
+                new OtherSourceItem(kind, Money.of("1000"), Money.ZERO, Money.ZERO, Money.ZERO, false, Optional.empty()));
 
         // Then
         assertThat(reached).isEqualTo(expected);

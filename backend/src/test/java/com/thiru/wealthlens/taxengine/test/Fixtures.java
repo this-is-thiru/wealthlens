@@ -173,7 +173,7 @@ public final class Fixtures {
     }
 
     private static OtherSourceItem interest(OtherSourceKind kind, String rupees) {
-        return new OtherSourceItem(kind, Money.of(rupees), Money.ZERO, Money.ZERO, Money.ZERO, false);
+        return new OtherSourceItem(kind, Money.of(rupees), Money.ZERO, Money.ZERO, Money.ZERO, false, Optional.empty());
     }
 
     /** A lot of listed equity bought on {@code acquired}, sold on NSE on 2026-09-01, STT paid both ways. */

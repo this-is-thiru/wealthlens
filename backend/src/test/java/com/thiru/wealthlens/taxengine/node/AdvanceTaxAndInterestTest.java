@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.pipeline.InterestAndFees;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
+import com.thiru.wealthlens.taxengine.rules.definition.DefermentInterest;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -26,6 +27,7 @@ import com.thiru.wealthlens.taxengine.trace.Notice;
 import com.thiru.wealthlens.taxengine.trace.Severity;
 import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
 import java.time.LocalDate;
+import java.time.MonthDay;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -319,5 +321,24 @@ class AdvanceTaxAndInterestTest {
 
         // Then — 38,363 to the nearest ₹10 = 38,360
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("38360")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void deferment_whenTheYearsPackIsRead_relievesTheFourIncomesTheSectionNamesPaidForBy31March(int year) {
+        // Given — 2025 s.425(4)(a)(i) – (iv), (b) and 1961 s.234C(1) first proviso (a) – (d): capital gains, winnings,
+        // first-time business income and dividends, their tax paid by 31 March
+        RulePack pack = pack(year);
+
+        // When
+        DefermentInterest rule = (DefermentInterest) pack.rule(RuleIds.INT_DEFERMENT)
+                .versionAt(TemporalContext.forTaxYear(TaxYearId.of(year), LocalDate.of(year, 4, 1))).definition()
+                .orElseThrow();
+
+        // Then
+        assertThat(rule.relievedIncomes()).containsExactly(DefermentInterest.RelievedIncome.CAPITAL_GAINS,
+                DefermentInterest.RelievedIncome.WINNINGS, DefermentInterest.RelievedIncome.FIRST_TIME_BUSINESS_INCOME,
+                DefermentInterest.RelievedIncome.DIVIDEND);
+        assertThat(rule.relievedIfPaidBy()).isEqualTo(MonthDay.of(3, 31));
     }
 }

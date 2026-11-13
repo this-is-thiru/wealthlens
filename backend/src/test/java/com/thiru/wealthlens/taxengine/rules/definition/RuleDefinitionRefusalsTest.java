@@ -74,6 +74,7 @@ class RuleDefinitionRefusalsTest {
     private static Stream<Arguments> schedules() {
         String instalment = "An instalment needs a date and a share above nil";
         String step = "A deferment date needs its day, share, interest and lower share";
+        String relief = "Deferment interest needs its relieved incomes";
         return Stream.of(
                 refusal("InstalmentSchedule null", () -> new InstalmentSchedule(null),
                         "An instalment schedule needs at least one instalment"),
@@ -85,10 +86,14 @@ class RuleDefinitionRefusalsTest {
                 refusal("Instalment day null", () -> new InstalmentSchedule.Instalment(null, SHARE), instalment),
                 refusal("Instalment share null", () -> new InstalmentSchedule.Instalment(DUE, null), instalment),
                 refusal("Instalment share nil", () -> new InstalmentSchedule.Instalment(DUE, Rate.ZERO), instalment),
-                refusal("DefermentInterest null", () -> new DefermentInterest(null),
+                refusal("DefermentInterest null", () -> new DefermentInterest(null, List.of(), DUE),
                         "Deferment interest needs at least one date"),
-                refusal("DefermentInterest empty", () -> new DefermentInterest(List.of()),
+                refusal("DefermentInterest empty", () -> new DefermentInterest(List.of(), List.of(), DUE),
                         "Deferment interest needs at least one date"),
+                refusal("DefermentInterest relieved incomes null", () -> new DefermentInterest(List.of(
+                        new DefermentInterest.Step(DUE, SHARE, SHARE, Optional.empty())), null, DUE), relief),
+                refusal("DefermentInterest paid-by day null", () -> new DefermentInterest(List.of(
+                        new DefermentInterest.Step(DUE, SHARE, SHARE, Optional.empty())), List.of(), null), relief),
                 refusal("Step day null", () -> new DefermentInterest.Step(null, SHARE, SHARE, Optional.empty()), step),
                 refusal("Step share null", () -> new DefermentInterest.Step(DUE, null, SHARE, Optional.empty()), step),
                 refusal("Step interest null", () -> new DefermentInterest.Step(DUE, SHARE, null, Optional.empty()), step),

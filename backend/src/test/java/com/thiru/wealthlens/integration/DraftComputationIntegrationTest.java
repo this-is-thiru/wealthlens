@@ -25,6 +25,8 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -633,6 +635,26 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         assertThat(rupees(compute(draftId), "bill")).isEqualByComparingTo("74750");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"", ", \"receivedOn\": \"2026-12-20\""})
+    void compute_whenADividendIsEnteredWithOrWithoutItsReceivedDate_takesItAndChargesTheBill(String receivedOn) {
+        // Given — salary 1,00,000 and a dividend of 14,00,000, its date given or left out as a draft saved before W-112a
+        // left it: 15,00,000 at the TY 2026-27 slabs is 20,000 + 40,000 + 45,000 = 1,05,000, no rebate above 12,00,000,
+        // cess 4,200
+        String draftId = draft(false, "0");
+        String dividend = "[{\"op\": \"add\", \"path\": \"/entered/otherSourceItems/-\", \"value\": {\"kind\": \"DIVIDEND\","
+                + " \"received\": " + money("1400000") + ", \"bankerCommission\": " + money("0") + ", \"interestExpense\": "
+                + money("0") + ", \"otherExpenditure\": " + money("0") + ", \"payableOutsideIndiaUntaxed\": false" + receivedOn
+                + "}}]";
+
+        // When
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, dividend, "\"rev-1\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(rupees(compute(draftId), "bill")).isEqualByComparingTo("109200");
     }
 
     @Test

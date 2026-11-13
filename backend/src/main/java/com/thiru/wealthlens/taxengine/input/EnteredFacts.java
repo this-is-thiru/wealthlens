@@ -243,6 +243,18 @@ public record EnteredFacts(
                 houseReinvestments);
     }
 
+    /** The same facts, with only {@code items} of other-source income — how the deferment relief leaves later income out. */
+    public EnteredFacts withOtherSourceItems(List<OtherSourceItem> items) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies, healthPayments,
+                disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, items, providentFundAccounts,
+                giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, absorptionOrder,
+                houseReinvestments);
+    }
+
     /** The same facts, with {@code order} elected for set-off — how an election's choice enters a computation. */
     public EnteredFacts withAbsorptionOrder(List<HeadCode> order) {
         return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
