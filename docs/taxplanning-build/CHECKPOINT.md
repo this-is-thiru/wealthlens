@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-294 — next by board order (W-299 waits for §2.14's run log); nothing written
-Stage           : W-290 DONE (stage 6, D-610), committed and pushed; W-294 not started
-Done today      : session 87: W-302 (695ac428, run 43358981189 success, D-609), W-290 (D-610) done and pushed
-Board           : W-290 D; W-299 · (waits for §2.14's run log, WL-46); W-294 · next; W-264b – d ·; W-266 ·; W-090d ·; W-149 B (waits for §2.3 on prod)
-Next step       : record W-290's pipeline run in D-610; then plan W-294, STOP for approval
+Item            : W-303 (exit load on the redemption value, G-2) — next by board order; nothing written
+Stage           : W-264b DONE (stage 6, D-611), committed and pushed; W-303 not started; Q-2 (AMC periods) open for the owner
+Done today      : session 87: W-302, W-290 done and pushed (D-609, D-610); W-294 set waiting (§2.13 log); W-264b audited: G-1 – G-4, CE-3, CE-4, checklist :457 → W-303 – W-309
+Board           : W-264b D; W-303 · next; W-304 – W-309 ·; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-149 B (waits for §2.3 on prod)
+Next step       : record W-264b's pipeline run in D-611; then plan W-303 (first test: audit report §6.1), STOP for approval
 Owner actions   : after deploy: §3.18, §3.19 (read-only), then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8); rotate the Mongo password and JWT key pasted in session 82; adopt the 13 questions' wording
-Last verify     : W-290 local: TransactionServiceTest 6, TransactionServiceIdempotencyTest 12, TransactionIntegrationTest 7, 0 failures; validate 0; pipeline pending
-Files touched   : none (all committed with W-290)
-Last item commit: taxplanning W-290: remove the uncalled TransactionService.addTransaction
-Updated         : 2026-11-13, session 87 — W-290 done; next W-294
+Last verify     : W-264b kept classes 11 / 0 locally; validate 0; pipeline pending
+Files touched   : none (all committed with W-264b)
+Last item commit: taxplanning W-264b: audit the charge engine through its HTTP API
+Updated         : 2026-11-13, session 87 — W-264b done; next W-303
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

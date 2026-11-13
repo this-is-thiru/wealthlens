@@ -6,6 +6,8 @@ responses. Each is real, and each was deliberately not done at the time.
 **CE-1 and CE-2 are closed.** CE-3, CE-4 and CE-5 remain open, and all three are latent by
 deployment or scope rather than by defect.
 
+**Audited 2026-11-13 (W-264b, `docs/taxplanning-build/reviews/2026-11-13-charge-engine-gap-audit.md` §5):** CE-3 and CE-4 are still open and are now rows W-307 and W-308 there; CE-5 is closed in substance by the whole-account erasure (W-237d). Track them there, not here.
+
 Numbered `CE-n` so as not to collide with the trade ledger's `B-n`
 ([`../trade-ledger/backlog.md`](../trade-ledger/backlog.md)) or this module's `D-n` defects and
 `ADR-n` decisions.
