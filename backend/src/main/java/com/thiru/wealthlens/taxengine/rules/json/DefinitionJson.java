@@ -59,7 +59,6 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.time.MonthDay;
-import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -283,12 +282,7 @@ public final class DefinitionJson {
     }
 
     private static MonthDay monthDay(JsonNode node, String field, String path) {
-        String text = PackJson.text(node, field, path);
-        try {
-            return MonthDay.parse("--" + text);
-        } catch (DateTimeParseException e) {
-            throw new PackValidationException(path + "." + field + " must read like \"06-15\", but was \"" + text + "\"");
-        }
+        return PackJson.monthDay(node, field, path);
     }
 
     /** Each entry names its financial year as a label, {@code "2023-24"}, so the table reads as the notification. */

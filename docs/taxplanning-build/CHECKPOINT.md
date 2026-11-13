@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-112a done (D-660), committed and pushed; api-collection a481d96; W-323 placed (D-661)
-Stage           : closed (owner "commit it and push", session 92); watch the push's pipeline and record its run in D-660
-Done today      : session 92: W-311 (D-659), W-112a (D-660), W-323 placed (D-661)
-Board           : W-311, W-112a D; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-323, then W-112b
-Next step       : confirm the W-112a push's pipeline, record it in D-660; then W-323 by board order
+Item            : W-323 done (D-662), committed and pushed
+Stage           : closed (owner "commit it and push", session 92); watch the push's pipeline and record its run in D-662
+Done today      : session 92: W-311 (D-659), W-112a (D-660), W-323 placed (D-661) and done (D-662)
+Board           : W-311, W-112a, W-323 D; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-112b
+Next step       : confirm the W-323 push's pipeline, record it in D-662; then W-112b by board order
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-112a targeted 4,221 / 0, validate 0; pipeline pending
+Last verify     : W-323 targeted 4,227 / 0 + JaCoCo gates; pipeline pending
 Files touched   : none beyond this file after the commit
-Last item commit: taxplanning W-112a: relieve deferment interest on the tax of capital gains and dividends arising after an instalment date
-Updated         : 2026-11-13, session 92 — W-112a closed and pushed
+Last item commit: taxplanning W-323: lay out ITR-2's accrual tables, CG F and OS 10, by period
+Updated         : 2026-11-13, session 92 — W-323 closed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

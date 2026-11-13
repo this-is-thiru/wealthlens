@@ -68,7 +68,9 @@ public final class ItrFormJson {
 
     private static FieldSource source(JsonNode node, String path) {
         return switch (PackJson.tag(node, path, "FromNodes", "FromTaxBasis", "FromRules", "FromCapitalGainsParts", "SumOf",
-                "FromItemFigure", "FromOtherSourceKinds", "FromCapitalGainsBuckets", "FromSetOff", "ManualEntry")) {
+                "FromItemFigure", "FromOtherSourceKinds", "FromCapitalGainsBuckets", "FromSetOff", "FromCapitalGainsAccrual",
+                "FromOtherSourceAccrual", "ManualEntry")) {
+            case "FromCapitalGainsAccrual", "FromOtherSourceAccrual" -> accrual(node, path);
             case "FromCapitalGainsBuckets" -> PackJson.construct(path, () -> new FieldSource.FromCapitalGainsBuckets(
                     PackJson.array(node, "parts", path, e -> new CapitalGainsPart(e.node().asString())),
                     PackJson.text(node, "figure", path)));
@@ -92,6 +94,19 @@ public final class ItrFormJson {
                     e -> term(e.node().asString(), e.path()))));
             default -> PackJson.construct(path, () -> new FieldSource.ManualEntry(PackJson.text(node, "guidance", path)));
         };
+    }
+
+    /** An accrual table's cell: its parts or kinds, and its period as the form prints it (W-323). */
+    private static FieldSource accrual(JsonNode node, String path) {
+        JsonNode period = PackJson.object(node, "period", path);
+        FieldSource.Period days = PackJson.construct(path + ".period", () -> new FieldSource.Period(
+                PackJson.monthDay(period, "from", path + ".period"), PackJson.monthDay(period, "to", path + ".period")));
+        return "FromCapitalGainsAccrual".equals(PackJson.text(node, "type", path))
+                ? PackJson.construct(path, () -> new FieldSource.FromCapitalGainsAccrual(
+                        PackJson.array(node, "parts", path, e -> new CapitalGainsPart(e.node().asString())), days,
+                        PackJson.text(node, "settledColumn", path)))
+                : PackJson.construct(path, () -> new FieldSource.FromOtherSourceAccrual(
+                        PackJson.array(node, "kinds", path, e -> e.node().asString()), days));
     }
 
     /** A sum's term: a cell's code, taken away where it starts with a minus sign. */

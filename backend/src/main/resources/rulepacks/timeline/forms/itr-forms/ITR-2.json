@@ -360,6 +360,70 @@
             {
               "path": "CG.E.8.vii",
               "cell": "LTCG_DTAA"
+            },
+            {
+              "path": "CG.F.1.i",
+              "cell": "CG_F_STCG_20_I"
+            },
+            {
+              "path": "CG.F.1.ii",
+              "cell": "CG_F_STCG_20_II"
+            },
+            {
+              "path": "CG.F.1.iii",
+              "cell": "CG_F_STCG_20_III"
+            },
+            {
+              "path": "CG.F.1.iv",
+              "cell": "CG_F_STCG_20_IV"
+            },
+            {
+              "path": "CG.F.1.v",
+              "cell": "CG_F_STCG_20_V"
+            },
+            {
+              "path": "CG.F.3.i",
+              "cell": "CG_F_STCG_APPLICABLE_I"
+            },
+            {
+              "path": "CG.F.3.ii",
+              "cell": "CG_F_STCG_APPLICABLE_II"
+            },
+            {
+              "path": "CG.F.3.iii",
+              "cell": "CG_F_STCG_APPLICABLE_III"
+            },
+            {
+              "path": "CG.F.3.iv",
+              "cell": "CG_F_STCG_APPLICABLE_IV"
+            },
+            {
+              "path": "CG.F.3.v",
+              "cell": "CG_F_STCG_APPLICABLE_V"
+            },
+            {
+              "path": "CG.F.5.i",
+              "cell": "CG_F_LTCG_12_5_I"
+            },
+            {
+              "path": "CG.F.5.ii",
+              "cell": "CG_F_LTCG_12_5_II"
+            },
+            {
+              "path": "CG.F.5.iii",
+              "cell": "CG_F_LTCG_12_5_III"
+            },
+            {
+              "path": "CG.F.5.iv",
+              "cell": "CG_F_LTCG_12_5_IV"
+            },
+            {
+              "path": "CG.F.5.v",
+              "cell": "CG_F_LTCG_12_5_V"
+            },
+            {
+              "path": "CG.F.2,4,6,7",
+              "cell": "CG_F_NOT_COMPUTED"
             }
           ],
           "provenance": {
@@ -476,6 +540,50 @@
             {
               "path": "OS.6",
               "cell": "OTHER_SOURCES_INCOME"
+            },
+            {
+              "path": "OS.10.3a.i",
+              "cell": "OS_10_DIVIDENDS_OTHER_I"
+            },
+            {
+              "path": "OS.10.3a.ii",
+              "cell": "OS_10_DIVIDENDS_OTHER_II"
+            },
+            {
+              "path": "OS.10.3a.iii",
+              "cell": "OS_10_DIVIDENDS_OTHER_III"
+            },
+            {
+              "path": "OS.10.3a.iv",
+              "cell": "OS_10_DIVIDENDS_OTHER_IV"
+            },
+            {
+              "path": "OS.10.3a.v",
+              "cell": "OS_10_DIVIDENDS_OTHER_V"
+            },
+            {
+              "path": "OS.10.3b.i",
+              "cell": "OS_10_DIVIDEND_2_22_F_I"
+            },
+            {
+              "path": "OS.10.3b.ii",
+              "cell": "OS_10_DIVIDEND_2_22_F_II"
+            },
+            {
+              "path": "OS.10.3b.iii",
+              "cell": "OS_10_DIVIDEND_2_22_F_III"
+            },
+            {
+              "path": "OS.10.3b.iv",
+              "cell": "OS_10_DIVIDEND_2_22_F_IV"
+            },
+            {
+              "path": "OS.10.3b.v",
+              "cell": "OS_10_DIVIDEND_2_22_F_V"
+            },
+            {
+              "path": "OS.10.1,2,4-10",
+              "cell": "OS_10_NOT_COMPUTED"
             }
           ],
           "provenance": {

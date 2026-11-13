@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.ItrSchedule;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import java.time.MonthDay;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -76,9 +77,28 @@ final class ItrScheduleReferences {
             case FieldSource.FromOtherSourceKinds kinds -> {
                 // the kinds are the computation's, checked by the persona tests
             }
+            case FieldSource.Accrual accrual -> checkAccrual(declared, reader + " (" + cell.code() + ")", accrual, problems);
             case FieldSource.ManualEntry manual -> {
                 // reads nothing
             }
         }
+    }
+
+    /** An accrual cell's parts are the year's, and its period runs forward within the financial year (W-323). */
+    private static void checkAccrual(Set<CapitalGainsPart> declared, String reader, FieldSource.Accrual accrual,
+            List<String> problems) {
+        if (accrual instanceof FieldSource.FromCapitalGainsAccrual gains) {
+            gains.parts().stream().filter(part -> !declared.contains(part)).forEach(part -> problems.add(reader
+                    + " reads capital-gains part " + part + ", which the year's CapitalGainsParts does not declare (I21)"));
+        }
+        if (inYearOrder(accrual.period().to()) < inYearOrder(accrual.period().from())) {
+            problems.add(reader + " runs from " + accrual.period().from() + " back to " + accrual.period().to()
+                    + "; a period runs forward within the financial year (I21)");
+        }
+    }
+
+    /** A day's place in a financial year that begins on 1 April. */
+    private static int inYearOrder(MonthDay day) {
+        return (day.getMonthValue() + 8) % 12 * 100 + day.getDayOfMonth();
     }
 }

@@ -1,0 +1,16 @@
+{
+  "code": "CG_F_STCG_APPLICABLE_I",
+  "_note": "Accrual of the BFLA row, by transfer date. Drafted by Claude, adopted by the owner's rulings C1a – C4a (W-323, D-662); Gazette 271435 p.50 (CG F), pp.55 – 56 (OS 10).",
+  "label": "Short-term capital gains taxable at applicable rates, up to 15/6",
+  "source": {
+    "type": "FromCapitalGainsAccrual",
+    "parts": [
+      "SHORT_TERM_SLAB"
+    ],
+    "period": {
+      "from": "04-01",
+      "to": "06-15"
+    },
+    "settledColumn": "afterBroughtForward"
+  }
+}

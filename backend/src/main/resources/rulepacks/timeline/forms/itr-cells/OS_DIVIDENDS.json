@@ -1,12 +1,12 @@
 {
   "code": "OS_DIVIDENDS",
-  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658); (f) in place of (e) by C4a (W-323, D-662).",
   "label": "Dividends, Gross",
   "source": {
     "type": "SumOf",
     "cells": [
       "OS_DIVIDENDS_OTHER",
-      "OS_DIVIDEND_2_22_E"
+      "OS_DIVIDEND_2_22_F"
     ]
   }
 }

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.input.Declaration;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.FilingFacts;
+import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource;
@@ -234,9 +235,15 @@ class ItrFormChoiceTest {
     /** A listed equity share sold on NSE on 1 November 2025, STT paid both sides, no charges entered. */
     private static com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket listedEquitySold(String consideration,
             String cost, LocalDate acquired) {
+        return listedEquitySold(consideration, cost, acquired, LocalDate.of(2025, 11, 1));
+    }
+
+    /** A listed equity share sold on NSE on {@code soldOn}, STT paid both sides, no charges entered. */
+    private static com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket listedEquitySold(String consideration,
+            String cost, LocalDate acquired, LocalDate soldOn) {
         com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts facts =
                 new com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE",
-                        Optional.empty(), acquired, LocalDate.of(2025, 11, 1),
+                        Optional.empty(), acquired, soldOn,
                         com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue.UNRECORDED,
                         new com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue(Optional.of("NSE"), Optional.empty()));
         return new com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket(Money.of(consideration), Money.of(cost),
@@ -280,6 +287,59 @@ class ItrFormChoiceTest {
                 "BFLA.iii.1", "60000", "BFLA.iii.2", "30000", "BFLA.iii.3", "30000", "BFLA.vii.3", "200000",
                 "BFLA.xii.2", "30000");
         bfla.forEach((path, rupees) -> assertThat(cellAt(choice, path).amount()).as(path).contains(Money.of(rupees)));
+        // Schedule CG F (W-323 C1a): the 30,000 set off leaves BFLA 3iii at 30,000 against 60,000 of gains, in no period
+        // the form names, so row 1 is not split; the long-term sale of 1 November falls in 16/9 to 15/12
+        assertThat(cellAt(choice, "CG.F.1.iii").unavailableBecause()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("A loss was set off against these gains"));
+        Map<String, String> accrual = Map.of("CG.F.5.i", "0", "CG.F.5.ii", "0", "CG.F.5.iii", "200000", "CG.F.5.iv", "0",
+                "CG.F.5.v", "0");
+        accrual.forEach((path, rupees) -> assertThat(cellAt(choice, path).amount()).as(path).contains(Money.of(rupees)));
+    }
+
+    @Test
+    void chooseForm_whenGainsAndDividendsAriseThroughTheYear_fillsTheAccrualTablesByPeriod() {
+        // Given — Priya in TY 2025-26, nothing carried: short-term sales of 3,00,000 for 2,50,000 (10 May 2025) and
+        // 1,30,000 for 1,00,000 (20 January 2026), a long-term one of 5,00,000 for 3,00,000 (1 August 2025); dividends of
+        // 10,000 (5 September 2025) and 20,000 (20 March 2026), and a buy-back dividend of 5,000 (1 July 2025)
+        EngineInputs priya = answered(Fixtures.priya(), Map.of());
+        EngineInputs selling = new EngineInputs(TY_2025_26, priya.regime(),
+                TemporalContext.forTaxYear(TY_2025_26, LocalDate.of(2026, 3, 31)),
+                priya.entered().withOtherSourceItems(List.of(
+                        received(OtherSourceKind.DIVIDEND, "10000", LocalDate.of(2025, 9, 5)),
+                        received(OtherSourceKind.DIVIDEND, "20000", LocalDate.of(2026, 3, 20)),
+                        received(OtherSourceKind.DEEMED_DIVIDEND, "5000", LocalDate.of(2025, 7, 1)))),
+                priya.assessee(), priya.family(), priya.ledgers(), priya.elections(),
+                com.thiru.wealthlens.taxengine.test.CapitalGainsHarness.inputOf(
+                        listedEquitySold("300000", "250000", LocalDate.of(2025, 4, 2), LocalDate.of(2025, 5, 10)),
+                        listedEquitySold("130000", "100000", LocalDate.of(2025, 6, 1), LocalDate.of(2026, 1, 20)),
+                        listedEquitySold("500000", "300000", LocalDate.of(2023, 4, 1), LocalDate.of(2025, 8, 1))),
+                priya.filing());
+
+        // When
+        ItrFormChoice choice = CALCULATOR.chooseForm(answered(selling, Map.of()), ORIGINAL_2025);
+
+        // Then — CG F row 1: 50,000 up to 15/6 and 30,000 in 16/12 to 15/3, adding to BFLA 3iii's 80,000; row 5: 2,00,000
+        // in 16/6 to 15/9; row 3 holds nothing. OS 10 row 3a: 10,000 in 16/6 to 15/9 and 20,000 in 16/3 to 31/3; row 3b, the
+        // buy-back dividend now at 1a(iii) (C4a), 5,000 in 16/6 to 15/9
+        assertThat(choice.form()).contains("ITR-2");
+        Map<String, String> expected = Map.ofEntries(Map.entry("CG.F.1.i", "50000"), Map.entry("CG.F.1.ii", "0"),
+                Map.entry("CG.F.1.iii", "0"), Map.entry("CG.F.1.iv", "30000"), Map.entry("CG.F.1.v", "0"),
+                Map.entry("CG.F.3.i", "0"), Map.entry("CG.F.5.i", "0"), Map.entry("CG.F.5.ii", "200000"),
+                Map.entry("CG.F.5.iii", "0"), Map.entry("BFLA.iii.3", "80000"), Map.entry("OS.10.3a.i", "0"),
+                Map.entry("OS.10.3a.ii", "10000"), Map.entry("OS.10.3a.v", "20000"), Map.entry("OS.10.3b.ii", "5000"),
+                Map.entry("OS.10.3b.i", "0"), Map.entry("OS.1a.i", "30000"), Map.entry("OS.1a.iii", "5000"),
+                Map.entry("OS.1a", "35000"));
+        expected.forEach((path, rupees) -> assertThat(cellAt(choice, path).amount()).as(path).contains(Money.of(rupees)));
+        assertThat(cellAt(choice, "OS.1a.ii").unavailableBecause()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("A dividend u/s 2(22)(e), a loan or advance to a shareholder"));
+        assertThat(cellAt(choice, "CG.F.2,4,6,7").unavailableBecause()).isPresent();
+        assertThat(cellAt(choice, "OS.10.1,2,4-10").unavailableBecause()).isPresent();
+    }
+
+    private static com.thiru.wealthlens.taxengine.input.OtherSourceItem received(OtherSourceKind kind, String rupees,
+            LocalDate on) {
+        return new com.thiru.wealthlens.taxengine.input.OtherSourceItem(kind, Money.of(rupees), Money.ZERO, Money.ZERO,
+                Money.ZERO, false, Optional.of(on));
     }
 
     @Test

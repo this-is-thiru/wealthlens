@@ -115,12 +115,12 @@ public class TaxCalculator {
         ItrSelection selection = ItrFormSelector.select(pack.itrForms().values(), inputs.assessee().type(), kind, facts);
         List<FilledCell> cells = selection.chosen()
                 .map(form -> ScheduleMapper.fill(pack.itrForms().get(form),
-                        figures(run, returned)))
+                        figures(run, returned, inputs)))
                 .orElse(List.of());
         return ItrFormChoice.of(inputs.taxYear(), inputs.regime(), kind, selection, pack.itrForms(), cells);
     }
 
-    private static ScheduleMapper.Figures figures(PipelineRunner.Result run, ReturnFacts returned) {
+    private static ScheduleMapper.Figures figures(PipelineRunner.Result run, ReturnFacts returned, EngineInputs inputs) {
         Optional<TaxByBasis> byBasis = Optional.ofNullable(run.values().get(NodeIds.TAX_BYBASIS))
                 .filter(TaxByBasis.class::isInstance).map(TaxByBasis.class::cast);
         Map<String, Money> special = new java.util.HashMap<>();
@@ -128,7 +128,23 @@ public class TaxCalculator {
         Map<String, Money> otherSources = ((OtherSourcesHead) run.valueOf(NodeIds.OTHERSOURCES_INCOME)).grossByKind();
         return new ScheduleMapper.Figures(computedAmounts(run), tracedAmounts(run), returned,
                 byBasis.map(TaxByBasis::atSlabRates), special, otherSources, items(run), tracedAmountsByKind(run),
-                setOff(run));
+                setOff(run), accruals(run, inputs));
+    }
+
+    /**
+     * Each amount that arose in the year with its day, for ITR-2's accrual tables (W-323, D-662): a bucket's gain on its
+     * transfer date under its part's kind, an item of other-source income's gross on the day it was received under its kind.
+     */
+    private static ScheduleMapper.Accruals accruals(PipelineRunner.Result run, EngineInputs inputs) {
+        Map<String, List<ScheduleMapper.Accrued>> byKind = new java.util.HashMap<>();
+        ((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)).bucketOutcomes().stream()
+                .filter(outcome -> outcome.part().isPresent())
+                .forEach(outcome -> byKind.computeIfAbsent(FieldSource.FromCapitalGainsBuckets.itemKindOf(outcome.part().get()),
+                        kind -> new ArrayList<>()).add(new ScheduleMapper.Accrued(outcome.gain(),
+                                Optional.of(outcome.facts().transferredOn()))));
+        inputs.entered().otherSourceItems().forEach(item -> byKind.computeIfAbsent(item.kind().name(),
+                kind -> new ArrayList<>()).add(new ScheduleMapper.Accrued(item.received(), item.receivedOn())));
+        return new ScheduleMapper.Accruals(inputs.temporal().taxYearStart(), byKind);
     }
 
     /** Set-off row by row, each row's columns by name — Schedules CYLA, BFLA, CFL (W-093a Q4a, Q5a; D-658). */

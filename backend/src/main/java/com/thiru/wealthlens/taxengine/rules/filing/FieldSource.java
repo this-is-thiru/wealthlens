@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import java.time.MonthDay;
 import java.util.List;
 import java.util.Optional;
 
@@ -155,6 +156,62 @@ public sealed interface FieldSource {
                 throw new IllegalArgumentException("FromSetOff names at least one row and its column");
             }
             rows = List.copyOf(rows);
+        }
+    }
+
+    /**
+     * A figure for one period of the year, as ITR-2's accrual tables print them — Schedule CG item F and Schedule OS item
+     * 10, the break-up the s.425(4) / s.234C relief rests on (W-323, D-662). The period is the form's, held in the cell.
+     */
+    sealed interface Accrual extends FieldSource {
+
+        /** The days of the financial year the figure covers. */
+        Period period();
+    }
+
+    /**
+     * The days from {@code from} to {@code to}, both included, within one financial year — "From 16/6 to 15/9".
+     *
+     * @param from the first day; a day before 1 April falls in the year's last three months
+     * @param to the last day, on or after {@code from} in the year's order
+     */
+    record Period(MonthDay from, MonthDay to) {
+        public Period {
+            if (from == null || to == null) {
+                throw new IllegalArgumentException("A period names its first and last day");
+            }
+        }
+    }
+
+    /**
+     * The gains of the capital-gains buckets of these parts transferred in the period — a CG F row. The form takes the row
+     * from BFLA, after set-off, so it is read only where the parts' {@code settledColumn} of set-off equals their gains
+     * (W-323 C1a).
+     *
+     * @param parts the parts the row holds
+     * @param period the period
+     * @param settledColumn the set-off column the row is taken from, such as {@code afterBroughtForward}
+     */
+    record FromCapitalGainsAccrual(List<CapitalGainsPart> parts, Period period, String settledColumn) implements Accrual {
+        public FromCapitalGainsAccrual {
+            if (parts == null || parts.isEmpty() || period == null || settledColumn == null || settledColumn.isBlank()) {
+                throw new IllegalArgumentException("FromCapitalGainsAccrual names its parts, its period and the set-off"
+                        + " column the row is taken from");
+            }
+            parts = List.copyOf(parts);
+        }
+    }
+
+    /**
+     * The gross income from other sources of these kinds received in the period — an OS 10 row; read only where every such
+     * item carries the date it was received (W-323 C2a).
+     */
+    record FromOtherSourceAccrual(List<String> kinds, Period period) implements Accrual {
+        public FromOtherSourceAccrual {
+            if (kinds == null || kinds.isEmpty() || period == null) {
+                throw new IllegalArgumentException("FromOtherSourceAccrual names its kinds and its period");
+            }
+            kinds = List.copyOf(kinds);
         }
     }
 

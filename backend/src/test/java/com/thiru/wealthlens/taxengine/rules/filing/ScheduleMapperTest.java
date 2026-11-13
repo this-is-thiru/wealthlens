@@ -24,6 +24,7 @@ import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import java.net.URI;
 import java.time.LocalDate;
+import java.time.MonthDay;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +36,9 @@ import org.junit.jupiter.api.Test;
  * kind once, a cell shared by two forms at different paths (T21-14), and a cell the run cannot fill (T21-15, C4a).
  */
 class ScheduleMapperTest {
+
+    private static final ScheduleMapper.Accruals NO_ACCRUALS = new ScheduleMapper.Accruals(LocalDate.of(2025, 4, 1),
+            Map.of());
 
     private static final Provenance SOURCE = new Provenance(URI.create("https://example.invalid/w-092"),
             "Synthetic, tests only", LocalDate.of(2026, 11, 13), VerificationLevel.UNVERIFIED, "Nothing: synthetic");
@@ -70,7 +74,7 @@ class ScheduleMapperTest {
                 Money.ZERO, HeadCode.OTHER_SOURCES, Money.ZERO, HeadCode.CAPITAL_GAINS, Money.of("150000")),
                 Map.of(LONG, Money.of("150000")), Set.of(), Map.of(), Map.of());
         return new ScheduleMapper.Figures(Map.of(GROSS_NODE, Money.of("1075000"), TRAVEL_NODE, Money.of("25000")), rules,
-                returned, Optional.of(Money.of("120000")), Map.of("RATE_CG_LONG_LISTED_EQUITY", Money.of("3125")), Map.of(), Map.of(), Map.of(), Map.of());
+                returned, Optional.of(Money.of("120000")), Map.of("RATE_CG_LONG_LISTED_EQUITY", Money.of("3125")), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS);
     }
 
     private static FilledCell cell(List<FilledCell> cells, ScheduleCell wanted) {
@@ -133,7 +137,7 @@ class ScheduleMapperTest {
     void fill_whenANodeWasNotComputed_saysWhich() {
         // When
         List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of()),
-                new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(), Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of()));
+                new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(), Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS));
 
         // Then
         assertThat(cell(cells, GROSS).unavailableBecause()).contains("The node salary.gross was not computed in this run");
@@ -199,7 +203,7 @@ class ScheduleMapperTest {
         ScheduleMapper.Figures run = new ScheduleMapper.Figures(Map.of(GROSS_NODE, Money.of("1075000")), Map.of(),
                 figures(Map.of()).returned(), Optional.empty(), Map.of(), Map.of(), Map.of("HOUSE_PROPERTY", List.of(
                         Map.of("annualValue", Money.of("522000"), "income", Money.of("365400")),
-                        Map.of("annualValue", Money.ZERO, "income", Money.of("-86666.67")))), Map.of(), Map.of());
+                        Map.of("annualValue", Money.ZERO, "income", Money.of("-86666.67")))), Map.of(), Map.of(), NO_ACCRUALS);
 
         // When
         List<FilledCell> cells = ScheduleMapper.fill(form, run);
@@ -234,12 +238,110 @@ class ScheduleMapperTest {
                 List.of("SAVINGS_DEPOSIT_INTEREST", "DEPOSIT_INTEREST", "OTHER_INTEREST")), ScheduleCell.Sign.AS_COMPUTED);
         ScheduleMapper.Figures run = new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(),
                 Optional.empty(), Map.of(), Map.of("SAVINGS_DEPOSIT_INTEREST", Money.of("14000"), "DEPOSIT_INTEREST",
-                        Money.of("100000"), "DIVIDEND", Money.of("5000")), Map.of(), Map.of(), Map.of());
+                        Money.of("100000"), "DIVIDEND", Money.of("5000")), Map.of(), Map.of(), Map.of(), NO_ACCRUALS);
 
         // When
         List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(interest)), run);
 
         // Then — a kind not received adds nothing
         assertThat(cell(cells, interest).amount()).contains(Money.of("114000"));
+    }
+
+    private static final CapitalGainsPart SHORT_LISTED = new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY");
+
+    private static final FieldSource.Period UP_TO_15_JUNE = new FieldSource.Period(MonthDay.of(4, 1), MonthDay.of(6, 15));
+
+    private static final FieldSource.Period FROM_16_JUNE = new FieldSource.Period(MonthDay.of(6, 16), MonthDay.of(9, 15));
+
+    private static final FieldSource.Period FROM_16_DECEMBER = new FieldSource.Period(MonthDay.of(12, 16), MonthDay.of(3, 15));
+
+    private static ScheduleCell gainsIn(String code, FieldSource.Period period) {
+        return new ScheduleCell(new CellCode(code), code, new FieldSource.FromCapitalGainsAccrual(List.of(SHORT_LISTED), period,
+                "afterBroughtForward"), ScheduleCell.Sign.AS_COMPUTED);
+    }
+
+    /** TY 2025-26's figures with these short-term listed-equity gains, and {@code settled} as their BFLA figure. */
+    private static ScheduleMapper.Figures accrued(List<ScheduleMapper.Accrued> gains, String settled,
+            List<ScheduleMapper.Accrued> dividends) {
+        return new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(), Optional.empty(), Map.of(),
+                Map.of(), Map.of(), Map.of(), Map.of(SHORT_LISTED.value(), Map.of("afterBroughtForward", Money.of(settled))),
+                new ScheduleMapper.Accruals(LocalDate.of(2025, 4, 1), Map.of(
+                        FieldSource.FromCapitalGainsBuckets.itemKindOf(SHORT_LISTED), gains, "DIVIDEND", dividends)));
+    }
+
+    private static ScheduleMapper.Accrued on(String rupees, LocalDate day) {
+        return new ScheduleMapper.Accrued(Money.of(rupees), Optional.of(day));
+    }
+
+    @Test
+    void fill_whenGainsAriseInTwoPeriods_givesEachPeriodItsOwn() {
+        // Given — 50,000 sold on 15 June 2025 and 30,000 on 20 January 2026; nothing set off, so BFLA holds 80,000
+        ScheduleCell june = gainsIn("SYN_CG_I", UP_TO_15_JUNE);
+        ScheduleCell september = gainsIn("SYN_CG_II", FROM_16_JUNE);
+        ScheduleCell march = gainsIn("SYN_CG_IV", FROM_16_DECEMBER);
+        ScheduleMapper.Figures run = accrued(List.of(on("50000", LocalDate.of(2025, 6, 15)),
+                on("30000", LocalDate.of(2026, 1, 20))), "80000", List.of());
+
+        // When
+        List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(june, september, march)), run);
+
+        // Then — 15 June is the first period's last day; the January sale falls in 16/12 to 15/3, across the year's turn
+        assertThat(cell(cells, june).amount()).contains(Money.of("50000"));
+        assertThat(cell(cells, september).amount()).contains(Money.ZERO);
+        assertThat(cell(cells, march).amount()).contains(Money.of("30000"));
+    }
+
+    @Test
+    void fill_whenALossWasSetOffAgainstTheGains_saysTheRowCannotBeSplit() {
+        // Given — the same gains, but BFLA holds 60,000: 20,000 of loss was set off, in no period the form names
+        ScheduleCell june = gainsIn("SYN_CG_I", UP_TO_15_JUNE);
+        ScheduleMapper.Figures run = accrued(List.of(on("50000", LocalDate.of(2025, 6, 15)),
+                on("30000", LocalDate.of(2026, 1, 20))), "60000", List.of());
+
+        // When
+        List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(june)), run);
+
+        // Then
+        assertThat(cell(cells, june).amount()).isEmpty();
+        assertThat(cell(cells, june).unavailableBecause()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("A loss was set off against these gains"));
+    }
+
+    @Test
+    void fill_whenAGainInTheRowIsALoss_saysTheRowCannotBeSplit() {
+        // Given — a 20,000 loss sold on 1 February 2026 nets inside the part, so BFLA's 60,000 equals the bucket total
+        ScheduleCell march = gainsIn("SYN_CG_IV", FROM_16_DECEMBER);
+        ScheduleMapper.Figures run = accrued(List.of(on("50000", LocalDate.of(2025, 6, 15)),
+                on("30000", LocalDate.of(2026, 1, 20)), on("-20000", LocalDate.of(2026, 2, 1))), "60000", List.of());
+
+        // When
+        List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(march)), run);
+
+        // Then
+        assertThat(cell(cells, march).unavailableBecause()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("A loss was set off against these gains"));
+    }
+
+    @Test
+    void fill_whenADividendHasNoDateOrIsDatedOutsideTheYear_saysSo() {
+        // Given — dividends by the date received
+        ScheduleCell dividends = new ScheduleCell(new CellCode("SYN_OS_II"), "Dividends", new FieldSource.FromOtherSourceAccrual(
+                List.of("DIVIDEND"), FROM_16_JUNE), ScheduleCell.Sign.AS_COMPUTED);
+        ScheduleMapper.Figures dated = accrued(List.of(), "0", List.of(on("10000", LocalDate.of(2025, 9, 5))));
+        ScheduleMapper.Figures undated = accrued(List.of(), "0", List.of(new ScheduleMapper.Accrued(Money.of("10000"),
+                Optional.empty())));
+        ScheduleMapper.Figures outside = accrued(List.of(), "0", List.of(on("10000", LocalDate.of(2026, 4, 2))));
+
+        // When
+        FilledCell inYear = cell(ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(dividends)), dated), dividends);
+        FilledCell noDate = cell(ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(dividends)), undated), dividends);
+        FilledCell late = cell(ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(dividends)), outside), dividends);
+
+        // Then
+        assertThat(inYear.amount()).contains(Money.of("10000"));
+        assertThat(noDate.unavailableBecause()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("An item this row holds was entered without the date it was received"));
+        assertThat(late.unavailableBecause()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("An item this row holds is dated outside the year"));
     }
 }

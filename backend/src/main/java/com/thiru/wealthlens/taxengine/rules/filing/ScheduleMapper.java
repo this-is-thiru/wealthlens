@@ -2,10 +2,13 @@ package com.thiru.wealthlens.taxengine.rules.filing;
 
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.Accrual;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsAccrual;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsBuckets;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromItemFigure;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromNodes;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromOtherSourceAccrual;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromOtherSourceKinds;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromRules;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromSetOff;
@@ -16,6 +19,8 @@ import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import java.time.LocalDate;
+import java.time.MonthDay;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,14 +49,16 @@ public final class ScheduleMapper {
      * @param items each kind of item's figures, one map per item in input order, such as each house property's
      * @param rulesByKind each rule's figures in the trace, summed by step kind
      * @param setOff set-off row by row, each row's columns by name
+     * @param accruals each kind of item's amounts with the day each arose, for the accrual tables (W-323)
      */
     public record Figures(Map<NodeId, Money> nodes, Map<RuleId, Money> rules, ReturnFacts returned,
             Optional<Money> taxAtSlabRates, Map<String, Money> taxAtSpecialRates, Map<String, Money> otherSourcesByKind,
             Map<String, List<Map<String, Money>>> items, Map<RuleId, Map<String, Money>> rulesByKind,
-            Map<String, Map<String, Money>> setOff) {
+            Map<String, Map<String, Money>> setOff, Accruals accruals) {
         public Figures {
-            if (returned == null || taxAtSlabRates == null) {
-                throw new IllegalArgumentException("Figures needs the return's facts and says whether slab tax was computed");
+            if (returned == null || taxAtSlabRates == null || accruals == null) {
+                throw new IllegalArgumentException("Figures needs the return's facts, says whether slab tax was computed and"
+                        + " carries the accruals, none where nothing arose");
             }
             nodes = Map.copyOf(nodes);
             rules = Map.copyOf(rules);
@@ -60,6 +67,36 @@ public final class ScheduleMapper {
             items = Map.copyOf(items);
             rulesByKind = Map.copyOf(rulesByKind);
             setOff = Map.copyOf(setOff);
+        }
+    }
+
+    /**
+     * The amounts that arose in the year, each with its day, by the item kind the cells name — a capital-gains bucket's gain
+     * under its part's kind, an item of other-source income's gross under its kind (W-323, D-662).
+     *
+     * @param yearStartsOn the first day of the financial year, against which a cell's period is read
+     * @param byKind each kind's amounts, in input order
+     */
+    public record Accruals(LocalDate yearStartsOn, Map<String, List<Accrued>> byKind) {
+        public Accruals {
+            if (yearStartsOn == null || byKind == null) {
+                throw new IllegalArgumentException("Accruals needs the year's first day and its amounts, an empty map for none");
+            }
+            byKind = Map.copyOf(byKind);
+        }
+    }
+
+    /**
+     * One amount and the day it arose.
+     *
+     * @param amount the amount, a loss negative
+     * @param on the day it arose or was received; {@code Optional.empty()} where none was entered
+     */
+    public record Accrued(Money amount, Optional<LocalDate> on) {
+        public Accrued {
+            if (amount == null || on == null) {
+                throw new IllegalArgumentException("An accrued amount needs its amount, and its day or Optional.empty()");
+            }
         }
     }
 
@@ -133,17 +170,71 @@ public final class ScheduleMapper {
                     .map(part -> figures.returned().capitalGains().getOrDefault(part, Money.ZERO))
                     .reduce(Money.ZERO, Money::plus));
             case SumOf sum -> sumOf(sum, cells, figures, read, item);
-            case FromItemFigure figure -> item.flatMap(values -> Optional.ofNullable(values.get(figure.figure())))
-                    .map(Reading::of).orElseGet(() -> Reading.unavailable(item.isEmpty()
-                            ? "The item figure " + figure.figure() + " is read outside a group"
-                            : "The item has no figure " + figure.figure()));
+            case FromItemFigure figure -> fromItemFigure(figure, item);
             case FromCapitalGainsBuckets buckets -> fromBuckets(buckets, figures);
             case FromSetOff setOff -> fromSetOff(setOff, figures);
             case FromOtherSourceKinds kinds -> Reading.of(kinds.kinds().stream()
                     .map(kind -> figures.otherSourcesByKind().getOrDefault(kind, Money.ZERO))
                     .reduce(Money.ZERO, Money::plus));
+            case Accrual accrual -> fromAccrual(accrual, figures);
             case ManualEntry manual -> Reading.unavailable(manual.guidance());
         };
+    }
+
+    /** One figure of the item a group repeats over. */
+    private static Reading fromItemFigure(FromItemFigure figure, Optional<Map<String, Money>> item) {
+        return item.flatMap(values -> Optional.ofNullable(values.get(figure.figure()))).map(Reading::of)
+                .orElseGet(() -> Reading.unavailable(item.isEmpty()
+                        ? "The item figure " + figure.figure() + " is read outside a group"
+                        : "The item has no figure " + figure.figure()));
+    }
+
+    /** An accrual table's cell: the amounts that arose in its period, where every one can be placed in a period. */
+    private static Reading fromAccrual(Accrual accrual, Figures figures) {
+        Accruals accruals = figures.accruals();
+        List<String> kinds = switch (accrual) {
+            case FromCapitalGainsAccrual gains -> gains.parts().stream().map(FromCapitalGainsBuckets::itemKindOf).toList();
+            case FromOtherSourceAccrual items -> items.kinds();
+        };
+        List<Accrued> amounts = kinds.stream().flatMap(kind -> accruals.byKind().getOrDefault(kind, List.of()).stream())
+                .toList();
+        Optional<String> unplaced = unplaced(accrual, amounts, figures);
+        if (unplaced.isPresent()) {
+            return Reading.unavailable(unplaced.get());
+        }
+        LocalDate from = dayOfYear(accruals.yearStartsOn(), accrual.period().from());
+        LocalDate to = dayOfYear(accruals.yearStartsOn(), accrual.period().to());
+        return Reading.of(amounts.stream().filter(amount -> !amount.on().get().isBefore(from) && !amount.on().get().isAfter(to))
+                .map(Accrued::amount).reduce(Money.ZERO, Money::plus));
+    }
+
+    /** Why the amounts cannot be split by period, where they cannot. */
+    private static Optional<String> unplaced(Accrual accrual, List<Accrued> amounts, Figures figures) {
+        LocalDate start = figures.accruals().yearStartsOn();
+        LocalDate end = start.plusYears(1).minusDays(1);
+        if (amounts.stream().anyMatch(amount -> amount.on().isEmpty())) {
+            return Optional.of("An item this row holds was entered without the date it was received; enter the split by"
+                    + " period from your records");
+        }
+        if (amounts.stream().anyMatch(amount -> amount.on().get().isBefore(start) || amount.on().get().isAfter(end))) {
+            return Optional.of("An item this row holds is dated outside the year; enter the split by period from your records");
+        }
+        if (accrual instanceof FromCapitalGainsAccrual gains) {
+            Money arose = amounts.stream().map(Accrued::amount).reduce(Money.ZERO, Money::plus);
+            Money settled = fromSetOff(new FromSetOff(gains.parts().stream().map(CapitalGainsPart::value).toList(),
+                    gains.settledColumn()), figures).amount().orElse(arose);
+            if (amounts.stream().anyMatch(amount -> amount.amount().isLessThan(Money.ZERO)) || arose.compareTo(settled) != 0) {
+                return Optional.of("A loss was set off against these gains, and the form does not say in which period it"
+                        + " falls; split the set-off figure by period from your records");
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** The day of the financial year beginning {@code yearStartsOn} that falls on {@code day}. */
+    private static LocalDate dayOfYear(LocalDate yearStartsOn, MonthDay day) {
+        LocalDate date = day.atYear(yearStartsOn.getYear());
+        return date.isBefore(yearStartsOn) ? day.atYear(yearStartsOn.getYear() + 1) : date;
     }
 
     private static Reading signed(Reading reading, ScheduleCell.Sign sign) {

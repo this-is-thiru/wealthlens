@@ -24,6 +24,7 @@ import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import java.net.URI;
 import java.time.LocalDate;
+import java.time.MonthDay;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -97,5 +98,25 @@ class ItrScheduleReferencesTest {
         // Then
         assertThat(problems).containsExactly(
                 "form SYN-1 S SYN_AV (SYN_AV) reads an item's figure outside a group, where there is no item (I21)");
+    }
+
+    @Test
+    void check_whenAnAccrualCellReadsAnUndeclaredPartOrRunsBackwards_namesEach() {
+        // When — the form's own periods pass, across the year's turn too (16/12 to 15/3); a part the year lacks, and a
+        // period from 16/9 back to 15/6, do not (W-323)
+        List<String> problems = problems(
+                cell("SYN_F_IV", new FieldSource.FromCapitalGainsAccrual(List.of(new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY")),
+                        new FieldSource.Period(MonthDay.of(12, 16), MonthDay.of(3, 15)), "afterBroughtForward")),
+                cell("SYN_F_PART", new FieldSource.FromCapitalGainsAccrual(List.of(new CapitalGainsPart("SYN_NOT_A_PART")),
+                        new FieldSource.Period(MonthDay.of(4, 1), MonthDay.of(6, 15)), "afterBroughtForward")),
+                cell("SYN_OS_BACK", new FieldSource.FromOtherSourceAccrual(List.of("DIVIDEND"),
+                        new FieldSource.Period(MonthDay.of(9, 16), MonthDay.of(6, 15)))));
+
+        // Then
+        assertThat(problems).containsExactly(
+                "form SYN-1 S SYN_F_PART (SYN_F_PART) reads capital-gains part SYN_NOT_A_PART, which the year's"
+                        + " CapitalGainsParts does not declare (I21)",
+                "form SYN-1 S SYN_OS_BACK (SYN_OS_BACK) runs from --09-16 back to --06-15; a period runs forward within the"
+                        + " financial year (I21)");
     }
 }

@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
+import java.time.MonthDay;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -226,6 +227,16 @@ public final class PackJson {
             return uri;
         } catch (URISyntaxException e) {
             throw malformed(path + "." + field, "an absolute URL", raw);
+        }
+    }
+
+    /** A day of the year written {@code "06-15"}, as the Tables write "15th June" and the forms "15/6". */
+    public static MonthDay monthDay(JsonNode parent, String field, String path) {
+        String text = text(parent, field, path);
+        try {
+            return MonthDay.parse("--" + text);
+        } catch (DateTimeParseException e) {
+            throw new PackValidationException(path + "." + field + " must read like \"06-15\", but was \"" + text + "\"");
         }
     }
 

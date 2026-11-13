@@ -29,6 +29,9 @@ import org.junit.jupiter.api.Test;
  */
 class ScheduleModelTest {
 
+    private static final ScheduleMapper.Accruals NO_ACCRUALS = new ScheduleMapper.Accruals(LocalDate.of(2025, 4, 1),
+            Map.of());
+
     private static final Provenance SOURCE = new Provenance(URI.create("https://example.invalid/w-092"),
             "Synthetic, tests only", LocalDate.of(2026, 11, 13), VerificationLevel.UNVERIFIED, "Nothing: synthetic");
     private static final CellCode CODE = new CellCode("SYN_CELL");
@@ -111,10 +114,16 @@ class ScheduleModelTest {
 
     @Test
     void figuresVerdictsAndSelections_whenAPartIsMissing_areRefused() {
-        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), null, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of()))
-                .hasMessage("Figures needs the return's facts and says whether slab tax was computed");
-        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, null, Map.of(), Map.of(), Map.of(), Map.of(), Map.of()))
-                .hasMessage("Figures needs the return's facts and says whether slab tax was computed");
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), null, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS))
+                .hasMessage("Figures needs the return's facts, says whether slab tax was computed and carries the accruals, none where nothing arose");
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, null, Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS))
+                .hasMessage("Figures needs the return's facts, says whether slab tax was computed and carries the accruals, none where nothing arose");
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), null))
+                .hasMessage("Figures needs the return's facts, says whether slab tax was computed and carries the accruals, none where nothing arose");
+        assertThatThrownBy(() -> new ScheduleMapper.Accruals(null, Map.of()))
+                .hasMessage("Accruals needs the year's first day and its amounts, an empty map for none");
+        assertThatThrownBy(() -> new ScheduleMapper.Accrued(Money.ZERO, null))
+                .hasMessage("An accrued amount needs its amount, and its day or Optional.empty()");
         ItrFormCode form = new ItrFormCode("SYN-1");
         String verdict = "A verdict names its form, its standing and whether a form excluded it";
         assertThatThrownBy(() -> new FormVerdict(null, FormVerdict.Standing.ELIGIBLE, List.of(), List.of(), Optional.empty(),
