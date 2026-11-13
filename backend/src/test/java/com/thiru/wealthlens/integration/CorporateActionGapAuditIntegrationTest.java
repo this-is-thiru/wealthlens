@@ -402,4 +402,23 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(JSON.readTree(added.getBody()).get("message").asString()).isEqualTo(
                 "A demerger's ratio is new shares to shares held, two whole numbers above nil such as 1:10, but it was 1.5:10");
     }
+
+    // Scenario 11 (W-316)
+    @Test
+    void perform_whenARightsIssueIsInTheQuarter_neitherHoldsATradeNorStopsTheQuarter() {
+        // Given -- 10 SBIN and 10 WIPRO held; a rights issue on SBIN (15 Jan) and a bonus on WIPRO (20 Jan)
+        buy("SBIN", 10, 100, "2026-01-05", "Self");
+        buy("WIPRO", 10, 100, "2026-01-05", "Self");
+        addAction("SBIN", "RIGHTS_ISSUANCE", "1:5", "2026-01-15", null);
+        addAction("WIPRO", "BONUS", "1:1", "2026-01-20", "2026-01-22");
+
+        // When -- a buy of 5 SBIN after the rights issue's record date, then the quarter's run
+        buy("SBIN", 5, 100, "2026-01-21", "Self");
+        ResponseEntity<String> performed = perform("JANUARY", 2026);
+
+        // Then -- the buy is recorded at once, and the run applies the quarter's bonus
+        assertThat(quantity("SBIN")).isEqualTo(15.0);
+        assertThat(performed.getStatusCode().value()).as(performed.getBody()).isEqualTo(200);
+        assertThat(quantity("WIPRO")).isEqualTo(20.0);
+    }
 }
