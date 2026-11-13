@@ -25,6 +25,7 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -63,7 +64,7 @@ class NodeContextDeclarationsTest {
         EngineInputs inputs = new EngineInputs(plain.taxYear(), plain.regime(), plain.temporal(), plain.entered(),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 new FilingFacts(filed.dueDate(), filed.furnishedOn(), filed.advanceTaxPaid(), filed.taxAtSource(),
-                        filed.selfAssessmentPaid(), answers));
+                        filed.selfAssessmentPaid(), answers, Optional.empty()));
         return NodeContext.forRun(PACK, PACK.regimes().get(new RegimeCode("NEW_TAX_REGIME")), inputs).conditions();
     }
 

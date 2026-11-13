@@ -864,7 +864,7 @@ class PackJsonTest {
                                     "exec/declarations.json", resource("exec/declarations.json"),
                                     "forms/itr-forms.json", resource("forms/itr-forms.json")));
 
-            assertThat(pack.rules()).hasSize(236);
+            assertThat(pack.rules()).hasSize(237);
             // r.164(2) and (4)'s forms, in force for TY 2026-27 (W-090c2)
             assertThat(pack.itrForms()).containsOnlyKeys(
                     new com.thiru.wealthlens.taxengine.rules.id.ItrFormCode("ITR-1"),
@@ -983,7 +983,7 @@ class PackJsonTest {
         @Test
         void theShippedPackStillParses() {
             // So a mutation test that passed because everything fails would be caught
-            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(236);
+            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(237);
         }
 
         @Test

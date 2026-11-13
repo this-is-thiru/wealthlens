@@ -33,12 +33,13 @@ public class DraftComputationService {
 
     /**
      * Stated with every figure until each is built (D-442, D-445, D-446): W-089a, W-088i2, W-088i3, the pin in {@code DR 11} F4.1,
-     * a dividend without its received date (W-112a relieves only dated ones), W-112b, and what no draft can state (an Assessing Officer's order, the fees for a revised return or a report).
+     * a dividend without its received date (W-112a relieves only dated ones), and what no draft can state (interest on an
+     * excess refund, W-112b; an Assessing Officer's order; the fees for a revised return or a report).
      */
     private static final List<String> NOT_INCLUDED = List.of(
             "Relief for salary received in arrears or in advance",
             "Relief from interest for deferring advance tax on a dividend entered without the date it was received",
-            "Interest on a refund, either way: paid to you on a refund due, or charged on a refund that was too much",
+            "Interest charged on a refund later found not to be due, which only a regular assessment decides",
             "Advance tax or interest under an Assessing Officer's order",
             "Fees for a late revised return, a late audit report or a late accountant's report",
             "A house-reinvestment exemption by deposit in the capital gains account scheme",

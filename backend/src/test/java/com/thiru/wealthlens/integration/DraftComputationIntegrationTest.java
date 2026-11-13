@@ -276,6 +276,26 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void compute_whenARefundIsGranted_showsTheInterestAddedApartFromThePayable() {
+        // Given — 1,00,000 of salary is under the nil band, so the 10,000 at source is all refunded; furnished on time on
+        // 15-7-2027 and granted on 20-9-2027 (W-112b)
+        String draftId = draft(false, "10000");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/filing/furnishedOn", "value": "2027-07-15"},
+                 {"op": "add", "path": "/filing/refundGrantedOn", "value": "2027-09-20"}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode view = compute(draftId);
+
+        // Then — 1-4-2027 to 20-9-2027 is 6 months; 10,000 × 0.5 % × 6 = 300, outside the refund of 10,000
+        assertThat(view.at("/tax/interestOnRefund/0/rule").asString()).isEqualTo("INT-REFUND");
+        assertThat(view.at("/tax/interestOnRefund/0/amount/amountInRupees").decimalValue()).isEqualByComparingTo("300");
+        assertThat(view.at("/tax/interestAndFees").size()).isZero();
+        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("-10000");
+    }
+
+    @Test
     void compute_whenMoreWasDeductedThanIsDue_showsARefundToTheNearestTen() {
         // Given — 87,750 − 1,00,004 = −12,254; no advance tax was due, so nothing is owed on it
         listedEquitySale();

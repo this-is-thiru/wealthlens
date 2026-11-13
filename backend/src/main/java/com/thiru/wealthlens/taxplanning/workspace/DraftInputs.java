@@ -27,7 +27,7 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
     }
 
     static DraftInputs blank() {
-        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of(), Map.of()), LedgerSnapshot.empty(),
+        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of(), Map.of(), null), LedgerSnapshot.empty(),
                 ThirdParties.NONE);
     }
 
@@ -53,10 +53,12 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
     /**
      * The engine's {@link FilingFacts} once the due date is stated; {@code dueDate} and {@code furnishedOn} may be null until
      * then. {@code declarations} are the person's answers to the year's questions (W-090a2); none when absent, which every
-     * draft stored before W-090a2 is, since none could answer one.
+     * draft stored before W-090a2 is, since none could answer one. {@code refundGrantedOn} is null until a refund is granted,
+     * which every draft stored before W-112b is.
      */
     public record Filing(LocalDate dueDate, LocalDate furnishedOn, List<FilingFacts.Payment> advanceTaxPaid, Money taxAtSource,
-            List<FilingFacts.Payment> selfAssessmentPaid, Map<DeclarationCode, Declaration> declarations) {
+            List<FilingFacts.Payment> selfAssessmentPaid, Map<DeclarationCode, Declaration> declarations,
+            LocalDate refundGrantedOn) {
 
         public Filing {
             declarations = declarations == null ? Map.of() : Map.copyOf(declarations);
@@ -68,7 +70,8 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
                 throw new IllegalArgumentException("A computation needs the draft's /filing/dueDate");
             }
             return new FilingFacts(dueDate, Optional.ofNullable(furnishedOn), advanceTaxPaid,
-                    taxAtSource == null ? Money.ZERO : taxAtSource, selfAssessmentPaid, declarations);
+                    taxAtSource == null ? Money.ZERO : taxAtSource, selfAssessmentPaid, declarations,
+                    Optional.ofNullable(refundGrantedOn));
         }
     }
 }

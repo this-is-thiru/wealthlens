@@ -32,10 +32,12 @@ import java.util.Optional;
  * @param selfAssessmentPaid tax paid on the return (2025 s.266; 1961 s.140A), with dates; may be empty, never null
  * @param declarations the person's answers to the questions the return asks and the engine cannot compute, by
  *     question (W-090a1, D-517); a question not answered is absent; may be empty, never null
+ * @param refundGrantedOn the date a refund was granted, which ends the interest on it (2025 s.437; 1961 s.244A; W-112b);
+ *     empty where none has been, and the interest then runs to the as-of date
  */
 public record FilingFacts(
         LocalDate dueDate, Optional<LocalDate> furnishedOn, List<Payment> advanceTaxPaid, Money taxAtSource,
-        List<Payment> selfAssessmentPaid, Map<DeclarationCode, Declaration> declarations) {
+        List<Payment> selfAssessmentPaid, Map<DeclarationCode, Declaration> declarations, Optional<LocalDate> refundGrantedOn) {
 
     /**
      * One advance-tax payment.
@@ -86,11 +88,15 @@ public record FilingFacts(
                     "FilingFacts.declarations may not be null; pass an empty map where nothing was answered");
         }
         declarations = Map.copyOf(declarations);
+        if (refundGrantedOn == null) {
+            throw new IllegalArgumentException(
+                    "FilingFacts.refundGrantedOn may not be null; pass Optional.empty() where no refund has been granted");
+        }
     }
 
     /** A return not yet furnished, with nothing paid in advance. */
     public static FilingFacts notYetFurnished(LocalDate dueDate) {
-        return new FilingFacts(dueDate, Optional.empty(), List.of(), Money.ZERO, List.of(), Map.of());
+        return new FilingFacts(dueDate, Optional.empty(), List.of(), Money.ZERO, List.of(), Map.of(), Optional.empty());
     }
 
     /** Everything paid on the return, whenever paid. */

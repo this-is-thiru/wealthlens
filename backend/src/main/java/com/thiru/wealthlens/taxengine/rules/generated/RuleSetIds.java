@@ -81,6 +81,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_INT_CALCULATION = new RuleSetId("RS-INT-CALCULATION");
     public static final RuleSetId RS_INT_DEFERMENT = new RuleSetId("RS-INT-DEFERMENT");
     public static final RuleSetId RS_INT_LATE_RETURN = new RuleSetId("RS-INT-LATE-RETURN");
+    public static final RuleSetId RS_INT_REFUND = new RuleSetId("RS-INT-REFUND");
     public static final RuleSetId RS_OS_BANKER_COMMISSION = new RuleSetId("RS-OS-BANKER-COMMISSION");
     public static final RuleSetId RS_OS_BUSINESS_TRUST = new RuleSetId("RS-OS-BUSINESS-TRUST");
     public static final RuleSetId RS_OS_DIVIDEND_INTEREST = new RuleSetId("RS-OS-DIVIDEND-INTEREST");

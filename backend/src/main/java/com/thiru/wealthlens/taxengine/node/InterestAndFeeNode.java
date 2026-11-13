@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.DefermentInterest;
 import com.thiru.wealthlens.taxengine.rules.definition.InterestCalculation;
 import com.thiru.wealthlens.taxengine.rules.definition.LateReturnFee;
 import com.thiru.wealthlens.taxengine.rules.definition.MonthlyInterest;
+import com.thiru.wealthlens.taxengine.rules.definition.RefundInterest;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -42,7 +43,8 @@ import java.util.Set;
  * advance tax and tax at source; the shortfall and deferment on tax less tax at source only. The period ends on the date the
  * return was furnished, or, for a return not yet furnished, on the as-of date, as if it were furnished and paid that day
  * (D-446 C2a). Deferment carries the s.425(4) / s.234C relief for income arising after a date ({@link DefermentRelief};
- * W-112a). Not computed, and said so where the figure is shown: an Assessing Officer's order, interest on a refund (W-112b).
+ * W-112a). Interest added to a refund is a receivable, never owed (s.437 / s.244A; W-112b). Not computed, and said so where
+ * the figure is shown: an Assessing Officer's order, interest on a refund later found not due (s.426 / s.234D).
  */
 public final class InterestAndFeeNode implements ComputationNode {
 
@@ -59,7 +61,7 @@ public final class InterestAndFeeNode implements ComputationNode {
     @Override
     public Set<RuleSetId> ruleSets() {
         return Set.of(RuleSetIds.RS_INT_LATE_RETURN, RuleSetIds.RS_INT_ADVANCE_SHORTFALL, RuleSetIds.RS_INT_DEFERMENT,
-                RuleSetIds.RS_INT_CALCULATION, RuleSetIds.RS_FEE_LATE_RETURN);
+                RuleSetIds.RS_INT_CALCULATION, RuleSetIds.RS_FEE_LATE_RETURN, RuleSetIds.RS_INT_REFUND);
     }
 
     @Override
@@ -72,6 +74,7 @@ public final class InterestAndFeeNode implements ComputationNode {
         run.shortfall();
         run.deferment();
         run.fee(ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount());
+        run.refund();
         return new NodeResult(new InterestAndFees(run.items), run.lines, run.annotations);
     }
 
@@ -242,6 +245,67 @@ public final class InterestAndFeeNode implements ComputationNode {
                 annotate(new Notice(Severity.ATTENTION, "The Act sets this fee as an upper limit; the limit is shown",
                         List.of(row.id())));
             }
+        }
+
+        /**
+         * s.437 / s.244A: interest the Government adds to the refund this computation shows — tax paid less the bill and
+         * what this node charges — to its grant, or to the as-of date as if granted then (W-112b C1a, C2a). The refund
+         * comes first out of tax paid on the return, the latest payment first, then out of tax at source and advance tax
+         * (C3a): the sections do not order them, and this never overstates the interest. Kept out of what is owed (C4a).
+         */
+        void refund() {
+            Money owed = items.stream().map(InterestAndFees.Item::amount).reduce(Money.ZERO, Money::plus);
+            List<FilingFacts.Payment> onReturn = filing.selfAssessmentPaid().stream()
+                    .sorted(Comparator.comparing(FilingFacts.Payment::paidOn).reversed()).toList();
+            Money paid = filing.taxAtSource().plus(advancePaid)
+                    .plus(onReturn.stream().map(FilingFacts.Payment::amount).reduce(Money.ZERO, Money::plus));
+            Money refund = paid.minus(bill).minus(owed);
+            if (!refund.isGreaterThan(Money.ZERO)) {
+                return;
+            }
+            RuleRow row = ctx.ruleOf(RuleSetIds.RS_INT_REFUND);
+            RefundInterest rule = definition(ctx, RuleSetIds.RS_INT_REFUND, RefundInterest.class);
+            LocalDate granted = filing.refundGrantedOn().orElse(ctx.inputs().asOfDate());
+            String until = filing.refundGrantedOn().isPresent() ? "granted on " + granted : "as if granted on " + granted;
+            if (refund.isLessThan(rule.noInterestBelowShare().of(bill))) {
+                add(row.id(), InterestAndFees.Kind.RECEIVABLE, calculation.base(refund), Money.ZERO, "a refund of " + refund
+                        + " is less than " + rule.noInterestBelowShare() + " of the tax of " + bill + ": none");
+                return;
+            }
+            Money left = refund;
+            for (FilingFacts.Payment payment : onReturn) {
+                Money slice = Money.min(left, payment.amount());
+                if (slice.isGreaterThan(Money.ZERO)) {
+                    receivable(row, rule, slice, latest(end, payment.paidOn()), granted,
+                            "out of tax paid on the return on " + payment.paidOn() + ", " + until);
+                }
+                left = left.minus(slice);
+            }
+            if (left.isGreaterThan(Money.ZERO)) {
+                LocalDate from = end.isAfter(filing.dueDate()) ? end : ctx.inputs().temporal().taxYearEnd().plusDays(1);
+                receivable(row, rule, left, from, granted, "out of tax at source and advance tax, " + until);
+            }
+            refundNotices(row, !onReturn.isEmpty());
+        }
+
+        private void receivable(RuleRow row, RefundInterest rule, Money slice, LocalDate from, LocalDate granted, String what) {
+            Money base = calculation.base(slice);
+            int months = months(from, granted, calculation.fractionOfMonthCountsWhole());
+            add(row.id(), InterestAndFees.Kind.RECEIVABLE, base, rule.perMonth().of(base).times(months),
+                    period(months, from, granted) + "; " + what);
+        }
+
+        private void refundNotices(RuleRow row, boolean outOfTaxOnTheReturn) {
+            annotate(new Notice(Severity.ATTENTION, "Interest on a refund is income of the year it is received in, under"
+                    + " other sources; it is not in this year's figures", List.of(row.id())));
+            if (outOfTaxOnTheReturn) {
+                annotate(new Notice(Severity.ATTENTION, "The Act does not say which payment a refund returns first; tax paid"
+                        + " on the return is taken first, which never overstates the interest", List.of(row.id())));
+            }
+        }
+
+        private static LocalDate latest(LocalDate one, LocalDate other) {
+            return one.isAfter(other) ? one : other;
         }
 
         private void add(RuleId rule, InterestAndFees.Kind kind, Money base, Money amount, String why) {

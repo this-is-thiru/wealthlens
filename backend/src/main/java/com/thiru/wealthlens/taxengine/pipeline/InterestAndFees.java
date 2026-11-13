@@ -19,22 +19,25 @@ public record InterestAndFees(List<Item> items) implements NodeValue {
         items = List.copyOf(items);
     }
 
+    /** What the person owes: interest and fees, never the interest added to a refund, which is paid to them (W-112b C4a). */
     @Override
     public Money asMoney() {
-        return items.stream().map(Item::amount).reduce(Money.ZERO, Money::plus);
+        return items.stream().filter(item -> item.kind() != Kind.RECEIVABLE).map(Item::amount).reduce(Money.ZERO, Money::plus);
     }
 
-    /** Whether an item is interest or a fee. */
+    /** Whether an item is interest or a fee the person owes, or interest the Government adds to their refund. */
     public enum Kind {
         INTEREST,
-        FEE
+        FEE,
+        /** Interest added to a refund (2025 s.437; 1961 s.244A; W-112b): paid to the person, so in no amount payable. */
+        RECEIVABLE
     }
 
     /**
-     * What one provision charges.
+     * What one provision charges, or adds to a refund.
      *
-     * @param rule the row that charges it
-     * @param kind interest or fee
+     * @param rule the row that charges or adds it
+     * @param kind interest, fee or receivable
      * @param amount the amount, above nil
      */
     public record Item(RuleId rule, Kind kind, Money amount) {

@@ -59,7 +59,7 @@ class ItrFormChoiceTest {
         return new EngineInputs(inputs.taxYear(), inputs.regime(), inputs.temporal(), inputs.entered(),
                 inputs.assessee(), inputs.family(), inputs.ledgers(), inputs.elections(), inputs.capitalGains(),
                 new FilingFacts(filed.dueDate(), filed.furnishedOn(), filed.advanceTaxPaid(), filed.taxAtSource(),
-                        filed.selfAssessmentPaid(), answers));
+                        filed.selfAssessmentPaid(), answers, Optional.empty()));
     }
 
     private static ItrFormChoice.Verdict verdict(ItrFormChoice choice, String form) {
@@ -482,7 +482,7 @@ class ItrFormChoiceTest {
         return new EngineInputs(moved.taxYear(), new RegimeCode("FIRST_SCHEDULE_RATES"), moved.temporal(), moved.entered(),
                 moved.assessee(), moved.family(), moved.ledgers(), moved.elections(), moved.capitalGains(),
                 new FilingFacts(LocalDate.of(2026, 7, 31), Optional.of(furnishedOn), List.of(), Money.ZERO, List.of(),
-                        filed.declarations()));
+                        filed.declarations(), Optional.empty()));
     }
 
     @Test

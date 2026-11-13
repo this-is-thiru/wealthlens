@@ -144,12 +144,15 @@ class RuleDefinitionRefusalsTest {
 
     private static Stream<Arguments> periods() {
         String fee = "A late-return fee needs an income and two fees above nil";
+        String refund = "Refund interest needs a rate above nil and the share below which none is paid";
         String months = "A reinvestment row's periods must each be positive months";
         String shortfall = "Advance-tax shortfall interest needs a share and a rate above nil";
         String indices = "Every index must be a positive number";
         Map<TaxYearId, Integer> missingIndex = new HashMap<>();
         missingIndex.put(TaxYearId.of(2026), null);
         return Stream.of(
+                refusal("RefundInterest rate nil", () -> new RefundInterest(Rate.ZERO, SHARE), refund),
+                refusal("RefundInterest share null", () -> new RefundInterest(SHARE, null), refund),
                 refusal("LateReturnFee income null", () -> new LateReturnFee(null, LIMIT, true, LIMIT), fee),
                 refusal("LateReturnFee lower fee null", () -> new LateReturnFee(LIMIT, null, true, LIMIT), fee),
                 refusal("LateReturnFee fee null", () -> new LateReturnFee(LIMIT, LIMIT, true, null), fee),

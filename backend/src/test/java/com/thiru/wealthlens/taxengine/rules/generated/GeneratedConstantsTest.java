@@ -115,6 +115,7 @@ class GeneratedConstantsTest {
             "INT-CALCULATION",
             "INT-DEFERMENT",
             "INT-LATE-RETURN",
+            "INT-REFUND",
             "OS-BANKER-COMMISSION",
             "OS-BUSINESS-TRUST",
             "OS-COMMUTED-PENSION",

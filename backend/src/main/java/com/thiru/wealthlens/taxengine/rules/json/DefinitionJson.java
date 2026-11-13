@@ -40,6 +40,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.PolicyIssueWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.PolicyPremiumLimits;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
+import com.thiru.wealthlens.taxengine.rules.definition.RefundInterest;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryAveragingPeriod;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
@@ -86,7 +87,8 @@ public final class DefinitionJson {
                 "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod",
                 "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath", "WearAndTear", "ChargeDeduction",
                 "IndexedCost", "ExemptReinvestment", "NotModelledProvision", "AdvanceTaxLiability", "InstalmentSchedule",
-                "DefermentInterest", "MonthlyInterest", "AdvanceShortfallInterest", "InterestCalculation", "LateReturnFee");
+                "DefermentInterest", "MonthlyInterest", "AdvanceShortfallInterest", "InterestCalculation", "LateReturnFee",
+                "RefundInterest");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -269,6 +271,8 @@ public final class DefinitionJson {
                     PackJson.rate(node, "paidBelowPercent", path), PackJson.rate(node, "perMonthPercent", path)));
             case "InterestCalculation" -> PackJson.construct(path, () -> new InterestCalculation(
                     PackJson.money(node, "baseRoundedDownTo", path), PackJson.bool(node, "fractionOfMonthCountsWhole", path)));
+            case "RefundInterest" -> PackJson.construct(path, () -> new RefundInterest(
+                    PackJson.rate(node, "perMonthPercent", path), PackJson.rate(node, "noInterestBelowSharePercent", path)));
             case "LateReturnFee" -> PackJson.construct(path, () -> new LateReturnFee(PackJson.money(node, "incomeAtMost", path),
                     PackJson.money(node, "lowerFee", path), PackJson.bool(node, "lowerFeeIsCeiling", path),
                     PackJson.money(node, "fee", path)));

@@ -96,6 +96,7 @@ public final class RuleIds {
     public static final RuleId INT_CALCULATION = new RuleId("INT-CALCULATION");
     public static final RuleId INT_DEFERMENT = new RuleId("INT-DEFERMENT");
     public static final RuleId INT_LATE_RETURN = new RuleId("INT-LATE-RETURN");
+    public static final RuleId INT_REFUND = new RuleId("INT-REFUND");
     public static final RuleId OS_BANKER_COMMISSION = new RuleId("OS-BANKER-COMMISSION");
     public static final RuleId OS_BUSINESS_TRUST = new RuleId("OS-BUSINESS-TRUST");
     public static final RuleId OS_COMMUTED_PENSION = new RuleId("OS-COMMUTED-PENSION");

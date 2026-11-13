@@ -84,7 +84,8 @@ public class TaxCalculator {
         return new ComputedTax(id.value(), ComputationReceipt.of(id, inputs.taxYear()).value(), inputs.taxYear().label(),
                 inputs.regime().value(), computation.totalIncome(), computation.netPayableBeforeFilingEffects(),
                 ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(), advanceTax((AdvanceTaxPosition) run.valueOf(NodeIds.ADVANCE_TAX)),
-                owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES)),
+                owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), false),
+                owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), true),
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
                 computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation),
                 buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)));
@@ -402,9 +403,10 @@ public class TaxCalculator {
                 .map(i -> new ComputedTax.AdvanceTax.Instalment(i.dueOn(), i.dueByThen(), i.paidByThen(), i.stillOwed())).toList());
     }
 
-    private static List<ComputedTax.Owed> owed(InterestAndFees owed) {
-        return owed.items().stream().map(item -> new ComputedTax.Owed(item.rule().value(), item.kind().name(), item.amount()))
-                .toList();
+    /** The items the person owes, or with {@code receivable} the interest added to a refund (W-112b C4a). */
+    private static List<ComputedTax.Owed> owed(InterestAndFees owed, boolean receivable) {
+        return owed.items().stream().filter(item -> (item.kind() == InterestAndFees.Kind.RECEIVABLE) == receivable)
+                .map(item -> new ComputedTax.Owed(item.rule().value(), item.kind().name(), item.amount())).toList();
     }
 
     private static List<ComputedTax.Step> steps(TaxComputation computation) {

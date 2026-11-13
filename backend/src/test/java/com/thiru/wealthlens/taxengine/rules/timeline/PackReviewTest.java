@@ -57,13 +57,14 @@ class PackReviewTest {
     }
 
     @Test
-    void render_whenTheShippedYearsAreCompared_splitsTheirSuccessionsIntoThirtyOneLawChangesAndOneHundredEightyNineResourced() {
-        // When — the counts a script over every rule file found (plans/W-139a.md)
+    void render_whenTheShippedYearsAreCompared_splitsTheirSuccessionsIntoThirtyOneLawChangesAndOneHundredNinetyResourced() {
+        // When — the counts a script over every rule file found (plans/W-139a.md), and INT-REFUND's two versions, which
+        // state the same rate and share and differ only in instrument and source (W-112b)
         String review = shippedReview();
 
         // Then
         assertThat(review).contains("## Law changed at the boundary — 31 version(s)",
-                "## Re-sourced only — 189 version(s)");
+                "## Re-sourced only — 190 version(s)");
         assertThat(section(review, "Law changed").lines().filter(line -> line.startsWith("- `")).count()).isEqualTo(31);
     }
 

@@ -17,6 +17,8 @@ import java.util.List;
  * @param credits tax already paid for the year
  * @param advanceTax whether advance tax is payable and what each instalment still asks (W-089c)
  * @param interestAndFees each interest and fee on the return, by the row that charges it (W-112)
+ * @param interestOnRefund the interest the Government adds to a refund, by the row that adds it; never in the amount
+ *     payable (W-112b C4a)
  * @param finalAmount the bill less credits, with interest and fees, rounded: above nil payable, below nil refundable
  * @param inputsFingerprint what identifies the inputs
  * @param lawAndExec the rule pack's layer versions
@@ -24,7 +26,7 @@ import java.util.List;
  * @param capitalGainsBuckets what was decided for each bucket (D-410)
  */
 public record ComputedTax(String computationId, String receipt, String taxYear, String regime, Money totalIncome, Money bill,
-        Money credits, AdvanceTax advanceTax, List<Owed> interestAndFees, Money finalAmount, String inputsFingerprint, List<String> lawAndExec, List<Step> trace,
+        Money credits, AdvanceTax advanceTax, List<Owed> interestAndFees, List<Owed> interestOnRefund, Money finalAmount, String inputsFingerprint, List<String> lawAndExec, List<Step> trace,
         List<Bucket> capitalGainsBuckets) {
 
     /**

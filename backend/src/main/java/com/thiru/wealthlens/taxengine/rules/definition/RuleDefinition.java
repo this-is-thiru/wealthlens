@@ -16,5 +16,5 @@ public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPe
         AbsorptionOrder, CapitalGainsAbsorptionOrder, SpecialRateShortfallOrder, LossCarryForward, BucketPart,
         SttChargeability, ShortTermHoldingPeriod, CapitalGainsParts, SalaryAveragingPeriod, VehiclePath, WearAndTear, ChargeDeduction,
         IndexedCost, ExemptReinvestment, NotModelledProvision, AdvanceTaxLiability, InstalmentSchedule, DefermentInterest,
-        MonthlyInterest, AdvanceShortfallInterest, InterestCalculation, LateReturnFee {
+        MonthlyInterest, AdvanceShortfallInterest, InterestCalculation, LateReturnFee, RefundInterest {
 }

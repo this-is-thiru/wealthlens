@@ -72,7 +72,7 @@ class CreditsAndBalanceTest {
     void credits_whenAllThreeArePaid_sumsThemWithALineEach(int year) {
         // Given — at source 50,000; advance 15,000 + 5,000 = 20,000; on the return 5,000
         FilingFacts filing = new FilingFacts(DUE, Optional.empty(), List.of(paid("15000"), paid("5000")),
-                Money.of("50000"), List.of(paid("5000")), Map.of());
+                Money.of("50000"), List.of(paid("5000")), Map.of(), Optional.empty());
 
         // When
         NodeResult result = credits(year, filing);
@@ -94,7 +94,7 @@ class CreditsAndBalanceTest {
     void credits_whenAnAdvancePaymentIsAfterTheYear_stillCountsIt() {
         // Given — paid after 31 March: still tax already paid (s.266(2)(a)); only interest turns on the date (W-112)
         FilingFacts filing = new FilingFacts(DUE, Optional.empty(),
-                List.of(new FilingFacts.Payment(LocalDate.of(2027, 6, 1), Money.of("20000"))), Money.ZERO, List.of(), Map.of());
+                List.of(new FilingFacts.Payment(LocalDate.of(2027, 6, 1), Money.of("20000"))), Money.ZERO, List.of(), Map.of(), Optional.empty());
 
         // When / Then
         assertThat(credits(2026, filing).value()).isEqualTo(MoneyValue.of(Money.of("20000")));
@@ -103,7 +103,7 @@ class CreditsAndBalanceTest {
     @Test
     void filingFacts_whenTaxAtSourceIsNegative_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new FilingFacts(DUE, Optional.empty(), List.of(), Money.of("-1"), List.of(), Map.of()))
+        assertThatThrownBy(() -> new FilingFacts(DUE, Optional.empty(), List.of(), Money.of("-1"), List.of(), Map.of(), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("taxAtSource");
     }
 

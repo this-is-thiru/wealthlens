@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.definition.DefermentInterest;
+import com.thiru.wealthlens.taxengine.rules.definition.RefundInterest;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -18,6 +19,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -60,7 +62,7 @@ class AdvanceTaxAndInterestTest {
     private static FilingFacts filing(int year, Optional<LocalDate> furnishedOn, List<FilingFacts.Payment> selfAssessment) {
         return new FilingFacts(LocalDate.of(year + 1, 7, 31), furnishedOn,
                 List.of(paid(LocalDate.of(year, 9, 15), "30000"), paid(LocalDate.of(year + 1, 3, 15), "20000")),
-                Money.of("20000"), selfAssessment, Map.of());
+                Money.of("20000"), selfAssessment, Map.of(), Optional.empty());
     }
 
     private static FilingFacts.Payment paid(LocalDate on, String amount) {
@@ -229,7 +231,7 @@ class AdvanceTaxAndInterestTest {
     void evaluate_whenAdvanceTaxIsEitherSideOfNinetyPercent_chargesShortfallInterestBelowIt(String paid, String interest) {
         // Given — assessed 80,000; 90 % = 72,000, and s.234B runs only on "less than ninety per cent."
         FilingFacts filing = new FilingFacts(LocalDate.of(2026, 7, 31), on(2026, 8, 31),
-                List.of(paid(LocalDate.of(2025, 9, 15), paid)), Money.of("20000"), List.of(), Map.of());
+                List.of(paid(LocalDate.of(2025, 9, 15), paid)), Money.of("20000"), List.of(), Map.of(), Optional.empty());
         EngineInputs inputs = inputs(2025, filing, LocalDate.of(2026, 8, 31), UNDER_SIXTY);
 
         // When
@@ -340,5 +342,32 @@ class AdvanceTaxAndInterestTest {
                 DefermentInterest.RelievedIncome.WINNINGS, DefermentInterest.RelievedIncome.FIRST_TIME_BUSINESS_INCOME,
                 DefermentInterest.RelievedIncome.DIVIDEND);
         assertThat(rule.relievedIfPaidBy()).isEqualTo(MonthDay.of(3, 31));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void refund_whenTheYearsPackIsRead_addsHalfAPerCentAMonthAndNoneBelowATenth(int year) {
+        // Given — 2025 s.437(1), (2) and 1961 s.244A(1)(a), (aa), proviso: 0.5 % for every month or part, none below 10 %
+        RulePack pack = pack(year);
+
+        // When
+        RefundInterest rule = (RefundInterest) pack.rule(RuleIds.INT_REFUND)
+                .versionAt(TemporalContext.forTaxYear(TaxYearId.of(year), LocalDate.of(year, 4, 1))).definition()
+                .orElseThrow();
+
+        // Then
+        assertThat(rule.perMonth()).isEqualTo(Rate.percent("0.5"));
+        assertThat(rule.noInterestBelowShare()).isEqualTo(Rate.percent("10"));
+    }
+
+    @Test
+    void asMoney_whenARefundCarriesInterest_leavesItOutOfWhatIsOwed() {
+        // Given — 1,560 of deferment owed and 366 added to a refund (W-112b C4a)
+        InterestAndFees items = new InterestAndFees(List.of(
+                new InterestAndFees.Item(RuleIds.INT_DEFERMENT, InterestAndFees.Kind.INTEREST, Money.of("1560")),
+                new InterestAndFees.Item(RuleIds.INT_REFUND, InterestAndFees.Kind.RECEIVABLE, Money.of("366"))));
+
+        // When / Then
+        assertThat(items.asMoney()).isEqualTo(Money.of("1560"));
     }
 }

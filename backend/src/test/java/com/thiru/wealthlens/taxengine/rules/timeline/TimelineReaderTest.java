@@ -68,6 +68,7 @@ class TimelineReaderTest {
             new RuleId("INT-CALCULATION"),
             new RuleId("INT-DEFERMENT"),
             new RuleId("INT-LATE-RETURN"),
+            new RuleId("INT-REFUND"),
             new RuleId("STT-PURCHASE-DELIVERY"),
             new RuleId("STT-SALE-DELIVERY"),
             new RuleId("STT-SALE-NONDELIVERY"),

@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.244A / 2025 s.437 (coverage MODELLED by INT-REFUND); interest on an excess refund (s.234D / s.426) is out of scope; plans/W-112b.md; D-663",
+  "key": "SEC-INTEREST-REFUND",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.244A",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.437",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest added to a refund",
+  "summary": "Interest the Government adds to a refund, by the month from when the tax was paid or the return furnished until the refund is granted, unless the refund is small beside the tax.",
+  "routes": [
+    {
+      "name": "Interest added to a refund",
+      "description": "Paid with the refund; not part of what is owed.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "INT-REFUND"
+        }
+      ]
+    }
+  ]
+}
