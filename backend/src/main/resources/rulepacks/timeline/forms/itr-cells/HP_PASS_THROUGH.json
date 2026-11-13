@@ -1,0 +1,9 @@
+{
+  "code": "HP_PASS_THROUGH",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Pass through income/loss",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Pass-through income (Schedule PTI) is not computed; enter it from the trust's or fund's statement"
+  }
+}

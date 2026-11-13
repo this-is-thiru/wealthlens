@@ -77,9 +77,9 @@ class T4RetirementContributionTest {
                 .as("%s in %s — Chapter VIII", golden.id(), year.label())
                 .isEqualTo(MoneyValue.of(deduction)));
         golden.expectedOtherSourcesIncome().ifPresent(income -> assertThat(
-                        run.result().valueOf(NodeIds.OTHERSOURCES_INCOME))
+                        run.result().valueOf(NodeIds.OTHERSOURCES_INCOME).asMoney())
                 .as("%s in %s — income from other sources", golden.id(), year.label())
-                .isEqualTo(MoneyValue.of(income)));
+                .isEqualTo(income));
         golden.expectedProvidentFundExcess().ifPresent(excess -> assertThat(run.result().trace().stream()
                         .filter(line -> line.rule().equals(RuleIds.OS_PF_TAXABLE_INTEREST))
                         .filter(line -> line.kind() == StepKind.MEASURE)

@@ -79,7 +79,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(year, List.of(R16_LET));
 
         // Then — annual value 5,40,000 − 18,000 = 5,22,000; 30% = 1,56,600; 5,22,000 − 1,56,600
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("365400")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("365400")));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.HP_ANNUAL_VALUE, RuleIds.HP_STANDARD_DEDUCTION);
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("522000")));
@@ -92,7 +92,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(year, List.of(unlet(HouseOccupancy.OWN_RESIDENCE, "480000")));
 
         // Then — S2 s.21(6); 1961 s.23(2)
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).first()
                 .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.HP_OWN_RESIDENCE));
     }
@@ -103,7 +103,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(2026, List.of(unlet(HouseOccupancy.NOT_LET, "300000")));
 
         // Then — 3,00,000 − 90,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("210000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("210000")));
     }
 
     @Test
@@ -113,8 +113,8 @@ class HousePropertyNodeTest {
         NodeResult notVacant = run(2026, List.of(let("480000", "360000", false, "0")));
 
         // Then — s.21(2): 3,60,000 − 1,08,000 = 2,52,000; without the vacancy the higher, 4,80,000 − 1,44,000
-        assertThat(vacant.value()).isEqualTo(MoneyValue.of(Money.of("252000")));
-        assertThat(notVacant.value()).isEqualTo(MoneyValue.of(Money.of("336000")));
+        assertThat(vacant.value().asMoney()).isEqualTo((Money.of("252000")));
+        assertThat(notVacant.value().asMoney()).isEqualTo((Money.of("336000")));
     }
 
     @Test
@@ -125,7 +125,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(2026, List.of(half));
 
         // Then — S2 s.24(1): half of 3,65,400
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("182700")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("182700")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -137,7 +137,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(year, List.of(withArrears));
 
         // Then — S2 s.23; 1961 s.25A: 1,00,000 − 30,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("70000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("70000")));
     }
 
     @Test
@@ -156,7 +156,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(2026, List.of(home, home));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @Test
@@ -173,7 +173,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(2026, List.of());
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).isEmpty();
     }
 
@@ -194,7 +194,7 @@ class HousePropertyNodeTest {
 
         // Then — S2 s.21(4); 1961 s.23(1) Explanation: rent 4,50,000 under 4,80,000; 4,80,000 − 18,000 = 4,62,000,
         // less 1,38,600
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("323400")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("323400")));
         assertThat(result.trace().getFirst()).satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.HP_UNREALISED_RENT);
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("450000")));
@@ -207,7 +207,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(2026, List.of(unrealised("480000", "540000", "30000", false, "18000")));
 
         // Then — 5,10,000 − 18,000 = 4,92,000, less 1,47,600
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("344400")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("344400")));
     }
 
     @Test
@@ -216,7 +216,7 @@ class HousePropertyNodeTest {
         NodeResult result = run(2026, List.of(unrealised("480000", "360000", "60000", true, "0")));
 
         // Then — s.21(2) on 3,00,000: 3,00,000 − 90,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("210000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("210000")));
     }
 
     @Test

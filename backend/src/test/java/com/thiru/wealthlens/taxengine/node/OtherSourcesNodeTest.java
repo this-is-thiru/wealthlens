@@ -19,6 +19,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -130,7 +131,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, List.of());
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).isEmpty();
     }
 
@@ -144,7 +145,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, List.of(securities));
 
         // Then — 1,00,000 − 2,000 − 3,000 (S2 s.93(1)(a), (e); 1961 s.57(i), (iii))
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("95000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("95000")));
         assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_INTEREST,
                 RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE);
     }
@@ -159,7 +160,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, List.of(savings));
 
         // Then — clause (a) / (i) reaches interest on securities only: a nil line, the whole 40,000 chargeable
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("40000")));
         assertThat(result.trace().get(1).rule()).isEqualTo(RuleIds.OS_BANKER_COMMISSION);
         assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.ZERO));
     }
@@ -175,7 +176,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2025, items);
 
         // Then — the limit is the year's: 20% of 6,00,000 = 1,20,000 < 1,50,000; 6,00,000 − 1,20,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("480000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("480000")));
         assertThat(result.trace().getLast().rule()).isEqualTo(RuleIds.OS_DIVIDEND_INTEREST);
         assertThat(result.trace().getLast().out()).isEqualTo(MoneyValue.of(Money.of("120000")));
     }
@@ -189,7 +190,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2025, items);
 
         // Then — 60,000 < 1,00,000 (20% of 5,00,000); 5,00,000 − 60,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("440000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("440000")));
     }
 
     @Test
@@ -201,7 +202,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, items);
 
         // Then — S2 s.93(2) as substituted by FA 2026 s.44(b): no deduction
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("500000")));
         assertThat(result.trace().getLast().out()).isEqualTo(MoneyValue.of(Money.ZERO));
     }
 
@@ -215,7 +216,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, items);
 
         // Then — the 1961 s.57 proviso (FA 2020 s.30(b)) and S2 s.93(2): only interest expense, never commission
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("200000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.OS_DIVIDEND, RuleIds.OS_BANKER_COMMISSION);
         assertThat(result.trace().getLast().out()).isEqualTo(MoneyValue.of(Money.ZERO));
@@ -233,7 +234,7 @@ class OtherSourcesNodeTest {
 
         // Then — nothing against the deemed one (F(No.2)A 2024 s.24(c)); the 20% is of 1,00,000 only = 20,000;
         // 2,00,000 + 1,00,000 − 20,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("280000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("280000")));
         // — the deemed dividend's 50,000 a nil line on the expenditure row, which does not reach it (D-323)
         assertThat(rowLines(result, RuleIds.OS_OTHER_EXPENDITURE)).extracting(TraceLine::in, TraceLine::out)
                 .containsExactly(tuple(money("50000"), money("0")));
@@ -250,7 +251,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, items);
 
         // Then — 50% of 80,000 = 40,000 deducted; the 5,000 is a nil line (S2 s.93(1)(f); 1961 s.57(iv))
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("40000")));
         assertThat(result.trace().getLast().out()).isEqualTo(MoneyValue.of(Money.ZERO));
     }
 
@@ -264,7 +265,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, List.of(untaxed));
 
         // Then — S2 s.94(1)(b), (c)
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("100000")));
         assertThat(result.trace().getLast().limitedBy()).hasValueSatisfying(
                 why -> assertThat(why).contains("payable outside India untaxed"));
     }
@@ -279,7 +280,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, List.of(untaxed));
 
         // Then — S2 s.94(1)(b), (c): 100 and 200 + 400 each a nil line on its own row
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("10000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("10000")));
         assertThat(rowLines(result, RuleIds.OS_BANKER_COMMISSION)).extracting(TraceLine::in, TraceLine::out)
                 .containsExactly(tuple(money("100"), money("0")));
         assertThat(rowLines(result, RuleIds.OS_OTHER_EXPENDITURE)).extracting(TraceLine::in, TraceLine::out)
@@ -298,6 +299,23 @@ class OtherSourcesNodeTest {
      * row; interest and other expenditure on the expenditure row — for dividends and unit income other expenditure
      * only (400), their interest going to the year's limit.
      */
+    @Test
+    void evaluate_whenItemsOfOneKindRepeat_addsTheirGrossByKindForTheSchedule() {
+        // Given — savings 14,000; two deposits, 90,000 and 10,000; securities 1,00,000 with 2,000 to the banker
+        List<OtherSourceItem> items = List.of(item(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, "14000", "0", "0", "0"),
+                item(OtherSourceKind.DEPOSIT_INTEREST, "90000", "0", "0", "0"),
+                item(OtherSourceKind.DEPOSIT_INTEREST, "10000", "0", "0", "0"),
+                item(OtherSourceKind.INTEREST_ON_SECURITIES, "100000", "2000", "0", "0"));
+
+        // When
+        OtherSourcesHead head = (OtherSourcesHead) run(2025, items).value();
+
+        // Then — Schedule OS 1b's rows by kind, gross; the banker's 2,000 comes off the head, not the gross (W-093a)
+        assertThat(head.grossByKind()).isEqualTo(Map.of("SAVINGS_DEPOSIT_INTEREST", Money.of("14000"),
+                "DEPOSIT_INTEREST", Money.of("100000"), "INTEREST_ON_SECURITIES", Money.of("100000")));
+        assertThat(head.total()).isEqualTo(Money.of("212000"));
+    }
+
     private static Stream<Arguments> reachByKind() {
         List<OtherSourceKind> bearingExpenditureOnly = List.of(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST,
                 OtherSourceKind.DEPOSIT_INTEREST, OtherSourceKind.OTHER_INTEREST, OtherSourceKind.FAMILY_PENSION,
@@ -394,7 +412,7 @@ class OtherSourcesNodeTest {
                 "0")));
 
         // Then — charged in full by s.92(2)(i), half deducted by s.93(1)(f), the commission no row reaches
-        assertThat(result.value()).isEqualTo(money("100000"));
+        assertThat(result.value().asMoney()).isEqualTo(money("100000").asMoney());
         assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
                 tuple(RuleIds.OS_COMPENSATION_INTEREST_INCOME, money("200000")),
                 tuple(RuleIds.OS_COMPENSATION_INTEREST, money("100000")),
@@ -479,7 +497,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2025, items);
 
         // Then — s.92(1) / s.56(1) charges it (not "any dividend"); 20% of 1,00,000 = 20,000 ≥ 10,000
-        assertThat(result.value()).isEqualTo(money("90000"));
+        assertThat(result.value().asMoney()).isEqualTo(money("90000").asMoney());
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_RESIDUAL);
         assertThat(result.trace().getFirst().out()).isEqualTo(money("100000"));
     }
@@ -490,7 +508,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, List.of(item(OtherSourceKind.OTHER_INTEREST, "10000", "0", "0", "15000")));
 
         // Then — −5,000, which SetOffNode sets off against the other heads (D-217)
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("-5000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("-5000")));
     }
 
     /** {@code DR 08} T6-6: savings 14,000; time deposit 90,000; dividend 2,00,000 bearing 60,000 of interest. */
@@ -505,7 +523,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, T6_6);
 
         // Then — DR 08 T6-6: "other-sources income = 14,000 + 90,000 + 2,00,000 = 3,04,000" (FA 2026 s.44(b))
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("304000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("304000")));
     }
 
     @Test
@@ -514,7 +532,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2025, T6_6);
 
         // Then — DR 08 T6-6: "0.20 × 2,00,000 = 40,000"; "3,04,000 − 40,000 = 2,64,000"
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("264000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("264000")));
     }
 
     private static OtherSourceItem pension(String received) {
@@ -528,7 +546,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, OLD, List.of(pension("30000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("20000")));
         assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
                 tuple(RuleIds.OS_RESIDUAL, money("30000")), tuple(RuleIds.OS_FAMILY_PENSION, money("10000")));
     }
@@ -540,7 +558,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, OLD, List.of(pension("60000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("45000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("45000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -550,7 +568,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, NEW, List.of(pension("60000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("40000")));
         assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
                 tuple(RuleIds.OS_RESIDUAL, money("60000")),
                 tuple(RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME, money("20000")));
@@ -563,7 +581,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, NEW, List.of(pension("90000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("65000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("65000")));
     }
 
     @Test
@@ -572,7 +590,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, OLD, List.of(pension("10000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("6666.67")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("6666.67")));
     }
 
     @Test
@@ -584,7 +602,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, OLD, List.of(expensed));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("44000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("44000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.OS_RESIDUAL, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_OTHER_EXPENDITURE);
     }
@@ -597,7 +615,7 @@ class OtherSourcesNodeTest {
                 "0")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::in, TraceLine::out).containsExactly(
                 tuple(RuleIds.OS_RESIDUAL, money("500000"), money("500000")),
                 tuple(RuleIds.OS_COMMUTED_PENSION, money("500000"), money("500000")));
@@ -610,7 +628,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, NEW, List.of(item(OtherSourceKind.DEATH_GRATUITY, "1000000", "0", "0", "0")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.OS_RESIDUAL, RuleIds.OS_DEATH_GRATUITY);
     }
@@ -621,7 +639,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, OLD, List.of(item(OtherSourceKind.DEATH_GRATUITY, "1000000", "0", "0", "2000")));
 
         // Then — income 10,00,000, its share 10,00,000, the 2,000 a nil line on the expenditure row
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
                 tuple(RuleIds.OS_RESIDUAL, money("1000000")), tuple(RuleIds.OS_DEATH_GRATUITY, money("1000000")),
                 tuple(RuleIds.OS_OTHER_EXPENDITURE, money("0")));
@@ -654,7 +672,7 @@ class OtherSourcesNodeTest {
 
         // Then — 6,00,000 − 2,50,000 = 3,50,000 enters the taxable account; the 12,000 is income
         assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.of("350000")));
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("12000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("12000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsOnly(RuleIds.OS_PF_TAXABLE_INTEREST);
     }
@@ -667,7 +685,7 @@ class OtherSourcesNodeTest {
 
         // Then — 6,00,000 − 5,00,000 = 1,00,000
         assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.of("100000")));
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("5000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("5000")));
     }
 
     @Test
@@ -677,7 +695,7 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.ZERO));
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @Test
@@ -687,7 +705,7 @@ class OtherSourcesNodeTest {
 
         // Then — 2,60,000 − 2,50,000 = 10,000
         assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.of("10000")));
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("400")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("400")));
     }
 
     @Test
@@ -697,7 +715,7 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.ZERO));
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("8000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("8000")));
     }
 
     @Test
@@ -707,7 +725,7 @@ class OtherSourcesNodeTest {
 
         // Then — "in that fund": nothing beyond either threshold
         assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO));
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @Test
@@ -716,7 +734,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(2026, OLD, List.of(pension("30000")), List.of(fund("600000", true, "12000")));
 
         // Then — 30,000 − min(10,000, 15,000) = 20,000, plus 12,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("32000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("32000")));
     }
 
     private static GiftReceived gift(GiftKind kind, String consideration, String value) {
@@ -774,7 +792,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(year, sum("30000"), sum("25000"));
 
         // Then — "the total of which exceeds ₹ 50000, the whole of such sum": 55,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("55000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("55000")));
         assertThat(result.trace()).extracting(TraceLine::rule).containsOnly(RuleIds.OS_GIFT);
     }
 
@@ -785,7 +803,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(year, sum("30000"), sum("20000"));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -795,7 +813,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(year, excluded(GiftExclusion.RELATIVE, "100000"), sum("40000"));
 
         // Then — the relative's sum counts toward nothing; 40,000 alone does not exceed
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace().getFirst().kind()).isEqualTo(StepKind.EXEMPTION);
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("100000")));
     }
@@ -807,7 +825,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(year, gift(GiftKind.IMMOVABLE_PROPERTY, "0", "600000"));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("600000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("600000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -817,7 +835,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(year, gift(GiftKind.IMMOVABLE_PROPERTY, "5000000", "5400000"));
 
         // Then — 4,00,000 is not more than max(50,000, 10% of 50,00,000 = 5,00,000)
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -828,7 +846,7 @@ class OtherSourcesNodeTest {
                 gift(GiftKind.IMMOVABLE_PROPERTY, "300000", "360000"));
 
         // Then — 6,00,000 > 5,00,000; 60,000 > max(50,000, 30,000): each on its own, 6,60,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("660000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("660000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -839,7 +857,7 @@ class OtherSourcesNodeTest {
                 gift(GiftKind.OTHER_PROPERTY, "0", "25000"));
 
         // Then — "the aggregate fair market value of which exceeds ₹ 50000": 55,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("55000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("55000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -850,7 +868,7 @@ class OtherSourcesNodeTest {
 
         // Then — limb (i)'s total 30,000 and limb (iii)(A)'s total 30,000 each do not exceed 50,000; pooled, the
         // 60,000 would have been charged
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.OS_GIFT, RuleIds.OS_GIFT_PROPERTY_FREE);
     }
@@ -863,7 +881,7 @@ class OtherSourcesNodeTest {
                 gift(GiftKind.OTHER_PROPERTY, "100000", "150000"));
 
         // Then — 60,000 exceeds 50,000; 50,000 does not: 60,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("60000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("60000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -873,7 +891,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(year, excluded(GiftExclusion.MARRIAGE, "500000"));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @Test
@@ -882,7 +900,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(2025, excluded(GiftExclusion.COVID_DEATH_FROM_OTHERS, "1200000"));
 
         // Then — 10,00,000 excluded; 2,00,000 remains and exceeds 50,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("200000")));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_GIFT_COVID_DEATH);
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("1000000")));
     }
@@ -895,7 +913,7 @@ class OtherSourcesNodeTest {
 
         // Then — (A) has no limit, so the employer's 3,00,000 is excluded whole; of the others' 12,00,000 the
         // limit excludes 10,00,000, and the 2,00,000 left exceeds 50,000, so 2,00,000 is charged
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("200000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.OS_GIFT_EXCLUSION, RuleIds.OS_GIFT_COVID_DEATH, RuleIds.OS_GIFT);
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("300000")));
@@ -908,7 +926,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runGifts(2025, excluded(GiftExclusion.COVID_TREATMENT, "100000"));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_GIFT_EXCLUSION);
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("100000")));
     }
@@ -943,7 +961,7 @@ class OtherSourcesNodeTest {
                 "0")), List.of(), List.of(sum("30000"), sum("25000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("65000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("65000")));
     }
 
     private static NodeResult runTrusts(int year, BusinessTrustUnits... trusts) {
@@ -962,7 +980,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, List.of(item(OtherSourceKind.KEYMAN_POLICY, "500000", "0", "0", "10000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("490000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("490000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.OS_KEYMAN_POLICY, RuleIds.OS_OTHER_EXPENDITURE);
     }
@@ -974,7 +992,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, List.of(item(OtherSourceKind.FORFEITED_ADVANCE, "200000", "0", "0", "0")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("200000")));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_FORFEITED_ADVANCE);
     }
 
@@ -986,7 +1004,7 @@ class OtherSourcesNodeTest {
                 "0")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("300000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("300000")));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_TERMINATION_COMPENSATION);
     }
 
@@ -998,7 +1016,7 @@ class OtherSourcesNodeTest {
                 Money.of("20000")));
 
         // Then — A − B − C = 30,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("30000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("30000")));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_BUSINESS_TRUST);
     }
 
@@ -1011,7 +1029,7 @@ class OtherSourcesNodeTest {
                 new BusinessTrustUnits(Money.of("110000"), Money.of("80000"), Money.of("30000")));
 
         // Then — "deemed to be zero, if the sum of B and C is greater than A"; equal gives zero too
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1021,7 +1039,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, List.of(item(OtherSourceKind.OTHER, "25000", "0", "0", "5000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("20000")));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_RESIDUAL);
     }
 
@@ -1032,7 +1050,7 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, List.of(item(OtherSourceKind.KEYMAN_POLICY, "500000", "1000", "0", "0")));
 
         // Then — a nil line; 5,00,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("500000")));
         assertThat(result.trace().get(1).rule()).isEqualTo(RuleIds.OS_BANKER_COMMISSION);
         assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.ZERO));
     }
@@ -1045,7 +1063,7 @@ class OtherSourcesNodeTest {
                 item(OtherSourceKind.INTEREST_ON_SECURITIES, "10000", "0", "0", "0")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("210000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("210000")));
     }
 
     /** A policy's receipt: not unit linked, not on death, not special, not IFSC, held alone unless said otherwise. */
@@ -1079,7 +1097,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runPolicies(year, policy(IN_2015, "800000", "50000", "600000", "0"));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
         assertThat(result.trace().getFirst().kind()).isEqualTo(StepKind.EXEMPTION);
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_LIFE_POLICY_RATIO);
     }
@@ -1091,7 +1109,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runPolicies(year, policy(IN_2015, "1000000", "70000", "600000", "300000"));
 
         // Then — r.59 A − B
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("700000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("700000")));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_LIFE_POLICY);
     }
 
@@ -1104,7 +1122,7 @@ class OtherSourcesNodeTest {
                 Money.of("300000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1116,7 +1134,7 @@ class OtherSourcesNodeTest {
                 policy(in2010, "500000", "110000", "500000", "400000"));
 
         // Then — the first excluded; the second 5,00,000 − 4,00,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("100000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1126,7 +1144,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runPolicies(year, policy(LocalDate.of(2001, 6, 1), "800000", "150000", "500000", "0"));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1136,7 +1154,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runPolicies(year, policy(IN_2023, "4000000", "600000", "10000000", "3000000"));
 
         // Then — the 5,00,000 limit breached: 10,00,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("1000000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1148,7 +1166,7 @@ class OtherSourcesNodeTest {
                 Money.of("3000000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1170,7 +1188,7 @@ class OtherSourcesNodeTest {
         NodeResult result = runPolicies(year, policy(IN_2015, "1000000", "70000", "600000", "1200000"));
 
         // Then — "the sum exceeding": nil, never a loss
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1182,7 +1200,7 @@ class OtherSourcesNodeTest {
                 TaxYearId.of(2034), Money.of("3000000")));
 
         // Then — no premium limit (TY 2026-27 from 1-4-2025; TY 2025-26 any date); 6% within 10%
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1194,7 +1212,7 @@ class OtherSourcesNodeTest {
                 "300000")));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("710000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("710000")));
     }
 
     /** A capped policy's receipt — not unit linked, issued on {@code issuedOn}, sum assured ten times the premium. */
@@ -1232,7 +1250,7 @@ class OtherSourcesNodeTest {
                 capped(APRIL_2023, 2023, 2032, "550000", "6000000", "5500000", true));
 
         // Then — B over 5,00,000 alone: 60,00,000 − 55,00,000 = 5,00,000; A excluded
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("500000")));
         assertThat(result.trace()).extracting(TraceLine::kind).containsExactly(StepKind.EXEMPTION, StepKind.INCOME);
     }
 
@@ -1246,7 +1264,7 @@ class OtherSourcesNodeTest {
                 capped(APRIL_2023, 2023, 2032, "600000", "7000000", "6000000", true));
 
         // Then — 4,50,000 within 5,00,000: A and B excluded; C 70,00,000 − 60,00,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("1000000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1269,7 +1287,7 @@ class OtherSourcesNodeTest {
                 capped(APRIL_2024, 2024, 2033, "100000", "1200000", "1000000", true));
 
         // Then — 5,50,000 in 2024-25: not excluded; 12,00,000 − 10,00,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("200000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1280,7 +1298,7 @@ class OtherSourcesNodeTest {
                 capped(APRIL_2024, 2024, 2033, "250000", "3800000", "2500000", true));
 
         // Then — 5,00,000 does not exceed
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1291,7 +1309,7 @@ class OtherSourcesNodeTest {
                 capped(LocalDate.of(2034, 4, 1), 2034, 2047, "500000", "5200000", "5000000", true));
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1303,7 +1321,7 @@ class OtherSourcesNodeTest {
                 capped(APRIL_2023, 2023, 2032, "150000", "1800000", "1500000", true));
 
         // Then — A + C = 2,50,000 within 5,00,000; the ULIP counts toward its own class only
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1314,7 +1332,7 @@ class OtherSourcesNodeTest {
                 capped(APRIL_2023, 2023, 2032, "100000", "1200000", "1000000", false));
 
         // Then — 12,00,000 − 10,00,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.value().asMoney()).isEqualTo((Money.of("200000")));
     }
 
     @ParameterizedTest(name = "TY {0}")

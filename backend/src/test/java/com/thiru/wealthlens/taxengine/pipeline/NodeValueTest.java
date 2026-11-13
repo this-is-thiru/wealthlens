@@ -130,13 +130,26 @@ class NodeValueTest {
          * without extending this switch does not compile.
          */
         @Test
+        void heads_whenTheirTotalOrItemsAreMissing_areRefused() {
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> new HousePropertyHead(null, java.util.List.of()))
+                    .hasMessage("A house-property head needs its total and its properties, empty for none");
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> new HousePropertyHead(Money.ZERO, null))
+                    .hasMessage("A house-property head needs its total and its properties, empty for none");
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> new OtherSourcesHead(null, java.util.Map.of()))
+                    .hasMessage("An other-sources head needs its total and its gross by kind, empty for none");
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> new OtherSourcesHead(Money.ZERO, null))
+                    .hasMessage("An other-sources head needs its total and its gross by kind, empty for none");
+        }
+
+        @Test
         void everyNodeValueIsAccountedFor() {
             java.util.List<NodeValue> all = java.util.List.of(
                     MoneyValue.of(Money.of("1")), TaxByBasis.atSlabRatesOnly(Money.of("1")),
                     new ComponentSet(java.util.Map.of()), new SalaryBases(java.util.Map.of()), CapitalGainsHead.none(),
                     new HeadsAfterSetOff(Money.of("1"), java.util.Map.of()),
                     new AdvanceTaxPosition(false, Money.of("1"), java.util.List.of()),
-                    new InterestAndFees(java.util.List.of()));
+                    new InterestAndFees(java.util.List.of()), new HousePropertyHead(Money.of("1"), java.util.List.of()),
+                    new OtherSourcesHead(Money.of("1"), java.util.Map.of()));
 
             for (NodeValue value : all) {
                 String kind = switch (value) {
@@ -148,10 +161,12 @@ class NodeValueTest {
                     case HeadsAfterSetOff ignored -> "heads after set-off";
                     case AdvanceTaxPosition ignored -> "advance tax and its instalments";
                     case InterestAndFees ignored -> "interest and fees by row";
+                    case HousePropertyHead ignored -> "house property by property";
+                    case OtherSourcesHead ignored -> "other sources by kind";
                 };
                 assertThat(kind).isNotBlank();
             }
-            assertThat(all).hasSize(8);
+            assertThat(all).hasSize(10);
         }
     }
 

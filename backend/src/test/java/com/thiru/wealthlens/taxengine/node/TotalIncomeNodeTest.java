@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -41,8 +43,8 @@ class TotalIncomeNodeTest {
         // When
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
-                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
-                .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
+                .given(NodeIds.HOUSEPROPERTY_INCOME, new HousePropertyHead(Money.ZERO, java.util.List.of()))
+                .given(NodeIds.OTHERSOURCES_INCOME, new OtherSourcesHead(Money.ZERO, java.util.Map.of()))
                 .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
 
@@ -56,8 +58,8 @@ class TotalIncomeNodeTest {
         // When — 9,25,000 under Salaries and 3,65,400 from a let property (D-155)
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
-                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
-                .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
+                .given(NodeIds.HOUSEPROPERTY_INCOME, new HousePropertyHead(Money.of("365400"), java.util.List.of()))
+                .given(NodeIds.OTHERSOURCES_INCOME, new OtherSourcesHead(Money.ZERO, java.util.Map.of()))
                 .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
 
@@ -70,8 +72,8 @@ class TotalIncomeNodeTest {
         // When — 9,25,000 under Salaries, 3,65,400 from house property and 95,000 from other sources (D-194)
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
-                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
-                .given(NodeIds.OTHERSOURCES_INCOME, Money.of("95000"))
+                .given(NodeIds.HOUSEPROPERTY_INCOME, new HousePropertyHead(Money.of("365400"), java.util.List.of()))
+                .given(NodeIds.OTHERSOURCES_INCOME, new OtherSourcesHead(Money.of("95000"), java.util.Map.of()))
                 .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
 

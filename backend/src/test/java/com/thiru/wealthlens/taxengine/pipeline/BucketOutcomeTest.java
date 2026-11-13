@@ -23,14 +23,33 @@ class BucketOutcomeTest {
         BucketOutcome.TermDecision decision = new BucketOutcome.TermDecision(Term.LONG_TERM, RuleIds.CG_TERM_LISTED_SECURITY, 12);
 
         // When / Then
-        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.of(decision), Optional.of(RuleIds.CG_DEPOSIT)))
+        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.of(decision), Optional.of(RuleIds.CG_DEPOSIT),
+                Money.ZERO, Money.ZERO, Money.ZERO, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void new_whenNeitherIsGiven_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.empty(), Optional.empty()))
+        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.empty(), Optional.empty(), Money.ZERO,
+                Money.ZERO, Money.ZERO, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void new_whenAFigureOrThePartIsMissing_refuses() {
+        // Given
+        BucketOutcome.TermDecision decision = new BucketOutcome.TermDecision(Term.LONG_TERM, RuleIds.CG_TERM_LISTED_SECURITY, 12);
+        String refusal = "A bucket's outcome states its consideration, cost and expenditure, and its part or none";
+
+        // When / Then
+        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.of(decision), Optional.empty(),
+                null, Money.ZERO, Money.ZERO, Optional.empty())).hasMessage(refusal);
+        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.of(decision), Optional.empty(),
+                Money.ZERO, null, Money.ZERO, Optional.empty())).hasMessage(refusal);
+        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.of(decision), Optional.empty(),
+                Money.ZERO, Money.ZERO, null, Optional.empty())).hasMessage(refusal);
+        assertThatThrownBy(() -> new BucketOutcome(FACTS, Money.ZERO, List.of(), Optional.of(decision), Optional.empty(),
+                Money.ZERO, Money.ZERO, Money.ZERO, null)).hasMessage(refusal);
     }
 }

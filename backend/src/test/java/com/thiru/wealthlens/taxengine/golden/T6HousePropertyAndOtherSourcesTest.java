@@ -69,8 +69,8 @@ class T6HousePropertyAndOtherSourcesTest {
     private static void assertFigure(GoldenCaseRunner.ShippedPipelineRun run, HouseAndOtherSourcesGoldenCase golden,
             TaxYearId year, NodeId node, Map<TaxYearId, Money> expected) {
         if (expected.containsKey(year)) {
-            assertThat(run.result().valueOf(node)).as("%s in %s — %s", golden.id(), year.label(), node)
-                    .isEqualTo(MoneyValue.of(expected.get(year)));
+            assertThat(run.result().valueOf(node).asMoney()).as("%s in %s — %s", golden.id(), year.label(), node)
+                    .isEqualTo(expected.get(year));
         }
     }
 

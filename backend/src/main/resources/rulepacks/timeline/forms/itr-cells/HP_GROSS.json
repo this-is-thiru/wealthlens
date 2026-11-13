@@ -1,0 +1,9 @@
+{
+  "code": "HP_GROSS",
+  "_note": "Where the rent is the measure, the rent not realised is added back here and shown at 1b (D-658). Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Gross rent received or receivable or lettable value",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "gross"
+  }
+}

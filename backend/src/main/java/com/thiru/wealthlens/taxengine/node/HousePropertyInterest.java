@@ -114,10 +114,18 @@ final class HousePropertyInterest {
      * A house other than an own residence: its interest, deducted whole. An own residence's is only gathered, for
      * {@link #ownResidenceAllowed}; nothing is deducted for it here.
      */
-    Money deductedFor(int position, HouseProperty property) {
+    /**
+     * A house's interest: what is deducted for it outright (a house other than an own residence), and what it adds to
+     * the own residences' aggregate before that is limited (W-093a, D-658) — the share Schedule HP shows it.
+     */
+    record HouseInterest(Money deducted, Money ownResidenceBeforeLimit) {
+    }
+
+    HouseInterest interestFor(int position, HouseProperty property) {
         boolean ownResidence = HousePropertyNode.isOwnResidence(ctx, property);
         RuleId current = rowFor(YEARS_INTEREST, property);
         Money deducted = Money.ZERO;
+        Money own = Money.ZERO;
         for (int i = 0; i < property.loans().size(); i++) {
             HousingLoan loan = property.loans().get(i);
             Money interest = allowed(position, current, loan, yearsInterest(loan), "the year's interest");
@@ -127,13 +135,15 @@ final class HousePropertyInterest {
                     .orElse(Money.ZERO);
             if (ownResidence && qualifiesForHigherLimit(property, loan)) {
                 ownResidenceConditionsMet = ownResidenceConditionsMet.plus(interest).plus(instalment);
+                own = own.plus(interest).plus(instalment);
             } else if (ownResidence) {
                 ownResidenceAnyOtherCase = ownResidenceAnyOtherCase.plus(interest).plus(instalment);
+                own = own.plus(interest).plus(instalment);
             } else {
                 deducted = deducted.plus(interest).plus(instalment);
             }
         }
-        return deducted;
+        return new HouseInterest(deducted, own);
     }
 
     /**

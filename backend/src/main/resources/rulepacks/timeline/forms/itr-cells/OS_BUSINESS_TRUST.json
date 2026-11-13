@@ -1,0 +1,11 @@
+{
+  "code": "OS_BUSINESS_TRUST",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Specified sum received by a unit holder from a business trust u/s 56(2)(xii)",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "BUSINESS_TRUST"
+    ]
+  }
+}

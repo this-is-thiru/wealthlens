@@ -10,10 +10,12 @@ import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
@@ -62,8 +64,9 @@ class ReturnFactsProjectionTest {
     private static PipelineRunner.Result handBuilt() {
         Map<NodeId, NodeValue> values = new LinkedHashMap<>();
         values.put(NodeIds.SALARY_INCOME, MoneyValue.of(Money.of("900000")));
-        values.put(NodeIds.HOUSEPROPERTY_INCOME, MoneyValue.of(Money.of("-20000")));
-        values.put(NodeIds.OTHERSOURCES_INCOME, MoneyValue.of(Money.of("48000")));
+        values.put(NodeIds.HOUSEPROPERTY_INCOME, new HousePropertyHead(Money.of("-20000"), List.of()));
+        values.put(NodeIds.OTHERSOURCES_INCOME, new OtherSourcesHead(Money.of("48000"), Map.of("DEPOSIT_INTEREST",
+                Money.of("48000"))));
         values.put(NodeIds.CAPITALGAINS_INCOME, new CapitalGainsHead(Map.of(LONG_LISTED, Money.of("125000")), Map.of(),
                 Money.ZERO, Money.ZERO, List.of()));
         // House property ₹40,000 brought forward, ₹10,000 of it still carried; a capital loss of ₹15,000 left
@@ -87,6 +90,21 @@ class ReturnFactsProjectionTest {
         assertThat(facts.incomeUnder(HeadCode.OTHER_SOURCES)).isEqualTo(Money.of("48000"));
         assertThat(facts.incomeUnder(HeadCode.CAPITAL_GAINS)).isEqualTo(Money.of("125000"));
         assertThat(facts.capitalGains().get(LONG_LISTED)).isEqualTo(Money.of("125000"));
+    }
+
+    @Test
+    void of_whenAHeadHoldsNoAmount_refusesNamingWhatItHolds() {
+        // Given — the salary head holding a capital-gains head, which no run produces
+        PipelineRunner.Result built = handBuilt();
+        Map<NodeId, NodeValue> values = new LinkedHashMap<>(built.values());
+        values.put(NodeIds.SALARY_INCOME, CapitalGainsHead.none());
+        PipelineRunner.Result wrong = new PipelineRunner.Result(built.order(), values, built.trace(), List.of(),
+                built.inputs(), Map.of());
+
+        // When / Then
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> ReturnFactsProjection.of(wrong))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("salary.income holds a CapitalGainsHead, not an amount");
     }
 
     @Test

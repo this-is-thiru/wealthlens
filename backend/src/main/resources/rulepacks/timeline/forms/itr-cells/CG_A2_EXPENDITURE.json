@@ -1,0 +1,12 @@
+{
+  "code": "CG_A2_EXPENDITURE",
+  "_note": "The charges a row classes as expenditure on the transfer. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Expenditure wholly and exclusively in connection with transfer (short-term, equity share or equity-oriented fund, STT paid)",
+  "source": {
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "SHORT_TERM_LISTED_EQUITY"
+    ],
+    "figure": "transferExpenditure"
+  }
+}

@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrSchedule;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleField;
+import com.thiru.wealthlens.taxengine.rules.filing.ScheduleGroup;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.FurnishingManner;
 import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
@@ -67,14 +68,24 @@ public final class ItrFormJson {
 
     private static FieldSource source(JsonNode node, String path) {
         return switch (PackJson.tag(node, path, "FromNodes", "FromTaxBasis", "FromRules", "FromCapitalGainsParts", "SumOf",
-                "ManualEntry")) {
+                "FromItemFigure", "FromOtherSourceKinds", "FromCapitalGainsBuckets", "FromSetOff", "ManualEntry")) {
+            case "FromCapitalGainsBuckets" -> PackJson.construct(path, () -> new FieldSource.FromCapitalGainsBuckets(
+                    PackJson.array(node, "parts", path, e -> new CapitalGainsPart(e.node().asString())),
+                    PackJson.text(node, "figure", path)));
+            case "FromSetOff" -> PackJson.construct(path, () -> new FieldSource.FromSetOff(
+                    PackJson.array(node, "rows", path, e -> e.node().asString()), PackJson.text(node, "column", path)));
+            case "FromItemFigure" -> PackJson.construct(path,
+                    () -> new FieldSource.FromItemFigure(PackJson.text(node, "figure", path)));
+            case "FromOtherSourceKinds" -> PackJson.construct(path, () -> new FieldSource.FromOtherSourceKinds(
+                    PackJson.array(node, "kinds", path, e -> e.node().asString())));
             case "FromNodes" -> PackJson.construct(path, () -> new FieldSource.FromNodes(PackJson.array(node, "nodes", path,
                     e -> PackJson.construct(e.path(), () -> new NodeId(e.node().asString())))));
             case "FromTaxBasis" -> PackJson.construct(path,
                     () -> new FieldSource.FromTaxBasis(FieldSource.FromTaxBasis.Basis.valueOf(PackJson.text(node, "basis", path)),
                             PackJson.optionalText(node, "specialRate", path)));
             case "FromRules" -> PackJson.construct(path, () -> new FieldSource.FromRules(PackJson.array(node, "rules", path,
-                    e -> PackJson.construct(e.path(), () -> new RuleId(e.node().asString())))));
+                    e -> PackJson.construct(e.path(), () -> new RuleId(e.node().asString()))),
+                    PackJson.optionalText(node, "kind", path)));
             case "FromCapitalGainsParts" -> PackJson.construct(path, () -> new FieldSource.FromCapitalGainsParts(
                     PackJson.array(node, "parts", path, e -> new CapitalGainsPart(e.node().asString()))));
             case "SumOf" -> PackJson.construct(path, () -> new FieldSource.SumOf(PackJson.array(node, "cells", path,
@@ -117,8 +128,14 @@ public final class ItrFormJson {
         ScheduleCode code = PackJson.construct(path, () -> new ScheduleCode(PackJson.text(node, "code", path)));
         String where = path + " (" + code + ")";
         return PackJson.construct(where, () -> new ItrSchedule(code, PackJson.text(node, "displayName", where),
-                PackJson.array(node, "fields", where, e -> field(e.node(), e.path(), cells)),
+                PackJson.arrayOrEmpty(node, "fields", where, e -> field(e.node(), e.path(), cells)),
+                PackJson.arrayOrEmpty(node, "groups", where, e -> group(e.node(), e.path(), cells)),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
+    }
+
+    private static ScheduleGroup group(JsonNode node, String path, Map<CellCode, ScheduleCell> cells) {
+        return PackJson.construct(path, () -> new ScheduleGroup(PackJson.text(node, "item", path),
+                PackJson.text(node, "path", path), PackJson.array(node, "fields", path, e -> field(e.node(), e.path(), cells))));
     }
 
     private static ScheduleField field(JsonNode node, String path, Map<CellCode, ScheduleCell> cells) {

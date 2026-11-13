@@ -8,12 +8,15 @@ import com.thiru.wealthlens.taxengine.node.CarriedLossSetOff.Portion;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
 import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
+import com.thiru.wealthlens.taxengine.pipeline.SetOffRows;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
@@ -103,8 +106,8 @@ public final class SetOffNode implements ComputationNode {
         TemporalContext t = ctx.inputs().temporal();
         Map<HeadCode, Money> heads = new EnumMap<>(HeadCode.class);
         heads.put(HeadCode.SALARIES, ctx.get(NodeIds.SALARY_INCOME, MoneyValue.class).asMoney());
-        heads.put(HeadCode.HOUSE_PROPERTY, ctx.get(NodeIds.HOUSEPROPERTY_INCOME, MoneyValue.class).asMoney());
-        heads.put(HeadCode.OTHER_SOURCES, ctx.get(NodeIds.OTHERSOURCES_INCOME, MoneyValue.class).asMoney());
+        heads.put(HeadCode.HOUSE_PROPERTY, ctx.get(NodeIds.HOUSEPROPERTY_INCOME, HousePropertyHead.class).total());
+        heads.put(HeadCode.OTHER_SOURCES, ctx.get(NodeIds.OTHERSOURCES_INCOME, OtherSourcesHead.class).total());
         CapitalGainsHead capitalGains = ctx.get(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.class);
         Map<CapitalGainsPart, Money> parts = new HashMap<>(capitalGains.parts());
         Map<CapitalGainsPart, List<IndexedGain>> indexedGains = new HashMap<>(capitalGains.indexedGains());
@@ -121,17 +124,26 @@ public final class SetOffNode implements ComputationNode {
         Map<HeadCode, Money> income = new EnumMap<>(HeadCode.class);
         heads.forEach((head, amount) -> income.put(head, Money.max(amount, Money.ZERO)));
         List<TraceLine> lines = new ArrayList<>();
+        Map<HeadCode, Money> incomeBefore = new EnumMap<>(income);
+        Map<CapitalGainsPart, Money> partsBefore = new HashMap<>(parts);
         SetOffContext run = new SetOffContext(ctx, order, income,
-                new CapitalGainsAbsorption(order.capitalGainsOrder(), parts, indexedGains), lines);
+                new CapitalGainsAbsorption(order.capitalGainsOrder(), parts, indexedGains), lines, new EnumMap<>(HeadCode.class));
+        Map<HeadCode, Money> currentYearLoss = new EnumMap<>(HeadCode.class);
+        Map<HeadCode, Money> currentYearLossLeft = new EnumMap<>(HeadCode.class);
         Map<HeadCode, Money> broughtForward = nilUnder(heads.keySet());
         Map<HeadCode, Money> toCarryForward = nilUnder(heads.keySet());
         toCarryForward.put(HeadCode.CAPITAL_GAINS, capitalGains.shortTermLossLeft().plus(capitalGains.longTermLossLeft()));
         for (HeadCode lossHead : order.order().heads()) {
             Money loss = Money.ZERO.minus(heads.getOrDefault(lossHead, Money.ZERO));
             if (loss.isGreaterThan(Money.ZERO)) {
-                toCarryForward.merge(lossHead, setOff(run, lossHead, loss), Money::plus);
+                Money left = setOff(run, lossHead, loss);
+                currentYearLoss.put(lossHead, loss);
+                currentYearLossLeft.put(lossHead, left);
+                toCarryForward.merge(lossHead, left, Money::plus);
             }
         }
+        Map<HeadCode, Money> incomeAfterCurrentYear = new EnumMap<>(income);
+        Map<CapitalGainsPart, Money> partsAfterCurrentYear = new HashMap<>(parts);
         for (CarriedLosses ledger : List.of(carriedHousePropertyLosses(ctx, t), carriedCapitalLosses(ctx, t,
                 order.capitalGainsOrder(), DeclaredCapitalGainsParts.of(ctx)))) {
             CarriedLossSetOff.LedgerTotals totals = CarriedLossSetOff.apply(ctx, ledger, income, run.parts(), lines);
@@ -140,7 +152,9 @@ public final class SetOffNode implements ComputationNode {
         }
         Money total = income.values().stream().reduce(Money.ZERO, Money::plus);
         return new NodeResult(new HeadsAfterSetOff(total, parts, indexedGains,
-                new LossesAcrossYears(broughtForward, toCarryForward)), lines);
+                new LossesAcrossYears(broughtForward, toCarryForward),
+                rows(run, new Snapshot(incomeBefore, partsBefore), new Snapshot(incomeAfterCurrentYear, partsAfterCurrentYear),
+                        new Snapshot(income, parts), currentYearLoss, currentYearLossLeft)), lines);
     }
 
     private static Map<HeadCode, Money> nilUnder(Set<HeadCode> heads) {
@@ -191,7 +205,48 @@ public final class SetOffNode implements ComputationNode {
      * place as each loss is absorbed, with the lines written so far (D-263).
      */
     private record SetOffContext(NodeContext ctx, OrderInUse order, Map<HeadCode, Money> income,
-            CapitalGainsAbsorption parts, List<TraceLine> lines) {
+            CapitalGainsAbsorption parts, List<TraceLine> lines, Map<HeadCode, Map<String, Money>> takenBy) {
+
+        /** Records what the loss took from the part, and returns its line. */
+        TraceLine tookAndTraced(HeadCode lossHead, CapitalGainsPart part, Money taken, TraceLine line) {
+            took(lossHead, part.value(), taken);
+            return line;
+        }
+
+        /** What a head's loss took from a row — a head by its name, a part by its code (W-093a, D-658). */
+        void took(HeadCode lossHead, String row, Money taken) {
+            takenBy.computeIfAbsent(lossHead, head -> new HashMap<>()).merge(row, taken, Money::plus);
+        }
+    }
+
+    /** Each head's income and each part's gain at one point of set-off. */
+    private record Snapshot(Map<HeadCode, Money> heads, Map<CapitalGainsPart, Money> parts) {
+        Money of(String row) {
+            return heads.entrySet().stream().filter(entry -> entry.getKey().name().equals(row)).map(Map.Entry::getValue)
+                    .findFirst().orElseGet(() -> parts.getOrDefault(new CapitalGainsPart(row), Money.ZERO));
+        }
+    }
+
+    /**
+     * Schedule CYLA's and BFLA's rows (W-093a Q4a, D-658): every head but capital gains, and every capital-gains part,
+     * each with what the year's losses and the brought-forward losses took from it.
+     */
+    private static SetOffRows rows(SetOffContext run, Snapshot before, Snapshot afterCurrentYear, Snapshot after,
+            Map<HeadCode, Money> currentYearLoss, Map<HeadCode, Money> currentYearLossLeft) {
+        List<String> names = new ArrayList<>();
+        before.heads().keySet().stream().filter(head -> head != HeadCode.CAPITAL_GAINS).map(HeadCode::name).forEach(names::add);
+        before.parts().keySet().stream().map(CapitalGainsPart::value).sorted().forEach(names::add);
+        List<SetOffRows.Row> rows = new ArrayList<>();
+        for (String name : names) {
+            Money remaining = afterCurrentYear.of(name);
+            rows.add(new SetOffRows.Row(name, before.of(name), takenBy(run, HeadCode.HOUSE_PROPERTY, name),
+                    takenBy(run, HeadCode.OTHER_SOURCES, name), remaining, remaining.minus(after.of(name)), after.of(name)));
+        }
+        return new SetOffRows(rows, currentYearLoss, currentYearLossLeft);
+    }
+
+    private static Money takenBy(SetOffContext run, HeadCode lossHead, String row) {
+        return run.takenBy().getOrDefault(lossHead, Map.of()).getOrDefault(row, Money.ZERO);
     }
 
     /** The other heads absorb up to {@code allowed} of the loss, in order; returns how much they took. */
@@ -210,6 +265,7 @@ public final class SetOffNode implements ComputationNode {
             run.income().put(head, available.minus(taken));
             remaining = remaining.minus(taken);
             if (head != HeadCode.CAPITAL_GAINS) {
+                run.took(lossHead, head.name(), taken);
                 lines.add(run.ctx().traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken)
                         .withLimitedBy(lossHead
                         + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis()));
@@ -221,8 +277,8 @@ public final class SetOffNode implements ComputationNode {
     /** The capital-gains parts absorb up to {@code loss}, in their order, a line each; returns how much they took. */
     private static Money absorbCapitalGains(SetOffContext run, HeadCode lossHead, Money loss, RuleId row) {
         OrderInUse order = run.order();
-        return run.parts().absorb(loss, part -> true, run.lines(), (sequence, part, available, taken) -> run.ctx()
-                .traceLine(sequence, row, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
+        return run.parts().absorb(loss, part -> true, run.lines(), (sequence, part, available, taken) -> run.tookAndTraced(
+                lossHead, part, taken, run.ctx().traceLine(sequence, row, StepKind.SET_OFF, available, taken)).withLimitedBy(lossHead
                         + " loss against CAPITAL_GAINS " + part + "; order " + order.order().heads() + ", "
                         + order.basis() + "; within capital gains " + order.capitalGainsOrder().parts()
                         + ", the declared default (OQ-32)"));

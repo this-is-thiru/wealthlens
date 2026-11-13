@@ -40,8 +40,10 @@ class ScheduleModelTest {
     void sources_whenTheyNameNothing_areRefused() {
         assertThatThrownBy(() -> new FromNodes(null)).hasMessage("FromNodes names at least one node");
         assertThatThrownBy(() -> new FromNodes(List.of())).hasMessage("FromNodes names at least one node");
-        assertThatThrownBy(() -> new FromRules(null)).hasMessage("FromRules names at least one rule");
-        assertThatThrownBy(() -> new FromRules(List.of())).hasMessage("FromRules names at least one rule");
+        assertThatThrownBy(() -> new FromRules(null, Optional.empty())).hasMessage("FromRules names at least one rule, and its kind or none");
+        assertThatThrownBy(() -> new FromRules(List.of(), Optional.empty())).hasMessage("FromRules names at least one rule, and its kind or none");
+        assertThatThrownBy(() -> new FromRules(List.of(new com.thiru.wealthlens.taxengine.rules.id.RuleId("OS-INTEREST")), null))
+                .hasMessage("FromRules names at least one rule, and its kind or none");
         assertThatThrownBy(() -> new FromCapitalGainsParts(null)).hasMessage("FromCapitalGainsParts names at least one part");
         assertThatThrownBy(() -> new FromCapitalGainsParts(List.of()))
                 .hasMessage("FromCapitalGainsParts names at least one part");
@@ -77,15 +79,15 @@ class ScheduleModelTest {
         assertThatThrownBy(() -> new ScheduleField(" ", CELL)).hasMessage("A schedule field names its path and its cell");
         assertThatThrownBy(() -> new ScheduleField("S.1", null)).hasMessage("A schedule field names its path and its cell");
         List<ScheduleField> fields = List.of(new ScheduleField("S.1", CELL));
-        assertThatThrownBy(() -> new ItrSchedule(null, "S", fields, SOURCE))
+        assertThatThrownBy(() -> new ItrSchedule(null, "S", fields, List.of(), SOURCE))
                 .hasMessage("A schedule names its code and where it was read");
-        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, "S", fields, null))
+        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, "S", fields, List.of(), null))
                 .hasMessage("A schedule names its code and where it was read");
-        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, null, fields, SOURCE)).hasMessage("S must have a display name");
-        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, " ", fields, SOURCE)).hasMessage("S must have a display name");
-        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, "S", null, SOURCE))
+        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, null, fields, List.of(), SOURCE)).hasMessage("S must have a display name");
+        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, " ", fields, List.of(), SOURCE)).hasMessage("S must have a display name");
+        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, "S", null, List.of(), SOURCE))
                 .hasMessage("S has no fields; a schedule shows at least one figure");
-        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, "S", List.of(), SOURCE))
+        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, "S", List.of(), List.of(), SOURCE))
                 .hasMessage("S has no fields; a schedule shows at least one figure");
     }
 
@@ -109,9 +111,9 @@ class ScheduleModelTest {
 
     @Test
     void figuresVerdictsAndSelections_whenAPartIsMissing_areRefused() {
-        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), null, Optional.empty(), Map.of()))
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), null, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of()))
                 .hasMessage("Figures needs the return's facts and says whether slab tax was computed");
-        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, null, Map.of()))
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, null, Map.of(), Map.of(), Map.of(), Map.of(), Map.of()))
                 .hasMessage("Figures needs the return's facts and says whether slab tax was computed");
         ItrFormCode form = new ItrFormCode("SYN-1");
         String verdict = "A verdict names its form, its standing and whether a form excluded it";
@@ -123,5 +125,19 @@ class ScheduleModelTest {
                 .hasMessage(verdict);
         assertThatThrownBy(() -> new ItrSelection(List.of(), null, List.of()))
                 .hasMessage("An ItrSelection says whether a form was chosen; empty for none");
+    }
+    @Test
+    void groupsAndItemSources_whenAPartIsMissing_areRefused() {
+        List<ScheduleField> fields = List.of(new ScheduleField("a", CELL));
+        assertThatThrownBy(() -> new ScheduleGroup(null, "HP.1", fields))
+                .hasMessage("A schedule group names the kind of item it repeats over and its path");
+        assertThatThrownBy(() -> new ScheduleGroup("HOUSE_PROPERTY", " ", fields))
+                .hasMessage("A schedule group names the kind of item it repeats over and its path");
+        assertThatThrownBy(() -> new ScheduleGroup("HOUSE_PROPERTY", "HP.1", List.of())).hasMessage("The group HP.1 repeats no cell");
+        assertThatThrownBy(() -> new FieldSource.FromItemFigure(" ")).hasMessage("FromItemFigure names the item's figure");
+        assertThatThrownBy(() -> new FieldSource.FromOtherSourceKinds(List.of()))
+                .hasMessage("FromOtherSourceKinds names at least one kind");
+        assertThatThrownBy(() -> new ItrSchedule(SCHEDULE, "S", List.of(), null, SOURCE))
+                .hasMessage("S has no fields; a schedule shows at least one figure");
     }
 }

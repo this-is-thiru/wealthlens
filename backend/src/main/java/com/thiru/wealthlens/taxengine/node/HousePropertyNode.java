@@ -3,7 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.HouseOccupancy;
 import com.thiru.wealthlens.taxengine.input.HouseProperty;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
@@ -70,7 +70,7 @@ public final class HousePropertyNode implements ComputationNode {
     public NodeResult evaluate(NodeContext ctx) {
         List<HouseProperty> properties = ctx.inputs().entered().houseProperties();
         if (properties.isEmpty()) {
-            return NodeResult.untraced(MoneyValue.of(Money.ZERO));
+            return NodeResult.untraced(new HousePropertyHead(Money.ZERO, List.of()));
         }
         TemporalContext t = ctx.inputs().temporal();
         requireOwnResidencesWithinLimit(ctx, t, properties);
@@ -78,19 +78,73 @@ public final class HousePropertyNode implements ComputationNode {
                 ctx.inputs().entered().purposeLoanInterest());
         List<TraceLine> lines = new ArrayList<>();
         HousePropertyInterest interest = new HousePropertyInterest(ctx, lines);
+        List<PropertyIncome> incomes = new ArrayList<>();
+        List<HousePropertyInterest.HouseInterest> interests = new ArrayList<>();
         Money head = Money.ZERO;
         for (int position = 0; position < properties.size(); position++) {
             HouseProperty property = properties.get(position);
-            head = head.plus(income(ctx, t, position, property, lines)).minus(interest.deductedFor(position, property));
+            PropertyIncome income = income(ctx, t, position, property, lines);
+            HousePropertyInterest.HouseInterest owed = interest.interestFor(position, property);
+            incomes.add(income);
+            interests.add(owed);
+            head = head.plus(income.income()).minus(owed.deducted());
         }
-        head = head.minus(interest.ownResidenceAllowed());
-        return new NodeResult(MoneyValue.of(head), lines);
+        Money ownAllowed = interest.ownResidenceAllowed();
+        head = head.minus(ownAllowed);
+        return new NodeResult(new HousePropertyHead(head, figures(incomes, interests, ownAllowed)), lines);
+    }
+
+    /** One property's income and the figures Schedule HP shows for it, before interest. */
+    private record PropertyIncome(Valuation valuation, Money ownShare, Money standardDeduction, Money arrears,
+            Money income) {
+    }
+
+    /** Items 1a – 1c and 1e of Schedule HP. */
+    private record Valuation(Money gross, Money unrealisedRent, Money localTaxes, Money annualValue) {
+        static final Valuation NIL = new Valuation(Money.ZERO, Money.ZERO, Money.ZERO, Money.ZERO);
+    }
+
+    /**
+     * Each property's figures, the own residences' limited interest apportioned to them by their interest before the
+     * limit (W-093a, owner: "Apportion", D-658), the last of them taking what rounding leaves so the shares add up to
+     * the amount allowed — and so the properties' income adds up to the head.
+     */
+    private static List<HousePropertyHead.PropertyFigures> figures(List<PropertyIncome> incomes,
+            List<HousePropertyInterest.HouseInterest> interests, Money ownAllowed) {
+        Money gathered = interests.stream().map(HousePropertyInterest.HouseInterest::ownResidenceBeforeLimit)
+                .reduce(Money.ZERO, Money::plus);
+        int lastOwn = -1;
+        for (int position = 0; position < interests.size(); position++) {
+            if (interests.get(position).ownResidenceBeforeLimit().isGreaterThan(Money.ZERO)) {
+                lastOwn = position;
+            }
+        }
+        List<HousePropertyHead.PropertyFigures> figures = new ArrayList<>();
+        Money apportionedSoFar = Money.ZERO;
+        for (int position = 0; position < incomes.size(); position++) {
+            PropertyIncome income = incomes.get(position);
+            Money before = interests.get(position).ownResidenceBeforeLimit();
+            Money ownShare = Money.ZERO;
+            if (position == lastOwn) {
+                ownShare = ownAllowed.minus(apportionedSoFar);
+            } else if (before.isGreaterThan(Money.ZERO)) {
+                ownShare = ownAllowed.scaledBy(before, gathered);
+            }
+            apportionedSoFar = apportionedSoFar.plus(ownShare);
+            Money interest = interests.get(position).deducted().plus(ownShare);
+            Valuation valuation = income.valuation();
+            figures.add(new HousePropertyHead.PropertyFigures(position, valuation.gross(), valuation.unrealisedRent(),
+                    valuation.localTaxes(), valuation.annualValue(), income.ownShare(), income.standardDeduction(), interest,
+                    income.arrears(), income.income().minus(interest)));
+        }
+        return figures;
     }
 
     /** One property's income: annual value less thirty per cent, arrears less thirty per cent, the share of it. */
-    private static Money income(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
+    private static PropertyIncome income(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
             List<TraceLine> lines) {
-        Money annualValue = annualValue(ctx, t, position, property, lines);
+        Valuation valuation = annualValue(ctx, t, position, property, lines);
+        Money annualValue = valuation.annualValue();
         Money allowance = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_HP_STANDARD_DEDUCTION), t,
                 CapContext.of(ANNUAL_VALUE, annualValue)).value();
         lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_STANDARD_DEDUCTION), StepKind.DEDUCTION,
@@ -105,7 +159,11 @@ public final class HousePropertyNode implements ComputationNode {
                     .withLimitedBy("property " + position + ": arrears less " + deduction));
             income = income.plus(property.arrearsReceived().minus(deduction));
         }
-        return property.ownershipShare().of(income);
+        Money ownShare = property.ownershipShare().of(annualValue);
+        Money afterAllowance = property.ownershipShare().of(annualValue.minus(allowance));
+        Money shareOfIncome = property.ownershipShare().of(income);
+        return new PropertyIncome(valuation, ownShare, ownShare.minus(afterAllowance), shareOfIncome.minus(afterAllowance),
+                shareOfIncome);
     }
 
     /**
@@ -113,13 +171,13 @@ public final class HousePropertyNode implements ComputationNode {
      * the rent — the rent where the property was let, vacant, and the rent fell below — less the local taxes paid. The
      * rent is net of what the owner cannot realise before either comparison (s.21(4); 1961 s.23(1) Explanation).
      */
-    private static Money annualValue(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
+    private static Valuation annualValue(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
             List<TraceLine> lines) {
         if (isOwnResidence(ctx, property)) {
             lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE), StepKind.MEASURE,
                             property.expectedLettingValue(), Money.ZERO)
                     .withLimitedBy("property " + position + ": the owner's own residence, nil"));
-            return Money.ZERO;
+            return Valuation.NIL;
         }
         Money expected = property.expectedLettingValue();
         Money rent = actualRent(ctx, t, position, property, lines);
@@ -137,7 +195,9 @@ public final class HousePropertyNode implements ComputationNode {
                         gross, value)
                 .withLimitedBy("property " + position + ": " + (let ? "let, rent " + rent : "not let")
                         + ", expected " + expected + ", less local taxes " + property.localTaxesPaid()));
-        return value;
+        // Where the rent is the measure, the rent not realised is shown apart and added back to the gross (1a – 1b)
+        Money unrealisedShown = let && gross.equals(rent) ? property.rentReceivable().minus(rent) : Money.ZERO;
+        return new Valuation(gross.plus(unrealisedShown), unrealisedShown, property.localTaxesPaid(), value);
     }
 
     /** S2 s.21(4) with Rules 2026 r.21; 1961 s.23(1) Explanation with Rules 1962 r.4: the rent less what is unrealised. */

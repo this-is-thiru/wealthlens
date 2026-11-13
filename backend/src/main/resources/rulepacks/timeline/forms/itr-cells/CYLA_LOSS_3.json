@@ -1,0 +1,12 @@
+{
+  "code": "CYLA_LOSS_3",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "Other sources loss to be set off",
+  "source": {
+    "type": "FromSetOff",
+    "rows": [
+      "CURRENT_YEAR_LOSS"
+    ],
+    "column": "otherSourcesLoss"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "code": "OS_INTEREST_SAVINGS",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest from Savings Bank",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "SAVINGS_DEPOSIT_INTEREST"
+    ]
+  }
+}

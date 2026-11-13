@@ -16,12 +16,20 @@ import java.util.Map;
  * @param capitalGains each capital-gains part held, after other heads' losses, nil or more; a part not held is nil
  * @param indexedGains each held part's qualifying gains, together no more than the part
  * @param losses each head's loss brought forward into the year and left to carry forward (W-090c1b2, D-528)
+ * @param rows set-off row by row, as Schedules CYLA and BFLA lay it out (W-093a, D-658)
  */
 public record HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capitalGains,
-        Map<CapitalGainsPart, List<IndexedGain>> indexedGains, LossesAcrossYears losses) implements NodeValue {
+        Map<CapitalGainsPart, List<IndexedGain>> indexedGains, LossesAcrossYears losses, SetOffRows rows)
+        implements NodeValue {
+
+    /** A value built without its rows, as a hand-built test value is; the set-off node always records them. */
+    public HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capitalGains,
+            Map<CapitalGainsPart, List<IndexedGain>> indexedGains, LossesAcrossYears losses) {
+        this(total, capitalGains, indexedGains, losses, SetOffRows.NONE);
+    }
 
     public HeadsAfterSetOff {
-        if (total == null || capitalGains == null || indexedGains == null || losses == null) {
+        if (total == null || capitalGains == null || indexedGains == null || losses == null || rows == null) {
             throw new IllegalArgumentException("Heads after set-off need the total, the capital-gains parts, their"
                     + " indexed measure and the losses across years");
         }

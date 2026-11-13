@@ -1,0 +1,12 @@
+{
+  "code": "CG_A5_CONSIDERATION",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Full value of consideration (short-term, other assets)",
+  "source": {
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "SHORT_TERM_SLAB"
+    ],
+    "figure": "consideration"
+  }
+}

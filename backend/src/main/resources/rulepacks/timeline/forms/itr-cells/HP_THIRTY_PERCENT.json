@@ -1,0 +1,9 @@
+{
+  "code": "HP_THIRTY_PERCENT",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "30% of 1f",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "standardDeduction"
+  }
+}

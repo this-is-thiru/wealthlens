@@ -1,0 +1,9 @@
+{
+  "code": "SETOFF_NOT_COMPUTED",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "Rows at 30%, DTAA rates and from race horses",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Short-term gains at 30%, gains and other-sources income at DTAA rates and race-horse income are not computed; enter these rows from your records"
+  }
+}

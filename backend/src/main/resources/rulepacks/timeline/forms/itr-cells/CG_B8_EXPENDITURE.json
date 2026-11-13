@@ -1,0 +1,12 @@
+{
+  "code": "CG_B8_EXPENDITURE",
+  "_note": "The charges a row classes as expenditure on the transfer. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Expenditure wholly and exclusively in connection with transfer (long-term, other assets)",
+  "source": {
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "LONG_TERM_OTHER"
+    ],
+    "figure": "transferExpenditure"
+  }
+}

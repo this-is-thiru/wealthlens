@@ -1,0 +1,14 @@
+{
+  "code": "OS_OTHER_INCOME",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Any other income (1e)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "OS_FAMILY_PENSION",
+      "OS_BUSINESS_TRUST",
+      "OS_LIFE_POLICY",
+      "OS_ANY_OTHER"
+    ]
+  }
+}

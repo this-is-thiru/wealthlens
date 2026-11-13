@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.input.HousingLoan;
 import com.thiru.wealthlens.taxengine.input.LoanPurpose;
 import com.thiru.wealthlens.taxengine.input.LoanUse;
 import com.thiru.wealthlens.taxengine.input.PurposeLoanInterest;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -107,7 +108,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(year, OLD, List.of(let(ACQUIRED, R16_LOAN)));
 
         // Then — 5,22,000 − 1,56,600 − 3,20,000 − 2,00,000 ÷ 5 = 5,400 (R16's figure; the second and third instalments)
-        assertThat(result.value()).isEqualTo(rupees("5400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("5400").asMoney());
         assertThat(result.trace()).extracting(TraceLine::rule).contains(RuleIds.HP_INTEREST,
                 RuleIds.HP_PRE_CONSTRUCTION);
     }
@@ -120,7 +121,7 @@ class HousePropertyInterestTest {
 
         // Then — 3,20,000 + 40,000 = 3,60,000 within 2,00,000 (s.22(2)(a) with FA 2026 s.38; 1961 second proviso
         // and Explanation): 3,65,400 − 2,00,000
-        assertThat(result.value()).isEqualTo(rupees("165400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("165400").asMoney());
         assertThat(result.trace()).last().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.HP_OWN_RESIDENCE_INTEREST_CAP);
             assertThat(line.in()).isEqualTo(rupees("360000"));
@@ -134,7 +135,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, OLD, List.of(R16_LET, home(ACQUIRED, loan("320000", "200000", false))));
 
         // Then — s.22(2)(b): 30,000; 3,65,400 − 30,000
-        assertThat(result.value()).isEqualTo(rupees("335400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("335400").asMoney());
     }
 
     @Test
@@ -145,7 +146,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, OLD, List.of(R16_LET, home(ACQUIRED, repairs)));
 
         // Then — s.22(2)(a)(i) needs acquisition or construction: 30,000
-        assertThat(result.value()).isEqualTo(rupees("335400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("335400").asMoney());
     }
 
     @Test
@@ -155,7 +156,30 @@ class HousePropertyInterestTest {
                 home(ACQUIRED, loan("50000", "0", false))));
 
         // Then — 1,00,000 + min(50,000, 30,000) = 1,30,000, under 2,00,000: 3,65,400 − 1,30,000
-        assertThat(result.value()).isEqualTo(rupees("235400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("235400").asMoney());
+    }
+
+    @Test
+    void evaluate_whenOwnResidencesShareTheLimitedInterest_showsEachPropertysFiguresAddingToTheHead() {
+        // When — the case above: R16's let house, and own residences with ₹1,00,000 and ₹50,000 of interest
+        NodeResult result = run(2026, OLD, List.of(R16_LET, home(ACQUIRED, loan("100000", "0", true)),
+                home(ACQUIRED, loan("50000", "0", false))));
+        HousePropertyHead head = (HousePropertyHead) result.value();
+
+        // Then — the let house as Schedule HP items 1a – 1k: rent 5,40,000 (above the 4,80,000 letting value), local
+        // taxes 18,000, annual value 5,22,000, thirty per cent 1,56,600, income 3,65,400
+        assertThat(head.properties().get(0)).isEqualTo(new HousePropertyHead.PropertyFigures(0, Money.of("540000"),
+                Money.ZERO, Money.of("18000"), Money.of("522000"), Money.of("522000"), Money.of("156600"), Money.ZERO,
+                Money.ZERO, Money.of("365400")));
+        // the 1,30,000 allowed apportioned by interest before the limit (owner: "Apportion"):
+        // 1,30,000 × 1,00,000 / 1,50,000 = 86,666.67; the last takes the rest, 43,333.33
+        assertThat(head.properties().get(1).interest()).isEqualTo(Money.of("86666.67"));
+        assertThat(head.properties().get(1).income()).isEqualTo(Money.of("-86666.67"));
+        assertThat(head.properties().get(2).interest()).isEqualTo(Money.of("43333.33"));
+        assertThat(head.properties().get(1).annualValue()).isEqualTo(Money.ZERO);
+        assertThat(head.properties().stream().map(HousePropertyHead.PropertyFigures::income).reduce(Money.ZERO,
+                Money::plus)).isEqualTo(head.total());
+        assertThat(head.total()).isEqualTo(Money.of("235400"));
     }
 
     @Test
@@ -165,7 +189,7 @@ class HousePropertyInterestTest {
                 home(ACQUIRED, loan("50000", "0", false))));
 
         // Then — 1,90,000 + 30,000 = 2,20,000 within s.22(5)'s 2,00,000: 3,65,400 − 2,00,000
-        assertThat(result.value()).isEqualTo(rupees("165400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("165400").asMoney());
     }
 
     @Test
@@ -174,7 +198,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, NEW, List.of(R16_LET, home(ACQUIRED, R16_LOAN)));
 
         // Then — s.202(2)(a)(v) removes s.22(1)(b) only (D-156 C1(a)): 3,65,400 − 40,000
-        assertThat(result.value()).isEqualTo(rupees("325400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("325400").asMoney());
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.HP_OWN_RESIDENCE_INTEREST))
                 .singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
@@ -186,7 +210,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2025, NEW, List.of(R16_LET, home(ACQUIRED, R16_LOAN)));
 
         // Then — 1961 s.115BAC(2)(i) removes the whole of s.24(b), the Explanation within it
-        assertThat(result.value()).isEqualTo(rupees("365400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("365400").asMoney());
     }
 
     @Test
@@ -195,7 +219,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, NEW, List.of(let(ACQUIRED, R16_LOAN)));
 
         // Then — only s.21(6) properties lose s.22(1)(b): R16's 5,400
-        assertThat(result.value()).isEqualTo(rupees("5400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("5400").asMoney());
     }
 
     @Test
@@ -210,8 +234,8 @@ class HousePropertyInterestTest {
         NodeResult taxYear2026 = run(2026, OLD, properties);
 
         // Then — 1961 second proviso "on or after the 1st day of April, 1999": 30,000; S2 s.22(2)(a) has no date
-        assertThat(taxYear2025.value()).isEqualTo(rupees("335400"));
-        assertThat(taxYear2026.value()).isEqualTo(rupees("265400"));
+        assertThat(taxYear2025.value().asMoney()).isEqualTo(rupees("335400").asMoney());
+        assertThat(taxYear2026.value().asMoney()).isEqualTo(rupees("265400").asMoney());
     }
 
     @Test
@@ -225,8 +249,8 @@ class HousePropertyInterestTest {
         NodeResult late = run(2026, OLD, List.of(R16_LET, home(LocalDate.of(2025, 4, 1), borrowed2019)));
 
         // Then — 3,65,400 − 1,00,000; a day late, 3,65,400 − 30,000
-        assertThat(inTime.value()).isEqualTo(rupees("265400"));
-        assertThat(late.value()).isEqualTo(rupees("335400"));
+        assertThat(inTime.value().asMoney()).isEqualTo(rupees("265400").asMoney());
+        assertThat(late.value().asMoney()).isEqualTo(rupees("335400").asMoney());
     }
 
     @Test
@@ -239,8 +263,8 @@ class HousePropertyInterestTest {
         NodeResult sixth = run(2026, OLD, List.of(let(LocalDate.of(2021, 6, 1), prior)));
 
         // Then — 3,65,400 − 40,000; 3,65,400
-        assertThat(fifth.value()).isEqualTo(rupees("325400"));
-        assertThat(sixth.value()).isEqualTo(rupees("365400"));
+        assertThat(fifth.value().asMoney()).isEqualTo(rupees("325400").asMoney());
+        assertThat(sixth.value().asMoney()).isEqualTo(rupees("365400").asMoney());
     }
 
     @Test
@@ -256,7 +280,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, OLD, List.of(let(ACQUIRED, split)), List.of(section131));
 
         // Then — s.131(3): 3,65,400 − 1,70,000
-        assertThat(result.value()).isEqualTo(rupees("195400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("195400").asMoney());
     }
 
     @Test
@@ -275,7 +299,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, OLD, List.of(let(ACQUIRED, split)), List.of(section131, vehicle));
 
         // Then — the match takes the s.131 loan's 1,50,000 alone, so the head is as without the vehicle loan
-        assertThat(result.value()).isEqualTo(rupees("195400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("195400").asMoney());
     }
 
     @Test
@@ -303,7 +327,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, OLD, List.of(let(ACQUIRED, abroad)));
 
         // Then — s.22(6): 3,65,400
-        assertThat(result.value()).isEqualTo(rupees("365400"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("365400").asMoney());
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.HP_INTEREST)).singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
     }
@@ -319,7 +343,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, OLD, List.of(half));
 
         // Then — S2 s.24(2): half of 3,65,400 = 1,82,700, less 1,00,000
-        assertThat(result.value()).isEqualTo(rupees("82700"));
+        assertThat(result.value().asMoney()).isEqualTo(rupees("82700").asMoney());
     }
 
     @Test
@@ -328,7 +352,7 @@ class HousePropertyInterestTest {
         NodeResult result = run(2026, OLD, List.of(home(ACQUIRED, R16_LOAN)));
 
         // Then — −2,00,000, which SetOffNode sets off against the other heads (D-217)
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("-200000")));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("-200000"));
     }
 
     @Test

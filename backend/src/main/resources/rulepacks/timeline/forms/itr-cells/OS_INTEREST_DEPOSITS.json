@@ -1,0 +1,11 @@
+{
+  "code": "OS_INTEREST_DEPOSITS",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest from Deposits (Bank/ Post Office/ Co-operative Society)",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "DEPOSIT_INTEREST"
+    ]
+  }
+}

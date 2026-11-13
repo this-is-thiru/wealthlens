@@ -1,0 +1,11 @@
+{
+  "code": "OS_DIVIDEND_2_22_E",
+  "_note": "The engine's one deemed-dividend kind (Q2a). Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Dividend income u/s 2(22)(e)",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "DEEMED_DIVIDEND"
+    ]
+  }
+}

@@ -59,6 +59,12 @@ final class CapitalGainsCharges {
         return new Gain(gain, netConsideration);
     }
 
+    /** The bucket's charges a row classes under {@code limb}, added together (W-093a, D-658). */
+    static Money chargesUnder(NodeContext ctx, CapitalGainsInput.Bucket bucket, ChargeDeductionLimb limb) {
+        return bucket.charges().stream().filter(charge -> limbIn(ctx, rowOf(ctx, bucket, charge)) == limb)
+                .map(Charge::amount).reduce(Money.ZERO, Money::plus);
+    }
+
     /** Each of the bucket's charges and the limb its row names (W-160g, D-444). */
     static List<BucketOutcome.ChargeOutcome> outcomesOf(NodeContext ctx, CapitalGainsInput.Bucket bucket) {
         return bucket.charges().stream()

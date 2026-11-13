@@ -1,0 +1,12 @@
+{
+  "code": "HP_G_PLUS_H",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Total (1g + 1h)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "HP_THIRTY_PERCENT",
+      "HP_INTEREST"
+    ]
+  }
+}

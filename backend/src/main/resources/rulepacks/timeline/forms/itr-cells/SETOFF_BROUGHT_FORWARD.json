@@ -1,12 +1,13 @@
 {
   "code": "SETOFF_BROUGHT_FORWARD",
-  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "_note": "The SET_OFF lines of SETOFF-CARRIED-CAPITAL-GAINS, SETOFF-CARRIED-HOUSE-PROPERTY: the brought-forward loss absorbed this year. Only SET_OFF lines: each row also writes a MEASURE line for the amount allowed or left, so adding every line counted the set-off twice (found by W-093a's loss persona, D-658; corrects D-655). Drafted by Claude, adopted by the owner's rulings (W-092).",
   "label": "Brought forward losses set off",
   "source": {
     "type": "FromRules",
     "rules": [
       "SETOFF-CARRIED-CAPITAL-GAINS",
       "SETOFF-CARRIED-HOUSE-PROPERTY"
-    ]
+    ],
+    "kind": "SET_OFF"
   }
 }

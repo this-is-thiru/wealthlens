@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -50,7 +51,7 @@ class ItrScheduleReferencesTest {
         ItrFormSpec form = new ItrFormSpec(new ItrFormCode("SYN-1"), "Synthetic", 1, Set.of(PersonType.INDIVIDUAL),
                 Set.of(new ReturnKind("SYN_ORIGINAL")), List.of(), List.of(), Set.of(),
                 List.of(new FurnishingOption(new FurnishingManner("SYN_ELECTRONIC"), List.of(), SOURCE)),
-                List.of(new ItrSchedule(new ScheduleCode("S"), "Synthetic", fields, SOURCE)), SOURCE);
+                List.of(new ItrSchedule(new ScheduleCode("S"), "Synthetic", fields, List.of(), SOURCE)), SOURCE);
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
                 PACK.declarations(), Map.of(form.code(), form));
@@ -64,7 +65,7 @@ class ItrScheduleReferencesTest {
         // When — a node, a rule of the year, a declared part, a sum of placed cells, an entry by hand
         List<String> problems = problems(
                 cell("SYN_GROSS", new FieldSource.FromNodes(List.of(new NodeId("salary.gross")))),
-                cell("SYN_DEDUCTION", new FieldSource.FromRules(List.of(new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME")))),
+                cell("SYN_DEDUCTION", new FieldSource.FromRules(List.of(new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME")), Optional.empty())),
                 cell("SYN_GAIN", new FieldSource.FromCapitalGainsParts(List.of(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY")))),
                 cell("SYN_NET", new FieldSource.SumOf(List.of(new FieldSource.SumOf.Term(new CellCode("SYN_GROSS"), false)))),
                 cell("SYN_TAN", new FieldSource.ManualEntry("Enter it")));
@@ -77,7 +78,7 @@ class ItrScheduleReferencesTest {
     void check_whenACellReadsARuleOrPartTheYearLacksOrSumsAnUnplacedCell_namesEach() {
         // When
         List<String> problems = problems(
-                cell("SYN_RULE", new FieldSource.FromRules(List.of(new RuleId("SYN-NOT-A-RULE")))),
+                cell("SYN_RULE", new FieldSource.FromRules(List.of(new RuleId("SYN-NOT-A-RULE")), Optional.empty())),
                 cell("SYN_PART", new FieldSource.FromCapitalGainsParts(List.of(new CapitalGainsPart("SYN_NOT_A_PART")))),
                 cell("SYN_SUM", new FieldSource.SumOf(List.of(new FieldSource.SumOf.Term(new CellCode("SYN_ABSENT"), true)))));
 
@@ -87,5 +88,14 @@ class ItrScheduleReferencesTest {
                 "form SYN-1 S SYN_PART (SYN_PART) reads capital-gains part SYN_NOT_A_PART, which the year's"
                         + " CapitalGainsParts does not declare (I21)",
                 "form SYN-1 S SYN_SUM (SYN_SUM) sums cell SYN_ABSENT, which the form does not place (I21)");
+    }
+    @Test
+    void check_whenAnItemFigureIsPlacedOutsideAGroup_refusesIt() {
+        // When
+        List<String> problems = problems(cell("SYN_AV", new FieldSource.FromItemFigure("annualValue")));
+
+        // Then
+        assertThat(problems).containsExactly(
+                "form SYN-1 S SYN_AV (SYN_AV) reads an item's figure outside a group, where there is no item (I21)");
     }
 }

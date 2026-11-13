@@ -1,0 +1,12 @@
+{
+  "code": "CG_A5_BALANCE",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Balance (short-term, other assets)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_A5_CONSIDERATION",
+      "-CG_A5_DEDUCTIONS"
+    ]
+  }
+}

@@ -11,9 +11,11 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
@@ -93,8 +95,8 @@ class SetOffNodeTest {
                 plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack(year)).regime(regime).inputs(inputs)
                 .given(NodeIds.SALARY_INCOME, Money.of(salaries))
-                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of(houseProperty))
-                .given(NodeIds.OTHERSOURCES_INCOME, Money.of(otherSources))
+                .given(NodeIds.HOUSEPROPERTY_INCOME, new HousePropertyHead(Money.of(houseProperty), java.util.List.of()))
+                .given(NodeIds.OTHERSOURCES_INCOME, new OtherSourcesHead(Money.of(otherSources), java.util.Map.of()))
                 .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
     }
@@ -376,8 +378,8 @@ class SetOffNodeTest {
                 plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack(2026)).regime(OLD).inputs(inputs)
                 .given(NodeIds.SALARY_INCOME, Money.of(salaries))
-                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of(houseProperty))
-                .given(NodeIds.OTHERSOURCES_INCOME, Money.of(otherSources))
+                .given(NodeIds.HOUSEPROPERTY_INCOME, new HousePropertyHead(Money.of(houseProperty), java.util.List.of()))
+                .given(NodeIds.OTHERSOURCES_INCOME, new OtherSourcesHead(Money.of(otherSources), java.util.Map.of()))
                 .given(NodeIds.CAPITALGAINS_INCOME, capitalGains)
                 .run(new SetOffNode());
     }
@@ -430,8 +432,8 @@ class SetOffNodeTest {
                 plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)
                 .given(NodeIds.SALARY_INCOME, Money.ZERO)
-                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
-                .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
+                .given(NodeIds.HOUSEPROPERTY_INCOME, new HousePropertyHead(Money.ZERO, java.util.List.of()))
+                .given(NodeIds.OTHERSOURCES_INCOME, new OtherSourcesHead(Money.ZERO, java.util.Map.of()))
                 .given(NodeIds.CAPITALGAINS_INCOME, new CapitalGainsHead(parts, Money.ZERO, Money.ZERO))
                 .run(new SetOffNode());
     }

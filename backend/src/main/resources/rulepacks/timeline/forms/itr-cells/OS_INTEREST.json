@@ -1,0 +1,14 @@
+{
+  "code": "OS_INTEREST",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest, Gross",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "OS_INTEREST_SAVINGS",
+      "OS_INTEREST_DEPOSITS",
+      "OS_PF_INTEREST",
+      "OS_INTEREST_OTHERS"
+    ]
+  }
+}

@@ -1,9 +1,12 @@
 {
   "code": "LTCG_112A_COST",
-  "_note": "Q10a. Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "_note": "The s.112A buckets' costOfAcquisition (Q1a, D-658; was ManualEntry under D-655 Q10a). Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
   "label": "Total cost of acquisition (s.112A)",
   "source": {
-    "type": "ManualEntry",
-    "guidance": "Enter the total cost of acquisition of the s.112A transfers from your capital-gains statement; the figure is placed with Schedule CG (W-093a)"
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "LONG_TERM_LISTED_EQUITY"
+    ],
+    "figure": "costOfAcquisition"
   }
 }

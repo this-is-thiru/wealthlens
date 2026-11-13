@@ -13,10 +13,13 @@ import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
 import com.thiru.wealthlens.taxengine.pipeline.AskedDeclarations;
 import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.InterestAndFees;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.result.ComputationId;
@@ -27,6 +30,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource;
 import com.thiru.wealthlens.taxengine.rules.filing.FilledCell;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSelector;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrSelection;
@@ -121,8 +125,57 @@ public class TaxCalculator {
                 .filter(TaxByBasis.class::isInstance).map(TaxByBasis.class::cast);
         Map<String, Money> special = new java.util.HashMap<>();
         byBasis.ifPresent(tax -> tax.atSpecialRates().forEach((rate, amount) -> special.put(rate.value(), amount)));
+        Map<String, Money> otherSources = ((OtherSourcesHead) run.valueOf(NodeIds.OTHERSOURCES_INCOME)).grossByKind();
         return new ScheduleMapper.Figures(computedAmounts(run), tracedAmounts(run), returned,
-                byBasis.map(TaxByBasis::atSlabRates), special);
+                byBasis.map(TaxByBasis::atSlabRates), special, otherSources, items(run), tracedAmountsByKind(run),
+                setOff(run));
+    }
+
+    /** Set-off row by row, each row's columns by name — Schedules CYLA, BFLA, CFL (W-093a Q4a, Q5a; D-658). */
+    private static Map<String, Map<String, Money>> setOff(PipelineRunner.Result run) {
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) run.valueOf(NodeIds.SETOFF);
+        CapitalGainsHead gains = (CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME);
+        Map<String, Map<String, Money>> rows = new java.util.HashMap<>();
+        heads.rows().rows().forEach(row -> rows.put(row.row(), Map.of("income", row.income(),
+                "housePropertyLossSetOff", row.housePropertyLossSetOff(), "otherSourcesLossSetOff", row.otherSourcesLossSetOff(),
+                "afterCurrentYear", row.afterCurrentYear(), "broughtForwardSetOff", row.broughtForwardSetOff(),
+                "afterBroughtForward", row.afterBroughtForward())));
+        rows.put("CURRENT_YEAR_LOSS", lossColumns(heads.rows().currentYearLoss()));
+        rows.put("CURRENT_YEAR_LOSS_LEFT", lossColumns(heads.rows().currentYearLossLeft()));
+        rows.put("CAPITAL_GAINS_LOSS_LEFT", Map.of("shortTerm", gains.shortTermLossLeft(), "longTerm", gains.longTermLossLeft()));
+        return rows;
+    }
+
+    private static Map<String, Money> lossColumns(Map<HeadCode, Money> losses) {
+        return Map.of("housePropertyLoss", losses.getOrDefault(HeadCode.HOUSE_PROPERTY, Money.ZERO),
+                "otherSourcesLoss", losses.getOrDefault(HeadCode.OTHER_SOURCES, Money.ZERO));
+    }
+
+    /** Each kind of item's figures, for the schedule groups that repeat over them (W-093a C2a, D-658). */
+    private static Map<String, List<Map<String, Money>>> items(PipelineRunner.Result run) {
+        Map<String, List<Map<String, Money>>> items = new java.util.HashMap<>();
+        ((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)).bucketOutcomes().stream()
+                .filter(outcome -> outcome.part().isPresent())
+                .forEach(outcome -> items.computeIfAbsent(
+                        FieldSource.FromCapitalGainsBuckets.itemKindOf(outcome.part().get()), kind -> new ArrayList<>())
+                        .add(Map.of("consideration", outcome.consideration(), "costOfAcquisition", outcome.costOfAcquisition(),
+                                "transferExpenditure", outcome.transferExpenditure(), "gain", outcome.gain())));
+        HousePropertyHead head = (HousePropertyHead) run.valueOf(NodeIds.HOUSEPROPERTY_INCOME);
+        items.put("HOUSE_PROPERTY", head.properties().stream().map(property -> Map.of(
+                "gross", property.gross(), "unrealisedRent", property.unrealisedRent(),
+                "localTaxes", property.localTaxes(), "annualValue", property.annualValue(),
+                "ownShare", property.ownShare(), "standardDeduction", property.standardDeduction(),
+                "interest", property.interest(), "arrears", property.arrears(), "income", property.income())).toList());
+        return items;
+    }
+
+    /** Each rule's figures in the run's trace, summed by step kind — for a cell reading one kind of line (D-658). */
+    private static Map<RuleId, Map<String, Money>> tracedAmountsByKind(PipelineRunner.Result run) {
+        Map<RuleId, Map<String, Money>> byRule = new java.util.HashMap<>();
+        run.trace().stream().filter(line -> line.out() instanceof MoneyValue)
+                .forEach(line -> byRule.computeIfAbsent(line.rule(), rule -> new java.util.HashMap<>())
+                        .merge(line.kind().name(), ((MoneyValue) line.out()).amount(), Money::plus));
+        return byRule;
     }
 
     /** Each rule's figures in the run's trace, summed — a schedule cell's {@code FromRules} (W-093). */
@@ -135,8 +188,9 @@ public class TaxCalculator {
 
     private static Map<NodeId, Money> computedAmounts(PipelineRunner.Result run) {
         return run.values().entrySet().stream()
-                .filter(entry -> entry.getValue() instanceof MoneyValue)
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> ((MoneyValue) entry.getValue()).amount()));
+                .filter(entry -> entry.getValue() instanceof MoneyValue || entry.getValue() instanceof HousePropertyHead
+                        || entry.getValue() instanceof OtherSourcesHead)
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asMoney()));
     }
 
     /** The heads the return computed a figure under, income or loss — a loss is still income under the head. */

@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.rules.validate;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
+import com.thiru.wealthlens.taxengine.rules.filing.ItrSchedule;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
@@ -26,10 +27,22 @@ final class ItrScheduleReferences {
         Set<CapitalGainsPart> declared = ReturnFactReferences.declaredParts(pack);
         for (ItrFormSpec form : pack.itrForms().values()) {
             Set<CellCode> placed = new HashSet<>();
-            form.schedules().forEach(schedule -> schedule.fields().forEach(field -> placed.add(field.cell().code())));
-            form.schedules().forEach(schedule -> schedule.fields().forEach(field ->
-                    checkCell(pack, declared, placed, "form " + form.code() + " " + schedule.code() + " " + field.path(),
-                            field.cell(), problems)));
+            form.schedules().forEach(schedule -> {
+                schedule.fields().forEach(field -> placed.add(field.cell().code()));
+                schedule.groups().forEach(group -> group.fields().forEach(field -> placed.add(field.cell().code())));
+            });
+            for (ItrSchedule schedule : form.schedules()) {
+                String where = "form " + form.code() + " " + schedule.code() + " ";
+                schedule.fields().forEach(field -> {
+                    checkCell(pack, declared, placed, where + field.path(), field.cell(), problems);
+                    if (field.cell().source() instanceof FieldSource.FromItemFigure) {
+                        problems.add(where + field.path() + " (" + field.cell().code()
+                                + ") reads an item's figure outside a group, where there is no item (I21)");
+                    }
+                });
+                schedule.groups().forEach(group -> group.fields().forEach(field -> checkCell(pack, declared, placed,
+                        where + group.path() + "." + field.path(), field.cell(), problems)));
+            }
         }
     }
 
@@ -50,6 +63,18 @@ final class ItrScheduleReferences {
             }
             case FieldSource.FromTaxBasis basis -> {
                 // a special rate is a run's code, checked by the persona tests
+            }
+            case FieldSource.FromCapitalGainsBuckets buckets -> buckets.parts().stream().filter(part -> !declared.contains(part))
+                    .forEach(part -> problems.add(reader + " (" + cell.code() + ") reads capital-gains part " + part
+                            + ", which the year's CapitalGainsParts does not declare (I21)"));
+            case FieldSource.FromSetOff setOff -> {
+                // the rows and columns are the computation's, checked by the persona tests
+            }
+            case FieldSource.FromItemFigure figure -> {
+                // an item's figure names are the computation's, checked by the persona tests
+            }
+            case FieldSource.FromOtherSourceKinds kinds -> {
+                // the kinds are the computation's, checked by the persona tests
             }
             case FieldSource.ManualEntry manual -> {
                 // reads nothing

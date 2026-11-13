@@ -146,6 +146,10 @@
           "displayName": "Schedule HP — Details of Income from House Property",
           "fields": [
             {
+              "path": "HP.2",
+              "cell": "HP_PASS_THROUGH"
+            },
+            {
               "path": "HP.3",
               "cell": "HOUSE_PROPERTY_INCOME"
             }
@@ -153,6 +157,590 @@
           "provenance": {
             "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
             "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule HP, pp.41 – 42",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          },
+          "groups": [
+            {
+              "item": "HOUSE_PROPERTY",
+              "path": "HP.1",
+              "fields": [
+                {
+                  "path": "details",
+                  "cell": "HP_PROPERTY_DETAILS"
+                },
+                {
+                  "path": "a",
+                  "cell": "HP_GROSS"
+                },
+                {
+                  "path": "b",
+                  "cell": "HP_UNREALISED"
+                },
+                {
+                  "path": "c",
+                  "cell": "HP_LOCAL_TAXES"
+                },
+                {
+                  "path": "d",
+                  "cell": "HP_B_PLUS_C"
+                },
+                {
+                  "path": "e",
+                  "cell": "HP_ANNUAL_VALUE"
+                },
+                {
+                  "path": "f",
+                  "cell": "HP_OWN_SHARE"
+                },
+                {
+                  "path": "g",
+                  "cell": "HP_THIRTY_PERCENT"
+                },
+                {
+                  "path": "h",
+                  "cell": "HP_INTEREST"
+                },
+                {
+                  "path": "i",
+                  "cell": "HP_G_PLUS_H"
+                },
+                {
+                  "path": "j",
+                  "cell": "HP_ARREARS"
+                },
+                {
+                  "path": "k",
+                  "cell": "HP_PROPERTY_INCOME"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "CG",
+          "displayName": "Schedule CG — Capital Gains",
+          "fields": [
+            {
+              "path": "CG.A2.a",
+              "cell": "CG_A2_CONSIDERATION"
+            },
+            {
+              "path": "CG.A2.b.i",
+              "cell": "CG_A2_COST"
+            },
+            {
+              "path": "CG.A2.b.ii",
+              "cell": "CG_A2_IMPROVEMENT"
+            },
+            {
+              "path": "CG.A2.b.iii",
+              "cell": "CG_A2_EXPENDITURE"
+            },
+            {
+              "path": "CG.A2.b.iv",
+              "cell": "CG_A2_DEDUCTIONS"
+            },
+            {
+              "path": "CG.A2.c",
+              "cell": "CG_A2_BALANCE"
+            },
+            {
+              "path": "CG.A2.d",
+              "cell": "CG_A2_94_DISALLOWED"
+            },
+            {
+              "path": "CG.A2.e",
+              "cell": "CG_A2_GAIN"
+            },
+            {
+              "path": "CG.A5.a.iii",
+              "cell": "CG_A5_CONSIDERATION"
+            },
+            {
+              "path": "CG.A5.b.i",
+              "cell": "CG_A5_COST"
+            },
+            {
+              "path": "CG.A5.b.ii",
+              "cell": "CG_A5_IMPROVEMENT"
+            },
+            {
+              "path": "CG.A5.b.iii",
+              "cell": "CG_A5_EXPENDITURE"
+            },
+            {
+              "path": "CG.A5.b.iv",
+              "cell": "CG_A5_DEDUCTIONS"
+            },
+            {
+              "path": "CG.A5.c",
+              "cell": "CG_A5_BALANCE"
+            },
+            {
+              "path": "CG.A5.e",
+              "cell": "CG_A5_GAIN"
+            },
+            {
+              "path": "CG.A9",
+              "cell": "CG_STCG_TOTAL"
+            },
+            {
+              "path": "CG.B3.a",
+              "cell": "CG_B3_LTCG_112A"
+            },
+            {
+              "path": "CG.B3.c",
+              "cell": "CG_B3_LTCG"
+            },
+            {
+              "path": "CG.B8.a.iii",
+              "cell": "CG_B8_CONSIDERATION"
+            },
+            {
+              "path": "CG.B8.b.i",
+              "cell": "CG_B8_COST"
+            },
+            {
+              "path": "CG.B8.b.ii",
+              "cell": "CG_B8_IMPROVEMENT"
+            },
+            {
+              "path": "CG.B8.b.iii",
+              "cell": "CG_B8_EXPENDITURE"
+            },
+            {
+              "path": "CG.B8.b.iv",
+              "cell": "CG_B8_DEDUCTIONS"
+            },
+            {
+              "path": "CG.B8.c",
+              "cell": "CG_B8_BALANCE"
+            },
+            {
+              "path": "CG.B8.e",
+              "cell": "CG_B8_GAIN"
+            },
+            {
+              "path": "CG.B12",
+              "cell": "CG_LTCG_TOTAL"
+            },
+            {
+              "path": "CG.C1",
+              "cell": "CG_INCOMES"
+            },
+            {
+              "path": "CG.D",
+              "cell": "CG_54_DEDUCTIONS"
+            },
+            {
+              "path": "CG.other",
+              "cell": "CG_NOT_COMPUTED"
+            },
+            {
+              "path": "CG.E.8.ii",
+              "cell": "STCG_111A"
+            },
+            {
+              "path": "CG.E.8.iii",
+              "cell": "STCG_30"
+            },
+            {
+              "path": "CG.E.8.iv",
+              "cell": "STCG_APPLICABLE_RATE"
+            },
+            {
+              "path": "CG.E.8.v",
+              "cell": "STCG_DTAA"
+            },
+            {
+              "path": "CG.E.8.vi",
+              "cell": "LTCG_AT_12_5"
+            },
+            {
+              "path": "CG.E.8.vii",
+              "cell": "LTCG_DTAA"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule CG, pp.42 – 48",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "OS",
+          "displayName": "Schedule OS — Income from Other Sources",
+          "fields": [
+            {
+              "path": "OS.1a.i",
+              "cell": "OS_DIVIDENDS_OTHER"
+            },
+            {
+              "path": "OS.1a.ii",
+              "cell": "OS_DIVIDEND_2_22_E"
+            },
+            {
+              "path": "OS.1a.iii",
+              "cell": "OS_DIVIDEND_2_22_F"
+            },
+            {
+              "path": "OS.1a",
+              "cell": "OS_DIVIDENDS"
+            },
+            {
+              "path": "OS.1b.i",
+              "cell": "OS_INTEREST_SAVINGS"
+            },
+            {
+              "path": "OS.1b.ii",
+              "cell": "OS_INTEREST_DEPOSITS"
+            },
+            {
+              "path": "OS.1b.iii",
+              "cell": "OS_INTEREST_REFUND"
+            },
+            {
+              "path": "OS.1b.iv",
+              "cell": "OS_INTEREST_PASS_THROUGH"
+            },
+            {
+              "path": "OS.1b.v",
+              "cell": "OS_PF_INTEREST"
+            },
+            {
+              "path": "OS.1b.vi-viii",
+              "cell": "OS_PF_INTEREST_SPLIT"
+            },
+            {
+              "path": "OS.1b.ix",
+              "cell": "OS_INTEREST_OTHERS"
+            },
+            {
+              "path": "OS.1b",
+              "cell": "OS_INTEREST"
+            },
+            {
+              "path": "OS.1c",
+              "cell": "OS_MACHINERY_RENT"
+            },
+            {
+              "path": "OS.1d",
+              "cell": "OS_GIFTS"
+            },
+            {
+              "path": "OS.1d.i-v",
+              "cell": "OS_GIFTS_SPLIT"
+            },
+            {
+              "path": "OS.1e.1",
+              "cell": "OS_FAMILY_PENSION"
+            },
+            {
+              "path": "OS.1e.5",
+              "cell": "OS_BUSINESS_TRUST"
+            },
+            {
+              "path": "OS.1e.6",
+              "cell": "OS_LIFE_POLICY"
+            },
+            {
+              "path": "OS.1e.other",
+              "cell": "OS_ANY_OTHER"
+            },
+            {
+              "path": "OS.1e",
+              "cell": "OS_OTHER_INCOME"
+            },
+            {
+              "path": "OS.1",
+              "cell": "OS_GROSS_NORMAL_RATES"
+            },
+            {
+              "path": "OS.2",
+              "cell": "OS_SPECIAL_RATES"
+            },
+            {
+              "path": "OS.3a.i",
+              "cell": "OS_DEDUCTION_EXPENSES"
+            },
+            {
+              "path": "OS.3a.ii",
+              "cell": "OS_DEDUCTION_DIVIDEND_INTEREST"
+            },
+            {
+              "path": "OS.3a.iii",
+              "cell": "OS_DEDUCTION_FAMILY_PENSION"
+            },
+            {
+              "path": "OS.6",
+              "cell": "OTHER_SOURCES_INCOME"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule OS, pp.52 – 54",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "CYLA",
+          "displayName": "Schedule CYLA — Details of Income after Set off of Current Year Losses",
+          "fields": [
+            {
+              "path": "CYLA.i.2",
+              "cell": "CYLA_LOSS_2"
+            },
+            {
+              "path": "CYLA.i.3",
+              "cell": "CYLA_LOSS_3"
+            },
+            {
+              "path": "CYLA.ii.1",
+              "cell": "CYLA_SALARIES_1"
+            },
+            {
+              "path": "CYLA.ii.2",
+              "cell": "CYLA_SALARIES_2"
+            },
+            {
+              "path": "CYLA.ii.3",
+              "cell": "CYLA_SALARIES_3"
+            },
+            {
+              "path": "CYLA.ii.4",
+              "cell": "CYLA_SALARIES_4"
+            },
+            {
+              "path": "CYLA.iii.1",
+              "cell": "CYLA_HOUSE_PROPERTY_1"
+            },
+            {
+              "path": "CYLA.iii.2",
+              "cell": "CYLA_HOUSE_PROPERTY_2"
+            },
+            {
+              "path": "CYLA.iii.3",
+              "cell": "CYLA_HOUSE_PROPERTY_3"
+            },
+            {
+              "path": "CYLA.iii.4",
+              "cell": "CYLA_HOUSE_PROPERTY_4"
+            },
+            {
+              "path": "CYLA.iv.1",
+              "cell": "CYLA_STCG_20_1"
+            },
+            {
+              "path": "CYLA.iv.2",
+              "cell": "CYLA_STCG_20_2"
+            },
+            {
+              "path": "CYLA.iv.3",
+              "cell": "CYLA_STCG_20_3"
+            },
+            {
+              "path": "CYLA.iv.4",
+              "cell": "CYLA_STCG_20_4"
+            },
+            {
+              "path": "CYLA.vi.1",
+              "cell": "CYLA_STCG_APPLICABLE_1"
+            },
+            {
+              "path": "CYLA.vi.2",
+              "cell": "CYLA_STCG_APPLICABLE_2"
+            },
+            {
+              "path": "CYLA.vi.3",
+              "cell": "CYLA_STCG_APPLICABLE_3"
+            },
+            {
+              "path": "CYLA.vi.4",
+              "cell": "CYLA_STCG_APPLICABLE_4"
+            },
+            {
+              "path": "CYLA.viii.1",
+              "cell": "CYLA_LTCG_12_5_1"
+            },
+            {
+              "path": "CYLA.viii.2",
+              "cell": "CYLA_LTCG_12_5_2"
+            },
+            {
+              "path": "CYLA.viii.3",
+              "cell": "CYLA_LTCG_12_5_3"
+            },
+            {
+              "path": "CYLA.viii.4",
+              "cell": "CYLA_LTCG_12_5_4"
+            },
+            {
+              "path": "CYLA.x.1",
+              "cell": "CYLA_OTHER_SOURCES_1"
+            },
+            {
+              "path": "CYLA.x.2",
+              "cell": "CYLA_OTHER_SOURCES_2"
+            },
+            {
+              "path": "CYLA.x.3",
+              "cell": "CYLA_OTHER_SOURCES_3"
+            },
+            {
+              "path": "CYLA.x.4",
+              "cell": "CYLA_OTHER_SOURCES_4"
+            },
+            {
+              "path": "CYLA.v,vii,ix,xi,xii",
+              "cell": "SETOFF_NOT_COMPUTED"
+            },
+            {
+              "path": "CYLA.xiii.2",
+              "cell": "CYLA_TOTAL_2"
+            },
+            {
+              "path": "CYLA.xiii.3",
+              "cell": "CYLA_TOTAL_3"
+            },
+            {
+              "path": "CYLA.xiv.2",
+              "cell": "CYLA_LEFT_2"
+            },
+            {
+              "path": "CYLA.xiv.3",
+              "cell": "CYLA_LEFT_3"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule CYLA, pp.56 – 57",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "BFLA",
+          "displayName": "Schedule BFLA — Details of Income after Set off of Brought Forward Losses",
+          "fields": [
+            {
+              "path": "BFLA.i.1",
+              "cell": "CYLA_SALARIES_4"
+            },
+            {
+              "path": "BFLA.i.2",
+              "cell": "BFLA_SALARIES_2"
+            },
+            {
+              "path": "BFLA.i.3",
+              "cell": "BFLA_SALARIES_3"
+            },
+            {
+              "path": "BFLA.ii.1",
+              "cell": "CYLA_HOUSE_PROPERTY_4"
+            },
+            {
+              "path": "BFLA.ii.2",
+              "cell": "BFLA_HOUSE_PROPERTY_2"
+            },
+            {
+              "path": "BFLA.ii.3",
+              "cell": "BFLA_HOUSE_PROPERTY_3"
+            },
+            {
+              "path": "BFLA.iii.1",
+              "cell": "CYLA_STCG_20_4"
+            },
+            {
+              "path": "BFLA.iii.2",
+              "cell": "BFLA_STCG_20_2"
+            },
+            {
+              "path": "BFLA.iii.3",
+              "cell": "BFLA_STCG_20_3"
+            },
+            {
+              "path": "BFLA.v.1",
+              "cell": "CYLA_STCG_APPLICABLE_4"
+            },
+            {
+              "path": "BFLA.v.2",
+              "cell": "BFLA_STCG_APPLICABLE_2"
+            },
+            {
+              "path": "BFLA.v.3",
+              "cell": "BFLA_STCG_APPLICABLE_3"
+            },
+            {
+              "path": "BFLA.vii.1",
+              "cell": "CYLA_LTCG_12_5_4"
+            },
+            {
+              "path": "BFLA.vii.2",
+              "cell": "BFLA_LTCG_12_5_2"
+            },
+            {
+              "path": "BFLA.vii.3",
+              "cell": "BFLA_LTCG_12_5_3"
+            },
+            {
+              "path": "BFLA.ix.1",
+              "cell": "CYLA_OTHER_SOURCES_4"
+            },
+            {
+              "path": "BFLA.ix.2",
+              "cell": "BFLA_OTHER_SOURCES_2"
+            },
+            {
+              "path": "BFLA.ix.3",
+              "cell": "BFLA_OTHER_SOURCES_3"
+            },
+            {
+              "path": "BFLA.iv,vi,viii,x",
+              "cell": "SETOFF_NOT_COMPUTED"
+            },
+            {
+              "path": "BFLA.xii.2",
+              "cell": "BFLA_TOTAL_2"
+            },
+            {
+              "path": "BFLA.xiii.3",
+              "cell": "BFLA_TOTAL_3"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule BFLA, p.57",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "CFL",
+          "displayName": "Schedule CFL — Carry Forward of Loss",
+          "fields": [
+            {
+              "path": "CFL.i-x",
+              "cell": "CFL_EARLIER_YEARS"
+            },
+            {
+              "path": "CFL.xi.3",
+              "cell": "CFL_CURRENT_HP"
+            },
+            {
+              "path": "CFL.xi.4",
+              "cell": "CFL_CURRENT_STCL"
+            },
+            {
+              "path": "CFL.xi.5",
+              "cell": "CFL_CURRENT_LTCL"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule CFL, pp.57 – 58",
             "accessedOn": "2026-11-13",
             "verificationLevel": "SOURCE_CHECKED"
           }

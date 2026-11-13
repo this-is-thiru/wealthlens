@@ -22,7 +22,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
  */
 public sealed interface NodeValue
         permits MoneyValue, TaxByBasis, ComponentSet, SalaryBases, CapitalGainsHead, HeadsAfterSetOff, AdvanceTaxPosition,
-        InterestAndFees {
+        InterestAndFees, HousePropertyHead, OtherSourcesHead {
 
     /** The single summary figure, for the trace's {@code out} column. */
     Money asMoney();

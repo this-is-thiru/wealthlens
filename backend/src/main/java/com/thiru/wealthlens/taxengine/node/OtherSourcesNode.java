@@ -6,9 +6,9 @@ import com.thiru.wealthlens.taxengine.input.LifePolicyReceipt;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
@@ -25,7 +25,9 @@ import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -101,38 +103,43 @@ public final class OtherSourcesNode implements ComputationNode {
         List<BusinessTrustUnits> trusts = ctx.inputs().entered().businessTrustUnits();
         List<LifePolicyReceipt> policies = ctx.inputs().entered().lifePolicyReceipts();
         if (items.isEmpty() && accounts.isEmpty() && gifts.isEmpty() && trusts.isEmpty() && policies.isEmpty()) {
-            return NodeResult.untraced(MoneyValue.of(Money.ZERO));
+            return NodeResult.untraced(new OtherSourcesHead(Money.ZERO, Map.of()));
         }
         requireCharged(ctx, items);
         OtherSourcesLines lines = new OtherSourcesLines(ctx, ctx.inputs().temporal());
         Money head = Money.ZERO;
+        Map<String, Money> grossByKind = new HashMap<>();
         for (int position = 0; position < items.size(); position++) {
-            head = head.plus(itemIncome(lines, position, items.get(position)));
+            // An item: its income line, the share its kind's row deducts, then the expenses the expense rows reach;
+            // dividends' interest expense is the year's, below. Every choice is a row's, by the item's kind (D-320 – D-323)
+            OtherSourceItem item = items.get(position);
+            String where = "item " + position;
+            Money gross = incomeLine(lines, where, item);
+            grossByKind.merge(item.kind().name(), gross, Money::plus);
+            head = head.plus(gross.minus(share(lines, where, item)).minus(otherExpenditure(lines, where, item)));
         }
         head = head.minus(DividendInterestAllowance.allowed(lines, items));
         for (int position = 0; position < accounts.size(); position++) {
-            head = head.plus(providentFundInterest(lines, position, accounts.get(position)));
+            Money interest = providentFundInterest(lines, position, accounts.get(position));
+            grossByKind.merge("PROVIDENT_FUND_INTEREST", interest, Money::plus);
+            head = head.plus(interest);
         }
         if (!gifts.isEmpty()) {
-            head = head.plus(GiftIncome.income(ctx, lines, gifts));
+            Money chargeable = GiftIncome.income(ctx, lines, gifts);
+            grossByKind.put("GIFTS", chargeable);
+            head = head.plus(chargeable);
         }
         for (int position = 0; position < trusts.size(); position++) {
-            head = head.plus(businessTrustIncome(lines, position, trusts.get(position)));
+            Money sum = businessTrustIncome(lines, position, trusts.get(position));
+            grossByKind.merge("BUSINESS_TRUST", sum, Money::plus);
+            head = head.plus(sum);
         }
         if (!policies.isEmpty()) {
-            head = head.plus(LifePolicySums.income(ctx, lines, policies, ctx.inputs().entered().claimedLifePolicies()));
+            Money sums = LifePolicySums.income(ctx, lines, policies, ctx.inputs().entered().claimedLifePolicies());
+            grossByKind.put("LIFE_POLICY", sums);
+            head = head.plus(sums);
         }
-        return new NodeResult(MoneyValue.of(head), lines.all());
-    }
-
-    /**
-     * One item: its income line, the share its kind's row deducts, then the expenses the expense rows reach; dividends'
-     * interest expense is the year's, below. Every choice is a row's, by the item's kind (D-320 – D-323).
-     */
-    private static Money itemIncome(OtherSourcesLines lines, int position, OtherSourceItem item) {
-        String where = "item " + position;
-        Money income = incomeLine(lines, where, item);
-        return income.minus(share(lines, where, item)).minus(otherExpenditure(lines, where, item));
+        return new NodeResult(new OtherSourcesHead(head, grossByKind), lines.all());
     }
 
     /**

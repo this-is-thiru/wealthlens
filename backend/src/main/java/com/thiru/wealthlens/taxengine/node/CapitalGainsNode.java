@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.ChargeDeductionLimb;
 import com.thiru.wealthlens.taxengine.rules.definition.NotModelledProvision;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -110,7 +111,9 @@ public final class CapitalGainsNode implements ComputationNode {
         List<TraceLine> lines = new ArrayList<>();
         List<TraceAnnotation> annotations = new ArrayList<>();
         List<BucketOutcome> outcomes = new ArrayList<>();
-        List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines, annotations, outcomes);
+        List<CapitalGainsInput.Bucket> outcomeBuckets = new ArrayList<>();
+        List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines, annotations, outcomes, outcomeBuckets);
+        Map<CapitalGainsInput.Bucket, CapitalGainsPart> partOfBucket = new java.util.IdentityHashMap<>();
         List<Money> chargeableGains = ReinvestmentExemption.chargeableGainsOf(ctx, taken, lines);
         for (int position = 0; position < taken.size(); position++) {
             CapitalGainsInput.Bucket bucket = taken.get(position).bucket();
@@ -118,6 +121,7 @@ public final class CapitalGainsNode implements ComputationNode {
             Money chargeable = chargeableGains.get(position);
             CapitalGainsPart part = partOf(ctx, bucket, chargeable, term,
                     CapitalGainsStt.of(ctx, bucket, chargeable, term, lines));
+            partOfBucket.put(bucket, part);
             net.merge(part, chargeable, Money::plus);
             Optional<Money> indexed = CapitalGainsIndexation.indexedGainOf(ctx, bucket, chargeable, lines);
             if (chargeable.isGreaterThan(Money.ZERO)) {
@@ -153,7 +157,8 @@ public final class CapitalGainsNode implements ComputationNode {
         CapitalGainsAbsorption parts = new CapitalGainsAbsorption(order, available, indexed);
         Money longTermLeft = setOff(ctx, parts, longTermLoss, true, declared, lines);
         Money shortTermLeft = setOff(ctx, parts, shortTermLoss, false, declared, lines);
-        CapitalGainsHead head = new CapitalGainsHead(available, indexed, shortTermLeft, longTermLeft, outcomes);
+        CapitalGainsHead head = new CapitalGainsHead(available, indexed, shortTermLeft, longTermLeft,
+                withParts(outcomes, outcomeBuckets, partOfBucket));
         return new NodeResult(head, lines, annotations);
     }
 
@@ -201,24 +206,45 @@ public final class CapitalGainsNode implements ComputationNode {
      * bucket's term line, a notice for every provision not modelled that reaches it.
      */
     private static List<ReinvestmentExemption.BucketGain> takenBuckets(NodeContext ctx, List<TraceLine> lines,
-            List<TraceAnnotation> annotations, List<BucketOutcome> outcomes) {
+            List<TraceAnnotation> annotations, List<BucketOutcome> outcomes, List<CapitalGainsInput.Bucket> outcomeBuckets) {
         List<ReinvestmentExemption.BucketGain> taken = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
             CapitalGainsCharges.Gain gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
             Optional<RuleId> leftOutBy = CapitalGainsScope.leftOutBy(ctx, bucket, gain.gain(), lines);
+            outcomeBuckets.add(bucket);
             if (leftOutBy.isPresent()) {
-                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), CapitalGainsCharges.outcomesOf(ctx, bucket),
-                        Optional.empty(), leftOutBy));
+                outcomes.add(outcome(ctx, bucket, gain, Optional.empty(), leftOutBy));
             } else {
                 BucketOutcome.TermDecision decision = CapitalGainsTerm.of(ctx, bucket, gain.gain(), lines);
-                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), CapitalGainsCharges.outcomesOf(ctx, bucket),
-                        Optional.of(decision), Optional.empty()));
+                outcomes.add(outcome(ctx, bucket, gain, Optional.of(decision), Optional.empty()));
                 taken.add(new ReinvestmentExemption.BucketGain(bucket, gain, decision.term()));
                 noticesOf(ctx, bucket).ifPresent(notices ->
                         annotations.add(new TraceAnnotation(lines.getLast().sequence(), notices)));
             }
         }
         return taken;
+    }
+
+    /** A bucket's outcome before its part is known; {@link #withParts} adds it (W-093a, D-658). */
+    private static BucketOutcome outcome(NodeContext ctx, CapitalGainsInput.Bucket bucket, CapitalGainsCharges.Gain gain,
+            Optional<BucketOutcome.TermDecision> term, Optional<RuleId> leftOutBy) {
+        return new BucketOutcome(bucket.facts(), gain.gain(), CapitalGainsCharges.outcomesOf(ctx, bucket), term, leftOutBy,
+                bucket.consideration(),
+                bucket.cost().plus(CapitalGainsCharges.chargesUnder(ctx, bucket, ChargeDeductionLimb.COST_OF_ACQUISITION)),
+                CapitalGainsCharges.chargesUnder(ctx, bucket, ChargeDeductionLimb.TRANSFER_EXPENDITURE), Optional.empty());
+    }
+
+    /** Each outcome with the part its bucket's gain went to, where it was taken. */
+    private static List<BucketOutcome> withParts(List<BucketOutcome> outcomes, List<CapitalGainsInput.Bucket> buckets,
+            Map<CapitalGainsInput.Bucket, CapitalGainsPart> parts) {
+        List<BucketOutcome> placed = new ArrayList<>();
+        for (int i = 0; i < outcomes.size(); i++) {
+            BucketOutcome outcome = outcomes.get(i);
+            placed.add(new BucketOutcome(outcome.facts(), outcome.gain(), outcome.charges(), outcome.term(),
+                    outcome.leftOutBy(), outcome.consideration(), outcome.costOfAcquisition(),
+                    outcome.transferExpenditure(), Optional.ofNullable(parts.get(buckets.get(i)))));
+        }
+        return placed;
     }
 
     /**

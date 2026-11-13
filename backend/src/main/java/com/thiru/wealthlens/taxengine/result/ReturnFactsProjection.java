@@ -2,9 +2,11 @@ package com.thiru.wealthlens.taxengine.result;
 
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.HousePropertyHead;
 import com.thiru.wealthlens.taxengine.pipeline.LossesAcrossYears;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.pipeline.OtherSourcesHead;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
@@ -46,10 +48,10 @@ final class ReturnFactsProjection {
 
     private static Money money(PipelineRunner.Result run, NodeId node) {
         NodeValue value = run.valueOf(node);
-        if (!(value instanceof MoneyValue amount)) {
+        if (!(value instanceof MoneyValue) && !(value instanceof HousePropertyHead) && !(value instanceof OtherSourcesHead)) {
             throw new IllegalArgumentException(node + " holds a " + value.getClass().getSimpleName() + ", not an amount");
         }
-        return amount.asMoney();
+        return value.asMoney();
     }
 
     private static Set<RuleId> deductionsAllowed(PipelineRunner.Result run) {
