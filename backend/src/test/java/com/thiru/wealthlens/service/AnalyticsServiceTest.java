@@ -466,6 +466,7 @@ class AnalyticsServiceTest {
         XirrResponse result = analyticsService.calculateXirr(userMail, new XirrRequest());
 
         assertNotNull(result.getMessage());
-        assertTrue(result.getMessage().contains("Open positions excluded"));
+        // The open lot, INFY, has no price, so it is named as left out (W-318)
+        assertTrue(result.getMessage().contains("Left out for want of a current price: INFY"));
     }
 }

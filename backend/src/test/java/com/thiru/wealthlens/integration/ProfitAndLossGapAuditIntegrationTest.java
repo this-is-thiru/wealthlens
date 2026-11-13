@@ -183,6 +183,7 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(result.get("xirr").asDouble()).isCloseTo(0.10, org.assertj.core.data.Offset.offset(1e-6));
     }
 
+
     // Scenario 5 (W-320)
     @Test
     void profitAndLoss_whenTheYearIsNotWrittenAsStored_answers400NamingTheForm() {
@@ -249,6 +250,23 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         // Then -- the held buy is not a cash flow yet
         assertThat(result.get("cashFlowsCount").asInt()).isEqualTo(2);
         assertThat(result.get("xirr").asDouble()).isCloseTo(0.10, org.assertj.core.data.Offset.offset(1e-6));
+    }
+
+    // Scenario 11 (W-318)
+    @Test
+    void xirr_whenAHoldingHasNoPrice_leavesItOutWholeAndNamesIt() {
+        // Given -- TCS and INFY held, ₹1,000 each; a price for TCS only
+        v2("TCS", "BUY", 10, 100, "2025-01-01");
+        v2("INFY", "BUY", 10, 100, "2025-01-01");
+
+        // When
+        JsonNode result = JSON.readTree(xirr(List.of(Map.of("stockCode", "TCS", "price", 110.0))).getBody());
+
+        // Then -- TCS's buy and its value are the two flows; INFY is left out whole and named
+        assertThat(result.get("cashFlowsCount").asInt()).as(result.toString()).isEqualTo(2);
+        assertThat(result.get("xirr").asDouble()).isPositive();
+        assertThat(result.get("message").asString())
+                .isEqualTo("Left out for want of a current price: INFY. Give currentPrices for them to include them.");
     }
 
     // Scenario 12 (W-321)
