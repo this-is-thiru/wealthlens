@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-093a done (D-658), committed and pushed
-Stage           : closed (owner "commit it and push", session 91); watch the push's pipeline
-Done today      : session 91: W-090d (D-652), W-091 (D-653), W-092/W-093 (D-654, D-655, D-657), W-094 (D-656), W-093a (D-658)
-Board           : W-091 – W-094, W-093a D; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); W-307, W-308 K; W-311 · (after Phase 10)
-Next step       : record this push's pipeline in D-658 (fix first if red); then Phase 10 waits on the owner's §2.14 / §2.13 run logs (W-299, W-294) — ask for them, or the next phase by board order
+Item            : W-311 done (D-659), committed and pushed; api-collection 1733ad3
+Stage           : closed (owner "commit it and push", session 92); watch the push's pipeline and record its run in D-659
+Done today      : session 92: W-311 (D-659)
+Board           : W-311 D; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); W-307, W-308 K; Phase 12 next: W-112a
+Next step       : confirm the pipeline for the W-311 push and record it in D-659; then W-112a by board order (or W-299 / W-294 once the owner has the run logs)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : pipeline 43441778329 success (4eaaa1fe) — first green run since W-091; recorded in D-657 (uncommitted)
-Files touched   : none (all committed)
-Last item commit: taxplanning W-093a: lay out ITR-2's HP, OS, CG, CYLA, BFLA, CFL schedules as cells from per-item engine figures
-Updated         : 2026-11-13, session 91 — W-093a closed and pushed
+Last verify     : W-311 targeted 133 / 0, validate 0; pipeline pending
+Files touched   : none beyond this file after the commit
+Last item commit: taxplanning W-311: remove the test routes — the sale replay, /request — and serve /request2's asset filter at /assets/search
+Updated         : 2026-11-13, session 92 — W-311 closed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

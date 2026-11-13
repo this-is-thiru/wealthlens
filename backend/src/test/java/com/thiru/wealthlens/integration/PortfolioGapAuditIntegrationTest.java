@@ -319,7 +319,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void searchAssets_whenAFilterNamesAFieldNotAllowed_answers400() {
         // When
-        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/request2",
+        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/assets/search",
                 Map.of("queryFilters", List.of(Map.of("filterKey", "password", "operation", "EQUALS", "value", "x"))));
 
         // Then

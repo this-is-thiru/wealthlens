@@ -87,6 +87,8 @@ expected to return nothing. It becomes urgent the first time they do not.
 
 ## B-9 — `TestController` mutates state without saving the lots
 
+> **2026-11-13 (W-311, D-659):** the route is gone — `TestController`, its body type and its test removed; the path answers 404. B-9 is closed.
+
 `POST /test/user/{email}/transact/sell` (authenticated — it is in `AuthConfig`'s list) takes
 `stockEntities` from the request body and calls the V2 sell helper, but never saves them.
 

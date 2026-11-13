@@ -23,7 +23,7 @@ Repository Layer   → Spring Data MongoDB
 | **brokercharges** | Rules-based charge engine: rate cards, calculators, per-user charge records, AMC | ChargeEngine, ChargeScheduleResolver, ChargeScheduleEntity, UserChargeService, AmcChargeService |
 | **auth** | JWT-based Spring Security: login, registration, role upgrades | AuthService, AuthFilter, SecurityConfig, UserDetail |
 | **shared** | Cross-cutting utilities, common DTOs, audit entities, config, query helpers | ApiResponse, ErrorResponse, UserMail, TCollectionUtil, ExcelBuilder, XirrCalculator, MongoConfig |
-| **helper** | Auxiliary controllers and file utilities | HelperController, SpecialController, TemplateController, TestController, FileHelper, FileStream, FileType |
+| **helper** | Auxiliary controllers and file utilities | HelperController, SpecialController, TemplateController, FileHelper, FileStream, FileType |
 | **finance** | Financial calculators (Step-up SIP) | FinancesService, StepUpSIPCalculator, FinanceRequest, FinanceResponse |
 | **insurance** | Insurance policy tracking | InsuranceService, InsuranceEntity, PolicyDetails, InsuranceRequest, InsuranceResponse |
 | **taxplanning** | Tax planning & ITR automation stub — intended for capital gains tax report generation, Schedule CG auto-fill, and Section 112A/111A computation | TaxPlanningModulePlaceholder |

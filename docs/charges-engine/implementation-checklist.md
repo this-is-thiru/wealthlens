@@ -23,7 +23,7 @@ Everything that was once deliberately left unticked is now closed:
    (`TradeCollisionRetry`, `app.mongodb.transactions-enabled: true`), and a temporary trade is redriven
    once. Drift is repaired by the P&L rebuild (deploy runbook §2.2, W-283), which already derives the
    summary from `user_charges`. The one replay, `POST /test/user/{email}/transact/sell`, rewrites a whole
-   sale, not only its charges, and is W-311.
+   sale, not only its charges; W-311 (D-659) removed it.
 2. **Two V1-bound items are void by decision** — `toTradeOutcomeContext` pro-rating and retiring the
    `ProfitAndLossContext` overload. Both are V1-only code, and V1 is in live use.
 3. **V2 sells write no `trade_outcomes` row** (`sellStockV2` → `…AndProfitAndLoss1`, which never calls

@@ -12,7 +12,6 @@ import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.portfolio.service.UserRecordsErasureService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
-import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -101,20 +100,8 @@ public class PortfolioController {
         return transactionService.getUserTransactions(UserMail.from(email));
     }
 
-    // Note: Below this comment is for testing purpose only
-
-    @PostMapping("/request")
-    public AssetRequest testRequest(@RequestBody AssetRequest assetRequest) {
-
-        if (assetRequest.getTransactionDate() == null) {
-            assetRequest.setTransactionDate(LocalDate.now());
-        }
-        return assetRequest;
-    }
-
-    @PostMapping("/request2")
-    public List<AssetEntity> testRequest(@PathVariable String email,
-                                                         @RequestBody BulkGetRequest bulkGetRequest) {
+    @PostMapping("/assets/search")
+    public List<AssetEntity> searchAssets(@PathVariable String email, @RequestBody BulkGetRequest bulkGetRequest) {
         return portfolioQueryService.searchAssets(UserMail.from(email), bulkGetRequest.getQueryFilters());
     }
 

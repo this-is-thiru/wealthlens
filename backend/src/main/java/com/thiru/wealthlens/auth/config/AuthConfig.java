@@ -40,7 +40,7 @@ public class AuthConfig {
                                 // The notice as a page (W-247); an exact path, so nothing under /privacy/** opens with it.
                                 "/privacy").permitAll()
                         .requestMatchers("/auth/**", "/portfolio/**", "/reports/**", "/transactions/**", "/corporate-action/**",
-                                "/temporary-transactions/**", "/broker-charges/**", "/user-broker-charges/**", "/test/**", "/analytics/**", "/tax-planning/**",
+                                "/temporary-transactions/**", "/broker-charges/**", "/user-broker-charges/**", "/analytics/**", "/tax-planning/**",
                                 // The charges engine. Listed explicitly because the fallback below
                                 // is permitAll: a path nobody adds here is public. A rate card sets
                                 // what every user is charged, /charges/amc/impose bills real money,
