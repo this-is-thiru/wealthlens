@@ -269,4 +269,20 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(performed.getStatusCode().value()).as(performed.getBody()).isEqualTo(401);
         assertThat(read.getStatusCode().value()).as(read.getBody()).isEqualTo(401);
     }
+
+    // Scenario 8 (W-314)
+    @Test
+    void perform_whenASplitAndABonusFallInOneQuarter_appliesThemByRecordDate() {
+        // Given -- 10 @ ₹100; the bonus (record 20 Jan) is announced before the split (record 10 Jan)
+        buy("INFY", 10, 100, "2026-01-05", "Self");
+        addAction("INFY", "BONUS", "1:1", "2026-01-20", "2026-01-22");
+        addAction("INFY", "STOCK_SPLIT", "2:1", "2026-01-10", null);
+
+        // When
+        perform("JANUARY", 2026);
+
+        // Then -- split first: 20 @ ₹50; then the bonus on 20: +20 @ ₹0 = 40, cost ₹1,000
+        assertThat(quantity("INFY")).isEqualTo(40.0);
+        assertMoney(1000.0, cost("INFY"));
+    }
 }

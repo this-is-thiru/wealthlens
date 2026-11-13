@@ -20,7 +20,8 @@ public interface CorporateActionRepository extends MongoRepository<CorporateActi
     @Query("{'stock_code': ?0, 'type': { $in: ?1 }, 'record_date': { $gte: ?2, $lte: ?3 } }")
     List<CorporateActionEntity> findByStockCodeAndTypeInAndRecordDateBetween(String stockCode, List<CorporateActionType> types, LocalDate start, LocalDate transactionDate);
 
-    @Query(value = "{'type': { $in: ?0 }, 'record_date': { $gte: ?1, $lte: ?2 } }", sort = "{ 'record_date' : -1 }")
+    /** Oldest record date first, then priority: a later action applies to what an earlier one left (W-314). */
+    @Query(value = "{'type': { $in: ?0 }, 'record_date': { $gte: ?1, $lte: ?2 } }", sort = "{ 'record_date' : 1, 'priority' : 1 }")
     List<CorporateActionEntity> findByTypeInAndRecordDateBetween(List<CorporateActionType> types, LocalDate start, LocalDate transactionDate);
 
     @Query(value = "{'stock_code': ?0, 'record_date': ?1 }", sort = "{ 'priority' : 1 }")

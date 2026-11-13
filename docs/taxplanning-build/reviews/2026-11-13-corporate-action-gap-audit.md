@@ -38,8 +38,9 @@ the same order, and the bonus code reads it so). `demergeLots` multiplies the he
 ₹5,40,400 instead of ₹54,040, so ₹8,85,960 in total from ₹4,00,000. `1:1` hides it, and every test and example uses
 `1:1`. *Fix row:* W-313.
 
-**G-3. Actions in one quarter run in the order they were entered, not by record date.**
-`findByTypeInAndRecordDateBetween` (`:164`) sorts nothing. The bonus lot is dated its allotment (22 Jan), so a split
+**G-3. Actions in one quarter run latest record date first.** `findByTypeInAndRecordDateBetween` sorts by
+`record_date` descending (`CorporateActionRepository:23`; corrected by W-314's plan, the first draft said "sorts
+nothing"). The bonus lot is dated its allotment (22 Jan), so a split
 recorded 10 Jan, run after it, skips that lot: 30 shares, not 40. *Fix row:* W-314.
 
 **G-4. A wrong month is answered in Java's words.** `Month.valueOf` (`:138`) answers "No enum constant
