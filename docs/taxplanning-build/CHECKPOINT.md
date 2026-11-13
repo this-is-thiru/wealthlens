@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-309 (derive the charge summary from user_charges, checklist :457) — next by board order; nothing written
-Stage           : W-306 DONE (D-625), committed and pushed; W-309 not started
-Done today      : session 89: Phase 10 frozen (D-622), W-304 (D-623), W-305 (D-624), W-306 (D-625)
-Board           : W-306 D; W-309 · next; W-307, W-308 K; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-264c – d ·; W-266 ·; W-090d ·; W-091 – W-094 ·
-Next step       : record W-306's pipeline run in D-625; plan W-309 with a probe run first, STOP for approval
+Item            : W-264c (gap audit: corporate actions) — next by board order; nothing written
+Stage           : W-309 DONE (D-626), committed and pushed; W-264c not started
+Done today      : session 89: Phase 10 frozen (D-622), W-304 (D-623), W-305 (D-624), W-306 (D-625), W-309 (D-626, W-311 placed)
+Board           : W-309 D; W-264c · next; W-264d ·; W-266 ·; W-090d ·; W-091 – W-094 ·; W-299 · (waits §2.14 log); W-294 · (waits §2.13 log); W-307, W-308 K; W-311 · (after Phase 10)
+Next step       : record W-309's pipeline run in D-626; plan W-264c (audit; findings go after Phase 10 per D-622), STOP for approval
 Owner actions   : after deploy: §3.21 (W-304) and §3.20 (W-303), read-only, each database; §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-305 pipeline 43372109985 success (D-624); W-306 validate 0, compile 0
+Last verify     : W-306 pipeline 43374199792 success (D-625); W-309 FinishedPlanTest + ParkedRowsTest 0 failures
 Files touched   : none (all committed)
-Last item commit: taxplanning W-306: say which trade flows the charge engine prices
-Updated         : 2026-11-13, session 89 — W-306 done; next W-309
+Last item commit: taxplanning W-309: close the accumulating charge-summary limit with its reason
+Updated         : 2026-11-13, session 89 — W-309 done; next W-264c
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

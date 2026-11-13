@@ -4,7 +4,7 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** **All twelve chunks done.** Phases A, B and C complete; the superseded implementation is deleted and its collections dropped. **No outstanding cutover item.** Three things stay open and none blocks a merge: one accepted limit (the summary accumulates), and two V1-bound items that are void by decision. One unrelated pre-existing gap is recorded — V2 sells write no `trade_outcomes` row.
+**Status:** **All twelve chunks done.** Phases A, B and C complete; the superseded implementation is deleted and its collections dropped. **No outstanding cutover item.** Two things stay open and neither blocks a merge: two V1-bound items that are void by decision. The accepted limit (the summary accumulates) was closed by W-309 (D-626). One unrelated pre-existing gap is recorded — V2 sells write no `trade_outcomes` row.
 **Last updated:** 2026-09-11 — 886 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (597/598) across the engine and the charges services.
 
 Everything that was once deliberately left unticked is now closed:
@@ -18,10 +18,12 @@ Everything that was once deliberately left unticked is now closed:
 
 **What is genuinely still open** — none of it blocks a merge:
 
-1. **`YearlyChargeSummary` accumulates** rather than being derived from `user_charges`, so
-   reprocessing one trade twice counts it twice. Accepted; worth revisiting now that the old
-   hierarchy it was matching is deleted. Deriving it would also give per-broker and per-asset-type
-   breakdowns the summary cannot express today.
+1. ~~**`YearlyChargeSummary` accumulates**~~ **Closed by W-309 (D-626), not derived.** No live path
+   processes a trade twice: a collision re-run is its own transaction and leaves nothing behind
+   (`TradeCollisionRetry`, `app.mongodb.transactions-enabled: true`), and a temporary trade is redriven
+   once. Drift is repaired by the P&L rebuild (deploy runbook §2.2, W-283), which already derives the
+   summary from `user_charges`. The one replay, `POST /test/user/{email}/transact/sell`, rewrites a whole
+   sale, not only its charges, and is W-311.
 2. **Two V1-bound items are void by decision** — `toTradeOutcomeContext` pro-rating and retiring the
    `ProfitAndLossContext` overload. Both are V1-only code, and V1 is in live use.
 3. **V2 sells write no `trade_outcomes` row** (`sellStockV2` → `…AndProfitAndLoss1`, which never calls
@@ -454,7 +456,7 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
       `outSourcedRealisedProfits` — so the two can be compared bucket for bucket while both are written
 - [x] The hidden `precomputedCharge` field introduced in 10a is gone; the computation is threaded as a
       parameter through `dispatch` and both handlers
-- [ ] **Known limit, deliberately accepted:** the summary *accumulates*, so reprocessing one trade
+- [x] **Closed by W-309 (D-626), not derived — see the open list's item 1.** Known limit, deliberately accepted: the summary *accumulates*, so reprocessing one trade
       twice counts it twice. The hierarchy beside it has always had that property. Deriving the summary
       from `user_charges` instead would be idempotent by construction — **revisit when Chunk 11 deletes
       the old hierarchy**, since that is when `ChargeSummaryReport.merge` stops having a peer to match
