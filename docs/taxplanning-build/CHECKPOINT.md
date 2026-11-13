@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-317 (any signed-in user can add, reprioritise and globally perform corporate actions, G-6) — next by board order; nothing written
-Stage           : W-264c DONE (D-627), committed and pushed; W-317 not started
-Done today      : session 89: Phase 10 frozen (D-622), W-304 (D-623), W-305 (D-624), W-306 (D-625), W-309 (D-626), W-264c (D-627; W-312 – W-317 placed)
-Board           : W-264c D; W-317 · next; W-313, W-312, W-316, W-314, W-315 ·; W-264d ·; W-266 ·; W-090d ·; W-091 – W-094 ·; W-299, W-294 · (wait run logs); W-307, W-308 K; W-311 · (after Phase 10)
-Next step       : record W-264c's pipeline run in D-627; plan W-317 with a probe run first, STOP for approval
+Item            : W-313 (a demerger reads its share ratio backwards, G-2) — next by board order; nothing written
+Stage           : batch W-317, W-315, W-314 DONE (D-634 – D-636), committed and pushed (+ api-collection 1559ff5); W-313 not started
+Done today      : session 89: Phase 10 frozen (D-622), W-304, W-305, W-306, W-309, W-264c (W-312 – W-317 placed), batch W-317 + W-315 + W-314 (D-623 – D-636)
+Board           : W-317, W-315, W-314 D; W-313 · next; W-312, W-316 ·; W-264d ·; W-266 ·; W-090d ·; W-091 – W-094 ·; W-299, W-294 · (wait run logs); W-307, W-308 K; W-311 · (after Phase 10)
+Next step       : record the batch's pipeline run in D-634; plan W-313 with a probe run first (needs a read-only stored-demerger count), STOP for approval
 Owner actions   : after deploy: §3.21 (W-304) and §3.20 (W-303), read-only, each database; §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-264c: audit class 7 / 0 (13 scenarios, 6 gaps reproduced twice); validate 0; FinishedPlan + ParkedRows 0; W-309 pipeline recorded in D-626
+Last verify     : W-264c pipeline 43380695041 success (D-627); batch red 3, probes 3, 197 / 0, validate 0
 Files touched   : none (all committed)
-Last item commit: taxplanning W-264c: audit corporate actions through the HTTP API
-Updated         : 2026-11-13, session 89 — W-264c done; next W-317
+Last item commit: taxplanning W-317: allow only a super user to add, reprioritise or globally perform corporate actions
+Updated         : 2026-11-13, session 89 — batch done; next W-313
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

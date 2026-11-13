@@ -301,4 +301,23 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(JSON.readTree(february.getBody()).get("message").asString())
                 .isEqualTo("A quarter starts in one of [JANUARY, APRIL, JULY, OCTOBER], but the month was 'FEBRUARY'");
     }
+
+    // Scenario 15 (W-317)
+    @Test
+    void adminRoutes_whenTheCallerIsNotASuperUser_answer403() {
+        // When
+        ResponseEntity<String> added = call(HttpMethod.POST, "/corporate-action/add", "USER",
+                Map.of("stockCode", "X", "type", "BONUS", "ratio", "1:1", "recordDate", "2026-01-15", "exDate", "2026-01-15"));
+        ResponseEntity<String> performedForAll = call(HttpMethod.PUT, "/corporate-action/perform", "USER",
+                Map.of("stockCode", "X", "type", "NAME_OR_SYMBOL_CHANGE", "toStockCode", "Y"));
+        ResponseEntity<String> tested = call(HttpMethod.PUT, "/corporate-action/perform/test", "USER",
+                Map.of("stockCode", "X", "recordDate", "2026-01-15"));
+        ResponseEntity<String> reprioritised = call(HttpMethod.PUT, "/corporate-action/update/priority/abc/2", "USER", null);
+
+        // Then
+        assertThat(added.getStatusCode().value()).isEqualTo(403);
+        assertThat(performedForAll.getStatusCode().value()).isEqualTo(403);
+        assertThat(tested.getStatusCode().value()).isEqualTo(403);
+        assertThat(reprioritised.getStatusCode().value()).isEqualTo(403);
+    }
 }
