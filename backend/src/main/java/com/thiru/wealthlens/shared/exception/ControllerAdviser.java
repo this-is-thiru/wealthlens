@@ -21,15 +21,30 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.exc.InvalidFormatException;
+import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 @Log4j2
 @RestControllerAdvice
 public class ControllerAdviser {
 
-    @ExceptionHandler({IllegalArgumentException.class, HttpMessageNotReadableException.class})
+    @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest request) {
         log(ex);
         return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request);
+    }
+
+    /**
+     * A body the server cannot read is the caller's to correct; the answer names the field and what it accepts, never the
+     * parser's own text, which names library settings and controller signatures (W-305).
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableBody(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log(ex);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), unreadable(ex), request);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -113,10 +128,53 @@ public class ControllerAdviser {
         return ResponseEntity.status(status).body(errorResponse);
     }
 
+    private static String unreadable(HttpMessageNotReadableException ex) {
+        if (ex.getCause() == null) {
+            return "The request body is missing";
+        }
+        Throwable cause = ex.getCause();
+        if (cause instanceof UnrecognizedPropertyException unknown) {
+            return "Field '" + path(unknown) + "' is not one this request accepts";
+        }
+        if (cause instanceof InvalidFormatException format) {
+            return "Field '" + path(format) + "' must be " + accepted(format.getTargetType()) + ", but was '" + format.getValue() + "'";
+        }
+        if (cause instanceof MismatchedInputException mismatch && mismatch.getTargetType() != null) {
+            return mismatch.getPath().isEmpty()
+                    ? "The request body must be a JSON " + (isList(mismatch.getTargetType()) ? "array" : "object")
+                    : "Field '" + path(mismatch) + "' must be " + accepted(mismatch.getTargetType());
+        }
+        if (cause instanceof StreamReadException malformed && malformed.getLocation() != null) {
+            return "The request body is not valid JSON (line " + malformed.getLocation().getLineNr() + ", column "
+                    + malformed.getLocation().getColumnNr() + ")";
+        }
+        return "The request body could not be read";
+    }
+
+    private static boolean isList(Class<?> type) {
+        return type.isArray() || java.util.Collection.class.isAssignableFrom(type);
+    }
+
+    /** The field as the caller wrote it: {@code rules[0].perLot}. */
+    private static String path(JacksonException ex) {
+        StringBuilder path = new StringBuilder();
+        for (JacksonException.Reference reference : ex.getPath()) {
+            if (reference.getPropertyName() != null) {
+                path.append(path.isEmpty() ? "" : ".").append(reference.getPropertyName());
+            } else {
+                path.append('[').append(reference.getIndex()).append(']');
+            }
+        }
+        return path.toString();
+    }
+
     /** What a parameter of {@code type} accepts, in the caller's words; the formats are the ones the controllers bind. */
     private static String accepted(Class<?> type) {
         if (type.isEnum()) {
             return "one of " + Arrays.toString(type.getEnumConstants());
+        }
+        if (type == double.class || type == Double.class) {
+            return "a number";
         }
         if (type == int.class) {
             return "a whole number";

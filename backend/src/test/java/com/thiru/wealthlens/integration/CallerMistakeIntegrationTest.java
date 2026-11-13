@@ -108,4 +108,24 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
 
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
+
+    @Test
+    void simulate_whenThereIsNoBody_expected400SayingSo() {
+        assertAnswered(exchange(HttpMethod.POST, "/charges/simulate", MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
+                "The request body is missing");
+    }
+
+    @Test
+    void simulate_whenThePriceIsNotANumber_expected400NamingTheFieldAndValue() {
+        assertAnswered(exchange(HttpMethod.POST, "/charges/simulate", MediaType.APPLICATION_JSON, "{\"price\":\"abc\"}"),
+                HttpStatus.BAD_REQUEST, "Field 'price' must be a number, but was 'abc'");
+    }
+
+    @Test
+    void publish_whenARuleOmitsAPrimitive_expected400NamingItsPath() {
+        // W-264b scenario 4: Jackson's text named DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES
+        assertAnswered(exchange(HttpMethod.POST, "/charge-schedules", MediaType.APPLICATION_JSON,
+                "{\"scheduleCode\":\"X\",\"rules\":[{\"code\":\"STT\"}]}"), HttpStatus.BAD_REQUEST,
+                "Field 'rules[0].perLot' must be true or false");
+    }
 }
