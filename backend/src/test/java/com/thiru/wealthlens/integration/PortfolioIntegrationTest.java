@@ -1018,7 +1018,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void getProfitAndLoss_whenCalled_expected200() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/profit-and-loss?financialYear=2025-26";
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/profit-and-loss?financialYear=2025-2026"; // the stored form; another is refused (W-320)
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);

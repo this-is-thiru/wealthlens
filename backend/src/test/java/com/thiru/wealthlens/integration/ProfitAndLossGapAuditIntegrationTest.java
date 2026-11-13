@@ -168,4 +168,24 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(result.get("xirr").asDouble()).isCloseTo(0.10, org.assertj.core.data.Offset.offset(1e-6));
     }
 
+    // Scenario 5 (W-320)
+    @Test
+    void profitAndLoss_whenTheYearIsNotWrittenAsStored_answers400NamingTheForm() {
+        // Given
+        v2("TCS", "BUY", 10, 100, "2026-01-10");
+        v2("TCS", "SELL", 4, 150, "2026-03-05");
+
+        // When
+        ResponseEntity<String> shortForm = call(HttpMethod.GET, "/portfolio/user/" + EMAIL + "/profit-and-loss?financialYear=2025-26",
+                "USER", null);
+        ResponseEntity<String> untraded = call(HttpMethod.GET, "/portfolio/user/" + EMAIL + "/profit-and-loss?financialYear=2027-2028",
+                "USER", null);
+
+        // Then -- the short form is refused naming the stored form; a year with nothing traded is simply empty
+        assertThat(shortForm.getStatusCode().value()).as(shortForm.getBody()).isEqualTo(400);
+        assertThat(JSON.readTree(shortForm.getBody()).get("message").asString())
+                .isEqualTo("A financial year is written as portfolio writes it, such as 2025-2026, but was 2025-26");
+        assertThat(untraded.getStatusCode().value()).isEqualTo(200);
+    }
+
 }

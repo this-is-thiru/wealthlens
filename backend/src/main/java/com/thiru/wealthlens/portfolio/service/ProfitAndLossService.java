@@ -239,8 +239,10 @@ public class ProfitAndLossService {
 	public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {
 		String email = userMail.getEmail();
 
+		// Read as stored; a year written another way is refused naming the form rather than answered empty (W-320)
+		String label = FinancialYear.parse(financialYear).label();
 		Optional<ProfitAndLossEntity> optionalProfitAndLoss = profitAndLossRepository.findByEmailAndFinancialYear(email,
-				financialYear);
+				label);
 		ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity());
 
 		return TJsonMapper.safeCopy(profitAndLossEntity, ProfitAndLossResponse.class);
