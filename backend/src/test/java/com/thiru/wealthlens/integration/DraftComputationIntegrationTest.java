@@ -1304,4 +1304,77 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(undated.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(undated.getBody()).contains("/filing/dueDate");
     }
+
+    private JsonNode completeness(String draftId) {
+        ResponseEntity<String> completeness = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/completeness", null, null);
+        assertThat(completeness.getStatusCode()).as(completeness.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(completeness.getBody());
+    }
+
+    /** Basic 10,00,000 and HRA 4,00,000, no rent, nothing paid (W-115, {@code DraftCompletenessServiceTest}). */
+    private String allowanceDraft() {
+        String draftId = draft(false, "0");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "replace", "path": "/entered/employments/0/components/0/annualAmount/amountInRupees", "value": 1000000},
+                 {"op": "add", "path": "/entered/employments/0/components/-",
+                  "value": {"code": {"value": "HRA"}, "annualAmount": {"amountInRupees": 400000}}}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        return draftId;
+    }
+
+    @Test
+    void completeness_whenTheOldRegimeIsElected_ranksWhatEachMissingItemSavesAndStoresNothing() {
+        // Given — DraftCompletenessServiceTest's hand-worked worths, at 31.2 % on an income of 13,50,000
+        String draftId = allowanceDraft();
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status", "{\"status\": \"READY\"}", null);
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status",
+                "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}", null);
+
+        // When
+        JsonNode completeness = completeness(draftId);
+
+        // Then — rent 1,19,600, Schedule XV 46,800, own NPS 15,600, own health cover 7,800; 1,89,800 together
+        assertThat(completeness.get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(completeness.get("top").size()).isEqualTo(4);
+        assertThat(completeness.at("/top/0/rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
+        assertThat(completeness.at("/top/0/direction").asString()).isEqualTo("REDUCES");
+        assertThat(completeness.at("/top/0/location").asString()).isEqualTo("ANY_OTHER_PLACE");
+        assertThat(amountAt(completeness, "/top/0/rentNeeded")).isEqualByComparingTo("500000");
+        assertThat(amountAt(completeness, "/top/0/worth")).isEqualByComparingTo("119600");
+        assertThat(completeness.at("/top/1/rule").asString()).isEqualTo("DED-SCHEDULE-XV");
+        assertThat(amountAt(completeness, "/top/1/worth")).isEqualByComparingTo("46800");
+        assertThat(amountAt(completeness, "/top/2/worth")).isEqualByComparingTo("15600");
+        assertThat(amountAt(completeness, "/top/3/worth")).isEqualByComparingTo("7800");
+        assertThat(completeness.get("others").size()).isZero();
+        assertThat(amountAt(completeness, "/topWorth")).isEqualByComparingTo("189800");
+        assertThat(completeness.get("notIncluded").toString()).contains("W-324");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isZero();
+    }
+
+    @Test
+    void completeness_whenTheDefaultRegimeAllowsNoneOfIt_listsNothing() {
+        // Given — no election: the year's default, which allows no Schedule XV, s.124(3), health cover or HRA
+        String draftId = allowanceDraft();
+
+        // When
+        JsonNode completeness = completeness(draftId);
+
+        // Then
+        assertThat(completeness.get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(completeness.get("top").size()).isZero();
+        assertThat(amountAt(completeness, "/topWorth")).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void completeness_whenAnotherAccountAsks_expected400() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> anothers = call(HttpMethod.GET, "other@example.com", "/drafts/" + draftId + "/completeness",
+                null, null);
+
+        // Then
+        assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
 }

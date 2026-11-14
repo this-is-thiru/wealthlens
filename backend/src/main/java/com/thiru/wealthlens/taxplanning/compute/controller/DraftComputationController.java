@@ -6,6 +6,8 @@ import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
 import com.thiru.wealthlens.taxplanning.compute.DraftCalendar;
 import com.thiru.wealthlens.taxplanning.compute.DraftCalendarService;
+import com.thiru.wealthlens.taxplanning.compute.DraftCompleteness;
+import com.thiru.wealthlens.taxplanning.compute.DraftCompletenessService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationView;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecast;
@@ -34,6 +36,7 @@ public class DraftComputationController {
     private final CapitalGainsViewService capitalGainsViewService;
     private final DraftForecastService forecastService;
     private final DraftCalendarService calendarService;
+    private final DraftCompletenessService completenessService;
 
     @PostMapping("/drafts/{draftId}/compute")
     public DraftComputationView compute(@PathVariable String email, @PathVariable String draftId,
@@ -54,6 +57,11 @@ public class DraftComputationController {
     @GetMapping("/drafts/{draftId}/calendar")
     public DraftCalendar calendar(@PathVariable String email, @PathVariable String draftId) {
         return calendarService.calendar(email, draftId);
+    }
+
+    @GetMapping("/drafts/{draftId}/completeness")
+    public DraftCompleteness completeness(@PathVariable String email, @PathVariable String draftId) {
+        return completenessService.completeness(email, draftId);
     }
 
     @PostMapping("/drafts/{draftId}/itr-form")

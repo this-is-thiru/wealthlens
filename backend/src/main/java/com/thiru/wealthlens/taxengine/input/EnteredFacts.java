@@ -314,6 +314,30 @@ public record EnteredFacts(
                 houseReinvestments);
     }
 
+    /** The same facts with the homes replaced — how rent's worth is measured (W-115, D-670). */
+    public EnteredFacts withTenancies(List<Tenancy> homes) {
+        return new EnteredFacts(employments, homes, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies, healthPayments,
+                disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems, providentFundAccounts,
+                giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, absorptionOrder,
+                houseReinvestments);
+    }
+
+    /** The same facts with the Form No. 31 declaration replaced — how s.134's worth is measured (W-115, D-670). */
+    public EnteredFacts withRentDeclaration(Optional<RentDeclaration> declaration) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies, healthPayments,
+                disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, declaration, donations, houseProperties, otherSourceItems, providentFundAccounts,
+                giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, absorptionOrder,
+                houseReinvestments);
+    }
+
     /** The same facts with the employer contributions replaced — what the optimiser prices a fund move on (W-238c). */
     public EnteredFacts withEmployerContributions(List<EmployerFundContribution> reallocated) {
         return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,

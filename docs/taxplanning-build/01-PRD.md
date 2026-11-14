@@ -208,7 +208,7 @@ Design: `20-product-gaps.md` F29 · `23` A6, A10
 
 Design: `20-product-gaps.md` F30
 
-#### F33 — Completeness weighted by measured worth — ○ `W-115`
+#### F33 — Completeness weighted by measured worth — ✅ `W-115` (D-670: F33.1 and F33.3 — Schedule XV, both health parties, own NPS and rent, HRA or s.134, each priced by a second run; F33.2, items that raise tax, waits on department data, ○ `W-324`)
 | # | Acceptance criterion |
 |---|---|
 | F33.1 | Weights are measured by recomputation, never a notional marginal rate |

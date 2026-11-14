@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsTerm;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.optimise.DeductionRoomPricing;
+import com.thiru.wealthlens.taxengine.optimise.RentRoomPricing;
 import com.thiru.wealthlens.taxengine.optimise.SalaryOptimiser;
 import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
 import com.thiru.wealthlens.taxengine.pipeline.AskedDeclarations;
@@ -298,6 +299,17 @@ public class TaxCalculator {
     public List<DeductionRoom> priceDeductionRoom(EngineInputs inputs) {
         RulePack pack = shipped(inputs.taxYear());
         return DeductionRoomPricing.price(REGISTRY, pack, spec(pack, inputs.regime()), inputs);
+    }
+
+    /**
+     * What rent the draft does not yet reflect would take off the bill; empty where it would earn nothing more (W-115,
+     * D-670).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Optional<RentRoom> priceRentRoom(EngineInputs inputs) {
+        RulePack pack = shipped(inputs.taxYear());
+        return RentRoomPricing.price(REGISTRY, pack, spec(pack, inputs.regime()), inputs);
     }
 
     /**

@@ -1593,6 +1593,7 @@ if that is not enough for the item in hand.
 > Verified by: `plans/W-114c.md` (Re-plan); `DeductionRoomPricingTest`.
 | W-114d | Own NPS (s.124(3); 1961 s.80CCD(1B)) — the order first, then the calendar *(W-114c R1a, D-668)*: read 2025 s.124(3) and Schedule XV para 1(y) (Gazette 265620) and the 1961 s.80CCD(1), (1B) chain with its amending Acts, and settle whether the engine's order — a contribution counted under Schedule XV up to the 10 % sub-cap, only the rest reaching s.124(3) (`ScheduleXvDeduction`) — is the law; correct the engine if not; then price the own-NPS room in the calendar with the contribution it takes | `DR 20` F30; `DR 01` NPS rows | **F30**; a possible engine defect first |
 | W-115 | `CompletenessProjection` + endpoint | `DR 20` F33 | **F33** |
+| W-324 | F33.2, omitted income that raises tax *(W-115 C2a, D-670)*: an item with `direction` `RAISES` for income the department already holds and the draft leaves out (the design's example: savings interest, `rule 237(6)`), its worth measured by a second run with the figure entered — from department data (AIS / Form 26AS), which no module imports yet; its plan first places or names that import | `DR 20` F33 | **F33.2**; after an AIS / 26AS import |
 | W-116 | `content/explanations.json` + renderer | `DR 20` F37 | **F37** |
 | W-117 | `content/claim-catalogue.json` (12 entries) | `DR 22` C5 | **F40** |
 | W-118 | claim-playbook endpoint | `DR 22` C4 | **F40** |

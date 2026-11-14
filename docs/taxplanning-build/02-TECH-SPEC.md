@@ -115,7 +115,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 (✅ `W-096`–`W-098`, D-440) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs` (`filing.declarations`, checked on save; `GET /tax/user/{email}/declarations/{taxYear}`, W-090a2)
 `EntryProvenance` (○ `W-099`, `W-100`) · `assemble/` `EngineInputsAssembler` — the **only** place
 `EngineInputs` is built (✅ `W-103`, D-442) · `portfolio/` `MoneyBridge` (✅ `W-087`, D-240: `fromTMoney` refuses a non-canonical or non-finite double; `toTMoney` throws) `CapitalGainsAdapter` (✅ `W-087b`, D-241: `inputFor(email, taxYear)` — term and rate basis from S2 ss.196–198 / 1961 ss.111A, 112, 112A on `EQUITY` and the bucket's STT flags; unclassified, speculative and unmapped assets refused; OQ-31 refused), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087b`) ·
-`projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`; `ForecastProjection` ✅ as `compute/DraftForecast`, `W-113`, D-664; `CalendarProjection` ✅ as `compute/DraftCalendar`, `W-114`, D-665)
+`projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`; `ForecastProjection` ✅ as `compute/DraftForecast`, `W-113`, D-664; `CalendarProjection` ✅ as `compute/DraftCalendar`, `W-114`, D-665; `CompletenessProjection` ✅ as `compute/DraftCompleteness`, `W-115`, D-670)
 · `scenario/` `Scenario` `ScenarioDiff` `DiffLine` (⚠ UNOWNED) · `controller/` DTOs only · `job/`
 `TaxJob` + 6 jobs, `JobLease` (○ `W-137`) · `gazette/` `GazetteWatch` (a `TaxJob`, daily, off until seeded and enabled) `GazetteCopies` `GazetteMatcher` `GazetteLead` `GazetteCursor` — leads, never pack writes; tier two from `taxengine` `api.TaxCalculator.provisionsCited()` / `ProvisionCitation` (✅ `W-236`).
 
@@ -365,7 +365,7 @@ distinct from the legacy `/tax-planning` until that is deleted (**D-046 B3**). W
 | `GET` | `/computations/{receipt}` | ✅ `W-107` |
 | `GET` | `/drafts/{draftId}/forecast` | ✅ `W-113` (D-664: `DraftForecast`, computed per request under the elected or default regime, stored nowhere) |
 | `GET` | `/drafts/{draftId}/calendar` | ✅ `W-114` (D-665: `DraftCalendar`, computed per request, up to seven runs, stored nowhere) |
-| `GET` | `/drafts/{draftId}/completeness` | ○ `W-115` |
+| `GET` | `/drafts/{draftId}/completeness` | ✅ `W-115` (D-670: `DraftCompleteness`, computed per request, up to eight runs, stored nowhere) |
 | `GET` | `/drafts/{draftId}/itr-suggestion` | ⚠ UNOWNED endpoint (selector ○ `W-091`) |
 | `GET` | `/drafts/{draftId}/itr-export` | ⚠ UNOWNED endpoint (mapper ○ `W-093`) |
 | `GET` | `/drafts/{draftId}/claim-playbook/{ruleId}` | ○ `W-118` |

@@ -231,7 +231,7 @@ public final class DeductionRoomPricing {
                         + " qualifying payment live in " + year.label()));
     }
 
-    private static Money bill(PipelineRunner.Result run) {
+    static Money bill(PipelineRunner.Result run) {
         return ((MoneyValue) run.valueOf(NodeIds.TAX_NETPAYABLE)).amount();
     }
 }

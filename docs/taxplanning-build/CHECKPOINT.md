@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-114d done (D-669), committed and pushed with api-collection
-Stage           : DONE (session 93, 2026-11-14) — review approved ("commit it and push"); pipeline + benchmark to be checked (RUN_BENCHMARKS set)
-Done today      : session 93: W-113 (D-664), W-114 (D-665) committed, pushed, pipelines green; W-114a planned, approved, built
-Board           : W-114 – W-114d D (F30 complete), W-113a ·; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-115
-Next step       : record W-114d pipeline + benchmark in D-669, then gh variable delete RUN_BENCHMARKS; then W-115 by board order (plan first, §2)
+Item            : W-115 done (D-670), committed and pushed; W-324 placed (F33.2, after an AIS / 26AS import)
+Stage           : 6 DONE — review approved ("commit it and push"); pipeline with RUN_BENCHMARKS to confirm, then delete the variable
+Done today      : session 94: W-115 (D-670); session 93: W-113 – W-114d (D-664 – D-669)
+Board           : W-113, W-114 – W-114d, W-115 D; W-113a · (after F12); W-324 · (after an AIS / 26AS import); Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-116
+Next step       : W-116 by board order (plan first, §2; probe before plan)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-114c pipeline 43553629519 success (D-668); W-114d targeted: ChapterEightNodeTest 30, TaxCalculatorOptimiseTest 46, SaturationTest, goldens 317, DeductionRoomPricingTest 10, DraftCalendarServiceTest 13, DraftComputationIntegrationTest 56, Architecture/Modulith/FinishedPlan; full tiers + benchmark on the pipeline
-Files touched   : none beyond this file once committed
-Last item commit: taxplanning W-114d: claim own NPS under s.124(3) before s.123 and price its room in the calendar
-Updated         : 2026-11-14, session 93 — W-114d committed and pushed
+Last verify     : 2026-11-14 RentRoomPricingTest 12, DraftCompletenessServiceTest 2, DeductionRoomPricingTest 10, DraftCalendarServiceTest 13, DraftComputationIntegrationTest completeness_* + calendar_* 6, ArchitectureTest, WealthLensModulithTest, FinishedPlanTest, validate — all green; full tiers on the pipeline
+Files touched   : none beyond this file once the item commit lands
+Last item commit: taxplanning W-115: rank what a draft leaves out by the tax each item would save
+Updated         : 2026-11-14, session 94 — W-115 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
