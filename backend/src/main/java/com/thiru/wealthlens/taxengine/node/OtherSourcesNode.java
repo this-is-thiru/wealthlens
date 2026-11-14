@@ -23,6 +23,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.util.HashMap;
@@ -156,7 +159,7 @@ public final class OtherSourcesNode implements ComputationNode {
         Money share = lines.version(id).definition().isPresent()
                 ? lines.familyPensionShare(id).deduction(item.received())
                 : lines.applied(id, baseOf(lines.ctx(), row.get()), item.received());
-        lines.add(id, StepKind.DEDUCTION, item.received(), share, where + ": deducted against " + item.kind());
+        lines.add(id, StepKind.DEDUCTION, item.received(), share, where + ": deducted against " + item.kind(), new Reason(ReasonCodes.OS_FOR_THIS_ITEM, Map.of()));
         return share;
     }
 
@@ -182,7 +185,7 @@ public final class OtherSourcesNode implements ComputationNode {
     private static Money incomeLine(OtherSourcesLines lines, String where, OtherSourceItem item) {
         RuleRow row = chargingRow(lines.ctx(), item);
         Money income = lines.applied(row.id(), baseOf(lines.ctx(), row), item.received());
-        lines.add(row.id(), StepKind.INCOME, item.received(), income, where + ": " + item.kind());
+        lines.add(row.id(), StepKind.INCOME, item.received(), income, where + ": " + item.kind(), new Reason(ReasonCodes.OS_FOR_THIS_ITEM, Map.of()));
         return income;
     }
 
@@ -240,14 +243,15 @@ public final class OtherSourcesNode implements ComputationNode {
             deducted = reaches(lines.ctx(), row, item)
                     ? lines.deduction(row, COMMISSION, item, item.bankerCommission(), where)
                     : lines.nil(row, item.bankerCommission(), where + ": a banker's commission is not deducted against "
-                            + item.kind());
+                            + item.kind(), new Reason(ReasonCodes.OS_EXPENSE_NOT_DEDUCTED, Map.of()));
         }
         Money expenses = expenditureClaimed(lines.ctx(), item);
         if (expenses.isGreaterThan(Money.ZERO)) {
             RuleId row = lines.row(RuleSetIds.RS_OS_OTHER_EXPENDITURE);
             deducted = deducted.plus(reaches(lines.ctx(), row, item)
                     ? lines.deduction(row, EXPENDITURE, item, expenses, where)
-                    : lines.nil(row, expenses, where + ": expenditure is not deducted against " + item.kind()));
+                    : lines.nil(row, expenses, where + ": expenditure is not deducted against " + item.kind(),
+                            new Reason(ReasonCodes.OS_EXPENSE_NOT_DEDUCTED, Map.of())));
         }
         return deducted;
     }
@@ -257,7 +261,8 @@ public final class OtherSourcesNode implements ComputationNode {
         Money income = lines.applied(lines.row(RuleSetIds.RS_OS_BUSINESS_TRUST), BUSINESS_TRUST, units.specifiedSum());
         lines.add(lines.row(RuleSetIds.RS_OS_BUSINESS_TRUST), StepKind.INCOME, units.distributed(), income, "business trust holding "
                 + position + ": " + units.distributed() + " distributed less " + units.issuedAt() + " issued and "
-                + units.chargedEarlier() + " charged earlier, never below nil");
+                + units.chargedEarlier() + " charged earlier, never below nil",
+                new Reason(ReasonCodes.BUSINESS_TRUST_SPECIFIED_SUM, Map.of("distributed", new ReasonFact.MoneyFact(units.distributed()), "issued", new ReasonFact.MoneyFact(units.issuedAt()), "earlier", new ReasonFact.MoneyFact(units.chargedEarlier()))));
         return income;
     }
 
@@ -270,9 +275,11 @@ public final class OtherSourcesNode implements ComputationNode {
         String where = "provident fund " + position;
         Money excess = lines.providentFundThreshold().excess(account.contributed(), account.employerContributes());
         lines.add(lines.row(RuleSetIds.RS_OS_PF_TAXABLE_INTEREST), StepKind.MEASURE, account.contributed(), excess,
-                where + ": the contribution beyond the threshold enters the taxable contribution account");
+                where + ": the contribution beyond the threshold enters the taxable contribution account",
+                new Reason(ReasonCodes.PF_CONTRIBUTION_ABOVE_THRESHOLD, Map.of()));
         lines.add(lines.row(RuleSetIds.RS_OS_PF_TAXABLE_INTEREST), StepKind.INCOME, account.taxableAccountInterest(),
-                account.taxableAccountInterest(), where + ": interest accrued in the taxable contribution account");
+                account.taxableAccountInterest(), where + ": interest accrued in the taxable contribution account",
+                new Reason(ReasonCodes.PF_TAXABLE_ACCOUNT_INTEREST, Map.of()));
         return account.taxableAccountInterest();
     }
 

@@ -29,6 +29,9 @@ import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -268,6 +271,9 @@ class OtherSourcesNodeTest {
         assertThat(result.value().asMoney()).isEqualTo((Money.of("100000")));
         assertThat(result.trace().getLast().limitedBy()).hasValueSatisfying(
                 why -> assertThat(why).contains("payable outside India untaxed"));
+        assertThat(result.trace().getLast().reason()).contains(new Reason(ReasonCodes.OS_UNTAXED_ABROAD, Map.of()));
+        assertThat(rowLines(result, RuleIds.OS_INTEREST)).allSatisfy(
+                line -> assertThat(line.reason()).contains(new Reason(ReasonCodes.OS_FOR_THIS_ITEM, Map.of())));
     }
 
     @Test
@@ -645,6 +651,7 @@ class OtherSourcesNodeTest {
                 tuple(RuleIds.OS_OTHER_EXPENDITURE, money("0")));
         assertThat(result.trace().getLast().limitedBy().orElseThrow())
                 .contains("expenditure is not deducted against DEATH_GRATUITY");
+        assertThat(result.trace().getLast().reason()).contains(new Reason(ReasonCodes.OS_EXPENSE_NOT_DEDUCTED, Map.of()));
     }
 
     private static ProvidentFundAccount fund(String contributed, boolean employerContributes, String interest) {
@@ -960,8 +967,10 @@ class OtherSourcesNodeTest {
         NodeResult result = run(year, OLD, List.of(item(OtherSourceKind.INTEREST_ON_SECURITIES, "10000", "0", "0",
                 "0")), List.of(), List.of(sum("30000"), sum("25000")));
 
-        // Then
+        // Then — the sums are totalled for the year, then measured against the threshold
         assertThat(result.value().asMoney()).isEqualTo((Money.of("65000")));
+        assertThat(result.trace()).extracting(TraceLine::reason)
+                .contains(Optional.of(new Reason(ReasonCodes.GIFTS_FOR_THE_YEAR, Map.of())));
     }
 
     private static NodeResult runTrusts(int year, BusinessTrustUnits... trusts) {
@@ -1018,6 +1027,7 @@ class OtherSourcesNodeTest {
         // Then — A − B − C = 30,000
         assertThat(result.value().asMoney()).isEqualTo((Money.of("30000")));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_BUSINESS_TRUST);
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.BUSINESS_TRUST_SPECIFIED_SUM, Map.of("distributed", new ReasonFact.MoneyFact(Money.of("150000")), "issued", new ReasonFact.MoneyFact(Money.of("100000")), "earlier", new ReasonFact.MoneyFact(Money.of("20000")))));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -1201,6 +1211,8 @@ class OtherSourcesNodeTest {
 
         // Then — no premium limit (TY 2026-27 from 1-4-2025; TY 2025-26 any date); 6% within 10%
         assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
+        assertThat(result.trace()).extracting(TraceLine::reason)
+                .contains(Optional.of(new Reason(ReasonCodes.LIFE_POLICY_EXCLUDED, Map.of())));
     }
 
     @ParameterizedTest(name = "TY {0}")

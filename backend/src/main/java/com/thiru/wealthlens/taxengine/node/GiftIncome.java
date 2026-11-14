@@ -9,9 +9,12 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -85,7 +88,7 @@ final class GiftIncome {
                     covidDeathLimbs.add(limb);
                 } else {
                     lines.add(ctx.ruleIdOf(RuleSetIds.RS_OS_GIFT_EXCLUSION), StepKind.EXEMPTION, gift.value(),
-                            gift.value(), where + ": excluded, " + gift.excludedAs().get());
+                            gift.value(), where + ": excluded, " + gift.excludedAs().get(), new Reason(ReasonCodes.GIFT_EXCLUDED, Map.of()));
                 }
                 continue;
             }
@@ -101,7 +104,8 @@ final class GiftIncome {
             RuleId row = ctx.ruleIdOf(limb);
             if (totals.containsKey(row)) {
                 Received total = totals.get(row);
-                charged = charged.plus(chargedGift(lines, row, "the year's total", total.value(),
+                charged = charged.plus(chargedGift(lines, row, "the year's total", ReasonCodes.GIFTS_FOR_THE_YEAR,
+                        total.value(),
                         threshold(lines, row).charged(total.consideration(), total.value())));
             }
         }
@@ -116,7 +120,7 @@ final class GiftIncome {
             totals.merge(row, received, Received::plus);
             return Money.ZERO;
         }
-        return chargedGift(lines, row, what, received.value(),
+        return chargedGift(lines, row, what, ReasonCodes.GIFT_ON_ITS_OWN, received.value(),
                 threshold.charged(received.consideration(), received.value()));
     }
 
@@ -148,7 +152,8 @@ final class GiftIncome {
     private static Money covidDeathSumsBeyondTheLimit(OtherSourcesLines lines, RuleId row, Money covidDeathSums) {
         Money excluded = Money.min(covidDeathSums, lines.applied(row, GIFT, covidDeathSums));
         lines.add(row, StepKind.EXEMPTION, covidDeathSums, excluded,
-                "sums to the family of a person whose death was related to COVID-19, excluded up to the limit");
+                "sums to the family of a person whose death was related to COVID-19, excluded up to the limit",
+                new Reason(ReasonCodes.GIFT_COVID_DEATH_LIMIT, Map.of()));
         return covidDeathSums.minus(excluded);
     }
 
@@ -176,10 +181,10 @@ final class GiftIncome {
     }
 
     /** One INCOME line on a limb's row for a gift or a year's total: what was received, what of it is charged. */
-    private static Money chargedGift(OtherSourcesLines lines, RuleId row, String what, Money received,
+    private static Money chargedGift(OtherSourcesLines lines, RuleId row, String what, ReasonCode how, Money received,
             Money chargedAmount) {
         if (received.isGreaterThan(Money.ZERO)) {
-            lines.add(row, StepKind.INCOME, received, chargedAmount, what);
+            lines.add(row, StepKind.INCOME, received, chargedAmount, what, new Reason(how, Map.of()));
         }
         return chargedAmount;
     }

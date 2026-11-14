@@ -229,6 +229,45 @@ public final class ReasonCodes {
     /** A life premium counts only up to a share of the sum assured. (W-327c1, D-684) */
     public static final ReasonCode PREMIUM_SHARE_OF_SUM_ASSURED = new ReasonCode("PREMIUM_SHARE_OF_SUM_ASSURED");
 
+    /** The line is for one entered item; its sentence names the income, and this confirms it. (W-327c2, D-685) */
+    public static final ReasonCode OS_FOR_THIS_ITEM = new ReasonCode("OS_FOR_THIS_ITEM");
+
+    /** The expense is not allowed against this kind of income. (W-327c2, D-685) */
+    public static final ReasonCode OS_EXPENSE_NOT_DEDUCTED = new ReasonCode("OS_EXPENSE_NOT_DEDUCTED");
+
+    /** The expense is payable outside India untaxed, so nothing is deducted. (W-327c2, D-685) */
+    public static final ReasonCode OS_UNTAXED_ABROAD = new ReasonCode("OS_UNTAXED_ABROAD");
+
+    /** A business trust's specified sum: distributed less issue price and earlier charges, never below nil. (W-327c2, D-685) */
+    public static final ReasonCode BUSINESS_TRUST_SPECIFIED_SUM = new ReasonCode("BUSINESS_TRUST_SPECIFIED_SUM");
+
+    /** The contribution above the threshold enters the taxable contribution account. (W-327c2, D-685) */
+    public static final ReasonCode PF_CONTRIBUTION_ABOVE_THRESHOLD = new ReasonCode("PF_CONTRIBUTION_ABOVE_THRESHOLD");
+
+    /** The interest earned in the taxable contribution account. (W-327c2, D-685) */
+    public static final ReasonCode PF_TAXABLE_ACCOUNT_INTEREST = new ReasonCode("PF_TAXABLE_ACCOUNT_INTEREST");
+
+    /** The gift is excluded on a ground the rules list; the ground stays in limitedBy. (W-327c2, D-685) */
+    public static final ReasonCode GIFT_EXCLUDED = new ReasonCode("GIFT_EXCLUDED");
+
+    /** Sums received on a COVID-19 death are excluded up to the limit. (W-327c2, D-685) */
+    public static final ReasonCode GIFT_COVID_DEATH_LIMIT = new ReasonCode("GIFT_COVID_DEATH_LIMIT");
+
+    /** The gift is measured on its own against the threshold. (W-327c2, D-685) */
+    public static final ReasonCode GIFT_ON_ITS_OWN = new ReasonCode("GIFT_ON_ITS_OWN");
+
+    /** The gifts of the kind are totalled for the year against the threshold. (W-327c2, D-685) */
+    public static final ReasonCode GIFTS_FOR_THE_YEAR = new ReasonCode("GIFTS_FOR_THE_YEAR");
+
+    /** The sums received under the life policy are excluded. (W-327c2, D-685) */
+    public static final ReasonCode LIFE_POLICY_EXCLUDED = new ReasonCode("LIFE_POLICY_EXCLUDED");
+
+    /** Only the sum above premium not deducted or counted is income. (W-327c2, D-685) */
+    public static final ReasonCode LIFE_POLICY_ABOVE_PREMIUMS = new ReasonCode("LIFE_POLICY_ABOVE_PREMIUMS");
+
+    /** Interest expense against dividend and unit income, within the row's limit. (W-327c2, D-685) */
+    public static final ReasonCode DIVIDEND_INTEREST_LIMITED = new ReasonCode("DIVIDEND_INTEREST_LIMITED");
+
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
@@ -303,7 +342,20 @@ public final class ReasonCodes {
             Map.entry(RENT_OWNS_HOME_HERE, Set.of()),
             Map.entry(RENT_OWNS_HOME_ELSEWHERE, Set.of()),
             Map.entry(RENT_RECEIVES_HRA, Set.of()),
-            Map.entry(PREMIUM_SHARE_OF_SUM_ASSURED, Set.of("share", "sumAssured")));
+            Map.entry(PREMIUM_SHARE_OF_SUM_ASSURED, Set.of("share", "sumAssured")),
+            Map.entry(OS_FOR_THIS_ITEM, Set.of()),
+            Map.entry(OS_EXPENSE_NOT_DEDUCTED, Set.of()),
+            Map.entry(OS_UNTAXED_ABROAD, Set.of()),
+            Map.entry(BUSINESS_TRUST_SPECIFIED_SUM, Set.of("distributed", "issued", "earlier")),
+            Map.entry(PF_CONTRIBUTION_ABOVE_THRESHOLD, Set.of()),
+            Map.entry(PF_TAXABLE_ACCOUNT_INTEREST, Set.of()),
+            Map.entry(GIFT_EXCLUDED, Set.of()),
+            Map.entry(GIFT_COVID_DEATH_LIMIT, Set.of()),
+            Map.entry(GIFT_ON_ITS_OWN, Set.of()),
+            Map.entry(GIFTS_FOR_THE_YEAR, Set.of()),
+            Map.entry(LIFE_POLICY_EXCLUDED, Set.of()),
+            Map.entry(LIFE_POLICY_ABOVE_PREMIUMS, Set.of("premiums")),
+            Map.entry(DIVIDEND_INTEREST_LIMITED, Set.of("income", "limit")));
 
     private ReasonCodes() {
     }

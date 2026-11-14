@@ -12,10 +12,14 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -161,7 +165,7 @@ final class LifePolicySums {
         LifePolicyReceipt receipt = verdict.receipt();
         if (verdict.excluded()) {
             lines.add(lines.row(RuleSetIds.RS_OS_LIFE_POLICY_RATIO), StepKind.EXEMPTION, receipt.received(), receipt.received(),
-                    where + ": excluded, " + verdict.why());
+                    where + ": excluded, " + verdict.why(), new Reason(ReasonCodes.LIFE_POLICY_EXCLUDED, Map.of()));
             return Money.ZERO;
         }
         if (receipt.unitLinked()) {
@@ -173,7 +177,8 @@ final class LifePolicySums {
         Money income = lines.applied(lines.row(RuleSetIds.RS_OS_LIFE_POLICY), LIFE_POLICY, chargeable);
         lines.add(lines.row(RuleSetIds.RS_OS_LIFE_POLICY), StepKind.INCOME, receipt.received(), income, where + ": not excluded, "
                 + verdict.why() + "; the sum exceeding " + receipt.premiumsNotDeductedOrUsed()
-                + " of premium not deducted or already counted");
+                + " of premium not deducted or already counted",
+                new Reason(ReasonCodes.LIFE_POLICY_ABOVE_PREMIUMS, Map.of("premiums", new ReasonFact.MoneyFact(receipt.premiumsNotDeductedOrUsed()))));
         return income;
     }
 

@@ -456,4 +456,22 @@ class ExplanationRendererTest {
                 "This line splits your preventive health check-ups between your own family's limit and your parents', as you"
                         + " claimed them. It is split as you claimed: ₹2,857.14 for your family and ₹2,142.86 for your parents.");
     }
+
+    @Test
+    void explain_whenABusinessTrustIsCharged_writesItsThreeFigures() {
+        // Given — OtherSourcesNode:258: 1,50,000 distributed, 1,00,000 issue price, 20,000 earlier = 30,000
+        TraceLine trust = line(new RuleId("OS-BUSINESS-TRUST"), MoneyValue.of(Money.of("150000")),
+                MoneyValue.of(Money.of("30000"))).withLimitedBy("business trust holding 0: 150000.00 distributed less …")
+                .withReason(new Reason(ReasonCodes.BUSINESS_TRUST_SPECIFIED_SUM, Map.of(
+                        "distributed", new ReasonFact.MoneyFact(Money.of("150000")),
+                        "issued", new ReasonFact.MoneyFact(Money.of("100000")),
+                        "earlier", new ReasonFact.MoneyFact(Money.of("20000")))));
+
+        // When
+        String explained = ExplanationRenderer.explain(trust, PACK.explanations());
+
+        // Then — the row's own sentence, then the reason with all three figures
+        assertThat(explained).endsWith("It is the ₹1,50,000 distributed, less the ₹1,00,000 issue price and the ₹20,000"
+                + " charged in earlier years, never below nil.");
+    }
 }

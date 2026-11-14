@@ -15,12 +15,15 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -54,10 +57,10 @@ final class OtherSourcesLines {
     /** An expense the row allows: nil where it is payable outside India untaxed, else the row's share of it. */
     Money deduction(RuleId rule, BaseId base, OtherSourceItem item, Money amount, String where) {
         if (item.payableOutsideIndiaUntaxed()) {
-            return nil(rule, amount, where + UNTAXED_ABROAD);
+            return nil(rule, amount, where + UNTAXED_ABROAD, new Reason(ReasonCodes.OS_UNTAXED_ABROAD, Map.of()));
         }
         Money allowed = applied(rule, base, amount);
-        add(rule, StepKind.DEDUCTION, amount, allowed, where);
+        add(rule, StepKind.DEDUCTION, amount, allowed, where, new Reason(ReasonCodes.OS_FOR_THIS_ITEM, Map.of()));
         return allowed;
     }
 
@@ -84,16 +87,19 @@ final class OtherSourcesLines {
         return TemporallyApportionedCap.governingVersion(ctx.rule(row), temporal);
     }
 
-    Money nil(RuleId rule, Money amount, String why) {
-        add(rule, StepKind.DEDUCTION, amount, Money.ZERO, why);
+    /** A nil deduction line: {@code why} the audit text, {@code reason} the same as facts (W-327c2, D-685). */
+    Money nil(RuleId rule, Money amount, String why, Reason reason) {
+        add(rule, StepKind.DEDUCTION, amount, Money.ZERO, why, reason);
         return Money.ZERO;
     }
 
-    void add(RuleId rule, StepKind kind, Money in, Money out, String why) {
+    /** A line: {@code why} the audit text, {@code reason} the same as facts the content words (W-327c2, D-685). */
+    void add(RuleId rule, StepKind kind, Money in, Money out, String why, Reason reason) {
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.OTHERSOURCES_INCOME, rule, kind, MoneyValue.of(in),
                         MoneyValue.of(out), TemporallyApportionedCap.governingVersion(ctx.rule(rule), temporal)
                                 .provenance())
-                .withLimitedBy(why));
+                .withLimitedBy(why)
+                .withReason(reason));
     }
 
     List<TraceLine> all() {

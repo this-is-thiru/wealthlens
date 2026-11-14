@@ -8,8 +8,12 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The interest expense allowed against the year's dividend and unit income (S2 s.93(2); 1961 s.57 proviso; D-200) — a
@@ -34,12 +38,13 @@ final class DividendInterestAllowance {
         }
         if (interest.untaxedAbroad()) {
             return lines.nil(lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST), interest.claimed(), "dividend and unit income"
-                    + OtherSourcesLines.UNTAXED_ABROAD);
+                    + OtherSourcesLines.UNTAXED_ABROAD, new Reason(ReasonCodes.OS_UNTAXED_ABROAD, Map.of()));
         }
         Money allowed = interest.allowed();
         lines.add(lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST), StepKind.DEDUCTION, interest.claimed(), allowed,
                 "interest expense against dividend and unit income of " + interest.base() + ", limited to "
-                        + interest.limit());
+                        + interest.limit(),
+                new Reason(ReasonCodes.DIVIDEND_INTEREST_LIMITED, Map.of("income", new ReasonFact.MoneyFact(interest.base()), "limit", new ReasonFact.MoneyFact(interest.limit()))));
         return allowed;
     }
 

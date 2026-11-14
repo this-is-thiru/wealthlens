@@ -35,6 +35,10 @@
       "why": "It is the rent your employer paid for it, less the {recovered} you paid back."
     },
     {
+      "code": "BUSINESS_TRUST_SPECIFIED_SUM",
+      "why": "It is the {distributed} distributed, less the {issued} issue price and the {earlier} charged in earlier years, never below nil."
+    },
+    {
       "code": "CAP_ACTUAL_AMOUNTS",
       "why": "Your amounts together are within the overall ceiling, so all of them count."
     },
@@ -107,6 +111,10 @@
       "why": "It is the amount the law sets for a certified disability of this degree."
     },
     {
+      "code": "DIVIDEND_INTEREST_LIMITED",
+      "why": "Interest expense is deducted against your dividend and unit income of {income}, up to {limit}."
+    },
+    {
       "code": "DONATION_CASH_LIMIT",
       "why": "Nothing is deducted: it was paid in cash above {limit}."
     },
@@ -159,8 +167,24 @@
       "why": "Gifts of {given} from this employer are below {limit}, so none of it is taxed."
     },
     {
+      "code": "GIFTS_FOR_THE_YEAR",
+      "why": "It is the year's total of these gifts, measured against the threshold the law sets."
+    },
+    {
       "code": "GIFTS_REACH_LIMIT",
       "why": "Gifts of {given} from this employer reach {limit}, so all of it is taxed."
+    },
+    {
+      "code": "GIFT_COVID_DEATH_LIMIT",
+      "why": "Sums received on a death related to the Covid pandemic are excluded up to the limit."
+    },
+    {
+      "code": "GIFT_EXCLUDED",
+      "why": "This gift is excluded, so it is not taxed."
+    },
+    {
+      "code": "GIFT_ON_ITS_OWN",
+      "why": "This gift is measured on its own against the threshold the law sets."
     },
     {
       "code": "GROSS_TOTAL_LESS_SPECIAL_GAINS",
@@ -181,6 +205,14 @@
     {
       "code": "LESS_RECOVERED",
       "why": "It is the amount less the {recovered} you paid back."
+    },
+    {
+      "code": "LIFE_POLICY_ABOVE_PREMIUMS",
+      "why": "Only the sum above the {premiums} of premium not already deducted or counted is income."
+    },
+    {
+      "code": "LIFE_POLICY_EXCLUDED",
+      "why": "The sums received under this policy are excluded from income."
     },
     {
       "code": "LOANS_WITHIN_PETTY_LIMIT",
@@ -229,6 +261,26 @@
     {
       "code": "NOT_SPECIFIED_EMPLOYEE",
       "why": "These benefits are not taxed for you: your salary paid in money, {salary}, does not exceed {threshold}, and you are not a director or a holder of a substantial interest."
+    },
+    {
+      "code": "OS_EXPENSE_NOT_DEDUCTED",
+      "why": "Nothing is deducted: this expense is not allowed against this kind of income."
+    },
+    {
+      "code": "OS_FOR_THIS_ITEM",
+      "why": "This line is for one item you entered."
+    },
+    {
+      "code": "OS_UNTAXED_ABROAD",
+      "why": "Nothing is deducted: it is payable outside India without tax deducted."
+    },
+    {
+      "code": "PF_CONTRIBUTION_ABOVE_THRESHOLD",
+      "why": "Your contribution above the threshold goes into a taxable contribution account."
+    },
+    {
+      "code": "PF_TAXABLE_ACCOUNT_INTEREST",
+      "why": "It is the interest earned in that taxable contribution account."
     },
     {
       "code": "PREMIUM_SHARE_OF_SUM_ASSURED",
