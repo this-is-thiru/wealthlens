@@ -22,12 +22,16 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -157,7 +161,8 @@ public final class RetirementNode implements ComputationNode {
         Optional<RuleRow> bar = bar(ctx, payment);
         if (bar.isPresent()) {
             return Optional.of(ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, Money.ZERO)
-                    .withLimitedBy(barredBy(ctx, bar.get(), payment)));
+                    .withLimitedBy(barredBy(ctx, bar.get(), payment))
+                    .withReason(barReason(ctx, payment)));
         }
         Claim claim = new Claim(payment, received, sequence);
         GoverningRow row = new GoverningRow(ruleId, version);
@@ -187,10 +192,13 @@ public final class RetirementNode implements ComputationNode {
         boolean gratuityReceived = paid(components, ComponentCodes.GRATUITY).isGreaterThan(Money.ZERO);
         Money limit = commutedPensionShare(row.id(), row.version())
                 .limit(claim.payment().commutedValueOfWholePension().orElseThrow(), gratuityReceived);
+        ReasonCode code = received.isLessThanOrEqual(limit) ? ReasonCodes.WITHIN_LIMIT
+                : gratuityReceived ? ReasonCodes.COMMUTED_PENSION_LIMIT_WITH_GRATUITY : ReasonCodes.COMMUTED_PENSION_LIMIT;
         return ctx.traceLine(claim.sequence(), row.id(), StepKind.DEDUCTION, received, Money.min(received, limit))
                 .withLimitedBy(received.isLessThanOrEqual(limit) ? "payment received"
                         : gratuityReceived ? "one-third of the pension's commuted value, gratuity also received"
-                                : "one-half of the pension's commuted value");
+                                : "one-half of the pension's commuted value")
+                .withReason(new Reason(code, Map.of("limit", new ReasonFact.MoneyFact(limit))));
     }
 
     /** Any other payment, within its row's limit: a notified limit, a statutory entitlement, or the row's own. */
@@ -258,6 +266,14 @@ public final class RetirementNode implements ComputationNode {
     }
 
     /** The bar's words: the row, and the year the ledger holds for the entry where it holds one, as a fact. */
+    /** The bar as facts: the year a deduction under the entry was allowed, where the ledger names it. */
+    private static Reason barReason(NodeContext ctx, RetirementPayment payment) {
+        return Optional.ofNullable(ctx.inputs().ledgers().deductionAllowedIn().get(payment.entry()))
+                .map(year -> new Reason(ReasonCodes.RETIREMENT_ALLOWED_BEFORE,
+                        Map.<String, ReasonFact>of("year", new ReasonFact.TaxYearFact(year))))
+                .orElseGet(() -> new Reason(ReasonCodes.RETIREMENT_BARRED, Map.of()));
+    }
+
     private static String barredBy(NodeContext ctx, RuleRow bar, RetirementPayment payment) {
         return "barred by " + bar.id() + Optional.ofNullable(ctx.inputs().ledgers().deductionAllowedIn()
                         .get(payment.entry()))

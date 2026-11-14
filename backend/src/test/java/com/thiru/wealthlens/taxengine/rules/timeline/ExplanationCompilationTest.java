@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.ExplanationJson;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.nio.file.Path;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -184,18 +187,21 @@ class ExplanationCompilationTest {
                 .isInstanceOf(PackValidationException.class).hasMessageContaining("REGIME_FORGOTTEN");
     }
 
-    /** The cap reasons' sentences (W-327a1), so a fixture that words the regime's reasons reaches the check it means. */
-    private static final String CAP_REASONS = """
-            {"code": "CAP_ACTUAL_AMOUNTS", "why": "All count."}, {"code": "CAP_AGGREGATE_CEILING", "why": "Up to {ceiling}."},
-            {"code": "CAP_FIXED", "why": "Fixed at {amount}."}, {"code": "CAP_IN_EXCESS", "why": "Above {threshold}."},
-            {"code": "CAP_SHARE", "why": "{share} of it."},""";
+    /**
+     * Every reason code the engine publishes worded, but {@code leftOut}: a fixture reaches the check it means however
+     * many codes later items add (W-327b1).
+     */
+    private static String reasonsExcept(String leftOut) {
+        return ReasonCodes.FACTS.keySet().stream().map(ReasonCode::value).filter(code -> !code.equals(leftOut)).sorted()
+                .map(code -> "{\"code\": \"" + code + "\", \"why\": \"Words.\"}").collect(Collectors.joining(", "));
+    }
 
     @Test
     void compile_whenAReasonTheEnginePublishesIsNotWorded_isRefused() {
         // Given — REGIME_EXCLUDES_ROW left out
-        Timeline unworded = withExplanations("{\"explanations\": [], \"reasons\": [" + CAP_REASONS + """
-                {"code": "REGIME_DISALLOWS", "why": "Not under {regime}."}],
-                 "terms": {"regime": {"NEW_TAX_REGIME": "the default regime", "FIRST_SCHEDULE_RATES": "the old regime"}}}""");
+        Timeline unworded = withExplanations("{\"explanations\": [], \"reasons\": [" + reasonsExcept("REGIME_EXCLUDES_ROW")
+                + "], \"terms\": {\"regime\": {\"NEW_TAX_REGIME\": \"the default regime\","
+                + " \"FIRST_SCHEDULE_RATES\": \"the old regime\"}}}");
 
         // When / Then
         assertThatThrownBy(() -> RulePackCompiler.compile(unworded, TaxYearId.of(2026)))
@@ -205,10 +211,8 @@ class ExplanationCompilationTest {
     @Test
     void compile_whenARegimeOfTheTimelineHasNoTerm_isRefused() {
         // Given — FIRST_SCHEDULE_RATES left out
-        Timeline unnamed = withExplanations("{\"explanations\": [], \"reasons\": [" + CAP_REASONS + """
-                {"code": "REGIME_DISALLOWS", "why": "Not under {regime}."},
-                  {"code": "REGIME_EXCLUDES_ROW", "why": "Not under {regime}."}],
-                 "terms": {"regime": {"NEW_TAX_REGIME": "the default regime"}}}""");
+        Timeline unnamed = withExplanations("{\"explanations\": [], \"reasons\": [" + reasonsExcept("")
+                + "], \"terms\": {\"regime\": {\"NEW_TAX_REGIME\": \"the default regime\"}}}");
 
         // When / Then
         assertThatThrownBy(() -> RulePackCompiler.compile(unnamed, TaxYearId.of(2026)))
@@ -225,8 +229,14 @@ class ExplanationCompilationTest {
         // Then
         Set<String> codes = new TreeSet<>();
         content.path("reasons").forEach(reason -> codes.add(reason.path("code").asString()));
-        assertThat(codes).containsExactly("CAP_ACTUAL_AMOUNTS", "CAP_AGGREGATE_CEILING", "CAP_FIXED", "CAP_IN_EXCESS",
-                "CAP_SHARE", "REGIME_DISALLOWS", "REGIME_EXCLUDES_ROW");
+        assertThat(codes).containsExactly("ALLOWANCE_DISABILITY_NOT_LISTED", "ALLOWANCE_MONTHLY_LIMIT", "CAP_ACTUAL_AMOUNTS",
+                "CAP_AGGREGATE_CEILING", "CAP_APPORTIONED", "CAP_FIXED", "CAP_IN_EXCESS", "CAP_SHARE",
+                "COMMUTED_PENSION_LIMIT", "COMMUTED_PENSION_LIMIT_WITH_GRATUITY", "EMPLOYER_ACCRETION_SHARE",
+                "HRA_NOT_RENTED", "LTC_ASSISTANCE_RECEIVED", "LTC_CHILD_BEYOND_LIMIT", "LTC_JOURNEYS_IN_BLOCK",
+                "MEDICAL_ABROAD_EXCLUDED", "MEDICAL_TRAVEL_CONDITION_NOT_MET", "REGIME_DISALLOWS", "REGIME_EXCLUDES_ROW",
+                "RETIREMENT_ALLOWED_BEFORE", "RETIREMENT_BARRED", "RETIREMENT_CEILING_USED",
+                "RETIREMENT_CEILING_USED_THIS_YEAR", "SALARY_INCLUDES_AGNIVEER", "SALARY_INCLUDES_EMPLOYER_EXCESS",
+                "SALARY_INCLUDES_PENSION_CONTRIBUTION", "SALARY_INCLUDES_PERQUISITES", "WITHIN_LIMIT");
         assertThat(content.at("/terms/regime/NEW_TAX_REGIME").asString()).isEqualTo("the default regime");
     }
 

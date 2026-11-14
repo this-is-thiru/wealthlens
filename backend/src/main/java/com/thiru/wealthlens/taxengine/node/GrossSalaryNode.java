@@ -14,14 +14,18 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -69,25 +73,33 @@ public final class GrossSalaryNode implements ComputationNode {
         List<TraceLine> lines = new ArrayList<>(List.of(payLine));
         Money gross = pay
                 .plus(added(lines, includes, version, ctx.get(NodeIds.SALARY_PERQUISITES, MoneyValue.class).asMoney(),
-                        "perquisites, valued in salary.perquisites"))
+                        "perquisites, valued in salary.perquisites", ReasonCodes.SALARY_INCLUDES_PERQUISITES))
                 .plus(added(lines, includes, version, ctx.get(NodeIds.EMPLOYER_CONTRIB_CHARGES, MoneyValue.class).asMoney(),
-                        "employer retirement contributions beyond the limit, in employer.contrib.charges"))
+                        "employer retirement contributions beyond the limit, in employer.contrib.charges",
+                        ReasonCodes.SALARY_INCLUDES_EMPLOYER_EXCESS))
                 .plus(added(lines, includes, version, pensionContributions(ctx),
-                        "the employer's contribution to the employee's pension-scheme account"))
+                        "the employer's contribution to the employee's pension-scheme account",
+                        ReasonCodes.SALARY_INCLUDES_PENSION_CONTRIBUTION))
                 .plus(added(lines, includes, version, ctx.inputs().entered().agniveerCorpusFund()
                                 .map(AgniveerCorpusFund::governmentContribution).orElse(Money.ZERO),
-                        "the Central Government's contribution to the Agniveer Corpus Fund account"));
+                        "the Central Government's contribution to the Agniveer Corpus Fund account",
+                        ReasonCodes.SALARY_INCLUDES_AGNIVEER));
         return new NodeResult(MoneyValue.of(gross), lines);
     }
 
-    /** An amount salary includes, on a line of its own where it is not nil; the amount added. */
-    private static Money added(List<TraceLine> lines, RuleRow includes, RuleVersion version, Money amount, String what) {
+    /**
+     * An amount salary includes, on a line of its own where it is not nil; the amount added. {@code what} is the audit
+     * text and {@code part} the same as a reason the content words (W-327b1, D-681).
+     */
+    private static Money added(List<TraceLine> lines, RuleRow includes, RuleVersion version, Money amount, String what,
+            ReasonCode part) {
         if (!amount.isGreaterThan(Money.ZERO)) {
             return Money.ZERO;
         }
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.SALARY_GROSS, includes.id(), StepKind.INCOME,
                         MoneyValue.of(amount), MoneyValue.of(amount), version.provenance())
-                .withLimitedBy(what));
+                .withLimitedBy(what)
+                .withReason(new Reason(part, Map.of())));
         return amount;
     }
 

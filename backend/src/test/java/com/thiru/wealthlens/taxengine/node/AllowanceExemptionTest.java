@@ -26,6 +26,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -213,6 +216,8 @@ class AllowanceExemptionTest {
             assertThat(line.rule()).isEqualTo(RuleIds.SAL_ALW_TRANSPORT_DISABLED);
             assertThat(line.kind()).isEqualTo(StepKind.EXEMPTION);
             assertThat(line.limitedBy()).contains("limit per month");
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.ALLOWANCE_MONTHLY_LIMIT,
+                    Map.of("limit", new ReasonFact.MoneyFact(Money.of("38400")))));
             assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }

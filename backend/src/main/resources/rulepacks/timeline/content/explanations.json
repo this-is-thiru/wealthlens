@@ -3,12 +3,24 @@
   "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
   "reasons": [
     {
+      "code": "ALLOWANCE_DISABILITY_NOT_LISTED",
+      "why": "Nothing is exempt: your disability is not among those this year's rules list for this allowance."
+    },
+    {
+      "code": "ALLOWANCE_MONTHLY_LIMIT",
+      "why": "It is limited to {limit}, the monthly limit for the months covered."
+    },
+    {
       "code": "CAP_ACTUAL_AMOUNTS",
       "why": "Your amounts together are within the overall ceiling, so all of them count."
     },
     {
       "code": "CAP_AGGREGATE_CEILING",
       "why": "It is limited by the overall ceiling of {ceiling} on these amounts together."
+    },
+    {
+      "code": "CAP_APPORTIONED",
+      "why": "The law changed during the year, so each part of the year has its own limit for its share of the year."
     },
     {
       "code": "CAP_FIXED",
@@ -23,12 +35,84 @@
       "why": "It is {share} of the amount it applies to."
     },
     {
+      "code": "COMMUTED_PENSION_LIMIT",
+      "why": "It is limited to {limit}, the share of the pension's commuted value the law exempts."
+    },
+    {
+      "code": "COMMUTED_PENSION_LIMIT_WITH_GRATUITY",
+      "why": "It is limited to {limit}, the smaller share of the pension's commuted value the law exempts when you also received gratuity."
+    },
+    {
+      "code": "EMPLOYER_ACCRETION_SHARE",
+      "why": "It is the share of the fund's income this year that is earned on contributions above the limit, this year's and earlier years' taxed ones."
+    },
+    {
+      "code": "HRA_NOT_RENTED",
+      "why": "Nothing is exempt for this home: it is your own, or no rent was paid."
+    },
+    {
+      "code": "LTC_ASSISTANCE_RECEIVED",
+      "why": "It is limited to the travel assistance you received."
+    },
+    {
+      "code": "LTC_CHILD_BEYOND_LIMIT",
+      "why": "Nothing is exempt for this child: the concession covers only {children} surviving children."
+    },
+    {
+      "code": "LTC_JOURNEYS_IN_BLOCK",
+      "why": "Nothing is exempt for this journey: the rules exempt only {journeys} journeys in each block of {years} calendar years."
+    },
+    {
+      "code": "MEDICAL_ABROAD_EXCLUDED",
+      "why": "{excluded} of it is not taxed."
+    },
+    {
+      "code": "MEDICAL_TRAVEL_CONDITION_NOT_MET",
+      "why": "None of it is excluded: a condition for excluding the travel is not met."
+    },
+    {
       "code": "REGIME_DISALLOWS",
       "why": "It is not allowed under {regime}."
     },
     {
       "code": "REGIME_EXCLUDES_ROW",
       "why": "This rule does not apply under {regime}."
+    },
+    {
+      "code": "RETIREMENT_ALLOWED_BEFORE",
+      "why": "Nothing is deducted: a deduction under this entry was already allowed in {year}."
+    },
+    {
+      "code": "RETIREMENT_BARRED",
+      "why": "Nothing is deducted: the rules bar a deduction under this entry this year."
+    },
+    {
+      "code": "RETIREMENT_CEILING_USED",
+      "why": "The ceiling across all your employers and years is reduced by the {before} allowed in earlier years."
+    },
+    {
+      "code": "RETIREMENT_CEILING_USED_THIS_YEAR",
+      "why": "The ceiling across all your employers and years is reduced by the {before} allowed in earlier years and the {thisYear} allowed on this year's earlier payments."
+    },
+    {
+      "code": "SALARY_INCLUDES_AGNIVEER",
+      "why": "This is the Central Government's contribution to your Agniveer Corpus Fund account."
+    },
+    {
+      "code": "SALARY_INCLUDES_EMPLOYER_EXCESS",
+      "why": "This is your employer's retirement contributions above the limit, worked out on their own lines."
+    },
+    {
+      "code": "SALARY_INCLUDES_PENSION_CONTRIBUTION",
+      "why": "This is your employer's contribution to your pension-scheme account."
+    },
+    {
+      "code": "SALARY_INCLUDES_PERQUISITES",
+      "why": "This is the value of your perquisites, worked out on their own lines."
+    },
+    {
+      "code": "WITHIN_LIMIT",
+      "why": "All of it is exempt: it is within the limit of {limit}."
     }
   ],
   "terms": {

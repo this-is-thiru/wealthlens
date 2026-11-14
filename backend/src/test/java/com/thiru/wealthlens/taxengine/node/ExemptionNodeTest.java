@@ -175,8 +175,10 @@ class ExemptionNodeTest {
 
         // Then — Sch. III Table Sl. 11(c): no exemption for a home the taxpayer owns
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).singleElement().satisfies(line ->
-                assertThat(line.limitedBy()).hasValueSatisfying(why -> assertThat(why).contains("owned")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.limitedBy()).hasValueSatisfying(why -> assertThat(why).contains("owned"));
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.HRA_NOT_RENTED, Map.of()));
+        });
     }
 
     @Test

@@ -4,12 +4,16 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.temporal.proration.ProrationBasis;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -81,7 +85,9 @@ public final class TemporallyApportionedCap {
             limitedBy.append(limitedBy.isEmpty() ? "" : "; ").append(segment.range()).append(": ")
                     .append(whole.limitedBy());
         }
-        return new CapResult(total, limitedBy.toString());
+        // The parts' own reasons are in limitedBy; the line says only that the year was split (W-327b1, D-681 C2a)
+        return new CapResult(total, limitedBy.toString(),
+                Optional.of(new Reason(ReasonCodes.CAP_APPORTIONED, Map.of())));
     }
 
     /** Each version in force for part of the year, clipped to the year, in date order. */

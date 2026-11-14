@@ -29,6 +29,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -305,6 +308,8 @@ class LeaveTravelExemptionTest {
                 assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("6000")));
                 assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
                 assertThat(line.limitedBy().orElseThrow()).contains("family position 2");
+                assertThat(line.reason()).contains(new Reason(ReasonCodes.LTC_CHILD_BEYOND_LIMIT,
+                        Map.of("children", new ReasonFact.CountFact(2))));
             });
             assertThat(lines(result, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION)).singleElement()
                     .satisfies(line -> assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("22000"))));

@@ -135,6 +135,7 @@ class EmployerContributionNodeTest {
             assertThat(line.rule()).isEqualTo(RuleIds.PERQ_EMPLOYER_ACCRETION);
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("12330")));
             assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.EMPLOYER_ACCRETION_SHARE, Map.of()));
         });
     }
 

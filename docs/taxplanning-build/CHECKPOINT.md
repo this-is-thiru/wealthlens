@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-327b split (D-680) into W-327b1, W-327b2, board placed — next by board order W-327b1 (not yet planned)
-Stage           : DONE for the split (session 95, 2026-11-14) — committed and pushed
-Done today      : session 95: W-325d (D-676), W-327 split (D-677), W-327a (D-678), W-327a1 (D-679)
-Board           : W-115, W-116, W-325, W-325a – d, W-327, W-327a, W-327a1, W-327b D; W-327b1 ·, W-327b2 ·, W-327c – e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
-Next step       : record W-327a1 pipeline 43585750679 in D-679 (was still in progress at the split commit); then plan W-327b1 (16 sites listed in its row)
+Item            : W-327b1 done (D-681), board D — next by board order W-327b2 (perquisites, 22 sites, not yet planned)
+Stage           : DONE (session 95, 2026-11-14) — committed and pushed
+Done today      : session 95: W-325d (D-676), W-327 split (D-677), W-327a (D-678), W-327a1 (D-679), W-327b split (D-680), W-327b1 (D-681)
+Board           : W-115, W-116, W-325, W-325a – d, W-327, W-327a, W-327a1, W-327b, W-327b1 D; W-327b2 ·, W-327c – e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : confirm the W-327b1 pipeline run and record it in D-681; then plan W-327b2 (22 perquisite sites; list in /private/tmp scratch w327b.txt or re-derive from the W-327 log)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-327a1 local: unit (taxengine, taxplanning, architecture) 4499/0, DraftComputationIntegrationTest + Modulith 61/0, validate green; pipeline after push
-Files touched   : none beyond this file after the W-327b split commit
-Last item commit: taxplanning W-327a1: publish a cap's reason as figures and word it in content
-Updated         : 2026-11-14, session 95 — W-327b split committed and pushed
+Last verify     : W-327b1 local: unit (taxengine, taxplanning, architecture) 4502/0, DraftComputationIntegrationTest + Modulith 61/0, validate green; W-327a1 code: pipeline 43586163804 success (D-679)
+Files touched   : none beyond this file after the W-327b1 commit
+Last item commit: taxplanning W-327b1: publish why for allowances, exemptions, retirement and employer contributions as facts
+Updated         : 2026-11-14, session 95 — W-327b1 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -21,6 +21,9 @@ import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
@@ -112,13 +115,19 @@ final class NotifiedRetirementLimits {
             return line;
         }
         String why = "notified limit less the " + allowedBefore + " allowed in earlier years";
+        Reason reason = new Reason(ReasonCodes.RETIREMENT_CEILING_USED,
+                Map.of("before", new ReasonFact.MoneyFact(allowedBefore)));
         if (allowedThisYear.isGreaterThan(Money.ZERO)) {
             why += " and the " + allowedThisYear + " allowed on this year's earlier payments, in the order entered (the"
                     + " split changes no tax; D-225)";
+            reason = new Reason(ReasonCodes.RETIREMENT_CEILING_USED_THIS_YEAR, Map.of(
+                    "before", new ReasonFact.MoneyFact(allowedBefore),
+                    "thisYear", new ReasonFact.MoneyFact(allowedThisYear)));
         }
         return TraceLine.of(line.sequence(), line.node(), aggregateId, line.kind(), MoneyValue.of(allowed),
                         MoneyValue.of(remaining), version.provenance())
-                .withLimitedBy(why);
+                .withLimitedBy(why)
+                .withReason(reason);
     }
 
     /**

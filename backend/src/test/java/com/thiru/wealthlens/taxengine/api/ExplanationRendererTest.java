@@ -352,4 +352,48 @@ class ExplanationRendererTest {
                 "Of the ₹9,00,000 government gratuity you received, ₹9,00,000 is not taxed. It is 100% of the amount it"
                         + " applies to.");
     }
+
+    @Test
+    void explain_whenAReasonCarriesCounts_writesThemAsNumbers() {
+        // Given — LeaveTravelExemption:92: a journey beyond the block's two
+        TraceLine journey = line(new RuleId("SAL-LEAVE-TRAVEL-CONCESSION"), MoneyValue.of(Money.of("40000")),
+                MoneyValue.of(Money.ZERO)).withLimitedBy("journeys in block: the Rules exempt 2 in each block of 4 calendar years")
+                .withReason(new Reason(ReasonCodes.LTC_JOURNEYS_IN_BLOCK, Map.of("journeys", new ReasonFact.CountFact(2),
+                        "years", new ReasonFact.CountFact(4))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(journey, PACK.explanations())).isEqualTo(
+                "₹0 of your leave travel concession is not taxed. Nothing is exempt for this journey: the rules exempt only"
+                        + " 2 journeys in each block of 4 calendar years.");
+    }
+
+    @Test
+    void explain_whenAReasonCarriesATaxYear_writesItsLabel() {
+        // Given — RetirementNode:160: a deduction under the entry allowed in TY 2021-22
+        TraceLine barred = line(new RuleId("RET-VOLUNTARY-RETIREMENT"), MoneyValue.of(Money.of("500000")),
+                MoneyValue.of(Money.ZERO)).withLimitedBy("barred by RET-BAR-ONCE-ONLY; a deduction under this entry was allowed"
+                        + " in 2021-22").withReason(new Reason(ReasonCodes.RETIREMENT_ALLOWED_BEFORE,
+                                Map.of("year", new ReasonFact.TaxYearFact(TaxYearId.of(2021)))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(barred, PACK.explanations())).isEqualTo(
+                "₹0 of your voluntary retirement compensation is not taxed. Nothing is deducted: a deduction under this"
+                        + " entry was already allowed in 2021-22.");
+    }
+
+    @Test
+    void explain_whenAReasonCarriesTwoFigures_writesBothInIndianNotation() {
+        // Given — NotifiedRetirementLimits:121: 20,00,000 less 5,00,000 earlier and 4,00,000 this year = 11,00,000
+        TraceLine aggregate = line(new RuleId("RET-GRATUITY-AGGREGATE"), MoneyValue.of(Money.of("1500000")),
+                MoneyValue.of(Money.of("1100000"))).withLimitedBy("notified limit less the 500000.00 allowed in earlier years")
+                .withReason(new Reason(ReasonCodes.RETIREMENT_CEILING_USED_THIS_YEAR, Map.of(
+                        "before", new ReasonFact.MoneyFact(Money.of("500000")),
+                        "thisYear", new ReasonFact.MoneyFact(Money.of("400000")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(aggregate, PACK.explanations())).isEqualTo(
+                "Of the ₹15,00,000 gratuity you received, ₹11,00,000 is not taxed within the ceiling across all your employers"
+                        + " and years. The ceiling across all your employers and years is reduced by the ₹5,00,000 allowed in"
+                        + " earlier years and the ₹4,00,000 allowed on this year's earlier payments.");
+    }
 }

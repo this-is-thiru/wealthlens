@@ -18,11 +18,11 @@ import java.util.Optional;
  *     {@code LeastOf}, {@code "ceiling"} where an aggregate ceiling bound, or the shape's own name
  *     where nothing did
  * @param reason the same as facts, for the explanation to put into words (W-327a1, D-679); empty for a
- *     {@code LeastOf}, whose limb the content words by name, and for a cap split across a year's dates
+ *     {@code LeastOf}, whose limb the content words by name
  */
 public record CapResult(Money value, String limitedBy, Optional<Reason> reason) {
 
-    /** A result whose {@code limitedBy} is its whole reason: a least-of's limb, or a date-split cap's parts. */
+    /** A result whose {@code limitedBy} is its whole reason: a least-of's limb, which the content words by name. */
     public CapResult(Money value, String limitedBy) {
         this(value, limitedBy, Optional.empty());
     }

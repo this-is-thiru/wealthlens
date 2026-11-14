@@ -23,6 +23,8 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -177,7 +179,8 @@ public final class ExemptionNode implements ComputationNode {
         Money allowance = BY_DAYS_OCCUPIED.apportion(allowanceForYear, year, tenancy.occupied());
         if (tenancy.ownedByAssessee() || !tenancy.rentPaid().isGreaterThan(Money.ZERO)) {
             return ctx.traceLine(sequence, rule.id(), StepKind.EXEMPTION, allowance, Money.ZERO)
-                    .withLimitedBy("not rented: the home is owned or no rent was paid (Sch. III Table Sl. 11(c), (d))");
+                    .withLimitedBy("not rented: the home is owned or no rent was paid (Sch. III Table Sl. 11(c), (d))")
+                    .withReason(new Reason(ReasonCodes.HRA_NOT_RENTED, Map.of()));
         }
         Money salary = BY_DAYS_OCCUPIED.apportion(salaryForYear, year, tenancy.occupied());
         CapResult exempt = TemporallyApportionedCap.apply(rule, t, new CapContext(

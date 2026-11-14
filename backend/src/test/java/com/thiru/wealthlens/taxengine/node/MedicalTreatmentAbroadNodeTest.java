@@ -17,6 +17,8 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -25,6 +27,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -123,6 +126,8 @@ class MedicalTreatmentAbroadNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("150000")));
         assertThat(result.trace().get(1).limitedBy()).hasValueSatisfying(bound ->
                 assertThat(bound).startsWith("not excluded, not met"));
+        assertThat(result.trace().get(1).reason())
+                .contains(new Reason(ReasonCodes.MEDICAL_TRAVEL_CONDITION_NOT_MET, Map.of()));
     }
 
     @Test

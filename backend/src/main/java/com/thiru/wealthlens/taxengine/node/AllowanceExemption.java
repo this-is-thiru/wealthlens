@@ -22,6 +22,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -117,13 +120,16 @@ final class AllowanceExemption {
             return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, ruleId, StepKind.EXEMPTION,
                             MoneyValue.of(received), MoneyValue.of(Money.ZERO), version.provenance())
                     .withLimitedBy("not listed: " + claim.condition() + " is not among this year's disabilities "
-                            + limit.conditions().stream().map(Enum::name).sorted().toList()));
+                            + limit.conditions().stream().map(Enum::name).sorted().toList())
+                    .withReason(new Reason(ReasonCodes.ALLOWANCE_DISABILITY_NOT_LISTED, Map.of())));
         }
         Money ceiling = limit.monthlyLimit(claim.city(), claim.dearnessAllowanceThereon())
                 .times(claim.monthsCovered());
         return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, ruleId, StepKind.EXEMPTION,
                         MoneyValue.of(received), MoneyValue.of(Money.min(received, ceiling)), version.provenance())
-                .withLimitedBy(received.isLessThanOrEqual(ceiling) ? "allowance received" : "limit per month"));
+                .withLimitedBy(received.isLessThanOrEqual(ceiling) ? "allowance received" : "limit per month")
+                .withReason(new Reason(received.isLessThanOrEqual(ceiling) ? ReasonCodes.WITHIN_LIMIT
+                        : ReasonCodes.ALLOWANCE_MONTHLY_LIMIT, Map.of("limit", new ReasonFact.MoneyFact(ceiling)))));
     }
 
     private static DisabledTransportLimit transportLimit(NodeContext ctx, RuleVersion version) {

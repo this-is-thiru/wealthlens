@@ -17,6 +17,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -89,7 +92,8 @@ public final class MedicalTreatmentAbroadNode implements ComputationNode {
         Money value = claim.treatmentAndStay().minus(excluded.value());
         return TraceLine.of(sequence, NodeIds.SALARY_MEDICALTRAVEL, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEDABROAD_STAY), StepKind.INCOME,
                         MoneyValue.of(claim.treatmentAndStay()), MoneyValue.of(value), version.provenance())
-                .withLimitedBy("excluded " + excluded.value() + ", " + excluded.limitedBy());
+                .withLimitedBy("excluded " + excluded.value() + ", " + excluded.limitedBy())
+                .withReason(new Reason(ReasonCodes.MEDICAL_ABROAD_EXCLUDED, Map.of("excluded", new ReasonFact.MoneyFact(excluded.value()))));
     }
 
     /** Travel: wholly excluded where the income before it passes the row's condition, else wholly salary. */
@@ -106,10 +110,13 @@ public final class MedicalTreatmentAbroadNode implements ComputationNode {
         String bound = unmet.map(condition -> "not excluded, not met: " + condition.describe())
                 .orElse("excluded " + excluded + ", " + version.conditions().stream().map(Condition::describe)
                         .toList());
+        Reason reason = unmet.isPresent() ? new Reason(ReasonCodes.MEDICAL_TRAVEL_CONDITION_NOT_MET, Map.of())
+                : new Reason(ReasonCodes.MEDICAL_ABROAD_EXCLUDED, Map.of("excluded", new ReasonFact.MoneyFact(excluded)));
         return TraceLine.of(sequence, NodeIds.SALARY_MEDICALTRAVEL, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEDABROAD_TRAVEL), StepKind.INCOME,
                         MoneyValue.of(claim.travel()), MoneyValue.of(claim.travel().minus(excluded)),
                         version.provenance())
-                .withLimitedBy(bound);
+                .withLimitedBy(bound)
+                .withReason(reason);
     }
 
     /** The person facts, with the one computed amount the travel row's condition reads. */

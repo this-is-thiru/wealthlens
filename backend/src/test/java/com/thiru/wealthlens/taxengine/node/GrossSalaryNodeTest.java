@@ -31,6 +31,8 @@ import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -201,6 +203,7 @@ class GrossSalaryNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(pay.plus(Money.of("96000"))));
         assertThat(result.trace()).hasSize(2);
         assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.of("96000")));
+        assertThat(result.trace().get(1).reason()).contains(new Reason(ReasonCodes.SALARY_INCLUDES_PERQUISITES, Map.of()));
     }
 
     @ParameterizedTest(name = "TY {0}")

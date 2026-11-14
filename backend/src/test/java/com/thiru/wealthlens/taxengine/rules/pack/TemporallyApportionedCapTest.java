@@ -9,6 +9,8 @@ import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
@@ -92,6 +94,7 @@ class TemporallyApportionedCapTest {
 
         // Then — 12,000 × 183/365 = 6,016.44; 24,000 × 182/365 = 11,967.12; together 17,983.56
         assertThat(result.value()).isEqualTo(Money.of("17983.56"));
+        assertThat(result.reason()).contains(new Reason(ReasonCodes.CAP_APPORTIONED, Map.of()));
     }
 
     @Test

@@ -21,6 +21,8 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -124,7 +126,8 @@ public final class EmployerContributionNode implements ComputationNode {
                         MoneyValue.of(fund.incomeAccrued()), MoneyValue.of(accretion),
                         TemporallyApportionedCap.governingVersion(rule, t).provenance())
                 .withLimitedBy("(PC " + excess + " ÷ 2 + PC1 + TP1 " + earlier + ") × I " + fund.incomeAccrued()
-                        + " ÷ F(avg) of " + fund.openingBalance() + " and " + fund.closingBalance()));
+                        + " ÷ F(avg) of " + fund.openingBalance() + " and " + fund.closingBalance())
+                .withReason(new Reason(ReasonCodes.EMPLOYER_ACCRETION_SHARE, Map.of())));
         return excess.plus(accretion);
     }
 
@@ -159,6 +162,7 @@ public final class EmployerContributionNode implements ComputationNode {
             lines.add(TraceLine.of(lines.size() + 1, produces(), rule.id(), StepKind.INCOME,
                             MoneyValue.of(entry.getValue()), MoneyValue.of(charged.value()),
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
+                    .withCapResult(charged)
                     .withLimitedBy(charged.limitedBy() + "; employment " + entry.getKey() + "'s salary " + salary));
             total = total.plus(charged.value());
         }
@@ -189,6 +193,7 @@ public final class EmployerContributionNode implements ComputationNode {
             lines.add(TraceLine.of(lines.size() + 1, produces(), ctx.ruleIdOf(RuleSetIds.RS_PERQ_RPF_INTEREST), StepKind.INCOME,
                             MoneyValue.of(interest.interestCredited()), MoneyValue.of(charged.value()),
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
+                    .withCapResult(charged)
                     .withLimitedBy(charged.limitedBy() + "; allowed at " + interest.rateAllowed().asPercentLabel()
                             + " on a balance of " + balance));
             total = total.plus(charged.value());

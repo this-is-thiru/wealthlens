@@ -54,6 +54,8 @@ final class ExplanationRenderer {
                 case ReasonFact.RegimeFact regime -> Optional.ofNullable(explanations.regimeTerms().get(regime.regime()));
                 case ReasonFact.MoneyFact money -> Optional.of(money.amount().inIndianNotation());
                 case ReasonFact.ShareFact share -> Optional.of(share.share().asPercentLabel());
+                case ReasonFact.CountFact count -> Optional.of(Integer.toString(count.count()));
+                case ReasonFact.TaxYearFact year -> Optional.of(year.taxYear().label());
             };
             if (words.isEmpty()) {
                 return Optional.empty();

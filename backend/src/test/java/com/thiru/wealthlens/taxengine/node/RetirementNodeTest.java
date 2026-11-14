@@ -267,8 +267,11 @@ class RetirementNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("450000")));
-        assertThat(result.trace()).singleElement()
-                .satisfies(line -> assertThat(line.limitedBy()).contains("one-half of the pension's commuted value"));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.limitedBy()).contains("one-half of the pension's commuted value");
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.COMMUTED_PENSION_LIMIT,
+                    Map.of("limit", new ReasonFact.MoneyFact(Money.of("450000")))));
+        });
     }
 
     @ParameterizedTest(name = "TY {0}")

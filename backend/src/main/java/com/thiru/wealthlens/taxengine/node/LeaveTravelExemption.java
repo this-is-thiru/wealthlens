@@ -23,6 +23,9 @@ import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -90,7 +93,10 @@ final class LeaveTravelExemption {
             if (!tally.admit(journey.startedOn().getYear())) {
                 lines.add(line(ctx, firstSequence + lines.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO,
                         version).withLimitedBy("journeys in block: the Rules exempt " + blocks.journeys()
-                                + " in each block of " + blocks.calendarYears() + " calendar years"));
+                                + " in each block of " + blocks.calendarYears() + " calendar years")
+                        .withReason(new Reason(ReasonCodes.LTC_JOURNEYS_IN_BLOCK, Map.of(
+                                "journeys", new ReasonFact.CountFact(blocks.journeys()),
+                                "years", new ReasonFact.CountFact(blocks.calendarYears())))));
                 continue;
             }
             Covered covered = covered(ctx, t, journey, firstSequence + lines.size());
@@ -102,8 +108,11 @@ final class LeaveTravelExemption {
                     Map.of(AMOUNT_INCURRED, covered.amountIncurred(), FARE_ADMISSIBLE, fare)));
             Money allowed = Money.min(exempt.value(), remaining);
             remaining = remaining.minus(allowed);
-            lines.add(line(ctx, sequence, spent, allowed, version)
-                    .withLimitedBy(allowed.isLessThan(exempt.value()) ? "assistance received" : exempt.limitedBy()));
+            TraceLine line = line(ctx, sequence, spent, allowed, version);
+            lines.add(allowed.isLessThan(exempt.value())
+                    ? line.withLimitedBy("assistance received")
+                            .withReason(new Reason(ReasonCodes.LTC_ASSISTANCE_RECEIVED, Map.of()))
+                    : line.withCapResult(exempt));
         }
         return lines;
     }
@@ -157,7 +166,8 @@ final class LeaveTravelExemption {
                     ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CHILDREN), StepKind.EXEMPTION, MoneyValue.of(traveller.amountIncurred()),
                     MoneyValue.of(Money.ZERO), version.provenance()).withLimitedBy("family position " + position.get()
                     + ": a child beyond the " + limit.children() + " surviving children the concession covers"
-                    + perKilometre));
+                    + perKilometre).withReason(new Reason(ReasonCodes.LTC_CHILD_BEYOND_LIMIT,
+                            Map.of("children", new ReasonFact.CountFact(limit.children())))));
         }
         Money admitted = fares;
         return new Covered(spent, journey.fareAdmissible().map(whole -> admitted), List.copyOf(leftOut));
