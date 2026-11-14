@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * A draft's calendar, computed on every request and stored nowhere (W-114 C5a, D-665): up to thirteen runs, counted in {@code DraftCalendarBenchmarkTest}. Each cost is the draft computed
+ * A draft's calendar, computed on every request and stored nowhere (W-114 C5a, D-665): up to fifteen runs, counted in {@code DraftCalendarBenchmarkTest}. Each cost is the draft computed
  * again with one action taken, both runs as of the later of the return's due date and today: measured as of today, an
  * instalment still to come would cost nothing, since its interest has not accrued yet (the W-114 probe).
  */
@@ -31,7 +31,7 @@ public class DraftCalendarService {
 
     /** Stated with every calendar beyond what every computation states (D-665 C1a). */
     private static final List<String> NOT_INCLUDED = List.of(
-            "The last day to pay for a health-insurance or own-pension deduction (W-114c)",
+            "The last day to pay for an own-pension deduction: what it takes turns on Schedule XV's room (W-114d)",
             "The end of a leave-travel block, which carries an unused journey into the next block (W-114a C4a)",
             "The employer's cut-off for proofs and the window for a revised return: neither has a cost to measure (W-114b C1a)",
             "That opting out of the default regime with business income binds later years is not priced (W-114b C4a)",

@@ -185,6 +185,20 @@ class DraftCalendarServiceTest {
     }
 
     @Test
+    void entries_whenTheAssesseeHasNoHealthCoverInTheOldRegime_namesItsRoomOnTheYearsLastDay() {
+        // Given / When
+        List<DraftCalendar.Entry> entries = SERVICE.entries(tuitionPayer("FIRST_SCHEDULE_RATES"), DUE);
+
+        // Then — DeductionRoomPricingTest: 25,000 of premium room, 9,00,000 → 8,75,000, saving 5,200
+        assertThat(entries).filteredOn(entry -> entry.rule().equals("DED-HEALTH-FAMILY")).singleElement().satisfies(health -> {
+            assertThat(health.on()).isEqualTo(LocalDate.of(2027, 3, 31));
+            assertThat(health.kind()).isEqualTo(DraftCalendar.Kind.DEDUCTION_PAID_BY);
+            assertThat(health.amountToPay()).contains(Money.of("25000"));
+            assertThat(health.costOfMissing()).isEqualTo(Money.of("5200"));
+        });
+    }
+
+    @Test
     void entries_whenTheRegimeAllowsNoScheduleXvDeduction_namesNoDeductionDay() {
         // Given / When / Then
         assertThat(SERVICE.entries(tuitionPayer("NEW_TAX_REGIME"), DUE))

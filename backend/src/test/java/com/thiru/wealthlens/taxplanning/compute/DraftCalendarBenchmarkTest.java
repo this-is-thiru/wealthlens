@@ -14,10 +14,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
- * A calendar is at most thirteen whole computations: the draft as it stands, one per instalment, the relief day, the
+ * A calendar is at most fifteen whole computations: the draft as it stands, one per instalment, the relief day, the
  * return on time and a day late (W-114, D-665; first counted as seven, one short — D-667), Schedule XV's room priced
- * in two (W-114a, D-666), and the regime election in three, the two regimes priced and the facts its route reads
- * (W-114b, D-667). Held to thirteen of {@code 01-PRD.md} §5 N1's 50 ms. Timings depend on the machine, so this
+ * in two (W-114a, D-666), the assessee's and the parents' health cover in one each (W-114c, D-668), and the regime
+ * election in three, the two regimes priced and the facts its route reads (W-114b, D-667). Held to fifteen of
+ * {@code 01-PRD.md} §5 N1's 50 ms. Timings depend on the machine, so this
  * runs only under {@code -Pbenchmark}, as {@code EngineBenchmarkTest} does.
  */
 @Log4j2
@@ -26,10 +27,10 @@ class DraftCalendarBenchmarkTest {
 
     private static final int WARM_UP = 100;
     private static final int TIMED = 500;
-    private static final double THIRTEEN_COMPUTES_MILLIS = 13 * 50;
+    private static final double FIFTEEN_COMPUTES_MILLIS = 15 * 50;
 
     @Test
-    void entries_whenT13IsMeasured_staysUnderThirteenComputesAtP99() {
+    void entries_whenT13IsMeasured_staysUnderFifteenComputesAtP99() {
         // Given — T13-1, sold 1-9-2026, nothing paid: every instalment and the relief day take a run
         DraftCalendarService service = new DraftCalendarService(null, null, new TaxCalculator(
                 ShippedRulePacks.compile("rulepacks", ClasspathRulePackProvider.shippedYears("rulepacks"))), null);
@@ -52,6 +53,6 @@ class DraftCalendarBenchmarkTest {
                 "%.3f".formatted(p99), TIMED);
 
         // Then
-        assertThat(p99).as("calendar p99 in ms").isLessThan(THIRTEEN_COMPUTES_MILLIS);
+        assertThat(p99).as("calendar p99 in ms").isLessThan(FIFTEEN_COMPUTES_MILLIS);
     }
 }
