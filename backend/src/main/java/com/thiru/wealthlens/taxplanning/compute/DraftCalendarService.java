@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * A draft's calendar, computed on every request and stored nowhere (W-114 C5a, D-665). Each cost is the draft computed
+ * A draft's calendar, computed on every request and stored nowhere (W-114 C5a, D-665; up to nine runs with W-114a's two). Each cost is the draft computed
  * again with one action taken, both runs as of the later of the return's due date and today: measured as of today, an
  * instalment still to come would cost nothing, since its interest has not accrued yet (the W-114 probe).
  */
@@ -31,7 +31,8 @@ public class DraftCalendarService {
 
     /** Stated with every calendar beyond what every computation states (D-665 C1a). */
     private static final List<String> NOT_INCLUDED = List.of(
-            "The last day to invest or pay for a deduction in the year, and the end of a leave-travel block (W-114a)",
+            "The last day to pay for a health-insurance or own-pension deduction (W-114c)",
+            "The end of a leave-travel block, which carries an unused journey into the next block (W-114a C4a)",
             "The employer's cut-off for proofs, the window for a revised return and the regime election (W-114b)",
             "Entries are separate actions: their costs overlap and do not add up");
 
@@ -68,9 +69,19 @@ public class DraftCalendarService {
                     Optional.empty(), costOfNotPaying(inputs, measuredAsOf, instalment.dueOn(), instalment.stillOwed(), baseOwed)));
         }
         base.advanceTax().reliefPaidBy().ifPresent(paidBy -> entries.add(reliefEntry(inputs, measuredAsOf, base, paidBy)));
+        deductionEntries(inputs).forEach(entries::add);
         entries.add(returnEntry(inputs, measuredAsOf, base));
         entries.sort(Comparator.comparing(DraftCalendar.Entry::on));
         return entries;
+    }
+
+    /** Each deduction with room whose filling would save tax, on the year's last day (W-114a C3a); none in a regime that allows none. */
+    private List<DraftCalendar.Entry> deductionEntries(EngineInputs inputs) {
+        return taxCalculator.priceDeductionRoom(inputs).stream()
+                .filter(room -> room.taxSaved().isGreaterThan(Money.ZERO))
+                .map(room -> new DraftCalendar.Entry(inputs.temporal().taxYearEnd(), DraftCalendar.Kind.DEDUCTION_PAID_BY,
+                        room.rule(), Optional.of(room.room()), Optional.of(room.counted()), Optional.empty(), room.taxSaved()))
+                .toList();
     }
 
     /** s.425(4): the advance tax still owed at the last instalment, paid by the relief's day. */

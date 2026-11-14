@@ -14,8 +14,9 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
- * A calendar is at most seven whole computations (W-114 C5a, D-665): the draft as it stands, one per instalment, the relief
- * day and the return a day late. Held to seven of {@code 01-PRD.md} §5 N1's 50 ms. Timings depend on the machine, so this
+ * A calendar is at most nine whole computations (W-114 C5a, D-665; W-114a, D-666): the draft as it stands, one per
+ * instalment, the relief day, the return a day late, and Schedule XV's room priced in two. Held to nine of
+ * {@code 01-PRD.md} §5 N1's 50 ms. Timings depend on the machine, so this
  * runs only under {@code -Pbenchmark}, as {@code EngineBenchmarkTest} does.
  */
 @Log4j2
@@ -24,10 +25,10 @@ class DraftCalendarBenchmarkTest {
 
     private static final int WARM_UP = 100;
     private static final int TIMED = 500;
-    private static final double SEVEN_COMPUTES_MILLIS = 7 * 50;
+    private static final double NINE_COMPUTES_MILLIS = 9 * 50;
 
     @Test
-    void entries_whenT13IsMeasured_staysUnderSevenComputesAtP99() {
+    void entries_whenT13IsMeasured_staysUnderNineComputesAtP99() {
         // Given — T13-1, sold 1-9-2026, nothing paid: every instalment and the relief day take a run
         DraftCalendarService service = new DraftCalendarService(null, null, new TaxCalculator(
                 ShippedRulePacks.compile("rulepacks", ClasspathRulePackProvider.shippedYears("rulepacks"))), null);
@@ -50,6 +51,6 @@ class DraftCalendarBenchmarkTest {
                 "%.3f".formatted(p99), TIMED);
 
         // Then
-        assertThat(p99).as("calendar p99 in ms").isLessThan(SEVEN_COMPUTES_MILLIS);
+        assertThat(p99).as("calendar p99 in ms").isLessThan(NINE_COMPUTES_MILLIS);
     }
 }

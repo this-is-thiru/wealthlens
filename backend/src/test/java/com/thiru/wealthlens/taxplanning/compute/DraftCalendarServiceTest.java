@@ -11,8 +11,10 @@ import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FilingFacts;
+import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -154,5 +156,37 @@ class DraftCalendarServiceTest {
         assertThat(december.paidByThen()).contains(Money.of("65812.50"));
         assertThat(december.amountToPay()).contains(Money.ZERO);
         assertThat(december.costOfMissing()).isEqualTo(Money.ZERO);
+    }
+
+    /** Basic pay of 10,00,000 and 50,000 of tuition fees, under {@code regime}: DeductionRoomPricingTest's case. */
+    private static EngineInputs tuitionPayer(String regime) {
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        Employment basicPay = new Employment(List.of(new SalaryComponent(new ComponentCode("BASIC"), Money.of("1000000"))),
+                false, EmployerKind.OTHER, false, Optional.empty());
+        return new EngineInputs(TY_2026_27, new RegimeCode(regime), TemporalContext.forTaxYear(TY_2026_27, DUE),
+                EnteredFacts.none().withEmployments(List.of(basicPay)).withQualifyingPayments(
+                        List.of(new QualifyingPayment(new ComponentCode("TUITION_FEES"), Money.of("50000")))),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                new FilingFacts(DUE, Optional.empty(), List.of(), Money.ZERO, List.of(), Map.of(), Optional.empty()));
+    }
+
+    @Test
+    void entries_whenScheduleXvHasRoomInTheOldRegime_namesTheYearsLastDayAndTheTaxItSaves() {
+        // Given / When
+        List<DraftCalendar.Entry> entries = SERVICE.entries(tuitionPayer("FIRST_SCHEDULE_RATES"), DUE);
+
+        // Then — DeductionRoomPricingTest: 1,00,000 of room saves 20,800; 50,000 counted
+        DraftCalendar.Entry room = entry(entries, LocalDate.of(2027, 3, 31), DraftCalendar.Kind.DEDUCTION_PAID_BY);
+        assertThat(room.rule()).isEqualTo("DED-SCHEDULE-XV");
+        assertThat(room.amountToPay()).contains(Money.of("100000"));
+        assertThat(room.paidByThen()).contains(Money.of("50000"));
+        assertThat(room.costOfMissing()).isEqualTo(Money.of("20800"));
+    }
+
+    @Test
+    void entries_whenTheRegimeAllowsNoScheduleXvDeduction_namesNoDeductionDay() {
+        // Given / When / Then
+        assertThat(SERVICE.entries(tuitionPayer("NEW_TAX_REGIME"), DUE))
+                .noneMatch(entry -> entry.kind() == DraftCalendar.Kind.DEDUCTION_PAID_BY);
     }
 }

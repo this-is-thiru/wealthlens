@@ -1583,7 +1583,10 @@ if that is not enough for the item in hand.
 | W-113a | F29.3, the top three drivers by `RuleId` *(W-113 C4a, D-664)*: ranked from the diff between the employer's view of the year and the return, which needs F12's projection (`TDS-PROJ-001`); its plan states which diff it ranks | `DR 20` F29 | **F29.3**; after F12 |
 | W-114 | `CalendarProjection` + endpoint | `DR 20` F30 | **F30** |
 | W-114a | Two more calendar entries *(W-114 C1a, D-665)*: the year's last day to invest or pay for a deduction (80C, 80D) and the end of a leave-travel block (`SAL-LEAVE-TRAVEL-JOURNEYS.blocksCommence`), each costed by the tax on the unused headroom, priced as the optimiser prices it (`D-MARGINAL`) | `DR 20` F30 | **F30**; after W-114 |
+> **Erratum (W-114a, 2026-11-14):** the LTA block end has no measurable cost of missing (a fare not paid; r.278(3) – (4) carries an unused journey on) — left out of the calendar (D-666 C4a); and 80D's four limbs and own NPS (`DED-NPS-OWN`) each need a hypothetical payment of their own shape — moved to W-114c (C1a). W-114a built Schedule XV alone.
+> Verified by: `plans/W-114a.md`; `DeductionRoomPricingTest`.
 | W-114b | The calendar entries with no data *(W-114 C1a, D-665)*: the employer's cut-off for proofs (needs a payroll calendar, `TDS-SAL-12BB-001`), the revised-return window (2025 s.263(5)) and the regime election's form (`REG-OPTOUT-FORM-001`), each first as rule data from a Gazette copy | `DR 20` F30 | **F30**; after W-114 |
+| W-114c | The calendar's other deductions with a ceiling *(W-114a C1a, D-666)*: the four health-insurance limbs (`DED-HEALTH-FAMILY`, `-FAMILY-SENIOR`, `-PARENTS`, `-PARENTS-SENIOR`) and own NPS (`DED-NPS-OWN`), each priced by `DeductionRoom` with a hypothetical payment of its own shape — whom a premium covers and their age, the own-contribution base — read per row | `DR 20` F30 | **F30**; after W-114a |
 | W-115 | `CompletenessProjection` + endpoint | `DR 20` F33 | **F33** |
 | W-116 | `content/explanations.json` + renderer | `DR 20` F37 | **F37** |
 | W-117 | `content/claim-catalogue.json` (12 entries) | `DR 22` C5 | **F40** |

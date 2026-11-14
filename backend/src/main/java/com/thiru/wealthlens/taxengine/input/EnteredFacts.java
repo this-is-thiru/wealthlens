@@ -290,6 +290,18 @@ public record EnteredFacts(
                 houseReinvestments);
     }
 
+    /** The same facts with the qualifying payments replaced — how a deduction's room is priced (W-114a, D-666). */
+    public EnteredFacts withQualifyingPayments(List<QualifyingPayment> payments) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, payments, lifeInsurancePolicies, healthPayments,
+                disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems, providentFundAccounts,
+                giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, absorptionOrder,
+                houseReinvestments);
+    }
+
     /** The same facts with the employer contributions replaced — what the optimiser prices a fund move on (W-238c). */
     public EnteredFacts withEmployerContributions(List<EmployerFundContribution> reallocated) {
         return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,

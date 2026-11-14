@@ -82,6 +82,10 @@ time-aware from the user's point of view.
 | Employer proof cut-off | `Employment.payrollCalendar` + `TDS-SAL-12BB-001` |
 | Last date for 80C / 80D investment — 31 March | `DED-80C-001`, `DED-80D-001` |
 | **LTA block expiry** — 31 Dec 2029 for the current block | `SAL-LTA-BLOCK-001` |
+
+> **Erratum (W-114a, 2026-11-14):** the LTA block's end is not a calendar entry — missing it has no measurable cost: pricing it needs a fare the person has not paid, and r.278(3) – (4) carries an unused block's concession into the next block's first calendar year (`SAL-LEAVE-TRAVEL-JOURNEYS` `_note`); the TY 2026-27 block (from `blocksCommence` 2022, `calendarYears` 4) ends 31-12-2029, after the year (D-666 C4a).
+> Verified by: `SAL-LEAVE-TRAVEL-JOURNEYS.json` (`journeys` 2, `calendarYears` 4, `blocksCommence` 2022).
+
 | Return due date — 31 July | `ITR-DUE-*` |
 | Revised-return window — 12 months from year end | `s.263(5)` |
 | Late-filing interest and fee start | `INT-LATEFILE-001`, `FEE-LATEFILE-001` |

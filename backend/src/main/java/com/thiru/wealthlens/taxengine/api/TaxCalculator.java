@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsTerm;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
+import com.thiru.wealthlens.taxengine.optimise.DeductionRoomPricing;
 import com.thiru.wealthlens.taxengine.optimise.SalaryOptimiser;
 import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
 import com.thiru.wealthlens.taxengine.pipeline.AskedDeclarations;
@@ -235,6 +236,17 @@ public class TaxCalculator {
     public Optimisation optimise(AllocationSpace space) {
         RulePack pack = shipped(space.base().taxYear());
         return SalaryOptimiser.optimise(REGISTRY, pack, spec(pack, space.base().regime()), space);
+    }
+
+    /**
+     * The room left under Schedule XV's ceiling and the tax filling it in the year would save; empty where none is left
+     * (W-114a, D-666).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public List<DeductionRoom> priceDeductionRoom(EngineInputs inputs) {
+        RulePack pack = shipped(inputs.taxYear());
+        return DeductionRoomPricing.price(REGISTRY, pack, spec(pack, inputs.regime()), inputs);
     }
 
     /**
