@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-325d done (D-676), board D — W-325 complete; next by board order W-327
-Stage           : DONE (session 95, 2026-11-14) — committed and pushed
+Item            : W-327 split (D-677) into W-327a – e, board placed — next by board order W-327a (not yet planned)
+Stage           : DONE for the split (session 95, 2026-11-14) — committed and pushed
 Done today      : session 94: W-115 (D-670), W-116 (D-671), W-325 split (D-672), W-325a (D-673), W-325b (D-674), W-325c (D-675); session 95: W-325d (D-676)
-Board           : W-115, W-116, W-325, W-325a – d D; W-327 ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
-Next step       : confirm the W-325d pipeline run is green and record it in D-676; then plan W-327 (read its board row first), then W-326
+Board           : W-115, W-116, W-325, W-325a – d, W-327 D; W-327a – e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : plan W-327a (probe the reason type on one shared producer before the plan; check rules/id grammar before naming codes)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-325d local: taxengine unit 4175/0, targeted pack 147/0, DraftComputationIntegrationTest 60/0, validate green; pipeline after push
-Files touched   : none beyond this file after the W-325d commit
+Last verify     : W-325d pipeline 43579165019 success (824a137d), recorded in D-676
+Files touched   : none beyond this file after the W-327 split commit
 Last item commit: taxplanning W-325d: explain the capital-gains lines and list every rule that names no line
-Updated         : 2026-11-14, session 95 — W-325d committed and pushed
+Updated         : 2026-11-14, session 95 — W-327 split committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
