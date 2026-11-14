@@ -51,6 +51,8 @@ import java.util.Optional;
  *     (D-059)
  * @param explanations the trace lines' plain-language sentences ({@code content/explanations.json}) verbatim, where the
  *     timeline has them; each year's pack keeps those of its own rules (W-116, D-671)
+ * @param claimCatalogue the claim catalogue ({@code content/claim-catalogue.json}) verbatim, where the timeline has
+ *     one; each year's pack keeps the entries of its own rules (W-117a, D-699)
  * @param sections the section catalogue ({@code content/sections/}), each entry's file verbatim by its
  *     key. Like the register it describes the whole timeline, so no year's pack is compiled from it
  *     (D-060)
@@ -77,6 +79,7 @@ public record Timeline(
         Map<NodeId, String> pipelineNodes,
         Optional<String> coverage,
         Optional<String> explanations,
+        Optional<String> claimCatalogue,
         Map<String, String> sections,
         Map<String, String> acts) {
 
@@ -99,6 +102,8 @@ public record Timeline(
         itrCellSources = Map.copyOf(itrCellSources);
         pipelineNodes = Map.copyOf(pipelineNodes);
         coverage = Objects.requireNonNull(coverage, "coverage: Optional.empty() where the timeline has none");
+        claimCatalogue = Objects.requireNonNull(claimCatalogue,
+                "claimCatalogue: Optional.empty() where the timeline has none");
         sections = Map.copyOf(sections);
         acts = Map.copyOf(acts);
     }

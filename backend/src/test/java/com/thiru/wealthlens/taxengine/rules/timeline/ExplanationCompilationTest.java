@@ -45,7 +45,8 @@ class ExplanationCompilationTest {
         return new Timeline(t.rules(), t.ruleSets(), t.regimes(), t.ruleSources(), t.regimeSources(),
                 t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
                 t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
-                t.itrCellSources(), t.pipelineNodes(), t.coverage(), Optional.of(content), t.sections(), t.acts());
+                t.itrCellSources(), t.pipelineNodes(), t.coverage(), Optional.of(content),
+                t.claimCatalogue(), t.sections(), t.acts());
     }
 
     private static JsonNode explanationOf(CompiledPack pack, String rule) {

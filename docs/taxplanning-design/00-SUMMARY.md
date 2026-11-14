@@ -265,7 +265,7 @@ and a fee; it does not cost the deduction. This is widely misunderstood.
 
 | Channel | Can it be lost? |
 |---|---|
-| **E** — employer, optional (80C, 80D, HRA, LTA, house-loan interest) | **No** — s.392(4)(a) says the employer route is *"at his option"*. Fully claimable in the return |
+| **E** — employer, optional (80C, 80D, HRA, LTA, house-loan interest) | **No** — s.392(4)(a) says the employer route is *"at his option"*. Fully claimable in the return *(erratum, W-117a, D-699: (4)(a) covers five other particulars; the basis is each claim's own provision carrying no employer condition — `DR 22` C2)* |
 | **R** — return only (regime election, 80TTA/80TTB, s.157 relief) | No — never the employer's to apply |
 | **R+** — return, certificate retained (80U, 80DD, 80DDB) | No, provided the certificate exists |
 | **T** — third-party reported (**80G**) | **Yes.** s.133(6): allowable *"**only** on the basis of the information … furnished by such institution"*. **Your receipt is not enough** |

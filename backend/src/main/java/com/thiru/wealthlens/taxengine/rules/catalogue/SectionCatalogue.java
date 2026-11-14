@@ -39,7 +39,7 @@ public record SectionCatalogue(Map<String, SectionCatalogueEntry> entries) {
     private static final Pattern PLACEHOLDER =
             Pattern.compile("\\{\\{([A-Z]{2,8}(?:-[A-Z0-9]{1,12}){1,5})\\.[a-zA-Z][a-zA-Z0-9]*}}");
     /** A figure, rate or date typed into text, or a placeholder that is not well-formed. */
-    private static final Pattern TYPED_FIGURE =
+    static final Pattern TYPED_FIGURE =
             Pattern.compile("[0-9₹%{}]|\\bRs\\b|\\blakhs?\\b|\\bcrores?\\b", Pattern.CASE_INSENSITIVE);
 
     public SectionCatalogue {

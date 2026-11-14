@@ -45,7 +45,7 @@ public enum RulePackLayer {
     FORMS(false, "forms/itr-forms.json"),
 
     /** Display names, explanations, claim steps, counterparties, common mistakes. Changes no number. */
-    CONTENT(false, "content/explanations.json");
+    CONTENT(false, "content/explanations.json", "content/claim-catalogue.json");
 
     private final boolean affectsComputation;
     private final List<String> files;

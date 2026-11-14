@@ -18,6 +18,13 @@ HRA"* still does not know whether to email HR, wait for January, or just claim i
 `FACT (S2, s.392(4)(a))`: the employee **"may, at his option"** furnish particulars to the employer.
 The employer route is **optional**, not the only route.
 
+> **Erratum (W-117a, 2026-11-14, D-699):** s.392(4)(a)'s "at his option" covers five particulars only — salary from
+> another employer, s.157 relief, a house-property loss, other-head income, and tax deducted or collected at source
+> (Gazette 2025/265620 p.397). It does not reach HRA or a Chapter VIII deduction, whose proofs the employer obtains under
+> s.392(5)(b). Channel E's "claimable in the return if not" therefore rests, entry by entry, on the claim's own provision
+> carrying no employer condition (for HRA: s.11(1) with Sch. III Table Sl. 11), read in the Gazette before the entry is
+> written — `sources/2026-11-14-claim-channel.md`.
+
 `FACT (S2, s.122(5))`: the late-return bar — *"Deduction under the provisions of **Part C** of this
 Chapter shall not be allowed to an assessee who fails to (a) furnish a return … on or before the due
 date; or (b) make a claim of deduction in a return"*.

@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
+import com.thiru.wealthlens.taxengine.rules.catalogue.ClaimCatalogue;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -112,7 +114,23 @@ public final class RulePackCompiler {
         }
         files.put("forms/itr-forms.json", render(forms.set("forms", itrForms(timeline, taxYear))));
         files.put("content/explanations.json", render(explanations(timeline, taxYear, ruleChecksums.keySet())));
+        files.put(ClaimCatalogue.FILE, render(claimCatalogue(timeline, ruleChecksums.keySet())));
         return new CompiledPack(taxYear, files, ruleChecksums);
+    }
+
+    /** The year's claim catalogue: the entries of the rules it holds, once the whole catalogue is checked (W-117a). */
+    private static ObjectNode claimCatalogue(Timeline timeline, Set<RuleId> yearsRules) {
+        ClaimCatalogue.of(timeline).verify(timeline);
+        Map<String, JsonNode> byRule = new TreeMap<>();
+        timeline.claimCatalogue().ifPresent(source -> MAPPER.readTree(source).path("entries")
+                .forEach(entry -> byRule.put(entry.path("rule").asText(), entry)));
+        ArrayNode kept = MAPPER.createArrayNode();
+        byRule.forEach((rule, entry) -> {
+            if (yearsRules.contains(new RuleId(rule))) {
+                kept.add(entry);
+            }
+        });
+        return object().set("entries", kept);
     }
 
     /**

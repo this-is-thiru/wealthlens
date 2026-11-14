@@ -23,7 +23,7 @@ import tools.jackson.databind.node.ObjectNode;
  * Invariant I27 / test T23-1 (property P3): the timeline's content — the section catalogue, the Acts' section lists,
  * the coverage register and the trace lines' explanations — changes no number. Every text in it is rewritten, or the
  * whole of {@code content/} removed, and each shipped year compiles to the same pack but for the content layer's own
- * file, {@code content/explanations.json} (W-116, D-671): every law, exec and forms file and every rule checksum stays,
+ * files, {@code content/explanations.json} (W-116, D-671) and {@code content/claim-catalogue.json} (W-117a, D-699): every law, exec and forms file and every rule checksum stays,
  * so the engine reads exactly what it read before (W-146). The same holds for {@code forms/} (W-090c2, D-529): a form's texts, limits and ages are rewritten, or
  * the whole layer removed, and only {@code forms/itr-forms.json} moves — every law, exec and content file and every
  * rule checksum stays, so no figure can.
@@ -40,7 +40,16 @@ class ContentPerturbationTest {
      */
     private static final Set<String> IDENTITY = Set.of("key", "act", "rule", "code");
 
+    /**
+     * The claim catalogue's fields that are codes from closed sets or links, not text (W-117a): rewriting one would be
+     * refused as an unknown code before any text could be shown to change nothing.
+     */
+    private static final Set<String> CLAIM_CODES = Set.of("section", "channel", "chapterViiiPart", "ifMissingFromForm16",
+            "actor", "by", "whom", "presence");
+
     private static final String CONTENT_FILE = "content/explanations.json";
+
+    private static final String CLAIM_CATALOGUE_FILE = "content/claim-catalogue.json";
 
     /** A form's free texts, and the values its conditions compare: what a form may change without breaking its row. */
     private static final Set<String> FORM_TEXTS = Set.of("_note", "displayName", "reason", "sourceDescription", "label",
@@ -68,8 +77,9 @@ class ContentPerturbationTest {
         // Then — the rewrite reached every content file and the explanations reached the content layer; no other compiled
         // file or rule checksum moved
         assertThat(rewritten).isGreaterThan(60);
-        assertThat(without(perturbed, CONTENT_FILE)).isEqualTo(without(shipped, CONTENT_FILE));
+        assertThat(withoutContent(perturbed)).isEqualTo(withoutContent(shipped));
         assertThat(perturbed.files().get(CONTENT_FILE)).isNotEqualTo(shipped.files().get(CONTENT_FILE));
+        assertThat(perturbed.files().get(CLAIM_CATALOGUE_FILE)).isNotEqualTo(shipped.files().get(CLAIM_CATALOGUE_FILE));
         assertThat(perturbed.ruleChecksums()).isEqualTo(shipped.ruleChecksums());
     }
 
@@ -90,7 +100,7 @@ class ContentPerturbationTest {
         CompiledPack withoutContent = RulePackCompiler.compile(TimelineReader.read(root), taxYear);
 
         // Then — only the content layer's file moved
-        assertThat(without(withoutContent, CONTENT_FILE)).isEqualTo(without(shipped, CONTENT_FILE));
+        assertThat(withoutContent(withoutContent)).isEqualTo(withoutContent(shipped));
         assertThat(withoutContent.ruleChecksums()).isEqualTo(shipped.ruleChecksums());
     }
 
@@ -139,6 +149,12 @@ void compile_whenTheFormsDirectoryIsRemoved_movesOnlyTheFormsFile(int year) thro
 
 private static Map<String, String> withoutForms(CompiledPack pack) {
     return without(pack, FORMS_FILE);
+}
+
+private static Map<String, String> withoutContent(CompiledPack pack) {
+    Map<String, String> files = without(pack, CONTENT_FILE);
+    files.remove(CLAIM_CATALOGUE_FILE);
+    return files;
 }
 
 private static Map<String, String> without(CompiledPack pack, String file) {
@@ -203,7 +219,7 @@ private static void rewriteForm(JsonNode node) {
         if (node instanceof ObjectNode object) {
             for (String name : Set.copyOf(object.propertyNames())) {
                 JsonNode value = object.get(name);
-                if (value.isString() && !IDENTITY.contains(name)) {
+                if (value.isString() && !IDENTITY.contains(name) && !CLAIM_CODES.contains(name)) {
                     object.put(name, value.asString() + " (rewritten)");
                 } else {
                     rewrite(value);

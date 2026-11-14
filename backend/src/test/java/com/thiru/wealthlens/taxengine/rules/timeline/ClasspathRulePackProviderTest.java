@@ -118,7 +118,8 @@ class ClasspathRulePackProviderTest {
                             "exec/pipelines.json",
                             "exec/components.json",
                             "forms/itr-forms.json",
-                            "content/explanations.json");
+                            "content/explanations.json",
+                            "content/claim-catalogue.json");
         }
 
         @Test

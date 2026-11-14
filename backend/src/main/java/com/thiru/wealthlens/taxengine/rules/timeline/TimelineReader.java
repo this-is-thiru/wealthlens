@@ -81,6 +81,8 @@ public final class TimelineReader {
     private static final String COVERAGE = "content/coverage.json";
     /** The trace lines' plain-language sentences, one file for every year; each pack keeps its own rules' (W-116). */
     private static final String EXPLANATIONS = "content/explanations.json";
+    /** The claim catalogue, carried verbatim for its own reader (W-117a). */
+    private static final String CLAIM_CATALOGUE = "content/claim-catalogue.json";
     /** The rule sets every year's pack declares; each rule row names its own (D-252). */
     private static final String RULE_SETS = "law/rule-sets.json";
 
@@ -109,11 +111,17 @@ public final class TimelineReader {
                 contents.explanations(content);
                 continue;
             }
+            if (CLAIM_CATALOGUE.equals(path)) {
+                String content = contentOf(file);
+                parse(content, path);
+                contents.claimCatalogue(content);
+                continue;
+            }
             String directory = path.contains("/") ? path.substring(0, path.lastIndexOf('/')) : "";
             if (!KNOWN_DIRECTORIES.contains(directory) || !path.endsWith(".json")) {
                 throw new PackValidationException(
                         path + ": not a timeline file; a timeline holds only .json files under "
-                                + KNOWN_DIRECTORIES + ", " + RULE_SETS + ", " + COVERAGE + " and " + EXPLANATIONS);
+                                + KNOWN_DIRECTORIES + ", " + RULE_SETS + ", " + COVERAGE + ", " + EXPLANATIONS + " and " + CLAIM_CATALOGUE);
             }
             String content = contentOf(file);
             String stem = file.getFileName().toString().replaceFirst("\\.json$", "");
@@ -146,6 +154,7 @@ public final class TimelineReader {
         private final Map<String, String> acts = new HashMap<>();
         private Optional<String> coverage = Optional.empty();
         private Optional<String> explanations = Optional.empty();
+        private Optional<String> claimCatalogue = Optional.empty();
         private Optional<String> ruleSets = Optional.empty();
 
         void ruleSets(String content) {
@@ -158,6 +167,10 @@ public final class TimelineReader {
 
         void explanations(String content) {
             explanations = Optional.of(content);
+        }
+
+        void claimCatalogue(String content) {
+            claimCatalogue = Optional.of(content);
         }
 
         void add(String directory, String path, String stem, JsonNode node, String content) {
@@ -280,7 +293,7 @@ public final class TimelineReader {
                     (version, where) -> ItrFormJson.form(version, where, itrCells)));
             return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources,
                     conditionSetSources, components, componentSources,
-                    funds, fundSources, declarations, declarationSources, itrFormSources, itrCells, itrCellSources, pipelineNodes, coverage, explanations, sections, acts);
+                    funds, fundSources, declarations, declarationSources, itrFormSources, itrCells, itrCellSources, pipelineNodes, coverage, explanations, claimCatalogue, sections, acts);
         }
     }
 
