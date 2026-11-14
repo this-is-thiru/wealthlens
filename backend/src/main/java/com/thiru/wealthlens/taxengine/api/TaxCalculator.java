@@ -46,7 +46,11 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
+import com.thiru.wealthlens.taxengine.rules.regime.DeadlineSpec;
+import com.thiru.wealthlens.taxengine.rules.regime.ElectionKind;
+import com.thiru.wealthlens.taxengine.rules.regime.FormRef;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.regime.VehicleRoute;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -229,6 +233,53 @@ public class TaxCalculator {
     }
 
     /**
+     * Each regime reached by opting out of the year's default, priced against it, with its deadline from the year's pack
+     * (W-114b, D-667). Empty where the comparison prices no such regime.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     * @throws IllegalStateException where a deadline names a provision whose due date a draft does not hold
+     */
+    public List<RegimeElectionDue> regimeElection(EngineInputs inputs) {
+        RulePack pack = shipped(inputs.taxYear());
+        Map<String, Money> bills = compareRegimes(inputs).priced().stream()
+                .collect(Collectors.toMap(RegimeComparison.Priced::regime, RegimeComparison.Priced::bill));
+        Money defaultBill = bills.get(defaultRegime(inputs.taxYear()).value());
+        if (defaultBill == null) {
+            return List.of();
+        }
+        RegimeSpec computing = spec(pack, inputs.regime());
+        PipelineRunner.Result run = PipelineRunner.run(REGISTRY, pack, computing, inputs);
+        ReturnFacts returned = ComputationProjector.project(run, inputs, ComputationId.fresh()).returnFacts();
+        ConditionContext facts = NodeContext.forRun(pack, computing, inputs).conditions().reporting(returned)
+                .having(computedAmounts(run), headsWithIncome(returned));
+        return pack.regimes().values().stream()
+                .filter(regime -> regime.election().kind() == ElectionKind.OPT_OUT && bills.containsKey(regime.code().value()))
+                .map(regime -> {
+                    VehicleRoute route = regime.election().vehicleFor(facts);
+                    return new RegimeElectionDue(regime.code().value(), dueBy(regime.election().deadline(), inputs),
+                            route.vehicle().name(), route.form().map(FormRef::number), defaultBill,
+                            bills.get(regime.code().value()));
+                })
+                .toList();
+    }
+
+    /**
+     * A deadline as a date. {@code FilingFacts.dueDate} is the due date of the return, the one date s.263(1) and, before
+     * TY 2026-27, s.139(1) name; a deadline under any other provision is refused, not read as that date.
+     */
+    static Optional<LocalDate> dueBy(DeadlineSpec deadline, EngineInputs inputs) {
+        return switch (deadline) {
+            case DeadlineSpec.DueDateUnder under when RETURN_DUE_DATE.contains(under.section()) ->
+                    Optional.of(inputs.filing().dueDate());
+            case DeadlineSpec.DueDateUnder under -> throw new IllegalStateException("An election's deadline names the"
+                    + " due date under s." + under.section() + ", and a draft holds only the return's due date (s."
+                    + String.join(", s.", RETURN_DUE_DATE) + ")");
+            case DeadlineSpec.WithTheReturn ignored -> Optional.empty();
+            case DeadlineSpec.NoDeadline ignored -> Optional.empty();
+        };
+    }
+
+    /**
      * The allocation of the movable pay that leaves the least tax, the regime chosen on each (W-238a).
      *
      * @throws IllegalArgumentException if the space does not fit the year's pack or the inputs
@@ -391,6 +442,9 @@ public class TaxCalculator {
         }
         return List.copyOf(cited);
     }
+
+    /** The provisions whose due date is the return's: what {@code FilingFacts.dueDate} holds (W-114b C2a). */
+    private static final Set<String> RETURN_DUE_DATE = new TreeSet<>(Set.of("263(1)", "139(1)"));
 
     private static RegimeSpec spec(RulePack pack, RegimeCode code) {
         RegimeSpec spec = pack.regimes().get(code);

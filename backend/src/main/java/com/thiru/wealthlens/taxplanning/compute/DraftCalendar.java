@@ -9,7 +9,8 @@ import java.util.Optional;
  * A draft's dated actions for the year, each with what missing it costs (PRD F30; {@code DR 20} F30; W-114, D-665). A cost is
  * measured, not assumed: the draft computed with the action taken against the draft as it stands, both as of
  * {@code measuredAsOf} ({@code D-MARGINAL}). For a payment or the return the cost is the change in interest and fees; for a
- * deduction's last day it is the tax the room would have saved (W-114a C3a, D-666). Entries are separate actions; their
+ * deduction's last day, or for opting out of the default regime, it is the tax that would have been saved (W-114a C3a,
+ * D-666; W-114b C3a, D-667). Entries are separate actions; their
  * costs overlap and are not to be added.
  *
  * @param asOf the day it was computed on; an entry dated before it has passed, and shows what was paid or furnished
@@ -44,7 +45,7 @@ public record DraftCalendar(LocalDate asOf, LocalDate measuredAsOf, String regim
             Optional<LocalDate> furnishedOn, Money costOfMissing) {
     }
 
-    /** The kinds of entry built so far (W-114 C1a, W-114a C1a); the rest of {@code DR 20} F30's table is W-114b and W-114c. */
+    /** The kinds of entry built so far (W-114 C1a, W-114a C1a, W-114b C1a); 80D and own NPS are W-114c. */
     public enum Kind {
         /** An advance-tax instalment date (2025 s.408; 1961 s.211). */
         ADVANCE_TAX_INSTALMENT,
@@ -53,6 +54,11 @@ public record DraftCalendar(LocalDate asOf, LocalDate measuredAsOf, String regim
         /** The return's due date (2025 s.263(1); 1961 s.139(1)), after which late-return interest and the fee run. */
         RETURN_DUE,
         /** The tax year's last day, by which a sum must be paid to count for a deduction paid in the year (2025 s.123; W-114a). */
-        DEDUCTION_PAID_BY
+        DEDUCTION_PAID_BY,
+        /**
+         * The last day to opt out of the default regime, where opting out costs less (2025 s.202(4); 1961 s.115BAC(6);
+         * W-114b): {@code rule} names the regime, and its form where the choice is made in one.
+         */
+        REGIME_ELECTION
     }
 }

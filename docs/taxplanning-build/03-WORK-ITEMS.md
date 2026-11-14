@@ -1586,6 +1586,8 @@ if that is not enough for the item in hand.
 > **Erratum (W-114a, 2026-11-14):** the LTA block end has no measurable cost of missing (a fare not paid; r.278(3) – (4) carries an unused journey on) — left out of the calendar (D-666 C4a); and 80D's four limbs and own NPS (`DED-NPS-OWN`) each need a hypothetical payment of their own shape — moved to W-114c (C1a). W-114a built Schedule XV alone.
 > Verified by: `plans/W-114a.md`; `DeductionRoomPricingTest`.
 | W-114b | The calendar entries with no data *(W-114 C1a, D-665)*: the employer's cut-off for proofs (needs a payroll calendar, `TDS-SAL-12BB-001`), the revised-return window (2025 s.263(5)) and the regime election's form (`REG-OPTOUT-FORM-001`), each first as rule data from a Gazette copy | `DR 20` F30 | **F30**; after W-114 |
+> **Erratum (W-114b, 2026-11-14):** "each first as rule data from a Gazette copy" holds for the regime election alone, whose deadline the pack already holds (`ElectionProtocol`, D-133); the employer proof cut-off has no statutory date (`TDS-SAL-12BB-001`) and neither it nor the revised-return window has a measurable cost — left out (D-667 C1a), so s.263(5) was not read.
+> Verified by: `plans/W-114b.md`; `RegimeElectionTest`.
 | W-114c | The calendar's other deductions with a ceiling *(W-114a C1a, D-666)*: the four health-insurance limbs (`DED-HEALTH-FAMILY`, `-FAMILY-SENIOR`, `-PARENTS`, `-PARENTS-SENIOR`) and own NPS (`DED-NPS-OWN`), each priced by `DeductionRoom` with a hypothetical payment of its own shape — whom a premium covers and their age, the own-contribution base — read per row | `DR 20` F30 | **F30**; after W-114a |
 | W-115 | `CompletenessProjection` + endpoint | `DR 20` F33 | **F33** |
 | W-116 | `content/explanations.json` + renderer | `DR 20` F37 | **F37** |

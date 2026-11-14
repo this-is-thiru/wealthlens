@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * A draft's calendar, computed on every request and stored nowhere (W-114 C5a, D-665; up to nine runs with W-114a's two). Each cost is the draft computed
+ * A draft's calendar, computed on every request and stored nowhere (W-114 C5a, D-665): up to thirteen runs, counted in {@code DraftCalendarBenchmarkTest}. Each cost is the draft computed
  * again with one action taken, both runs as of the later of the return's due date and today: measured as of today, an
  * instalment still to come would cost nothing, since its interest has not accrued yet (the W-114 probe).
  */
@@ -33,7 +33,8 @@ public class DraftCalendarService {
     private static final List<String> NOT_INCLUDED = List.of(
             "The last day to pay for a health-insurance or own-pension deduction (W-114c)",
             "The end of a leave-travel block, which carries an unused journey into the next block (W-114a C4a)",
-            "The employer's cut-off for proofs, the window for a revised return and the regime election (W-114b)",
+            "The employer's cut-off for proofs and the window for a revised return: neither has a cost to measure (W-114b C1a)",
+            "That opting out of the default regime with business income binds later years is not priced (W-114b C4a)",
             "Entries are separate actions: their costs overlap and do not add up");
 
     private final DraftService draftService;
@@ -70,6 +71,7 @@ public class DraftCalendarService {
         }
         base.advanceTax().reliefPaidBy().ifPresent(paidBy -> entries.add(reliefEntry(inputs, measuredAsOf, base, paidBy)));
         deductionEntries(inputs).forEach(entries::add);
+        electionEntries(inputs).forEach(entries::add);
         entries.add(returnEntry(inputs, measuredAsOf, base));
         entries.sort(Comparator.comparing(DraftCalendar.Entry::on));
         return entries;
@@ -81,6 +83,20 @@ public class DraftCalendarService {
                 .filter(room -> room.taxSaved().isGreaterThan(Money.ZERO))
                 .map(room -> new DraftCalendar.Entry(inputs.temporal().taxYearEnd(), DraftCalendar.Kind.DEDUCTION_PAID_BY,
                         room.rule(), Optional.of(room.room()), Optional.of(room.counted()), Optional.empty(), room.taxSaved()))
+                .toList();
+    }
+
+    /**
+     * Each regime reached by opting out that costs less than the default and that the draft has not elected, on its
+     * deadline (W-114b C3a, C4a); none where the pack sets the deadline no date of its own.
+     */
+    private List<DraftCalendar.Entry> electionEntries(EngineInputs inputs) {
+        return taxCalculator.regimeElection(inputs).stream()
+                .filter(due -> due.by().isPresent() && due.bill().isLessThan(due.defaultBill())
+                        && !due.regime().equals(inputs.regime().value()))
+                .map(due -> new DraftCalendar.Entry(due.by().orElseThrow(), DraftCalendar.Kind.REGIME_ELECTION,
+                        due.form().map(form -> due.regime() + " · Form No. " + form).orElse(due.regime()), Optional.empty(),
+                        Optional.empty(), Optional.empty(), due.defaultBill().minus(due.bill())))
                 .toList();
     }
 

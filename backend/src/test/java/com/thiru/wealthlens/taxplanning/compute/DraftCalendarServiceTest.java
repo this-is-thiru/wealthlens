@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
+import com.thiru.wealthlens.taxengine.input.EducationLoanInterest;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -188,5 +189,49 @@ class DraftCalendarServiceTest {
         // Given / When / Then
         assertThat(SERVICE.entries(tuitionPayer("NEW_TAX_REGIME"), DUE))
                 .noneMatch(entry -> entry.kind() == DraftCalendar.Kind.DEDUCTION_PAID_BY);
+    }
+
+    /** Basic pay of 15,75,000 and {@code interest} of education-loan interest, under {@code regime}: RegimeElectionTest's case. */
+    private static EngineInputs borrower(String regime, String interest) {
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        Employment basicPay = new Employment(List.of(new SalaryComponent(new ComponentCode("BASIC"), Money.of("1575000"))),
+                false, EmployerKind.OTHER, false, Optional.empty());
+        List<EducationLoanInterest> loans = interest == null ? List.of()
+                : List.of(new EducationLoanInterest(Money.of(interest), TY_2026_27));
+        EnteredFacts entered = new EnteredFacts(List.of(basicPay), List.of(), List.of(), List.of(), Optional.empty(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), loans, List.of(), Optional.empty(), Optional.empty(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                Optional.empty(), List.of());
+        return new EngineInputs(TY_2026_27, new RegimeCode(regime), TemporalContext.forTaxYear(TY_2026_27, DUE), entered,
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                new FilingFacts(DUE, Optional.empty(), List.of(), Money.ZERO, List.of(), Map.of(), Optional.empty()));
+    }
+
+    @Test
+    void entries_whenOptingOutCostsLess_namesTheDueDateAndTheTaxStayingCosts() {
+        // Given / When
+        List<DraftCalendar.Entry> entries = SERVICE.entries(borrower("NEW_TAX_REGIME", "600000"), DUE);
+
+        // Then — RegimeElectionTest: 1,09,200 against 1,01,400, so 7,800
+        DraftCalendar.Entry election = entry(entries, DUE, DraftCalendar.Kind.REGIME_ELECTION);
+        assertThat(election.rule()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(election.amountToPay()).isEmpty();
+        assertThat(election.costOfMissing()).isEqualTo(Money.of("7800"));
+    }
+
+    @Test
+    void entries_whenOptingOutCostsMore_namesNoElection() {
+        // Given / When / Then — RegimeElectionTest: 2,80,800 against 1,09,200
+        assertThat(SERVICE.entries(borrower("NEW_TAX_REGIME", null), DUE))
+                .noneMatch(entry -> entry.kind() == DraftCalendar.Kind.REGIME_ELECTION);
+    }
+
+    @Test
+    void entries_whenTheDraftAlreadyElectedTheCheaperRegime_namesNoElection() {
+        // Given / When / Then — the draft computed under FIRST_SCHEDULE_RATES, its election made
+        assertThat(SERVICE.entries(borrower("FIRST_SCHEDULE_RATES", "600000"), DUE))
+                .noneMatch(entry -> entry.kind() == DraftCalendar.Kind.REGIME_ELECTION);
     }
 }

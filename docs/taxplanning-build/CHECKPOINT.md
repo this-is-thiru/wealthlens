@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-114a done (D-666), committed and pushed with api-collection; ci: opt-in benchmark job
-Stage           : DONE (session 93, 2026-11-14) — review approved ("commit it and push"); pipeline + benchmark run to be checked
+Item            : W-114b done (D-667), committed and pushed with api-collection
+Stage           : DONE (session 93, 2026-11-14) — review approved ("commit it and push"); pipeline + benchmark to be checked (RUN_BENCHMARKS set)
 Done today      : session 93: W-113 (D-664), W-114 (D-665) committed, pushed, pipelines green; W-114a planned, approved, built
-Board           : W-114 D, W-114a D, W-114b ·, W-114c ·, W-113a ·; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13)
-Next step       : record W-114a pipeline + benchmark timings in D-666, then gh variable delete RUN_BENCHMARKS; then W-114b by board order (plan first, §2)
+Board           : W-114a D, W-114b D, W-114c ·, W-113a ·; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13)
+Next step       : record W-114b pipeline + benchmark in D-667, then gh variable delete RUN_BENCHMARKS; then W-114c by board order (plan first, §2)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-114 pipeline 43546636480 success; W-114a targeted: DeductionRoomPricingTest 8, DraftCalendarServiceTest 8, IT calendar_*+forecast_* 8, Architecture/Modulith/FinishedPlan green; benchmark p99 49.5 ms (budget 450); full tiers on the pipeline
+Last verify     : W-114a pipeline 43548192748 success + benchmark (calendar p99 24.4 ms); W-114b targeted: RegimeElectionTest 4, DraftCalendarServiceTest 11, DeductionRoomPricingTest 8, IT calendar_* 3, Architecture/Modulith/FinishedPlan; full tiers + benchmark on the pipeline
 Files touched   : none beyond this file once committed
-Last item commit: taxplanning W-114a: price Schedule XV's unused room and name the year's last day to fill it
-Updated         : 2026-11-14, session 93 — W-114a committed and pushed
+Last item commit: taxplanning W-114b: name the last day to opt out of the default regime with what staying costs
+Updated         : 2026-11-14, session 93 — W-114b committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
