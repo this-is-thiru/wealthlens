@@ -7,11 +7,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.temporal.Presence;
+import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.timeline.RulePackCompiler;
 import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
 import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -258,6 +260,72 @@ class ClaimCatalogueTest {
         assertThatThrownBy(() -> ClaimCatalogue.of(timeline))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("one entry for a rule, but SAL-HOUSE-RENT-ALLOWANCE has two");
+    }
+
+    @Test
+    void of_whenAStepIsNumberedBelowOneOrAnEntryHasNoSteps_isRefused() {
+        // Given
+        Timeline numberedNil = edited(entries -> step(entries, HOUSE_RENT_ENTRY, 0).put("order", 0));
+        Timeline noSteps = edited(entries -> ((ObjectNode) entries.path(DONATION_ENTRY)).putArray("steps"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(numberedNil))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("entries[0].steps[0]")
+                .hasMessageContaining("order starts at 1, but was 0");
+        assertThatThrownBy(() -> ClaimCatalogue.of(noSteps))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("entries[1]")
+                .hasMessageContaining("A claim needs at least one step");
+    }
+
+    @Test
+    void of_whenAMistakeIsBlankOrNotASentence_isRefused() {
+        // Given
+        Timeline blank = edited(entries -> ((ObjectNode) entries.path(HOUSE_RENT_ENTRY)).putArray("mistakes").add(" "));
+        Timeline figure = edited(entries -> ((ObjectNode) entries.path(HOUSE_RENT_ENTRY)).putArray("mistakes").add(7));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(blank))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("A common mistake cannot be blank");
+        assertThatThrownBy(() -> ClaimCatalogue.of(figure))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("entries[0].mistakes[0]: a common mistake is a sentence, but was 7");
+    }
+
+    /** The parts refuse to be built without what they are for, whoever builds them — not only the file's reader. */
+    @Test
+    void construction_whenAPartLacksWhatItIsFor_isRefused() {
+        // Given
+        Provision act = Provision.present("Income-tax Act, 2025", "s.133(6)");
+        ClaimStep step = new ClaimStep(1, "Keep the receipt.", ClaimActor.YOU, ClaimDeadline.NONE, Optional.empty(), false);
+        ClaimGuidance guidance = new ClaimGuidance(Optional.empty(), List.of(step), List.of(), List.of(), List.of());
+        ClaimBasis basis = new ClaimBasis(act, act);
+
+        // When / Then
+        assertThatThrownBy(() -> new ClaimStep(1, " ", ClaimActor.YOU, ClaimDeadline.NONE, Optional.empty(), false))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs an instruction");
+        assertThatThrownBy(() -> new ClaimStep(1, "Keep it.", null, ClaimDeadline.NONE, Optional.empty(), false))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("an actor");
+        assertThatThrownBy(() -> new ClaimRequest(null, "Its certificate."))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("whom to ask");
+        assertThatThrownBy(() -> new ClaimRequest(ClaimActor.LENDER, " "))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("what for");
+        assertThatThrownBy(() -> new ClaimEvidence(" ", "A receipt."))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs a name");
+        assertThatThrownBy(() -> new ClaimBasis(null, act))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("both Acts");
+        assertThatThrownBy(() -> new ClaimBasis(act, null))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("both Acts");
+        assertThatThrownBy(() -> new ClaimGuidance(Optional.empty(), List.of(step), null, List.of(), List.of()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("empty lists for none");
+        assertThatThrownBy(() -> new ClaimCatalogueEntry(HOUSE_RENT, " ", ClaimChannel.RETURN_ONLY, Optional.empty(),
+                AbsenceFromForm16.CLAIMABLE_IN_RETURN, basis, guidance))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs a rule, a section");
+        assertThatThrownBy(() -> new ClaimCatalogueEntry(HOUSE_RENT, "SEC-DONATIONS", ClaimChannel.RETURN_ONLY,
+                Optional.empty(), AbsenceFromForm16.CLAIMABLE_IN_RETURN, basis, null))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("guidance");
     }
 
     @ParameterizedTest(name = "TY {0}")
