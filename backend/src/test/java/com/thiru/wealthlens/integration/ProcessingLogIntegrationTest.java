@@ -2,6 +2,7 @@ package com.thiru.wealthlens.integration;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
@@ -23,6 +24,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -92,6 +94,14 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         return mongoTemplate.findAll(ProcessingRecord.class);
     }
 
+    /**
+     * The log once it holds {@code count} records. The filter writes after the response (W-237e), so a read straight
+     * after a request can come before the write lands (W-328: 0.8 – 31 ms in a 200-run probe).
+     */
+    private List<ProcessingRecord> recordsOnceWritten(int count) {
+        return await().atMost(Duration.ofSeconds(5)).until(this::records, written -> written.size() >= count);
+    }
+
     private static URI uri(String path) {
         return URI.create(RestAssured.baseURI + ":" + RestAssured.port + path);
     }
@@ -115,7 +125,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         assertThat(read("/privacy/grievances/user/" + ANU, generateToken(ANU))).isEqualTo(200);
 
         // Then
-        assertThat(records()).singleElement().satisfies(record -> {
+        assertThat(recordsOnceWritten(1)).singleElement().satisfies(record -> {
             assertThat(record.getPrincipal()).isEqualTo(ANU);
             assertThat(record.getSubjectEmail()).isEqualTo(ANU);
             assertThat(record.getMethod()).isEqualTo("GET");
@@ -132,6 +142,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         assertThat(read("/privacy/grievances/user/" + ANU + "?pan=ABCPE1234F", generateToken(ANU))).isEqualTo(200);
 
         // Then
+        recordsOnceWritten(1);
         Document stored = mongoTemplate.getCollection("privacy_processing_log").find().first();
         assertThat(stored).isNotNull();
         assertThat(stored.toJson()).doesNotContain("ABCPE1234F").contains(GRIEVANCES_ROUTE);
@@ -143,7 +154,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         assertThat(read("/privacy/grievances/user/" + BALA, generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
 
         // Then
-        assertThat(records()).singleElement().satisfies(record -> {
+        assertThat(recordsOnceWritten(1)).singleElement().satisfies(record -> {
             assertThat(record.getPrincipal()).isEqualTo(OWNER);
             assertThat(record.getSubjectEmail()).isEqualTo(BALA);
         });
@@ -155,7 +166,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         login("not-anus-password", 401);
 
         // Then
-        assertThat(records()).singleElement().satisfies(record -> {
+        assertThat(recordsOnceWritten(1)).singleElement().satisfies(record -> {
             assertThat(record.getPrincipal()).isEqualTo(ANU);
             assertThat(record.getSubjectEmail()).isEqualTo(ANU);
             assertThat(record.getMethod()).isEqualTo("POST");
@@ -170,7 +181,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         login(PASSWORD, 200);
 
         // Then
-        assertThat(records()).singleElement().satisfies(record -> {
+        assertThat(recordsOnceWritten(1)).singleElement().satisfies(record -> {
             assertThat(record.getPrincipal()).isEqualTo(ANU);
             assertThat(record.getStatus()).isEqualTo(200);
         });
@@ -182,8 +193,8 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         assertThat(HttpClient.newHttpClient().send(HttpRequest.newBuilder(uri("/privacy/grievances/user/" + ANU)).GET().build(),
                 HttpResponse.BodyHandlers.ofString()).statusCode()).isEqualTo(401);
 
-        // Then
-        assertThat(records()).isEmpty();
+        // Then — still nothing after ten times the slowest write measured (W-328)
+        await().during(Duration.ofMillis(500)).atMost(Duration.ofSeconds(1)).until(this::records, List::isEmpty);
     }
 
     @Test
@@ -242,8 +253,9 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         // Given
         assertThat(read("/privacy/grievances/user/" + ANU, generateToken(ANU))).isEqualTo(200);
         assertThat(read("/privacy/grievances/user/" + ANU, generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
+        recordsOnceWritten(2);
 
-        // When
+        // When — both written first, or a late one would survive the erasure
         privacyRecordErasure.erase(ANU);
 
         // Then
