@@ -142,6 +142,28 @@ class ChapterEightNodeTest {
         assertThat(result.trace().getFirst().in()).isEqualTo(MoneyValue.of(Money.of("280000")));
     }
 
+    /**
+     * s.123 already at its ceiling from tuition fees, and 50,000 of own NPS withheld: s.124(5) and (10) bar only the same
+     * rupee in both, so the 50,000 is claimed under s.124(3) — 1,50,000 + 50,000. Claimed under s.123 first, as the engine
+     * did before W-114d, it met the full ceiling and earned nothing (Gazette 265620 p.160; 1961 s.80CCD(1B), "whether or not
+     * any deductions is allowed under sub-section (1)").
+     */
+    @ParameterizedTest
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenScheduleXvIsFullAndOwnNpsIsWithinTheSubCap_claimsTheNpsUnderSection124Three(int year) {
+        // Given — salary 10,00,000, so the sub-cap is 1,00,000; tuition 1,50,000; own NPS 50,000
+        Case full = new Case(year, OLD, EmployerKind.OTHER, List.of(pay(ComponentCodes.EMPLOYEE_NPS, "50000")),
+                List.of(paid(ComponentCodes.TUITION_FEES, "150000")), List.of(), Money.of("1000000"), Money.of("1000000"));
+
+        // When
+        NodeResult result = run(full);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.DED_NPS_OWN)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("50000"))));
+    }
+
     @Test
     void evaluate_whenT5ThreesNpsIsEntered_allowsNinetyThousand() {
         // Given — T5-3: salary 4,00,000, NPS 1,50,000, nothing else

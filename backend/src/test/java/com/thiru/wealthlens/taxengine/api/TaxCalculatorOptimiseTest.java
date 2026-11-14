@@ -819,8 +819,9 @@ class TaxCalculatorOptimiseTest {
     @Test
     void optimise_whenTheOwnNpsLiesPastTheScheduleXvCeiling_addsTheNpsUntilOwnNpsIsFull() {
         // Given — salary for the sub-cap is basic 16L, so the sub-cap is 1,60,000. NPS's point under the old regime is
-        // the least addition reaching total income at the ceiling (24L in hand): 1,60,000 + 50,000 = 2,10,000, where
-        // s.123 allows 1,50,000 and own NPS 50,000. Round 1: HRA 8L saves 2,92,500 − 2,88,600 = 3,900; NPS alone saves
+        // the least addition reaching total income at the ceiling (24L in hand): own NPS claims its 50,000 under s.124(3)
+        // first (W-114d, D-669), and 1,50,000 more fills s.123 within the sub-cap, so 2,00,000 — 2,10,000 before, when
+        // s.123 took the first 1,60,000 and wasted 10,000 of it past its ceiling. Round 1: HRA 8L saves 2,92,500 − 2,88,600 = 3,900; NPS alone saves
         // nil (old 21,50,000 → 1,12,500 + 3,45,000 = 4,57,500, + 4 % = 4,75,800, above the new 2,92,500). Round 2: old
         // 15,50,000 − 2,00,000 = 13,50,000 → 1,12,500 + 1,05,000 = 2,17,500, + 4 % = 2,26,200.
         AllocationSpace space = contributing(flipsWithHra(), Set.of(HRA), Set.of(ComponentCodes.EMPLOYEE_NPS), "0");
@@ -841,9 +842,9 @@ class TaxCalculatorOptimiseTest {
         assertThat(nps.facts().feedsInto()).isEqualTo(EMPLOYEE_NPS_FEEDS);
         assertThat(outline(nps.facts().liquidity())).isEqualTo(NPS_2026_27);
         assertThat(nps.current()).isEqualTo(Money.ZERO);
-        assertThat(nps.suggested()).isEqualTo(Money.of("210000"));
+        assertThat(nps.suggested()).isEqualTo(Money.of("200000"));
         assertThat(nps.savingAlone()).contains(Money.ZERO);
-        assertThat(nps.cashImpact()).isEqualTo(Money.of("-210000"));
+        assertThat(nps.cashImpact()).isEqualTo(Money.of("-200000"));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
         assertThat(optimised.search().verified()).containsExactly("HRA", "EMPLOYEE_NPS");
         assertThat(optimised.search().discrepancy()).isEmpty();
@@ -851,7 +852,7 @@ class TaxCalculatorOptimiseTest {
 
     @Test
     void optimise_whenTheCashFloorCannotPayTheContribution_leavesItAsEntered() {
-        // Given — as entered 24L − 2,92,500 = 21,07,500 in hand; HRA and NPS leave 24L − 2,10,000 − 2,26,200 = 19,63,800,
+        // Given — as entered 24L − 2,92,500 = 21,07,500 in hand; HRA and NPS leave 24L − 2,00,000 − 2,26,200 = 19,73,800,
         // below 20,00,000; HRA alone leaves 24L − 2,88,600 = 21,11,400
         AllocationSpace space = contributing(flipsWithHra(), Set.of(HRA), Set.of(ComponentCodes.EMPLOYEE_NPS),
                 "2000000");

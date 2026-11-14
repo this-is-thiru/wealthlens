@@ -857,8 +857,9 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void optimise_whenTheEmployeesNpsIsAContribution_addsItPaidFromTakeHomeWithNoHrSupport() {
-        // Given — TaxCalculatorOptimiseTest's W-238k case 1 on a draft: HRA 8,00,000 and NPS 2,10,000 (s.123 1,50,000,
-        // own NPS 50,000) give old 13,50,000 → 2,26,200, below what was deducted, so no interest
+        // Given — TaxCalculatorOptimiseTest's W-238k case 1 on a draft: HRA 8,00,000 and NPS 2,00,000 (own NPS 50,000 under
+        // s.124(3) first, then s.123 1,50,000; 2,10,000 before W-114d) give old 13,50,000 → 2,26,200, below what was
+        // deducted, so no interest
         String draftId = rentingDraft();
 
         // When
@@ -875,8 +876,8 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         JsonNode nps = view.at("/changes/contributions/0");
         assertThat(nps.get("component").asString()).isEqualTo("EMPLOYEE_NPS");
         assertThat(amountAt(nps, "/current")).isEqualByComparingTo("0");
-        assertThat(amountAt(nps, "/suggested")).isEqualByComparingTo("210000");
-        assertThat(amountAt(nps, "/cashImpact")).isEqualByComparingTo("-210000");
+        assertThat(amountAt(nps, "/suggested")).isEqualByComparingTo("200000");
+        assertThat(amountAt(nps, "/cashImpact")).isEqualByComparingTo("-200000");
         assertThat(nps.at("/facts/kind").asString()).isEqualTo("EMPLOYEE_CONTRIBUTION");
         // W-238k C5a: HR support for HRA only, the contribution being the employee's own declaration
         assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"HRA\",\"likelihood\":\"HIGH\"}]");

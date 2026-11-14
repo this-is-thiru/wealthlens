@@ -105,9 +105,12 @@ public final class ChapterEightNode implements ComputationNode {
         ScheduleXvDeduction.requireGovernmentEmployment(ctx, payLines);
         Map<ComponentCode, Money> paid = paid(ctx, payLines, payments);
         List<TraceLine> lines = new ArrayList<>();
-        Money residue = ScheduleXvDeduction.lines(ctx, policies, paid, lines);
-        PensionDeduction.lines(ctx, residue, paid.getOrDefault(ComponentCodes.NPS_MINOR_DEPOSIT, Money.ZERO),
-                employerPension, lines);
+        Money minorDeposit = paid.getOrDefault(ComponentCodes.NPS_MINOR_DEPOSIT, Money.ZERO);
+        Money ownClaim = PensionDeduction.ownClaim(ctx, paid.getOrDefault(ComponentCodes.EMPLOYEE_NPS, Money.ZERO),
+                minorDeposit);
+        paid.computeIfPresent(ComponentCodes.EMPLOYEE_NPS, (code, amount) -> amount.minus(ownClaim));
+        ScheduleXvDeduction.lines(ctx, policies, paid, lines);
+        PensionDeduction.lines(ctx, ownClaim, minorDeposit, employerPension, lines);
         lines.addAll(HealthInsuranceDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(LoanInterestDeduction.lines(ctx, lines.size() + 1));

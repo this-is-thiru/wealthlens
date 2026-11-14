@@ -199,6 +199,19 @@ class DraftCalendarServiceTest {
     }
 
     @Test
+    void entries_whenOwnNpsHasRoomInTheOldRegime_namesItOnTheYearsLastDay() {
+        // Given / When
+        List<DraftCalendar.Entry> entries = SERVICE.entries(tuitionPayer("FIRST_SCHEDULE_RATES"), DUE);
+
+        // Then — DeductionRoomPricingTest: 50,000 of own NPS, 9,00,000 → 8,50,000, saving 10,400
+        assertThat(entries).filteredOn(entry -> entry.rule().equals("DED-NPS-OWN")).singleElement().satisfies(nps -> {
+            assertThat(nps.on()).isEqualTo(LocalDate.of(2027, 3, 31));
+            assertThat(nps.amountToPay()).contains(Money.of("50000"));
+            assertThat(nps.costOfMissing()).isEqualTo(Money.of("10400"));
+        });
+    }
+
+    @Test
     void entries_whenTheRegimeAllowsNoScheduleXvDeduction_namesNoDeductionDay() {
         // Given / When / Then
         assertThat(SERVICE.entries(tuitionPayer("NEW_TAX_REGIME"), DUE))

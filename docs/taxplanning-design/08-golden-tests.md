@@ -547,6 +547,9 @@ WRONG:    ceiling first — min(1,50,000 , 1,50,000) = 1,50,000
 **Expected: ₹90,000.** `INFERENCE`: the wrong order is ₹60,000 too generous. `G2.1`'s "sub-cap first,
 then aggregate" is not a stylistic preference.
 
+> **Erratum (W-114d, 2026-11-14):** the CORRECT derivation reaches s.124(3) through s.123's residue, an order the Act does not set — s.124(5) and (10) bar only the same rupee under both, so own NPS is claimed under s.124(3) first (D-669): 50,000 there, then 1,00,000 to s.123, sub-capped at 40,000; total **₹90,000, unchanged**. The sub-cap still binds before the ceiling. The order differs only where s.123 overflows with own NPS inside the sub-cap (`01-rulebook.md`'s erratum under `DED-NPS-SELF-001`).
+> Verified by: `ChapterEightNodeTest.evaluate_whenT5ThreesNpsIsEntered_allowsNinetyThousand`; `T5LeaveTravelAndInvestmentTest`.
+
 ### T5-4 — LTA. **`PROVISIONAL` for TY 2025-26; `VERIFIED` for TY 2026-27**
 
 LTA received ₹1,20,000. Journey: Bengaluru → Delhi, flown, actual expenditure ₹68,000 for the family.

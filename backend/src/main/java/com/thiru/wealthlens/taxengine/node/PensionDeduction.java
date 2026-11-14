@@ -28,9 +28,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * s.124 — the pension scheme, for {@link ChapterEightNode} (S2 s.124; D-132, D-252, D-253): what s.123's sub-cap
- * left with a minor's deposit under one ceiling (s.124(3)–(4)), then the employer's contribution by employer and
- * regime (s.124(1)–(2)).
+ * s.124 — the pension scheme, for {@link ChapterEightNode} (S2 s.124; D-132, D-252, D-253): the assessee's own contribution
+ * claimed here first, with a minor's deposit, under one ceiling (s.124(3)–(4); W-114d), then the employer's contribution by
+ * employer and regime (s.124(1)–(2)).
  */
 final class PensionDeduction {
 
@@ -44,16 +44,35 @@ final class PensionDeduction {
     private PensionDeduction() {
     }
 
+    /**
+     * How much of the assessee's own contribution is claimed under s.124(3) rather than s.123: as much as the row's ceiling
+     * leaves after a minor's deposit, which has no other home (s.124(4)). s.124(5) and (10) bar only the same rupee under
+     * both, so the claim is the assessee's; claiming here first never deducts less, since every rupee here is deducted and a
+     * rupee under s.123 may meet a full ceiling (Gazette 265620 p.160; 1961 s.80CCD(1B); W-114d, D-669). Nil where the
+     * row does not apply in the regime.
+     */
+    static Money ownClaim(NodeContext ctx, Money ownContribution, Money minorDeposit) {
+        if (!ownContribution.isGreaterThan(Money.ZERO)) {
+            return Money.ZERO;
+        }
+        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN));
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), version).applies()) {
+            return Money.ZERO;
+        }
+        Money ceiling = ((AggregateWithCeiling) version.cap().orElseThrow()).ceiling();
+        return Money.min(ownContribution, ceiling.minus(minorDeposit).floorAtZero());
+    }
+
     /** The own-contribution line, then the employer's, added to {@code lines}; none where nothing is entered. */
-    static void lines(NodeContext ctx, Money residue, Money minorDeposit, List<EmployerFundContribution> employerPension,
+    static void lines(NodeContext ctx, Money ownClaim, Money minorDeposit, List<EmployerFundContribution> employerPension,
             List<TraceLine> lines) {
-        ownPension(ctx, residue, minorDeposit, lines);
+        ownPension(ctx, ownClaim, minorDeposit, lines);
         employerPension(ctx, employerPension, lines);
     }
 
-    /** s.124(3)–(4): the pension contribution s.123 did not allow, with a minor's deposit, under one ceiling. */
-    private static void ownPension(NodeContext ctx, Money residue, Money minorDeposit, List<TraceLine> lines) {
-        Money entered = residue.plus(minorDeposit);
+    /** s.124(3)–(4): the own contribution claimed here, with a minor's deposit, under one ceiling. */
+    private static void ownPension(NodeContext ctx, Money ownClaim, Money minorDeposit, List<TraceLine> lines) {
+        Money entered = ownClaim.plus(minorDeposit);
         if (!entered.isGreaterThan(Money.ZERO)) {
             return;
         }
@@ -63,7 +82,7 @@ final class PensionDeduction {
             return;
         }
         AggregateOutcome outcome = ((AggregateWithCeiling) version.cap().orElseThrow()).applyDetailed(CapContext.ofContributions(
-                Map.of(ComponentCodes.EMPLOYEE_NPS, residue, ComponentCodes.NPS_MINOR_DEPOSIT, minorDeposit)));
+                Map.of(ComponentCodes.EMPLOYEE_NPS, ownClaim, ComponentCodes.NPS_MINOR_DEPOSIT, minorDeposit)));
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), StepKind.DEDUCTION,
                         MoneyValue.of(entered), MoneyValue.of(outcome.allowed()), version.provenance())
                 .withLimitedBy(outcome.limitedBy()));

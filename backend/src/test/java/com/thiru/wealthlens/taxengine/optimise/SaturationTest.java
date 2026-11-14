@@ -62,8 +62,9 @@ class SaturationTest {
     }
 
     /**
-     * Own NPS's shape where the Schedule XV ceiling binds first (W-238k C3a): falling to 1,50,000, flat to the 1,60,000
-     * sub-cap, falling again for the 50,000 of own NPS, then flat. The least amount reaching the floor is 2,10,000.
+     * A total income that falls, is flat, then falls again — own NPS's shape before W-114d claimed s.124(3) first (W-238k
+     * C3a; D-669): falling to 1,50,000, flat to the 1,60,000 sub-cap, falling again for 50,000, then flat. The search
+     * must not stop at the flat stretch: the least amount reaching the floor is 2,10,000.
      */
     @Test
     void leastReaching_whenTotalIncomeIsFlatAndThenFallsAgain_findsTheSecondStop() {
@@ -88,9 +89,9 @@ class SaturationTest {
 
     /**
      * Employee NPS through the pipeline where the flat stretch is wide (W-238k C3a): basic 30,00,000 puts the sub-cap at
-     * 10 % × 30,00,000 = 3,00,000 ({@code 01-rulebook.md:1078}) above the 1,50,000 ceiling ({@code :1076}), and own NPS
-     * takes up to 50,000 of what the sub-cap left ({@code :972}; {@code 08-golden-tests.md} T5-1), so the point is
-     * 3,50,000. A halving from the residual's 8,00,000 would probe 4,00,000 and 2,00,000, both flat, and stop at 1,50,000.
+     * 10 % × 30,00,000 = 3,00,000 ({@code 01-rulebook.md:1078}) above the 1,50,000 ceiling ({@code :1076}); own NPS claims
+     * its 50,000 under s.124(3) first ({@code :972}; W-114d, D-669) and 1,50,000 more fills s.123, so the point is 2,00,000
+     * (3,50,000 before W-114d, when s.123 took the first 3,00,000).
      */
     @Test
     void of_whenTheContributionsTotalIncomeIsFlatPastTheCeiling_findsTheEndOfOwnNps() {
@@ -106,7 +107,7 @@ class SaturationTest {
                 new RegimeCode("FIRST_SCHEDULE_RATES"));
 
         // Then
-        assertThat(point).isEqualTo(Money.of("350000"));
+        assertThat(point).isEqualTo(Money.of("200000"));
     }
 
     private static final Movable.Contribution OWN_PF = new Movable.Contribution(ComponentCodes.EMPLOYEE_PF);

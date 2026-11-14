@@ -50,13 +50,13 @@ final class ScheduleXvDeduction {
     }
 
     /**
-     * The premium measures, then the s.123 line, added to {@code lines}; returns what the pension sub-cap left, for
-     * s.124(3).
+     * The premium measures, then the s.123 line, added to {@code lines}. Own NPS arrives net of what s.124(3) claimed first
+     * ({@link PensionDeduction#ownClaim}; W-114d), so what the pension sub-cap leaves here is deducted nowhere.
      */
-    static Money lines(NodeContext ctx, List<LifeInsurancePolicy> policies, Map<ComponentCode, Money> paid,
+    static void lines(NodeContext ctx, List<LifeInsurancePolicy> policies, Map<ComponentCode, Money> paid,
             List<TraceLine> lines) {
         premiums(ctx, policies, paid, lines);
-        return scheduleXv(ctx, paid, lines);
+        scheduleXv(ctx, paid, lines);
     }
 
     /**
@@ -93,19 +93,19 @@ final class ScheduleXvDeduction {
         return RuleDefinitions.require(version.definition(), PremiumShareBands.class, ruleId);
     }
 
-    /** s.123: the Schedule XV sums under one ceiling; returns what the pension sub-cap left, for s.124(3). */
-    private static Money scheduleXv(NodeContext ctx, Map<ComponentCode, Money> paid, List<TraceLine> lines) {
+    /** s.123: the Schedule XV sums under one ceiling. */
+    private static void scheduleXv(NodeContext ctx, Map<ComponentCode, Money> paid, List<TraceLine> lines) {
         RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV));
         AggregateWithCeiling cap = (AggregateWithCeiling) version.cap().orElseThrow();
         Map<ComponentCode, Money> contributions = new LinkedHashMap<>();
         cap.contributors().forEach(code -> contributions.put(code, paid.getOrDefault(code, Money.ZERO)));
         Money entered = contributions.values().stream().reduce(Money.ZERO, Money::plus);
         if (!entered.isGreaterThan(Money.ZERO)) {
-            return Money.ZERO;
+            return;
         }
         if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), version).applies()) {
             lines.add(nil(ctx, lines, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), version, entered));
-            return Money.ZERO;
+            return;
         }
         SalaryBases bases = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class);
         Money salary = Money.ZERO;
@@ -117,7 +117,6 @@ final class ScheduleXvDeduction {
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), StepKind.DEDUCTION,
                         MoneyValue.of(outcome.aggregate()), MoneyValue.of(outcome.allowed()), version.provenance())
                 .withLimitedBy(outcome.limitedBy()));
-        return outcome.subCapResidue().getOrDefault(ComponentCodes.EMPLOYEE_NPS, Money.ZERO);
     }
 
     /**

@@ -1203,6 +1203,9 @@ Total NPS-related and 80C-related deduction                   = 2,00,000
 `DED-NPS-SELF-001`. Get the order wrong and the ₹50,000 either vanishes or is counted twice. This
 ordering is the single most common error in this area and is why `G2` exists as a separate algorithm.
 
+> **Erratum (W-114d, 2026-11-14):** the `INFERENCE` above sets an order the Act does not — s.124(5) and (10) bar only the same rupee under both s.123 and s.124(3), so the assessee may claim own NPS under s.124(3) first, and claiming it there first never deducts less; with the sub-cap-first order, own NPS inside the 10 % sub-cap earned no s.124(3) deduction whenever s.123's ceiling was full (₹1,50,000 of tuition and ₹50,000 of own NPS: 1,50,000 allowed, not 2,00,000) — the engine now claims s.124(3) first, up to its ceiling less a minor's deposit, and passes only the rest to Schedule XV (D-669). The worked example's 2,00,000 is unchanged.
+> Verified by: Gazette 265620 p.160 (`sources/2026-11-14-own-nps-order.md`); `ChapterEightNodeTest.evaluate_whenScheduleXvIsFullAndOwnNpsIsWithinTheSubCap_claimsTheNpsUnderSection124Three`.
+
 > **Addendum (W-075a, 2026-10-06, D-129, D-130):** built for TY 2026-27, each read in Gazette CG-DL-E-22082025-265620 —
 > `DED-80C-001` / `-ITEMS-001` / `-NPS-CAP-001` as `DED-SCHEDULE-XV` (s.123, p.159; Schedule XV para 1, pp.561–563),
 > with 21 of the 26 clauses as components; (a), (c), (j), (k), (l) held for W-075a2 (para 2's share of the sum assured,

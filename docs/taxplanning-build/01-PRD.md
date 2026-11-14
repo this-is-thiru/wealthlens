@@ -198,7 +198,7 @@ F11 ○ `W-124`–`W-132`; F28 ○ `W-133`.
 
 Design: `20-product-gaps.md` F29 · `23` A6, A10
 
-#### F30 — Tax calendar — ✅ `W-114` (D-665: instalments, the s.425(4) relief day, the return's due date; D-666: Schedule XV's last day, priced by the tax its room saves; D-668: the four health limbs, priced by filling; own NPS ○ `W-114d`; D-667: the regime election, priced by the comparison; the LTA block end, proof cut-off and revised-return window are no entries, `DR 20` F30 errata)
+#### F30 — Tax calendar — ✅ `W-114` (D-665: instalments, the s.425(4) relief day, the return's due date; D-666: Schedule XV's last day, priced by the tax its room saves; D-668: the four health limbs, priced by filling; D-669: own NPS, claimed under s.124(3) before s.123; D-667: the regime election, priced by the comparison; the LTA block end, proof cut-off and revised-return window are no entries, `DR 20` F30 errata)
 | # | Acceptance criterion |
 |---|---|
 | F30.1 | Entries are generated from the assessee's own facts, never a static list |
@@ -323,3 +323,4 @@ with current truth plus this log. Earlier text is in git (last version before th
 | 2026-11-14 | F30: Schedule XV's last day in the calendar, priced by the tax its room saves (`W-114a`); the LTA block end left out (no measurable cost); 80D and own NPS placed as `W-114c` | `W-114a`, D-666 |
 | 2026-11-14 | F30: the regime election in the calendar, its deadline from the pack, priced by the regime comparison (`W-114b`); the employer proof cut-off and the revised-return window left out (no measurable cost) | `W-114b`, D-667 |
 | 2026-11-14 | F30: the health limbs' last day in the calendar, priced by a run with each party's premium (`W-114c`); own NPS moved to `W-114d` — its contribution counts under Schedule XV first | `W-114c`, D-668 |
+| 2026-11-14 | Own NPS claimed under s.124(3) before s.123 (s.124(5), (10) bar only the same rupee), which corrects an under-deduction and the optimiser's NPS suggestion; F30 gains own NPS's last day (`W-114d`) | `W-114d`, D-669 |

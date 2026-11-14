@@ -1,12 +1,14 @@
 package com.thiru.wealthlens.taxengine.optimise;
 
 import com.thiru.wealthlens.taxengine.api.DeductionRoom;
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.input.HealthPayment;
 import com.thiru.wealthlens.taxengine.input.HealthPaymentKind;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
+import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
@@ -47,8 +49,11 @@ import java.util.stream.Collectors;
  * so the room is found by filling: one run with a premium as large as the largest ceiling those rows hold, covering the
  * assessee, and one covering every living parent the family lists. The rise in those rows' deduction lines is the room,
  * which is also what the premium takes, since within a cap a rupee paid is a rupee deducted; the fall in the bill is the
- * saving. The engine picks the row, the limb and the senior rate inside the run (D-252). Own NPS is not priced here: its
- * contribution counts under Schedule XV first, so the amount it takes is not its room (W-114c R13, W-114d).
+ * saving. The engine picks the row, the limb and the senior rate inside the run (D-252).
+ *
+ * <p><b>Own NPS</b> (s.124(3); 80CCD(1B)): claimed under s.124(3) before s.123 (W-114d, D-669), so it fills rupee for
+ * rupee — the room is the row's ceiling less its line's allowed, paid as the row's own-contribution pay line on the first
+ * employment; none without an employment.
  */
 public final class DeductionRoomPricing {
 
@@ -73,7 +78,7 @@ public final class DeductionRoomPricing {
     }
 
     /**
-     * Schedule XV's room, then the assessee's health cover and the parents': each where it has room.
+     * Schedule XV's room, then the assessee's health cover and the parents', then own NPS: each where it has room.
      *
      * @throws IllegalStateException where a set holds more than one row and the run chose none, or no contributor can
      *     carry the room — a pack that changed under this
@@ -95,6 +100,7 @@ public final class DeductionRoomPricing {
                     new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, false, parents, healthCeiling, false, 1)))))
                     .ifPresent(rooms::add);
         }
+        ownPension(pricing).ifPresent(rooms::add);
         return List.copyOf(rooms);
     }
 
@@ -117,6 +123,36 @@ public final class DeductionRoomPricing {
         PipelineRunner.Result filled = pricing.run(pricing.with(inputs.entered().withQualifyingPayments(payments)));
         Money saved = bill(pricing.base()).minus(bill(filled)).floorAtZero();
         return Optional.of(new DeductionRoom(row.id().value(), allowed, room, saved));
+    }
+
+    private static Optional<DeductionRoom> ownPension(Pricing pricing) {
+        RulePack pack = pricing.pack();
+        EngineInputs inputs = pricing.inputs();
+        List<Employment> employments = inputs.entered().employments();
+        if (employments.isEmpty()) {
+            return Optional.empty();
+        }
+        RuleRow row = pack.rule(onlyMember(pack.ruleSet(RuleSetIds.RS_DED_NPS_OWN).members()));
+        AggregateWithCeiling cap = cap(row, inputs);
+        Money allowed = deducted(pricing.base(), Set.of(row.id())).getOrDefault(row.id(), Money.ZERO);
+        Money room = cap.ceiling().minus(allowed);
+        if (!room.isGreaterThan(Money.ZERO)) {
+            return Optional.empty();
+        }
+        ComponentCode contribution = cap.contributors().stream()
+                .filter(code -> pack.components().containsKey(code)
+                        && pack.components().get(code).kind() == ComponentKind.EMPLOYEE_CONTRIBUTION)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(row.id() + " has no contributor paid out of pay"));
+        Employment first = employments.getFirst();
+        List<SalaryComponent> pay = new ArrayList<>(first.components());
+        pay.add(new SalaryComponent(contribution, room));
+        List<Employment> withPay = new ArrayList<>(employments);
+        withPay.set(0, new Employment(pay, first.termsIncludeDearnessAllowance(), first.employerKind(),
+                first.dearnessAllowanceCountsForRetirement(), first.companyEmployer()));
+        PipelineRunner.Result filled = pricing.run(pricing.with(inputs.entered().withEmployments(withPay)));
+        return Optional.of(new DeductionRoom(row.id().value(), allowed, room,
+                bill(pricing.base()).minus(bill(filled)).floorAtZero()));
     }
 
     /**

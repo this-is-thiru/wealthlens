@@ -70,10 +70,12 @@ class DeductionRoomPricingTest {
 
         // Then — 1,50,000 − 50,000 = 1,00,000 of room; total income 9,00,000 → 8,00,000: 92,500 + 3,700 = 96,200 against
         // 72,500 + 2,900 = 75,400, so 20,800. The assessee's own cover: DED-HEALTH-FAMILY's premium sub-cap 25,000 (the
-        // harness's taxpayer is under sixty); 9,00,000 → 8,75,000: 87,500 + 3,500 = 91,000, so 5,200
+        // harness's taxpayer is under sixty); 9,00,000 → 8,75,000: 87,500 + 3,500 = 91,000, so 5,200. Own NPS: DED-NPS-OWN's
+        // 50,000, claimed under s.124(3) first (W-114d); 9,00,000 → 8,50,000: 82,500 + 3,300 = 85,800, so 10,400
         assertThat(rooms).containsExactly(
                 new DeductionRoom("DED-SCHEDULE-XV", Money.of("50000"), Money.of("100000"), Money.of("20800")),
-                new DeductionRoom("DED-HEALTH-FAMILY", Money.ZERO, Money.of("25000"), Money.of("5200")));
+                new DeductionRoom("DED-HEALTH-FAMILY", Money.ZERO, Money.of("25000"), Money.of("5200")),
+                new DeductionRoom("DED-NPS-OWN", Money.ZERO, Money.of("50000"), Money.of("10400")));
     }
 
     @Test
@@ -82,18 +84,21 @@ class DeductionRoomPricingTest {
         List<DeductionRoom> rooms = CALCULATOR.priceDeductionRoom(inputs("FIRST_SCHEDULE_RATES", List.of()));
 
         // Then — 9,50,000 → 8,00,000: 1,02,500 + 4,100 = 1,06,600 against 75,400, so 31,200; 9,50,000 → 9,25,000:
-        // 97,500 + 3,900 = 1,01,400, so 5,200
+        // 97,500 + 3,900 = 1,01,400, so 5,200; 9,50,000 → 9,00,000: 96,200, so 10,400
         assertThat(rooms).containsExactly(
                 new DeductionRoom("DED-SCHEDULE-XV", Money.ZERO, Money.of("150000"), Money.of("31200")),
-                new DeductionRoom("DED-HEALTH-FAMILY", Money.ZERO, Money.of("25000"), Money.of("5200")));
+                new DeductionRoom("DED-HEALTH-FAMILY", Money.ZERO, Money.of("25000"), Money.of("5200")),
+                new DeductionRoom("DED-NPS-OWN", Money.ZERO, Money.of("50000"), Money.of("10400")));
     }
 
     @Test
     void priceDeductionRoom_whenScheduleXvsCeilingIsReached_pricesOnlyTheHealthCover() {
-        // Given / When / Then — 8,00,000 → 7,75,000: 75,400 against 67,500 + 2,700 = 70,200, so 5,200
+        // Given / When / Then — 8,00,000 → 7,75,000: 75,400 against 67,500 + 2,700 = 70,200, so 5,200; own NPS still has its
+        // own 50,000, s.123 being full: 8,00,000 → 7,50,000: 62,500 + 2,500 = 65,000, so 10,400 (nil before W-114d)
         assertThat(CALCULATOR.priceDeductionRoom(inputs("FIRST_SCHEDULE_RATES",
                 List.of(new QualifyingPayment(TUITION_FEES, Money.of("150000"))))))
-                .containsExactly(new DeductionRoom("DED-HEALTH-FAMILY", Money.ZERO, Money.of("25000"), Money.of("5200")));
+                .containsExactly(new DeductionRoom("DED-HEALTH-FAMILY", Money.ZERO, Money.of("25000"), Money.of("5200")),
+                        new DeductionRoom("DED-NPS-OWN", Money.ZERO, Money.of("50000"), Money.of("10400")));
     }
 
     @Test
@@ -110,9 +115,10 @@ class DeductionRoomPricingTest {
 
         // Then — the assessee's limb full; DED-HEALTH-PARENTS-SENIOR's premium sub-cap 50,000: total income
         // 9,50,000 − 1,50,000 − 25,000 = 7,75,000 → 7,25,000: 70,200 against 12,500 + 45,000 = 57,500 + 2,300 = 59,800,
-        // so 10,400
+        // so 10,400; own NPS from 7,75,000 the same 50,000 at 20 %: 70,200 against 59,800, so 10,400
         assertThat(rooms).containsExactly(
-                new DeductionRoom("DED-HEALTH-PARENTS-SENIOR", Money.ZERO, Money.of("50000"), Money.of("10400")));
+                new DeductionRoom("DED-HEALTH-PARENTS-SENIOR", Money.ZERO, Money.of("50000"), Money.of("10400")),
+                new DeductionRoom("DED-NPS-OWN", Money.ZERO, Money.of("50000"), Money.of("10400")));
     }
 
     @Test
@@ -123,7 +129,20 @@ class DeductionRoomPricingTest {
 
         // When / Then
         assertThat(CALCULATOR.priceDeductionRoom(inputs))
-                .containsExactly(new DeductionRoom("DED-SCHEDULE-XV", Money.ZERO, Money.of("150000"), Money.ZERO));
+                .containsExactly(new DeductionRoom("DED-SCHEDULE-XV", Money.ZERO, Money.of("150000"), Money.ZERO),
+                        new DeductionRoom("DED-NPS-OWN", Money.ZERO, Money.of("50000"), Money.ZERO));
+    }
+
+    @Test
+    void priceDeductionRoom_whenThereIsNoEmployment_pricesNoOwnNps() {
+        // Given — 4,00,000 of other income and no employment: own NPS is paid out of pay here, so there is nothing to add it to
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        EngineInputs inputs = new EngineInputs(TY_2026_27, new RegimeCode("FIRST_SCHEDULE_RATES"), plain.temporal(),
+                EnteredFacts.none(), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+
+        // When / Then
+        assertThat(CALCULATOR.priceDeductionRoom(inputs)).noneMatch(room -> room.rule().equals("DED-NPS-OWN"));
     }
 
     @Test
