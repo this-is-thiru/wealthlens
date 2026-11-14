@@ -87,6 +87,9 @@ time-aware from the user's point of view.
 | Late-filing interest and fee start | `INT-LATEFILE-001`, `FEE-LATEFILE-001` |
 | Regime election — in the return | `REG-OPTOUT-FORM-001` |
 
+> **Erratum (W-114, 2026-11-14):** "every date is already derivable from rules that exist" holds for three rows only — the instalments (`ADV-INSTALMENTS`), the carve-out (`INT-DEFERMENT.relievedIfPaidBy`) and late-filing interest and fee (`INT-LATE-RETURN`, `FEE-LATE-RETURN`); the return's due date is entered on the draft (`FilingFacts.dueDate`), and no rule row holds the employer proof cut-off, the revised-return window, `ITR-DUE-*` or the regime election's form — W-114 builds the three with data (D-665 C1a), and the rest are W-114a (year end for 80C / 80D, the LTA block end) and W-114b (proof cut-off, revised return, regime election). A cost is measured as of the later of the return's due date and today: as of today, an instalment still to come costs nothing, its interest not yet accrued.
+> Verified by: `ls backend/src/main/resources/rulepacks/timeline/law/rules | grep -ciE 'ITR-DUE|REVISED|12BB|PAYROLL|OPTOUT-FORM'` → 0; `DraftCalendarServiceTest`.
+
 **What makes it good:** each entry carries **the rupee consequence of missing it**, measured by
 recomputation (`D-MARGINAL`), not a generic reminder.
 

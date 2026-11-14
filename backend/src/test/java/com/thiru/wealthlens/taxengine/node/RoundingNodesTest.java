@@ -83,7 +83,7 @@ class RoundingNodesTest {
     /** The balance rounded with nothing owed on it, so the figure is the balance's own (D-446). */
     private static NodeResult roundPayable(String payable) {
         return NodeHarness.with(pack()).regime(NEW_TAX_REGIME).given(NodeIds.TAX_BALANCE, Money.of(payable))
-                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of())).run(new RoundNetPayableNode());
+                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of(), Optional.empty())).run(new RoundNetPayableNode());
     }
 
     // -- total income ------------------------------------------------------------------------------

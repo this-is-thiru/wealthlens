@@ -33,6 +33,7 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -75,7 +76,7 @@ public final class InterestAndFeeNode implements ComputationNode {
         run.deferment();
         run.fee(ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount());
         run.refund();
-        return new NodeResult(new InterestAndFees(run.items), run.lines, run.annotations);
+        return new NodeResult(new InterestAndFees(run.items, run.reliefPaidBy), run.lines, run.annotations);
     }
 
     private static <T extends RuleDefinition> T definition(NodeContext ctx, RuleSetId set, Class<T> type) {
@@ -120,6 +121,7 @@ public final class InterestAndFeeNode implements ComputationNode {
         private final List<TraceLine> lines = new ArrayList<>();
         private final List<InterestAndFees.Item> items = new ArrayList<>();
         private final List<TraceAnnotation> annotations = new ArrayList<>();
+        private Optional<LocalDate> reliefPaidBy = Optional.empty();
 
         Run(NodeContext ctx, Money bill, AdvanceTaxPosition advance, InterestCalculation calculation,
                 List<Notice> calculationNotice) {
@@ -197,6 +199,9 @@ public final class InterestAndFeeNode implements ComputationNode {
                 Money paid = filing.advanceTaxPaidBy(dueOn);
                 boolean reached = !dueOn.isAfter(end);
                 DefermentRelief.AtDate relieved = advance.liable() && reached ? relief.at(dueOn) : DefermentRelief.AtDate.NONE;
+                if (relieved.reason().isPresent()) {
+                    reliefPaidBy = Optional.of(relief.paidBy());
+                }
                 Money dueHere = due.minus(relieved.leftOut());
                 boolean harboured = step.noInterestFrom().filter(share -> !paid.isLessThan(share.of(dueHere))).isPresent();
                 Money base = calculation.base(step.share().of(dueHere).minus(paid));

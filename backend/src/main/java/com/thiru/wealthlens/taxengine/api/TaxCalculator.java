@@ -83,7 +83,7 @@ public class TaxCalculator {
         TaxComputation computation = ComputationProjector.project(run, inputs, id);
         return new ComputedTax(id.value(), ComputationReceipt.of(id, inputs.taxYear()).value(), inputs.taxYear().label(),
                 inputs.regime().value(), computation.totalIncome(), computation.netPayableBeforeFilingEffects(),
-                ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(), advanceTax((AdvanceTaxPosition) run.valueOf(NodeIds.ADVANCE_TAX)),
+                ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(), advanceTax((AdvanceTaxPosition) run.valueOf(NodeIds.ADVANCE_TAX), (InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES)),
                 owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), false),
                 owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), true),
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
@@ -398,9 +398,10 @@ public class TaxCalculator {
         }).toList();
     }
 
-    private static ComputedTax.AdvanceTax advanceTax(AdvanceTaxPosition position) {
+    private static ComputedTax.AdvanceTax advanceTax(AdvanceTaxPosition position, InterestAndFees owed) {
         return new ComputedTax.AdvanceTax(position.liable(), position.amount(), position.instalments().stream()
-                .map(i -> new ComputedTax.AdvanceTax.Instalment(i.dueOn(), i.dueByThen(), i.paidByThen(), i.stillOwed())).toList());
+                .map(i -> new ComputedTax.AdvanceTax.Instalment(i.dueOn(), i.dueByThen(), i.paidByThen(), i.stillOwed())).toList(),
+                owed.reliefPaidBy());
     }
 
     /** The items the person owes, or with {@code receivable} the interest added to a refund (W-112b C4a). */

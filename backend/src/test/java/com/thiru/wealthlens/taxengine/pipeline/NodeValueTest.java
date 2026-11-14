@@ -148,7 +148,7 @@ class NodeValueTest {
                     new ComponentSet(java.util.Map.of()), new SalaryBases(java.util.Map.of()), CapitalGainsHead.none(),
                     new HeadsAfterSetOff(Money.of("1"), java.util.Map.of()),
                     new AdvanceTaxPosition(false, Money.of("1"), java.util.List.of()),
-                    new InterestAndFees(java.util.List.of()), new HousePropertyHead(Money.of("1"), java.util.List.of()),
+                    new InterestAndFees(java.util.List.of(), java.util.Optional.empty()), new HousePropertyHead(Money.of("1"), java.util.List.of()),
                     new OtherSourcesHead(Money.of("1"), java.util.Map.of()));
 
             for (NodeValue value : all) {

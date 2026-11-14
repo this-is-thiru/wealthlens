@@ -4,6 +4,8 @@ import com.thiru.wealthlens.taxengine.api.ItrFormChoice;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
+import com.thiru.wealthlens.taxplanning.compute.DraftCalendar;
+import com.thiru.wealthlens.taxplanning.compute.DraftCalendarService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationView;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecast;
@@ -31,6 +33,7 @@ public class DraftComputationController {
     private final DraftComputationService service;
     private final CapitalGainsViewService capitalGainsViewService;
     private final DraftForecastService forecastService;
+    private final DraftCalendarService calendarService;
 
     @PostMapping("/drafts/{draftId}/compute")
     public DraftComputationView compute(@PathVariable String email, @PathVariable String draftId,
@@ -46,6 +49,11 @@ public class DraftComputationController {
     @GetMapping("/drafts/{draftId}/forecast")
     public DraftForecast forecast(@PathVariable String email, @PathVariable String draftId) {
         return forecastService.forecast(email, draftId);
+    }
+
+    @GetMapping("/drafts/{draftId}/calendar")
+    public DraftCalendar calendar(@PathVariable String email, @PathVariable String draftId) {
+        return calendarService.calendar(email, draftId);
     }
 
     @PostMapping("/drafts/{draftId}/itr-form")

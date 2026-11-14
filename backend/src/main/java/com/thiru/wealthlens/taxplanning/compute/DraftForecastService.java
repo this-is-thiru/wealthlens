@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -41,16 +42,20 @@ public class DraftForecastService {
      */
     public DraftForecast forecast(String email, String draftId) {
         DraftService.OwnedDraft owned = draftService.ownedDraft(email, draftId);
-        String election = owned.draft().getRegimeElection();
-        RegimeCode regime = election == null || election.isBlank()
-                ? taxCalculator.defaultRegime(TaxYearId.of(owned.draft().getTaxYearStart()))
-                : new RegimeCode(election);
+        RegimeCode regime = regimeOf(owned.draft(), taxCalculator);
         LocalDate asOf = LocalDate.now(clock);
         EngineInputsAssembler.Assembled assembled = assembler.assemble(email, draftId, regime, asOf);
         ComputedTax tax = taxCalculator.compute(assembled.inputs());
         Optional<Money> byEmployer = owned.inputs().filing().byEmployer();
         return forecastOf(tax, byEmployer, assembled.inputs().filing().dueDate(), asOf,
                 assembled.draft().getCurrentRevision(), concat(DraftComputationService.NOT_INCLUDED, NOT_INCLUDED));
+    }
+
+    /** The regime the draft elected when acted on, else the year's default (D-664 C3a; W-114 C6). */
+    static RegimeCode regimeOf(FilingDraft draft, TaxCalculator taxCalculator) {
+        String election = draft.getRegimeElection();
+        return election == null || election.isBlank() ? taxCalculator.defaultRegime(TaxYearId.of(draft.getTaxYearStart()))
+                : new RegimeCode(election);
     }
 
     /** The figures from a computation; separate from {@link #forecast} so the arithmetic is tested without a pipeline. */

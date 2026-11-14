@@ -1228,4 +1228,79 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(undated.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(undated.getBody()).contains("/filing/dueDate");
     }
+
+    private JsonNode calendar(String draftId) {
+        ResponseEntity<String> calendar = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/calendar", null, null);
+        assertThat(calendar.getStatusCode()).as(calendar.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(calendar.getBody());
+    }
+
+    private static JsonNode calendarEntry(JsonNode calendar, String on, String kind) {
+        for (JsonNode entry : calendar.get("entries")) {
+            if (entry.get("on").asString().equals(on) && entry.get("kind").asString().equals(kind)) {
+                return entry;
+            }
+        }
+        throw new AssertionError("No " + kind + " on " + on + " in " + calendar);
+    }
+
+    @Test
+    void calendar_whenNothingIsPaid_measuresEachCostAsOfTheDueDateAndStoresNothing() {
+        // Given — T13-1, sold 1-9-2026, nothing at source; computed on 6-11-2026 (W-114, D-665)
+        listedEquitySale();
+
+        // When
+        JsonNode calendar = calendar(draft(true, "0"));
+
+        // Then — DraftCalendarServiceTest's hand-worked costs: as of 6-11-2026 December would cost nothing, as of 31-7-2027
+        // it costs 7,934 − 2,670 = 5,264; 31 March 3,901; a day late 6,754
+        assertThat(calendar.get("asOf").asString()).isEqualTo("2026-11-06");
+        assertThat(calendar.get("measuredAsOf").asString()).isEqualTo("2027-07-31");
+        assertThat(calendar.get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(calendar.get("entries").size()).isEqualTo(6);
+        assertThat(calendarEntry(calendar, "2026-12-15", "ADVANCE_TAX_INSTALMENT").at("/costOfMissing/amountInRupees")
+                .decimalValue()).isEqualByComparingTo("5264");
+        assertThat(calendarEntry(calendar, "2027-03-31", "DEFERMENT_RELIEF_PAID_BY").at("/costOfMissing/amountInRupees")
+                .decimalValue()).isEqualByComparingTo("3901");
+        assertThat(calendarEntry(calendar, "2027-07-31", "RETURN_DUE").at("/costOfMissing/amountInRupees").decimalValue())
+                .isEqualByComparingTo("6754");
+        assertThat(calendar.get("entries").get(0).get("on").asString()).isEqualTo("2026-06-15");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isZero();
+    }
+
+    @Test
+    void calendar_whenAPastInstalmentWasPaid_showsWhatWasPaidAndCostsItNothing() {
+        // Given — 13,162.50 paid on 15-6-2026, all June's share
+        listedEquitySale();
+        String draftId = draft(true, "0");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/filing/advanceTaxPaid/-",
+                  "value": {"paidOn": "2026-06-15", "amount": {"amountInRupees": 13162.50}}}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode june = calendarEntry(calendar(draftId), "2026-06-15", "ADVANCE_TAX_INSTALMENT");
+
+        // Then
+        assertThat(june.at("/paidByThen/amountInRupees").decimalValue()).isEqualByComparingTo("13162.50");
+        assertThat(june.at("/amountToPay/amountInRupees").decimalValue()).isEqualByComparingTo("0");
+        assertThat(june.at("/costOfMissing/amountInRupees").decimalValue()).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void calendar_whenAnotherAccountAsksOrNoDueDateIsStated_expected400() {
+        // Given
+        String draftId = draft(false, "0");
+        ResponseEntity<String> anothers = call(HttpMethod.GET, "other@example.com", "/drafts/" + draftId + "/calendar", null, null);
+        call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, "[{\"op\": \"replace\", \"path\": \"/filing/dueDate\", \"value\": null}]",
+                "\"rev-1\"");
+
+        // When
+        ResponseEntity<String> undated = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/calendar", null, null);
+
+        // Then
+        assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getBody()).contains("/filing/dueDate");
+    }
 }

@@ -84,6 +84,31 @@ class DefermentReliefTest {
     }
 
     @Test
+    void run_whenAGainArisesAfterAnInstalmentDate_namesTheReliefsPaidByDayWhetherPaidOrNot() {
+        // Given — sold 10 January 2027, with 80,000 paid: short of the 87,750 left out, so not relieved
+        EngineInputs inputs = filed(gainsSoldOn(LocalDate.of(2027, 1, 10)), List.of(), "80000");
+
+        // When
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(inputs);
+
+        // Then — INT-DEFERMENT's relievedIfPaidBy, 03-31, in the year (W-114 C4a, D-665)
+        assertThat(((InterestAndFees) run.result().valueOf(NodeIds.INTEREST_AND_FEES)).reliefPaidBy())
+                .contains(LocalDate.of(2027, 3, 31));
+    }
+
+    @Test
+    void run_whenTheGainArisesBeforeTheFirstInstalmentDate_namesNoReliefDay() {
+        // Given — sold 1 June 2026, before 15 June
+        EngineInputs inputs = filed(gainsSoldOn(LocalDate.of(2026, 6, 1)), List.of(), "87750");
+
+        // When
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(inputs);
+
+        // Then
+        assertThat(((InterestAndFees) run.result().valueOf(NodeIds.INTEREST_AND_FEES)).reliefPaidBy()).isEmpty();
+    }
+
+    @Test
     void run_whenTheGainArisesOnAnInstalmentDate_isNotRelievedAtThatDate() {
         // Given — sold on 15 December 2026 itself, the whole bill paid on 14 March
         EngineInputs inputs = filed(gainsSoldOn(LocalDate.of(2026, 12, 15)), List.of(), "87750");

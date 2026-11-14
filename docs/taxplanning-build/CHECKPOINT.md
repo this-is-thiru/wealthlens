@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-113 done (D-664), committed and pushed with api-collection
+Item            : W-114 done (D-665), committed and pushed with api-collection
 Stage           : DONE (session 93, 2026-11-14) — review approved ("commit it and push"); pipeline to be checked
-Done today      : session 93: W-113 planned, approved C1a C2a C3a C4a C5, built; W-113a placed
-Board           : W-113 D, W-113a · (after F12); Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-114
-Next step       : check W-113's pipeline run and record it in D-664; then W-114 by board order (plan first, §2)
+Done today      : session 93: W-113 (D-664) committed, pushed, pipeline green; W-114 planned, approved, built; W-114a, W-114b placed
+Board           : W-113 D, W-114 D, W-113a · (after F12), W-114a ·, W-114b ·; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13)
+Next step       : record W-114's pipeline run in D-665; then by board order W-114a (plan first, §2)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : targeted: DraftForecastServiceTest 6, DraftFilingTest 5, DraftComputationIntegrationTest#forecast_* 5 + 1, Architecture/Modulith/doc guards green; validate green; full tiers on the pipeline
+Last verify     : W-113 pipeline 43545129163 success; W-114 targeted: DraftCalendarServiceTest 6, DefermentReliefTest 7, StoredComputationReadTest 1, IT calendar_* 3 (+forecast, byReceipt), moved engine tests, Architecture/Modulith/FinishedPlan green; benchmark p99 9.4 ms; full tiers on the pipeline
 Files touched   : none beyond this file once committed
-Last item commit: taxplanning W-113: forecast a draft's refund after filing or payable now
-Updated         : 2026-11-14, session 93 — W-113 committed and pushed
+Last item commit: taxplanning W-114: list a draft's dated actions with what missing each costs
+Updated         : 2026-11-14, session 93 — W-114 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * One computation's figures and how they were reached.
@@ -54,8 +55,10 @@ public record ComputedTax(String computationId, String receipt, String taxYear, 
      * @param liable whether it is payable at all
      * @param amount the bill less tax at source
      * @param instalments each date, what is due by then, paid by then and still owed; empty where not liable
+     * @param reliefPaidBy where income s.425(4) / s.234C relieves arose after an instalment date, the day its tax must be
+     *     paid by for the relief to hold (W-114 C4a, D-665); empty otherwise
      */
-    public record AdvanceTax(boolean liable, Money amount, List<Instalment> instalments) {
+    public record AdvanceTax(boolean liable, Money amount, List<Instalment> instalments, Optional<LocalDate> reliefPaidBy) {
 
         /** One instalment. */
         public record Instalment(LocalDate dueOn, Money dueByThen, Money paidByThen, Money stillOwed) {

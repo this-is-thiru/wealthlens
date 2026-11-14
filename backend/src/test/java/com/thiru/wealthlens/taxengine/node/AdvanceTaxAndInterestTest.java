@@ -313,7 +313,7 @@ class AdvanceTaxAndInterestTest {
         // Given — balance 30,000 with 8,360 of interest and fee (D-446 C5a)
         InterestAndFees owed = new InterestAndFees(List.of(
                 new InterestAndFees.Item(RuleIds.INT_DEFERMENT, InterestAndFees.Kind.INTEREST, Money.of("3363")),
-                new InterestAndFees.Item(RuleIds.FEE_LATE_RETURN, InterestAndFees.Kind.FEE, Money.of("5000"))));
+                new InterestAndFees.Item(RuleIds.FEE_LATE_RETURN, InterestAndFees.Kind.FEE, Money.of("5000"))), Optional.empty());
 
         // When
         NodeResult result = NodeHarness.with(pack(year)).regime(REGIME)
@@ -365,7 +365,7 @@ class AdvanceTaxAndInterestTest {
         // Given — 1,560 of deferment owed and 366 added to a refund (W-112b C4a)
         InterestAndFees items = new InterestAndFees(List.of(
                 new InterestAndFees.Item(RuleIds.INT_DEFERMENT, InterestAndFees.Kind.INTEREST, Money.of("1560")),
-                new InterestAndFees.Item(RuleIds.INT_REFUND, InterestAndFees.Kind.RECEIVABLE, Money.of("366"))));
+                new InterestAndFees.Item(RuleIds.INT_REFUND, InterestAndFees.Kind.RECEIVABLE, Money.of("366"))), Optional.empty());
 
         // When / Then
         assertThat(items.asMoney()).isEqualTo(Money.of("1560"));

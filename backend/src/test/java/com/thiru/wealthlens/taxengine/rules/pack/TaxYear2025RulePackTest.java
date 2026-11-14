@@ -236,7 +236,7 @@ class TaxYear2025RulePackTest {
                 .run(new CessNode());
         var rounded = NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs2025(NEW_TAX_REGIME))
                 .given(NodeIds.TAX_BALANCE, Money.of("10.40"))
-                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of()))
+                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of(), Optional.empty()))
                 .run(new RoundNetPayableNode());
 
         // Then

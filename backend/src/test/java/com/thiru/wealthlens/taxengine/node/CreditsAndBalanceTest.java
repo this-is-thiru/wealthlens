@@ -121,7 +121,7 @@ class CreditsAndBalanceTest {
         // When
         NodeResult result = NodeHarness.with(pack(year)).regime(REGIME)
                 .inputs(paying(year, FilingFacts.notYetFurnished(DUE))).given(NodeIds.TAX_BALANCE, Money.of(balance))
-                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of())).run(new RoundNetPayableNode());
+                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of(), Optional.empty())).run(new RoundNetPayableNode());
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));

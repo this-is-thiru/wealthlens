@@ -81,6 +81,11 @@ final class DefermentRelief {
                 + ", paid after it by " + paidBy));
     }
 
+    /** The day by which the tax on relieved income must be paid, in the year. */
+    LocalDate paidBy() {
+        return paidBy;
+    }
+
     /** Whether a dividend the relief would reach was entered without the date it was received. */
     boolean hasUndatedDividend() {
         return relieved.contains(RelievedIncome.DIVIDEND) && ctx.inputs().entered().otherSourceItems().stream()

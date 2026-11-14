@@ -115,7 +115,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 (✅ `W-096`–`W-098`, D-440) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs` (`filing.declarations`, checked on save; `GET /tax/user/{email}/declarations/{taxYear}`, W-090a2)
 `EntryProvenance` (○ `W-099`, `W-100`) · `assemble/` `EngineInputsAssembler` — the **only** place
 `EngineInputs` is built (✅ `W-103`, D-442) · `portfolio/` `MoneyBridge` (✅ `W-087`, D-240: `fromTMoney` refuses a non-canonical or non-finite double; `toTMoney` throws) `CapitalGainsAdapter` (✅ `W-087b`, D-241: `inputFor(email, taxYear)` — term and rate basis from S2 ss.196–198 / 1961 ss.111A, 112, 112A on `EQUITY` and the bucket's STT flags; unclassified, speculative and unmapped assets refused; OQ-31 refused), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087b`) ·
-`projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`; `ForecastProjection` ✅ as `compute/DraftForecast`, `W-113`, D-664)
+`projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`; `ForecastProjection` ✅ as `compute/DraftForecast`, `W-113`, D-664; `CalendarProjection` ✅ as `compute/DraftCalendar`, `W-114`, D-665)
 · `scenario/` `Scenario` `ScenarioDiff` `DiffLine` (⚠ UNOWNED) · `controller/` DTOs only · `job/`
 `TaxJob` + 6 jobs, `JobLease` (○ `W-137`) · `gazette/` `GazetteWatch` (a `TaxJob`, daily, off until seeded and enabled) `GazetteCopies` `GazetteMatcher` `GazetteLead` `GazetteCursor` — leads, never pack writes; tier two from `taxengine` `api.TaxCalculator.provisionsCited()` / `ProvisionCitation` (✅ `W-236`).
 
@@ -364,7 +364,7 @@ distinct from the legacy `/tax-planning` until that is deleted (**D-046 B3**). W
 | `POST` | `/drafts/{draftId}/compare-regimes` | ✅ `W-109` |
 | `GET` | `/computations/{receipt}` | ✅ `W-107` |
 | `GET` | `/drafts/{draftId}/forecast` | ✅ `W-113` (D-664: `DraftForecast`, computed per request under the elected or default regime, stored nowhere) |
-| `GET` | `/drafts/{draftId}/calendar` | ○ `W-114` |
+| `GET` | `/drafts/{draftId}/calendar` | ✅ `W-114` (D-665: `DraftCalendar`, computed per request, up to seven runs, stored nowhere) |
 | `GET` | `/drafts/{draftId}/completeness` | ○ `W-115` |
 | `GET` | `/drafts/{draftId}/itr-suggestion` | ⚠ UNOWNED endpoint (selector ○ `W-091`) |
 | `GET` | `/drafts/{draftId}/itr-export` | ⚠ UNOWNED endpoint (mapper ○ `W-093`) |
@@ -607,3 +607,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-11-09 | T2 `pipeline/`: `HeadsAfterSetOff.losses` (`LossesAcrossYears`: each head's loss brought forward and left to carry forward), filled by `SetOffNode` from `CarriedLossSetOff`'s `LedgerTotals`, the year's house-property loss left and `CapitalGainsHead`'s losses left; no figure or line changes. T1 `condition/`: `HasLossBroughtForward`, `HasLossCarriedForward`, 25 in all; `ReturnFacts` carries both maps; `HasLossUnderHead` refuses `CAPITAL_GAINS`, whose figure is never below nil | D-528 (W-090c1b2) |
 | 2026-11-09 | T4 pack: TY 2026-27's first forms, `forms/itr-forms/ITR-1.json` (SAHAJ: r.164(2) as ten positive conditions, (3)(a) – (n) as fourteen bars, the r.164(12) Table's three electronic manners and paper at 80 or more) and `ITR-2.json` (r.164(4): individual or HUF, no business income, excluding ITR-1), return kinds `S263_1`, `S268_1_A`, `S280`, valid 2026-04-01 – 2027-03-31; forms layer 2026-27.forms.3. `validate/`: `ItrFormCoverage` (I19, I20). I27 extended to `forms/` | D-529 (W-090c2) |
 | 2026-11-14 | T8 route `GET /drafts/{draftId}/forecast` and `ForecastProjection` built as `compute/DraftForecast` + `DraftForecastService`; draft `Filing.ofWhichByEmployer` | `W-113`, D-664 |
+| 2026-11-14 | T8 route `GET /drafts/{draftId}/calendar`, `CalendarProjection` built as `compute/DraftCalendar` + `DraftCalendarService`; T2 `pipeline/`: `InterestAndFees.reliefPaidBy`, and `api` `ComputedTax.AdvanceTax.reliefPaidBy` — `INT-DEFERMENT`'s paid-by day where relieved income arose after an instalment date | `W-114`, D-665 |
