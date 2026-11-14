@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
@@ -55,7 +56,7 @@ class NodeContextDeclarationsTest {
         }
         return new RulePack(SHIPPED.taxYear(), SHIPPED.layers(), SHIPPED.instruments(), SHIPPED.rules(),
                 SHIPPED.ruleSets(), SHIPPED.components(), SHIPPED.regimes(), SHIPPED.disallowanceSets(),
-                SHIPPED.conditionSets(), SHIPPED.funds(), catalogue, Map.of());
+                SHIPPED.conditionSets(), SHIPPED.funds(), catalogue, Map.of(), Explanations.none());
     }
 
     private static ConditionContext conditions(Map<DeclarationCode, Declaration> answers) {

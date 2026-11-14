@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
@@ -395,7 +396,7 @@ class NodeRegistryTest {
                 Map.of(),
                 Map.of(),
                 Map.of(),
-                Map.of(), Map.of(), Map.of(), Map.of());
+                Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none());
     }
 
     private static RuleRow stdDeductionRule() {

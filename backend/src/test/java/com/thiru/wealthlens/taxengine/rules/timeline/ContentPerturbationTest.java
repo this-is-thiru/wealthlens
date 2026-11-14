@@ -20,10 +20,11 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Invariant I27 / test T23-1 (property P3): the timeline's content — the section catalogue, the Acts' section lists
- * and the coverage register — changes no number. Every text in it is rewritten, or the whole of {@code content/}
- * removed, and each shipped year compiles to the same pack, file for file, so the engine reads exactly what it read
- * before (W-146). The same holds for {@code forms/} (W-090c2, D-529): a form's texts, limits and ages are rewritten, or
+ * Invariant I27 / test T23-1 (property P3): the timeline's content — the section catalogue, the Acts' section lists,
+ * the coverage register and the trace lines' explanations — changes no number. Every text in it is rewritten, or the
+ * whole of {@code content/} removed, and each shipped year compiles to the same pack but for the content layer's own
+ * file, {@code content/explanations.json} (W-116, D-671): every law, exec and forms file and every rule checksum stays,
+ * so the engine reads exactly what it read before (W-146). The same holds for {@code forms/} (W-090c2, D-529): a form's texts, limits and ages are rewritten, or
  * the whole layer removed, and only {@code forms/itr-forms.json} moves — every law, exec and content file and every
  * rule checksum stays, so no figure can.
  */
@@ -33,8 +34,10 @@ class ContentPerturbationTest {
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
-    /** The fields a content file is named by, which the reader checks against the file name; all else is text. */
-    private static final Set<String> IDENTITY = Set.of("key", "act");
+    /** The fields a content file or entry is named by — an explanation by its rule (W-116); all else is text. */
+    private static final Set<String> IDENTITY = Set.of("key", "act", "rule");
+
+    private static final String CONTENT_FILE = "content/explanations.json";
 
     /** A form's free texts, and the values its conditions compare: what a form may change without breaking its row. */
     private static final Set<String> FORM_TEXTS = Set.of("_note", "displayName", "reason", "sourceDescription", "label",
@@ -59,9 +62,11 @@ class ContentPerturbationTest {
         // When
         CompiledPack perturbed = RulePackCompiler.compile(TimelineReader.read(root), taxYear);
 
-        // Then — the rewrite reached every content file, and no compiled file or rule checksum moved
+        // Then — the rewrite reached every content file and the explanations reached the content layer; no other compiled
+        // file or rule checksum moved
         assertThat(rewritten).isGreaterThan(60);
-        assertThat(perturbed.files()).isEqualTo(shipped.files());
+        assertThat(without(perturbed, CONTENT_FILE)).isEqualTo(without(shipped, CONTENT_FILE));
+        assertThat(perturbed.files().get(CONTENT_FILE)).isNotEqualTo(shipped.files().get(CONTENT_FILE));
         assertThat(perturbed.ruleChecksums()).isEqualTo(shipped.ruleChecksums());
     }
 
@@ -81,8 +86,8 @@ class ContentPerturbationTest {
         // When
         CompiledPack withoutContent = RulePackCompiler.compile(TimelineReader.read(root), taxYear);
 
-        // Then
-        assertThat(withoutContent.files()).isEqualTo(shipped.files());
+        // Then — only the content layer's file moved
+        assertThat(without(withoutContent, CONTENT_FILE)).isEqualTo(without(shipped, CONTENT_FILE));
         assertThat(withoutContent.ruleChecksums()).isEqualTo(shipped.ruleChecksums());
     }
 
@@ -130,8 +135,12 @@ void compile_whenTheFormsDirectoryIsRemoved_movesOnlyTheFormsFile(int year) thro
 }
 
 private static Map<String, String> withoutForms(CompiledPack pack) {
+    return without(pack, FORMS_FILE);
+}
+
+private static Map<String, String> without(CompiledPack pack, String file) {
     Map<String, String> files = new TreeMap<>(pack.files());
-    files.remove(FORMS_FILE);
+    files.remove(file);
     return files;
 }
 

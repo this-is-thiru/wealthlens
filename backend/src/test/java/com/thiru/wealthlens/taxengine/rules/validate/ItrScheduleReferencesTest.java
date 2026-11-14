@@ -18,6 +18,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.ScheduleCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
@@ -55,7 +56,7 @@ class ItrScheduleReferencesTest {
                 List.of(new ItrSchedule(new ScheduleCode("S"), "Synthetic", fields, List.of(), SOURCE)), SOURCE);
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
-                PACK.declarations(), Map.of(form.code(), form));
+                PACK.declarations(), Map.of(form.code(), form), Explanations.none());
         List<String> problems = new ArrayList<>();
         ItrScheduleReferences.check(pack, problems);
         return problems;

@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
@@ -193,7 +194,7 @@ class CessNodeTest {
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(fixed),
                 row.midYearCombination(), row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
         RulePack notAPercentage = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
-                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds(), Map.of(), Map.of());
+                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds(), Map.of(), Map.of(), Explanations.none());
 
         // When / Then
         assertThatThrownBy(() -> run(notAPercentage, slab("50000")))

@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.rules.component.WithdrawalTerm;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import java.time.LocalDate;
@@ -46,14 +47,14 @@ class LiquidityCoverageTest {
         Map<EmployerFundCode, EmployerFundDefinition> funds = new LinkedHashMap<>(PACK.funds());
         funds.put(fund.code(), fund);
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds, Map.of(), Map.of());
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds, Map.of(), Map.of(), Explanations.none());
     }
 
     private static RulePack withComponent(ComponentDefinition component) {
         Map<ComponentCode, ComponentDefinition> components = new LinkedHashMap<>(PACK.components());
         components.put(component.code(), component);
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                components, PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(), Map.of(), Map.of());
+                components, PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(), Map.of(), Map.of(), Explanations.none());
     }
 
     private static EmployerFundDefinition fundWith(EmployerFundDefinition row, Liquidity liquidity) {

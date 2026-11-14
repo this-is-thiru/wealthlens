@@ -1377,4 +1377,33 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
+
+    @Test
+    void compute_whenHraIsLimitedByTheAllowance_explainsTheLineInPlainLanguage() {
+        // Given — the renting draft with HRA 4,80,000 in the old regime: rent 9,60,000 less a tenth of 16,00,000 is
+        // 8,00,000 and Mumbai's half of salary is 8,00,000, so the allowance binds (W-116, D-671)
+        String draftId = rentingDraft();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/entered/employments/0/components/-",
+                  "value": {"code": {"value": "HRA"}, "annualAmount": {"amountInRupees": 480000}}}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode view = compute(draftId, "{\"regime\": \"FIRST_SCHEDULE_RATES\"}");
+
+        // Then
+        JsonNode hra = null;
+        for (JsonNode step : view.at("/tax/trace")) {
+            if (step.get("rule").asString().equals("SAL-HOUSE-RENT-ALLOWANCE")) {
+                hra = step;
+            }
+        }
+        assertThat(hra).as("the HRA line").isNotNull();
+        assertThat(amountAt(hra, "/in")).isEqualByComparingTo("480000");
+        assertThat(amountAt(hra, "/out")).isEqualByComparingTo("480000");
+        assertThat(hra.get("explanation").asString()).isEqualTo(
+                "Of the ₹4,80,000 house rent allowance you received for this home, ₹4,80,000 is not taxed. All of the"
+                        + " allowance is exempt: it is below both other limits. Raising any of the other limits alone would"
+                        + " not change it: percentage of salary, rent less one-tenth of salary.");
+    }
 }

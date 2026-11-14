@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-115 done (D-670), committed and pushed; W-324 placed (F33.2, after an AIS / 26AS import)
-Stage           : 6 DONE — review approved ("commit it and push"); pipeline with RUN_BENCHMARKS to confirm, then delete the variable
-Done today      : session 94: W-115 (D-670); session 93: W-113 – W-114d (D-664 – D-669)
-Board           : W-113, W-114 – W-114d, W-115 D; W-113a · (after F12); W-324 · (after an AIS / 26AS import); Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-116
-Next step       : W-116 by board order (plan first, §2; probe before plan)
+Item            : W-116 done (D-671), committed and pushed; W-325, W-326 placed
+Stage           : 6 DONE — review approved ("commit and push"); pipeline with RUN_BENCHMARKS to confirm, then record in D-671 and delete the variable
+Done today      : session 94: W-115 (D-670), W-116 (D-671); session 93: W-113 – W-114d (D-664 – D-669)
+Board           : W-113 – W-116 D; W-113a · (after F12); W-324 · (after AIS / 26AS); W-325, W-326 · (after W-116); Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-325
+Next step       : W-325 by board order (plan first, §2; probe before plan)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : 2026-11-14 RentRoomPricingTest 12, DraftCompletenessServiceTest 2, DeductionRoomPricingTest 10, DraftCalendarServiceTest 13, DraftComputationIntegrationTest completeness_* + calendar_* 6, ArchitectureTest, WealthLensModulithTest, FinishedPlanTest, validate — all green; full tiers on the pipeline
+Last verify     : 2026-11-14 taxengine.** + Architecture/Modulith/FinishedPlan/ParkedRows/CheckstyleBaseline 4189 green; DraftComputationIntegrationTest 60 green; red check on the limit lookup done
 Files touched   : none beyond this file once the item commit lands
-Last item commit: taxplanning W-115: rank what a draft leaves out by the tax each item would save
-Updated         : 2026-11-14, session 94 — W-115 committed and pushed
+Last item commit: taxplanning W-116: explain each trace line in plain language from the pack's content layer
+Updated         : 2026-11-14, session 94 — W-116 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

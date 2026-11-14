@@ -30,6 +30,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -92,7 +93,7 @@ class SalaryBaseNodeTest {
                         component(shipped, HRA, Set.of()))
                 .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
-                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of());
+                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of(), Explanations.none());
     }
 
     /** Basic is in every base, and outright in the entertainment one, which DA is not in (D-105). */

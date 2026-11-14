@@ -121,6 +121,31 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
         return ofExact(amountInRupees.multiply(numerator.amountInRupees).divide(denominator.amountInRupees, CALC));
     }
 
+    /**
+     * The amount as a reader writes it, grouped the Indian way — thousands, then every two digits for lakhs and crores —
+     * with paise only where there are any: what an explanation prints (W-116, D-671).
+     */
+    public String inIndianNotation() {
+        BigDecimal absolute = amountInRupees.abs();
+        BigDecimal whole = absolute.setScale(0, RoundingMode.DOWN);
+        String digits = whole.toPlainString();
+        StringBuilder grouped = new StringBuilder();
+        int head = Math.max(0, digits.length() - 3);
+        for (int i = 0; i < head; i++) {
+            if (i > 0 && (head - i) % 2 == 0) {
+                grouped.append(',');
+            }
+            grouped.append(digits.charAt(i));
+        }
+        if (head > 0) {
+            grouped.append(',');
+        }
+        grouped.append(digits.substring(head));
+        BigDecimal paise = absolute.subtract(whole);
+        String fraction = paise.signum() == 0 ? "" : paise.setScale(2, RoundingMode.HALF_EVEN).toPlainString().substring(1);
+        return (amountInRupees.signum() < 0 ? "-" : "") + "₹" + grouped + fraction;
+    }
+
     /** Clamps a negative amount to zero. Named for what it does, not for what it guards against. */
     public Money floorAtZero() {
         return amountInRupees.signum() < 0 ? ZERO : this;

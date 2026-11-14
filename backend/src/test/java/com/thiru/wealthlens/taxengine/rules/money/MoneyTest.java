@@ -266,4 +266,15 @@ class MoneyTest {
             assertThatThrownBy(() -> Money.of("100").scaledBy(-1, 3)).isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    @Test
+    void inIndianNotation_whenGrouped_putsCommasAtThousandsThenEveryTwoDigits() {
+        // Given / When / Then — W-116's explanations print figures this way
+        assertThat(Money.ZERO.inIndianNotation()).isEqualTo("₹0");
+        assertThat(Money.of("999").inIndianNotation()).isEqualTo("₹999");
+        assertThat(Money.of("1000").inIndianNotation()).isEqualTo("₹1,000");
+        assertThat(Money.of("100000").inIndianNotation()).isEqualTo("₹1,00,000");
+        assertThat(Money.of("123456789.5").inIndianNotation()).isEqualTo("₹12,34,56,789.50");
+        assertThat(Money.of("-2500").inIndianNotation()).isEqualTo("-₹2,500");
+    }
 }

@@ -230,7 +230,7 @@ Design: `20-product-gaps.md` F30
 | F36.3 | A cell the computation cannot produce says so; it is never blank |
 | F36.4 | Per-schedule copy |
 
-#### F37 — Plain-language explanations — ○ `W-116`
+#### F37 — Plain-language explanations — ✅ `W-116` (D-671: the 28 least-of rows explained from `content/explanations.json`, every other line its rule id (F37.2) until ○ `W-325`; F37.3 names the limit that bound and the others that would not help — the rupee figure that would, ○ `W-326`)
 | # | Acceptance criterion |
 |---|---|
 | F37.1 | Templates live in `content/`, never in code |

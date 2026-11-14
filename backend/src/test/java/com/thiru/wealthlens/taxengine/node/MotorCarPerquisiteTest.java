@@ -25,6 +25,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
@@ -172,7 +173,7 @@ class MotorCarPerquisiteTest {
         sets.put(partly.id(), new RuleSet(partly.id(), partly.selection(), partly.ground(),
                 List.of(RuleIds.PERQ_CAR_PARTLY_ELECTRIC)));
         RulePack gap = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), sets,
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of(), Explanations.none());
 
         // When / Then — a pack defect, said as one, not as the electric car's refusal
         assertThatThrownBy(() -> runOn(gap, 2026, ABOVE_THRESHOLD, Optional.empty(),

@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ class EmployerFundReferencesTest {
             funds.put(fund, changed);
         }
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds, Map.of(), Map.of());
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), funds, Map.of(), Map.of(), Explanations.none());
     }
 
     private static EmployerFundDefinition feeding(EmployerFundDefinition row, Set<RuleId> feedsInto) {

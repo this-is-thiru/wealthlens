@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
@@ -42,7 +43,7 @@ class ReturnFactReferencesTest {
                         LocalDate.of(2026, 11, 9), VerificationLevel.UNVERIFIED, "Nothing: synthetic"));
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(SET, set), PACK.funds(),
-                PACK.declarations(), PACK.itrForms());
+                PACK.declarations(), PACK.itrForms(), Explanations.none());
         List<String> problems = new ArrayList<>();
         ReturnFactReferences.check(pack, problems);
         return problems;

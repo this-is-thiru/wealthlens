@@ -1,0 +1,237 @@
+{
+  "_note": "Plain-language sentences for trace lines (PRD F37; W-116, D-671). Content: it changes no number and holds none (SC-2) — {out} is the line's figure and {in} what it started from, filled from the trace. byLimit is keyed by each limit's name exactly as the rule's least-of names it, and the pack refuses an entry whose limits differ. Drafted by Claude from each rule's section entry and limit names, for the owner's adoption (C5). Rules not listed show their rule id (F37.2); W-325 writes the rest.",
+  "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
+  "explanations": [
+    {
+      "rule": "DED-DEPOSIT-INTEREST-SENIOR",
+      "what": "{out} of your deposit interest is deducted.",
+      "byLimit": {
+        "the interest": "All of the interest is deducted, since it is within the limit.",
+        "the limit": "The deduction is capped by the limit for a senior citizen's deposit interest; interest above it is taxed."
+      }
+    },
+    {
+      "rule": "DED-DISABLED-DEPENDANT",
+      "what": "{out} is deducted for the care of a dependant with disability.",
+      "byLimit": {
+        "the amount spent or deposited": "The deduction is what you spent or deposited, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for the dependant's disability; spending more would not raise it."
+      }
+    },
+    {
+      "rule": "DED-DISABLED-DEPENDANT-SEVERE",
+      "what": "{out} is deducted for the care of a dependant with severe disability.",
+      "byLimit": {
+        "the amount spent or deposited": "The deduction is what you spent or deposited, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for severe disability; spending more would not raise it."
+      }
+    },
+    {
+      "rule": "DED-RENT-PAID",
+      "what": "Of the {in} rent you paid, {out} is deducted.",
+      "byLimit": {
+        "rent less 10% of total income": "It is limited by how far your rent exceeds a share of your total income; paying more rent would raise it, up to the next limit.",
+        "5000 per month": "It is limited by the sum allowed for each month you stayed; paying more rent would not raise it.",
+        "25% of total income": "It is limited by a share of your total income; paying more rent would not raise it."
+      }
+    },
+    {
+      "rule": "DED-SAVINGS-INTEREST",
+      "what": "{out} of your savings account interest is deducted.",
+      "byLimit": {
+        "the interest": "All of the interest is deducted, since it is within the limit.",
+        "the limit": "The deduction is capped by the limit for savings account interest; interest above it is taxed."
+      }
+    },
+    {
+      "rule": "DED-SPECIFIED-DISEASE",
+      "what": "{out} is deducted for the treatment of a specified disease.",
+      "byLimit": {
+        "paid less reimbursed": "The deduction is what you paid less what was reimbursed, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for the patient's age; paying more would not raise it."
+      }
+    },
+    {
+      "rule": "DED-SPECIFIED-DISEASE-SENIOR",
+      "what": "{out} is deducted for the treatment of a specified disease of a senior citizen.",
+      "byLimit": {
+        "paid less reimbursed": "The deduction is what you paid less what was reimbursed, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for a senior citizen; paying more would not raise it."
+      }
+    },
+    {
+      "rule": "PERQ-ACCOM-HOTEL",
+      "what": "Hotel accommodation from your employer is valued at {out} as a perquisite.",
+      "byLimit": {
+        "hotel charges": "It is valued at the hotel charges your employer paid, which are below the share of your salary.",
+        "twenty-four per cent of salary": "It is valued at a share of your salary, which is below the hotel charges."
+      }
+    },
+    {
+      "rule": "PERQ-ACCOM-LEASED",
+      "what": "Accommodation your employer leases for you is valued at {out} as a perquisite.",
+      "byLimit": {
+        "lease rental": "It is valued at the lease rental your employer pays, which is below the share of your salary.",
+        "ten per cent of salary": "It is valued at a share of your salary, which is below the lease rental."
+      }
+    },
+    {
+      "rule": "PERQ-CAR-CONVEYANCE",
+      "what": "The use of a conveyance from your employer is valued at {out} as a perquisite.",
+      "byLimit": {
+        "the expenditure less the Table's amount per month": "It is your employer's expenditure less the fixed amount the rules allow for official use.",
+        "the expenditure less the higher official use claimed": "It is your employer's expenditure less the higher official use you claimed with records."
+      }
+    },
+    {
+      "rule": "PERQ-CAR-EMPLOYEE",
+      "what": "The use of your own car, paid for by your employer, is valued at {out} as a perquisite.",
+      "byLimit": {
+        "the expenditure less the Table's amount for official use": "It is your employer's expenditure less the fixed amount the rules allow for official use.",
+        "the expenditure less the higher official use claimed": "It is your employer's expenditure less the higher official use you claimed with records."
+      }
+    },
+    {
+      "rule": "PERQ-MEDABROAD-STAY",
+      "what": "Medical treatment and stay abroad paid by your employer comes to {out} on this line.",
+      "byLimit": {
+        "the treatment and stay": "It is set by what the treatment and stay cost.",
+        "the extent permitted by the Reserve Bank of India": "It is set by the extent the Reserve Bank of India permits."
+      }
+    },
+    {
+      "rule": "RATE-CG-LONG-OTHER",
+      "what": "This long-term capital gain comes to {out} on this line.",
+      "byLimit": {
+        "twelve and one-half per cent of the gain": "It is the lower of the two ways the law allows, here the one without indexation.",
+        "twenty per cent of the gain computed with indexed cost": "It is the lower of the two ways the law allows, here the one with indexed cost."
+      }
+    },
+    {
+      "rule": "RET-GRATUITY-OTHER",
+      "what": "{out} of your gratuity is not taxed.",
+      "byLimit": {
+        "gratuity received": "All of the gratuity is exempt, since it is within the other limits.",
+        "notified limit": "The exemption is capped by the limit the government notifies; gratuity above it is taxed.",
+        "half a month's salary for each completed year": "The exemption is capped by your salary and completed years of service; gratuity above it is taxed."
+      }
+    },
+    {
+      "rule": "RET-GRATUITY-STATUTORY",
+      "what": "{out} of your gratuity is not taxed.",
+      "byLimit": {
+        "gratuity received": "All of the gratuity is exempt, since it is within the statutory amount.",
+        "amount under the gratuity statute": "The exemption is capped by the amount the gratuity statute works out; gratuity above it is taxed."
+      }
+    },
+    {
+      "rule": "RET-LEAVE-ENCASHMENT-OTHER",
+      "what": "{out} of your leave encashment is not taxed.",
+      "byLimit": {
+        "payment received": "All of the payment is exempt, since it is within the other limits.",
+        "leave at credit valued at the ten-month average salary": "The exemption is capped by your leave at credit, valued at your average salary.",
+        "ten months' average salary": "The exemption is capped by a multiple of your average salary.",
+        "notified limit": "The exemption is capped by the limit the government notifies; the payment above it is taxed.",
+        "leave salary at credit": "The exemption is capped by the leave salary at your credit."
+      }
+    },
+    {
+      "rule": "RET-RETRENCHMENT",
+      "what": "{out} of your retrenchment compensation is not taxed.",
+      "byLimit": {
+        "compensation received": "All of the compensation is exempt, since it is within the other limits.",
+        "amount under the retrenchment statute": "The exemption is capped by the amount the retrenchment statute works out.",
+        "notified limit": "The exemption is capped by the limit the government notifies; compensation above it is taxed."
+      }
+    },
+    {
+      "rule": "RET-VOLUNTARY-RETIREMENT",
+      "what": "{out} of your voluntary retirement compensation is not taxed.",
+      "byLimit": {
+        "compensation received": "All of the compensation is exempt, since it is within the limit.",
+        "limit": "The exemption is capped by the limit the law sets; compensation above it is taxed."
+      }
+    },
+    {
+      "rule": "SAL-ALW-CHILDREN-EDUCATION",
+      "what": "{out} of your children's education allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since it is within the limit.",
+        "prescribed limit": "The exemption is capped by the limit the rules prescribe for each child; a larger allowance would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-ALW-CONVEYANCE",
+      "what": "{out} of your conveyance allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since you spent at least as much on conveyance for your duties.",
+        "amount actually incurred": "The exemption is limited to what you actually spent on conveyance for your duties; spending more for your duties would raise it."
+      }
+    },
+    {
+      "rule": "SAL-ALW-HOSTEL",
+      "what": "{out} of your children's hostel allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since it is within the limit.",
+        "prescribed limit": "The exemption is capped by the limit the rules prescribe for each child; a larger allowance would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-ALW-UNIFORM",
+      "what": "{out} of your uniform allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since you spent at least as much on the uniform.",
+        "amount actually incurred": "The exemption is limited to what you actually spent on the uniform; spending more on it would raise it."
+      }
+    },
+    {
+      "rule": "SAL-ENTMT-ALLOWANCE",
+      "what": "{out} of your entertainment allowance is deducted from your salary.",
+      "byLimit": {
+        "one-fifth of salary": "The deduction is capped by a share of your salary.",
+        "limit": "The deduction is capped by the limit the law sets."
+      }
+    },
+    {
+      "rule": "SAL-HOUSE-RENT-ALLOWANCE",
+      "what": "Of the {in} house rent allowance you received for this home, {out} is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt: it is below both other limits.",
+        "rent less one-tenth of salary": "It is limited by how far your rent exceeds a share of your salary; paying more rent, with evidence, would raise it, up to the next limit.",
+        "percentage of salary": "It is limited by the share of your salary the home's location allows; paying more rent would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-LEAVE-TRAVEL-CONCESSION",
+      "what": "{out} of your leave travel concession is not taxed.",
+      "byLimit": {
+        "amount actually incurred": "The exemption is what you actually spent on the journey, which is within the fare allowed.",
+        "fare admissible": "The exemption is capped by the fare the rules allow for the journey; spending more would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE",
+      "what": "{out} is deducted from your salary as the standard deduction.",
+      "byLimit": {
+        "statutory amount": "It is the amount the law sets, whatever you spend.",
+        "salary": "It is limited by your salary, which is below the amount the law sets."
+      }
+    },
+    {
+      "rule": "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
+      "what": "{out} is deducted from your salary as the standard deduction.",
+      "byLimit": {
+        "statutory amount": "It is the amount the law sets, whatever you spend.",
+        "salary": "It is limited by your salary, which is below the amount the law sets."
+      }
+    },
+    {
+      "rule": "SETOFF-HOUSE-PROPERTY",
+      "what": "{out} of your loss from house property is set off against your other income.",
+      "byLimit": {
+        "the loss": "All of the loss is set off, since it is within the limit.",
+        "the limit": "The set-off is capped by the limit the law sets; the rest of the loss is carried forward where the law allows."
+      }
+    }
+  ]
+}

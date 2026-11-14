@@ -75,7 +75,14 @@ public record ComputedTax(String computationId, String receipt, String taxYear, 
     public record Owed(String rule, String kind, Money amount) {
     }
 
-    /** One line of the trace, in plain values. */
-    public record Step(int sequence, String node, String rule, String kind, String limitedBy) {
+    /**
+     * One line of the trace, in plain values.
+     *
+     * @param in what the line started from, where it is money
+     * @param out what the line produced, where it is money
+     * @param explanation the line in plain language, from the pack's content; the rule id where it has none (W-116)
+     */
+    public record Step(int sequence, String node, String rule, String kind, String limitedBy, Optional<Money> in,
+            Optional<Money> out, String explanation) {
     }
 }

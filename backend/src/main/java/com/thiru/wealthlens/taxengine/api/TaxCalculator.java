@@ -93,7 +93,7 @@ public class TaxCalculator {
                 owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), false),
                 owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), true),
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
-                computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation),
+                computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation, pack),
                 buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)));
     }
 
@@ -488,10 +488,11 @@ public class TaxCalculator {
                 .map(item -> new ComputedTax.Owed(item.rule().value(), item.kind().name(), item.amount())).toList();
     }
 
-    private static List<ComputedTax.Step> steps(TaxComputation computation) {
+    private static List<ComputedTax.Step> steps(TaxComputation computation, RulePack pack) {
         return computation.trace().stream()
                 .map(line -> new ComputedTax.Step(line.sequence(), line.node().value(), line.rule().value(), line.kind().name(),
-                        line.limitedBy().orElse("")))
+                        line.limitedBy().orElse(""), ExplanationRenderer.money(line.in()), ExplanationRenderer.money(line.out()),
+                        ExplanationRenderer.explain(line, pack.explanations())))
                 .toList();
     }
 }

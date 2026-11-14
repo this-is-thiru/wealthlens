@@ -56,6 +56,7 @@ public final class JsonPackAssembler implements PackAssembler {
         JsonNode funds = parse(layerContents, "exec/funds.json");
         JsonNode declarations = parse(layerContents, "exec/declarations.json");
         JsonNode itrForms = parse(layerContents, "forms/itr-forms.json");
+        JsonNode explanations = parse(layerContents, "content/explanations.json");
 
         return new RulePack(
                 taxYear,
@@ -69,7 +70,8 @@ public final class JsonPackAssembler implements PackAssembler {
                 RegistryJson.conditionSets(regimes, "law/regimes.json"),
                 RegistryJson.funds(funds, "exec/funds.json"),
                 RegistryJson.declarations(declarations, "exec/declarations.json"),
-                ItrFormJson.forms(itrForms, "forms/itr-forms.json"));
+                ItrFormJson.forms(itrForms, "forms/itr-forms.json"),
+                ExplanationJson.explanations(explanations, "content/explanations.json"));
     }
 
     private static JsonNode parse(Map<String, String> contents, String file) {

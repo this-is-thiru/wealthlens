@@ -29,6 +29,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -78,7 +79,7 @@ class GrossSalaryNodeTest {
                         component(shipped, INTEREST, HeadCode.OTHER_SOURCES, RuleIds.RATE_SLAB_NEW_TAX_REGIME))
                 .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
-                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of());
+                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of(), Explanations.none());
     }
 
     private static ComponentDefinition component(RulePack pack, ComponentCode code, HeadCode head, RuleId feeds) {

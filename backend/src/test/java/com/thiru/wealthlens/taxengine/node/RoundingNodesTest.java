@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
@@ -184,7 +185,7 @@ class RoundingNodesTest {
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(toHundred),
                 row.midYearCombination(), row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
         RulePack hundred = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
-                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds(), Map.of(), Map.of());
+                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(), pack.funds(), Map.of(), Map.of(), Explanations.none());
 
         // When — 12,34,567 leaves 67 over a multiple of 100, at or above 50
         NodeResult result = run(hundred, new RoundTotalIncomeNode(), NodeIds.TOTALINCOME, "1234567");

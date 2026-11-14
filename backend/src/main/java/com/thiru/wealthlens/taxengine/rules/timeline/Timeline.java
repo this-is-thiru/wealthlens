@@ -49,6 +49,8 @@ import java.util.Optional;
  * @param coverage the coverage register ({@code content/coverage.json}) verbatim, where the timeline
  *     has one. It describes the whole timeline rather than a year, so no year's pack is compiled from it
  *     (D-059)
+ * @param explanations the trace lines' plain-language sentences ({@code content/explanations.json}) verbatim, where the
+ *     timeline has them; each year's pack keeps those of its own rules (W-116, D-671)
  * @param sections the section catalogue ({@code content/sections/}), each entry's file verbatim by its
  *     key. Like the register it describes the whole timeline, so no year's pack is compiled from it
  *     (D-060)
@@ -74,6 +76,7 @@ public record Timeline(
         Map<CellCode, String> itrCellSources,
         Map<NodeId, String> pipelineNodes,
         Optional<String> coverage,
+        Optional<String> explanations,
         Map<String, String> sections,
         Map<String, String> acts) {
 

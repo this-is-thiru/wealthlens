@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
@@ -104,7 +105,7 @@ class RuleStatusTest {
                 VerificationLevel.SOURCE_CHECKED);
         RuleRow row = new RuleRow(SLAB, TemporalAxis.TAX_YEAR, List.of(version), checked());
         return new RulePack(
-                TY, layers, new GoverningInstruments(act, act, act), Map.of(SLAB, row), null, null, null, null, null, Map.of(), Map.of(), Map.of());
+                TY, layers, new GoverningInstruments(act, act, act), Map.of(SLAB, row), null, null, null, null, null, Map.of(), Map.of(), Map.of(), Explanations.none());
     }
 
     @ParameterizedTest

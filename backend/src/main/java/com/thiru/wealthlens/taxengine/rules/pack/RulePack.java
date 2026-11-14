@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.pack;
 
+import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
@@ -23,6 +24,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -47,6 +49,7 @@ import java.util.stream.Collectors;
  * @param funds the employer-fund registry, by code (W-238e)
  * @param declarations the questions the year asks the person and the engine cannot compute, by code (W-090a1)
  * @param itrForms the year's return forms, by code — the {@code forms} layer (W-090b)
+ * @param explanations the year's plain-language sentences for trace lines — the {@code content} layer (W-116)
  */
 public record RulePack(
         TaxYearId taxYear,
@@ -60,7 +63,8 @@ public record RulePack(
         Map<ConditionSetId, ConditionSet> conditionSets,
         Map<EmployerFundCode, EmployerFundDefinition> funds,
         Map<DeclarationCode, DeclarationDefinition> declarations,
-        Map<ItrFormCode, ItrFormSpec> itrForms) {
+        Map<ItrFormCode, ItrFormSpec> itrForms,
+        Explanations explanations) {
 
     public RulePack {
         if (taxYear == null) {
@@ -84,6 +88,33 @@ public record RulePack(
         requireRulesFiledUnderTheirOwnIds(taxYear, rules);
         requireOnlyPublishedVersions(taxYear, rules);
         requireSetMembersAreRulesOfOneSet(taxYear, rules, ruleSets);
+        requireExplanationsFitTheirRules(taxYear, rules, explanations);
+    }
+
+    /**
+     * Each explanation is of a rule of the year and names exactly the limits its least-of names in the year's versions, so
+     * a renamed or added limit fails the pack rather than losing its sentence (W-116, D-671).
+     */
+    private static void requireExplanationsFitTheirRules(TaxYearId taxYear, Map<RuleId, RuleRow> rules,
+            Explanations explanations) {
+        if (explanations == null) {
+            throw new IllegalArgumentException(taxYear + " must carry its explanations; pass Explanations.none() for none");
+        }
+        explanations.byRule().forEach((id, explanation) -> {
+            RuleRow row = rules.get(id);
+            if (row == null) {
+                throw new IllegalArgumentException(taxYear + " explains " + id + ", which is not a rule of the year");
+            }
+            Set<String> limits = new TreeSet<>();
+            for (RuleVersion version : row.versions()) {
+                version.cap().filter(LeastOf.class::isInstance).map(LeastOf.class::cast)
+                        .ifPresent(cap -> cap.limbs().forEach(limb -> limits.add(limb.name())));
+            }
+            if (!limits.equals(new TreeSet<>(explanation.byLimit().keySet()))) {
+                throw new IllegalArgumentException(taxYear + " explains " + id + " by the limits "
+                        + new TreeSet<>(explanation.byLimit().keySet()) + ", but its least-of names " + limits);
+            }
+        });
     }
 
     private static Map<RulePackLayer, RulePackRef> everyLayerVersioned(

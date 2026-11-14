@@ -29,6 +29,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -451,7 +452,7 @@ class SetOffNodeTest {
         rules.put(row, new RuleRow(rule.id(), rule.axis(), versions, rule.midYearCombination(),
                 rule.midYearCombinationRule(), rule.prorationBasis(), rule.headProvenance()));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules, shipped.ruleSets(),
-                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of());
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of(), Explanations.none());
     }
 
     private static CarriedCapitalLoss capitalLoss(String shortTerm, String longTerm, String longTermAbsorbed,

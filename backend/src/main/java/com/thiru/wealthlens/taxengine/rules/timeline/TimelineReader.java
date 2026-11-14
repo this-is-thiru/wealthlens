@@ -79,6 +79,8 @@ public final class TimelineReader {
             DECLARATIONS, ITR_FORMS, ITR_CELLS, SECTIONS, ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
+    /** The trace lines' plain-language sentences, one file for every year; each pack keeps its own rules' (W-116). */
+    private static final String EXPLANATIONS = "content/explanations.json";
     /** The rule sets every year's pack declares; each rule row names its own (D-252). */
     private static final String RULE_SETS = "law/rule-sets.json";
 
@@ -101,11 +103,17 @@ public final class TimelineReader {
                 contents.coverage(content);
                 continue;
             }
+            if (EXPLANATIONS.equals(path)) {
+                String content = contentOf(file);
+                parse(content, path);
+                contents.explanations(content);
+                continue;
+            }
             String directory = path.contains("/") ? path.substring(0, path.lastIndexOf('/')) : "";
             if (!KNOWN_DIRECTORIES.contains(directory) || !path.endsWith(".json")) {
                 throw new PackValidationException(
                         path + ": not a timeline file; a timeline holds only .json files under "
-                                + KNOWN_DIRECTORIES + ", " + RULE_SETS + " and " + COVERAGE);
+                                + KNOWN_DIRECTORIES + ", " + RULE_SETS + ", " + COVERAGE + " and " + EXPLANATIONS);
             }
             String content = contentOf(file);
             String stem = file.getFileName().toString().replaceFirst("\\.json$", "");
@@ -137,6 +145,7 @@ public final class TimelineReader {
         private final Map<String, String> sections = new HashMap<>();
         private final Map<String, String> acts = new HashMap<>();
         private Optional<String> coverage = Optional.empty();
+        private Optional<String> explanations = Optional.empty();
         private Optional<String> ruleSets = Optional.empty();
 
         void ruleSets(String content) {
@@ -145,6 +154,10 @@ public final class TimelineReader {
 
         void coverage(String content) {
             coverage = Optional.of(content);
+        }
+
+        void explanations(String content) {
+            explanations = Optional.of(content);
         }
 
         void add(String directory, String path, String stem, JsonNode node, String content) {
@@ -267,7 +280,7 @@ public final class TimelineReader {
                     (version, where) -> ItrFormJson.form(version, where, itrCells)));
             return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources,
                     conditionSetSources, components, componentSources,
-                    funds, fundSources, declarations, declarationSources, itrFormSources, itrCells, itrCellSources, pipelineNodes, coverage, sections, acts);
+                    funds, fundSources, declarations, declarationSources, itrFormSources, itrCells, itrCellSources, pipelineNodes, coverage, explanations, sections, acts);
         }
     }
 

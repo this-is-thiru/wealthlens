@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.regime.AfterWithdrawal;
 import com.thiru.wealthlens.taxengine.rules.regime.BindingSpec;
@@ -50,7 +51,7 @@ class RegimeOffersTest {
         Map<ConditionSetId, ConditionSet> conditionSets = new HashMap<>(PACK.conditionSets());
         conditionSets.putAll(sets);
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(), PACK.components(),
-                regimes, PACK.disallowanceSets(), conditionSets, Map.of(), Map.of(), Map.of());
+                regimes, PACK.disallowanceSets(), conditionSets, Map.of(), Map.of(), Map.of(), Explanations.none());
     }
 
     private static RegimeSpec copy(RegimeSpec r, Set<ConditionSetId> eligibility, ElectionProtocol election,

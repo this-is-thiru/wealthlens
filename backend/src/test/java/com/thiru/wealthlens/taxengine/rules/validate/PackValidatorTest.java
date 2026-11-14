@@ -34,6 +34,7 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
 import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
@@ -253,7 +254,7 @@ class PackValidatorTest {
 
         RulePack build() {
             return new RulePack(TY, layers(), instruments(), rules, oneRowSets(rules.keySet()), components, regimes,
-                    disallowanceSets, conditionSets, Map.of(), Map.of(), Map.of());
+                    disallowanceSets, conditionSets, Map.of(), Map.of(), Map.of(), Explanations.none());
         }
 
         /** Each rule in a set of its own, as most shipped rows are (D-252). */
@@ -286,7 +287,7 @@ class PackValidatorTest {
             Map<RuleSetId, RuleSet> sets = new LinkedHashMap<>(whole.ruleSets());
             sets.remove(new RuleSetId("RS-" + rule.value()));
             return new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
-                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds(), Map.of(), Map.of());
+                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds(), Map.of(), Map.of(), Explanations.none());
         }
 
         @Test
@@ -327,7 +328,7 @@ class PackValidatorTest {
             RuleSetId empty = new RuleSetId("RS-NOT-THIS-YEAR");
             sets.put(empty, new RuleSet(empty, RuleSelection.EXACTLY_ONE, SelectionGround.REGIME, List.of()));
             RulePack withEmpty = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
-                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds(), Map.of(), Map.of());
+                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds(), Map.of(), Map.of(), Explanations.none());
 
             // When / Then — a provision of one year only is AT_MOST_ONE instead
             assertThatThrownBy(() -> PackValidator.validate(withEmpty))
@@ -343,7 +344,7 @@ class PackValidatorTest {
             RuleSetId optional = new RuleSetId("RS-ONE-YEAR-ONLY");
             sets.put(optional, new RuleSet(optional, RuleSelection.AT_MOST_ONE, SelectionGround.REGIME, List.of()));
             RulePack withOptional = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(),
-                    sets, whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds(), Map.of(), Map.of());
+                    sets, whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets(), whole.funds(), Map.of(), Map.of(), Explanations.none());
 
             // When / Then
             assertThatCode(() -> PackValidator.validate(withOptional)).doesNotThrowAnyException();

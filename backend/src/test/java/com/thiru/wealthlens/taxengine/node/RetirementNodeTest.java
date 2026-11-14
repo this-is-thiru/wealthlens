@@ -29,6 +29,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
@@ -495,7 +496,7 @@ class RetirementNodeTest {
                 row.midYearCombination(), row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
         RulePack twelve = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules,
                 shipped.ruleSets(), shipped.components(), shipped.regimes(), shipped.disallowanceSets(),
-                shipped.conditionSets(), shipped.funds(), Map.of(), Map.of());
+                shipped.conditionSets(), shipped.funds(), Map.of(), Map.of(), Explanations.none());
 
         // When — least of 15,00,000, 20,00,000 and 1/2 × (12 × 60,000 / 12) × 10 = 3,00,000
         NodeResult result = run(twelve, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),

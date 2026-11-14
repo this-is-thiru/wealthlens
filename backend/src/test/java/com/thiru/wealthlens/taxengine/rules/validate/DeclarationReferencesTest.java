@@ -22,6 +22,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
@@ -81,7 +82,7 @@ class DeclarationReferencesTest {
                 row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
         return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), rules, PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
-                catalogue, Map.of());
+                catalogue, Map.of(), Explanations.none());
     }
 
     @Test
@@ -138,7 +139,7 @@ class DeclarationReferencesTest {
         ConditionSet set = new ConditionSet(id, "A synthetic set", List.of(new IsResident(), new Declared(DIRECTOR)),
                 RuleIds.REBATE_NEW_TAX_REGIME, definition(DIRECTOR, AnswerKind.YES_NO).provenance());
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(id, set), PACK.funds(), Map.of(), Map.of());
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(id, set), PACK.funds(), Map.of(), Map.of(), Explanations.none());
 
         // When / Then
         assertThat(problems(pack)).containsExactly("condition set COND-SYNTHETIC reads declaration SYNTHETIC_YES_NO,"
@@ -156,7 +157,7 @@ class DeclarationReferencesTest {
                         List.of(new Not(new Declared(new DeclarationCode("SYNTHETIC_PAPER")))), source)), List.of(), source);
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
-                Map.of(), Map.of(form.code(), form));
+                Map.of(), Map.of(form.code(), form), Explanations.none());
 
         // When / Then
         assertThat(problems(pack)).containsExactly(

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
+import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -10,7 +11,10 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.ExplanationJson;
 import com.thiru.wealthlens.taxengine.rules.json.ValueJson;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanation;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
@@ -28,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -99,8 +104,59 @@ public final class RulePackCompiler {
             forms.set("cells", itrCells(timeline));
         }
         files.put("forms/itr-forms.json", render(forms.set("forms", itrForms(timeline, taxYear))));
-        files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
+        files.put("content/explanations.json", render(explanations(timeline, taxYear, ruleChecksums.keySet())));
         return new CompiledPack(taxYear, files, ruleChecksums);
+    }
+
+    /**
+     * The year's explanations: those of the rules it holds, each keeping the sentences for the limits its versions in the
+     * year name, with the shared sentence (W-116, D-671). One file serves every year and a limit can be one year's alone,
+     * so a limit is checked against the rule's versions in every year: a rule or a limit the timeline names nowhere is
+     * refused here, as a component's misspelt rule is.
+     */
+    private static ObjectNode explanations(Timeline timeline, TaxYearId taxYear, Set<RuleId> yearsRules) {
+        ObjectNode content = object();
+        ArrayNode kept = MAPPER.createArrayNode();
+        timeline.explanations().ifPresent(source -> {
+            JsonNode file = MAPPER.readTree(source);
+            Explanations explanations = ExplanationJson.explanations(file, "content/explanations.json");
+            explanations.otherLimits().ifPresent(sentence -> content.put("otherLimits", sentence));
+            for (RuleId rule : sorted(explanations.byRule().keySet(), RuleId::value)) {
+                RuleRow row = timeline.rules().get(rule);
+                if (row == null) {
+                    throw new PackValidationException("content/explanations.json explains " + rule
+                            + ", which the timeline states in no year");
+                }
+                Explanation explanation = explanations.byRule().get(rule);
+                Set<String> everyYear = limits(row, IntStream.range(0, row.versions().size()).boxed().toList());
+                explanation.byLimit().keySet().stream().filter(limit -> !everyYear.contains(limit)).findFirst()
+                        .ifPresent(limit -> {
+                            throw new PackValidationException("content/explanations.json explains " + rule + " by \""
+                                    + limit + "\", a limit its least-of names in no year; it names " + everyYear);
+                        });
+                if (yearsRules.contains(rule)) {
+                    Set<String> inYear = limits(row, versionsIn(row, taxYear));
+                    ObjectNode byLimit = object();
+                    explanation.byLimit().forEach((limit, sentence) -> {
+                        if (inYear.contains(limit)) {
+                            byLimit.put(limit, sentence);
+                        }
+                    });
+                    kept.add(canonical(object().put("rule", rule.value()).put("what", explanation.what()).set("byLimit", byLimit)));
+                }
+            }
+        });
+        return content.set("explanations", kept);
+    }
+
+    /** The limit names of the rule's least-of in the versions given. */
+    private static Set<String> limits(RuleRow row, List<Integer> versions) {
+        Set<String> limits = new TreeSet<>();
+        for (int index : versions) {
+            row.versions().get(index).cap().filter(LeastOf.class::isInstance).map(LeastOf.class::cast)
+                    .ifPresent(cap -> cap.limbs().forEach(limb -> limits.add(limb.name())));
+        }
+        return limits;
     }
 
     /** The regimes in force at some time in the year, each with the election version for the year. */

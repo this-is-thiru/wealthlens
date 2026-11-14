@@ -1595,6 +1595,8 @@ if that is not enough for the item in hand.
 | W-115 | `CompletenessProjection` + endpoint | `DR 20` F33 | **F33** |
 | W-324 | F33.2, omitted income that raises tax *(W-115 C2a, D-670)*: an item with `direction` `RAISES` for income the department already holds and the draft leaves out (the design's example: savings interest, `rule 237(6)`), its worth measured by a second run with the figure entered — from department data (AIS / Form 26AS), which no module imports yet; its plan first places or names that import | `DR 20` F33 | **F33.2**; after an AIS / 26AS import |
 | W-116 | `content/explanations.json` + renderer | `DR 20` F37 | **F37** |
+| W-325 | The other rows' explanations *(W-116 C1a, D-671)*: a `what` sentence in `content/explanations.json` for every rule a trace line can name beyond the 28 least-of rows, grouped by section entry; each line's `in` / `out` read from its node before its sentence names them; `ExplanationCompilationTest` then pins full coverage | `DR 20` F37 | **F37.2**; after W-116 |
+| W-326 | "What would change it", in rupees *(W-116 C4a, D-671)*: every limit's value carried with the winner (`CapResult`, `TraceLine`), so an explanation can say how much more of the binding input would reach the next limit and what the figure would then be (`03-advisory.md` A4.4's third sentence) | `DR 20` F37; `05-domain-model.md:220` | **F37.3**; after W-116 |
 | W-117 | `content/claim-catalogue.json` (12 entries) | `DR 22` C5 | **F40** |
 | W-118 | claim-playbook endpoint | `DR 22` C4 | **F40** |
 | W-119 | claim integrity: S / E / D + statutory overshoot | `DR 12` C2, C3.1 | **F23, F24**; **also (D-159):** Form No. 12BB evidence (`TDS-SAL-12BB-001/002`) and `DR 08` T5-4's no-evidence variant, which W-077 left waiting on it |
