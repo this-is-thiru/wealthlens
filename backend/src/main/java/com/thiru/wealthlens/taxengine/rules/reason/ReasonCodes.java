@@ -160,6 +160,75 @@ public final class ReasonCodes {
     /** Securities are valued at their fair market value, less what was paid. (W-327b2, D-682) */
     public static final ReasonCode SECURITY_VALUE = new ReasonCode("SECURITY_VALUE");
 
+    /** Chapter VIII deductions together are limited to the income they are taken from. (W-327c1, D-684) */
+    public static final ReasonCode DEDUCTIONS_WITHIN_INCOME = new ReasonCode("DEDUCTIONS_WITHIN_INCOME");
+
+    /** The gross total income the deductions are limited to leaves out capital gains taxed at special rates. (W-327c1, D-684) */
+    public static final ReasonCode GROSS_TOTAL_LESS_SPECIAL_GAINS = new ReasonCode("GROSS_TOTAL_LESS_SPECIAL_GAINS");
+
+    /** Only savings-account interest is deducted; time-deposit interest only for a senior citizen. (W-327c1, D-684) */
+    public static final ReasonCode DEPOSIT_INTEREST_SAVINGS_ONLY = new ReasonCode("DEPOSIT_INTEREST_SAVINGS_ONLY");
+
+    /** A condition of the deduction is not met; the condition stays in limitedBy. (W-327c1, D-684) */
+    public static final ReasonCode CONDITION_NOT_MET = new ReasonCode("CONDITION_NOT_MET");
+
+    /** The deduction is the amount set for a certified disability of its degree. (W-327c1, D-684) */
+    public static final ReasonCode DISABILITY_CERTIFIED = new ReasonCode("DISABILITY_CERTIFIED");
+
+    /** Nothing was spent on or deposited for the dependant's care. (W-327c1, D-684) */
+    public static final ReasonCode DEPENDANT_NOTHING_SPENT = new ReasonCode("DEPENDANT_NOTHING_SPENT");
+
+    /** The deduction is only for a resident. (W-327c1, D-684) */
+    public static final ReasonCode NOT_RESIDENT = new ReasonCode("NOT_RESIDENT");
+
+    /** The donations' qualifying limit is a share of adjusted gross total income. (W-327c1, D-684) */
+    public static final ReasonCode DONATION_QUALIFYING_LIMIT = new ReasonCode("DONATION_QUALIFYING_LIMIT");
+
+    /** A donation paid in cash above the limit is not deducted. (W-327c1, D-684) */
+    public static final ReasonCode DONATION_CASH_LIMIT = new ReasonCode("DONATION_CASH_LIMIT");
+
+    /** A donation the donee has not reported is not deducted. (W-327c1, D-684) */
+    public static final ReasonCode DONATION_UNREPORTED = new ReasonCode("DONATION_UNREPORTED");
+
+    /** The donations are deducted without a qualifying limit. (W-327c1, D-684) */
+    public static final ReasonCode DONATION_WITHOUT_LIMIT = new ReasonCode("DONATION_WITHOUT_LIMIT");
+
+    /** The donations are deducted within the qualifying limit. (W-327c1, D-684) */
+    public static final ReasonCode DONATION_WITHIN_QUALIFYING_LIMIT = new ReasonCode("DONATION_WITHIN_QUALIFYING_LIMIT");
+
+    /** A health payment made in cash that the rules do not allow in cash is not deducted. (W-327c1, D-684) */
+    public static final ReasonCode HEALTH_PAID_IN_CASH = new ReasonCode("HEALTH_PAID_IN_CASH");
+
+    /** Preventive check-ups are split between the family's and the parents' limits as claimed. (W-327c1, D-684) */
+    public static final ReasonCode HEALTH_CHECKUP_SPLIT = new ReasonCode("HEALTH_CHECKUP_SPLIT");
+
+    /** Education-loan interest counts only for the initial tax year and the years after it. (W-327c1, D-684) */
+    public static final ReasonCode EDUCATION_LOAN_OUTSIDE_YEARS = new ReasonCode("EDUCATION_LOAN_OUTSIDE_YEARS");
+
+    /** The whole amount is deducted. (W-327c1, D-684) */
+    public static final ReasonCode ALL_DEDUCTED = new ReasonCode("ALL_DEDUCTED");
+
+    /** The loan fails a condition on its sanction or the house; the condition stays in limitedBy. (W-327c1, D-684) */
+    public static final ReasonCode LOAN_SANCTION_CONDITION_NOT_MET = new ReasonCode("LOAN_SANCTION_CONDITION_NOT_MET");
+
+    /** The whole amount is deducted, being within the limit. (W-327c1, D-684) */
+    public static final ReasonCode DEDUCTED_IN_FULL = new ReasonCode("DEDUCTED_IN_FULL");
+
+    /** The deduction is held to its limit. (W-327c1, D-684) */
+    public static final ReasonCode DEDUCTION_LIMITED = new ReasonCode("DEDUCTION_LIMITED");
+
+    /** Rent is not deducted: a home is owned where the assessee lives or works. (W-327c1, D-684) */
+    public static final ReasonCode RENT_OWNS_HOME_HERE = new ReasonCode("RENT_OWNS_HOME_HERE");
+
+    /** Rent is not deducted: an occupied home is owned elsewhere. (W-327c1, D-684) */
+    public static final ReasonCode RENT_OWNS_HOME_ELSEWHERE = new ReasonCode("RENT_OWNS_HOME_ELSEWHERE");
+
+    /** Rent is not deducted: house rent allowance is received. (W-327c1, D-684) */
+    public static final ReasonCode RENT_RECEIVES_HRA = new ReasonCode("RENT_RECEIVES_HRA");
+
+    /** A life premium counts only up to a share of the sum assured. (W-327c1, D-684) */
+    public static final ReasonCode PREMIUM_SHARE_OF_SUM_ASSURED = new ReasonCode("PREMIUM_SHARE_OF_SUM_ASSURED");
+
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
@@ -211,7 +280,30 @@ public final class ReasonCodes {
             Map.entry(FURNITURE_COST_SHARE, Set.of("charges")),
             Map.entry(FURNITURE_HIRE, Set.of("charges")),
             Map.entry(NOT_SPECIFIED_EMPLOYEE, Set.of("salary", "threshold")),
-            Map.entry(SECURITY_VALUE, Set.of("units", "value", "paid")));
+            Map.entry(SECURITY_VALUE, Set.of("units", "value", "paid")),
+            Map.entry(DEDUCTIONS_WITHIN_INCOME, Set.of()),
+            Map.entry(GROSS_TOTAL_LESS_SPECIAL_GAINS, Set.of("gains")),
+            Map.entry(DEPOSIT_INTEREST_SAVINGS_ONLY, Set.of()),
+            Map.entry(CONDITION_NOT_MET, Set.of()),
+            Map.entry(DISABILITY_CERTIFIED, Set.of()),
+            Map.entry(DEPENDANT_NOTHING_SPENT, Set.of()),
+            Map.entry(NOT_RESIDENT, Set.of()),
+            Map.entry(DONATION_QUALIFYING_LIMIT, Set.of("adjusted")),
+            Map.entry(DONATION_CASH_LIMIT, Set.of("limit")),
+            Map.entry(DONATION_UNREPORTED, Set.of()),
+            Map.entry(DONATION_WITHOUT_LIMIT, Set.of()),
+            Map.entry(DONATION_WITHIN_QUALIFYING_LIMIT, Set.of()),
+            Map.entry(HEALTH_PAID_IN_CASH, Set.of()),
+            Map.entry(HEALTH_CHECKUP_SPLIT, Set.of("family", "parents")),
+            Map.entry(EDUCATION_LOAN_OUTSIDE_YEARS, Set.of("initial", "years")),
+            Map.entry(ALL_DEDUCTED, Set.of()),
+            Map.entry(LOAN_SANCTION_CONDITION_NOT_MET, Set.of()),
+            Map.entry(DEDUCTED_IN_FULL, Set.of("limit")),
+            Map.entry(DEDUCTION_LIMITED, Set.of("limit")),
+            Map.entry(RENT_OWNS_HOME_HERE, Set.of()),
+            Map.entry(RENT_OWNS_HOME_ELSEWHERE, Set.of()),
+            Map.entry(RENT_RECEIVES_HRA, Set.of()),
+            Map.entry(PREMIUM_SHARE_OF_SUM_ASSURED, Set.of("share", "sumAssured")));
 
     private ReasonCodes() {
     }

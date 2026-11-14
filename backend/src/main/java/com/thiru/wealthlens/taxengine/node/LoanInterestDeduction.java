@@ -14,11 +14,15 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -74,11 +78,15 @@ final class LoanInterestDeduction {
             return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
                             interest, Money.ZERO)
                     .withLimitedBy("outside the initial"
-                    + " tax year " + loan.initialTaxYear().label() + " and the " + span.succeedingYears() + " after it");
+                    + " tax year " + loan.initialTaxYear().label() + " and the " + span.succeedingYears() + " after it")
+                    .withReason(new Reason(ReasonCodes.EDUCATION_LOAN_OUTSIDE_YEARS, Map.of(
+                            "initial", new ReasonFact.TaxYearFact(loan.initialTaxYear()),
+                            "years", new ReasonFact.CountFact(span.succeedingYears()))));
         }
         return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
                         interest, interest)
-                .withLimitedBy("the interest paid");
+                .withLimitedBy("the interest paid")
+                .withReason(new Reason(ReasonCodes.ALL_DEDUCTED, Map.of()));
     }
 
     /**
@@ -113,11 +121,14 @@ final class LoanInterestDeduction {
         SanctionedLoanLimit limit = RuleDefinitions.require(version.definition(), SanctionedLoanLimit.class, row);
         Optional<String> failed = failure(limit, loan);
         if (failed.isPresent()) {
-            return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, Money.ZERO).withLimitedBy(failed.get());
+            return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, Money.ZERO).withLimitedBy(failed.get())
+                    .withReason(new Reason(ReasonCodes.LOAN_SANCTION_CONDITION_NOT_MET, Map.of()));
         }
         Money allowed = Money.min(interest, limit.limit());
         return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, allowed)
-                .withLimitedBy(allowed.isLessThan(interest) ? "the limit " + limit.limit() : "the interest payable");
+                .withLimitedBy(allowed.isLessThan(interest) ? "the limit " + limit.limit() : "the interest payable")
+                .withReason(new Reason(allowed.isLessThan(interest) ? ReasonCodes.DEDUCTION_LIMITED
+                        : ReasonCodes.DEDUCTED_IN_FULL, Map.of("limit", new ReasonFact.MoneyFact(limit.limit()))));
     }
 
     /** The first of the loan's conditions that fails, if any. */

@@ -12,11 +12,15 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -66,8 +70,8 @@ final class DonationDeduction {
         }
     }
 
-    /** What stops a donation: the row its nil line cites, and why. */
-    private record Bar(RuleId row, String reason) {
+    /** What stops a donation: the row its nil line cites, why as audit text, and the same as facts (W-327c1). */
+    private record Bar(RuleId row, String text, Reason reason) {
     }
 
     /** The donations' sums that count, by share row: without the qualifying limit, and within it. */
@@ -112,14 +116,16 @@ final class DonationDeduction {
                 lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII,
                                 ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_QUALIFYING), StepKind.MEASURE, MoneyValue.of(limited),
                                 MoneyValue.of(limit), version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_QUALIFYING)).provenance())
-                        .withLimitedBy("10% of adjusted gross total income " + adjustedGrossTotal));
+                        .withLimitedBy("10% of adjusted gross total income " + adjustedGrossTotal)
+                        .withReason(new Reason(ReasonCodes.DONATION_QUALIFYING_LIMIT, Map.of("adjusted", new ReasonFact.MoneyFact(adjustedGrossTotal)))));
             }
         }
         for (RuleSetId share : SHARES) {
             RuleId row = ctx.ruleIdOf(share);
-            deduct(ctx, row, counted.unlimited().getOrDefault(row, Money.ZERO), "without limit", firstSequence, lines);
+            deduct(ctx, row, counted.unlimited().getOrDefault(row, Money.ZERO), "without limit",
+                    ReasonCodes.DONATION_WITHOUT_LIMIT, firstSequence, lines);
             deduct(ctx, row, counted.limited().getOrDefault(row, Money.ZERO), "within the qualifying limit",
-                    firstSequence, lines);
+                    ReasonCodes.DONATION_WITHIN_QUALIFYING_LIMIT, firstSequence, lines);
         }
         return new Outcome(lines, bound);
     }
@@ -138,7 +144,8 @@ final class DonationDeduction {
             if (bar.isPresent()) {
                 lines.add(ctx.traceLine(firstSequence + lines.size(), bar.get().row(), StepKind.DEDUCTION,
                                 donation.amount(), Money.ZERO)
-                        .withLimitedBy(bar.get().reason()));
+                        .withLimitedBy(bar.get().text())
+                        .withReason(bar.get().reason()));
                 continue;
             }
             (RowReach.holdsFor(ctx, qualifying, factsOf(donation)) ? limited : unlimited)
@@ -162,11 +169,12 @@ final class DonationDeduction {
     /** s.133(5), then s.133(6): what stops a donation, if anything. */
     private static Optional<Bar> bar(NodeContext ctx, Donation donation, RuleId share, CashPaymentLimit cash) {
         if (!cash.allows(donation.amount(), donation.paidInCash())) {
-            return Optional.of(new Bar(ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH), "paid in cash over " + cash.atMost() + " (s.133(5))"));
+            return Optional.of(new Bar(ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH), "paid in cash over " + cash.atMost() + " (s.133(5))",
+                    new Reason(ReasonCodes.DONATION_CASH_LIMIT, Map.of("limit", new ReasonFact.MoneyFact(cash.atMost())))));
         }
         RuleRow report = ctx.ruleOf(RuleSetIds.RS_DED_DONATION_REPORT);
         if (RowReach.holdsFor(ctx, report, factsOf(donation))) {
-            return Optional.of(new Bar(share, "barred by " + report.id()));
+            return Optional.of(new Bar(share, "barred by " + report.id(), new Reason(ReasonCodes.DONATION_UNREPORTED, Map.of())));
         }
         return Optional.empty();
     }
@@ -196,12 +204,13 @@ final class DonationDeduction {
         });
     }
 
-    private static void deduct(NodeContext ctx, RuleId row, Money counted, String what, int firstSequence,
-            List<TraceLine> lines) {
+    private static void deduct(NodeContext ctx, RuleId row, Money counted, String what, ReasonCode how,
+            int firstSequence, List<TraceLine> lines) {
         if (counted.isGreaterThan(Money.ZERO)) {
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION,
                             counted, apply(ctx, row, AMOUNT_PAID, counted))
-                    .withLimitedBy(what));
+                    .withLimitedBy(what)
+                    .withReason(new Reason(how, Map.of())));
         }
     }
 

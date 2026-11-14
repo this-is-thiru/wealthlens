@@ -25,6 +25,8 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -180,6 +182,7 @@ class RentPaidDeductionTest {
         // Then
         assertThat(rentLine(result).out()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(rentLine(result).limitedBy().orElseThrow()).contains("s.134(4)(b)");
+        assertThat(rentLine(result).reason()).contains(new Reason(ReasonCodes.RENT_RECEIVES_HRA, Map.of()));
     }
 
     @Test

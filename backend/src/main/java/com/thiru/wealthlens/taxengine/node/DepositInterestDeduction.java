@@ -12,11 +12,14 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -68,7 +71,8 @@ final class DepositInterestDeduction {
             lines.add(ctx.traceLine(firstSequence + lines.size(), savingsRow, StepKind.DEDUCTION, other, Money.ZERO)
                     .withLimitedBy("s.153(2)(a) is savings-account interest only, time deposits excluded;"
                             + " deposit interest is deducted only for a senior citizen (s.153(2)(b); 1961 ss.80TTA,"
-                            + " 80TTB)"));
+                            + " 80TTB)")
+                    .withReason(new Reason(ReasonCodes.DEPOSIT_INTEREST_SAVINGS_ONLY, Map.of())));
         }
         return lines;
     }

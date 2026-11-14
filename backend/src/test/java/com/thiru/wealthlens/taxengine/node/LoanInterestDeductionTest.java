@@ -138,9 +138,11 @@ class LoanInterestDeductionTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).singleElement()
-                .satisfies(line -> assertThat(line.limitedBy()).hasValueSatisfying(
-                        reason -> assertThat(reason).contains("outside the initial tax year")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).contains("outside the initial tax year"));
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.EDUCATION_LOAN_OUTSIDE_YEARS, Map.of(
+                    "initial", new ReasonFact.TaxYearFact(TaxYearId.of(2018)), "years", new ReasonFact.CountFact(7))));
+        });
     }
 
     @Test

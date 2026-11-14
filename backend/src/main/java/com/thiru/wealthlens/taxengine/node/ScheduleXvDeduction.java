@@ -24,6 +24,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -83,7 +86,10 @@ final class ScheduleXvDeduction {
             lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE), StepKind.MEASURE,
                             MoneyValue.of(policy.premiumPaid()), MoneyValue.of(counted), version.provenance())
                     .withLimitedBy(band.share().asPercentLabel() + " of the sum assured " + policy.actualCapitalSumAssured()
-                            + ", a policy issued " + policy.issuedOn()));
+                            + ", a policy issued " + policy.issuedOn())
+                    .withReason(new Reason(ReasonCodes.PREMIUM_SHARE_OF_SUM_ASSURED, Map.of(
+                            "share", new ReasonFact.ShareFact(band.share()),
+                            "sumAssured", new ReasonFact.MoneyFact(policy.actualCapitalSumAssured())))));
             paid.merge(ComponentCodes.LIFE_INSURANCE_PREMIUM, counted, Money::plus);
         }
     }

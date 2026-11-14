@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-327b2 done (D-682), board D; W-327b complete — next by board order W-327c (Chapter VIII and other sources, not yet planned)
-Stage           : DONE (session 95, 2026-11-14) — committed and pushed
-Done today      : session 95: W-325d (D-676), W-327 split (D-677), W-327a (D-678), W-327a1 (D-679), W-327b split (D-680), W-327b1 (D-681), W-327b2 (D-682)
-Board           : W-115, W-116, W-325, W-325a – d, W-327, W-327a, W-327a1, W-327b, W-327b1, W-327b2 D; W-327c – e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
-Next step       : confirm the W-327b2 pipeline run and record it in D-682; then plan W-327c (chapterviii + othersources sites, incl. "not met" at DisabilityDeduction:97)
+Item            : W-327c1 done (D-684), board D — next by board order W-327c2 (other sources, 16 callers of OtherSourcesLines, not yet planned)
+Stage           : DONE (session 95, 2026-11-14) — committed and pushed with the W-327c split
+Done today      : session 95: W-325d (D-676), W-327 split (D-677), W-327a (D-678), W-327a1 (D-679), W-327b split (D-680), W-327b1 (D-681), W-327b2 (D-682), W-327c split (D-683), W-327c1 (D-684)
+Board           : W-115, W-116, W-325, W-325a – d, W-327, W-327a, W-327a1, W-327b, W-327b1, W-327b2, W-327c, W-327c1 D; W-327c2 ·, W-327d, W-327e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : confirm the W-327c1 pipeline run and record it in D-684; then plan W-327c2 (reason parameter on OtherSourcesLines.add + 16 callers listed in its row)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-327b2 local: unit (taxengine, taxplanning, architecture) 4504/0, DraftComputationIntegrationTest + Modulith 61/0, validate green
-Files touched   : none beyond this file after the W-327b2 commit
-Last item commit: taxplanning W-327b2: publish why for perquisites as facts and word it in content
-Updated         : 2026-11-14, session 95 — W-327b2 committed and pushed
+Last verify     : W-327c1 local: unit (taxengine, taxplanning, architecture) 4506/0 + DisabilityDeductionTest 20/0, DraftComputationIntegrationTest + Modulith 61/0, validate green
+Files touched   : none beyond this file after the W-327c1 commit
+Last item commit: taxplanning W-327c1: publish why for Chapter VIII as facts and word it in content
+Updated         : 2026-11-14, session 95 — W-327c1 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

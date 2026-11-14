@@ -427,4 +427,33 @@ class ExplanationRendererTest {
                 "Shares or securities your employer allotted or transferred to you free or cheaper is valued at ₹4,80,000 as"
                         + " a perquisite. 2000 units at a fair market value of ₹5,00,000 in all, less the ₹20,000 you paid.");
     }
+
+    @Test
+    void explain_whenAnEducationLoanIsPastItsYears_writesTheInitialYearAndTheCount() {
+        // Given — LoanInterestDeduction:76: initial tax year 2018-19 and the seven after it
+        TraceLine loan = line(new RuleId("DED-EDUCATION-LOAN"), MoneyValue.of(Money.of("80000")), MoneyValue.of(Money.ZERO))
+                .withLimitedBy("outside the initial tax year 2018-19 and the 7 after it")
+                .withReason(new Reason(ReasonCodes.EDUCATION_LOAN_OUTSIDE_YEARS, Map.of(
+                        "initial", new ReasonFact.TaxYearFact(TaxYearId.of(2018)), "years", new ReasonFact.CountFact(7))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(loan, PACK.explanations())).isEqualTo(
+                "₹0 of the interest on your loan for higher education is deducted. Nothing is deducted: interest counts only"
+                        + " for the initial tax year 2018-19 and the 7 years after it.");
+    }
+
+    @Test
+    void explain_whenCheckUpsAreSplit_writesBothShares() {
+        // Given — HealthInsuranceDeduction:293: 5,000 split 2,857.14 and 2,142.86
+        TraceLine split = line(new RuleId("DED-HEALTH-CHECKUP"), MoneyValue.of(Money.of("5000")),
+                MoneyValue.of(Money.of("5000"))).withLimitedBy("split in the ratio claimed: 2857.14 family, 2142.86 parents")
+                .withReason(new Reason(ReasonCodes.HEALTH_CHECKUP_SPLIT, Map.of(
+                        "family", new ReasonFact.MoneyFact(Money.of("2857.14")),
+                        "parents", new ReasonFact.MoneyFact(Money.of("2142.86")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(split, PACK.explanations())).isEqualTo(
+                "This line splits your preventive health check-ups between your own family's limit and your parents', as you"
+                        + " claimed them. It is split as you claimed: ₹2,857.14 for your family and ₹2,142.86 for your parents.");
+    }
 }

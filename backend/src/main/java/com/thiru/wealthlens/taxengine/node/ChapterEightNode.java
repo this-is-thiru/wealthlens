@@ -24,6 +24,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -237,7 +240,8 @@ public final class ChapterEightNode implements ComputationNode {
         capped.add(TraceLine.of(capped.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL),
                         StepKind.DEDUCTION, MoneyValue.of(total), MoneyValue.of(limit),
                         version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL)).provenance())
-                .withLimitedBy(grossTotalLabel(ctx, grossTotal)));
+                .withLimitedBy(grossTotalLabel(ctx, grossTotal))
+                .withReason(grossTotalReason(ctx)));
         return new NodeResult(MoneyValue.of(limit), capped);
     }
 
@@ -253,6 +257,14 @@ public final class ChapterEightNode implements ComputationNode {
 
     private static Money specialRateGains(NodeContext ctx) {
         return TaxByBasisNode.atSpecialRates(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
+    }
+
+    /** The same as {@link #grossTotalLabel} as facts: the special-rate gains left out, where there are any. */
+    private static Reason grossTotalReason(NodeContext ctx) {
+        Money special = specialRateGains(ctx);
+        return special.isGreaterThan(Money.ZERO)
+                ? new Reason(ReasonCodes.GROSS_TOTAL_LESS_SPECIAL_GAINS, Map.of("gains", new ReasonFact.MoneyFact(special)))
+                : new Reason(ReasonCodes.DEDUCTIONS_WITHIN_INCOME, Map.of());
     }
 
     private static String grossTotalLabel(NodeContext ctx, Money grossTotal) {

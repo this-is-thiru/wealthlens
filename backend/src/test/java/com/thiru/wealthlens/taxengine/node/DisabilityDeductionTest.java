@@ -25,6 +25,8 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -127,8 +129,10 @@ class DisabilityDeductionTest {
         // Then
         assertThat(earlier.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(later.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(earlier.trace()).singleElement()
-                .satisfies(line -> assertThat(line.limitedBy()).contains("nothing spent or deposited"));
+        assertThat(earlier.trace()).singleElement().satisfies(line -> {
+            assertThat(line.limitedBy()).contains("nothing spent or deposited");
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.DEPENDANT_NOTHING_SPENT, Map.of()));
+        });
     }
 
     @Test
@@ -176,7 +180,24 @@ class DisabilityDeductionTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.limitedBy()).isPresent());
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.limitedBy()).isPresent();
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.CONDITION_NOT_MET, Map.of()));
+        });
+    }
+
+    @Test
+    void evaluate_whenANonResidentClaimsOwnSpecifiedDiseaseTreatment_allowsNothingAndSaysWhy() {
+        // When — s.128: the claimed path's own residence check (DisabilityDeduction.claimed), not the row's condition
+        NodeResult result = run(OLD, assessee(ResidentialStatus.NON_RESIDENT, Optional.empty()), List.of(),
+                List.of(new SpecifiedDiseaseTreatment(true, Optional.empty(), Money.of("60000"), Money.of("10000"))));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.limitedBy()).contains("the assessee is not resident in India");
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.NOT_RESIDENT, Map.of()));
+        });
     }
 
     @Test

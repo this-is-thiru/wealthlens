@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.input.RentDeclaration;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
+import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
@@ -16,6 +17,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -59,11 +62,12 @@ final class RentPaidDeduction {
         Money rent = rented(ctx).stream().map(Tenancy::rentPaid).reduce(Money.ZERO, Money::plus);
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_DED_RENT_PAID),
                 ctx.inputs().temporal());
-        Optional<String> bar = bar(ctx, version, declaration);
+        Optional<Barred> bar = bar(ctx, version, declaration);
         if (bar.isPresent()) {
             return Optional.of(ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), StepKind.DEDUCTION,
                             rent, Money.ZERO)
-                    .withLimitedBy(bar.get()));
+                    .withLimitedBy(bar.get().text())
+                    .withReason(bar.get().reason()));
         }
         CapResult allowed = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_DED_RENT_PAID), ctx.inputs().temporal(),
                 new CapContext(Map.of(RENT_PAID, rent, TOTAL_INCOME, totalIncomeBefore), Map.of(),
@@ -80,22 +84,30 @@ final class RentPaidDeduction {
     }
 
     /** The regime, then s.134(4) in its order: a home owned at the place, an occupied home elsewhere, HRA. */
-    private static Optional<String> bar(NodeContext ctx, RuleVersion version, RentDeclaration declaration) {
-        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), version).applies()) {
-            return Optional.of(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), version).whyNot());
+    private static Optional<Barred> bar(NodeContext ctx, RuleVersion version, RentDeclaration declaration) {
+        RegimeVerdict verdict = ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), version);
+        if (!verdict.applies()) {
+            return Optional.of(new Barred(verdict.whyNot(), verdict.reason()));
         }
         if (declaration.ownsHomeWhereResidesOrWorks()) {
-            return Optional.of("a residential accommodation owned at the place of residence or work (s.134(4)(a)(i))");
+            return Optional.of(new Barred("a residential accommodation owned at the place of residence or work"
+                    + " (s.134(4)(a)(i))", new Reason(ReasonCodes.RENT_OWNS_HOME_HERE, Map.of())));
         }
         if (declaration.ownsOccupiedHomeElsewhere()) {
-            return Optional.of("an occupied residential accommodation owned elsewhere (s.134(4)(a)(ii))");
+            return Optional.of(new Barred("an occupied residential accommodation owned elsewhere (s.134(4)(a)(ii))",
+                    new Reason(ReasonCodes.RENT_OWNS_HOME_ELSEWHERE, Map.of())));
         }
         boolean receivesHra = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class).in(HeadCode.SALARIES).stream()
                 .anyMatch(line -> line.code().equals(ComponentCodes.HRA) && line.amount().isGreaterThan(Money.ZERO));
         if (receivesHra) {
-            return Optional.of("house rent allowance received, income in Schedule III Sl. 11 (s.134(4)(b))");
+            return Optional.of(new Barred("house rent allowance received, income in Schedule III Sl. 11 (s.134(4)(b))",
+                    new Reason(ReasonCodes.RENT_RECEIVES_HRA, Map.of())));
         }
         return Optional.empty();
+    }
+
+    /** What bars the deduction: the audit text and the same as facts (W-327c1, D-684). */
+    private record Barred(String text, Reason reason) {
     }
 
     /** The declared months of stay may not exceed the calendar months the tenancies occupy in the tax year (C2a). */

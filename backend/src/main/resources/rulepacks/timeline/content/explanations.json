@@ -19,6 +19,10 @@
       "why": "It is limited to {limit}, the monthly limit for the months covered."
     },
     {
+      "code": "ALL_DEDUCTED",
+      "why": "All of it is deducted."
+    },
+    {
       "code": "ASSET_TRANSFER_WRITTEN_DOWN",
       "why": "The asset is valued at {written} after {years} completed years of wear and tear, less the {price} you paid for it."
     },
@@ -75,8 +79,60 @@
       "why": "It is limited to {limit}, the smaller share of the pension's commuted value the law exempts when you also received gratuity."
     },
     {
+      "code": "CONDITION_NOT_MET",
+      "why": "Nothing is deducted: a condition of this deduction is not met."
+    },
+    {
+      "code": "DEDUCTED_IN_FULL",
+      "why": "All of it is deducted: it is within the limit of {limit}."
+    },
+    {
+      "code": "DEDUCTIONS_WITHIN_INCOME",
+      "why": "Deductions cannot be more than the income they are taken from."
+    },
+    {
+      "code": "DEDUCTION_LIMITED",
+      "why": "It is limited to {limit}."
+    },
+    {
+      "code": "DEPENDANT_NOTHING_SPENT",
+      "why": "Nothing is deducted: nothing was spent on or deposited for the dependant's care."
+    },
+    {
+      "code": "DEPOSIT_INTEREST_SAVINGS_ONLY",
+      "why": "Only savings-account interest is deducted for you; interest on time deposits is deducted only for a senior citizen."
+    },
+    {
+      "code": "DISABILITY_CERTIFIED",
+      "why": "It is the amount the law sets for a certified disability of this degree."
+    },
+    {
+      "code": "DONATION_CASH_LIMIT",
+      "why": "Nothing is deducted: it was paid in cash above {limit}."
+    },
+    {
+      "code": "DONATION_QUALIFYING_LIMIT",
+      "why": "The qualifying limit is a share of your adjusted gross total income of {adjusted}."
+    },
+    {
+      "code": "DONATION_UNREPORTED",
+      "why": "Nothing is deducted: the donee has not reported this donation."
+    },
+    {
+      "code": "DONATION_WITHIN_QUALIFYING_LIMIT",
+      "why": "These donations are deducted within the qualifying limit."
+    },
+    {
+      "code": "DONATION_WITHOUT_LIMIT",
+      "why": "These donations are deducted without a qualifying limit."
+    },
+    {
       "code": "EDUCATION_ABOVE_LIMIT",
       "why": "The cost of {cost} a month exceeds {limit} a month per child, so the whole for {months} months is taxed, less the {recovered} you paid back."
+    },
+    {
+      "code": "EDUCATION_LOAN_OUTSIDE_YEARS",
+      "why": "Nothing is deducted: interest counts only for the initial tax year {initial} and the {years} years after it."
     },
     {
       "code": "EDUCATION_WITHIN_LIMIT",
@@ -107,6 +163,18 @@
       "why": "Gifts of {given} from this employer reach {limit}, so all of it is taxed."
     },
     {
+      "code": "GROSS_TOTAL_LESS_SPECIAL_GAINS",
+      "why": "Gross total income here leaves out the {gains} of capital gains taxed at special rates."
+    },
+    {
+      "code": "HEALTH_CHECKUP_SPLIT",
+      "why": "It is split as you claimed: {family} for your family and {parents} for your parents."
+    },
+    {
+      "code": "HEALTH_PAID_IN_CASH",
+      "why": "Nothing is deducted: it was paid in cash, which the rules do not allow for this payment."
+    },
+    {
       "code": "HRA_NOT_RENTED",
       "why": "Nothing is exempt for this home: it is your own, or no rent was paid."
     },
@@ -125,6 +193,10 @@
     {
       "code": "LOAN_INTEREST_AT_BANK_RATE",
       "why": "Interest at {rate} a year on the month-end balances comes to {interest}, less the {paid} you paid."
+    },
+    {
+      "code": "LOAN_SANCTION_CONDITION_NOT_MET",
+      "why": "Nothing is deducted: the loan does not meet a condition on its sanction or the house."
     },
     {
       "code": "LTC_ASSISTANCE_RECEIVED",
@@ -151,8 +223,16 @@
       "why": "None of it is excluded: a condition for excluding the travel is not met."
     },
     {
+      "code": "NOT_RESIDENT",
+      "why": "Nothing is deducted: this deduction is only for a resident."
+    },
+    {
       "code": "NOT_SPECIFIED_EMPLOYEE",
       "why": "These benefits are not taxed for you: your salary paid in money, {salary}, does not exceed {threshold}, and you are not a director or a holder of a substantial interest."
+    },
+    {
+      "code": "PREMIUM_SHARE_OF_SUM_ASSURED",
+      "why": "The premium counts only up to {share} of the sum assured of {sumAssured}."
     },
     {
       "code": "REGIME_DISALLOWS",
@@ -161,6 +241,18 @@
     {
       "code": "REGIME_EXCLUDES_ROW",
       "why": "This rule does not apply under {regime}."
+    },
+    {
+      "code": "RENT_OWNS_HOME_ELSEWHERE",
+      "why": "Nothing is deducted: you own and live in a home elsewhere."
+    },
+    {
+      "code": "RENT_OWNS_HOME_HERE",
+      "why": "Nothing is deducted: you own a home where you live or work."
+    },
+    {
+      "code": "RENT_RECEIVES_HRA",
+      "why": "Nothing is deducted: you receive house rent allowance, which is exempted instead."
     },
     {
       "code": "RETIREMENT_ALLOWED_BEFORE",

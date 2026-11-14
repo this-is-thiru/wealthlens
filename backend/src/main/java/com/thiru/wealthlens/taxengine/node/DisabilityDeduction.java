@@ -19,6 +19,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -94,13 +96,15 @@ final class DisabilityDeduction {
                 .findFirst();
         if (unmet.isPresent()) {
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, Money.ZERO, Money.ZERO)
-                    .withLimitedBy("not met: " + unmet.get().describe()));
+                    .withLimitedBy("not met: " + unmet.get().describe())
+                    .withReason(new Reason(ReasonCodes.CONDITION_NOT_MET, Map.of())));
             return;
         }
         Money amount = limit(ctx, row);
         lines.add(applies(ctx, row, version)
                 ? ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, amount, amount)
                         .withLimitedBy("certified")
+                        .withReason(new Reason(ReasonCodes.DISABILITY_CERTIFIED, Map.of()))
                 : nil(ctx, firstSequence + lines.size(), row, version, amount));
     }
 
@@ -132,7 +136,8 @@ final class DisabilityDeduction {
         RuleId row = severityRow(ctx, DEPENDANT, severity);
         if (!support.spentOrDeposited().isGreaterThan(Money.ZERO)) {
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, Money.ZERO, Money.ZERO)
-                    .withLimitedBy("nothing spent or deposited"));
+                    .withLimitedBy("nothing spent or deposited")
+                    .withReason(new Reason(ReasonCodes.DEPENDANT_NOTHING_SPENT, Map.of())));
             return;
         }
         claimed(ctx, firstSequence, lines, row, support.spentOrDeposited());
@@ -168,7 +173,8 @@ final class DisabilityDeduction {
         RuleVersion version = version(ctx, row);
         if (!resident(ctx)) {
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, entered, Money.ZERO)
-                    .withLimitedBy("the assessee is not resident in India"));
+                    .withLimitedBy("the assessee is not resident in India")
+                    .withReason(new Reason(ReasonCodes.NOT_RESIDENT, Map.of())));
             return;
         }
         if (!applies(ctx, row, version)) {

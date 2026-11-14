@@ -24,6 +24,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -138,7 +141,8 @@ final class HealthInsuranceDeduction {
             RuleId row = ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_CASH_PERMITTED);
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, payment.amount(),
                             Money.ZERO)
-                    .withLimitedBy("paid in cash, which " + row + " does not allow for a " + payment.kind()));
+                    .withLimitedBy("paid in cash, which " + row + " does not allow for a " + payment.kind())
+                    .withReason(new Reason(ReasonCodes.HEALTH_PAID_IN_CASH, Map.of())));
             return;
         }
         if (payment.relevantTaxYears() > 1) {
@@ -291,7 +295,8 @@ final class HealthInsuranceDeduction {
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_CHECKUP),
                             StepKind.MEASURE, MoneyValue.of(total), MoneyValue.of(allowed), version.provenance())
                     .withLimitedBy("split in the ratio claimed: " + toFamily + " family, " + allowed.minus(toFamily)
-                            + " parents"));
+                            + " parents")
+                    .withReason(new Reason(ReasonCodes.HEALTH_CHECKUP_SPLIT, Map.of("family", new ReasonFact.MoneyFact(toFamily), "parents", new ReasonFact.MoneyFact(allowed.minus(toFamily))))));
         }
     }
 

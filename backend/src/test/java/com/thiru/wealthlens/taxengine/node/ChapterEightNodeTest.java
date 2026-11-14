@@ -26,6 +26,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.reason.Reason;
 import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
@@ -356,6 +357,8 @@ class ChapterEightNodeTest {
         assertThat(result.trace().getFirst()).satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.DED_PREMIUM_SHARE);
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("40000")));
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.PREMIUM_SHARE_OF_SUM_ASSURED, Map.of(
+                    "share", new ReasonFact.ShareFact(Rate.percent("10")), "sumAssured", new ReasonFact.MoneyFact(Money.of("400000")))));
         });
     }
 

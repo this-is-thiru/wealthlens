@@ -18,6 +18,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -115,7 +118,9 @@ final class PensionDeduction {
                         MoneyValue.of(contributed), MoneyValue.of(allowed), version(ctx, row).provenance())
                 .withLimitedBy(allowed.isLessThan(contributed)
                         ? "the share of the employer-pension salary " + salary + ", " + limit
-                        : "the contribution"));
+                        : "the contribution")
+                .withReason(new Reason(allowed.isLessThan(contributed) ? ReasonCodes.DEDUCTION_LIMITED
+                        : ReasonCodes.DEDUCTED_IN_FULL, Map.of("limit", new ReasonFact.MoneyFact(limit)))));
     }
 
     /**
