@@ -146,6 +146,33 @@ jobs:
           docker push "${{ steps.set_tag.outputs.moving }}"
           docker push "${{ steps.set_tag.outputs.sha }}"
 
+  # The performance budgets (PRD §5 N1 – N3, W-143; the calendar, W-114) under -Pbenchmark, uninstrumented. Off by default:
+  # timings matter only when a change could move them, and the owner's laptop throttles, so they run here and only while
+  # the repository variable RUN_BENCHMARKS is 'true' — set it for the push that needs them and unset it once the run reports
+  # (`gh variable set RUN_BENCHMARKS --body true`, then `gh variable delete RUN_BENCHMARKS`). Its own job, so the build's
+  # surefire gate and report count are untouched.
+  benchmark:
+    if: ${{ vars.RUN_BENCHMARKS == 'true' }}
+    runs-on: [ubuntu-latest]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # The budgets' timing lines (W-143 …, W-114 calendar …) are copied into the run's summary.
+      - name: Run the performance budgets
+        run: |
+          set -o pipefail
+          ./mvnw test -pl backend -Pbenchmark | tee benchmark.log
+          { echo '### Benchmark timings'; echo '```'; { grep -E 'W-[0-9]+[a-z]? ' benchmark.log || true; } | sed 's/.* -- //'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
 # deploy job is commented out and unchanged
 #  deploy:
 #    needs: build
