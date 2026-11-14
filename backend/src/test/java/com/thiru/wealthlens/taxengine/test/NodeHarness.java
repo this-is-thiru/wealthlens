@@ -172,7 +172,9 @@ public final class NodeHarness {
                 ? NodeContext.forRun(pack, regime, running)
                 : NodeContext.forRun(pack, regime, running, recomputation);
         stubs.forEach(run::put);
-        return node.evaluate(run.forNode(node));
+        NodeResult result = node.evaluate(run.forNode(node));
+        ReasonCoverage.require(result.trace());
+        return result;
     }
 
     private static Set<NodeId> sortedDifference(Set<NodeId> from, Set<NodeId> minus) {

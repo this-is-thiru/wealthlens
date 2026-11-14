@@ -17,6 +17,8 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -81,6 +83,8 @@ class AgniveerDeductionTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("60000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.DED_AGNIVEER_OWN, RuleIds.DED_AGNIVEER_GOVERNMENT);
+        assertThat(result.trace()).extracting(TraceLine::reason)
+                .containsOnly(Optional.of(new Reason(ReasonCodes.ALL_DEDUCTED, Map.of())));
     }
 
     @Test

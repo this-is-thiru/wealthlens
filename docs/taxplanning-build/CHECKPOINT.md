@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-327e2 done (D-692), board D — next by board order W-327e3 (five missed sites, then the coverage pin; not yet planned)
+Item            : W-327e3 done (D-693), board D — W-327 complete; next by board order W-328 (intermittent processing-log test; not yet planned)
 Stage           : DONE (session 96, 2026-11-14) — committed and pushed
-Done today      : session 96: W-327d2 (D-688); W-327e split (D-689); W-327e1 (D-690); W-328 placed (D-691); W-327e2 (D-692)
-Board           : W-327e, W-327e1, W-327e2 D; W-327e3 ·, W-328 ·; W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
-Next step       : confirm the W-327e2 pipeline run and record it in D-692; then plan W-327e3 (its row; the five sites and the pin design)
+Done today      : session 96: W-327d2 (D-688); W-327e split (D-689); W-327e1 (D-690); W-328 placed (D-691); W-327e2 (D-692); W-327e3 (D-693), W-327 complete
+Board           : W-327, W-327a – e3 D; W-328 ·; W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : confirm the W-327e3 pipeline run and record it in D-693; then plan W-328 (reproduce the processing-log race first)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-327e2 local: unit (taxengine, taxplanning, architecture) 4509/0, DraftComputation + Modulith 61/0, validate green; 2 red checks
-Files touched   : none beyond this file after the W-327e2 commit
-Last item commit: taxplanning W-327e2: publish why for tax by basis, rebate and surcharge, with reasons from the relief shapes
-Updated         : 2026-11-14, session 96 — W-327e2 committed and pushed
+Last verify     : W-327e3 local: unit 4514/0 with the pin, DraftComputation + Modulith 61/0, validate green; 2 red checks; W-327e2 pipeline 43610351964 success (D-692)
+Files touched   : none beyond this file after the W-327e3 commit
+Last item commit: taxplanning W-327e3: give the Agniveer line its reason and pin every engine line to read in words
+Updated         : 2026-11-14, session 96 — W-327e3 committed and pushed, W-327 complete
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

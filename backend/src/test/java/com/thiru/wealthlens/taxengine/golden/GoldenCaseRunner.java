@@ -38,6 +38,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxengine.test.ReasonCoverage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -85,6 +86,7 @@ final class GoldenCaseRunner {
         RegimeSpec entered = enteredAtTotalIncome(pack.regimes().get(golden.regime()), registry);
         EngineInputs inputs = inputs(golden, year);
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, entered, inputs);
+        ReasonCoverage.require(result.trace());
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
         return new Run(result, ComputationProjector.project(result, inputs, ID), provisional);
@@ -124,6 +126,7 @@ final class GoldenCaseRunner {
                 plain.assessee(), plain.family(), ledger(salary), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);
+        ReasonCoverage.require(result.trace());
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
         return new ShippedPipelineRun(result, provisional);
@@ -152,6 +155,7 @@ final class GoldenCaseRunner {
                 aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, heads, inputs);
+        ReasonCoverage.require(result.trace());
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
         return new ShippedPipelineRun(result, provisional);
@@ -167,6 +171,7 @@ final class GoldenCaseRunner {
         nodes.add(new TotalIncomeNode());
         PipelineRunner.Result result = PipelineRunner.run(NodeRegistry.of(nodes), pack,
                 pack.regimes().get(inputs.regime()), inputs);
+        ReasonCoverage.require(result.trace());
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
         return new ShippedPipelineRun(result, provisional);

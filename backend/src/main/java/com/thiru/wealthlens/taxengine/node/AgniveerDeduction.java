@@ -11,11 +11,14 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -55,7 +58,8 @@ final class AgniveerDeduction {
                 : Money.ZERO;
         TraceLine line = TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
                 MoneyValue.of(paid), MoneyValue.of(allowed), version.provenance());
-        lines.add(applies ? line.withLimitedBy("the whole amount") : line.withRegimeVerdict(verdict));
+        lines.add(applies ? line.withLimitedBy("the whole amount").withReason(new Reason(ReasonCodes.ALL_DEDUCTED, Map.of()))
+                : line.withRegimeVerdict(verdict));
     }
 
     /** Whether an Agniveer account is entered at all. */
