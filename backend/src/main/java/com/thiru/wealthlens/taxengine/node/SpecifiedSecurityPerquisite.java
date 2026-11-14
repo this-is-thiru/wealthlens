@@ -14,12 +14,16 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -59,7 +63,8 @@ final class SpecifiedSecurityPerquisite {
                             MoneyValue.of(value), TemporallyApportionedCap.governingVersion(
                                     ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_SECURITY), t).provenance())
                     .withLimitedBy(allotment.units() + " at a fair market value of " + fairMarketValue + " in all, "
-                            + describe(allotment.basis()) + ", less " + paid + " paid"));
+                            + describe(allotment.basis()) + ", less " + paid + " paid")
+                    .withReason(new Reason(ReasonCodes.SECURITY_VALUE, Map.of("units", new ReasonFact.CountFact(allotment.units()), "value", new ReasonFact.MoneyFact(fairMarketValue), "paid", new ReasonFact.MoneyFact(paid)))));
         }
         return lines;
     }

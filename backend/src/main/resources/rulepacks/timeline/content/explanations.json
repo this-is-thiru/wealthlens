@@ -3,12 +3,32 @@
   "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
   "reasons": [
     {
+      "code": "ACCOMMODATION_CONTINUED_CAP",
+      "why": "It is capped at {cap}, the first year's value raised by the cost inflation index."
+    },
+    {
+      "code": "ACCOMMODATION_LESS_RENT",
+      "why": "The accommodation is valued at {value}, less the {rent} rent you paid."
+    },
+    {
       "code": "ALLOWANCE_DISABILITY_NOT_LISTED",
       "why": "Nothing is exempt: your disability is not among those this year's rules list for this allowance."
     },
     {
       "code": "ALLOWANCE_MONTHLY_LIMIT",
       "why": "It is limited to {limit}, the monthly limit for the months covered."
+    },
+    {
+      "code": "ASSET_TRANSFER_WRITTEN_DOWN",
+      "why": "The asset is valued at {written} after {years} completed years of wear and tear, less the {price} you paid for it."
+    },
+    {
+      "code": "ASSET_USE_COST_SHARE",
+      "why": "It is a yearly share of the asset's cost for the {months} months you used it, less the {recovered} you paid back."
+    },
+    {
+      "code": "ASSET_USE_RENT",
+      "why": "It is the rent your employer paid for it, less the {recovered} you paid back."
     },
     {
       "code": "CAP_ACTUAL_AMOUNTS",
@@ -35,6 +55,18 @@
       "why": "It is {share} of the amount it applies to."
     },
     {
+      "code": "CAR_PER_MONTH",
+      "why": "It is the set amount for each of the {months} months."
+    },
+    {
+      "code": "CAR_PER_MONTH_WITH_CHAUFFEUR",
+      "why": "It is the set amount for each of the {months} months, plus the amount for a chauffeur."
+    },
+    {
+      "code": "CAR_RUNNING_AND_WEAR",
+      "why": "It is the running cost plus {wear} of wear and tear for {months} months, less the {charged} you were charged."
+    },
+    {
       "code": "COMMUTED_PENSION_LIMIT",
       "why": "It is limited to {limit}, the share of the pension's commuted value the law exempts."
     },
@@ -43,12 +75,56 @@
       "why": "It is limited to {limit}, the smaller share of the pension's commuted value the law exempts when you also received gratuity."
     },
     {
+      "code": "EDUCATION_ABOVE_LIMIT",
+      "why": "The cost of {cost} a month exceeds {limit} a month per child, so the whole for {months} months is taxed, less the {recovered} you paid back."
+    },
+    {
+      "code": "EDUCATION_WITHIN_LIMIT",
+      "why": "The cost of {cost} a month is within {limit} a month per child, so it is not taxed."
+    },
+    {
       "code": "EMPLOYER_ACCRETION_SHARE",
       "why": "It is the share of the fund's income this year that is earned on contributions above the limit, this year's and earlier years' taxed ones."
     },
     {
+      "code": "EXCLUDED_BY_RULE",
+      "why": "So nothing is added to your salary for it."
+    },
+    {
+      "code": "FURNITURE_COST_SHARE",
+      "why": "It is a yearly share of the furniture's cost, less the {charges} you paid."
+    },
+    {
+      "code": "FURNITURE_HIRE",
+      "why": "It is the hire charges, less the {charges} you paid."
+    },
+    {
+      "code": "GIFTS_BELOW_LIMIT",
+      "why": "Gifts of {given} from this employer are below {limit}, so none of it is taxed."
+    },
+    {
+      "code": "GIFTS_REACH_LIMIT",
+      "why": "Gifts of {given} from this employer reach {limit}, so all of it is taxed."
+    },
+    {
       "code": "HRA_NOT_RENTED",
       "why": "Nothing is exempt for this home: it is your own, or no rent was paid."
+    },
+    {
+      "code": "LESS_RECOVERED",
+      "why": "It is the amount less the {recovered} you paid back."
+    },
+    {
+      "code": "LOANS_WITHIN_PETTY_LIMIT",
+      "why": "Loans of {lent} from this employer do not exceed {limit}, so nothing is taxed for them."
+    },
+    {
+      "code": "LOAN_FOR_LISTED_DISEASE",
+      "why": "The loan is for treating a disease the rules list, so it is not taxed."
+    },
+    {
+      "code": "LOAN_INTEREST_AT_BANK_RATE",
+      "why": "Interest at {rate} a year on the month-end balances comes to {interest}, less the {paid} you paid."
     },
     {
       "code": "LTC_ASSISTANCE_RECEIVED",
@@ -63,12 +139,20 @@
       "why": "Nothing is exempt for this journey: the rules exempt only {journeys} journeys in each block of {years} calendar years."
     },
     {
+      "code": "MEALS_IN_FULL",
+      "why": "All of it is taxed: no limit reaches food provided this way this year."
+    },
+    {
       "code": "MEDICAL_ABROAD_EXCLUDED",
       "why": "{excluded} of it is not taxed."
     },
     {
       "code": "MEDICAL_TRAVEL_CONDITION_NOT_MET",
       "why": "None of it is excluded: a condition for excluding the travel is not met."
+    },
+    {
+      "code": "NOT_SPECIFIED_EMPLOYEE",
+      "why": "These benefits are not taxed for you: your salary paid in money, {salary}, does not exceed {threshold}, and you are not a director or a holder of a substantial interest."
     },
     {
       "code": "REGIME_DISALLOWS",
@@ -109,6 +193,10 @@
     {
       "code": "SALARY_INCLUDES_PERQUISITES",
       "why": "This is the value of your perquisites, worked out on their own lines."
+    },
+    {
+      "code": "SECURITY_VALUE",
+      "why": "{units} units at a fair market value of {value} in all, less the {paid} you paid."
     },
     {
       "code": "WITHIN_LIMIT",

@@ -12,6 +12,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
@@ -102,7 +105,8 @@ final class HouseholdBenefitPerquisite {
                 CapContext.of(BENEFIT_VALUE, net)).value();
         return ctx.traceLine(sequence, row.id(), StepKind.INCOME, benefit.amount(), value)
                 .withLimitedBy(benefit.kind() + " (" + benefit.arrangement() + "), less the recovery "
-                        + benefit.recovered());
+                        + benefit.recovered())
+                .withReason(new Reason(ReasonCodes.LESS_RECOVERED, Map.of("recovered", new ReasonFact.MoneyFact(benefit.recovered()))));
     }
 
     private static TraceLine educated(NodeContext ctx, EmployerChildEducation child, int sequence) {
@@ -113,12 +117,14 @@ final class HouseholdBenefitPerquisite {
         if (!cost.isGreaterThan(limit)) {
             return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), StepKind.INCOME,
                             whole, Money.ZERO)
-                    .withLimitedBy("not a perquisite: " + cost + " a month does not exceed " + limit + " per child");
+                    .withLimitedBy("not a perquisite: " + cost + " a month does not exceed " + limit + " per child")
+                    .withReason(new Reason(ReasonCodes.EDUCATION_WITHIN_LIMIT, Map.of("cost", new ReasonFact.MoneyFact(cost), "limit", new ReasonFact.MoneyFact(limit))));
         }
         return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), StepKind.INCOME,
                         whole, whole.minus(child.recovered()).floorAtZero())
                 .withLimitedBy(cost + " a month exceeds " + limit + " per child, so the whole for " + child.months()
-                        + " months, less the recovery " + child.recovered());
+                        + " months, less the recovery " + child.recovered())
+                .withReason(new Reason(ReasonCodes.EDUCATION_ABOVE_LIMIT, Map.of("cost", new ReasonFact.MoneyFact(cost), "limit", new ReasonFact.MoneyFact(limit), "months", new ReasonFact.CountFact(child.months()), "recovered", new ReasonFact.MoneyFact(child.recovered()))));
     }
 
 }

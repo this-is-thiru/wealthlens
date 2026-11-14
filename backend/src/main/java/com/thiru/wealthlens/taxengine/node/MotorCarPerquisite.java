@@ -19,6 +19,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -91,7 +94,8 @@ final class MotorCarPerquisite {
             VehicleFacts.requireWhatThePathReads(ctx, vehicle, position, path, computation, facts);
             if (computation == VehicleComputation.NOT_A_PERQUISITE) {
                 lines.add(ctx.traceLine(sequence, path.id(), StepKind.INCOME, vehicle.runningExpenditure(), Money.ZERO)
-                        .withLimitedBy("not a perquisite: excluded by " + path.id()));
+                        .withLimitedBy("not a perquisite: excluded by " + path.id())
+                        .withReason(new Reason(ReasonCodes.EXCLUDED_BY_RULE, Map.of())));
                 continue;
             }
             if (SpecifiedEmployee.gates(ctx, ItemFacts.of(SpecifiedEmployee.ARRANGEMENT,
@@ -160,7 +164,9 @@ final class MotorCarPerquisite {
             value = value.plus(perMonth(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_CHAUFFEUR), car.months()));
             bound += ", plus the chauffeur's amount";
         }
-        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, car.runningExpenditure(), value).withLimitedBy(bound);
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, car.runningExpenditure(), value).withLimitedBy(bound)
+                .withReason(new Reason(car.chauffeur() ? ReasonCodes.CAR_PER_MONTH_WITH_CHAUFFEUR : ReasonCodes.CAR_PER_MONTH,
+                        Map.of("months", new ReasonFact.CountFact(car.months()))));
     }
 
     /** Sl. 1(b): the running, plus wear and tear on the cost for the months, less the charge. */
@@ -175,7 +181,8 @@ final class MotorCarPerquisite {
                         car.runningExpenditure(), value)
                 .withLimitedBy("running plus wear and tear " + wearAndTear.value() + " (" + wearAndTear.limitedBy()
                         + " for "
-                        + car.months() + " months), less the charge " + car.chargedToEmployee());
+                        + car.months() + " months), less the charge " + car.chargedToEmployee())
+                .withReason(new Reason(ReasonCodes.CAR_RUNNING_AND_WEAR, Map.of("wear", new ReasonFact.MoneyFact(wearAndTear.value()), "months", new ReasonFact.CountFact(car.months()), "charged", new ReasonFact.MoneyFact(car.chargedToEmployee()))));
     }
 
     /** Sl. 2(b) or 3(b): the expenditure less the Table's official use, or less a higher amount claimed. */

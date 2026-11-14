@@ -396,4 +396,35 @@ class ExplanationRendererTest {
                         + " and years. The ceiling across all your employers and years is reduced by the ₹5,00,000 allowed in"
                         + " earlier years and the ₹4,00,000 allowed on this year's earlier payments.");
     }
+
+    @Test
+    void explain_whenALoanIsValuedAtTheBankRate_writesTheRateAndTheFigures() {
+        // Given — LoanPerquisite:74: 9% a year on the balances, 45,000, less 10,000 paid = 35,000
+        TraceLine loan = line(new RuleId("PERQ-LOAN"), MoneyValue.of(Money.of("500000")), MoneyValue.of(Money.of("35000")))
+                .withLimitedBy("interest at 9% a year on 12 month-end balances totalling 6000000.00, 45000.00, less 10000.00 paid")
+                .withReason(new Reason(ReasonCodes.LOAN_INTEREST_AT_BANK_RATE, Map.of(
+                        "rate", new ReasonFact.ShareFact(Rate.percent("9")),
+                        "interest", new ReasonFact.MoneyFact(Money.of("45000")),
+                        "paid", new ReasonFact.MoneyFact(Money.of("10000")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(loan, PACK.explanations())).isEqualTo(
+                "An interest-free or cheaper loan from your employer is valued at ₹35,000 as a perquisite. Interest at 9%"
+                        + " a year on the month-end balances comes to ₹45,000, less the ₹10,000 you paid.");
+    }
+
+    @Test
+    void explain_whenSecuritiesAreValued_writesTheUnitsAndBothFigures() {
+        // Given — SpecifiedSecurityPerquisite:61: 2,000 units, 5,00,000 in all, 20,000 paid
+        TraceLine security = line(new RuleId("PERQ-SPECIFIED-SECURITY"), MoneyValue.of(Money.of("500000")),
+                MoneyValue.of(Money.of("480000"))).withLimitedBy("2000 at a fair market value of 500000.00 in all")
+                .withReason(new Reason(ReasonCodes.SECURITY_VALUE, Map.of("units", new ReasonFact.CountFact(2000),
+                        "value", new ReasonFact.MoneyFact(Money.of("500000")),
+                        "paid", new ReasonFact.MoneyFact(Money.of("20000")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(security, PACK.explanations())).isEqualTo(
+                "Shares or securities your employer allotted or transferred to you free or cheaper is valued at ₹4,80,000 as"
+                        + " a perquisite. 2000 units at a fair market value of ₹5,00,000 in all, less the ₹20,000 you paid.");
+    }
 }

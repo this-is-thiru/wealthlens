@@ -20,6 +20,9 @@ import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -120,6 +123,7 @@ class LoanPerquisiteTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.PERQ_LOAN_PETTY);
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.LOANS_WITHIN_PETTY_LIMIT, Map.of("lent", new ReasonFact.MoneyFact(Money.of("200000")), "limit", new ReasonFact.MoneyFact(Money.of("200000")))));
     }
 
     @Test

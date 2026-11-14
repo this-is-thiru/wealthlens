@@ -22,6 +22,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -168,6 +171,7 @@ class HouseholdBenefitPerquisiteTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.EDUCATION_WITHIN_LIMIT, Map.of("cost", new ReasonFact.MoneyFact(Money.of("3000")), "limit", new ReasonFact.MoneyFact(Money.of("3000")))));
     }
 
     @Test

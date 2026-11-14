@@ -94,6 +94,72 @@ public final class ReasonCodes {
     /** The accretion taxed is the share of the fund's income earned on contributions above the limit. (W-327b1, D-681) */
     public static final ReasonCode EMPLOYER_ACCRETION_SHARE = new ReasonCode("EMPLOYER_ACCRETION_SHARE");
 
+    /** The line's own row excludes the benefit; its sentence says so, and this confirms nothing is added. (W-327b2, D-682) */
+    public static final ReasonCode EXCLUDED_BY_RULE = new ReasonCode("EXCLUDED_BY_RULE");
+
+    /** The use of an asset is valued as a yearly share of its cost for the months used, less what was paid back. (W-327b2, D-682) */
+    public static final ReasonCode ASSET_USE_COST_SHARE = new ReasonCode("ASSET_USE_COST_SHARE");
+
+    /** The use of a hired asset is valued at the rent paid, less what was paid back. (W-327b2, D-682) */
+    public static final ReasonCode ASSET_USE_RENT = new ReasonCode("ASSET_USE_RENT");
+
+    /** A transferred asset is valued at its written-down cost, less the price paid. (W-327b2, D-682) */
+    public static final ReasonCode ASSET_TRANSFER_WRITTEN_DOWN = new ReasonCode("ASSET_TRANSFER_WRITTEN_DOWN");
+
+    /** A benefit is valued at its amount, less what was paid back. (W-327b2, D-682) */
+    public static final ReasonCode LESS_RECOVERED = new ReasonCode("LESS_RECOVERED");
+
+    /** An employer's gifts are below the limit, so none of them is taxed. (W-327b2, D-682) */
+    public static final ReasonCode GIFTS_BELOW_LIMIT = new ReasonCode("GIFTS_BELOW_LIMIT");
+
+    /** An employer's gifts reach the limit, so all of them are taxed. (W-327b2, D-682) */
+    public static final ReasonCode GIFTS_REACH_LIMIT = new ReasonCode("GIFTS_REACH_LIMIT");
+
+    /** A child's education costs no more a month than the limit, so it is not taxed. (W-327b2, D-682) */
+    public static final ReasonCode EDUCATION_WITHIN_LIMIT = new ReasonCode("EDUCATION_WITHIN_LIMIT");
+
+    /** A child's education costs more a month than the limit, so the whole for the months is taxed, less what was paid back. (W-327b2, D-682) */
+    public static final ReasonCode EDUCATION_ABOVE_LIMIT = new ReasonCode("EDUCATION_ABOVE_LIMIT");
+
+    /** An employer's loans do not exceed the petty limit, so nothing is taxed. (W-327b2, D-682) */
+    public static final ReasonCode LOANS_WITHIN_PETTY_LIMIT = new ReasonCode("LOANS_WITHIN_PETTY_LIMIT");
+
+    /** The loan is for treating a listed disease, so it is not taxed. (W-327b2, D-682) */
+    public static final ReasonCode LOAN_FOR_LISTED_DISEASE = new ReasonCode("LOAN_FOR_LISTED_DISEASE");
+
+    /** A loan is valued at interest at the bank's rate on its balances, less the interest paid. (W-327b2, D-682) */
+    public static final ReasonCode LOAN_INTEREST_AT_BANK_RATE = new ReasonCode("LOAN_INTEREST_AT_BANK_RATE");
+
+    /** No limit reaches the food provided, so all of it is taxed. (W-327b2, D-682) */
+    public static final ReasonCode MEALS_IN_FULL = new ReasonCode("MEALS_IN_FULL");
+
+    /** A car is valued at a set amount for each month. (W-327b2, D-682) */
+    public static final ReasonCode CAR_PER_MONTH = new ReasonCode("CAR_PER_MONTH");
+
+    /** As CAR_PER_MONTH, plus the amount for a chauffeur. (W-327b2, D-682) */
+    public static final ReasonCode CAR_PER_MONTH_WITH_CHAUFFEUR = new ReasonCode("CAR_PER_MONTH_WITH_CHAUFFEUR");
+
+    /** A car is valued at its running cost plus wear and tear for the months, less what the employee was charged. (W-327b2, D-682) */
+    public static final ReasonCode CAR_RUNNING_AND_WEAR = new ReasonCode("CAR_RUNNING_AND_WEAR");
+
+    /** Accommodation is valued under its rule, less the rent paid. (W-327b2, D-682) */
+    public static final ReasonCode ACCOMMODATION_LESS_RENT = new ReasonCode("ACCOMMODATION_LESS_RENT");
+
+    /** Continued accommodation is capped at the first year's value raised by the cost inflation index. (W-327b2, D-682) */
+    public static final ReasonCode ACCOMMODATION_CONTINUED_CAP = new ReasonCode("ACCOMMODATION_CONTINUED_CAP");
+
+    /** Furniture is valued as a yearly share of its cost, less what the employee paid. (W-327b2, D-682) */
+    public static final ReasonCode FURNITURE_COST_SHARE = new ReasonCode("FURNITURE_COST_SHARE");
+
+    /** Furniture is valued at its hire charges, less what the employee paid. (W-327b2, D-682) */
+    public static final ReasonCode FURNITURE_HIRE = new ReasonCode("FURNITURE_HIRE");
+
+    /** The employee is not a specified employee, so the benefits taxed only for one are not. (W-327b2, D-682) */
+    public static final ReasonCode NOT_SPECIFIED_EMPLOYEE = new ReasonCode("NOT_SPECIFIED_EMPLOYEE");
+
+    /** Securities are valued at their fair market value, less what was paid. (W-327b2, D-682) */
+    public static final ReasonCode SECURITY_VALUE = new ReasonCode("SECURITY_VALUE");
+
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
@@ -123,7 +189,29 @@ public final class ReasonCodes {
             Map.entry(SALARY_INCLUDES_PENSION_CONTRIBUTION, Set.of()),
             Map.entry(SALARY_INCLUDES_AGNIVEER, Set.of()),
             Map.entry(CAP_APPORTIONED, Set.of()),
-            Map.entry(EMPLOYER_ACCRETION_SHARE, Set.of()));
+            Map.entry(EMPLOYER_ACCRETION_SHARE, Set.of()),
+            Map.entry(EXCLUDED_BY_RULE, Set.of()),
+            Map.entry(ASSET_USE_COST_SHARE, Set.of("months", "recovered")),
+            Map.entry(ASSET_USE_RENT, Set.of("recovered")),
+            Map.entry(ASSET_TRANSFER_WRITTEN_DOWN, Set.of("written", "years", "price")),
+            Map.entry(LESS_RECOVERED, Set.of("recovered")),
+            Map.entry(GIFTS_BELOW_LIMIT, Set.of("given", "limit")),
+            Map.entry(GIFTS_REACH_LIMIT, Set.of("given", "limit")),
+            Map.entry(EDUCATION_WITHIN_LIMIT, Set.of("cost", "limit")),
+            Map.entry(EDUCATION_ABOVE_LIMIT, Set.of("cost", "limit", "months", "recovered")),
+            Map.entry(LOANS_WITHIN_PETTY_LIMIT, Set.of("lent", "limit")),
+            Map.entry(LOAN_FOR_LISTED_DISEASE, Set.of()),
+            Map.entry(LOAN_INTEREST_AT_BANK_RATE, Set.of("rate", "interest", "paid")),
+            Map.entry(MEALS_IN_FULL, Set.of()),
+            Map.entry(CAR_PER_MONTH, Set.of("months")),
+            Map.entry(CAR_PER_MONTH_WITH_CHAUFFEUR, Set.of("months")),
+            Map.entry(CAR_RUNNING_AND_WEAR, Set.of("wear", "months", "charged")),
+            Map.entry(ACCOMMODATION_LESS_RENT, Set.of("value", "rent")),
+            Map.entry(ACCOMMODATION_CONTINUED_CAP, Set.of("cap")),
+            Map.entry(FURNITURE_COST_SHARE, Set.of("charges")),
+            Map.entry(FURNITURE_HIRE, Set.of("charges")),
+            Map.entry(NOT_SPECIFIED_EMPLOYEE, Set.of("salary", "threshold")),
+            Map.entry(SECURITY_VALUE, Set.of("units", "value", "paid")));
 
     private ReasonCodes() {
     }

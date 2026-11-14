@@ -28,6 +28,9 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -126,6 +129,7 @@ class MotorCarPerquisiteTest {
         assertThat(result.trace()).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.PERQ_CAR_PARTLY_SMALL);
             assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.CAR_PER_MONTH_WITH_CHAUFFEUR, Map.of("months", new ReasonFact.CountFact(12))));
         });
     }
 

@@ -16,12 +16,16 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -64,7 +68,8 @@ final class AssetPerquisite {
         if (excludedAssets(ctx, t).excludes(use.kind())) {
             return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED), StepKind.INCOME,
                             use.cost().or(use::rentPaid).orElseThrow(), Money.ZERO)
-                    .withLimitedBy("not a perquisite: the use of a " + use.kind() + " is excluded this year");
+                    .withLimitedBy("not a perquisite: the use of a " + use.kind() + " is excluded this year")
+                    .withReason(new Reason(ReasonCodes.EXCLUDED_BY_RULE, Map.of()));
         }
         Money charged = use.cost()
                 .map(cost -> TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_ASSET_USE), t,
@@ -75,7 +80,10 @@ final class AssetPerquisite {
                         use.cost().or(use::rentPaid).orElseThrow(), value)
                 .withLimitedBy((use.cost().isPresent() ? "ten per cent a year of the cost for " + use.months()
                         + " months"
-                        : "the rent paid") + ", less the recovery " + use.recovered());
+                        : "the rent paid") + ", less the recovery " + use.recovered())
+                .withReason(use.cost().isPresent()
+                        ? new Reason(ReasonCodes.ASSET_USE_COST_SHARE, Map.of("months", new ReasonFact.CountFact(use.months()), "recovered", new ReasonFact.MoneyFact(use.recovered())))
+                        : new Reason(ReasonCodes.ASSET_USE_RENT, Map.of("recovered", new ReasonFact.MoneyFact(use.recovered()))));
     }
 
     /** The cost written down by the wear and tear its row states — the rate and the method (W-154f) — less the price. */
@@ -97,7 +105,8 @@ final class AssetPerquisite {
         Money value = written.minus(transfer.pricePaid()).floorAtZero();
         return ctx.traceLine(sequence, ruleId, StepKind.INCOME, cost, value)
                 .withLimitedBy("written down to " + written + " after " + years + " completed years at " + rate
-                        + applied + ", less the price " + transfer.pricePaid());
+                        + applied + ", less the price " + transfer.pricePaid())
+                .withReason(new Reason(ReasonCodes.ASSET_TRANSFER_WRITTEN_DOWN, Map.of("written", new ReasonFact.MoneyFact(written), "years", new ReasonFact.CountFact(years), "price", new ReasonFact.MoneyFact(transfer.pricePaid()))));
     }
 
     private static ExcludedAssets excludedAssets(NodeContext ctx, TemporalContext t) {

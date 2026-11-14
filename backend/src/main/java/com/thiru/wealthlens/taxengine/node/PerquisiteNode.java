@@ -23,6 +23,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -144,17 +147,20 @@ public final class PerquisiteNode implements ComputationNode {
                 new CapContext(Map.copyOf(bases), Map.of(), population));
         Money value = valued.value().minus(accommodation.rentPaid()).floorAtZero();
         String bound = valued.limitedBy() + ", less the rent paid " + accommodation.rentPaid();
+        Reason reason = new Reason(ReasonCodes.ACCOMMODATION_LESS_RENT, Map.of("value", new ReasonFact.MoneyFact(valued.value()), "rent", new ReasonFact.MoneyFact(accommodation.rentPaid())));
         Optional<RuleRow> capRow = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_ACCOM_CONTINUED, facts);
         if (capRow.isPresent() && isContinued(accommodation, t.taxYear())) {
             Money cap = continuedCap(ctx, capRow.get(), accommodation, t);
             if (cap.isLessThan(value)) {
                 value = cap;
                 bound += "; capped at the first year's amount scaled by the Cost Inflation Index, " + cap;
+                reason = new Reason(ReasonCodes.ACCOMMODATION_CONTINUED_CAP, Map.of("cap", new ReasonFact.MoneyFact(cap)));
             }
         }
         return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ruleId, StepKind.INCOME, MoneyValue.of(salary),
                         MoneyValue.of(value), version.provenance())
-                .withLimitedBy(bound);
+                .withLimitedBy(bound)
+                .withReason(reason);
     }
 
     /**
@@ -216,7 +222,9 @@ public final class PerquisiteNode implements ComputationNode {
         return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, rule.id(), StepKind.INCOME,
                         MoneyValue.of(charged), MoneyValue.of(value), version.provenance())
                 .withLimitedBy((furniture.cost().isPresent() ? "ten per cent a year of the cost" : "hire charges")
-                        + ", less the employee's charges " + furniture.employeeCharges());
+                        + ", less the employee's charges " + furniture.employeeCharges())
+                .withReason(new Reason(furniture.cost().isPresent() ? ReasonCodes.FURNITURE_COST_SHARE
+                        : ReasonCodes.FURNITURE_HIRE, Map.of("charges", new ReasonFact.MoneyFact(furniture.employeeCharges()))));
     }
 
     /**

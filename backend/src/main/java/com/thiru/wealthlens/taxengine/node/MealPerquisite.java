@@ -13,6 +13,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
@@ -63,6 +65,7 @@ final class MealPerquisite {
         CapResult valued = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
                 new CapContext(Map.of(MEAL_VALUE, total(meals)), Map.of(), Map.of(MEAL, meals.meals())));
         return ctx.traceLine(sequence, ruleId, StepKind.INCOME, total(meals), valued.value())
+                .withCapResult(valued)
                 .withLimitedBy(counted(valued.limitedBy(), meals));
     }
 
@@ -74,12 +77,14 @@ final class MealPerquisite {
                 CapContext.of(MEAL_VALUE, total(meals)));
         return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL), StepKind.INCOME,
                         total(meals), valued.value())
-                .withLimitedBy(counted(why, meals));
+                .withLimitedBy(counted(why, meals))
+                .withReason(new Reason(ReasonCodes.MEALS_IN_FULL, Map.of()));
     }
 
     private static TraceLine excluded(NodeContext ctx, RuleRow row, EmployerMeals meals, int sequence) {
         return ctx.traceLine(sequence, row.id(), StepKind.INCOME, total(meals), Money.ZERO)
-                .withLimitedBy(counted("not a perquisite: excluded by " + row.id(), meals));
+                .withLimitedBy(counted("not a perquisite: excluded by " + row.id(), meals))
+                .withReason(new Reason(ReasonCodes.EXCLUDED_BY_RULE, Map.of()));
     }
 
     private static Money total(EmployerMeals meals) {

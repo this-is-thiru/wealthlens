@@ -8,6 +8,9 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
@@ -53,6 +56,7 @@ final class LoanPerquisite {
                                     loan.amountLent(), Money.ZERO)
                             .withLimitedBy("employment " + loan.employment()
                             + "'s loans lent " + lent + " do not exceed " + pettyLimit)
+                            .withReason(new Reason(ReasonCodes.LOANS_WITHIN_PETTY_LIMIT, Map.of("lent", new ReasonFact.MoneyFact(lent), "limit", new ReasonFact.MoneyFact(pettyLimit))))
                     : valued(ctx, loan, sequence));
         }
         return lines;
@@ -64,7 +68,8 @@ final class LoanPerquisite {
         if (!total.isGreaterThan(Money.ZERO) && loan.forListedDisease()) {
             return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_LOAN), StepKind.INCOME,
                             loan.amountLent(), Money.ZERO)
-                    .withLimitedBy("not a perquisite: for treatment of a disease the year's rule lists");
+                    .withLimitedBy("not a perquisite: for treatment of a disease the year's rule lists")
+                    .withReason(new Reason(ReasonCodes.LOAN_FOR_LISTED_DISEASE, Map.of()));
         }
         Money interest = loan.stateBankRate().ofShare(total, 1, 12);
         Money atBankRate = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_LOAN), ctx.inputs().temporal(),
@@ -74,7 +79,9 @@ final class LoanPerquisite {
                 .withLimitedBy("interest at " + loan.stateBankRate() + " a year on "
                 + balances.size() + " month-end balances totalling " + total + ", " + atBankRate + ", less "
                 + loan.interestPaid() + " paid" + (loan.forListedDisease() ? " — the part a medical insurance scheme"
-                + " reimbursed" : ""));
+                + " reimbursed" : ""))
+                .withReason(new Reason(ReasonCodes.LOAN_INTEREST_AT_BANK_RATE, Map.of(
+                        "rate", new ReasonFact.ShareFact(loan.stateBankRate()), "interest", new ReasonFact.MoneyFact(atBankRate), "paid", new ReasonFact.MoneyFact(loan.interestPaid()))));
     }
 
     /**

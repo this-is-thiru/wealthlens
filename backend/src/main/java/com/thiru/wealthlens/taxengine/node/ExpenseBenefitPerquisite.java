@@ -11,6 +11,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
@@ -100,11 +103,13 @@ final class ExpenseBenefitPerquisite {
         Money value = TemporallyApportionedCap.apply(row, ctx.inputs().temporal(),
                 CapContext.of(BENEFIT_VALUE, net)).value();
         return ctx.traceLine(sequence, row.id(), StepKind.INCOME, benefit.amount(), value)
-                .withLimitedBy(benefit.kind() + ", less the recovery " + benefit.recovered());
+                .withLimitedBy(benefit.kind() + ", less the recovery " + benefit.recovered())
+                .withReason(new Reason(ReasonCodes.LESS_RECOVERED, Map.of("recovered", new ReasonFact.MoneyFact(benefit.recovered()))));
     }
 
     private static TraceLine nil(NodeContext ctx, RuleRow row, EmployerExpenseBenefit benefit, int sequence) {
         return ctx.traceLine(sequence, row.id(), StepKind.INCOME, benefit.amount(), Money.ZERO)
-                .withLimitedBy("not a perquisite: excluded by " + row.id());
+                .withLimitedBy("not a perquisite: excluded by " + row.id())
+                .withReason(new Reason(ReasonCodes.EXCLUDED_BY_RULE, Map.of()));
     }
 }

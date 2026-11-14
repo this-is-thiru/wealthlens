@@ -19,6 +19,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -109,8 +112,9 @@ class SpecifiedSecurityPerquisiteTest {
         NodeResult result = run(year, List.of(allotment(year, 2000, "10",
                 new FairMarketValueBasis.MerchantBankerValue(Money.of("250"), LocalDate.of(year, 9, 1).minusDays(90)))));
 
-        // Then
+        // Then — 250 × 2,000 = 5,00,000 in all, 10 × 2,000 = 20,000 paid
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("480000")));
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.SECURITY_VALUE, Map.of("units", new ReasonFact.CountFact(2000), "value", new ReasonFact.MoneyFact(Money.of("500000")), "paid", new ReasonFact.MoneyFact(Money.of("20000")))));
     }
 
     @Test

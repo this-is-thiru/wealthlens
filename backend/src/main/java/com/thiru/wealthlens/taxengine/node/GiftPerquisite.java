@@ -9,6 +9,9 @@ import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -49,7 +52,9 @@ final class GiftPerquisite {
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
                     .withLimitedBy("employment " + employer.getKey() + "'s gifts " + given
                             + (belowTheLimit ? " are below " : " reach ") + limit
-                            + (belowTheLimit ? ", so nil" : ", so all of them")));
+                            + (belowTheLimit ? ", so nil" : ", so all of them"))
+                    .withReason(new Reason(belowTheLimit ? ReasonCodes.GIFTS_BELOW_LIMIT : ReasonCodes.GIFTS_REACH_LIMIT,
+                            Map.of("given", new ReasonFact.MoneyFact(given), "limit", new ReasonFact.MoneyFact(limit)))));
         }
         return lines;
     }

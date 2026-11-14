@@ -20,6 +20,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -221,6 +224,8 @@ class PerquisiteNodeTest {
                 .isEqualTo(MoneyValue.of(Money.of(year == 2025 ? "108045.98" : "110344.83")));
         assertThat(result.trace().getFirst().limitedBy())
                 .hasValueSatisfying(bound -> assertThat(bound).contains("Cost Inflation Index"));
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.ACCOMMODATION_CONTINUED_CAP,
+                Map.of("cap", new ReasonFact.MoneyFact(Money.of(year == 2025 ? "108045.98" : "110344.83")))));
     }
 
     @Test

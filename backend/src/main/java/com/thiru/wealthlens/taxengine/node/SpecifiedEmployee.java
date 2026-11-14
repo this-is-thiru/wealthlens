@@ -10,6 +10,9 @@ import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.Map;
@@ -56,7 +59,8 @@ final class SpecifiedEmployee {
                         TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE),
                                 ctx.inputs().temporal()).provenance())
                 .withLimitedBy("not a specified employee: salary by way of monetary payment " + monetaryIncome(ctx)
-                        + " does not exceed " + threshold(ctx) + ", and no director or substantial interest");
+                        + " does not exceed " + threshold(ctx) + ", and no director or substantial interest")
+                .withReason(new Reason(ReasonCodes.NOT_SPECIFIED_EMPLOYEE, Map.of("salary", new ReasonFact.MoneyFact(monetaryIncome(ctx)), "threshold", new ReasonFact.MoneyFact(threshold(ctx)))));
     }
 
     private static Money monetaryIncome(NodeContext ctx) {
