@@ -151,7 +151,7 @@ final class PensionDeduction {
             Money entered) {
         return TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION, MoneyValue.of(entered),
                         MoneyValue.of(Money.ZERO), version.provenance())
-                .withLimitedBy(ctx.inRegime(row, version).whyNot());
+                .withRegimeVerdict(ctx.inRegime(row, version));
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {

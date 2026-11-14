@@ -1,6 +1,22 @@
 {
-  "_note": "Plain-language sentences for trace lines (PRD F37; W-116, D-671). Content: it changes no number and holds none (SC-2) — {out} is the line's figure and {in} what it started from, filled from the trace. byLimit is keyed by each limit's name exactly as the rule's least-of names it, and the pack refuses an entry whose limits differ. Drafted by Claude from each rule's section entry and limit names, for the owner's adoption (C5). Every rule of the timeline is explained here or listed in notALine with the reason it never names a trace line of its own (W-325d, D-672 C2a); the compiler refuses a listed rule the timeline does not hold or one also explained, and copies notALine into no pack.",
+  "_note": "Plain-language sentences for trace lines (PRD F37; W-116, D-671). Content: it changes no number and holds none (SC-2) — {out} is the line's figure and {in} what it started from, filled from the trace. byLimit is keyed by each limit's name exactly as the rule's least-of names it, and the pack refuses an entry whose limits differ. Drafted by Claude from each rule's section entry and limit names, for the owner's adoption (C5). Every rule of the timeline is explained here or listed in notALine with the reason it never names a trace line of its own (W-325d, D-672 C2a); the compiler refuses a listed rule the timeline does not hold or one also explained, and copies notALine into no pack. reasons word the reason codes the engine publishes when a line names no limit, filling each fact by name; terms.regime names each regime in plain words, never its legal title (W-327a, D-678 C3a); the compiler refuses an unworded code or regime.",
   "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
+  "reasons": [
+    {
+      "code": "REGIME_DISALLOWS",
+      "why": "It is not allowed under {regime}."
+    },
+    {
+      "code": "REGIME_EXCLUDES_ROW",
+      "why": "This rule does not apply under {regime}."
+    }
+  ],
+  "terms": {
+    "regime": {
+      "FIRST_SCHEDULE_RATES": "the old regime",
+      "NEW_TAX_REGIME": "the default regime"
+    }
+  },
   "explanations": [
     {
       "rule": "ADV-INSTALMENTS",

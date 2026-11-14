@@ -121,7 +121,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         }
         return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT),
                         StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(Money.ZERO), version.provenance())
-                .withLimitedBy(disallowed.whyNot()));
+                .withRegimeVerdict(disallowed));
     }
 
     /**
@@ -155,7 +155,7 @@ public final class SalaryDeductionNode implements ComputationNode {
             return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, ruleId, StepKind.DEDUCTION,
                             MoneyValue.of(paidByGovernment.get(employment)), MoneyValue.of(Money.ZERO),
                             version.provenance())
-                    .withLimitedBy(verdict.whyNot()));
+                    .withRegimeVerdict(verdict));
         }
         Money salary = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
                 .of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_ENTMT), employment);

@@ -66,7 +66,7 @@ final class LoanInterestDeduction {
         if (!applies(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version)) {
             return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
                             interest, Money.ZERO)
-                    .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version).whyNot());
+                    .withRegimeVerdict(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version));
         }
         TaxYearSpan span = RuleDefinitions.require(version.definition(), TaxYearSpan.class,
                 ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN));
@@ -108,7 +108,7 @@ final class LoanInterestDeduction {
         Money interest = loan.interestPayable();
         if (!applies(ctx, row, version)) {
             return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, Money.ZERO)
-                    .withLimitedBy(ctx.inRegime(row, version).whyNot());
+                    .withRegimeVerdict(ctx.inRegime(row, version));
         }
         SanctionedLoanLimit limit = RuleDefinitions.require(version.definition(), SanctionedLoanLimit.class, row);
         Optional<String> failed = failure(limit, loan);

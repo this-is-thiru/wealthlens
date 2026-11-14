@@ -154,7 +154,7 @@ public final class ExemptionNode implements ComputationNode {
                 Money allowance = BY_DAYS_OCCUPIED.apportion(allowanceForYear, t.taxYear(), tenancy.occupied());
                 nil.add(ctx.traceLine(nil.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE),
                                 StepKind.EXEMPTION, allowance, Money.ZERO)
-                        .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE), version).whyNot()));
+                        .withRegimeVerdict(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE), version)));
             }
             return nil;
         }

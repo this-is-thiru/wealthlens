@@ -34,8 +34,11 @@ class ContentPerturbationTest {
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
-    /** The fields a content file or entry is named by — an explanation by its rule (W-116); all else is text. */
-    private static final Set<String> IDENTITY = Set.of("key", "act", "rule");
+    /**
+     * The fields a content file or entry is named by — an explanation by its rule (W-116), a reason's sentence by its
+     * code (W-327a); all else is text.
+     */
+    private static final Set<String> IDENTITY = Set.of("key", "act", "rule", "code");
 
     private static final String CONTENT_FILE = "content/explanations.json";
 

@@ -309,7 +309,7 @@ final class HealthInsuranceDeduction {
         if (!ctx.inRegime(row, version).applies()) {
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
                             MoneyValue.of(entered), MoneyValue.of(Money.ZERO), version.provenance())
-                    .withLimitedBy(ctx.inRegime(row, version).whyNot()));
+                    .withRegimeVerdict(ctx.inRegime(row, version)));
             return;
         }
         ComponentCode insurance = family ? ComponentCodes.HEALTH_INSURANCE_FAMILY

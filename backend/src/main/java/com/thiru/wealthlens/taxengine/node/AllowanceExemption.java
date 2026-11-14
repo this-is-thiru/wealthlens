@@ -88,7 +88,7 @@ final class AllowanceExemption {
                 lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_EXEMPTIONS, ruleId,
                                 StepKind.EXEMPTION, MoneyValue.of(received), MoneyValue.of(Money.ZERO),
                                 version.provenance())
-                        .withLimitedBy(verdict.whyNot()));
+                        .withRegimeVerdict(verdict));
                 continue;
             }
             CapResult exempt = TemporallyApportionedCap.apply(rule, t, context(version, use, received));

@@ -191,7 +191,7 @@ final class DonationDeduction {
         entered.forEach((row, amount) -> {
             if (amount.isGreaterThan(Money.ZERO)) {
                 lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, amount, Money.ZERO)
-                        .withLimitedBy(ctx.inRegime(row, version(ctx, row)).whyNot()));
+                        .withRegimeVerdict(ctx.inRegime(row, version(ctx, row))));
             }
         });
     }

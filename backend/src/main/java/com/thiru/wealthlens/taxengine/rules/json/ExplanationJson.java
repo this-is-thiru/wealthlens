@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanation;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
@@ -23,7 +25,28 @@ public final class ExplanationJson {
                 throw new PackValidationException(path + " explains " + explanation.rule() + " twice");
             }
         }
-        return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule));
+        Map<ReasonCode, String> reasons = reasons(root, path);
+        Map<RegimeCode, String> regimeTerms = new LinkedHashMap<>();
+        PackJson.optionalObject(root, "terms", path).flatMap(terms -> PackJson.optionalObject(terms, "regime", path + ".terms"))
+                .ifPresent(regimes -> regimes.properties().forEach(regime -> regimeTerms.put(
+                        PackJson.construct(path + ".terms.regime", () -> new RegimeCode(regime.getKey())),
+                        PackJson.text(regimes, regime.getKey(), path + ".terms.regime"))));
+        return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
+                reasons, regimeTerms));
+    }
+
+    /** Each reason code's sentence (W-327a, D-678); a code worded twice is refused. */
+    private static Map<ReasonCode, String> reasons(JsonNode root, String path) {
+        Map<ReasonCode, String> byCode = new LinkedHashMap<>();
+        PackJson.arrayOrEmpty(root, "reasons", path, element -> {
+            ReasonCode code = PackJson.construct(element.path(),
+                    () -> new ReasonCode(PackJson.text(element.node(), "code", element.path())));
+            if (byCode.put(code, PackJson.text(element.node(), "why", element.path() + " (" + code + ")")) != null) {
+                throw new PackValidationException(path + " words the reason " + code + " twice");
+            }
+            return code;
+        });
+        return byCode;
     }
 
     /**

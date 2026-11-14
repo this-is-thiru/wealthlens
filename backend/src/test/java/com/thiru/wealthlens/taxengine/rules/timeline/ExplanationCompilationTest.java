@@ -173,6 +173,56 @@ class ExplanationCompilationTest {
                 .isInstanceOf(PackValidationException.class).hasMessageContaining("lists CG-PARTS in notALine twice");
     }
 
+    @Test
+    void compile_whenTheContentWordsACodeTheEngineDoesNotPublish_isRefused() {
+        // Given
+        Timeline unknown = withExplanations("""
+                {"explanations": [], "reasons": [{"code": "REGIME_FORGOTTEN", "why": "It is not allowed."}]}""");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(unknown, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("REGIME_FORGOTTEN");
+    }
+
+    @Test
+    void compile_whenAReasonTheEnginePublishesIsNotWorded_isRefused() {
+        // Given — REGIME_EXCLUDES_ROW left out
+        Timeline unworded = withExplanations("""
+                {"explanations": [], "reasons": [{"code": "REGIME_DISALLOWS", "why": "Not under {regime}."}],
+                 "terms": {"regime": {"NEW_TAX_REGIME": "the default regime", "FIRST_SCHEDULE_RATES": "the old regime"}}}""");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(unworded, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("words no reason REGIME_EXCLUDES_ROW");
+    }
+
+    @Test
+    void compile_whenARegimeOfTheTimelineHasNoTerm_isRefused() {
+        // Given — FIRST_SCHEDULE_RATES left out
+        Timeline unnamed = withExplanations("""
+                {"explanations": [], "reasons": [{"code": "REGIME_DISALLOWS", "why": "Not under {regime}."},
+                  {"code": "REGIME_EXCLUDES_ROW", "why": "Not under {regime}."}],
+                 "terms": {"regime": {"NEW_TAX_REGIME": "the default regime"}}}""");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(unnamed, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("no term for the regime FIRST_SCHEDULE_RATES");
+    }
+
+    @Test
+    void compile_whenTheShippedContentIsCompiled_carriesEveryReasonAndTheYearsRegimeTerms() {
+        // Given / When
+        JsonNode content = MAPPER.readTree(RulePackCompiler.compile(SHIPPED, TaxYearId.of(2026)).files()
+                .get("content/explanations.json"));
+
+        // Then
+        Set<String> codes = new TreeSet<>();
+        content.path("reasons").forEach(reason -> codes.add(reason.path("code").asString()));
+        assertThat(codes).containsExactly("REGIME_DISALLOWS", "REGIME_EXCLUDES_ROW");
+        assertThat(content.at("/terms/regime/NEW_TAX_REGIME").asString()).isEqualTo("the default regime");
+    }
+
     /** The capital-gains lines, and the rules on lines no test reaches, as W-325's appendix classified them (W-325d). */
     private static final List<String> CAPITAL_GAINS_AND_UNREACHED = List.of(
             "CG-CHARGE-COST",

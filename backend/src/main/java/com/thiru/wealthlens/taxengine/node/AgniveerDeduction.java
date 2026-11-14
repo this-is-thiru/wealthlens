@@ -53,9 +53,9 @@ final class AgniveerDeduction {
                 ? TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(), CapContext.of(AMOUNT_PAID, paid))
                         .value()
                 : Money.ZERO;
-        lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
-                        MoneyValue.of(paid), MoneyValue.of(allowed), version.provenance())
-                .withLimitedBy(applies ? "the whole amount" : verdict.whyNot()));
+        TraceLine line = TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
+                MoneyValue.of(paid), MoneyValue.of(allowed), version.provenance());
+        lines.add(applies ? line.withLimitedBy("the whole amount") : line.withRegimeVerdict(verdict));
     }
 
     /** Whether an Agniveer account is entered at all. */

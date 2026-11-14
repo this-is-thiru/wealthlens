@@ -177,7 +177,7 @@ public final class SetOffNode implements ComputationNode {
         RegimeVerdict verdict = ctx.inRegime(row, version);
         if (!verdict.applies()) {
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, loss, Money.ZERO)
-                    .withLimitedBy(verdict.whyNot()));
+                    .withRegimeVerdict(verdict));
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, loss)
                     .withLimitedBy("deemed to have been given"
                     + " full effect to, and not carried forward (S2 s.202(3); 1961 s.115BAC(3)): " + verdict.whyNot()));

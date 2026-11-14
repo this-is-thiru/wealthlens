@@ -96,7 +96,7 @@ final class DepositInterestDeduction {
         RegimeVerdict verdict = ctx.inRegime(row, version(ctx, row));
         if (!verdict.applies()) {
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, interest, Money.ZERO)
-                    .withLimitedBy(verdict.whyNot()));
+                    .withRegimeVerdict(verdict));
             return;
         }
         CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),

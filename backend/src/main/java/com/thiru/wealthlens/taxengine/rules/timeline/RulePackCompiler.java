@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -17,6 +18,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.Explanation;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
@@ -146,6 +148,9 @@ public final class RulePackCompiler {
                     kept.add(canonical(object().put("rule", rule.value()).put("what", explanation.what()).set("byLimit", byLimit)));
                 }
             }
+            requireEveryReasonAndRegimeWorded(timeline, explanations);
+            content.set("reasons", reasons(explanations));
+            content.set("terms", object().set("regime", regimeTerms(timeline, taxYear, explanations)));
         });
         return content.set("explanations", kept);
     }
@@ -167,6 +172,51 @@ public final class RulePackCompiler {
                         + " and lists it in notALine; a rule is one or the other");
             }
         }
+    }
+
+    /**
+     * Refuses a reason code the engine publishes with no sentence, and a regime of the timeline with no word, or a word
+     * for a regime it does not hold (W-327a, D-678): once the content words reasons, every line that carries one reads
+     * in words. A timeline with no content file explains nothing and is not checked.
+     */
+    private static void requireEveryReasonAndRegimeWorded(Timeline timeline, Explanations explanations) {
+        for (ReasonCode code : sorted(ReasonCodes.FACTS.keySet(), ReasonCode::value)) {
+            if (!explanations.reasons().containsKey(code)) {
+                throw new PackValidationException("content/explanations.json words no reason " + code
+                        + ", which the engine publishes");
+            }
+        }
+        for (RegimeCode regime : sorted(timeline.regimes().keySet(), RegimeCode::value)) {
+            if (!explanations.regimeTerms().containsKey(regime)) {
+                throw new PackValidationException("content/explanations.json has no term for the regime " + regime);
+            }
+        }
+        for (RegimeCode regime : sorted(explanations.regimeTerms().keySet(), RegimeCode::value)) {
+            if (!timeline.regimes().containsKey(regime)) {
+                throw new PackValidationException("content/explanations.json has a term for " + regime
+                        + ", which the timeline states in no year");
+            }
+        }
+    }
+
+    /** Every reason's sentence, by code. */
+    private static ArrayNode reasons(Explanations explanations) {
+        ArrayNode reasons = MAPPER.createArrayNode();
+        for (ReasonCode code : sorted(explanations.reasons().keySet(), ReasonCode::value)) {
+            reasons.add(object().put("code", code.value()).put("why", explanations.reasons().get(code)));
+        }
+        return reasons;
+    }
+
+    /** The words for the regimes in force at some time in the year. */
+    private static ObjectNode regimeTerms(Timeline timeline, TaxYearId taxYear, Explanations explanations) {
+        ObjectNode terms = object();
+        for (RegimeCode regime : sorted(explanations.regimeTerms().keySet(), RegimeCode::value)) {
+            if (timeline.regimes().get(regime).lifecycle().inForceWindow().overlapsTaxYear(taxYear)) {
+                terms.put(regime.value(), explanations.regimeTerms().get(regime));
+            }
+        }
+        return terms;
     }
 
     /** The limit names of the rule's least-of in the versions given. */

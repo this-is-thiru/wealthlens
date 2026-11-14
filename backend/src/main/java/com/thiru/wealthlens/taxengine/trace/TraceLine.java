@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.taxengine.trace;
 
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import java.util.Optional;
 
@@ -39,6 +41,10 @@ import java.util.Optional;
  * @param limitedBy why the output was smaller than it might have been — a {@code LeastOf} limb name,
  *     or the cap that bound. Empty where nothing bound
  * @param provenance where the rule came from and whether it is verified
+ * @param reason why the output is what it is, as facts the pack's content puts into words (F37.3; W-327a, D-678).
+ *     A computed fact like {@code limitedBy}, which stays the audit text, and not commentary: nothing in
+ *     {@code content/} is read to build it, so a content edit still changes no line (I27). Empty where the
+ *     line's node publishes none yet, and the explanation then shows {@code limitedBy}
  */
 public record TraceLine(
         int sequence,
@@ -48,7 +54,8 @@ public record TraceLine(
         NodeValue in,
         NodeValue out,
         Optional<String> limitedBy,
-        Provenance provenance) {
+        Provenance provenance,
+        Optional<Reason> reason) {
 
     public TraceLine {
         if (sequence < 0) {
@@ -85,6 +92,10 @@ public record TraceLine(
                     "A TraceLine must carry its provenance; an unsourced figure is what this engine"
                             + " exists to avoid");
         }
+        if (reason == null) {
+            throw new IllegalArgumentException(
+                    "TraceLine.reason may not be null; pass Optional.empty() where the node publishes none");
+        }
     }
 
     /** A step that nothing bound. */
@@ -96,7 +107,7 @@ public record TraceLine(
             NodeValue in,
             NodeValue out,
             Provenance provenance) {
-        return new TraceLine(sequence, node, rule, kind, in, out, Optional.empty(), provenance);
+        return new TraceLine(sequence, node, rule, kind, in, out, Optional.empty(), provenance, Optional.empty());
     }
 
     /**
@@ -104,6 +115,19 @@ public record TraceLine(
      * bound. A copy; the record is immutable.
      */
     public TraceLine withLimitedBy(String bound) {
-        return new TraceLine(sequence, node, rule, kind, in, out, Optional.of(bound), provenance);
+        return new TraceLine(sequence, node, rule, kind, in, out, Optional.of(bound), provenance, reason);
+    }
+
+    /**
+     * This line, for a rule the regime does not apply: the verdict's {@code whyNot} as {@code limitedBy}, the audit
+     * text with its provision, and its reason as facts for the explanation (W-327a, D-678).
+     */
+    public TraceLine withRegimeVerdict(RegimeVerdict verdict) {
+        return withLimitedBy(verdict.whyNot()).withReason(verdict.reason());
+    }
+
+    /** This line, carrying why its output is what it is as facts (W-327a, D-678); {@code limitedBy} is kept. */
+    public TraceLine withReason(Reason why) {
+        return new TraceLine(sequence, node, rule, kind, in, out, limitedBy, provenance, Optional.of(why));
     }
 }

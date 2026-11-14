@@ -32,6 +32,9 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -207,6 +210,7 @@ class SetOffNodeTest {
         assertThat(lines(result, StepKind.SET_OFF)).singleElement().satisfies(line -> {
             assertThat(line.out()).isEqualTo(rupees("0"));
             assertThat(line.limitedBy().orElseThrow()).contains("REG-NEW-TAX-REGIME-NO-SETOFF");
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW))));
         });
         assertThat(lines(result, StepKind.MEASURE)).singleElement().satisfies(line -> {
             assertThat(line.out()).isEqualTo(rupees("40000"));

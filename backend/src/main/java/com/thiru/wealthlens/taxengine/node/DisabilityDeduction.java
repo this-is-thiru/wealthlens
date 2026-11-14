@@ -237,7 +237,7 @@ final class DisabilityDeduction {
 
     private static TraceLine nil(NodeContext ctx, int sequence, RuleId row, RuleVersion version, Money entered) {
         return ctx.traceLine(sequence, row, StepKind.DEDUCTION, entered, Money.ZERO)
-                .withLimitedBy(ctx.inRegime(row, version).whyNot());
+                .withRegimeVerdict(ctx.inRegime(row, version));
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {

@@ -8,11 +8,15 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -33,6 +37,8 @@ class ExplanationRendererTest {
     private static final RuleId HRA = new RuleId("SAL-HOUSE-RENT-ALLOWANCE");
 
     private static final RuleId RENT_PAID = new RuleId("DED-RENT-PAID");
+
+    private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
 
     private static TraceLine line(RuleId rule, NodeValue in, NodeValue out) {
         return TraceLine.of(1, new NodeId("salary.exemptions"), rule, StepKind.EXEMPTION, in, out,
@@ -261,5 +267,44 @@ class ExplanationRendererTest {
         assertThat(ExplanationRenderer.explain(income, PACK.explanations())).isEqualTo(
                 "This line totals your capital gains and losses of each kind and sets a loss against gains in the order"
                         + " shown. LONG_TERM_LISTED_EQUITY");
+    }
+
+    @Test
+    void explain_whenARegimeDisallowsTheRule_saysSoInWordsAndLeavesTheProvisionToLimitedBy() {
+        // Given — LoanInterestDeduction under the default regime: whyNot is the audit text, the reason its facts
+        TraceLine barred = line(new RuleId("DED-EDUCATION-LOAN"), MoneyValue.of(Money.of("40000")), MoneyValue.of(Money.ZERO))
+                .withLimitedBy("disallowed in the NEW_TAX_REGIME regime: Income-tax Act, 2025 s.202(2)(a) computes the new"
+                        + " tax regime's total income without this deduction (REG-NEW-TAX-REGIME-NO-EXEMPTION)")
+                .withReason(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(barred, PACK.explanations())).isEqualTo(
+                "₹0 of the interest on your loan for higher education is deducted. It is not allowed under the default regime.");
+    }
+
+    @Test
+    void explain_whenTheRowIsWrittenForAnotherRegime_saysTheRuleDoesNotApplyThere() {
+        // Given
+        TraceLine excluded = hra().withLimitedBy("not in the NEW_TAX_REGIME regime")
+                .withReason(new Reason(ReasonCodes.REGIME_EXCLUDES_ROW, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(excluded, PACK.explanations())).isEqualTo(
+                "Of the ₹2,40,000 house rent allowance you received for this home, ₹1,20,000 is not taxed. This rule does"
+                        + " not apply under the default regime.");
+    }
+
+    @Test
+    void explain_whenTheReasonsRegimeHasNoWord_showsLimitedByRatherThanAPlaceholder() {
+        // Given — the year's content with no regime terms
+        Explanations noTerms = new Explanations(PACK.explanations().otherLimits(), PACK.explanations().byRule(),
+                PACK.explanations().reasons(), Map.of());
+        TraceLine barred = hra().withLimitedBy("disallowed in the NEW_TAX_REGIME regime")
+                .withReason(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(barred, noTerms)).isEqualTo(
+                "Of the ₹2,40,000 house rent allowance you received for this home, ₹1,20,000 is not taxed. disallowed in the"
+                        + " NEW_TAX_REGIME regime");
     }
 }

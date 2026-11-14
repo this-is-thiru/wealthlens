@@ -2,6 +2,10 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
+import java.util.Map;
 
 /**
  * Whether a rule's version applies in the regime being computed, and if not, why (D-165).
@@ -23,6 +27,12 @@ public sealed interface RegimeVerdict {
      */
     String whyNot();
 
+    /**
+     * The same as facts, for the explanation to put into words (W-327a, D-678): the code and the regime, never the
+     * provision, which stays in {@link #whyNot()}. Refused for a rule that applies.
+     */
+    Reason reason();
+
     /** The rule applies. */
     record Applies() implements RegimeVerdict {
         @Override
@@ -32,6 +42,11 @@ public sealed interface RegimeVerdict {
 
         @Override
         public String whyNot() {
+            throw new IllegalStateException("A rule that applies in the regime has no reason for not applying");
+        }
+
+        @Override
+        public Reason reason() {
             throw new IllegalStateException("A rule that applies in the regime has no reason for not applying");
         }
     }
@@ -47,6 +62,11 @@ public sealed interface RegimeVerdict {
         public String whyNot() {
             return "not in the " + regime.value() + " regime";
         }
+
+        @Override
+        public Reason reason() {
+            return new Reason(ReasonCodes.REGIME_EXCLUDES_ROW, Map.of("regime", new ReasonFact.RegimeFact(regime)));
+        }
     }
 
     /** The regime forbids the rule, by a set resting on a provision. */
@@ -60,6 +80,11 @@ public sealed interface RegimeVerdict {
         @Override
         public String whyNot() {
             return "disallowed in the " + regime.value() + " regime: " + set.displayName() + " (" + set.basis() + ")";
+        }
+
+        @Override
+        public Reason reason() {
+            return new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(regime)));
         }
     }
 }

@@ -9,10 +9,14 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -66,6 +70,28 @@ class RegimeVerdictTest {
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
+    void reason_whenTheRegimeForbidsTheRule_isRegimeDisallowsNamingTheRegimeOnly(int year) {
+        // When
+        Reason reason = verdict(year, NEW_TAX_REGIME, RuleIds.SAL_TAX_ON_EMPLOYMENT).reason();
+
+        // Then — the provision stays in whyNot; the reason carries the regime alone (W-327a C3a)
+        assertThat(reason).isEqualTo(new Reason(ReasonCodes.REGIME_DISALLOWS,
+                Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void reason_whenTheRowIsWrittenForOtherRegimes_isRegimeExcludesRow(int year) {
+        // When
+        Reason reason = verdict(year, NEW_TAX_REGIME, RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE).reason();
+
+        // Then
+        assertThat(reason).isEqualTo(new Reason(ReasonCodes.REGIME_EXCLUDES_ROW,
+                Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
     void inRegime_whenTheRegimeReferencesNoSetListingIt_applies(int year) {
         // When — the regime outside s.202 references no disallowance set
         RegimeVerdict verdict = verdict(year, FIRST_SCHEDULE_RATES, RuleIds.SAL_TAX_ON_EMPLOYMENT);
@@ -74,6 +100,8 @@ class RegimeVerdictTest {
         assertThat(verdict).isInstanceOf(RegimeVerdict.Applies.class);
         assertThat(verdict.applies()).isTrue();
         assertThatThrownBy(verdict::whyNot).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("no reason for not applying");
+        assertThatThrownBy(verdict::reason).isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("no reason for not applying");
     }
 }
