@@ -15,10 +15,14 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -28,6 +32,7 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -155,7 +160,8 @@ class ReinvestmentExemptionTest {
                 bucket("12000000", "4000000", acquired, sold));
 
         // Then — 80,00,000 × 60,00,000 / 1,20,00,000, and the rest charged in the listed-equity part
-        exemptionLine(result, Money.of("8000000"), Money.of("4000000"));
+        assertThat(exemptionLine(result, Money.of("8000000"), Money.of("4000000")).reason())
+                .contains(costAgainst(ReasonCodes.CG_REINVESTMENT_SHARE, "6000000", "12000000"));
         assertThat(((CapitalGainsHead) result.value()).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("4000000"));
     }
 
@@ -167,7 +173,8 @@ class ReinvestmentExemptionTest {
                 bucket("4000000", "1000000", LocalDate.of(2024, 5, 1), SOLD));
 
         // Then — s.86(1)(ii) / s.54F(1)(a): the whole gain is exempt and no part is charged
-        exemptionLine(result, Money.of("3000000"), Money.ZERO);
+        assertThat(exemptionLine(result, Money.of("3000000"), Money.ZERO).reason())
+                .contains(costAgainst(ReasonCodes.CG_REINVESTMENT_WHOLE, "4500000", "4000000"));
         assertThat(((CapitalGainsHead) result.value()).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.ZERO);
     }
 
@@ -182,6 +189,7 @@ class ReinvestmentExemptionTest {
         // Then — 15,00,00,000 × 10,00,00,000 / 20,00,00,000 = 7,50,00,000 exempt, and it says the cost was capped
         TraceLine line = exemptionLine(result, Money.of("150000000"), Money.of("75000000"));
         assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).contains("capped at"));
+        assertThat(line.reason()).contains(costAgainst(ReasonCodes.CG_REINVESTMENT_SHARE, "100000000", "200000000"));
         assertThat(((CapitalGainsHead) result.value()).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("75000000"));
     }
 
@@ -224,6 +232,7 @@ class ReinvestmentExemptionTest {
         // Then — the row is met, so the line is written, and it says why nothing is exempt
         TraceLine line = exemptionLine(result, Money.of("8000000"), Money.of("8000000"));
         assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).contains("outside the window"));
+        assertThat(line.reason()).contains(outsideWindow(boughtOn, "2025-09-01", "2028-09-01"));
     }
 
     @ParameterizedTest(name = "the house bought on {0} is on the window's edge")
@@ -262,6 +271,34 @@ class ReinvestmentExemptionTest {
         // Then
         TraceLine line = exemptionLine(result, Money.of("8000000"), Money.of("8000000"));
         assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).contains("outside the window"));
+        assertThat(line.reason()).contains(outsideWindow("2029-09-02", "2026-09-01", "2029-09-01"));
+    }
+
+    @Test
+    void evaluate_whenTheSaleShowsNoGainTogether_exemptsNothingAndSaysSo() {
+        // Given — W-327d2: a lot gaining 10,00,000 (30,00,000 on 20,00,000) and a lot losing 20,00,000 (20,00,000
+        // on 40,00,000), sold together, and a house of 60,00,000
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "6000000");
+
+        // When
+        NodeResult result = result(house, lot("3000000", "2000000", LocalDate.of(2023, 5, 1)),
+                lot("2000000", "4000000", LocalDate.of(2024, 5, 1)));
+
+        // Then — together −10,00,000, so nothing is exempt; the gaining lot's line says why
+        assertThat(exemptionFigures(result)).containsExactly(inOut("1000000", "1000000"));
+        assertThat(exemptionLine(result, Money.of("1000000"), Money.of("1000000")).reason())
+                .contains(new Reason(ReasonCodes.CG_REINVESTMENT_NO_GAIN, Map.of()));
+    }
+
+    private static Reason costAgainst(ReasonCode code, String cost, String consideration) {
+        return new Reason(code, Map.of("cost", new ReasonFact.MoneyFact(Money.of(cost)),
+                "consideration", new ReasonFact.MoneyFact(Money.of(consideration))));
+    }
+
+    private static Reason outsideWindow(String house, String from, String to) {
+        return new Reason(ReasonCodes.CG_REINVESTMENT_OUTSIDE_WINDOW, Map.of(
+                "house", new ReasonFact.DateFact(LocalDate.parse(house)),
+                "from", new ReasonFact.DateFact(LocalDate.parse(from)), "to", new ReasonFact.DateFact(LocalDate.parse(to))));
     }
 
     @ParameterizedTest(name = "a house of {0} against {1} exempts {2} of a gain of 30,000")

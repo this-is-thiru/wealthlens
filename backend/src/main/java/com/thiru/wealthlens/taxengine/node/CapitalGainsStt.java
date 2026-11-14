@@ -9,10 +9,14 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
@@ -81,19 +85,23 @@ final class CapitalGainsStt {
         lines.add(ctx.traceLine(lines.size() + 1, row.get().id(), StepKind.MEASURE, gain, gain)
                 .withLimitedBy("STT on the " + side.label + ": " + code + " (" + exchange + ", " + segment + ")"
                         + (term == Term.LONG_TERM ? "; S2 s.198 / 1961 s.112A count a chargeable side as"
-                                + " paid by the owner's ruling D-294" : "")));
+                                + " paid by the owner's ruling D-294" : ""))
+                .withReason(new Reason(side.reason, Map.of("state", new ReasonFact.SttStateFact(code)))));
         return code;
     }
 
     /** A side of the disposal, as the rows name it. */
     private enum Side {
-        ACQUISITION("buy"),
-        TRANSFER("sale");
+        ACQUISITION("buy", ReasonCodes.CG_STT_ON_BUY),
+        TRANSFER("sale", ReasonCodes.CG_STT_ON_SALE);
 
         private final String label;
 
-        Side(String label) {
+        private final ReasonCode reason;
+
+        Side(String label, ReasonCode reason) {
             this.label = label;
+            this.reason = reason;
         }
 
         String evidenceOf(CapitalGainsInput.BucketFacts facts) {

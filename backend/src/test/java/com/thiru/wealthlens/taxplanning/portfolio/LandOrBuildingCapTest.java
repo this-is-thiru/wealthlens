@@ -20,6 +20,7 @@ import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
+import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
@@ -32,6 +33,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.CapitalGainsHarness;
@@ -40,6 +44,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -225,9 +230,38 @@ class LandOrBuildingCapTest {
         // Then — the measure line is the qualifying row's, and it says how the index was applied
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_INDEXED_COST_LAND_BUILDING))
                 .singleElement()
-                .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
-                        .isEqualTo("the cost 1000000.00 indexed by the index for 2025-26 (376) over that for 2005-06"
-                                + " (117): 3213675.21"));
+                .satisfies(line -> {
+                    assertThat(line.limitedBy().orElseThrow())
+                            .isEqualTo("the cost 1000000.00 indexed by the index for 2025-26 (376) over that for 2005-06"
+                                    + " (117): 3213675.21");
+                    // W-327d2: 10,00,000 × 376 / 117 = 32,13,675.21, from 2005-06 to 2025-26
+                    assertThat(line.reason()).contains(new Reason(ReasonCodes.CG_COST_INDEXED, Map.of(
+                            "cost", new ReasonFact.MoneyFact(Money.of("1000000")),
+                            "from", new ReasonFact.TaxYearFact(TaxYearId.of(2005)),
+                            "to", new ReasonFact.TaxYearFact(TaxYearId.of(2025)),
+                            "indexed", new ReasonFact.MoneyFact(Money.of("3213675.21")))));
+                });
+    }
+
+    @Test
+    void taxOnLandGain_whenTheIndexedCostIsAboveTheConsideration_givesANilMeasureAndSaysWhy() {
+        // When — W-327d2: bought 1-6-2005 for 10,00,000, sold 1-9-2025 for 20,00,000; the gain is 10,00,000, but the
+        // indexed cost 10,00,000 × 376 ÷ 117 = 32,13,675.21 leaves 20,00,000 − 32,13,675.21 = −12,13,675.21
+        NodeResult result = NodeHarness.with(pack(TaxYearId.of(2025))).regime(FIRST_SCHEDULE_RATES)
+                .inputs(inputs(2025, ResidentialStatus.RESIDENT, CapitalGainsHarness.inputOf(
+                        bucket(LocalDate.of(2005, 6, 1), LocalDate.of(2025, 9, 1), "1000000", "2000000"))))
+                .run(new CapitalGainsNode());
+
+        // Then — the measure is nil, and the line says so for the part
+        assertThat(((CapitalGainsHead) result.value()).indexedGains(LONG_TERM_OTHER)).extracting(IndexedGain::indexedGain)
+                .containsExactly(Money.ZERO);
+        assertThat(result.trace()).filteredOn(line -> line.reason().equals(Optional.of(new Reason(
+                        ReasonCodes.CG_INDEXED_MEASURE_NIL, Map.of("part", new ReasonFact.PartFact(LONG_TERM_OTHER))))))
+                .singleElement()
+                .satisfies(line -> {
+                    assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("-1213675.21")));
+                    assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+                });
     }
 
     @Test

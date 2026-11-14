@@ -328,6 +328,66 @@ public final class ReasonCodes {
     /** A carried loss set against a head's income. (W-327d1, D-687) */
     public static final ReasonCode CARRIED_LOSS_AGAINST_HEAD = new ReasonCode("CARRIED_LOSS_AGAINST_HEAD");
 
+    /** A capital-gains part nets to a loss. (W-327d2, D-688) */
+    public static final ReasonCode CG_PART_LOSS = new ReasonCode("CG_PART_LOSS");
+
+    /** A capital-gains part nets to a gain. (W-327d2, D-688) */
+    public static final ReasonCode CG_PART_GAIN = new ReasonCode("CG_PART_GAIN");
+
+    /** An indexed cost above the consideration leaves nothing at the indexed measure. (W-327d2, D-688) */
+    public static final ReasonCode CG_INDEXED_MEASURE_NIL = new ReasonCode("CG_INDEXED_MEASURE_NIL");
+
+    /** A short-term capital loss is set off against a part. (W-327d2, D-688) */
+    public static final ReasonCode CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART = new ReasonCode("CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART");
+
+    /** A long-term capital loss is set off against a part. (W-327d2, D-688) */
+    public static final ReasonCode CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART = new ReasonCode("CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART");
+
+    /** What is left of a short-term capital loss is carried forward. (W-327d2, D-688) */
+    public static final ReasonCode CG_SHORT_TERM_LOSS_CARRIED_FORWARD = new ReasonCode("CG_SHORT_TERM_LOSS_CARRIED_FORWARD");
+
+    /** What is left of a long-term capital loss is carried forward. (W-327d2, D-688) */
+    public static final ReasonCode CG_LONG_TERM_LOSS_CARRIED_FORWARD = new ReasonCode("CG_LONG_TERM_LOSS_CARRIED_FORWARD");
+
+    /** A charge is expenditure on the transfer. (W-327d2, D-688) */
+    public static final ReasonCode CG_CHARGE_TRANSFER_EXPENDITURE = new ReasonCode("CG_CHARGE_TRANSFER_EXPENDITURE");
+
+    /** A charge is part of the cost of acquisition. (W-327d2, D-688) */
+    public static final ReasonCode CG_CHARGE_COST_OF_ACQUISITION = new ReasonCode("CG_CHARGE_COST_OF_ACQUISITION");
+
+    /** A charge is not deducted. (W-327d2, D-688) */
+    public static final ReasonCode CG_CHARGE_NOT_DEDUCTED = new ReasonCode("CG_CHARGE_NOT_DEDUCTED");
+
+    /** The cost is indexed between two years. (W-327d2, D-688) */
+    public static final ReasonCode CG_COST_INDEXED = new ReasonCode("CG_COST_INDEXED");
+
+    /** Another head charges the gain. (W-327d2, D-688) */
+    public static final ReasonCode CG_LEFT_TO_ANOTHER_HEAD = new ReasonCode("CG_LEFT_TO_ANOTHER_HEAD");
+
+    /** No record shows the buy's STT; a row gives its state. (W-327d2, D-688) */
+    public static final ReasonCode CG_STT_ON_BUY = new ReasonCode("CG_STT_ON_BUY");
+
+    /** No record shows the sale's STT; a row gives its state. (W-327d2, D-688) */
+    public static final ReasonCode CG_STT_ON_SALE = new ReasonCode("CG_STT_ON_SALE");
+
+    /** Held longer than the period, so long-term. (W-327d2, D-688) */
+    public static final ReasonCode CG_HELD_LONG_TERM = new ReasonCode("CG_HELD_LONG_TERM");
+
+    /** Held no longer than the period, so short-term. (W-327d2, D-688) */
+    public static final ReasonCode CG_HELD_SHORT_TERM = new ReasonCode("CG_HELD_SHORT_TERM");
+
+    /** The new house is dated outside the window. (W-327d2, D-688) */
+    public static final ReasonCode CG_REINVESTMENT_OUTSIDE_WINDOW = new ReasonCode("CG_REINVESTMENT_OUTSIDE_WINDOW");
+
+    /** The buckets a claim reached show no gain together. (W-327d2, D-688) */
+    public static final ReasonCode CG_REINVESTMENT_NO_GAIN = new ReasonCode("CG_REINVESTMENT_NO_GAIN");
+
+    /** The new house's counted cost reaches the net consideration: the whole gain is exempt. (W-327d2, D-688) */
+    public static final ReasonCode CG_REINVESTMENT_WHOLE = new ReasonCode("CG_REINVESTMENT_WHOLE");
+
+    /** The new house's counted cost is below the net consideration: a share is exempt. (W-327d2, D-688) */
+    public static final ReasonCode CG_REINVESTMENT_SHARE = new ReasonCode("CG_REINVESTMENT_SHARE");
+
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
@@ -435,7 +495,27 @@ public final class ReasonCodes {
             Map.entry(CARRIED_LOSS_EXPIRED, Set.of("year", "years")),
             Map.entry(CARRIED_LOSS_STILL_CARRIED, Set.of("year")),
             Map.entry(CARRIED_LOSS_AGAINST_PART, Set.of("year", "part")),
-            Map.entry(CARRIED_LOSS_AGAINST_HEAD, Set.of("year", "head")));
+            Map.entry(CARRIED_LOSS_AGAINST_HEAD, Set.of("year", "head")),
+            Map.entry(CG_PART_LOSS, Set.of("part")),
+            Map.entry(CG_PART_GAIN, Set.of("part")),
+            Map.entry(CG_INDEXED_MEASURE_NIL, Set.of("part")),
+            Map.entry(CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART, Set.of("part")),
+            Map.entry(CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART, Set.of("part")),
+            Map.entry(CG_SHORT_TERM_LOSS_CARRIED_FORWARD, Set.of()),
+            Map.entry(CG_LONG_TERM_LOSS_CARRIED_FORWARD, Set.of()),
+            Map.entry(CG_CHARGE_TRANSFER_EXPENDITURE, Set.of()),
+            Map.entry(CG_CHARGE_COST_OF_ACQUISITION, Set.of()),
+            Map.entry(CG_CHARGE_NOT_DEDUCTED, Set.of()),
+            Map.entry(CG_COST_INDEXED, Set.of("cost", "from", "to", "indexed")),
+            Map.entry(CG_LEFT_TO_ANOTHER_HEAD, Set.of()),
+            Map.entry(CG_STT_ON_BUY, Set.of("state")),
+            Map.entry(CG_STT_ON_SALE, Set.of("state")),
+            Map.entry(CG_HELD_LONG_TERM, Set.of("bought", "sold", "months")),
+            Map.entry(CG_HELD_SHORT_TERM, Set.of("bought", "sold", "months")),
+            Map.entry(CG_REINVESTMENT_OUTSIDE_WINDOW, Set.of("house", "from", "to")),
+            Map.entry(CG_REINVESTMENT_NO_GAIN, Set.of()),
+            Map.entry(CG_REINVESTMENT_WHOLE, Set.of("cost", "consideration")),
+            Map.entry(CG_REINVESTMENT_SHARE, Set.of("cost", "consideration")));
 
     private ReasonCodes() {
     }

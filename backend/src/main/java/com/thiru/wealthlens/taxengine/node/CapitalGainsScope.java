@@ -10,6 +10,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
@@ -59,7 +61,8 @@ final class CapitalGainsScope {
         Optional<RuleRow> elsewhere = ctx.optionalRuleOf(ELSEWHERE, item);
         elsewhere.ifPresent(row -> lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE,
                         gain, Money.ZERO)
-                .withLimitedBy("left out of the head: " + row.id() + " — another head charges it, entered there")));
+                .withLimitedBy("left out of the head: " + row.id() + " — another head charges it, entered there")
+                .withReason(new Reason(ReasonCodes.CG_LEFT_TO_ANOTHER_HEAD, Map.of()))));
         return elsewhere.map(RuleRow::id);
     }
 }

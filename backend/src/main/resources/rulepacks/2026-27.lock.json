@@ -15,8 +15,8 @@
       "checksum": "sha256:370c6e695b1b9eb5481c15c18ddb8c5f555fdcf524aef337aade6e006144f3e5"
     },
     "content": {
-      "version": "2026-27.content.14",
-      "checksum": "sha256:f8657587e02997e9626059a1864092e277ab34e394d273e3422ab82bb3d2a6c1"
+      "version": "2026-27.content.15",
+      "checksum": "sha256:5aa7e6735e5eaefd351e999cff3841e272e1d33ecaac1f87bdb74d1a55ffdf6a"
     }
   },
   "rules": {

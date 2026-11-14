@@ -31,7 +31,8 @@ public final class ExplanationJson {
         Map<ReasonCode, String> reasons = reasons(root, path);
         return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
                 reasons, terms(root, path, "regime", RegimeCode::new), terms(root, path, "head", HeadCode::valueOf),
-                terms(root, path, "capitalGainsPart", CapitalGainsPart::new)));
+                terms(root, path, "capitalGainsPart", CapitalGainsPart::new),
+                terms(root, path, "sttState", Function.identity())));
     }
 
     /** One map of {@code terms}: each code, read by {@code code}, to its words; absent is empty. */

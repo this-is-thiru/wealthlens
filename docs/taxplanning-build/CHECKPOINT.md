@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-327d1 done (D-687), board D — next by board order W-327d2 (capital gains, 11 sites, not yet planned)
-Stage           : DONE (session 95, 2026-11-14) — committed and pushed with the W-327d split
-Done today      : session 95: W-325d (D-676), W-327 split (D-677), W-327a (D-678), W-327a1 (D-679), W-327b split (D-680), W-327b1 (D-681), W-327b2 (D-682), W-327c split (D-683), W-327c1 (D-684), W-327c2 (D-685), W-327d split (D-686), W-327d1 (D-687)
-Board           : W-115, W-116, W-325, W-325a – d, W-327, W-327a, W-327a1, W-327b, W-327b1, W-327b2, W-327c, W-327c1, W-327c2, W-327d, W-327d1 D; W-327d2 ·, W-327e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
-Next step       : confirm the W-327d1 pipeline run and record it in D-687; then plan W-327d2 (11 capital-gains sites in its row; part words already in terms.capitalGainsPart)
+Item            : W-327d2 done (D-688), board D, W-327d complete — next by board order W-327e (the bill, then the coverage pin; not yet planned)
+Stage           : DONE (session 96, 2026-11-14) — committed and pushed
+Done today      : session 96: D-687 pipeline recorded; W-327d2 planned and built (D-688)
+Board           : W-327d, W-327d1, W-327d2 D; W-327e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : confirm the W-327d2 pipeline run and record it in D-688; then plan W-327e (its row in 03-WORK-ITEMS)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-327d1 local: unit (taxengine, taxplanning, architecture) 4512/0, DraftComputationIntegrationTest + Modulith 61/0, validate green; W-327c2 pipeline 43591964437 success (D-685)
-Files touched   : none beyond this file after the W-327d1 commit
-Last item commit: taxplanning W-327d1: publish why for house property and set-off as facts, with words for heads and parts
-Updated         : 2026-11-14, session 95 — W-327d1 committed and pushed
+Last verify     : W-327d2 local: unit (taxengine, taxplanning, architecture) 4507/0, DraftComputation + Modulith 61/0, CG integration 12/0, validate green; 2 red checks
+Files touched   : none beyond this file after the W-327d2 commit
+Last item commit: taxplanning W-327d2: publish why for capital gains as facts, with dates and STT states in words
+Updated         : 2026-11-14, session 96 — W-327d2 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

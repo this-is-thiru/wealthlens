@@ -18,6 +18,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
@@ -25,6 +26,9 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -214,7 +218,15 @@ class CapitalGainsNodeTest {
                 .allSatisfy(line -> {
                     assertThat(line.rule()).isEqualTo(RuleIds.SETOFF_WITHIN_CAPITAL_GAINS);
                     assertThat(line.kind()).isEqualTo(StepKind.MEASURE);
-                });
+                })
+                .extracting(TraceLine::reason).containsExactlyInAnyOrder(
+                        Optional.of(new Reason(ReasonCodes.CG_SHORT_TERM_LOSS_CARRIED_FORWARD, Map.of())),
+                        Optional.of(new Reason(ReasonCodes.CG_LONG_TERM_LOSS_CARRIED_FORWARD, Map.of())));
+        // and each part's loss names its part: −5,000 short-term listed (STT on the sale), −8,000 long-term other
+        assertThat(result.trace()).filteredOn(line -> line.limitedBy().orElse("").endsWith(": a loss"))
+                .extracting(TraceLine::reason).containsExactlyInAnyOrder(
+                        Optional.of(ofPart(ReasonCodes.CG_PART_LOSS, SHORT_TERM_LISTED_EQUITY)),
+                        Optional.of(ofPart(ReasonCodes.CG_PART_LOSS, LONG_TERM_OTHER)));
     }
 
     @Test
@@ -233,6 +245,15 @@ class CapitalGainsNodeTest {
         List<TraceLine> setOff = result.trace().stream().filter(line -> line.kind() == StepKind.SET_OFF).toList();
         assertThat(setOff).hasSize(2);
         assertThat(setOff.getFirst().limitedBy().orElseThrow()).startsWith("long-term loss").contains("OQ-32");
+        assertThat(setOff).extracting(TraceLine::reason).containsExactly(
+                Optional.of(ofPart(ReasonCodes.CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART, LONG_TERM_OTHER)),
+                Optional.of(ofPart(ReasonCodes.CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART, LONG_TERM_OTHER)));
+        assertThat(result.trace()).filteredOn(line -> line.kind() == StepKind.INCOME).extracting(TraceLine::reason)
+                .containsExactly(Optional.of(ofPart(ReasonCodes.CG_PART_GAIN, LONG_TERM_OTHER)));
+    }
+
+    private static Reason ofPart(ReasonCode code, CapitalGainsPart part) {
+        return new Reason(code, Map.of("part", new ReasonFact.PartFact(part)));
     }
 
     /** TY {@code year}'s shipped pack with every version of {@code CG-PARTS} declaring {@code parts} instead (D-309). */
@@ -568,6 +589,8 @@ class CapitalGainsNodeTest {
                     assertThat(line.kind()).isEqualTo(StepKind.MEASURE);
                     assertThat(line.limitedBy().orElseThrow()).startsWith("STT on the buy: CHARGEABLE (NSE, DELIVERY)")
                             .contains("by the owner's ruling D-294");
+                    assertThat(line.reason()).contains(new Reason(ReasonCodes.CG_STT_ON_BUY,
+                            Map.of("state", new ReasonFact.SttStateFact("CHARGEABLE"))));
                 });
     }
 
@@ -580,8 +603,11 @@ class CapitalGainsNodeTest {
         // Then
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.STT_SALE_DELIVERY))
                 .singleElement()
-                .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
-                        .isEqualTo("STT on the sale: CHARGEABLE (NSE, DELIVERY)"));
+                .satisfies(line -> {
+                    assertThat(line.limitedBy().orElseThrow()).isEqualTo("STT on the sale: CHARGEABLE (NSE, DELIVERY)");
+                    assertThat(line.reason()).contains(new Reason(ReasonCodes.CG_STT_ON_SALE,
+                            Map.of("state", new ReasonFact.SttStateFact("CHARGEABLE"))));
+                });
     }
 
     @ParameterizedTest(name = "TY {0}: {1}")
@@ -662,6 +688,24 @@ class CapitalGainsNodeTest {
         // Then
         assertThat(head.part(expected)).isEqualTo(Money.of("1000"));
         assertThat(head.total()).isEqualTo(Money.of("1000"));
+    }
+
+    @ParameterizedTest(name = "TY 2026: {0} → {1}")
+    @CsvSource({
+        "2024-04-10, 2025-04-11, CG_HELD_LONG_TERM",
+        "2024-04-10, 2025-04-10, CG_HELD_SHORT_TERM"
+    })
+    void evaluate_whenAListedShareIsHeld_givesTheTermsReasonWithBothDatesAndTheMonths(String acquiredOn,
+            String transferredOn, String code) {
+        // When — W-327d2: the two W-088k3 boundary cases, twelve months (CG-TERM-LISTED-SECURITY)
+        NodeResult result = result(2026, held(acquiredOn, transferredOn, "NSE", "PURCHASE"));
+
+        // Then
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_TERM_LISTED_SECURITY)).singleElement()
+                .satisfies(line -> assertThat(line.reason()).contains(new Reason(new ReasonCode(code), Map.of(
+                        "bought", new ReasonFact.DateFact(LocalDate.parse(acquiredOn)),
+                        "sold", new ReasonFact.DateFact(LocalDate.parse(transferredOn)),
+                        "months", new ReasonFact.CountFact(12)))));
     }
 
     @ParameterizedTest(name = "TY {0}: sold on {1}")
@@ -790,6 +834,9 @@ class CapitalGainsNodeTest {
         // Then — every figure as if it were absent; only the record of what was decided (W-109a) tells them apart
         assertThat(result.value()).usingRecursiveComparison().ignoringFields("bucketOutcomes").isEqualTo(run(year, equity));
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_DEPOSIT)).singleElement()
-                .satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
+                .satisfies(line -> {
+                    assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+                    assertThat(line.reason()).contains(new Reason(ReasonCodes.CG_LEFT_TO_ANOTHER_HEAD, Map.of()));
+                });
     }
 }

@@ -251,6 +251,33 @@ class ExplanationCompilationTest {
                 .hasMessageContaining("no term for the capital-gains part LONG_TERM_OTHER");
     }
 
+    private static final String PART_TERMS = "\"capitalGainsPart\": {\"SHORT_TERM_SLAB\": \"a\", \"SHORT_TERM_LISTED_EQUITY\":"
+            + " \"b\", \"LONG_TERM_OTHER\": \"c\", \"LONG_TERM_LISTED_EQUITY\": \"d\"}";
+
+    @Test
+    void compile_whenAnSttStateARowNamesHasNoWord_isRefused() {
+        // Given — the RS-STT-CHARGEABLE rows name CHARGEABLE; the content words no state
+        Timeline unnamed = withExplanations("{\"explanations\": [], \"reasons\": [" + reasonsExcept("") + "], \"terms\": {"
+                + REGIME_TERMS + ", " + HEAD_TERMS + ", " + PART_TERMS + ", \"sttState\": {}}}");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(unnamed, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("no term for the STT state CHARGEABLE");
+    }
+
+    @Test
+    void compile_whenAnSttStateIsWordedThatNoRowNames_isRefused() {
+        // Given — CHARGEABLE worded, and PAID, which no row of RS-STT-CHARGEABLE names
+        Timeline extra = withExplanations("{\"explanations\": [], \"reasons\": [" + reasonsExcept("") + "], \"terms\": {"
+                + REGIME_TERMS + ", " + HEAD_TERMS + ", " + PART_TERMS
+                + ", \"sttState\": {\"CHARGEABLE\": \"chargeable\", \"PAID\": \"paid\"}}}");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(extra, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("a term for PAID, an STT state no row of RS-STT-CHARGEABLE names");
+    }
+
     @Test
     void compile_whenTheShippedContentIsCompiled_carriesEveryReasonAndTheYearsRegimeTerms() {
         // Given / When
@@ -262,11 +289,17 @@ class ExplanationCompilationTest {
         content.path("reasons").forEach(reason -> codes.add(reason.path("code").asString()));
         assertThat(codes).containsExactly("ACCOMMODATION_CONTINUED_CAP", "ACCOMMODATION_LESS_RENT",
                 "ALLOWANCE_DISABILITY_NOT_LISTED", "ALLOWANCE_MONTHLY_LIMIT", "ALL_DEDUCTED",
-                "ASSET_TRANSFER_WRITTEN_DOWN", "ASSET_USE_COST_SHARE", "ASSET_USE_RENT",
-                "BUSINESS_TRUST_SPECIFIED_SUM", "CAP_ACTUAL_AMOUNTS", "CAP_AGGREGATE_CEILING", "CAP_APPORTIONED",
-                "CAP_FIXED", "CAP_IN_EXCESS", "CAP_SHARE", "CARRIED_LOSS_AGAINST_HEAD", "CARRIED_LOSS_AGAINST_PART",
-                "CARRIED_LOSS_EXPIRED", "CARRIED_LOSS_NOT_IN_TIME", "CARRIED_LOSS_STILL_CARRIED", "CAR_PER_MONTH",
-                "CAR_PER_MONTH_WITH_CHAUFFEUR", "CAR_RUNNING_AND_WEAR", "COMMUTED_PENSION_LIMIT",
+                "ASSET_TRANSFER_WRITTEN_DOWN", "ASSET_USE_COST_SHARE", "ASSET_USE_RENT", "BUSINESS_TRUST_SPECIFIED_SUM",
+                "CAP_ACTUAL_AMOUNTS", "CAP_AGGREGATE_CEILING", "CAP_APPORTIONED", "CAP_FIXED", "CAP_IN_EXCESS",
+                "CAP_SHARE", "CARRIED_LOSS_AGAINST_HEAD", "CARRIED_LOSS_AGAINST_PART", "CARRIED_LOSS_EXPIRED",
+                "CARRIED_LOSS_NOT_IN_TIME", "CARRIED_LOSS_STILL_CARRIED", "CAR_PER_MONTH",
+                "CAR_PER_MONTH_WITH_CHAUFFEUR", "CAR_RUNNING_AND_WEAR", "CG_CHARGE_COST_OF_ACQUISITION",
+                "CG_CHARGE_NOT_DEDUCTED", "CG_CHARGE_TRANSFER_EXPENDITURE", "CG_COST_INDEXED", "CG_HELD_LONG_TERM",
+                "CG_HELD_SHORT_TERM", "CG_INDEXED_MEASURE_NIL", "CG_LEFT_TO_ANOTHER_HEAD",
+                "CG_LONG_TERM_LOSS_CARRIED_FORWARD", "CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART", "CG_PART_GAIN",
+                "CG_PART_LOSS", "CG_REINVESTMENT_NO_GAIN", "CG_REINVESTMENT_OUTSIDE_WINDOW", "CG_REINVESTMENT_SHARE",
+                "CG_REINVESTMENT_WHOLE", "CG_SHORT_TERM_LOSS_CARRIED_FORWARD",
+                "CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART", "CG_STT_ON_BUY", "CG_STT_ON_SALE", "COMMUTED_PENSION_LIMIT",
                 "COMMUTED_PENSION_LIMIT_WITH_GRATUITY", "CONDITION_NOT_MET", "DEDUCTED_IN_FULL",
                 "DEDUCTIONS_WITHIN_INCOME", "DEDUCTION_LIMITED", "DEPENDANT_NOTHING_SPENT",
                 "DEPOSIT_INTEREST_SAVINGS_ONLY", "DISABILITY_CERTIFIED", "DIVIDEND_INTEREST_LIMITED",
@@ -284,14 +317,13 @@ class ExplanationCompilationTest {
                 "LOSS_CARRIED_FORWARD_HOUSE_PROPERTY", "LOSS_DEEMED_GIVEN_EFFECT", "LOSS_NOT_CARRIED_FORWARD",
                 "LOSS_SET_OFF_AGAINST_HEAD", "LOSS_SET_OFF_AGAINST_PART", "LTC_ASSISTANCE_RECEIVED",
                 "LTC_CHILD_BEYOND_LIMIT", "LTC_JOURNEYS_IN_BLOCK", "MEALS_IN_FULL", "MEDICAL_ABROAD_EXCLUDED",
-                "MEDICAL_TRAVEL_CONDITION_NOT_MET", "NOT_RESIDENT", "NOT_SPECIFIED_EMPLOYEE",
-                "OS_EXPENSE_NOT_DEDUCTED", "OS_FOR_THIS_ITEM", "PF_CONTRIBUTION_ABOVE_THRESHOLD",
-                "PF_TAXABLE_ACCOUNT_INTEREST", "PREMIUM_SHARE_OF_SUM_ASSURED", "REGIME_DISALLOWS",
-                "REGIME_EXCLUDES_ROW", "RENT_OWNS_HOME_ELSEWHERE", "RENT_OWNS_HOME_HERE", "RENT_RECEIVES_HRA",
-                "RETIREMENT_ALLOWED_BEFORE", "RETIREMENT_BARRED", "RETIREMENT_CEILING_USED",
-                "RETIREMENT_CEILING_USED_THIS_YEAR", "SALARY_INCLUDES_AGNIVEER", "SALARY_INCLUDES_EMPLOYER_EXCESS",
-                "SALARY_INCLUDES_PENSION_CONTRIBUTION", "SALARY_INCLUDES_PERQUISITES", "SECURITY_VALUE",
-                "UNTAXED_ABROAD", "WITHIN_LIMIT");
+                "MEDICAL_TRAVEL_CONDITION_NOT_MET", "NOT_RESIDENT", "NOT_SPECIFIED_EMPLOYEE", "OS_EXPENSE_NOT_DEDUCTED",
+                "OS_FOR_THIS_ITEM", "PF_CONTRIBUTION_ABOVE_THRESHOLD", "PF_TAXABLE_ACCOUNT_INTEREST",
+                "PREMIUM_SHARE_OF_SUM_ASSURED", "REGIME_DISALLOWS", "REGIME_EXCLUDES_ROW", "RENT_OWNS_HOME_ELSEWHERE",
+                "RENT_OWNS_HOME_HERE", "RENT_RECEIVES_HRA", "RETIREMENT_ALLOWED_BEFORE", "RETIREMENT_BARRED",
+                "RETIREMENT_CEILING_USED", "RETIREMENT_CEILING_USED_THIS_YEAR", "SALARY_INCLUDES_AGNIVEER",
+                "SALARY_INCLUDES_EMPLOYER_EXCESS", "SALARY_INCLUDES_PENSION_CONTRIBUTION",
+                "SALARY_INCLUDES_PERQUISITES", "SECURITY_VALUE", "UNTAXED_ABROAD", "WITHIN_LIMIT");
         assertThat(content.at("/terms/regime/NEW_TAX_REGIME").asString()).isEqualTo("the default regime");
     }
 

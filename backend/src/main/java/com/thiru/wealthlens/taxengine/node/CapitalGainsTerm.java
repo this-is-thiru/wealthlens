@@ -14,6 +14,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
@@ -71,7 +74,11 @@ public final class CapitalGainsTerm {
                         + " (calendar months, D-303)"
                         + (facts.corporateAction().equals(Optional.of("BONUS"))
                                 ? "; a bonus lot processed before W-088k4a may be dated at its ex-date (W-088k4b)"
-                                : "")));
+                                : ""))
+                .withReason(new Reason(longTerm ? ReasonCodes.CG_HELD_LONG_TERM : ReasonCodes.CG_HELD_SHORT_TERM,
+                        Map.of("bought", new ReasonFact.DateFact(facts.acquiredOn()), "sold",
+                                new ReasonFact.DateFact(facts.transferredOn()), "months",
+                                new ReasonFact.CountFact(months)))));
         return new BucketOutcome.TermDecision(term, row.get().id(), months);
     }
 }

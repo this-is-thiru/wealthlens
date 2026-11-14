@@ -24,6 +24,7 @@ import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -303,7 +304,8 @@ class ExplanationRendererTest {
     void explain_whenTheReasonsRegimeHasNoWord_showsLimitedByRatherThanAPlaceholder() {
         // Given — the year's content with no regime terms
         Explanations noTerms = new Explanations(PACK.explanations().otherLimits(), PACK.explanations().byRule(),
-                PACK.explanations().reasons(), Map.of(), PACK.explanations().headTerms(), PACK.explanations().partTerms());
+                PACK.explanations().reasons(), Map.of(), PACK.explanations().headTerms(), PACK.explanations().partTerms(),
+                PACK.explanations().sttStateTerms());
         TraceLine barred = hra().withLimitedBy("disallowed in the NEW_TAX_REGIME regime")
                 .withReason(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
 
@@ -503,5 +505,33 @@ class ExplanationRendererTest {
         // When / Then
         assertThat(ExplanationRenderer.explain(carried, PACK.explanations()))
                 .endsWith("The loss of 2023-24 is set against your short-term gains on listed shares and equity funds.");
+    }
+
+    @Test
+    void explain_whenATermIsDecided_writesBothDatesInWordsAndTheMonths() {
+        // Given — CapitalGainsTerm:69: a listed share held 1 April 2024 to 2 June 2025 under a twelve-month period
+        TraceLine held = line(new RuleId("CG-TERM-LISTED-SECURITY"), MoneyValue.of(Money.of("10000")),
+                MoneyValue.of(Money.of("10000"))).withLimitedBy("Held 2024-04-01 → 2025-06-02: more than 12 months")
+                .withReason(new Reason(ReasonCodes.CG_HELD_LONG_TERM, Map.of(
+                        "bought", new ReasonFact.DateFact(LocalDate.of(2024, 4, 1)),
+                        "sold", new ReasonFact.DateFact(LocalDate.of(2025, 6, 2)),
+                        "months", new ReasonFact.CountFact(12))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(held, PACK.explanations()))
+                .endsWith("Held from 1 April 2024 to 2 June 2025, more than 12 months, so it is long-term.");
+    }
+
+    @Test
+    void explain_whenASalesSttIsDerived_namesTheStateInWords() {
+        // Given — CapitalGainsStt:82: no record of the sale's STT; the row says chargeable
+        TraceLine derived = line(new RuleId("STT-SALE-DELIVERY"), MoneyValue.of(Money.of("10000")),
+                MoneyValue.of(Money.of("10000"))).withLimitedBy("STT on the sale: CHARGEABLE (NSE, DELIVERY)")
+                .withReason(new Reason(ReasonCodes.CG_STT_ON_SALE, Map.of("state",
+                        new ReasonFact.SttStateFact("CHARGEABLE"))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(derived, PACK.explanations())).endsWith("No record shows the STT on the"
+                + " sale; under the year's rule it was chargeable to securities transaction tax.");
     }
 }

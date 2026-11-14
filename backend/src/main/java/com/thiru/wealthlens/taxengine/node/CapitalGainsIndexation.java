@@ -13,6 +13,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
@@ -78,7 +81,10 @@ final class CapitalGainsIndexation {
         lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, gain, indexedGain)
                 .withLimitedBy("the cost " + cost + " indexed by the index for " + saleYear.label() + " ("
                         + index.of(saleYear) + ") over that for " + divisorYear.label() + " (" + index.of(divisorYear)
-                        + "): " + indexedCost));
+                        + "): " + indexedCost)
+                .withReason(new Reason(ReasonCodes.CG_COST_INDEXED, Map.of("cost", new ReasonFact.MoneyFact(cost),
+                        "from", new ReasonFact.TaxYearFact(divisorYear), "to", new ReasonFact.TaxYearFact(saleYear),
+                        "indexed", new ReasonFact.MoneyFact(indexedCost)))));
         return Optional.of(indexedGain);
     }
 

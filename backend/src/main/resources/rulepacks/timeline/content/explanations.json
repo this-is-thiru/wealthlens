@@ -67,6 +67,86 @@
       "why": "The loss of {year} is set against your income from {head}."
     },
     {
+      "code": "CG_PART_LOSS",
+      "why": "It is a loss in your {part}."
+    },
+    {
+      "code": "CG_PART_GAIN",
+      "why": "It is your {part}."
+    },
+    {
+      "code": "CG_INDEXED_MEASURE_NIL",
+      "why": "With its cost indexed, the cost is above what it sold for, so nothing is left to tax at the indexed rate."
+    },
+    {
+      "code": "CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART",
+      "why": "Your short-term capital loss is set against your {part}."
+    },
+    {
+      "code": "CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART",
+      "why": "Your long-term capital loss is set against your {part}."
+    },
+    {
+      "code": "CG_SHORT_TERM_LOSS_CARRIED_FORWARD",
+      "why": "The rest of your short-term capital loss is carried forward to later years."
+    },
+    {
+      "code": "CG_LONG_TERM_LOSS_CARRIED_FORWARD",
+      "why": "The rest of your long-term capital loss is carried forward to later years."
+    },
+    {
+      "code": "CG_CHARGE_TRANSFER_EXPENDITURE",
+      "why": "This charge is an expense of the sale, so it is deducted from the gain."
+    },
+    {
+      "code": "CG_CHARGE_COST_OF_ACQUISITION",
+      "why": "This charge is part of what the asset cost you, so it is deducted from the gain."
+    },
+    {
+      "code": "CG_CHARGE_NOT_DEDUCTED",
+      "why": "The law does not let this charge be deducted from the gain."
+    },
+    {
+      "code": "CG_COST_INDEXED",
+      "why": "Its cost of {cost} is indexed from {from} to {to}, to {indexed}."
+    },
+    {
+      "code": "CG_LEFT_TO_ANOTHER_HEAD",
+      "why": "Another head of income taxes this gain, so it is left out here and entered there."
+    },
+    {
+      "code": "CG_STT_ON_BUY",
+      "why": "No record shows the STT on the buy; under the year's rule it was {state}."
+    },
+    {
+      "code": "CG_STT_ON_SALE",
+      "why": "No record shows the STT on the sale; under the year's rule it was {state}."
+    },
+    {
+      "code": "CG_HELD_LONG_TERM",
+      "why": "Held from {bought} to {sold}, more than {months} months, so it is long-term."
+    },
+    {
+      "code": "CG_HELD_SHORT_TERM",
+      "why": "Held from {bought} to {sold}, not more than {months} months, so it is short-term."
+    },
+    {
+      "code": "CG_REINVESTMENT_OUTSIDE_WINDOW",
+      "why": "The new house, dated {house}, is outside the window from {from} to {to}, so nothing is exempt."
+    },
+    {
+      "code": "CG_REINVESTMENT_NO_GAIN",
+      "why": "The sales this claim covers show no gain together, so nothing is exempt."
+    },
+    {
+      "code": "CG_REINVESTMENT_WHOLE",
+      "why": "The new house, counted at {cost}, costs at least the {consideration} you received, so the whole gain is exempt."
+    },
+    {
+      "code": "CG_REINVESTMENT_SHARE",
+      "why": "The new house, counted at {cost}, costs less than the {consideration} you received, so only that share of the gain is exempt."
+    },
+    {
       "code": "CARRIED_LOSS_AGAINST_PART",
       "why": "The loss of {year} is set against your {part}."
     },
@@ -444,6 +524,9 @@
       "SHORT_TERM_LISTED_EQUITY": "short-term gains on listed shares and equity funds",
       "LONG_TERM_OTHER": "other long-term gains",
       "LONG_TERM_LISTED_EQUITY": "long-term gains on listed shares and equity funds"
+    },
+    "sttState": {
+      "CHARGEABLE": "chargeable to securities transaction tax"
     }
   },
   "explanations": [

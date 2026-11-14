@@ -14,6 +14,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
@@ -48,7 +50,7 @@ final class CapitalGainsCharges {
             ChargeDeductionLimb limb = limbIn(ctx, row);
             lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, charge.amount(),
                             limb.deducts() ? charge.amount() : Money.ZERO)
-                    .withLimitedBy(charge.code() + " on the " + charge.side() + ": " + limb));
+                    .withLimitedBy(charge.code() + " on the " + charge.side() + ": " + limb).withReason(reasonOf(limb)));
             if (limb.deducts()) {
                 gain = gain.minus(charge.amount());
             }
@@ -57,6 +59,15 @@ final class CapitalGainsCharges {
             }
         }
         return new Gain(gain, netConsideration);
+    }
+
+    /** How the law treats the charge, in words (W-327d2, D-688); its code and side are on the line's charge table. */
+    private static Reason reasonOf(ChargeDeductionLimb limb) {
+        return new Reason(switch (limb) {
+            case TRANSFER_EXPENDITURE -> ReasonCodes.CG_CHARGE_TRANSFER_EXPENDITURE;
+            case COST_OF_ACQUISITION -> ReasonCodes.CG_CHARGE_COST_OF_ACQUISITION;
+            case NOT_DEDUCTED -> ReasonCodes.CG_CHARGE_NOT_DEDUCTED;
+        }, Map.of());
     }
 
     /** The bucket's charges a row classes under {@code limb}, added together (W-093a, D-658). */

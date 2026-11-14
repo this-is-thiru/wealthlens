@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
+import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
@@ -153,10 +154,12 @@ public final class RulePackCompiler {
             }
             requireEveryReasonAndRegimeWorded(timeline, explanations);
             requireEveryHeadAndPartWorded(timeline, explanations);
+            requireEverySttStateWorded(timeline, explanations);
             content.set("reasons", reasons(explanations));
             content.set("terms", object().<ObjectNode>set("regime", regimeTerms(timeline, taxYear, explanations))
                     .<ObjectNode>set("head", words(explanations.headTerms(), HeadCode::name))
-                    .set("capitalGainsPart", words(explanations.partTerms(), CapitalGainsPart::value)));
+                    .<ObjectNode>set("capitalGainsPart", words(explanations.partTerms(), CapitalGainsPart::value))
+                    .set("sttState", words(explanations.sttStateTerms(), Function.identity())));
         });
         return content.set("explanations", kept);
     }
@@ -229,6 +232,28 @@ public final class RulePackCompiler {
             if (!declared.contains(part)) {
                 throw new PackValidationException("content/explanations.json has a term for " + part.value()
                         + ", a part no year's CG-PARTS declares");
+            }
+        }
+    }
+
+    /**
+     * Refuses an STT state some row of {@code RS-STT-CHARGEABLE} names with no word, and a word for a state no row names
+     * (W-327d2, D-688): states are data (D-298), so a new one asks for its word here.
+     */
+    private static void requireEverySttStateWorded(Timeline timeline, Explanations explanations) {
+        Set<String> named = new TreeSet<>();
+        timeline.rules().values().forEach(row -> row.versions().forEach(version -> version.definition()
+                .filter(SttChargeability.class::isInstance).map(SttChargeability.class::cast)
+                .ifPresent(chargeability -> named.add(chargeability.code()))));
+        for (String state : named) {
+            if (!explanations.sttStateTerms().containsKey(state)) {
+                throw new PackValidationException("content/explanations.json has no term for the STT state " + state);
+            }
+        }
+        for (String state : new TreeSet<>(explanations.sttStateTerms().keySet())) {
+            if (!named.contains(state)) {
+                throw new PackValidationException("content/explanations.json has a term for " + state
+                        + ", an STT state no row of RS-STT-CHARGEABLE names");
             }
         }
     }

@@ -20,11 +20,15 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.Notice;
 import com.thiru.wealthlens.taxengine.trace.Severity;
@@ -140,14 +144,14 @@ public final class CapitalGainsNode implements ComputationNode {
             if (amount.isLessThan(Money.ZERO)) {
                 Money loss = Money.ZERO.minus(amount);
                 lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, amount, Money.ZERO)
-                        .withLimitedBy(part + ": a loss"));
+                        .withLimitedBy(part + ": a loss").withReason(ofPart(ReasonCodes.CG_PART_LOSS, part)));
                 boolean longTerm = declared.collectsLongTerm(part);
                 longTermLoss = longTerm ? longTermLoss.plus(loss) : longTermLoss;
                 shortTermLoss = longTerm ? shortTermLoss : shortTermLoss.plus(loss);
             } else if (amount.isGreaterThan(Money.ZERO)) {
                 declared.requireDeclared(part);
                 lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INCOME, amount, amount)
-                        .withLimitedBy(part.toString()));
+                        .withLimitedBy(part.toString()).withReason(ofPart(ReasonCodes.CG_PART_GAIN, part)));
                 available.put(part, amount);
                 if (qualifying.containsKey(part)) {
                     indexed.put(part, IndexedGain.lowered(qualifying.get(part), gaining.get(part), amount));
@@ -170,7 +174,7 @@ public final class CapitalGainsNode implements ComputationNode {
         }
         lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, measure, Money.ZERO)
                 .withLimitedBy(part + ": indexed cost above the consideration, so nothing is left at the 20 per cent"
-                        + " measure"));
+                        + " measure").withReason(ofPart(ReasonCodes.CG_INDEXED_MEASURE_NIL, part)));
         return Money.ZERO;
     }
 
@@ -186,13 +190,22 @@ public final class CapitalGainsNode implements ComputationNode {
         Money remaining = loss.minus(parts.absorb(loss, reaches, lines, (sequence, part, gain, taken) -> ctx
                 .traceLine(sequence, row, StepKind.SET_OFF, gain, taken).withLimitedBy(which + " loss against " + part
                         + "; order " + parts.order().parts()
-                        + ", the declared default: neither Act prescribes one (OQ-32)")));
+                        + ", the declared default: neither Act prescribes one (OQ-32)")
+                .withReason(ofPart(longTerm ? ReasonCodes.CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART
+                        : ReasonCodes.CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART, part))));
         if (remaining.isGreaterThan(Money.ZERO)) {
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, remaining).withLimitedBy(which
                     + " loss not set off, and not against another head (S2 s.109(2); 1961 s.71(3)); carried forward"
-                    + " (S2 s.111(1); 1961 s.74(1))"));
+                    + " (S2 s.111(1); 1961 s.74(1))").withReason(new Reason(longTerm
+                    ? ReasonCodes.CG_LONG_TERM_LOSS_CARRIED_FORWARD : ReasonCodes.CG_SHORT_TERM_LOSS_CARRIED_FORWARD,
+                    Map.of())));
         }
         return remaining;
+    }
+
+    /** A reason whose one fact is the part the line is for (W-327d2, D-688). */
+    private static Reason ofPart(ReasonCode code, CapitalGainsPart part) {
+        return new Reason(code, Map.of("part", new ReasonFact.PartFact(part)));
     }
 
     /**

@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import java.time.LocalDate;
 
 /**
  * One fact a {@link Reason} carries, typed so the renderer can put it into words: a regime through the content's term
@@ -70,6 +71,27 @@ public sealed interface ReasonFact {
         public PartFact {
             if (part == null) {
                 throw new IllegalArgumentException("A part fact must name its part");
+            }
+        }
+    }
+
+    /** A calendar date, written as day, month in words and year, such as 2 June 2025 (W-327d2, D-688). */
+    record DateFact(LocalDate date) implements ReasonFact {
+        public DateFact {
+            if (date == null) {
+                throw new IllegalArgumentException("A date fact must carry its date");
+            }
+        }
+    }
+
+    /**
+     * A side's STT state as a row of {@code RS-STT-CHARGEABLE} names it, worded by the content's {@code terms.sttState}
+     * (W-327d2, D-688). A code, not an enum: a later state is new data (D-298).
+     */
+    record SttStateFact(String state) implements ReasonFact {
+        public SttStateFact {
+            if (state == null || state.isBlank()) {
+                throw new IllegalArgumentException("An STT-state fact must name its state");
             }
         }
     }

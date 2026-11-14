@@ -14,10 +14,13 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.test.CapitalGainsHarness;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -80,6 +83,12 @@ class CapitalGainsChargesTest {
                 MoneyValue.of(Money.of("12")), MoneyValue.of(Money.ZERO), MoneyValue.of(Money.of("20")),
                 MoneyValue.of(Money.of("3.60")), MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO));
         assertThat(lines.get(2).limitedBy()).contains("STT on the ACQUISITION: NOT_DEDUCTED");
+        // and each line says how the law treats its charge: the buy's brokerage and stamp duty part of the cost, the
+        // sale's brokerage and GST an expense of the sale, both STT lines and misc not deducted
+        Optional<Reason> cost = Optional.of(new Reason(ReasonCodes.CG_CHARGE_COST_OF_ACQUISITION, Map.of()));
+        Optional<Reason> transfer = Optional.of(new Reason(ReasonCodes.CG_CHARGE_TRANSFER_EXPENDITURE, Map.of()));
+        Optional<Reason> not = Optional.of(new Reason(ReasonCodes.CG_CHARGE_NOT_DEDUCTED, Map.of()));
+        assertThat(lines).extracting(TraceLine::reason).containsExactly(cost, cost, not, transfer, transfer, not, not);
     }
 
     @ParameterizedTest(name = "TY {0}")

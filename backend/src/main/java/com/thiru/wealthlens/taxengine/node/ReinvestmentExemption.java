@@ -13,6 +13,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
@@ -127,6 +130,7 @@ final class ReinvestmentExemption {
         Money exempt = outside.isPresent() || !measure.hasGain() ? Money.ZERO
                 : exemptGain(definition, claim, measure.gain(), measure.netConsideration());
         String reason = outside.orElseGet(() -> reasonOf(definition, claim, measure));
+        Reason why = whyOf(definition, claim, measure, outside.isPresent());
         Money shared = Money.ZERO;
         for (int index = 0; index < measure.gainers().size(); index++) {
             int position = measure.gainers().get(index);
@@ -136,7 +140,7 @@ final class ReinvestmentExemption {
             shared = shared.plus(share);
             chargeable.set(position, before.minus(share));
             lines.add(ctx.traceLine(lines.size() + 1, reached.get(position).id(), StepKind.EXEMPTION, before,
-                    before.minus(share)).withLimitedBy(reason));
+                    before.minus(share)).withLimitedBy(reason).withReason(why));
         }
     }
 
@@ -193,15 +197,49 @@ final class ReinvestmentExemption {
      * the window starting at the transfer for a house built and before it for one bought.
      */
     private static Optional<String> outsideWindow(ExemptReinvestment definition, HouseReinvestment reinvestment) {
-        LocalDate transfer = reinvestment.transferDate();
-        LocalDate from = reinvestment.constructed() ? transfer : transfer.minusMonths(definition.monthsBeforePurchase());
-        LocalDate to = transfer.plusMonths(reinvestment.constructed()
-                ? definition.monthsAfterConstruction() : definition.monthsAfterPurchase());
-        if (!reinvestment.newAssetOn().isBefore(from) && !reinvestment.newAssetOn().isAfter(to)) {
+        Window window = Window.of(definition, reinvestment);
+        if (window.holds(reinvestment.newAssetOn())) {
             return Optional.empty();
         }
-        return Optional.of("the new house dated " + reinvestment.newAssetOn() + " is outside the window " + from
-                + " to " + to + " (S2 s.86(1)(b); 1961 s.54F(1)), so nothing is exempt");
+        return Optional.of("the new house dated " + reinvestment.newAssetOn() + " is outside the window " + window.from()
+                + " to " + window.to() + " (S2 s.86(1)(b); 1961 s.54F(1)), so nothing is exempt");
+    }
+
+    /** The line's reason, with the facts it was measured on (W-327d2, D-688). */
+    private static Reason whyOf(ExemptReinvestment definition, HouseReinvestment claim, Measure measure,
+            boolean outside) {
+        if (outside) {
+            Window window = Window.of(definition, claim);
+            return new Reason(ReasonCodes.CG_REINVESTMENT_OUTSIDE_WINDOW, Map.of(
+                    "house", new ReasonFact.DateFact(claim.newAssetOn()),
+                    "from", new ReasonFact.DateFact(window.from()), "to", new ReasonFact.DateFact(window.to())));
+        }
+        if (!measure.hasGain()) {
+            return new Reason(ReasonCodes.CG_REINVESTMENT_NO_GAIN, Map.of());
+        }
+        Money cost = Money.min(claim.newAssetCost(), definition.newAssetCostCap());
+        return new Reason(cost.isLessThan(measure.netConsideration()) ? ReasonCodes.CG_REINVESTMENT_SHARE
+                : ReasonCodes.CG_REINVESTMENT_WHOLE, Map.of("cost", new ReasonFact.MoneyFact(cost),
+                        "consideration", new ReasonFact.MoneyFact(measure.netConsideration())));
+    }
+
+    /**
+     * The days the new house may be dated in, ends included: starting at the transfer for a house built and before it for
+     * one bought, as the row's periods give.
+     */
+    private record Window(LocalDate from, LocalDate to) {
+
+        static Window of(ExemptReinvestment definition, HouseReinvestment reinvestment) {
+            LocalDate transfer = reinvestment.transferDate();
+            return new Window(reinvestment.constructed() ? transfer
+                    : transfer.minusMonths(definition.monthsBeforePurchase()),
+                    transfer.plusMonths(reinvestment.constructed()
+                            ? definition.monthsAfterConstruction() : definition.monthsAfterPurchase()));
+        }
+
+        boolean holds(LocalDate day) {
+            return !day.isBefore(from) && !day.isAfter(to);
+        }
     }
 
     /** The exempt gain: the whole of it where the new house's cost reaches the net consideration, else its share. */

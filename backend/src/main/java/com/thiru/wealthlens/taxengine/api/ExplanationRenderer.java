@@ -8,7 +8,9 @@ import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.reason.Reason;
 import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -21,6 +23,9 @@ import java.util.stream.Collectors;
  * line does not hold in money, shows the rule id: never a blank (F37.2). Every word comes from the pack's content.
  */
 final class ExplanationRenderer {
+
+    /** A date as the content's sentences read it, such as 2 June 2025 (W-327d2, D-688). */
+    private static final DateTimeFormatter DAY_MONTH_YEAR = DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.ENGLISH);
 
     private ExplanationRenderer() {
     }
@@ -50,21 +55,28 @@ final class ExplanationRenderer {
             return Optional.empty();
         }
         for (Map.Entry<String, ReasonFact> fact : reason.facts().entrySet()) {
-            Optional<String> words = switch (fact.getValue()) {
-                case ReasonFact.RegimeFact regime -> Optional.ofNullable(explanations.regimeTerms().get(regime.regime()));
-                case ReasonFact.MoneyFact money -> Optional.of(money.amount().inIndianNotation());
-                case ReasonFact.ShareFact share -> Optional.of(share.share().asPercentLabel());
-                case ReasonFact.CountFact count -> Optional.of(Integer.toString(count.count()));
-                case ReasonFact.TaxYearFact year -> Optional.of(year.taxYear().label());
-                case ReasonFact.HeadFact head -> Optional.ofNullable(explanations.headTerms().get(head.head()));
-                case ReasonFact.PartFact part -> Optional.ofNullable(explanations.partTerms().get(part.part()));
-            };
+            Optional<String> words = wordsOf(fact.getValue(), explanations);
             if (words.isEmpty()) {
                 return Optional.empty();
             }
             why = why.replace("{" + fact.getKey() + "}", words.get());
         }
         return Optional.of(why);
+    }
+
+    /** One fact in words, or empty where the content has no word for it. */
+    private static Optional<String> wordsOf(ReasonFact fact, Explanations explanations) {
+        return switch (fact) {
+            case ReasonFact.RegimeFact regime -> Optional.ofNullable(explanations.regimeTerms().get(regime.regime()));
+            case ReasonFact.MoneyFact money -> Optional.of(money.amount().inIndianNotation());
+            case ReasonFact.ShareFact share -> Optional.of(share.share().asPercentLabel());
+            case ReasonFact.CountFact count -> Optional.of(Integer.toString(count.count()));
+            case ReasonFact.TaxYearFact year -> Optional.of(year.taxYear().label());
+            case ReasonFact.HeadFact head -> Optional.ofNullable(explanations.headTerms().get(head.head()));
+            case ReasonFact.PartFact part -> Optional.ofNullable(explanations.partTerms().get(part.part()));
+            case ReasonFact.DateFact date -> Optional.of(date.date().format(DAY_MONTH_YEAR));
+            case ReasonFact.SttStateFact state -> Optional.ofNullable(explanations.sttStateTerms().get(state.state()));
+        };
     }
 
     /** The figure a value holds, where it is money. */
