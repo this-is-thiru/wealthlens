@@ -278,6 +278,32 @@ class ExplanationCompilationTest {
                 .hasMessageContaining("a term for PAID, an STT state no row of RS-STT-CHARGEABLE names");
     }
 
+    private static Timeline withHeadroom(String headroom) {
+        return withExplanations("{\"explanations\": [], \"reasons\": [" + reasonsExcept("") + "], \"terms\": {"
+                + REGIME_TERMS + ", " + HEAD_TERMS + ", " + PART_TERMS + ", \"sttState\": {\"CHARGEABLE\": \"chargeable\"}},"
+                + " \"headroom\": {" + headroom + "}}");
+    }
+
+    @Test
+    void compile_whenAHeadroomSentenceNamesAnInputNoLimbIsRaisedBy_isRefused() {
+        // Given — W-326b: SALARIES_PAID is no least-of limb's input, so the sentence would never be said
+        Timeline misspelt = withHeadroom("\"SALARIES_PAID\": \"Paying {more} more would raise it to {next}.\"");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(misspelt, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("headroom sentence for SALARIES_PAID");
+    }
+
+    @Test
+    void compile_whenAHeadroomSentenceHoldsAnotherPlaceholder_isRefused() {
+        // Given — only {more} and {next} are filled
+        Timeline stray = withHeadroom("\"RENT_PAID\": \"Paying {more} more in {city} would raise it to {next}.\"");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(stray, TaxYearId.of(2026))).hasMessageContaining("{city}");
+    }
+
     @Test
     void compile_whenTheShippedContentIsCompiled_carriesEveryReasonAndTheYearsRegimeTerms() {
         // Given / When

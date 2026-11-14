@@ -74,6 +74,7 @@ final class RentPaidDeduction {
                         Map.of(MONTH, declaration.monthsOfStay())));
         return Optional.of(ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), StepKind.DEDUCTION,
                         rent, allowed.value())
+                .withCapResult(allowed)
                 .withLimitedBy(allowed.limitedBy()
                 + ", on total income before this deduction " + totalIncomeBefore));
     }

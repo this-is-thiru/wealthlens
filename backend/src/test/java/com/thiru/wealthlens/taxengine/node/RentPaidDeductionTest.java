@@ -253,4 +253,17 @@ class RentPaidDeductionTest {
         assertThatThrownBy(() -> new RentDeclaration(13, false, false)).hasMessageContaining("1 to 12");
         assertThatThrownBy(() -> new RentDeclaration(0, false, false)).hasMessageContaining("1 to 12");
     }
+
+    @Test
+    void evaluate_whenRentBindsTheLimit_carriesHowMuchMoreRentReachesTheNext() {
+        // When — (a) 60,000 − 45,000 = 15,000 binds; the next is (b) 5,000 × 12 = 60,000, so 45,000 more rent (W-326b)
+        NodeResult result = run(Case.of("60000", 12));
+
+        // Then
+        assertThat(rentLine(result).headroom()).hasValueSatisfying(headroom -> {
+            assertThat(headroom.input().value()).isEqualTo("RENT_PAID");
+            assertThat(headroom.more()).isEqualByComparingTo(Money.of("45000"));
+            assertThat(headroom.next()).isEqualByComparingTo(Money.of("60000"));
+        });
+    }
 }

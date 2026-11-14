@@ -277,4 +277,16 @@ class MoneyTest {
         assertThat(Money.of("123456789.5").inIndianNotation()).isEqualTo("₹12,34,56,789.50");
         assertThat(Money.of("-2500").inIndianNotation()).isEqualTo("-₹2,500");
     }
+
+    @Test
+    void upToWholeRupee_whenPaiseRemain_raisesToTheNextRupee() {
+        // Given / When / Then — W-326b: what must be paid to reach a figure
+        assertThat(Money.of("44999.01").upToWholeRupee()).isEqualByComparingTo(Money.of("45000"));
+    }
+
+    @Test
+    void upToWholeRupee_whenAlreadyWhole_leavesIt() {
+        // Given / When / Then
+        assertThat(Money.of("45000.00").upToWholeRupee()).isEqualByComparingTo(Money.of("45000"));
+    }
 }

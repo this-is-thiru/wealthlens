@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
@@ -155,7 +156,9 @@ public final class RulePackCompiler {
             requireEveryReasonAndRegimeWorded(timeline, explanations);
             requireEveryHeadAndPartWorded(timeline, explanations);
             requireEverySttStateWorded(timeline, explanations);
+            requireEveryLeverRaisesALimit(timeline, explanations);
             content.set("reasons", reasons(explanations));
+            content.set("headroom", words(explanations.headroom(), BaseId::value));
             content.set("terms", object().<ObjectNode>set("regime", regimeTerms(timeline, taxYear, explanations))
                     .<ObjectNode>set("head", words(explanations.headTerms(), HeadCode::name))
                     .<ObjectNode>set("capitalGainsPart", words(explanations.partTerms(), CapitalGainsPart::value))
@@ -254,6 +257,23 @@ public final class RulePackCompiler {
             if (!named.contains(state)) {
                 throw new PackValidationException("content/explanations.json has a term for " + state
                         + ", an STT state no row of RS-STT-CHARGEABLE names");
+            }
+        }
+    }
+
+    /**
+     * Refuses a headroom sentence for an input no shipped least-of limb could be raised by (W-326b, D-697): it would
+     * never be said, and a misspelt input would hide behind it.
+     */
+    private static void requireEveryLeverRaisesALimit(Timeline timeline, Explanations explanations) {
+        Set<BaseId> raising = new TreeSet<>(Comparator.comparing(BaseId::value));
+        timeline.rules().values().forEach(row -> row.versions().forEach(version -> version.cap()
+                .filter(LeastOf.class::isInstance).map(LeastOf.class::cast)
+                .ifPresent(least -> least.limbs().forEach(limb -> limb.shape().raisingInput().ifPresent(raising::add)))));
+        for (BaseId input : sorted(explanations.headroom().keySet(), BaseId::value)) {
+            if (!raising.contains(input)) {
+                throw new PackValidationException("content/explanations.json has a headroom sentence for "
+                        + input.value() + ", which no year's least-of limb is raised by");
             }
         }
     }

@@ -61,20 +61,31 @@ public sealed interface CapShape
      * composition reads what its parts read.
      */
     /**
-     * The amount whose rise raises this shape, where one does at {@code ctx} (W-326a, D-696): a percentage's base at a
-     * rate above nil, an excess's amount where its threshold does not read it too. Empty for a shape no single amount
-     * raises.
+     * The amount whose rise could raise this shape, read from the shape alone (W-326b, D-697): a percentage's base, an
+     * excess's amount. The compiler holds content's levers to these; {@link #raisedBy} adds what a run decides.
      */
-    default Optional<BaseId> raisedBy(CapContext ctx) {
+    default Optional<BaseId> raisingInput() {
         return switch (this) {
-            case PercentOfBase percent -> Optional.of(percent.base()).filter(base -> percent.percent().compareTo(Rate.ZERO) > 0);
-            case PercentOfBaseByLocation byLocation -> Optional.of(byLocation.base())
-                    .filter(base -> byLocation.percentAt(ctx).compareTo(Rate.ZERO) > 0);
-            case AmountInExcess excess -> Optional.of(excess.amount())
-                    .filter(amount -> !excess.threshold().amountsRead().contains(amount));
+            case PercentOfBase percent -> Optional.of(percent.base());
+            case PercentOfBaseByLocation byLocation -> Optional.of(byLocation.base());
+            case AmountInExcess excess -> Optional.of(excess.amount());
             case Fixed _, PerUnitPerPeriod _, SlabLadder _, PercentOfBaseByPopulation _, LeastOf _,
                     AggregateWithCeiling _ -> Optional.empty();
         };
+    }
+
+    /**
+     * The amount whose rise raises this shape at {@code ctx} (W-326a, D-696): its {@link #raisingInput} where the rate
+     * there is above nil and, for an excess, its threshold does not read the same amount.
+     */
+    default Optional<BaseId> raisedBy(CapContext ctx) {
+        return raisingInput().filter(input -> switch (this) {
+            case PercentOfBase percent -> percent.percent().compareTo(Rate.ZERO) > 0;
+            case PercentOfBaseByLocation byLocation -> byLocation.percentAt(ctx).compareTo(Rate.ZERO) > 0;
+            case AmountInExcess excess -> !excess.threshold().amountsRead().contains(input);
+            case Fixed _, PerUnitPerPeriod _, SlabLadder _, PercentOfBaseByPopulation _, LeastOf _,
+                    AggregateWithCeiling _ -> false;
+        });
     }
 
     /**

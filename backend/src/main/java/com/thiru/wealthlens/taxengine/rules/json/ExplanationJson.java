@@ -2,10 +2,12 @@ package com.thiru.wealthlens.taxengine.rules.json;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanation;
+import com.thiru.wealthlens.taxengine.rules.pack.ExplanationTerms;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
@@ -29,10 +31,22 @@ public final class ExplanationJson {
             }
         }
         Map<ReasonCode, String> reasons = reasons(root, path);
-        return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
-                reasons, terms(root, path, "regime", RegimeCode::new), terms(root, path, "head", HeadCode::valueOf),
+        ExplanationTerms terms = PackJson.construct(path + ".terms", () -> new ExplanationTerms(
+                terms(root, path, "regime", RegimeCode::new), terms(root, path, "head", HeadCode::valueOf),
                 terms(root, path, "capitalGainsPart", CapitalGainsPart::new),
                 terms(root, path, "sttState", Function.identity())));
+        return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
+                reasons, terms, headroom(root, path)));
+    }
+
+    /** {@code headroom}: each lever's sentence, by input (W-326b, D-697); absent is none. */
+    private static Map<BaseId, String> headroom(JsonNode root, String path) {
+        Map<BaseId, String> byInput = new LinkedHashMap<>();
+        String where = path + ".headroom";
+        PackJson.optionalObject(root, "headroom", path).ifPresent(sentences -> sentences.properties().forEach(entry ->
+                byInput.put(PackJson.construct(where, () -> new BaseId(entry.getKey())),
+                        PackJson.text(sentences, entry.getKey(), where))));
+        return byInput;
     }
 
     /** One map of {@code terms}: each code, read by {@code code}, to its words; absent is empty. */

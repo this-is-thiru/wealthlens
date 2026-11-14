@@ -147,6 +147,14 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
     }
 
     /** Clamps a negative amount to zero. Named for what it does, not for what it guards against. */
+    /**
+     * This amount raised to the next whole rupee, a whole amount left as it is (W-326b, D-697): what must be paid to
+     * reach a figure, where paise short would fall short of it.
+     */
+    public Money upToWholeRupee() {
+        return ofExact(amountInRupees.setScale(0, RoundingMode.CEILING));
+    }
+
     public Money floorAtZero() {
         return amountInRupees.signum() < 0 ? ZERO : this;
     }

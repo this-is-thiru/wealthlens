@@ -106,15 +106,26 @@ final class LeaveTravelExemption {
             Money fare = covered.fareAdmissible().orElseGet(() -> fareFor(ctx, t, journey));
             CapResult exempt = TemporallyApportionedCap.apply(concession, t, new CapContext(
                     Map.of(AMOUNT_INCURRED, covered.amountIncurred(), FARE_ADMISSIBLE, fare)));
-            Money allowed = Money.min(exempt.value(), remaining);
+            Money available = remaining;
+            Money allowed = Money.min(exempt.value(), available);
             remaining = remaining.minus(allowed);
             TraceLine line = line(ctx, sequence, spent, allowed, version);
             lines.add(allowed.isLessThan(exempt.value())
                     ? line.withLimitedBy("assistance received")
                             .withReason(new Reason(ReasonCodes.LTC_ASSISTANCE_RECEIVED, Map.of()))
-                    : line.withCapResult(exempt));
+                    : line.withCapResult(withinAssistance(exempt, available)));
         }
         return lines;
+    }
+
+    /**
+     * The concession's result, without what would change it where the assistance left would stop the figure before the
+     * next limit (W-326b, D-697): spending more could not then raise it as far as that limit.
+     */
+    private static CapResult withinAssistance(CapResult exempt, Money available) {
+        return exempt.headroom().filter(headroom -> headroom.next().isGreaterThan(available)).isPresent()
+                ? new CapResult(exempt.value(), exempt.limitedBy(), exempt.reason())
+                : exempt;
     }
 
     /** A nil line per journey, naming why the regime excludes the concession. */

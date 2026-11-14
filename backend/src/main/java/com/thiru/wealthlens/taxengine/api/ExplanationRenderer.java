@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.api;
 
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.rules.cap.Headroom;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanation;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
@@ -42,7 +43,20 @@ final class ExplanationRenderer {
         Optional<String> bound = line.limitedBy().flatMap(limitedBy -> limitSentence(explanation, explanations, limitedBy));
         Optional<String> why = bound.or(() -> line.reason().flatMap(reason -> reasonSentence(reason, explanations)))
                 .or(line::limitedBy);
-        return why.map(sentence -> what.get() + " " + sentence).orElse(what.get());
+        String said = why.map(sentence -> what.get() + " " + sentence).orElse(what.get());
+        return line.headroom().flatMap(headroom -> changeSentence(headroom, explanations))
+                .map(change -> said + " " + change).orElse(said);
+    }
+
+    /**
+     * What would change the figure (03-advisory A4.4's third sentence; W-326b, D-697): the content's sentence for the
+     * input, with how much more rounded up to the rupee and the next limit; none for an input the content does not
+     * name as a lever.
+     */
+    private static Optional<String> changeSentence(Headroom headroom, Explanations explanations) {
+        return Optional.ofNullable(explanations.headroom().get(headroom.input()))
+                .map(sentence -> sentence.replace("{more}", headroom.more().upToWholeRupee().inIndianNotation())
+                        .replace("{next}", headroom.next().inIndianNotation()));
     }
 
     /**

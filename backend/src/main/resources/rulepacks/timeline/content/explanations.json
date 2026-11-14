@@ -681,6 +681,11 @@
       "CHARGEABLE": "chargeable to securities transaction tax"
     }
   },
+  "headroom": {
+    "AMOUNT_CLAIMED": "Spending {more} more on this would raise it to {next}.",
+    "AMOUNT_INCURRED": "Spending {more} more on what this allowance is for would raise it to {next}.",
+    "RENT_PAID": "Paying {more} more in rent would raise it to {next}."
+  },
   "explanations": [
     {
       "rule": "ADV-INSTALMENTS",

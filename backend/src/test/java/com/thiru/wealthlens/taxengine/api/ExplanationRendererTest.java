@@ -8,14 +8,17 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.cap.Headroom;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import com.thiru.wealthlens.taxengine.rules.pack.ExplanationTerms;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.reason.Reason;
@@ -304,8 +307,8 @@ class ExplanationRendererTest {
     void explain_whenTheReasonsRegimeHasNoWord_showsLimitedByRatherThanAPlaceholder() {
         // Given — the year's content with no regime terms
         Explanations noTerms = new Explanations(PACK.explanations().otherLimits(), PACK.explanations().byRule(),
-                PACK.explanations().reasons(), Map.of(), PACK.explanations().headTerms(), PACK.explanations().partTerms(),
-                PACK.explanations().sttStateTerms());
+                PACK.explanations().reasons(), new ExplanationTerms(Map.of(), PACK.explanations().headTerms(),
+                PACK.explanations().partTerms(), PACK.explanations().sttStateTerms()), PACK.explanations().headroom());
         TraceLine barred = hra().withLimitedBy("disallowed in the NEW_TAX_REGIME regime")
                 .withReason(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
 
@@ -564,5 +567,42 @@ class ExplanationRendererTest {
         // When / Then
         assertThat(ExplanationRenderer.explain(shifted, PACK.explanations())).endsWith("Your other income leaves"
                 + " ₹1,00,000 of the basic exemption unused, so ₹50,000 of your other long-term gains is not taxed.");
+    }
+
+    @Test
+    void explain_whenRentBindsHra_addsWhatWouldChangeIt() {
+        // Given — T3-1: rent binds at 2,28,000; 3,72,000 more rent reaches the 6,00,000 received (W-326a, W-326b)
+        TraceLine hra = hra().withCapResult(new CapResult(Money.of("228000"), "rent less one-tenth of salary",
+                Optional.empty(), Optional.of(new Headroom(new BaseId("RENT_PAID"), Money.of("372000"),
+                        Money.of("600000")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(hra, PACK.explanations()))
+                .endsWith("Paying ₹3,72,000 more in rent would raise it to ₹6,00,000.");
+    }
+
+    @Test
+    void explain_whenTheInputIsNoLever_saysNothingMore() {
+        // Given — the HRA received binds; receiving more saves no tax, so the content names no lever (W-326b C1a)
+        TraceLine received = hra().withCapResult(new CapResult(Money.of("240000"), "allowance received",
+                Optional.empty(), Optional.of(new Headroom(new BaseId("HRA_RECEIVED"), Money.of("1000"),
+                        Money.of("241000")))));
+        String withoutHeadroom = ExplanationRenderer.explain(hra().withCapResult(
+                new CapResult(Money.of("240000"), "allowance received")), PACK.explanations());
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(received, PACK.explanations())).isEqualTo(withoutHeadroom);
+    }
+
+    @Test
+    void explain_whenMorePaiseWouldBeNeeded_roundsUpToTheRupee() {
+        // Given — 44,999.01 more rent rounds up to 45,000
+        TraceLine hra = hra().withCapResult(new CapResult(Money.of("15000"), "rent less one-tenth of salary",
+                Optional.empty(), Optional.of(new Headroom(new BaseId("RENT_PAID"), Money.of("44999.01"),
+                        Money.of("60000")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(hra, PACK.explanations()))
+                .endsWith("Paying ₹45,000 more in rent would raise it to ₹60,000.");
     }
 }

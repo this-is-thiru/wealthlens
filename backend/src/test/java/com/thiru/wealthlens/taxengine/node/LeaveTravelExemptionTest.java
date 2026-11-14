@@ -123,6 +123,31 @@ class LeaveTravelExemptionTest {
     }
 
     @Test
+    void evaluate_whenSpendingBindsBelowTheAssistance_carriesHowMuchMoreReachesTheFare() {
+        // When — 20,000 spent binds; the fare 25,000 is next, within the 50,000 received: 5,000 more (W-326b)
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(journey("2026-05-10", JourneyMode.AIR, "20000", "25000")), PREVIOUS_BLOCK_USED, "50000");
+
+        // Then
+        assertThat(result.trace().getFirst().headroom()).hasValueSatisfying(headroom -> {
+            assertThat(headroom.input().value()).isEqualTo("AMOUNT_INCURRED");
+            assertThat(headroom.more()).isEqualByComparingTo(Money.of("5000"));
+            assertThat(headroom.next()).isEqualByComparingTo(Money.of("25000"));
+        });
+    }
+
+    @Test
+    void evaluate_whenTheAssistanceWouldStopItFirst_saysNothingOfTheFare() {
+        // When — the same journey with 22,000 received: spending more stops at 22,000, short of the 25,000 fare
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(journey("2026-05-10", JourneyMode.AIR, "20000", "25000")), PREVIOUS_BLOCK_USED, "22000");
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
+        assertThat(result.trace().getFirst().headroom()).isEmpty();
+    }
+
+    @Test
     void evaluate_whenNoRailAndNoPublicTransportIn2026_pricesThirtyRupeesAKilometre() {
         // Given — 400 km by the shortest route, 14,000 spent
         Journey road = new Journey(LocalDate.parse("2026-05-10"), JourneyMode.NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT,
