@@ -1,5 +1,5 @@
 {
-  "_note": "Plain-language sentences for trace lines (PRD F37; W-116, D-671). Content: it changes no number and holds none (SC-2) — {out} is the line's figure and {in} what it started from, filled from the trace. byLimit is keyed by each limit's name exactly as the rule's least-of names it, and the pack refuses an entry whose limits differ. Drafted by Claude from each rule's section entry and limit names, for the owner's adoption (C5). Rules not listed show their rule id (F37.2); W-325 writes the rest.",
+  "_note": "Plain-language sentences for trace lines (PRD F37; W-116, D-671). Content: it changes no number and holds none (SC-2) — {out} is the line's figure and {in} what it started from, filled from the trace. byLimit is keyed by each limit's name exactly as the rule's least-of names it, and the pack refuses an entry whose limits differ. Drafted by Claude from each rule's section entry and limit names, for the owner's adoption (C5). Every rule of the timeline is explained here or listed in notALine with the reason it never names a trace line of its own (W-325d, D-672 C2a); the compiler refuses a listed rule the timeline does not hold or one also explained, and copies notALine into no pack.",
   "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
   "explanations": [
     {
@@ -9,6 +9,42 @@
     {
       "rule": "ADV-LIABILITY",
       "what": "This line works out whether you must pay advance tax this year, and how much."
+    },
+    {
+      "rule": "CG-CHARGE-COST",
+      "what": "Of the {in} charged on the purchase, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-CHARGE-MISC",
+      "what": "Of the {in} of other charges, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-CHARGE-STT",
+      "what": "Of the {in} of securities transaction tax, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-CHARGE-TRANSFER",
+      "what": "Of the {in} charged on the sale, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-DEPOSIT",
+      "what": "This gain of {in} is left out of capital gains: a deposit's earnings are entered as interest under income from other sources."
+    },
+    {
+      "rule": "CG-EXEMPT-RESIDENTIAL-HOUSE",
+      "what": "Of the {in} gain, the part put into a residential house is not taxed, leaving {out}."
+    },
+    {
+      "rule": "CG-INDEXED-COST-LAND-BUILDING",
+      "what": "With its cost indexed for inflation, the {in} gain is {out}."
+    },
+    {
+      "rule": "CG-TERM-LAND-BUILDING",
+      "what": "This line decides whether the {in} gain is short-term or long-term, from how long the asset was held."
+    },
+    {
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "what": "This line decides whether the {in} gain is short-term or long-term, from how long the asset was held."
     },
     {
       "rule": "CREDIT-TAX-PAID",
@@ -396,6 +432,10 @@
       }
     },
     {
+      "rule": "PERQ-CAR-OWNRUN-ELECTRIC",
+      "what": "Your employer's electric car, used partly privately with you meeting its private running is valued at {out} as a perquisite."
+    },
+    {
       "rule": "PERQ-CAR-OWNRUN-LARGE",
       "what": "Your employer's larger car, used partly privately with you meeting its private running is valued at {out} as a perquisite."
     },
@@ -640,6 +680,14 @@
       "what": "On tax of {in}, a rebate of {out} is allowed to a resident individual."
     },
     {
+      "rule": "RET-COMMUTED-PENSION-FUND",
+      "what": "Of the {in} commuted pension you received from a pension fund, {out} is not taxed."
+    },
+    {
+      "rule": "RET-COMMUTED-PENSION-GOVERNMENT",
+      "what": "Of the {in} commuted pension you received from the government, {out} is not taxed."
+    },
+    {
       "rule": "RET-COMMUTED-PENSION-OTHER",
       "what": "Of the {in} commuted pension you received, {out} is not taxed."
     },
@@ -695,6 +743,10 @@
         "amount under the retrenchment statute": "The exemption is capped by the amount the retrenchment statute works out.",
         "notified limit": "The exemption is capped by the limit the government notifies; compensation above it is taxed."
       }
+    },
+    {
+      "rule": "RET-RETRENCHMENT-APPROVED-SCHEME",
+      "what": "Of the {in} retrenchment compensation you received under an approved scheme, {out} is not taxed."
     },
     {
       "rule": "RET-VOLUNTARY-RETIREMENT",
@@ -844,6 +896,208 @@
         "the loss": "All of the loss is set off, since it is within the limit.",
         "the limit": "The set-off is capped by the limit the law sets; the rest of the loss is carried forward where the law allows."
       }
+    },
+    {
+      "rule": "SETOFF-WITHIN-CAPITAL-GAINS",
+      "what": "This line totals your capital gains and losses of each kind and sets a loss against gains in the order shown."
+    },
+    {
+      "rule": "STT-PURCHASE-DELIVERY",
+      "what": "This line reads whether securities transaction tax was chargeable on the purchase, which decides how the gain is taxed."
+    },
+    {
+      "rule": "STT-SALE-DELIVERY",
+      "what": "This line reads whether securities transaction tax was chargeable on the sale, which decides how the gain is taxed."
+    },
+    {
+      "rule": "STT-SALE-NONDELIVERY",
+      "what": "This line reads whether securities transaction tax was chargeable on the sale, which decides how the gain is taxed."
+    }
+  ],
+  "notALine": [
+    {
+      "rule": "CG-DERIVATIVE",
+      "reason": "Refuses the sale: CapitalGainsScope throws, so no line is written."
+    },
+    {
+      "rule": "CG-NOT-MODELLED-IMPROVEMENT",
+      "reason": "Names only a notice (CapitalGainsNode), never a line."
+    },
+    {
+      "rule": "CG-NOT-MODELLED-STAMPDUTY",
+      "reason": "Names only a notice (CapitalGainsNode), never a line."
+    },
+    {
+      "rule": "CG-NOT-MODELLED-VALUE2001",
+      "reason": "Names only a notice (CapitalGainsNode), never a line."
+    },
+    {
+      "rule": "CG-PART-LONG-LISTED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-LONG-NOTIFIED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-LONG-OTHER",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-LONG-OTHER-LAND-BUILDING",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-SHORT-LISTED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-SHORT-SLAB",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-SHORT-SLAB-LAND-BUILDING",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PARTS",
+      "reason": "Read for a value inside another rule's line: the capital-gains parts, read by DeclaredCapitalGainsParts."
+    },
+    {
+      "rule": "CG-SPECULATIVE",
+      "reason": "Refuses the sale: CapitalGainsScope throws, so no line is written."
+    },
+    {
+      "rule": "DED-DEPENDANT",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: DisabilityDeduction reads who the dependant is; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-DEPENDANT-OWN-CLAIM",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: DisabilityDeduction bars the claim; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-DONATION-UNREPORTED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: DonationDeduction bars the share; the line names the share's row."
+    },
+    {
+      "rule": "DED-HEALTH-INSURANCE-LIMB",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction chooses the limb; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-HEALTH-INSURANCE-PAID",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction checks how the premium was paid; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-HEALTH-MEDICAL-LIMB",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction chooses the limb; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-HEALTH-SPREAD",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction spreads a premium over its years; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-SCHEDULE-XV-GOVERNMENT-SALARY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: ScheduleXvDeduction chooses the limit; the line names the deduction's row."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-HIGHER-LIMIT",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HousePropertyInterest chooses the higher limit; the line names the interest row."
+    },
+    {
+      "rule": "INT-CALCULATION",
+      "reason": "Names only a notice (InterestAndFeeNode), never a line."
+    },
+    {
+      "rule": "OS-LIFE-POLICY-PREMIUM",
+      "reason": "Read for a value inside another rule's line: read by LifePolicySums into the life policy line."
+    },
+    {
+      "rule": "PERQ-ACCOM-CONTINUED",
+      "reason": "Read for a value inside another rule's line: a cap on the accommodation row's line, read by PerquisiteNode."
+    },
+    {
+      "rule": "PERQ-CAR-CHAUFFEUR",
+      "reason": "Read for a value inside another rule's line: added by MotorCarPerquisite to the car row's value."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-CONVEYANCE",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-EMPLOYEE",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-OWNRUN",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-PARTLY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-PRIVATE",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-SPECIFIED-DATE",
+      "reason": "Read for a value inside another rule's line: the valuation date, read by SpecifiedSecurityPerquisite into the specified security's line."
+    },
+    {
+      "rule": "RATE-CG-COST-INFLATION-INDEX",
+      "reason": "Read for a value inside another rule's line: the cost inflation index, read by CapitalGainsIndexation into the indexed-cost line."
+    },
+    {
+      "rule": "RATE-COST-INFLATION-INDEX",
+      "reason": "Read for a value inside another rule's line: the cost inflation index, read by PerquisiteNode into the perquisite's line."
+    },
+    {
+      "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "reason": "Checked at build time only: a disallowance basis, read by PackValidator."
+    },
+    {
+      "rule": "REG-NEW-TAX-REGIME-NO-SETOFF",
+      "reason": "Checked at build time only: a disallowance basis, read by PackValidator."
+    },
+    {
+      "rule": "RET-AGGREGATE-HISTORY-GRATUITY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: NotifiedRetirementLimits reads earlier receipts; the line names the gratuity row."
+    },
+    {
+      "rule": "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: NotifiedRetirementLimits reads earlier receipts; the line names the leave encashment row."
+    },
+    {
+      "rule": "RET-BAR-ARREARS-RELIEF",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: RetirementNode names it in the entry line's reason."
+    },
+    {
+      "rule": "RET-BAR-ONCE-ONLY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: RetirementNode names it in the entry line's reason."
+    },
+    {
+      "rule": "RET-GRATUITY-AVERAGING",
+      "reason": "Read for a value inside another rule's line: the averaging period, read by NotifiedRetirementLimits into the gratuity line."
+    },
+    {
+      "rule": "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT",
+      "reason": "Read for a value inside another rule's line: read by RetirementNode into the entry row's line."
+    },
+    {
+      "rule": "SAL-HOUSE-RENT-LANDLORD-PAN",
+      "reason": "Names only a notice (ExemptionNode), never a line."
+    },
+    {
+      "rule": "SAL-INCLUDES-PENSION-CONTRIBUTION",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: GrossSalaryNode decides what salary includes; the line names the salary row."
+    },
+    {
+      "rule": "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
+      "reason": "Read for a value inside another rule's line: read by LeaveTravelExemption into the leave travel line."
+    },
+    {
+      "rule": "SAL-LEAVE-TRAVEL-JOURNEYS",
+      "reason": "Read for a value inside another rule's line: read by LeaveTravelExemption into the leave travel line."
     }
   ]
 }

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.ExplanationJson;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -25,7 +26,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * {@code content/explanations.json} compiled into each year's content layer (W-116, D-671): one file serves every year,
  * each year keeping its own rules and the limits its versions name; a rule or limit the timeline names nowhere is refused;
- * and every rule whose cap is a least-of is explained (F37.3), the rest showing their rule id (F37.2) until W-325.
+ * every rule whose cap is a least-of is explained (F37.3); and every rule of a year's pack is either explained or listed
+ * in {@code notALine} with the reason it names no trace line of its own (F37.2; W-325d, D-672 C2a).
  */
 class ExplanationCompilationTest {
 
@@ -109,9 +111,92 @@ class ExplanationCompilationTest {
             }
         }
 
-        // Then — every least-of row explained; the other rows show their rule id until W-325
+        // Then
         assertThat(leastOf).isNotEmpty();
         assertThat(pack.explanations().byRule().keySet()).containsAll(leastOf);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void shippedPack_whenCompiled_explainsOrListsEveryRule(int year) {
+        // Given
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = ShippedRulePacks.compile("rulepacks", Set.of(taxYear)).load(taxYear);
+        Set<RuleId> listed = ExplanationJson.notALine(MAPPER.readTree(SHIPPED.explanations().orElseThrow()),
+                "content/explanations.json").keySet();
+
+        // When
+        Set<String> neither = new TreeSet<>();
+        for (RuleId rule : pack.rules().keySet()) {
+            if (!pack.explanations().byRule().containsKey(rule) && !listed.contains(rule)) {
+                neither.add(rule.value());
+            }
+        }
+
+        // Then
+        assertThat(neither).isEmpty();
+    }
+
+    @Test
+    void compile_whenNotALineListsARuleTheTimelineDoesNotHold_isRefused() {
+        // Given
+        Timeline misspelt = withExplanations("""
+                {"explanations": [], "notALine": [{"rule": "CG-PART-SHORT-LISTING", "reason": "A condition only."}]}""");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(misspelt, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("CG-PART-SHORT-LISTING")
+                .hasMessageContaining("in no year");
+    }
+
+    @Test
+    void compile_whenARuleIsBothExplainedAndListed_isRefused() {
+        // Given
+        Timeline both = withExplanations("""
+                {"explanations": [{"rule": "CG-DEPOSIT", "what": "This gain of {in} is left out."}],
+                 "notALine": [{"rule": "CG-DEPOSIT", "reason": "Refuses the sale."}]}""");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(both, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("both explains CG-DEPOSIT");
+    }
+
+    @Test
+    void compile_whenNotALineListsARuleTwice_isRefused() {
+        // Given
+        Timeline twice = withExplanations("""
+                {"explanations": [], "notALine": [{"rule": "CG-PARTS", "reason": "A value."},
+                  {"rule": "CG-PARTS", "reason": "Another value."}]}""");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(twice, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("lists CG-PARTS in notALine twice");
+    }
+
+    /** The capital-gains lines, and the rules on lines no test reaches, as W-325's appendix classified them (W-325d). */
+    private static final List<String> CAPITAL_GAINS_AND_UNREACHED = List.of(
+            "CG-CHARGE-COST",
+            "CG-CHARGE-MISC",
+            "CG-CHARGE-STT",
+            "CG-CHARGE-TRANSFER",
+            "CG-DEPOSIT",
+            "CG-EXEMPT-RESIDENTIAL-HOUSE",
+            "CG-INDEXED-COST-LAND-BUILDING",
+            "CG-TERM-LAND-BUILDING",
+            "CG-TERM-LISTED-SECURITY",
+            "PERQ-CAR-OWNRUN-ELECTRIC",
+            "RET-COMMUTED-PENSION-FUND",
+            "RET-COMMUTED-PENSION-GOVERNMENT",
+            "RET-RETRENCHMENT-APPROVED-SCHEME",
+            "SETOFF-WITHIN-CAPITAL-GAINS",
+            "STT-PURCHASE-DELIVERY",
+            "STT-SALE-DELIVERY",
+            "STT-SALE-NONDELIVERY");
+
+    @Test
+    void timeline_whenCapitalGainsAreCompiled_explainsEveryRuleOfThemInSomeYear() {
+        // Given / When / Then
+        assertThat(explainedInSomeYear()).containsAll(CAPITAL_GAINS_AND_UNREACHED);
     }
 
     /** The salary-family rules W-325's probe saw on a trace line (W-325a, D-673): each explained in the year it is a rule of. */

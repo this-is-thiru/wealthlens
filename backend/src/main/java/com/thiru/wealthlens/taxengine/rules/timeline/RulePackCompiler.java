@@ -121,6 +121,7 @@ public final class RulePackCompiler {
             JsonNode file = MAPPER.readTree(source);
             Explanations explanations = ExplanationJson.explanations(file, "content/explanations.json");
             explanations.otherLimits().ifPresent(sentence -> content.put("otherLimits", sentence));
+            requireListedRulesUnexplained(timeline, explanations, ExplanationJson.notALine(file, "content/explanations.json"));
             for (RuleId rule : sorted(explanations.byRule().keySet(), RuleId::value)) {
                 RuleRow row = timeline.rules().get(rule);
                 if (row == null) {
@@ -147,6 +148,25 @@ public final class RulePackCompiler {
             }
         });
         return content.set("explanations", kept);
+    }
+
+    /**
+     * Refuses a rule {@code notALine} lists that the timeline states in no year, or one it also explains: a listed rule
+     * is one that names no trace line, so it cannot have a sentence too (W-325d, D-672 C2a). The list is copied into no
+     * year's pack; nothing at run time reads it.
+     */
+    private static void requireListedRulesUnexplained(Timeline timeline, Explanations explanations,
+            Map<RuleId, String> notALine) {
+        for (RuleId rule : sorted(notALine.keySet(), RuleId::value)) {
+            if (!timeline.rules().containsKey(rule)) {
+                throw new PackValidationException("content/explanations.json lists " + rule
+                        + " in notALine, which the timeline states in no year");
+            }
+            if (explanations.byRule().containsKey(rule)) {
+                throw new PackValidationException("content/explanations.json both explains " + rule
+                        + " and lists it in notALine; a rule is one or the other");
+            }
+        }
     }
 
     /** The limit names of the rule's least-of in the versions given. */

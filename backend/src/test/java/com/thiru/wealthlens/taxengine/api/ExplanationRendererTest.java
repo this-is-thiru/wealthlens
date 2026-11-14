@@ -225,4 +225,41 @@ class ExplanationRendererTest {
         assertThat(ExplanationRenderer.explain(late, PACK.explanations())).isEqualTo(
                 "Interest of ₹877 is charged because the return was furnished after its due date. one month from 2027-08-01");
     }
+
+    @Test
+    void explain_whenAChargeIsNotDeducted_namesTheChargeAndTheNilDeducted() {
+        // Given — CapitalGainsCharges:49: in is the charge, out nil under the NOT_DEDUCTED limb (W-325d C2a)
+        TraceLine stt = line(new RuleId("CG-CHARGE-STT"), MoneyValue.of(Money.of("500")), MoneyValue.of(Money.ZERO))
+                .withLimitedBy("STT on the TRANSFER: NOT_DEDUCTED");
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(stt, PACK.explanations())).isEqualTo(
+                "Of the ₹500 of securities transaction tax, ₹0 is deducted in working out the gain. STT on the TRANSFER:"
+                        + " NOT_DEDUCTED");
+    }
+
+    @Test
+    void explain_whenACostIsIndexed_namesTheGainBeforeAndAfter() {
+        // Given — CapitalGainsIndexation:78: in is the gain, out the gain with the cost indexed
+        TraceLine indexed = line(new RuleId("CG-INDEXED-COST-LAND-BUILDING"), MoneyValue.of(Money.of("1000000")),
+                MoneyValue.of(Money.of("600000")));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(indexed, PACK.explanations()))
+                .isEqualTo("With its cost indexed for inflation, the ₹10,00,000 gain is ₹6,00,000.");
+    }
+
+    @Test
+    void explain_whenSetOffWithinCapitalGainsIsOnAnIncomeLine_describesItWithoutAFigure() {
+        // Given — CapitalGainsNode:142: one rule on INCOME, MEASURE and SET_OFF lines, one sentence for all (W-325c C1a)
+        RuleId setOff = new RuleId("SETOFF-WITHIN-CAPITAL-GAINS");
+        TraceLine income = TraceLine.of(1, new NodeId("capitalgains.income"), setOff, StepKind.INCOME,
+                MoneyValue.of(Money.of("150000")), MoneyValue.of(Money.of("150000")), PACK.rule(setOff).headProvenance())
+                .withLimitedBy("LONG_TERM_LISTED_EQUITY");
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(income, PACK.explanations())).isEqualTo(
+                "This line totals your capital gains and losses of each kind and sets a loss against gains in the order"
+                        + " shown. LONG_TERM_LISTED_EQUITY");
+    }
 }

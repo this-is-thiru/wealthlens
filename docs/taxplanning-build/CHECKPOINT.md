@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-325c done (D-675), committed and pushed
-Stage           : 6 DONE — "commit and push"; pipeline to confirm and record in D-675 (content only, no benchmark)
-Done today      : session 94: W-115 (D-670), W-116 (D-671), W-325 split (D-672), W-325a – c (D-673 – D-675)
-Board           : W-113 – W-116, W-325, W-325a D; W-325b – d ·, W-327 ·, W-326 ·; W-113a · (after F12); W-324 · (after AIS / 26AS); Phase 10 left: W-299, W-294 · (wait run logs)
-Next step       : W-325d by board order (capital gains + classify the 53 rules on no line; plan first, §2)
+Item            : W-325d done (D-676), board D — W-325 complete; next by board order W-327
+Stage           : DONE (session 95, 2026-11-14) — committed and pushed
+Done today      : session 94: W-115 (D-670), W-116 (D-671), W-325 split (D-672), W-325a (D-673), W-325b (D-674), W-325c (D-675); session 95: W-325d (D-676)
+Board           : W-115, W-116, W-325, W-325a – d D; W-327 ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : confirm the W-325d pipeline run is green and record it in D-676; then plan W-327 (read its board row first), then W-326
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-325b pipeline 43563200917 success (66b8faeb), recorded in D-674 (uncommitted); W-325c targeted green
-Files touched   : none beyond this file once the item commit lands
-Last item commit: taxplanning W-325c: explain the bill in plain language
-Updated         : 2026-11-14, session 94 — W-325c committed and pushed
+Last verify     : W-325d local: taxengine unit 4175/0, targeted pack 147/0, DraftComputationIntegrationTest 60/0, validate green; pipeline after push
+Files touched   : none beyond this file after the W-325d commit
+Last item commit: taxplanning W-325d: explain the capital-gains lines and list every rule that names no line
+Updated         : 2026-11-14, session 95 — W-325d committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
