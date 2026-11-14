@@ -3,12 +3,28 @@
   "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
   "explanations": [
     {
+      "rule": "DED-AGNIVEER-GOVERNMENT",
+      "what": "{out} of the government's contribution to your Agniveer Corpus Fund is deducted."
+    },
+    {
+      "rule": "DED-AGNIVEER-OWN",
+      "what": "{out} of your own subscription to the Agniveer Corpus Fund is deducted."
+    },
+    {
       "rule": "DED-DEPOSIT-INTEREST-SENIOR",
       "what": "{out} of your deposit interest is deducted.",
       "byLimit": {
         "the interest": "All of the interest is deducted, since it is within the limit.",
         "the limit": "The deduction is capped by the limit for a senior citizen's deposit interest; interest above it is taxed."
       }
+    },
+    {
+      "rule": "DED-DISABILITY",
+      "what": "{out} is deducted because you are a person with disability."
+    },
+    {
+      "rule": "DED-DISABILITY-SEVERE",
+      "what": "{out} is deducted because you are a person with severe disability."
     },
     {
       "rule": "DED-DISABLED-DEPENDANT",
@@ -25,6 +41,82 @@
         "the amount spent or deposited": "The deduction is what you spent or deposited, which is within the limit.",
         "the limit": "The deduction is capped by the limit for severe disability; spending more would not raise it."
       }
+    },
+    {
+      "rule": "DED-DONATION-CASH",
+      "what": "Donations paid in cash above the amount allowed are not deducted; {out} is deducted on this line."
+    },
+    {
+      "rule": "DED-DONATION-HALF",
+      "what": "{out} is deducted for donations allowed at half their amount."
+    },
+    {
+      "rule": "DED-DONATION-QUALIFYING",
+      "what": "This line sets the qualifying limit that some donations are deducted within: a share of your adjusted gross total income."
+    },
+    {
+      "rule": "DED-DONATION-WHOLE",
+      "what": "{out} is deducted for donations allowed in full."
+    },
+    {
+      "rule": "DED-EDUCATION-LOAN",
+      "what": "{out} of the interest on your loan for higher education is deducted."
+    },
+    {
+      "rule": "DED-ELECTRIC-VEHICLE-LOAN",
+      "what": "{out} of the interest on your loan for an electric vehicle is deducted."
+    },
+    {
+      "rule": "DED-HEALTH-CASH-PERMITTED",
+      "what": "Only a preventive health check-up may be paid in cash; {out} of this cash payment is deducted."
+    },
+    {
+      "rule": "DED-HEALTH-CHECKUP",
+      "what": "This line splits your preventive health check-ups between your own family's limit and your parents', as you claimed them."
+    },
+    {
+      "rule": "DED-HEALTH-FAMILY",
+      "what": "{out} is deducted for health insurance and care for you and your family."
+    },
+    {
+      "rule": "DED-HEALTH-FAMILY-SENIOR",
+      "what": "{out} is deducted for health insurance and care for you and your family, at the senior citizen's limit."
+    },
+    {
+      "rule": "DED-HEALTH-PARENTS",
+      "what": "{out} is deducted for health insurance and care for your parents."
+    },
+    {
+      "rule": "DED-HEALTH-PARENTS-SENIOR",
+      "what": "{out} is deducted for health insurance and care for your parents, at the senior citizen's limit."
+    },
+    {
+      "rule": "DED-HOUSE-LOAN",
+      "what": "{out} of the interest on your loan for a house is deducted."
+    },
+    {
+      "rule": "DED-HOUSE-LOAN-EARLIER",
+      "what": "{out} of the interest on your loan for a first house is deducted."
+    },
+    {
+      "rule": "DED-NPS-EMPLOYER-GOVT",
+      "what": "{out} of your government employer's contribution to your pension account is deducted."
+    },
+    {
+      "rule": "DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+      "what": "{out} of your employer's contribution to your pension account is deducted under the default regime."
+    },
+    {
+      "rule": "DED-NPS-EMPLOYER-OTHER",
+      "what": "{out} of your employer's contribution to your pension account is deducted."
+    },
+    {
+      "rule": "DED-NPS-OWN",
+      "what": "{out} of your own contribution to your pension account is deducted."
+    },
+    {
+      "rule": "DED-PREMIUM-SHARE",
+      "what": "This line limits a life insurance premium to a share of the policy's sum assured before it counts towards your savings deduction."
     },
     {
       "rule": "DED-RENT-PAID",
@@ -44,6 +136,10 @@
       }
     },
     {
+      "rule": "DED-SCHEDULE-XV",
+      "what": "{out} is deducted for your savings and payments under Schedule XV."
+    },
+    {
       "rule": "DED-SPECIFIED-DISEASE",
       "what": "{out} is deducted for the treatment of a specified disease.",
       "byLimit": {
@@ -58,6 +154,150 @@
         "paid less reimbursed": "The deduction is what you paid less what was reimbursed, which is within the limit.",
         "the limit": "The deduction is capped by the limit for a senior citizen; paying more would not raise it."
       }
+    },
+    {
+      "rule": "DED-WITHIN-GROSS-TOTAL",
+      "what": "Your deductions of {in} together are limited to your gross total income of {out}."
+    },
+    {
+      "rule": "HP-ANNUAL-VALUE",
+      "what": "The annual value of this house is {out}."
+    },
+    {
+      "rule": "HP-ARREARS",
+      "what": "{out} of the arrears of rent you received is income from house property."
+    },
+    {
+      "rule": "HP-INTEREST",
+      "what": "{out} of the interest on the loan for this house is deducted."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE",
+      "what": "A house you live in yourself has no annual value, so no income arises from it."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-INTEREST",
+      "what": "{out} of the interest on the loan for the house you live in is deducted."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-INTEREST-CAP",
+      "what": "{out} of the interest on the loans for the houses you live in is deducted, within the limit for those houses together."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
+      "what": "{out} is deducted this year as an instalment of the interest from before the house you live in was finished."
+    },
+    {
+      "rule": "HP-PRE-CONSTRUCTION",
+      "what": "{out} is deducted this year as an instalment of the interest from before this house was finished."
+    },
+    {
+      "rule": "HP-STANDARD-DEDUCTION",
+      "what": "From the house's annual value of {in}, {out} is deducted as the standard deduction."
+    },
+    {
+      "rule": "HP-UNREALISED-RENT",
+      "what": "Rent you could not realise is left out before this house's annual value is found."
+    },
+    {
+      "rule": "OS-BANKER-COMMISSION",
+      "what": "{out} paid to a banker to realise interest on securities is deducted."
+    },
+    {
+      "rule": "OS-BUSINESS-TRUST",
+      "what": "{out} distributed by a business trust on your units is income from other sources."
+    },
+    {
+      "rule": "OS-COMMUTED-PENSION",
+      "what": "{out} of a commuted pension from an insurer's pension fund is deducted."
+    },
+    {
+      "rule": "OS-COMPENSATION-INTEREST",
+      "what": "{out} of the interest on compensation is deducted."
+    },
+    {
+      "rule": "OS-COMPENSATION-INTEREST-INCOME",
+      "what": "{out} of interest on compensation is income from other sources."
+    },
+    {
+      "rule": "OS-DEATH-GRATUITY",
+      "what": "{out} of a government gratuity received on an employee's death is deducted."
+    },
+    {
+      "rule": "OS-DIVIDEND",
+      "what": "{out} of dividends is income from other sources."
+    },
+    {
+      "rule": "OS-DIVIDEND-INTEREST",
+      "what": "{out} of interest you paid to earn dividend and unit income is deducted, within the share of that income allowed."
+    },
+    {
+      "rule": "OS-FAMILY-PENSION",
+      "what": "{out} of your family pension is deducted."
+    },
+    {
+      "rule": "OS-FAMILY-PENSION-NEW-TAX-REGIME",
+      "what": "{out} of your family pension is deducted under the default regime."
+    },
+    {
+      "rule": "OS-FORFEITED-ADVANCE",
+      "what": "{out} of an advance forfeited when the sale of an asset fell through is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT",
+      "what": "{out} of sums received as gifts is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT-COVID-DEATH",
+      "what": "{out} received by the family of a person whose death was related to the Covid pandemic is left out of income."
+    },
+    {
+      "rule": "OS-GIFT-EXCLUSION",
+      "what": "{out} of this gift is left out of income, on the ground you claimed."
+    },
+    {
+      "rule": "OS-GIFT-IMMOVABLE",
+      "what": "{out} of this gift of land or a building is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT-PROPERTY-BOUGHT",
+      "what": "{out} of this property bought below its value is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT-PROPERTY-FREE",
+      "what": "{out} of property received free this year is income from other sources."
+    },
+    {
+      "rule": "OS-INTEREST",
+      "what": "{out} of interest is income from other sources."
+    },
+    {
+      "rule": "OS-KEYMAN-POLICY",
+      "what": "{out} received under a keyman insurance policy is income from other sources."
+    },
+    {
+      "rule": "OS-LIFE-POLICY",
+      "what": "{out} received under this life policy is income from other sources."
+    },
+    {
+      "rule": "OS-LIFE-POLICY-RATIO",
+      "what": "{out} received under this life policy is left out of income, its premium being within the share of the sum assured allowed."
+    },
+    {
+      "rule": "OS-OTHER-EXPENDITURE",
+      "what": "{out} spent to earn this income is deducted."
+    },
+    {
+      "rule": "OS-PF-TAXABLE-INTEREST",
+      "what": "This line finds the interest on your own provident fund contributions above the threshold, which is taxed under other sources."
+    },
+    {
+      "rule": "OS-RESIDUAL",
+      "what": "{out} of this income falls under other sources, under no other head."
+    },
+    {
+      "rule": "OS-TERMINATION-COMPENSATION",
+      "what": "{out} of compensation for the end or change of your employment is income from other sources."
     },
     {
       "rule": "PERQ-ACCOM-FURNITURE",

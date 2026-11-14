@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -105,7 +106,7 @@ class ExplanationRendererTest {
         TraceLine unexplained = line(new RuleId("DED-SCHEDULE-XV"), MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO));
 
         // When / Then
-        assertThat(ExplanationRenderer.explain(unexplained, PACK.explanations())).isEqualTo("DED-SCHEDULE-XV");
+        assertThat(ExplanationRenderer.explain(unexplained, Explanations.none())).isEqualTo("DED-SCHEDULE-XV");
     }
 
     @Test
@@ -146,5 +147,48 @@ class ExplanationRendererTest {
         // When / Then
         assertThat(ExplanationRenderer.explain(base, PACK.explanations())).isEqualTo(
                 "This is the salary your house rent allowance is measured against: the pay lines the law counts for it.");
+    }
+
+    @Test
+    void explain_whenADeductionIsBarredByTheRegime_saysNothingIsDeductedAndWhy() {
+        // Given
+        TraceLine barred = line(new RuleId("DED-EDUCATION-LOAN"), MoneyValue.of(Money.of("40000")), MoneyValue.of(Money.ZERO))
+                .withLimitedBy("disallowed in the NEW_TAX_REGIME regime");
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(barred, PACK.explanations())).isEqualTo(
+                "₹0 of the interest on your loan for higher education is deducted. disallowed in the NEW_TAX_REGIME regime");
+    }
+
+    @Test
+    void explain_whenTheDeductionsReachGrossTotalIncome_namesBothFigures() {
+        // Given — ChapterEightNode:238: in is the deductions' total, out the gross total income that limits them
+        TraceLine capped = line(new RuleId("DED-WITHIN-GROSS-TOTAL"), MoneyValue.of(Money.of("250000")),
+                MoneyValue.of(Money.of("180000")));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(capped, PACK.explanations()))
+                .isEqualTo("Your deductions of ₹2,50,000 together are limited to your gross total income of ₹1,80,000.");
+    }
+
+    @Test
+    void explain_whenTheCapsInputIsNotMoney_showsTheRuleId() {
+        // Given — the sentence names {in}, which this line does not hold in money
+        TraceLine notMoney = line(new RuleId("DED-WITHIN-GROSS-TOTAL"), new ComponentSet(Map.of()),
+                MoneyValue.of(Money.of("180000")));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(notMoney, PACK.explanations())).isEqualTo("DED-WITHIN-GROSS-TOTAL");
+    }
+
+    @Test
+    void explain_whenALineMeasuresAnIntermediateFigure_describesItWithoutAFigure() {
+        // Given — a MEASURE line (W-325b C1a)
+        TraceLine measure = line(new RuleId("HP-UNREALISED-RENT"), MoneyValue.of(Money.of("300000")),
+                MoneyValue.of(Money.of("240000")));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(measure, PACK.explanations()))
+                .isEqualTo("Rent you could not realise is left out before this house's annual value is found.");
     }
 }

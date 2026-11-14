@@ -177,6 +177,86 @@ class ExplanationCompilationTest {
             "SAL-SALARY-INCLUDES",
             "SAL-TAX-ON-EMPLOYMENT");
 
+    /** Chapter VIII, other sources and house property, as W-325's probe saw them on a trace line (W-325b, D-674). */
+    private static final List<String> DEDUCTIONS_AND_OTHER_HEADS = List.of(
+            "DED-AGNIVEER-GOVERNMENT",
+            "DED-AGNIVEER-OWN",
+            "DED-DISABILITY",
+            "DED-DISABILITY-SEVERE",
+            "DED-DONATION-CASH",
+            "DED-DONATION-HALF",
+            "DED-DONATION-QUALIFYING",
+            "DED-DONATION-WHOLE",
+            "DED-EDUCATION-LOAN",
+            "DED-ELECTRIC-VEHICLE-LOAN",
+            "DED-HEALTH-CASH-PERMITTED",
+            "DED-HEALTH-CHECKUP",
+            "DED-HEALTH-FAMILY",
+            "DED-HEALTH-FAMILY-SENIOR",
+            "DED-HEALTH-PARENTS",
+            "DED-HEALTH-PARENTS-SENIOR",
+            "DED-HOUSE-LOAN",
+            "DED-HOUSE-LOAN-EARLIER",
+            "DED-NPS-EMPLOYER-GOVT",
+            "DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+            "DED-NPS-EMPLOYER-OTHER",
+            "DED-NPS-OWN",
+            "DED-PREMIUM-SHARE",
+            "DED-SCHEDULE-XV",
+            "DED-WITHIN-GROSS-TOTAL",
+            "HP-ANNUAL-VALUE",
+            "HP-ARREARS",
+            "HP-INTEREST",
+            "HP-OWN-RESIDENCE",
+            "HP-OWN-RESIDENCE-INTEREST",
+            "HP-OWN-RESIDENCE-INTEREST-CAP",
+            "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
+            "HP-PRE-CONSTRUCTION",
+            "HP-STANDARD-DEDUCTION",
+            "HP-UNREALISED-RENT",
+            "OS-BANKER-COMMISSION",
+            "OS-BUSINESS-TRUST",
+            "OS-COMMUTED-PENSION",
+            "OS-COMPENSATION-INTEREST",
+            "OS-COMPENSATION-INTEREST-INCOME",
+            "OS-DEATH-GRATUITY",
+            "OS-DIVIDEND",
+            "OS-DIVIDEND-INTEREST",
+            "OS-FAMILY-PENSION",
+            "OS-FAMILY-PENSION-NEW-TAX-REGIME",
+            "OS-FORFEITED-ADVANCE",
+            "OS-GIFT",
+            "OS-GIFT-COVID-DEATH",
+            "OS-GIFT-EXCLUSION",
+            "OS-GIFT-IMMOVABLE",
+            "OS-GIFT-PROPERTY-BOUGHT",
+            "OS-GIFT-PROPERTY-FREE",
+            "OS-INTEREST",
+            "OS-KEYMAN-POLICY",
+            "OS-LIFE-POLICY",
+            "OS-LIFE-POLICY-RATIO",
+            "OS-OTHER-EXPENDITURE",
+            "OS-PF-TAXABLE-INTEREST",
+            "OS-RESIDUAL",
+            "OS-TERMINATION-COMPENSATION");
+
+    @Test
+    void timeline_whenDeductionsAndTheOtherHeadsAreCompiled_explainsEveryRuleOfThemInSomeYear() {
+        // Given / When / Then
+        assertThat(explainedInSomeYear()).containsAll(DEDUCTIONS_AND_OTHER_HEADS);
+    }
+
+    private static Set<String> explainedInSomeYear() {
+        Set<String> explained = new TreeSet<>();
+        for (int year : new int[] {2025, 2026}) {
+            for (JsonNode entry : MAPPER.readTree(RulePackCompiler.compile(SHIPPED, TaxYearId.of(year)).files()
+                    .get("content/explanations.json")).path("explanations")) {
+                explained.add(entry.path("rule").asString());
+            }
+        }
+        return explained;
+    }
+
     @Test
     void timeline_whenTheSalaryFamilyIsCompiled_explainsEveryRuleOfItInSomeYear() {
         // Given

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-325a done (D-673), committed and pushed; W-325 split (D-672); W-327 placed
-Stage           : 6 DONE — review approved ("commit and push"); pipeline to confirm and record in D-673 (content only, no benchmark)
-Done today      : session 94: W-115 (D-670), W-116 (D-671), W-325 split (D-672), W-325a (D-673); session 93: W-113 – W-114d
+Item            : W-325b done (D-674), committed and pushed
+Stage           : 6 DONE — "commit and push"; pipeline to confirm and record in D-674 (content only, no benchmark)
+Done today      : session 94: W-115 (D-670), W-116 (D-671), W-325 split (D-672), W-325a (D-673), W-325b (D-674)
 Board           : W-113 – W-116, W-325, W-325a D; W-325b – d ·, W-327 ·, W-326 ·; W-113a · (after F12); W-324 · (after AIS / 26AS); Phase 10 left: W-299, W-294 · (wait run logs)
-Next step       : W-325b by board order (deductions and other heads; plan first, §2)
+Next step       : W-325c by board order (the bill lines; plan first, §2)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-116 pipeline 43560701697 success (1a69560a), build + benchmark, recorded in D-671 (uncommitted); RUN_BENCHMARKS deleted
+Last verify     : W-325a pipeline 43562306933 success (89906694), recorded in D-673; W-325b targeted green
 Files touched   : none beyond this file once the item commit lands
-Last item commit: taxplanning W-325a: explain the salary lines in plain language
-Updated         : 2026-11-14, session 94 — W-325a committed and pushed
+Last item commit: taxplanning W-325b: explain deductions, other sources and house property in plain language
+Updated         : 2026-11-14, session 94 — W-325b committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
