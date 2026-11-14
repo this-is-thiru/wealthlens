@@ -95,7 +95,7 @@ final class AllowanceExemption {
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_EXEMPTIONS, ruleId,
                             StepKind.EXEMPTION, MoneyValue.of(received), MoneyValue.of(exempt.value()),
                             version.provenance())
-                    .withLimitedBy(exempt.limitedBy()));
+                    .withCapResult(exempt));
         }
         ctx.inputs().entered().disabledTransport()
                 .flatMap(claim -> transport(ctx, components, claim, firstSequence + lines.size()))

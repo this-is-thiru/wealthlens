@@ -27,6 +27,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -140,6 +143,8 @@ class ChapterEightNodeTest {
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN);
         assertThat(result.trace().getFirst().in()).isEqualTo(MoneyValue.of(Money.of("280000")));
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.CAP_AGGREGATE_CEILING,
+                Map.of("ceiling", new ReasonFact.MoneyFact(Money.of("150000")))));
     }
 
     /**

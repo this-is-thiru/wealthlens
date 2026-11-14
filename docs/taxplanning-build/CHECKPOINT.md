@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-327a done (D-678), board D — next by board order W-327a1 (cap results, not yet planned)
+Item            : W-327a1 done (D-679), board D — next by board order W-327b (salary, not yet planned)
 Stage           : DONE (session 95, 2026-11-14) — committed and pushed
-Done today      : session 95: W-325d (D-676), W-327 split (D-677), W-327a (D-678)
-Board           : W-115, W-116, W-325, W-325a – d, W-327, W-327a D; W-327a1 ·, W-327b – e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
-Next step       : confirm the W-327a pipeline run and record it in D-678; then plan W-327a1 (probe CapResult carrying a Reason first)
+Done today      : session 95: W-325d (D-676), W-327 split (D-677), W-327a (D-678), W-327a1 (D-679)
+Board           : W-115, W-116, W-325, W-325a – d, W-327, W-327a, W-327a1 D; W-327b – e ·, W-326 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : confirm the W-327a1 pipeline run and record it in D-679; then plan W-327b (probe its salary sites, incl. date-split cap, excluded-by, per-unit / location / population shapes)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-327a local: unit (taxengine, taxplanning, architecture) 4490/0, DraftComputationIntegrationTest + Modulith 61/0, validate green; pipeline after push
-Files touched   : none beyond this file after the W-327a commit
-Last item commit: taxplanning W-327a: publish why a regime does not apply as facts and word them in content
-Updated         : 2026-11-14, session 95 — W-327a committed and pushed
+Last verify     : W-327a1 local: unit (taxengine, taxplanning, architecture) 4499/0, DraftComputationIntegrationTest + Modulith 61/0, validate green; pipeline after push
+Files touched   : none beyond this file after the W-327a1 commit
+Last item commit: taxplanning W-327a1: publish a cap's reason as figures and word it in content
+Updated         : 2026-11-14, session 95 — W-327a1 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

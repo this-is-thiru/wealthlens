@@ -178,7 +178,7 @@ final class DisabilityDeduction {
         CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
                 CapContext.of(AMOUNT_CLAIMED, entered));
         lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, entered, allowed.value())
-                .withLimitedBy(allowed.limitedBy()));
+                .withCapResult(allowed));
     }
 
     private static FamilySnapshot.Member dependantMember(NodeContext ctx, int position, String section) {

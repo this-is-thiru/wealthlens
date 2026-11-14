@@ -2,6 +2,11 @@ package com.thiru.wealthlens.taxengine.rules.cap;
 
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * A percentage of a named amount, such as thirty per cent of the annual value of a let property.
@@ -30,7 +35,8 @@ public record PercentOfBase(Rate percent, BaseId base) implements CapShape {
 
     @Override
     public CapResult apply(CapContext ctx) {
-        return new CapResult(percent.of(ctx.base(base)), shapeName());
+        return new CapResult(percent.of(ctx.base(base)), shapeName(),
+                Optional.of(new Reason(ReasonCodes.CAP_SHARE, Map.of("share", new ReasonFact.ShareFact(percent)))));
     }
 
     /** Names the rate and the base, so a trace line reads {@code "30% of ANNUAL_VALUE"}. */

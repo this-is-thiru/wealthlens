@@ -116,7 +116,7 @@ final class ScheduleXvDeduction {
                 Map.of(SALARY, salary, GOVERNMENT_SALARY, governmentSalary(ctx)), contributions, Map.of()));
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), StepKind.DEDUCTION,
                         MoneyValue.of(outcome.aggregate()), MoneyValue.of(outcome.allowed()), version.provenance())
-                .withLimitedBy(outcome.limitedBy()));
+                .withCapResult(outcome.asCapResult()));
     }
 
     /**

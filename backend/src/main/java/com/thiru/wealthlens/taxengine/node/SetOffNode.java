@@ -188,7 +188,7 @@ public final class SetOffNode implements ComputationNode {
             CapResult limit = TemporallyApportionedCap.apply(ctx.rule(row), t, CapContext.of(LOSS, loss));
             allowed = limit.value();
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, allowed)
-                    .withLimitedBy(limit.limitedBy()));
+                    .withCapResult(limit));
         }
         Money setOff = absorb(run, lossHead, allowed, row);
         Money left = loss.minus(setOff);

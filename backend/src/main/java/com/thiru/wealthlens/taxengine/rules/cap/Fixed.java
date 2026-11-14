@@ -1,6 +1,11 @@
 package com.thiru.wealthlens.taxengine.rules.cap;
 
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * A flat statutory amount, such as the &#8377;75,000 standard deduction.
@@ -22,7 +27,8 @@ public record Fixed(Money amount) implements CapShape {
 
     @Override
     public CapResult apply(CapContext ctx) {
-        return new CapResult(amount, shapeName());
+        return new CapResult(amount, shapeName(),
+                Optional.of(new Reason(ReasonCodes.CAP_FIXED, Map.of("amount", new ReasonFact.MoneyFact(amount)))));
     }
 
     @Override

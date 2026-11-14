@@ -184,7 +184,7 @@ public final class ExemptionNode implements ComputationNode {
                 Map.of(HRA_RECEIVED, allowance, RENT_PAID, tenancy.rentPaid(), SALARY, salary),
                 Map.of(), Map.of(), Map.of(LOCATION, tenancy.location())));
         return ctx.traceLine(sequence, rule.id(), StepKind.EXEMPTION, allowance, exempt.value())
-                .withLimitedBy(exempt.limitedBy());
+                .withCapResult(exempt);
     }
 
     /** Rent is entered for the window occupied, so a window the year does not contain cannot be split. */

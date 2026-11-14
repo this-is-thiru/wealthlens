@@ -2,6 +2,9 @@ package com.thiru.wealthlens.taxengine.rules.cap;
 
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +97,10 @@ public record AggregateWithCeiling(
                 aggregate,
                 capped,
                 residue,
-                ceiling.minus(allowed).floorAtZero());
+                ceiling.minus(allowed).floorAtZero(),
+                ceilingBound
+                        ? new Reason(ReasonCodes.CAP_AGGREGATE_CEILING, Map.of("ceiling", new ReasonFact.MoneyFact(ceiling)))
+                        : new Reason(ReasonCodes.CAP_ACTUAL_AMOUNTS, Map.of()));
     }
 
     @Override

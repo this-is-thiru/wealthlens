@@ -2,7 +2,9 @@ package com.thiru.wealthlens.taxengine.rules.cap;
 
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Everything an aggregate cap computed, not only what it allowed.
@@ -28,6 +30,7 @@ import java.util.Map;
  * @param capped each contribution after its own sub-cap
  * @param subCapResidue per contributor, what its own sub-cap excluded — {@code raw - capped}
  * @param headroom what remains of the ceiling, never negative
+ * @param reason the same as {@code limitedBy}, as facts for the explanation (W-327a1, D-679)
  */
 public record AggregateOutcome(
         Money allowed,
@@ -35,15 +38,19 @@ public record AggregateOutcome(
         Money aggregate,
         Map<ComponentCode, Money> capped,
         Map<ComponentCode, Money> subCapResidue,
-        Money headroom) {
+        Money headroom,
+        Reason reason) {
 
     public AggregateOutcome {
+        if (reason == null) {
+            throw new IllegalArgumentException("An aggregate outcome must carry its reason");
+        }
         capped = Map.copyOf(capped);
         subCapResidue = Map.copyOf(subCapResidue);
     }
 
     /** The subset of this outcome that every {@link CapShape} caller sees. */
     public CapResult asCapResult() {
-        return new CapResult(allowed, limitedBy);
+        return new CapResult(allowed, limitedBy, Optional.of(reason));
     }
 }

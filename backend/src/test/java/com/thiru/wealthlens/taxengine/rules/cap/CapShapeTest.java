@@ -7,6 +7,9 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -124,6 +127,96 @@ class CapShapeTest {
                     .isInstanceOf(IllegalArgumentException.class);
             assertThatThrownBy(() -> new PercentOfBase(Rate.percent("30"), null))
                     .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    /** W-327a1 (D-679): the shapes that reach a trace line on their own publish their reason as figures. */
+    @Nested
+    class Reasons {
+
+        private static final BaseId SALARY = new BaseId("SALARY");
+
+        private static final BaseId CONTRIBUTIONS = new BaseId("CONTRIBUTIONS");
+
+        @Test
+        void apply_whenFixed_givesCapFixedWithTheAmount() {
+            // When
+            CapResult result = new Fixed(Money.of("75000")).apply(new CapContext(Map.of()));
+
+            // Then
+            assertThat(result.reason()).contains(new Reason(ReasonCodes.CAP_FIXED,
+                    Map.of("amount", new ReasonFact.MoneyFact(Money.of("75000")))));
+        }
+
+        @Test
+        void apply_whenPercentOfBase_givesCapShareWithTheRateNotTheBase() {
+            // When
+            CapResult result = new PercentOfBase(Rate.percent("30"), ANNUAL_VALUE)
+                    .apply(CapContext.of(ANNUAL_VALUE, Money.of("522000")));
+
+            // Then
+            assertThat(result.reason()).contains(new Reason(ReasonCodes.CAP_SHARE,
+                    Map.of("share", new ReasonFact.ShareFact(Rate.percent("30")))));
+        }
+
+        @Test
+        void apply_whenAmountInExcess_givesTheThresholdsFigureForTheYear() {
+            // Given — PERQ-EMPLOYER-CONTRIBUTION's shape: contributions above a fixed 7,50,000
+            AmountInExcess excess = new AmountInExcess(CONTRIBUTIONS, new Fixed(Money.of("750000")));
+
+            // When — 8,00,000 contributed: 50,000 above
+            CapResult result = excess.apply(CapContext.of(CONTRIBUTIONS, Money.of("800000")));
+
+            // Then
+            assertThat(result.value()).isEqualTo(Money.of("50000"));
+            assertThat(result.reason()).contains(new Reason(ReasonCodes.CAP_IN_EXCESS,
+                    Map.of("threshold", new ReasonFact.MoneyFact(Money.of("750000")))));
+        }
+
+        @Test
+        void apply_whenTheAggregateCeilingBinds_givesTheCeiling() {
+            // Given — 1,00,000 + 80,000 = 1,80,000 against a 1,50,000 ceiling
+            ComponentCode nps = new ComponentCode("EMPLOYEE_NPS");
+            ComponentCode pf = new ComponentCode("EMPLOYEE_PF");
+            AggregateWithCeiling aggregate = new AggregateWithCeiling(List.of(nps, pf), Money.of("150000"), Map.of());
+
+            // When
+            CapResult result = aggregate.apply(CapContext.ofContributions(Map.of(nps, Money.of("100000"),
+                    pf, Money.of("80000"))));
+
+            // Then
+            assertThat(result.reason()).contains(new Reason(ReasonCodes.CAP_AGGREGATE_CEILING,
+                    Map.of("ceiling", new ReasonFact.MoneyFact(Money.of("150000")))));
+        }
+
+        @Test
+        void apply_whenTheAggregateIsWithinTheCeiling_givesActualAmounts() {
+            // Given — 1,00,000 + 20,000 = 1,20,000, under 1,50,000
+            ComponentCode nps = new ComponentCode("EMPLOYEE_NPS");
+            ComponentCode pf = new ComponentCode("EMPLOYEE_PF");
+            AggregateWithCeiling aggregate = new AggregateWithCeiling(List.of(nps, pf), Money.of("150000"), Map.of());
+
+            // When
+            CapResult result = aggregate.apply(CapContext.ofContributions(Map.of(nps, Money.of("100000"),
+                    pf, Money.of("20000"))));
+
+            // Then
+            assertThat(result.reason()).contains(new Reason(ReasonCodes.CAP_ACTUAL_AMOUNTS, Map.of()));
+        }
+
+        @Test
+        void apply_whenLeastOf_givesNoReasonBecauseItsLimbIsWordedByName() {
+            // Given
+            LeastOf least = new LeastOf(List.of(
+                    new LeastOf.Limb("limit", new Fixed(Money.of("2000000"))),
+                    new LeastOf.Limb("half", new PercentOfBase(Rate.percent("50"), SALARY))));
+
+            // When
+            CapResult result = least.apply(CapContext.of(SALARY, Money.of("100000")));
+
+            // Then
+            assertThat(result.limitedBy()).isEqualTo("half");
+            assertThat(result.reason()).isEmpty();
         }
     }
 

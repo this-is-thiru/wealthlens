@@ -3,6 +3,26 @@
   "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
   "reasons": [
     {
+      "code": "CAP_ACTUAL_AMOUNTS",
+      "why": "Your amounts together are within the overall ceiling, so all of them count."
+    },
+    {
+      "code": "CAP_AGGREGATE_CEILING",
+      "why": "It is limited by the overall ceiling of {ceiling} on these amounts together."
+    },
+    {
+      "code": "CAP_FIXED",
+      "why": "It is a fixed amount of {amount}."
+    },
+    {
+      "code": "CAP_IN_EXCESS",
+      "why": "Only the part above {threshold} counts."
+    },
+    {
+      "code": "CAP_SHARE",
+      "why": "It is {share} of the amount it applies to."
+    },
+    {
       "code": "REGIME_DISALLOWS",
       "why": "It is not allowed under {regime}."
     },

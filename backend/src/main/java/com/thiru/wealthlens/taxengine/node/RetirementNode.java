@@ -207,7 +207,7 @@ public final class RetirementNode implements ComputationNode {
             return NotifiedRetirementLimits.capped(ctx, payment,
                     allowedThisYear.getOrDefault(payment.entry(), Money.ZERO),
                     ctx.traceLine(claim.sequence(), row.id(), StepKind.DEDUCTION, received, deducted.value())
-                            .withLimitedBy(deducted.limitedBy()));
+                            .withCapResult(deducted));
         }
         if (payment.statutory().isPresent()) {
             StatutoryEntitlement entitlement = payment.statutory().get();
@@ -222,7 +222,7 @@ public final class RetirementNode implements ComputationNode {
         }
         CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(paidIn));
         return ctx.traceLine(claim.sequence(), row.id(), StepKind.DEDUCTION, received, deducted.value())
-                .withLimitedBy(deducted.limitedBy());
+                .withCapResult(deducted);
     }
 
     /**

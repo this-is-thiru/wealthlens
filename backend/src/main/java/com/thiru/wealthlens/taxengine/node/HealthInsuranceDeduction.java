@@ -320,7 +320,7 @@ final class HealthInsuranceDeduction {
                 CapContext.ofContributions(Map.of(insurance, paid.insurance, medical, paid.medical)));
         lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
                         MoneyValue.of(outcome.aggregate()), MoneyValue.of(outcome.allowed()), version.provenance())
-                .withLimitedBy(outcome.limitedBy()));
+                .withCapResult(outcome.asCapResult()));
     }
 
     /**

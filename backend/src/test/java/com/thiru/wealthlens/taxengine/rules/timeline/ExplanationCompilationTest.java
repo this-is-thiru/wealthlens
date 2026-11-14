@@ -184,11 +184,17 @@ class ExplanationCompilationTest {
                 .isInstanceOf(PackValidationException.class).hasMessageContaining("REGIME_FORGOTTEN");
     }
 
+    /** The cap reasons' sentences (W-327a1), so a fixture that words the regime's reasons reaches the check it means. */
+    private static final String CAP_REASONS = """
+            {"code": "CAP_ACTUAL_AMOUNTS", "why": "All count."}, {"code": "CAP_AGGREGATE_CEILING", "why": "Up to {ceiling}."},
+            {"code": "CAP_FIXED", "why": "Fixed at {amount}."}, {"code": "CAP_IN_EXCESS", "why": "Above {threshold}."},
+            {"code": "CAP_SHARE", "why": "{share} of it."},""";
+
     @Test
     void compile_whenAReasonTheEnginePublishesIsNotWorded_isRefused() {
         // Given — REGIME_EXCLUDES_ROW left out
-        Timeline unworded = withExplanations("""
-                {"explanations": [], "reasons": [{"code": "REGIME_DISALLOWS", "why": "Not under {regime}."}],
+        Timeline unworded = withExplanations("{\"explanations\": [], \"reasons\": [" + CAP_REASONS + """
+                {"code": "REGIME_DISALLOWS", "why": "Not under {regime}."}],
                  "terms": {"regime": {"NEW_TAX_REGIME": "the default regime", "FIRST_SCHEDULE_RATES": "the old regime"}}}""");
 
         // When / Then
@@ -199,8 +205,8 @@ class ExplanationCompilationTest {
     @Test
     void compile_whenARegimeOfTheTimelineHasNoTerm_isRefused() {
         // Given — FIRST_SCHEDULE_RATES left out
-        Timeline unnamed = withExplanations("""
-                {"explanations": [], "reasons": [{"code": "REGIME_DISALLOWS", "why": "Not under {regime}."},
+        Timeline unnamed = withExplanations("{\"explanations\": [], \"reasons\": [" + CAP_REASONS + """
+                {"code": "REGIME_DISALLOWS", "why": "Not under {regime}."},
                   {"code": "REGIME_EXCLUDES_ROW", "why": "Not under {regime}."}],
                  "terms": {"regime": {"NEW_TAX_REGIME": "the default regime"}}}""");
 
@@ -219,7 +225,8 @@ class ExplanationCompilationTest {
         // Then
         Set<String> codes = new TreeSet<>();
         content.path("reasons").forEach(reason -> codes.add(reason.path("code").asString()));
-        assertThat(codes).containsExactly("REGIME_DISALLOWS", "REGIME_EXCLUDES_ROW");
+        assertThat(codes).containsExactly("CAP_ACTUAL_AMOUNTS", "CAP_AGGREGATE_CEILING", "CAP_FIXED", "CAP_IN_EXCESS",
+                "CAP_SHARE", "REGIME_DISALLOWS", "REGIME_EXCLUDES_ROW");
         assertThat(content.at("/terms/regime/NEW_TAX_REGIME").asString()).isEqualTo("the default regime");
     }
 

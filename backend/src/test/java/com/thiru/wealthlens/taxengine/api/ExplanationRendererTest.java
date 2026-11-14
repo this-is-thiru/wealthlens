@@ -7,11 +7,13 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.reason.Reason;
@@ -21,6 +23,7 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -306,5 +309,47 @@ class ExplanationRendererTest {
         assertThat(ExplanationRenderer.explain(barred, noTerms)).isEqualTo(
                 "Of the ₹2,40,000 house rent allowance you received for this home, ₹1,20,000 is not taxed. disallowed in the"
                         + " NEW_TAX_REGIME regime");
+    }
+
+    @Test
+    void explain_whenACapCountsOnlyThePartAboveAThreshold_namesTheThresholdInWords() {
+        // Given — EmployerContributionNode:111: 8,00,000 contributed, 7,50,000 the year's threshold
+        TraceLine excess = line(new RuleId("PERQ-EMPLOYER-CONTRIBUTION"), MoneyValue.of(Money.of("800000")),
+                MoneyValue.of(Money.of("50000"))).withCapResult(new CapResult(Money.of("50000"),
+                        "CONTRIBUTIONS in excess of fixed", Optional.of(new Reason(ReasonCodes.CAP_IN_EXCESS,
+                                Map.of("threshold", new ReasonFact.MoneyFact(Money.of("750000")))))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(excess, PACK.explanations())).isEqualTo(
+                "₹50,000 of your employer's contributions to your provident, pension and superannuation funds is taxed as"
+                        + " a perquisite. Only the part above ₹7,50,000 counts.");
+    }
+
+    @Test
+    void explain_whenTheAggregateCeilingBinds_namesTheCeiling() {
+        // Given — ScheduleXvDeduction:119 with the ceiling bound
+        TraceLine ceiling = line(new RuleId("DED-SCHEDULE-XV"), MoneyValue.of(Money.of("180000")),
+                MoneyValue.of(Money.of("150000"))).withCapResult(new CapResult(Money.of("150000"), "aggregate ceiling",
+                        Optional.of(new Reason(ReasonCodes.CAP_AGGREGATE_CEILING,
+                                Map.of("ceiling", new ReasonFact.MoneyFact(Money.of("150000")))))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(ceiling, PACK.explanations())).isEqualTo(
+                "₹1,50,000 is deducted for your savings and payments under Schedule XV. It is limited by the overall"
+                        + " ceiling of ₹1,50,000 on these amounts together.");
+    }
+
+    @Test
+    void explain_whenACapIsAShare_namesTheShareAsAPercentage() {
+        // Given — RetirementNode:225: a government gratuity, 100% of the payment received
+        TraceLine share = line(new RuleId("RET-GRATUITY-GOVERNMENT"), MoneyValue.of(Money.of("900000")),
+                MoneyValue.of(Money.of("900000"))).withCapResult(new CapResult(Money.of("900000"),
+                        "100% of PAYMENT_RECEIVED", Optional.of(new Reason(ReasonCodes.CAP_SHARE,
+                                Map.of("share", new ReasonFact.ShareFact(Rate.percent("100")))))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(share, PACK.explanations())).isEqualTo(
+                "Of the ₹9,00,000 government gratuity you received, ₹9,00,000 is not taxed. It is 100% of the amount it"
+                        + " applies to.");
     }
 }

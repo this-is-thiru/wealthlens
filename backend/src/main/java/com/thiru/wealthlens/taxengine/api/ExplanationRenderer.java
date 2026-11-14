@@ -52,6 +52,8 @@ final class ExplanationRenderer {
         for (Map.Entry<String, ReasonFact> fact : reason.facts().entrySet()) {
             Optional<String> words = switch (fact.getValue()) {
                 case ReasonFact.RegimeFact regime -> Optional.ofNullable(explanations.regimeTerms().get(regime.regime()));
+                case ReasonFact.MoneyFact money -> Optional.of(money.amount().inIndianNotation());
+                case ReasonFact.ShareFact share -> Optional.of(share.share().asPercentLabel());
             };
             if (words.isEmpty()) {
                 return Optional.empty();

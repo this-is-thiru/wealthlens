@@ -85,7 +85,7 @@ final class PensionDeduction {
                 Map.of(ComponentCodes.EMPLOYEE_NPS, ownClaim, ComponentCodes.NPS_MINOR_DEPOSIT, minorDeposit)));
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), StepKind.DEDUCTION,
                         MoneyValue.of(entered), MoneyValue.of(outcome.allowed()), version.provenance())
-                .withLimitedBy(outcome.limitedBy()));
+                .withCapResult(outcome.asCapResult()));
     }
 
     /** s.124(1)–(2): the employer's pension contribution, up to the row's share of the employer-pension salary. */

@@ -108,7 +108,7 @@ public final class EmployerContributionNode implements ComputationNode {
             lines.add(TraceLine.of(lines.size() + 1, produces(), ctx.ruleIdOf(RuleSetIds.RS_PERQ_EMPLOYER_CONTRIBUTION), StepKind.INCOME,
                             MoneyValue.of(aggregate), MoneyValue.of(excess),
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
-                    .withLimitedBy(capped.limitedBy()));
+                    .withCapResult(capped));
         }
         if (!excess.isGreaterThan(Money.ZERO) && history.isEmpty()) {
             return excess;

@@ -163,7 +163,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, ruleId, StepKind.DEDUCTION,
                         MoneyValue.of(paidByGovernment.get(employment)), MoneyValue.of(deducted.value()),
                         version.provenance())
-                .withLimitedBy(deducted.limitedBy()));
+                .withCapResult(deducted));
     }
 
     /**
@@ -196,6 +196,6 @@ public final class SalaryDeductionNode implements ComputationNode {
         CapResult deduction = TemporallyApportionedCap.apply(row, ctx.inputs().temporal(), CapContext.of(SALARY, salary));
         return TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, row.id(), StepKind.DEDUCTION,
                         MoneyValue.of(salary), MoneyValue.of(deduction.value()), version.provenance())
-                .withLimitedBy(deduction.limitedBy());
+                .withCapResult(deduction);
     }
 }

@@ -186,7 +186,7 @@ final class MotorCarPerquisite {
                 Map.of(), Map.of(MONTH, vehicle.months()));
         CapResult valued = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(), bases);
         return ctx.traceLine(sequence, ruleId, StepKind.INCOME, vehicle.runningExpenditure(), valued.value())
-                .withLimitedBy(valued.limitedBy());
+                .withCapResult(valued);
     }
 
     /** The Sl. 1(c)(i) amount an employee's own car's expenditure is reduced by, with a chauffeur's if paid. */

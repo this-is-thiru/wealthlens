@@ -29,9 +29,13 @@ import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -116,6 +120,8 @@ class RetirementNodeTest {
             assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_GOVERNMENT);
             assertThat(line.kind()).isEqualTo(StepKind.DEDUCTION);
             assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.CAP_SHARE,
+                    Map.of("share", new ReasonFact.ShareFact(Rate.percent("100")))));
         });
     }
 

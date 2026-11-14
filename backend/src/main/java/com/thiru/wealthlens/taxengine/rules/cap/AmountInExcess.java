@@ -2,6 +2,11 @@ package com.thiru.wealthlens.taxengine.rules.cap;
 
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * "The amount by which" one figure "exceeds" a threshold, and never less than nil (D-099).
@@ -23,8 +28,10 @@ public record AmountInExcess(BaseId amount, CapShape threshold) implements CapSh
 
     @Override
     public CapResult apply(CapContext ctx) {
-        Money excess = ctx.base(amount).minus(threshold.apply(ctx).value());
-        return new CapResult(excess.floorAtZero(), shapeName());
+        Money above = threshold.apply(ctx).value();
+        Money excess = ctx.base(amount).minus(above);
+        return new CapResult(excess.floorAtZero(), shapeName(),
+                Optional.of(new Reason(ReasonCodes.CAP_IN_EXCESS, Map.of("threshold", new ReasonFact.MoneyFact(above)))));
     }
 
     @Override

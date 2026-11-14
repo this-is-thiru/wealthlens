@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.trace;
 
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
+import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.reason.Reason;
@@ -124,6 +125,15 @@ public record TraceLine(
      */
     public TraceLine withRegimeVerdict(RegimeVerdict verdict) {
         return withLimitedBy(verdict.whyNot()).withReason(verdict.reason());
+    }
+
+    /**
+     * This line, limited by a cap: the cap's {@code limitedBy} as the audit text, and its reason where the cap
+     * publishes one (W-327a1, D-679) — a least-of's limb is worded by name and carries none.
+     */
+    public TraceLine withCapResult(CapResult capped) {
+        TraceLine limited = withLimitedBy(capped.limitedBy());
+        return capped.reason().map(limited::withReason).orElse(limited);
     }
 
     /** This line, carrying why its output is what it is as facts (W-327a, D-678); {@code limitedBy} is kept. */
