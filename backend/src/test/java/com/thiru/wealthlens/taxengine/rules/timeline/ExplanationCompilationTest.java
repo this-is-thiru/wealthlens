@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -111,5 +112,83 @@ class ExplanationCompilationTest {
         // Then — every least-of row explained; the other rows show their rule id until W-325
         assertThat(leastOf).isNotEmpty();
         assertThat(pack.explanations().byRule().keySet()).containsAll(leastOf);
+    }
+
+    /** The salary-family rules W-325's probe saw on a trace line (W-325a, D-673): each explained in the year it is a rule of. */
+    private static final List<String> SALARY_FAMILY = List.of(
+            "PERQ-ACCOM-FURNITURE",
+            "PERQ-ACCOM-GOVERNMENT",
+            "PERQ-ACCOM-OWNED",
+            "PERQ-ASSET-TRANSFER-CAR",
+            "PERQ-ASSET-TRANSFER-ELECTRONIC",
+            "PERQ-ASSET-TRANSFER-OTHER",
+            "PERQ-ASSET-USE",
+            "PERQ-ASSET-USE-EXCLUDED",
+            "PERQ-CAR-OWNRUN-LARGE",
+            "PERQ-CAR-OWNRUN-SMALL",
+            "PERQ-CAR-PARTLY-ELECTRIC",
+            "PERQ-CAR-PARTLY-LARGE",
+            "PERQ-CAR-PARTLY-SMALL",
+            "PERQ-CAR-PATH-OFFICIAL",
+            "PERQ-CAR-PRIVATE",
+            "PERQ-CARRIER-TRAVEL",
+            "PERQ-CLUB",
+            "PERQ-CLUB-BUSINESS",
+            "PERQ-CLUB-BUSINESS-UNIFORM",
+            "PERQ-CLUB-UNIFORM",
+            "PERQ-CREDIT-CARD",
+            "PERQ-CREDIT-CARD-OFFICIAL",
+            "PERQ-EDUCATION",
+            "PERQ-EDUCATION-FREE",
+            "PERQ-EMPLOYER-ACCRETION",
+            "PERQ-EMPLOYER-CONTRIBUTION",
+            "PERQ-GIFT",
+            "PERQ-HOLIDAY",
+            "PERQ-LOAN",
+            "PERQ-LOAN-PETTY",
+            "PERQ-MEAL",
+            "PERQ-MEAL-AT-WORK",
+            "PERQ-MEAL-REMOTE",
+            "PERQ-MEAL-TEA-SNACKS",
+            "PERQ-MEAL-VOUCHER",
+            "PERQ-MEDABROAD-TRAVEL",
+            "PERQ-OTHER-BENEFIT",
+            "PERQ-RPF-CONTRIBUTION",
+            "PERQ-RPF-INTEREST",
+            "PERQ-SERVICES",
+            "PERQ-SPECIFIED-EMPLOYEE",
+            "PERQ-SPECIFIED-SECURITY",
+            "PERQ-TELEPHONE",
+            "PERQ-UTILITY",
+            "RET-COMMUTED-PENSION-OTHER",
+            "RET-GRATUITY-AGGREGATE",
+            "RET-GRATUITY-GOVERNMENT",
+            "RET-LEAVE-ENCASHMENT-AGGREGATE",
+            "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+            "SAL-ALW-TRANSPORT-DISABLED",
+            "SAL-LEAVE-TRAVEL-CHILDREN",
+            "SAL-SALARY-FOR-ACCOM",
+            "SAL-SALARY-FOR-EMPLOYEE-PENSION",
+            "SAL-SALARY-FOR-EMPLOYER-PENSION",
+            "SAL-SALARY-FOR-ENTMT",
+            "SAL-SALARY-FOR-GRATUITY",
+            "SAL-SALARY-FOR-HRA",
+            "SAL-SALARY-FOR-RPF",
+            "SAL-SALARY-INCLUDES",
+            "SAL-TAX-ON-EMPLOYMENT");
+
+    @Test
+    void timeline_whenTheSalaryFamilyIsCompiled_explainsEveryRuleOfItInSomeYear() {
+        // Given
+        Set<String> explained = new TreeSet<>();
+        for (int year : new int[] {2025, 2026}) {
+            for (JsonNode entry : MAPPER.readTree(RulePackCompiler.compile(SHIPPED, TaxYearId.of(year)).files()
+                    .get("content/explanations.json")).path("explanations")) {
+                explained.add(entry.path("rule").asString());
+            }
+        }
+
+        // When / Then
+        assertThat(explained).containsAll(SALARY_FAMILY);
     }
 }

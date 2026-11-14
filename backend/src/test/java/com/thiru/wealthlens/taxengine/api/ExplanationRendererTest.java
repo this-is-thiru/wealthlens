@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -114,5 +115,36 @@ class ExplanationRendererTest {
 
         // When / Then
         assertThat(ExplanationRenderer.explain(notMoney, PACK.explanations())).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
+    }
+
+    @Test
+    void explain_whenAPerquisiteNamesNoLimit_valuesItAndShowsTheEnginesReason() {
+        // Given — club expenditure, its limitedBy the engine's own text until W-327
+        TraceLine club = line(new RuleId("PERQ-CLUB"), MoneyValue.of(Money.of("50000")), MoneyValue.of(Money.of("50000")))
+                .withLimitedBy("CLUB, less the recovery 0.00");
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(club, PACK.explanations()))
+                .isEqualTo("Club expenditure your employer paid is valued at ₹50,000 as a perquisite. CLUB, less the recovery 0.00");
+    }
+
+    @Test
+    void explain_whenARowIsAnExclusion_saysItIsNotTaxedWithoutAFigure() {
+        // Given
+        TraceLine telephone = line(new RuleId("PERQ-TELEPHONE"), MoneyValue.of(Money.of("12000")), MoneyValue.of(Money.ZERO));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(telephone, PACK.explanations()))
+                .isEqualTo("Telephone and mobile phone expenses your employer pays are not taxed as a perquisite.");
+    }
+
+    @Test
+    void explain_whenTheFigureIsNotMoneyAndTheSentenceNamesNone_rendersTheSentence() {
+        // Given — a salary base, whose out is the bases by employment (W-325 C3a)
+        TraceLine base = line(new RuleId("SAL-SALARY-FOR-HRA"), new ComponentSet(Map.of()), new SalaryBases(Map.of()));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(base, PACK.explanations())).isEqualTo(
+                "This is the salary your house rent allowance is measured against: the pay lines the law counts for it.");
     }
 }

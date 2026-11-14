@@ -60,6 +60,14 @@
       }
     },
     {
+      "rule": "PERQ-ACCOM-FURNITURE",
+      "what": "Furniture in the accommodation your employer provides is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ACCOM-GOVERNMENT",
+      "what": "Accommodation the government provides you as its employee is valued at {out} as a perquisite."
+    },
+    {
       "rule": "PERQ-ACCOM-HOTEL",
       "what": "Hotel accommodation from your employer is valued at {out} as a perquisite.",
       "byLimit": {
@@ -74,6 +82,30 @@
         "lease rental": "It is valued at the lease rental your employer pays, which is below the share of your salary.",
         "ten per cent of salary": "It is valued at a share of your salary, which is below the lease rental."
       }
+    },
+    {
+      "rule": "PERQ-ACCOM-OWNED",
+      "what": "Accommodation your employer owns and provides is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-CAR",
+      "what": "A car your employer transferred to you is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-ELECTRONIC",
+      "what": "A computer or electronic item your employer transferred to you is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-OTHER",
+      "what": "An asset your employer transferred to you is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-USE",
+      "what": "The use of an asset belonging to or hired by your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-USE-EXCLUDED",
+      "what": "The use of this kind of asset from your employer is not taxed as a perquisite."
     },
     {
       "rule": "PERQ-CAR-CONVEYANCE",
@@ -92,6 +124,114 @@
       }
     },
     {
+      "rule": "PERQ-CAR-OWNRUN-LARGE",
+      "what": "Your employer's larger car, used partly privately with you meeting its private running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-OWNRUN-SMALL",
+      "what": "Your employer's smaller car, used partly privately with you meeting its private running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-ELECTRIC",
+      "what": "Your employer's electric car, used partly privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-LARGE",
+      "what": "Your employer's larger car, used partly privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-SMALL",
+      "what": "Your employer's smaller car, used partly privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-OFFICIAL",
+      "what": "A vehicle used wholly for official duties is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PRIVATE",
+      "what": "Your employer's car, used only privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CARRIER-TRAVEL",
+      "what": "Free or cheaper travel from your employer, a carrier, is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB",
+      "what": "Club expenditure your employer paid is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB-BUSINESS",
+      "what": "Club expenditure incurred wholly for business is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB-BUSINESS-UNIFORM",
+      "what": "Club expenditure incurred wholly for business, on the conditions the rules set, is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB-UNIFORM",
+      "what": "A health club or sports facility provided uniformly to all employees is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CREDIT-CARD",
+      "what": "Expenses on a credit card your employer provides or pays for is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CREDIT-CARD-OFFICIAL",
+      "what": "Credit card expenses incurred wholly for official purposes are not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-EDUCATION",
+      "what": "Education your employer pays for a member of your household is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-EDUCATION-FREE",
+      "what": "Free education for your child by reason of your employment is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-EMPLOYER-ACCRETION",
+      "what": "{out} of the interest and other accretion on your employer's contributions is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-EMPLOYER-CONTRIBUTION",
+      "what": "{out} of your employer's contributions to your provident, pension and superannuation funds is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-GIFT",
+      "what": "A gift, voucher or token from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-HOLIDAY",
+      "what": "Holiday expenses your employer paid is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-LOAN",
+      "what": "An interest-free or cheaper loan from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-LOAN-PETTY",
+      "what": "A small loan from your employer, within the limit, is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL",
+      "what": "Free food and drink from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-AT-WORK",
+      "what": "Food and drink at work beyond the amount allowed for each meal is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-REMOTE",
+      "what": "Food at work in a remote area or an off-shore installation is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-TEA-SNACKS",
+      "what": "Tea or snacks at work are not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-VOUCHER",
+      "what": "Meal vouchers beyond the amount allowed for each meal is valued at {out} as a perquisite."
+    },
+    {
       "rule": "PERQ-MEDABROAD-STAY",
       "what": "Medical treatment and stay abroad paid by your employer comes to {out} on this line.",
       "byLimit": {
@@ -100,12 +240,60 @@
       }
     },
     {
+      "rule": "PERQ-MEDABROAD-TRAVEL",
+      "what": "Of the {in} your employer spent on travel abroad for medical treatment, {out} is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-OTHER-BENEFIT",
+      "what": "Another benefit or amenity from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-RPF-CONTRIBUTION",
+      "what": "{out} of your employer's contribution to your recognised provident fund, the part above a share of your salary, is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-RPF-INTEREST",
+      "what": "{out} of the interest on your recognised provident fund, the part above the notified rate, is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-SERVICES",
+      "what": "A sweeper, gardener, watchman or personal attendant your employer pays for is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-SPECIFIED-EMPLOYEE",
+      "what": "Some benefits are taxed only for an employee whose pay in money exceeds a limit; this line checks that limit."
+    },
+    {
+      "rule": "PERQ-SPECIFIED-SECURITY",
+      "what": "Shares or securities your employer allotted or transferred to you free or cheaper is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-TELEPHONE",
+      "what": "Telephone and mobile phone expenses your employer pays are not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-UTILITY",
+      "what": "Gas, electricity or water your employer provides for your household is valued at {out} as a perquisite."
+    },
+    {
       "rule": "RATE-CG-LONG-OTHER",
       "what": "This long-term capital gain comes to {out} on this line.",
       "byLimit": {
         "twelve and one-half per cent of the gain": "It is the lower of the two ways the law allows, here the one without indexation.",
         "twenty per cent of the gain computed with indexed cost": "It is the lower of the two ways the law allows, here the one with indexed cost."
       }
+    },
+    {
+      "rule": "RET-COMMUTED-PENSION-OTHER",
+      "what": "Of the {in} commuted pension you received, {out} is not taxed."
+    },
+    {
+      "rule": "RET-GRATUITY-AGGREGATE",
+      "what": "Of the {in} gratuity you received, {out} is not taxed within the ceiling across all your employers and years."
+    },
+    {
+      "rule": "RET-GRATUITY-GOVERNMENT",
+      "what": "Of the {in} government gratuity you received, {out} is not taxed."
     },
     {
       "rule": "RET-GRATUITY-OTHER",
@@ -123,6 +311,14 @@
         "gratuity received": "All of the gratuity is exempt, since it is within the statutory amount.",
         "amount under the gratuity statute": "The exemption is capped by the amount the gratuity statute works out; gratuity above it is taxed."
       }
+    },
+    {
+      "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE",
+      "what": "Of the {in} leave encashment you received, {out} is not taxed within the ceiling across all your employers and years."
+    },
+    {
+      "rule": "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+      "what": "Of the {in} leave encashment you received from the government, {out} is not taxed."
     },
     {
       "rule": "RET-LEAVE-ENCASHMENT-OTHER",
@@ -177,6 +373,10 @@
       }
     },
     {
+      "rule": "SAL-ALW-TRANSPORT-DISABLED",
+      "what": "Of the {in} transport allowance you received, {out} is not taxed."
+    },
+    {
       "rule": "SAL-ALW-UNIFORM",
       "what": "{out} of your uniform allowance is not taxed.",
       "byLimit": {
@@ -202,12 +402,48 @@
       }
     },
     {
+      "rule": "SAL-LEAVE-TRAVEL-CHILDREN",
+      "what": "The leave travel concession covers a limited number of your surviving children; this line applies that count."
+    },
+    {
       "rule": "SAL-LEAVE-TRAVEL-CONCESSION",
       "what": "{out} of your leave travel concession is not taxed.",
       "byLimit": {
         "amount actually incurred": "The exemption is what you actually spent on the journey, which is within the fare allowed.",
         "fare admissible": "The exemption is capped by the fare the rules allow for the journey; spending more would not raise it."
       }
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "what": "This is the salary your accommodation is valued against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-EMPLOYEE-PENSION",
+      "what": "This is the salary your own pension contribution is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-EMPLOYER-PENSION",
+      "what": "This is the salary your employer's pension contribution is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ENTMT",
+      "what": "This is the salary the entertainment allowance deduction is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-GRATUITY",
+      "what": "This is the salary your gratuity and leave encashment are measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-HRA",
+      "what": "This is the salary your house rent allowance is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-RPF",
+      "what": "This is the salary your employer's provident fund contribution is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-INCLUDES",
+      "what": "{out} of what you received is salary."
     },
     {
       "rule": "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE",
@@ -224,6 +460,10 @@
         "statutory amount": "It is the amount the law sets, whatever you spend.",
         "salary": "It is limited by your salary, which is below the amount the law sets."
       }
+    },
+    {
+      "rule": "SAL-TAX-ON-EMPLOYMENT",
+      "what": "{out} of tax on employment is deducted from your salary."
     },
     {
       "rule": "SETOFF-HOUSE-PROPERTY",
