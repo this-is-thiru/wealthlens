@@ -69,6 +69,7 @@ class PackDiffTest {
         // Given
         Path root = timelineCopy();
         Files.delete(root.resolve("law/rules/RATE-SLAB-FIRST-SCHEDULE.json"));
+        withoutExplanationOf(root, "RATE-SLAB-FIRST-SCHEDULE");
         CompiledPack full = compile(TIMELINE, TY_2026);
         CompiledPack without = compile(root, TY_2026);
 
@@ -135,6 +136,20 @@ class PackDiffTest {
         assertThat(diff.from()).isEqualTo(TY_2026);
         assertThat(diff.to()).isEqualTo(next);
         assertThat(diff.findings()).isEmpty();
+    }
+
+    /** A rule removed takes its explanation with it, or the compiler refuses the explanation of no rule (W-325c, D-675). */
+    private static void withoutExplanationOf(Path root, String rule) throws IOException {
+        Path content = root.resolve("content/explanations.json");
+        JsonNode file = MAPPER.readTree(Files.readString(content));
+        ArrayNode kept = MAPPER.createArrayNode();
+        file.path("explanations").forEach(entry -> {
+            if (!entry.path("rule").asString().equals(rule)) {
+                kept.add(entry);
+            }
+        });
+        ((ObjectNode) file).set("explanations", kept);
+        Files.writeString(content, MAPPER.writeValueAsString(file));
     }
 
     private static CompiledPack compile(Path root, TaxYearId year) {

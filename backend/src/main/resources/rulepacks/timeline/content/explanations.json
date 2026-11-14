@@ -3,6 +3,18 @@
   "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
   "explanations": [
     {
+      "rule": "ADV-INSTALMENTS",
+      "what": "This line works out how much advance tax was still owed by an instalment date."
+    },
+    {
+      "rule": "ADV-LIABILITY",
+      "what": "This line works out whether you must pay advance tax this year, and how much."
+    },
+    {
+      "rule": "CREDIT-TAX-PAID",
+      "what": "{out} of tax already paid is credited against your bill."
+    },
+    {
       "rule": "DED-AGNIVEER-GOVERNMENT",
       "what": "{out} of the government's contribution to your Agniveer Corpus Fund is deducted."
     },
@@ -160,6 +172,10 @@
       "what": "Your deductions of {in} together are limited to your gross total income of {out}."
     },
     {
+      "rule": "FEE-LATE-RETURN",
+      "what": "A fee of {out} is charged for furnishing the return after its due date."
+    },
+    {
       "rule": "HP-ANNUAL-VALUE",
       "what": "The annual value of this house is {out}."
     },
@@ -198,6 +214,22 @@
     {
       "rule": "HP-UNREALISED-RENT",
       "what": "Rent you could not realise is left out before this house's annual value is found."
+    },
+    {
+      "rule": "INT-ADVANCE-SHORTFALL",
+      "what": "Interest of {out} is charged because the advance tax paid fell short of what was due for the year."
+    },
+    {
+      "rule": "INT-DEFERMENT",
+      "what": "Interest of {out} is charged because advance tax instalments were paid late or short."
+    },
+    {
+      "rule": "INT-LATE-RETURN",
+      "what": "Interest of {out} is charged because the return was furnished after its due date."
+    },
+    {
+      "rule": "INT-REFUND",
+      "what": "Interest of {out} is paid to you on your refund."
     },
     {
       "rule": "OS-BANKER-COMMISSION",
@@ -516,12 +548,96 @@
       "what": "Gas, electricity or water your employer provides for your household is valued at {out} as a perquisite."
     },
     {
+      "rule": "RATE-CG-LONG-LISTED-EQUITY",
+      "what": "On {in} of long-term gain on listed shares and equity funds, the tax is {out}."
+    },
+    {
       "rule": "RATE-CG-LONG-OTHER",
       "what": "This long-term capital gain comes to {out} on this line.",
       "byLimit": {
         "twelve and one-half per cent of the gain": "It is the lower of the two ways the law allows, here the one without indexation.",
         "twenty per cent of the gain computed with indexed cost": "It is the lower of the two ways the law allows, here the one with indexed cost."
       }
+    },
+    {
+      "rule": "RATE-CG-SHORT-LISTED-EQUITY",
+      "what": "On {in} of short-term gain on listed shares and equity funds, the tax is {out}."
+    },
+    {
+      "rule": "RATE-CG-SHORTFALL-ORDER",
+      "what": "This line takes from your gains taxed at special rates any part of the basic exemption your other income leaves unused."
+    },
+    {
+      "rule": "RATE-HEALTH-EDUCATION-CESS",
+      "what": "On tax and surcharge of {in}, the health and education cess is {out}."
+    },
+    {
+      "rule": "RATE-ROUND-PAYABLE",
+      "what": "The tax payable of {in} is rounded to {out}."
+    },
+    {
+      "rule": "RATE-ROUND-TOTAL-INCOME",
+      "what": "Your total income of {in} is rounded to {out}."
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE",
+      "what": "This is the tax on your income at the old regime's slab rates."
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+      "what": "This is the tax on your income at the old regime's slab rates for a senior citizen."
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
+      "what": "This is the tax on your income at the old regime's slab rates for a very senior citizen."
+    },
+    {
+      "rule": "RATE-SLAB-NEW-TAX-REGIME",
+      "what": "This is the tax on your income at the default regime's slab rates."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE",
+      "what": "On tax of {in}, the surcharge under the old regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-CEILING",
+      "what": "Marginal relief of {out} keeps the surcharge from taking more than your income above its threshold."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-EXCLUDING",
+      "what": "On tax of {in}, the surcharge under the old regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-LIMIT",
+      "what": "On tax of {in} from dividends and gains whose surcharge is capped, the surcharge is {out}."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME",
+      "what": "On tax of {in}, the surcharge under the default regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-CEILING",
+      "what": "Marginal relief of {out} keeps the surcharge from taking more than your income above its threshold."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-EXCLUDING",
+      "what": "On tax of {in}, the surcharge under the default regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-LIMIT",
+      "what": "On tax of {in} from dividends and gains whose surcharge is capped, the surcharge is {out}."
+    },
+    {
+      "rule": "REBATE-NEW-TAX-REGIME",
+      "what": "On tax of {in}, a rebate of {out} is allowed under the default regime."
+    },
+    {
+      "rule": "REBATE-NEW-TAX-REGIME-EXCESS",
+      "what": "On tax of {in}, a rebate of {out} keeps the tax from exceeding your income above the rebate's limit."
+    },
+    {
+      "rule": "REBATE-RESIDENT-INDIVIDUAL",
+      "what": "On tax of {in}, a rebate of {out} is allowed to a resident individual."
     },
     {
       "rule": "RET-COMMUTED-PENSION-OTHER",
@@ -704,6 +820,22 @@
     {
       "rule": "SAL-TAX-ON-EMPLOYMENT",
       "what": "{out} of tax on employment is deducted from your salary."
+    },
+    {
+      "rule": "SETOFF-ACROSS-HEADS",
+      "what": "This line sets a loss under one head against your income under the other heads."
+    },
+    {
+      "rule": "SETOFF-CARRIED-CAPITAL-GAINS",
+      "what": "This line sets a capital loss carried from an earlier year against this year's gains."
+    },
+    {
+      "rule": "SETOFF-CARRIED-DISALLOWED-PART",
+      "what": "This line deals with the part of a carried house property loss that comes from a deduction the default regime disallows: set off in the old regime, lost in the default one."
+    },
+    {
+      "rule": "SETOFF-CARRIED-HOUSE-PROPERTY",
+      "what": "This line sets a house property loss carried from an earlier year against this year's income from house property."
     },
     {
       "rule": "SETOFF-HOUSE-PROPERTY",

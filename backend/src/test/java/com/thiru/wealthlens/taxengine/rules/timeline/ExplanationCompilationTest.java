@@ -246,6 +246,48 @@ class ExplanationCompilationTest {
         assertThat(explainedInSomeYear()).containsAll(DEDUCTIONS_AND_OTHER_HEADS);
     }
 
+    /** The bill: tax by rate, surcharge, rebate, cess, rounding, interest and fees, advance tax, credits, set-off (W-325c, D-675). */
+    private static final List<String> THE_BILL = List.of(
+            "ADV-INSTALMENTS",
+            "ADV-LIABILITY",
+            "CREDIT-TAX-PAID",
+            "FEE-LATE-RETURN",
+            "INT-ADVANCE-SHORTFALL",
+            "INT-DEFERMENT",
+            "INT-LATE-RETURN",
+            "INT-REFUND",
+            "RATE-CG-LONG-LISTED-EQUITY",
+            "RATE-CG-SHORT-LISTED-EQUITY",
+            "RATE-CG-SHORTFALL-ORDER",
+            "RATE-HEALTH-EDUCATION-CESS",
+            "RATE-ROUND-PAYABLE",
+            "RATE-ROUND-TOTAL-INCOME",
+            "RATE-SLAB-FIRST-SCHEDULE",
+            "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+            "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
+            "RATE-SLAB-NEW-TAX-REGIME",
+            "RATE-SUR-FIRST-SCHEDULE",
+            "RATE-SUR-FIRST-SCHEDULE-CEILING",
+            "RATE-SUR-FIRST-SCHEDULE-EXCLUDING",
+            "RATE-SUR-FIRST-SCHEDULE-LIMIT",
+            "RATE-SUR-NEW-TAX-REGIME",
+            "RATE-SUR-NEW-TAX-REGIME-CEILING",
+            "RATE-SUR-NEW-TAX-REGIME-EXCLUDING",
+            "RATE-SUR-NEW-TAX-REGIME-LIMIT",
+            "REBATE-NEW-TAX-REGIME",
+            "REBATE-NEW-TAX-REGIME-EXCESS",
+            "REBATE-RESIDENT-INDIVIDUAL",
+            "SETOFF-ACROSS-HEADS",
+            "SETOFF-CARRIED-CAPITAL-GAINS",
+            "SETOFF-CARRIED-DISALLOWED-PART",
+            "SETOFF-CARRIED-HOUSE-PROPERTY");
+
+    @Test
+    void timeline_whenTheBillIsCompiled_explainsEveryRuleOfItInSomeYear() {
+        // Given / When / Then
+        assertThat(explainedInSomeYear()).containsAll(THE_BILL);
+    }
+
     private static Set<String> explainedInSomeYear() {
         Set<String> explained = new TreeSet<>();
         for (int year : new int[] {2025, 2026}) {

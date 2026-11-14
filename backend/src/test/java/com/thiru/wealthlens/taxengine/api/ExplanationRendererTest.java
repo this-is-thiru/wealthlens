@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
+import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -190,5 +191,38 @@ class ExplanationRendererTest {
         // When / Then
         assertThat(ExplanationRenderer.explain(measure, PACK.explanations()))
                 .isEqualTo("Rent you could not realise is left out before this house's annual value is found.");
+    }
+
+    @Test
+    void explain_whenCessIsCharged_namesTheTaxItIsOnAndTheCess() {
+        // Given — CessNode:63: in is tax with surcharge, out the cess
+        TraceLine cess = line(new RuleId("RATE-HEALTH-EDUCATION-CESS"), MoneyValue.of(Money.of("102500")),
+                MoneyValue.of(Money.of("4100")));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(cess, PACK.explanations()))
+                .isEqualTo("On tax and surcharge of ₹1,02,500, the health and education cess is ₹4,100.");
+    }
+
+    @Test
+    void explain_whenASlabLinesFigureIsTaxByBasis_rendersTheSentenceThatNamesNoFigure() {
+        // Given — TaxByBasisNode:97: out is the tax by basis, not money (W-325c C1a)
+        TraceLine slab = line(new RuleId("RATE-SLAB-NEW-TAX-REGIME"), MoneyValue.of(Money.of("1200000")),
+                TaxByBasis.atSlabRatesOnly(Money.of("60000")));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(slab, PACK.explanations()))
+                .isEqualTo("This is the tax on your income at the default regime's slab rates.");
+    }
+
+    @Test
+    void explain_whenTheReturnIsLate_saysWhatTheInterestIsForAndKeepsThePeriod() {
+        // Given — InterestAndFeeNode:211; the reason carries the period (W-325c C2a)
+        TraceLine late = line(new RuleId("INT-LATE-RETURN"), MoneyValue.of(Money.of("87700")), MoneyValue.of(Money.of("877")))
+                .withLimitedBy("one month from 2027-08-01");
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(late, PACK.explanations())).isEqualTo(
+                "Interest of ₹877 is charged because the return was furnished after its due date. one month from 2027-08-01");
     }
 }
