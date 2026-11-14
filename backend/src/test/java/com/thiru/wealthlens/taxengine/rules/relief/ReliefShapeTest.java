@@ -4,7 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +32,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.of("60000"));
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_LESSER_OF_TAX_AND_MAXIMUM, Map.of("maximum", new ReasonFact.MoneyFact(Money.of("60000")))));
     }
 
     @Test
@@ -38,6 +43,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.ZERO);
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_INCOME_ABOVE_CEILING, Map.of("ceiling", new ReasonFact.MoneyFact(Money.of("1200000")))));
     }
 
     @Test
@@ -50,6 +56,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.of("12000"));
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_LESSER_OF_TAX_AND_MAXIMUM, Map.of("maximum", new ReasonFact.MoneyFact(Money.of("12500")))));
     }
 
     @Test
@@ -60,6 +67,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.of("51500"));
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_TAX_ABOVE_EXCESS, Map.of("excess", new ReasonFact.MoneyFact(Money.of("10000")), "threshold", new ReasonFact.MoneyFact(Money.of("1200000")))));
     }
 
     @Test
@@ -70,6 +78,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.ZERO);
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_TAX_ABOVE_EXCESS, Map.of("excess", new ReasonFact.MoneyFact(Money.of("100000")), "threshold", new ReasonFact.MoneyFact(Money.of("1200000")))));
     }
 
     @Test
@@ -79,6 +88,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.ZERO);
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_INCOME_NOT_ABOVE_THRESHOLD, Map.of("threshold", new ReasonFact.MoneyFact(Money.of("1200000")))));
     }
 
     @Test
@@ -98,6 +108,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.of("107933"));
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_MARGINAL_AT_THRESHOLD, Map.of("threshold", new ReasonFact.MoneyFact(Money.of("5000000")))));
     }
 
     @Test
@@ -109,6 +120,7 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.ZERO);
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_ABOVE_NO_THRESHOLD, Map.of()));
     }
 
     @Test
@@ -127,13 +139,14 @@ class ReliefShapeTest {
 
         // Then
         assertThat(result.amount()).isEqualTo(Money.ZERO);
-        assertThat(result.reason()).isNotBlank();
+        assertThat(result.reason()).isEqualTo(new Reason(ReasonCodes.RELIEF_NONE, Map.of()));
+        assertThat(result.limitedBy()).isNotBlank();
     }
 
     @Test
     void reliefResult_whenTheAmountIsNegative_isRefused() {
         // When / Then — an amount to take off is never negative
-        assertThatThrownBy(() -> new ReliefResult(Money.of("-1"), "x"))
+        assertThatThrownBy(() -> new ReliefResult(Money.of("-1"), "x", new Reason(ReasonCodes.RELIEF_NONE, Map.of())))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

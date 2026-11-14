@@ -550,4 +550,19 @@ class ExplanationRendererTest {
                 + " enough. The ₹87,750 of tax on income that arose after that date is left out, as it was paid by"
                 + " 31 March 2027.");
     }
+
+    @Test
+    void explain_whenTheUnusedExemptionIsTakenFromAPart_writesBothFiguresAndThePart() {
+        // Given — TaxByBasisNode:205: 1,00,000 of the basic exemption unused, 50,000 of it taken from long-term other
+        TraceLine shifted = line(new RuleId("RATE-CG-SHORTFALL-ORDER"), MoneyValue.of(Money.of("80000")),
+                MoneyValue.of(Money.of("30000"))).withLimitedBy("LONG_TERM_OTHER less 50000.00: …")
+                .withReason(new Reason(ReasonCodes.CG_SHORTFALL_TAKEN_FROM_PART, Map.of(
+                        "part", new ReasonFact.PartFact(new CapitalGainsPart("LONG_TERM_OTHER")),
+                        "taken", new ReasonFact.MoneyFact(Money.of("50000")),
+                        "shortfall", new ReasonFact.MoneyFact(Money.of("100000")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(shifted, PACK.explanations())).endsWith("Your other income leaves"
+                + " ₹1,00,000 of the basic exemption unused, so ₹50,000 of your other long-term gains is not taxed.");
+    }
 }

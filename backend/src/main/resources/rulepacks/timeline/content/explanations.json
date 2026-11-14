@@ -239,6 +239,66 @@
       "why": "Interest is added for {months} months, from {from} to {to}, on the part of the refund that returns tax at source and advance tax."
     },
     {
+      "code": "RELIEF_ABOVE_NO_THRESHOLD",
+      "why": "Your total income is above none of the thresholds this relief starts at, so it gives nothing."
+    },
+    {
+      "code": "RELIEF_MARGINAL_AT_THRESHOLD",
+      "why": "Marginal relief: the tax, with surcharge, may exceed the tax at {threshold} by no more than your income exceeds {threshold}."
+    },
+    {
+      "code": "RELIEF_INCOME_ABOVE_CEILING",
+      "why": "Your total income is above {ceiling}, so this rebate gives nothing."
+    },
+    {
+      "code": "RELIEF_LESSER_OF_TAX_AND_MAXIMUM",
+      "why": "It is the tax itself, up to {maximum}."
+    },
+    {
+      "code": "RELIEF_INCOME_NOT_ABOVE_THRESHOLD",
+      "why": "Your total income is not above {threshold}, so this relief gives nothing."
+    },
+    {
+      "code": "RELIEF_TAX_ABOVE_EXCESS",
+      "why": "It is the tax above the {excess} by which your income exceeds {threshold}, so the tax left is no more than that excess."
+    },
+    {
+      "code": "RELIEF_NONE",
+      "why": "No relief applies."
+    },
+    {
+      "code": "RELIEF_CONDITION_NOT_MET",
+      "why": "Nothing is given: a condition of this relief is not met."
+    },
+    {
+      "code": "REBATE_LIMITED_TO_SLAB_TAX",
+      "why": "It is held to the tax at slab rates, {tax}."
+    },
+    {
+      "code": "SURCHARGE_ON_TOTAL_INCOME",
+      "why": "Surcharge is at {rate}, the rate on your total income, as it is greater than the {other} on your income without dividends and special-rate gains."
+    },
+    {
+      "code": "SURCHARGE_ON_INCOME_EXCLUDING",
+      "why": "Surcharge is at {rate}, the rate on your income without dividends and special-rate gains, as it is greater than the {other} on your total income."
+    },
+    {
+      "code": "SURCHARGE_LIMITED_PART",
+      "why": "On the tax for dividends ({dividends}) and for special-rate gains ({special}), surcharge is held to the limit the law sets."
+    },
+    {
+      "code": "TAX_AT_SLAB_RATES_ON_REST",
+      "why": "Slab rates apply to your total income of {income}, less the {special} of capital gains taxed at their own rates."
+    },
+    {
+      "code": "CG_TAXED_AT_SPECIAL_RATE",
+      "why": "Your {part} is taxed at its own rate, not at your slab rates."
+    },
+    {
+      "code": "CG_SHORTFALL_TAKEN_FROM_PART",
+      "why": "Your other income leaves {shortfall} of the basic exemption unused, so {taken} of your {part} is not taxed."
+    },
+    {
       "code": "CARRIED_LOSS_AGAINST_PART",
       "why": "The loss of {year} is set against your {part}."
     },

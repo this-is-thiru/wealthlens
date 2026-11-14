@@ -1,8 +1,12 @@
 package com.thiru.wealthlens.taxengine.rules.relief;
 
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -27,13 +31,15 @@ public record ThresholdLadderCeiling(List<Money> thresholds) implements ReliefSh
                 .filter(candidate -> ctx.totalIncome().isGreaterThan(candidate))
                 .max(Comparator.naturalOrder());
         if (threshold.isEmpty()) {
-            return new ReliefResult(Money.ZERO, "total income exceeds no surcharge threshold");
+            return new ReliefResult(Money.ZERO, "total income exceeds no surcharge threshold",
+                    new Reason(ReasonCodes.RELIEF_ABOVE_NO_THRESHOLD, Map.of()));
         }
         UnrelievedTax unrelieved = ctx.unrelievedAt().orElseThrow(() -> new IllegalStateException(
                 "ThresholdLadderCeiling needs an UnrelievedTax to price U at " + threshold.get()
                         + "; only the caller can re-enter the computation"));
         Money ceiling = unrelieved.at(threshold.get()).plus(ctx.totalIncome().minus(threshold.get()));
         Money amount = ctx.taxBeforeRelief().minus(ceiling).floorAtZero();
-        return new ReliefResult(amount, "marginal relief at " + threshold.get());
+        return new ReliefResult(amount, "marginal relief at " + threshold.get(), new Reason(
+                ReasonCodes.RELIEF_MARGINAL_AT_THRESHOLD, Map.of("threshold", new ReasonFact.MoneyFact(threshold.get()))));
     }
 }

@@ -14,6 +14,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefContext;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefResult;
 import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
@@ -22,6 +25,7 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -76,7 +80,7 @@ public final class RebateNode implements ComputationNode {
             rebated = rebated.plus(granted.amount());
             lines.add(TraceLine.of(lines.size() + 1, produces(), id, StepKind.RELIEF,
                             MoneyValue.of(tax.asMoney()), MoneyValue.of(granted.amount()), version.provenance())
-                    .withLimitedBy(granted.reason()));
+                    .withLimitedBy(granted.limitedBy()).withReason(granted.reason()));
         }
         if (rebated.isGreaterThan(tax.atSlabRates())) {
             throw new IllegalStateException("Rebates of " + rebated + " under regime " + ctx.regime().code()
@@ -91,14 +95,17 @@ public final class RebateNode implements ComputationNode {
                 .filter(condition -> !condition.holds(conditions))
                 .findFirst();
         if (unmet.isPresent()) {
-            return new ReliefResult(Money.ZERO, "not met: " + unmet.get().describe());
+            return new ReliefResult(Money.ZERO, "not met: " + unmet.get().describe(),
+                    new Reason(ReasonCodes.RELIEF_CONDITION_NOT_MET, Map.of()));
         }
         RuleRelief relief = version.relief().orElseThrow(() -> new IllegalStateException(
                 "Rebate rule " + id + " carries no relief"));
         ReliefResult onTheTax = relief.shape().apply(new ReliefContext(totalIncome, tax.asMoney(), Optional.empty()));
         if (relief.limitedToSlabRateTax()) {
             return onTheTax.amount().isGreaterThan(tax.atSlabRates())
-                    ? new ReliefResult(tax.atSlabRates(), "limited to the tax at slab rates, " + tax.atSlabRates())
+                    ? new ReliefResult(tax.atSlabRates(), "limited to the tax at slab rates, " + tax.atSlabRates(),
+                            new Reason(ReasonCodes.REBATE_LIMITED_TO_SLAB_TAX,
+                                    Map.of("tax", new ReasonFact.MoneyFact(tax.atSlabRates()))))
                     : onTheTax;
         }
         if (onTheTax.amount().isGreaterThan(Money.ZERO) && tax.totalAtSpecialRates().isGreaterThan(Money.ZERO)) {

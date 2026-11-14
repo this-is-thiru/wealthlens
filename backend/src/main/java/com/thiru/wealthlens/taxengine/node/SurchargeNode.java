@@ -15,11 +15,15 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefContext;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefResult;
 import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
@@ -28,6 +32,7 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -94,7 +99,7 @@ public final class SurchargeNode implements ComputationNode {
     private static final BaseId LIMITED_PART_TAX = new BaseId("LIMITED_PART_TAX");
 
     /** The rate a ladder set, the ladder that set it, and the ladder it beat, if the other was lower. */
-    private record ChosenRate(Rate rate, RuleId rule, RuleVersion version, Optional<String> over) {
+    private record ChosenRate(Rate rate, RuleId rule, RuleVersion version, Optional<Over> over) {
     }
 
 
@@ -144,17 +149,20 @@ public final class SurchargeNode implements ComputationNode {
         List<TraceLine> lines = new ArrayList<>();
         TraceLine charged = TraceLine.of(1, produces(), rate.rule(), StepKind.TAX, MoneyValue.of(part.rest()),
                 MoneyValue.of(surcharge.onRest()), rate.version().provenance());
-        lines.add(rate.over().map(charged::withLimitedBy).orElse(charged));
+        lines.add(rate.over().map(over -> charged.withLimitedBy(over.text()).withReason(over.reason())).orElse(charged));
         if (part.limited().isGreaterThan(Money.ZERO)) {
             lines.add(TraceLine.of(2, produces(), rows.limit(), StepKind.TAX, MoneyValue.of(part.limited()),
                             MoneyValue.of(surcharge.onLimited()), version(ctx, rows.limit()).provenance())
                     .withLimitedBy("the tax in respect of dividends (" + part.dividendShare() + ", their share of the"
                             + " slab tax by income, D-229) and of the special-rate gains (" + part.specialRates()
-                            + "), at " + rows.onTotalIncome() + "'s rate, at most the limit"));
+                            + "), at " + rows.onTotalIncome() + "'s rate, at most the limit")
+                    .withReason(new Reason(ReasonCodes.SURCHARGE_LIMITED_PART, Map.of(
+                            "dividends", new ReasonFact.MoneyFact(part.dividendShare()),
+                            "special", new ReasonFact.MoneyFact(part.specialRates())))));
         }
         lines.add(TraceLine.of(lines.size() + 1, produces(), rows.ceiling(), StepKind.RELIEF,
                         MoneyValue.of(tax.plus(surcharge.total())), MoneyValue.of(relief.amount()), ceiling.provenance())
-                .withLimitedBy(relief.reason()));
+                .withLimitedBy(relief.limitedBy()).withReason(relief.reason()));
         return new NodeResult(MoneyValue.of(surcharge.total().minus(relief.amount())), lines);
     }
 
@@ -267,13 +275,25 @@ public final class SurchargeNode implements ComputationNode {
         Rate totalRate = bandRate(rows.onTotalIncome(), onTotal, totalIncome);
         Rate excludingRate = bandRate(rows.onIncomeExcludingGains(), excluding, excluding(totalIncome, excluded));
         if (excludingRate.compareTo(totalRate) > 0) {
-            return new ChosenRate(excludingRate, rows.onIncomeExcludingGains(), excluding,
-                    Optional.of("greater than " + rows.onTotalIncome() + " at " + totalRate.asPercentLabel()));
+            return new ChosenRate(excludingRate, rows.onIncomeExcludingGains(), excluding, Optional.of(new Over(
+                    "greater than " + rows.onTotalIncome() + " at " + totalRate.asPercentLabel(),
+                    greater(ReasonCodes.SURCHARGE_ON_INCOME_EXCLUDING, excludingRate, totalRate))));
         }
-        Optional<String> over = totalRate.compareTo(excludingRate) > 0
-                ? Optional.of("greater than " + rows.onIncomeExcludingGains() + " at " + excludingRate.asPercentLabel())
+        Optional<Over> over = totalRate.compareTo(excludingRate) > 0
+                ? Optional.of(new Over("greater than " + rows.onIncomeExcludingGains() + " at "
+                        + excludingRate.asPercentLabel(), greater(ReasonCodes.SURCHARGE_ON_TOTAL_INCOME, totalRate,
+                                excludingRate)))
                 : Optional.empty();
         return new ChosenRate(totalRate, rows.onTotalIncome(), onTotal, over);
+    }
+
+    /** Why the chosen ladder's rate is cited: it is greater than the other's (W-327e2, D-692). */
+    private static Reason greater(ReasonCode code, Rate rate, Rate other) {
+        return new Reason(code, Map.of("rate", new ReasonFact.ShareFact(rate), "other", new ReasonFact.ShareFact(other)));
+    }
+
+    /** The other ladder's rate the chosen one exceeds, as audit text and as a reason. */
+    private record Over(String text, Reason reason) {
     }
 
     /** The rate of the band the income falls in; an income of nil is in no band and bears none. */

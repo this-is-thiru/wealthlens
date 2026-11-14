@@ -30,6 +30,9 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -103,7 +106,9 @@ public final class TaxByBasisNode implements ComputationNode {
         List<TraceLine> lines = new ArrayList<>();
         lines.add(TraceLine.of(1, produces(), row.id(), StepKind.TAX, MoneyValue.of(atSlab), value, version.provenance())
                 .withLimitedBy("total income " + totalIncome + " less the capital gains at special rates "
-                        + atSpecialRates));
+                        + atSpecialRates)
+                .withReason(new Reason(ReasonCodes.TAX_AT_SLAB_RATES_ON_REST, Map.of(
+                        "income", new ReasonFact.MoneyFact(totalIncome), "special", new ReasonFact.MoneyFact(atSpecialRates)))));
         Map<CapitalGainsPart, Money> charged = shiftShortfall(ctx, gains, nilBandCeiling(ladder).minus(atSlab), lines);
         for (Map.Entry<CapitalGainsPart, Money> part : charged.entrySet()) {
             RuleId rate = specialRate(ctx, part.getKey()).orElseThrow().id();
@@ -129,24 +134,25 @@ public final class TaxByBasisNode implements ComputationNode {
         Money tax = Money.ZERO;
         for (int index = 0; index < land.size(); index++) {
             IndexedGain one = land.get(index);
-            tax = tax.plus(applyRate(ctx, rate, alone ? part.toString()
+            tax = tax.plus(applyRate(ctx, rate, part, alone ? part.toString()
                     : part + ", qualifying gain " + (index + 1) + " of " + land.size(), one.gain(), one.indexedGain(),
                     lines));
         }
         if (chargesRest) {
-            tax = tax.plus(applyRate(ctx, rate, alone ? part.toString() : part + ", the rest", rest, rest, lines));
+            tax = tax.plus(applyRate(ctx, rate, part, alone ? part.toString() : part + ", the rest", rest, rest, lines));
         }
         return tax;
     }
 
     /** One application of a special-rate row to a gain and its indexed measure, its line added. */
-    private static Money applyRate(NodeContext ctx, RuleId rate, String what, Money gain, Money indexedGain,
-            List<TraceLine> lines) {
+    private static Money applyRate(NodeContext ctx, RuleId rate, CapitalGainsPart part, String what, Money gain,
+            Money indexedGain, List<TraceLine> lines) {
         RuleVersion rateVersion = TemporallyApportionedCap.governingVersion(ctx.rule(rate), ctx.inputs().temporal());
         CapResult cap = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
                 new CapContext(Map.of(SPECIAL_RATE_GAINS, gain, INDEXED_SPECIAL_RATE_GAINS, indexedGain)));
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.TAX_BYBASIS, rate, StepKind.TAX, MoneyValue.of(gain),
-                MoneyValue.of(cap.value()), rateVersion.provenance()).withLimitedBy(what + "; " + cap.limitedBy()));
+                MoneyValue.of(cap.value()), rateVersion.provenance()).withLimitedBy(what + "; " + cap.limitedBy())
+                .withReason(new Reason(ReasonCodes.CG_TAXED_AT_SPECIAL_RATE, Map.of("part", new ReasonFact.PartFact(part)))));
         return cap.value();
     }
 
@@ -203,7 +209,10 @@ public final class TaxByBasisNode implements ComputationNode {
                 lines.add(TraceLine.of(lines.size() + 1, NodeIds.TAX_BYBASIS, orderRow.id(), StepKind.MEASURE,
                                 MoneyValue.of(gain), MoneyValue.of(gain.minus(taken)), version.provenance())
                         .withLimitedBy(part + " less " + taken + ": income at slab rates leaves " + shortfall
-                                + " of the basic exemption unused, taken in the order " + order.parts()));
+                                + " of the basic exemption unused, taken in the order " + order.parts())
+                        .withReason(new Reason(ReasonCodes.CG_SHORTFALL_TAKEN_FROM_PART, Map.of(
+                                "part", new ReasonFact.PartFact(part), "taken", new ReasonFact.MoneyFact(taken),
+                                "shortfall", new ReasonFact.MoneyFact(shortfall)))));
                 left = left.minus(taken);
             }
         }

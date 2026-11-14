@@ -1,6 +1,10 @@
 package com.thiru.wealthlens.taxengine.rules.relief;
 
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
+import java.util.Map;
 
 /**
  * The whole tax up to a maximum, for an income not above a ceiling — "100% of income-tax payable or
@@ -17,9 +21,11 @@ public record FlatWithCeiling(Money maximum, Money incomeCeiling) implements Rel
     @Override
     public ReliefResult apply(ReliefContext ctx) {
         if (ctx.totalIncome().isGreaterThan(incomeCeiling)) {
-            return new ReliefResult(Money.ZERO, "total income exceeds " + incomeCeiling);
+            return new ReliefResult(Money.ZERO, "total income exceeds " + incomeCeiling, new Reason(
+                    ReasonCodes.RELIEF_INCOME_ABOVE_CEILING, Map.of("ceiling", new ReasonFact.MoneyFact(incomeCeiling))));
         }
         Money amount = Money.min(ctx.taxBeforeRelief(), maximum).floorAtZero();
-        return new ReliefResult(amount, "the lesser of the tax and " + maximum);
+        return new ReliefResult(amount, "the lesser of the tax and " + maximum, new Reason(
+                ReasonCodes.RELIEF_LESSER_OF_TAX_AND_MAXIMUM, Map.of("maximum", new ReasonFact.MoneyFact(maximum))));
     }
 }

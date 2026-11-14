@@ -1,6 +1,10 @@
 package com.thiru.wealthlens.taxengine.rules.relief;
 
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
+import java.util.Map;
 
 /**
  * Relief that keeps the tax from exceeding the income above a threshold: "the amount by which the
@@ -18,10 +22,13 @@ public record ExcessOverThreshold(Money threshold) implements ReliefShape {
     @Override
     public ReliefResult apply(ReliefContext ctx) {
         if (!ctx.totalIncome().isGreaterThan(threshold)) {
-            return new ReliefResult(Money.ZERO, "total income does not exceed " + threshold);
+            return new ReliefResult(Money.ZERO, "total income does not exceed " + threshold, new Reason(
+                    ReasonCodes.RELIEF_INCOME_NOT_ABOVE_THRESHOLD, Map.of("threshold", new ReasonFact.MoneyFact(threshold))));
         }
         Money excess = ctx.totalIncome().minus(threshold);
         Money amount = ctx.taxBeforeRelief().minus(excess).floorAtZero();
-        return new ReliefResult(amount, "tax in excess of the " + excess + " by which income exceeds " + threshold);
+        return new ReliefResult(amount, "tax in excess of the " + excess + " by which income exceeds " + threshold,
+                new Reason(ReasonCodes.RELIEF_TAX_ABOVE_EXCESS, Map.of("excess", new ReasonFact.MoneyFact(excess),
+                        "threshold", new ReasonFact.MoneyFact(threshold))));
     }
 }

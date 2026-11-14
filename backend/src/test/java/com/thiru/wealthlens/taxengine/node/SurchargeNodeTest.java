@@ -22,7 +22,11 @@ import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -152,6 +156,8 @@ class SurchargeNodeTest {
                                 MoneyValue.of(Money.of("108000.30"))),
                         tuple(RuleIds.RATE_SUR_NEW_TAX_REGIME_CEILING,
                                 StepKind.RELIEF, MoneyValue.of(Money.of("107993.30"))));
+        assertThat(result.trace().getLast().reason()).contains(new Reason(ReasonCodes.RELIEF_MARGINAL_AT_THRESHOLD,
+                Map.of("threshold", new ReasonFact.MoneyFact(Money.of("5000000")))));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -165,6 +171,11 @@ class SurchargeNodeTest {
         assertThat(charge.rule()).isEqualTo(RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING);
         assertThat(charge.limitedBy()).hasValueSatisfying(
                 reason -> assertThat(reason).contains(RuleIds.RATE_SUR_NEW_TAX_REGIME.value()));
+        assertThat(charge.reason()).hasValueSatisfying(reason -> {
+            assertThat(reason.code()).isEqualTo(ReasonCodes.SURCHARGE_ON_INCOME_EXCLUDING);
+            assertThat(((ReasonFact.ShareFact) reason.facts().get("rate")).share()).isEqualByComparingTo(Rate.percent("25"));
+            assertThat(((ReasonFact.ShareFact) reason.facts().get("other")).share()).isEqualByComparingTo(Rate.percent("15"));
+        });
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -177,6 +188,7 @@ class SurchargeNodeTest {
         assertThat(result.trace()).extracting(TraceLine::kind).containsExactly(StepKind.TAX, StepKind.RELIEF);
         assertThat(result.trace().getLast().out()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(result.trace().getLast().limitedBy()).isPresent();
+        assertThat(result.trace().getLast().reason()).contains(new Reason(ReasonCodes.RELIEF_ABOVE_NO_THRESHOLD, Map.of()));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -208,6 +220,9 @@ class SurchargeNodeTest {
         assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(
                 RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING, RuleIds.RATE_SUR_NEW_TAX_REGIME_LIMIT,
                 RuleIds.RATE_SUR_NEW_TAX_REGIME_CEILING);
+        // and the limited part names the gains' 87,500 (no dividends here)
+        assertThat(result.trace().get(1).reason()).contains(new Reason(ReasonCodes.SURCHARGE_LIMITED_PART, Map.of(
+                "dividends", new ReasonFact.MoneyFact(Money.of("0")), "special", new ReasonFact.MoneyFact(Money.of("87500")))));
     }
 
     /**

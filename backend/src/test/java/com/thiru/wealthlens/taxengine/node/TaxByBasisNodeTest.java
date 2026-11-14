@@ -29,6 +29,9 @@ import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
@@ -379,6 +382,21 @@ class TaxByBasisNodeTest {
                                 MoneyValue.of(Money.of("50000")), MoneyValue.of(Money.ZERO)),
                         tuple(RuleIds.RATE_CG_SHORTFALL_ORDER,
                                 MoneyValue.of(Money.of("80000")), MoneyValue.of(Money.of("30000"))));
+        // and the reasons (W-327e2): slab rates on 4,80,000 less the 3,30,000 of special-rate gains; 1,00,000 unused,
+        // taken 50,000 from each of the first two parts; each part taxed at its own rate
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.TAX_AT_SLAB_RATES_ON_REST,
+                Map.of("income", new ReasonFact.MoneyFact(Money.of("480000")), "special", new ReasonFact.MoneyFact(Money.of("330000")))));
+        assertThat(result.trace()).filteredOn(line -> line.kind() == StepKind.MEASURE).extracting(line -> line.reason()
+                .orElseThrow()).containsExactly(
+                        new Reason(ReasonCodes.CG_SHORTFALL_TAKEN_FROM_PART, Map.of("part", new ReasonFact.PartFact(new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY")),
+                                "taken", new ReasonFact.MoneyFact(Money.of("50000")), "shortfall", new ReasonFact.MoneyFact(Money.of("100000")))),
+                        new Reason(ReasonCodes.CG_SHORTFALL_TAKEN_FROM_PART, Map.of("part", new ReasonFact.PartFact(new CapitalGainsPart("LONG_TERM_OTHER")),
+                                "taken", new ReasonFact.MoneyFact(Money.of("50000")), "shortfall", new ReasonFact.MoneyFact(Money.of("100000")))));
+        assertThat(result.trace().stream().filter(line -> line.kind() == StepKind.TAX).skip(1)
+                .map(line -> line.reason().orElseThrow()).toList()).containsExactlyInAnyOrder(
+                        new Reason(ReasonCodes.CG_TAXED_AT_SPECIAL_RATE, Map.of("part", new ReasonFact.PartFact(new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY")))),
+                        new Reason(ReasonCodes.CG_TAXED_AT_SPECIAL_RATE, Map.of("part", new ReasonFact.PartFact(new CapitalGainsPart("LONG_TERM_OTHER")))),
+                        new Reason(ReasonCodes.CG_TAXED_AT_SPECIAL_RATE, Map.of("part", new ReasonFact.PartFact(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY")))));
     }
 
     /** TY 2026-27's shipped pack with every version of {@code CG-PARTS} declaring the parts in {@code order} (D-309). */

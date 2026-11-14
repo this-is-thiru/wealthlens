@@ -457,6 +457,51 @@ public final class ReasonCodes {
     /** Refund interest on the slice returning tax at source and advance tax. (W-327e1, D-690) */
     public static final ReasonCode REFUND_INTEREST_ON_PREPAID_TAX = new ReasonCode("REFUND_INTEREST_ON_PREPAID_TAX");
 
+    /** Total income above none of the relief's thresholds. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_ABOVE_NO_THRESHOLD = new ReasonCode("RELIEF_ABOVE_NO_THRESHOLD");
+
+    /** Marginal relief at a threshold. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_MARGINAL_AT_THRESHOLD = new ReasonCode("RELIEF_MARGINAL_AT_THRESHOLD");
+
+    /** Total income above the rebate's income ceiling. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_INCOME_ABOVE_CEILING = new ReasonCode("RELIEF_INCOME_ABOVE_CEILING");
+
+    /** The lesser of the tax and the maximum. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_LESSER_OF_TAX_AND_MAXIMUM = new ReasonCode("RELIEF_LESSER_OF_TAX_AND_MAXIMUM");
+
+    /** Total income not above the relief's threshold. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_INCOME_NOT_ABOVE_THRESHOLD = new ReasonCode("RELIEF_INCOME_NOT_ABOVE_THRESHOLD");
+
+    /** The tax above the income's excess over the threshold. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_TAX_ABOVE_EXCESS = new ReasonCode("RELIEF_TAX_ABOVE_EXCESS");
+
+    /** No relief applies. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_NONE = new ReasonCode("RELIEF_NONE");
+
+    /** A condition of the relief is not met. (W-327e2, D-692) */
+    public static final ReasonCode RELIEF_CONDITION_NOT_MET = new ReasonCode("RELIEF_CONDITION_NOT_MET");
+
+    /** The rebate is held to the tax at slab rates. (W-327e2, D-692) */
+    public static final ReasonCode REBATE_LIMITED_TO_SLAB_TAX = new ReasonCode("REBATE_LIMITED_TO_SLAB_TAX");
+
+    /** The total-income ladder gives the greater surcharge rate. (W-327e2, D-692) */
+    public static final ReasonCode SURCHARGE_ON_TOTAL_INCOME = new ReasonCode("SURCHARGE_ON_TOTAL_INCOME");
+
+    /** The excluding ladder gives the greater surcharge rate. (W-327e2, D-692) */
+    public static final ReasonCode SURCHARGE_ON_INCOME_EXCLUDING = new ReasonCode("SURCHARGE_ON_INCOME_EXCLUDING");
+
+    /** Surcharge on the tax for dividends and special-rate gains is held to the limit. (W-327e2, D-692) */
+    public static final ReasonCode SURCHARGE_LIMITED_PART = new ReasonCode("SURCHARGE_LIMITED_PART");
+
+    /** Slab rates apply to total income less the special-rate gains. (W-327e2, D-692) */
+    public static final ReasonCode TAX_AT_SLAB_RATES_ON_REST = new ReasonCode("TAX_AT_SLAB_RATES_ON_REST");
+
+    /** A part taxed at its own rate. (W-327e2, D-692) */
+    public static final ReasonCode CG_TAXED_AT_SPECIAL_RATE = new ReasonCode("CG_TAXED_AT_SPECIAL_RATE");
+
+    /** The unused basic exemption taken from a part. (W-327e2, D-692) */
+    public static final ReasonCode CG_SHORTFALL_TAKEN_FROM_PART = new ReasonCode("CG_SHORTFALL_TAKEN_FROM_PART");
+
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
@@ -607,7 +652,22 @@ public final class ReasonCodes {
             Map.entry(SHORTFALL_ADVANCE_TAX_PAID_ENOUGH, Set.of()),
             Map.entry(REFUND_BELOW_SHARE, Set.of("refund", "share", "tax")),
             Map.entry(REFUND_INTEREST_ON_RETURN_PAYMENT, Set.of("months", "from", "to", "paidOn")),
-            Map.entry(REFUND_INTEREST_ON_PREPAID_TAX, Set.of("months", "from", "to")));
+            Map.entry(REFUND_INTEREST_ON_PREPAID_TAX, Set.of("months", "from", "to")),
+            Map.entry(RELIEF_ABOVE_NO_THRESHOLD, Set.of()),
+            Map.entry(RELIEF_MARGINAL_AT_THRESHOLD, Set.of("threshold")),
+            Map.entry(RELIEF_INCOME_ABOVE_CEILING, Set.of("ceiling")),
+            Map.entry(RELIEF_LESSER_OF_TAX_AND_MAXIMUM, Set.of("maximum")),
+            Map.entry(RELIEF_INCOME_NOT_ABOVE_THRESHOLD, Set.of("threshold")),
+            Map.entry(RELIEF_TAX_ABOVE_EXCESS, Set.of("excess", "threshold")),
+            Map.entry(RELIEF_NONE, Set.of()),
+            Map.entry(RELIEF_CONDITION_NOT_MET, Set.of()),
+            Map.entry(REBATE_LIMITED_TO_SLAB_TAX, Set.of("tax")),
+            Map.entry(SURCHARGE_ON_TOTAL_INCOME, Set.of("rate", "other")),
+            Map.entry(SURCHARGE_ON_INCOME_EXCLUDING, Set.of("rate", "other")),
+            Map.entry(SURCHARGE_LIMITED_PART, Set.of("dividends", "special")),
+            Map.entry(TAX_AT_SLAB_RATES_ON_REST, Set.of("income", "special")),
+            Map.entry(CG_TAXED_AT_SPECIAL_RATE, Set.of("part")),
+            Map.entry(CG_SHORTFALL_TAKEN_FROM_PART, Set.of("part", "taken", "shortfall")));
 
     private ReasonCodes() {
     }

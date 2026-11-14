@@ -18,6 +18,9 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
@@ -119,8 +122,12 @@ class RebateNodeTest {
         // When
         NodeResult result = run(NEW_TAX_REGIME, "1250000", slab("67500"));
 
-        // Then
+        // Then — the flat rebate's ceiling of 12,00,000 is passed; the excess row gives the tax above the 50,000 excess
         assertThat(result.value()).isEqualTo(slab("50000"));
+        assertThat(lineFor(result, RuleIds.REBATE_NEW_TAX_REGIME).reason()).contains(new Reason(
+                ReasonCodes.RELIEF_INCOME_ABOVE_CEILING, Map.of("ceiling", new ReasonFact.MoneyFact(Money.of("1200000")))));
+        assertThat(lineFor(result, RuleIds.REBATE_NEW_TAX_REGIME_EXCESS).reason()).contains(new Reason(
+                ReasonCodes.RELIEF_TAX_ABOVE_EXCESS, Map.of("excess", new ReasonFact.MoneyFact(Money.of("50000")), "threshold", new ReasonFact.MoneyFact(Money.of("1200000")))));
     }
 
     @Test
@@ -157,6 +164,7 @@ class RebateNodeTest {
         TraceLine rebate = lineFor(result, RuleIds.REBATE_NEW_TAX_REGIME);
         assertThat(rebate.out()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(rebate.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).contains("tax at slab rates"));
+        assertThat(rebate.reason()).contains(new Reason(ReasonCodes.REBATE_LIMITED_TO_SLAB_TAX, Map.of("tax", new ReasonFact.MoneyFact(Money.of("0")))));
     }
 
     @Test
@@ -172,6 +180,7 @@ class RebateNodeTest {
         TraceLine rebate = lineFor(result, RuleIds.REBATE_NEW_TAX_REGIME);
         assertThat(rebate.out()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(rebate.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).contains("resident"));
+        assertThat(rebate.reason()).contains(new Reason(ReasonCodes.RELIEF_CONDITION_NOT_MET, Map.of()));
     }
 
     @Test
@@ -202,6 +211,8 @@ class RebateNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(slab("0"));
+        assertThat(result.trace().getFirst().reason()).contains(new Reason(ReasonCodes.RELIEF_LESSER_OF_TAX_AND_MAXIMUM,
+                Map.of("maximum", new ReasonFact.MoneyFact(Money.of("12500")))));
     }
 
     @Test
@@ -218,6 +229,8 @@ class RebateNodeTest {
         assertThat(only.rule()).isEqualTo(RuleIds.REBATE_RESIDENT_INDIVIDUAL);
         assertThat(only.out()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(only.limitedBy()).isPresent();
+        assertThat(only.reason()).contains(new Reason(ReasonCodes.RELIEF_INCOME_ABOVE_CEILING,
+                Map.of("ceiling", new ReasonFact.MoneyFact(Money.of("500000")))));
     }
 
     @Test
