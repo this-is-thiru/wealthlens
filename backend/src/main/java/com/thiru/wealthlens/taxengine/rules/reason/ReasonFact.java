@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.reason;
 
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -48,6 +50,26 @@ public sealed interface ReasonFact {
         public TaxYearFact {
             if (taxYear == null) {
                 throw new IllegalArgumentException("A tax-year fact must name its year");
+            }
+        }
+    }
+
+    /** A head of income, named in words by the content's {@code terms.head} (W-327d1, D-687). */
+    record HeadFact(HeadCode head) implements ReasonFact {
+
+        public HeadFact {
+            if (head == null) {
+                throw new IllegalArgumentException("A head fact must name its head");
+            }
+        }
+    }
+
+    /** A capital-gains part, named in words by the content's {@code terms.capitalGainsPart} (W-327d1, D-687). */
+    record PartFact(CapitalGainsPart part) implements ReasonFact {
+
+        public PartFact {
+            if (part == null) {
+                throw new IllegalArgumentException("A part fact must name its part");
             }
         }
     }

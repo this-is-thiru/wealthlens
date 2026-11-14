@@ -16,6 +16,8 @@ import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -23,6 +25,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -93,8 +96,10 @@ class HousePropertyNodeTest {
 
         // Then — S2 s.21(6); 1961 s.23(2)
         assertThat(result.value().asMoney()).isEqualTo((Money.ZERO));
-        assertThat(result.trace()).first()
-                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.HP_OWN_RESIDENCE));
+        assertThat(result.trace()).first().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.HP_OWN_RESIDENCE);
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.HP_OWN_RESIDENCE_NIL, Map.of()));
+        });
     }
 
     @Test

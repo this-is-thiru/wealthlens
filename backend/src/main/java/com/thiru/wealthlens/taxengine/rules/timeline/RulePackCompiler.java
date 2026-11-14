@@ -2,6 +2,9 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
@@ -149,8 +152,11 @@ public final class RulePackCompiler {
                 }
             }
             requireEveryReasonAndRegimeWorded(timeline, explanations);
+            requireEveryHeadAndPartWorded(timeline, explanations);
             content.set("reasons", reasons(explanations));
-            content.set("terms", object().set("regime", regimeTerms(timeline, taxYear, explanations)));
+            content.set("terms", object().<ObjectNode>set("regime", regimeTerms(timeline, taxYear, explanations))
+                    .<ObjectNode>set("head", words(explanations.headTerms(), HeadCode::name))
+                    .set("capitalGainsPart", words(explanations.partTerms(), CapitalGainsPart::value)));
         });
         return content.set("explanations", kept);
     }
@@ -197,6 +203,41 @@ public final class RulePackCompiler {
                         + ", which the timeline states in no year");
             }
         }
+    }
+
+    /**
+     * Refuses a head of income with no word, and a capital-gains part some year's {@code CG-PARTS} declares with no word, or
+     * a word for a part none declares (W-327d1, D-687): parts are data (D-309), so a new one asks for its word here.
+     */
+    private static void requireEveryHeadAndPartWorded(Timeline timeline, Explanations explanations) {
+        for (HeadCode head : HeadCode.values()) {
+            if (!explanations.headTerms().containsKey(head)) {
+                throw new PackValidationException("content/explanations.json has no term for the head " + head);
+            }
+        }
+        Set<CapitalGainsPart> declared = new TreeSet<>(Comparator.comparing(CapitalGainsPart::value));
+        timeline.rules().values().forEach(row -> row.versions().forEach(version -> version.definition()
+                .filter(CapitalGainsParts.class::isInstance).map(CapitalGainsParts.class::cast)
+                .ifPresent(parts -> parts.parts().forEach(part -> declared.add(part.part())))));
+        for (CapitalGainsPart part : declared) {
+            if (!explanations.partTerms().containsKey(part)) {
+                throw new PackValidationException("content/explanations.json has no term for the capital-gains part "
+                        + part.value());
+            }
+        }
+        for (CapitalGainsPart part : sorted(explanations.partTerms().keySet(), CapitalGainsPart::value)) {
+            if (!declared.contains(part)) {
+                throw new PackValidationException("content/explanations.json has a term for " + part.value()
+                        + ", a part no year's CG-PARTS declares");
+            }
+        }
+    }
+
+    /** A term map as JSON, in code order. */
+    private static <K> ObjectNode words(Map<K, String> terms, Function<K, String> code) {
+        ObjectNode words = object();
+        sorted(terms.keySet(), code).forEach(key -> words.put(code.apply(key), terms.get(key)));
+        return words;
     }
 
     /** Every reason's sentence, by code. */

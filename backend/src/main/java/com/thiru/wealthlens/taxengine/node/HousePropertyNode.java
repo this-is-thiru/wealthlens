@@ -18,6 +18,9 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -25,6 +28,7 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -149,14 +153,16 @@ public final class HousePropertyNode implements ComputationNode {
                 CapContext.of(ANNUAL_VALUE, annualValue)).value();
         lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_STANDARD_DEDUCTION), StepKind.DEDUCTION,
                         annualValue, allowance)
-                .withLimitedBy("property " + position));
+                .withLimitedBy("property " + position)
+                .withReason(new Reason(ReasonCodes.HP_FOR_THIS_PROPERTY, Map.of())));
         Money income = annualValue.minus(allowance);
         if (property.arrearsReceived().isGreaterThan(Money.ZERO)) {
             Money deduction = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_HP_ARREARS), t,
                     CapContext.of(ARREARS, property.arrearsReceived())).value();
             lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_ARREARS), StepKind.INCOME,
                             property.arrearsReceived(), property.arrearsReceived().minus(deduction))
-                    .withLimitedBy("property " + position + ": arrears less " + deduction));
+                    .withLimitedBy("property " + position + ": arrears less " + deduction)
+                    .withReason(new Reason(ReasonCodes.HP_ARREARS_LESS, Map.of("deduction", new ReasonFact.MoneyFact(deduction)))));
             income = income.plus(property.arrearsReceived().minus(deduction));
         }
         Money ownShare = property.ownershipShare().of(annualValue);
@@ -176,7 +182,8 @@ public final class HousePropertyNode implements ComputationNode {
         if (isOwnResidence(ctx, property)) {
             lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE), StepKind.MEASURE,
                             property.expectedLettingValue(), Money.ZERO)
-                    .withLimitedBy("property " + position + ": the owner's own residence, nil"));
+                    .withLimitedBy("property " + position + ": the owner's own residence, nil")
+                    .withReason(new Reason(ReasonCodes.HP_OWN_RESIDENCE_NIL, Map.of())));
             return Valuation.NIL;
         }
         Money expected = property.expectedLettingValue();
@@ -194,7 +201,10 @@ public final class HousePropertyNode implements ComputationNode {
         lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_ANNUAL_VALUE), StepKind.INCOME,
                         gross, value)
                 .withLimitedBy("property " + position + ": " + (let ? "let, rent " + rent : "not let")
-                        + ", expected " + expected + ", less local taxes " + property.localTaxesPaid()));
+                        + ", expected " + expected + ", less local taxes " + property.localTaxesPaid())
+                .withReason(let
+                        ? new Reason(ReasonCodes.HP_ANNUAL_VALUE_LET, Map.of("rent", new ReasonFact.MoneyFact(rent), "expected", new ReasonFact.MoneyFact(expected), "taxes", new ReasonFact.MoneyFact(property.localTaxesPaid())))
+                        : new Reason(ReasonCodes.HP_ANNUAL_VALUE_NOT_LET, Map.of("expected", new ReasonFact.MoneyFact(expected), "taxes", new ReasonFact.MoneyFact(property.localTaxesPaid())))));
         // Where the rent is the measure, the rent not realised is shown apart and added back to the gross (1a – 1b)
         Money unrealisedShown = let && gross.equals(rent) ? property.rentReceivable().minus(rent) : Money.ZERO;
         return new Valuation(gross.plus(unrealisedShown), unrealisedShown, property.localTaxesPaid(), value);
@@ -211,7 +221,8 @@ public final class HousePropertyNode implements ComputationNode {
         Money rent = property.rentReceivable().minus(unrealised);
         lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_UNREALISED_RENT), StepKind.MEASURE,
                         property.rentReceivable(), rent)
-                .withLimitedBy("property " + position + ": less unrealised rent " + unrealised));
+                .withLimitedBy("property " + position + ": less unrealised rent " + unrealised)
+                .withReason(new Reason(ReasonCodes.HP_LESS_UNREALISED_RENT, Map.of("unrealised", new ReasonFact.MoneyFact(unrealised)))));
         return rent;
     }
 

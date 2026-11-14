@@ -19,6 +19,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -162,7 +165,8 @@ final class HousePropertyInterest {
         lines.add(line(ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP), version, gathered, allowed)
                 .withLimitedBy("own residences: " + ownResidenceConditionsMet + " within " + limit.conditionsMet()
                         + ", " + ownResidenceAnyOtherCase + " within " + limit.anyOtherCase() + ", together within "
-                        + limit.aggregate()));
+                        + limit.aggregate())
+                .withReason(new Reason(ReasonCodes.HP_OWN_RESIDENCE_INTEREST_AGGREGATE, Map.of("aggregate", new ReasonFact.MoneyFact(limit.aggregate())))));
         return allowed;
     }
 
@@ -175,19 +179,20 @@ final class HousePropertyInterest {
         String where = "property " + position + ", " + what;
         if (!ctx.inRegime(row, version).applies()) {
             lines.add(line(row, version, amount, Money.ZERO)
-                    .withLimitedBy(where + ": " + ctx.inRegime(row, version).whyNot()));
+                    .withLimitedBy(where + ": " + ctx.inRegime(row, version).whyNot())
+                    .withReason(ctx.inRegime(row, version).reason()));
             return Money.ZERO;
         }
         if (loan.payableOutsideIndiaUntaxed()) {
             lines.add(line(row, version, amount, Money.ZERO).withLimitedBy(where + ": payable outside India, untaxed"
-                    + " and with no agent in India (S2 s.22(6); 1961 s.25)"));
+                    + " and with no agent in India (S2 s.22(6); 1961 s.25)").withReason(new Reason(ReasonCodes.UNTAXED_ABROAD, Map.of())));
             return Money.ZERO;
         }
         // The instalment rows define a span and limit nothing; the year's-interest rows state the whole as a cap.
         Money allowed = version.cap().isEmpty() ? amount
                 : TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
                         CapContext.of(INTEREST, amount)).value();
-        lines.add(line(row, version, amount, allowed).withLimitedBy(where));
+        lines.add(line(row, version, amount, allowed).withLimitedBy(where).withReason(new Reason(ReasonCodes.HP_FOR_THIS_PROPERTY, Map.of())));
         return allowed;
     }
 

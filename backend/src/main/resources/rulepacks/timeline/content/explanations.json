@@ -63,6 +63,26 @@
       "why": "It is {share} of the amount it applies to."
     },
     {
+      "code": "CARRIED_LOSS_AGAINST_HEAD",
+      "why": "The loss of {year} is set against your income from {head}."
+    },
+    {
+      "code": "CARRIED_LOSS_AGAINST_PART",
+      "why": "The loss of {year} is set against your {part}."
+    },
+    {
+      "code": "CARRIED_LOSS_EXPIRED",
+      "why": "The loss of {year} has expired: a loss can be carried for only {years} tax years."
+    },
+    {
+      "code": "CARRIED_LOSS_NOT_IN_TIME",
+      "why": "The loss of {year} is not carried forward: it was not determined in a return filed in time."
+    },
+    {
+      "code": "CARRIED_LOSS_STILL_CARRIED",
+      "why": "What is left of the loss of {year} is carried forward."
+    },
+    {
       "code": "CAR_PER_MONTH",
       "why": "It is the set amount for each of the {months} months."
     },
@@ -147,6 +167,18 @@
       "why": "The cost of {cost} a month is within {limit} a month per child, so it is not taxed."
     },
     {
+      "code": "ELECTION_AS_STATED",
+      "why": "You stated this choice, so it is applied as you stated it."
+    },
+    {
+      "code": "ELECTION_CHOSEN",
+      "why": "Of the choices priced, this one gives the least tax, so it is taken."
+    },
+    {
+      "code": "ELECTION_NOT_CHOSEN",
+      "why": "This choice gives more tax than the one taken."
+    },
+    {
       "code": "EMPLOYER_ACCRETION_SHARE",
       "why": "It is the share of the fund's income this year that is earned on contributions above the limit, this year's and earlier years' taxed ones."
     },
@@ -199,6 +231,34 @@
       "why": "Nothing is deducted: it was paid in cash, which the rules do not allow for this payment."
     },
     {
+      "code": "HP_ANNUAL_VALUE_LET",
+      "why": "It was let at {rent}, against an expected {expected}, less {taxes} of local taxes paid."
+    },
+    {
+      "code": "HP_ANNUAL_VALUE_NOT_LET",
+      "why": "It was not let: its expected value is {expected}, less {taxes} of local taxes paid."
+    },
+    {
+      "code": "HP_ARREARS_LESS",
+      "why": "It is the arrears of rent received, less the {deduction} the law allows off them."
+    },
+    {
+      "code": "HP_FOR_THIS_PROPERTY",
+      "why": "This line is for one property you entered."
+    },
+    {
+      "code": "HP_LESS_UNREALISED_RENT",
+      "why": "It is the rent receivable, less the {unrealised} you could not realise."
+    },
+    {
+      "code": "HP_OWN_RESIDENCE_INTEREST_AGGREGATE",
+      "why": "Interest on your own residences is limited to {aggregate} in all, each kind within its own limit."
+    },
+    {
+      "code": "HP_OWN_RESIDENCE_NIL",
+      "why": "Its annual value is nil: it is your own residence."
+    },
+    {
       "code": "HRA_NOT_RENTED",
       "why": "Nothing is exempt for this home: it is your own, or no rent was paid."
     },
@@ -229,6 +289,26 @@
     {
       "code": "LOAN_SANCTION_CONDITION_NOT_MET",
       "why": "Nothing is deducted: the loan does not meet a condition on its sanction or the house."
+    },
+    {
+      "code": "LOSS_CARRIED_FORWARD_HOUSE_PROPERTY",
+      "why": "The rest is carried forward, to be set against income from house property in later years."
+    },
+    {
+      "code": "LOSS_DEEMED_GIVEN_EFFECT",
+      "why": "Under {regime} the loss is treated as already used, and is not carried forward."
+    },
+    {
+      "code": "LOSS_NOT_CARRIED_FORWARD",
+      "why": "The rest is not set off, and cannot be carried forward."
+    },
+    {
+      "code": "LOSS_SET_OFF_AGAINST_HEAD",
+      "why": "Your loss from {loss} is set against your income from {against}."
+    },
+    {
+      "code": "LOSS_SET_OFF_AGAINST_PART",
+      "why": "Your loss from {loss} is set against your {part}."
     },
     {
       "code": "LTC_ASSISTANCE_RECEIVED",
@@ -269,10 +349,6 @@
     {
       "code": "OS_FOR_THIS_ITEM",
       "why": "This line is for one item you entered."
-    },
-    {
-      "code": "OS_UNTAXED_ABROAD",
-      "why": "Nothing is deducted: it is payable outside India without tax deducted."
     },
     {
       "code": "PF_CONTRIBUTION_ABOVE_THRESHOLD",
@@ -343,6 +419,10 @@
       "why": "{units} units at a fair market value of {value} in all, less the {paid} you paid."
     },
     {
+      "code": "UNTAXED_ABROAD",
+      "why": "Nothing is deducted: it is payable outside India without tax deducted."
+    },
+    {
       "code": "WITHIN_LIMIT",
       "why": "All of it is exempt: it is within the limit of {limit}."
     }
@@ -351,6 +431,19 @@
     "regime": {
       "FIRST_SCHEDULE_RATES": "the old regime",
       "NEW_TAX_REGIME": "the default regime"
+    },
+    "head": {
+      "SALARIES": "salary",
+      "HOUSE_PROPERTY": "house property",
+      "BUSINESS_OR_PROFESSION": "business or profession",
+      "CAPITAL_GAINS": "capital gains",
+      "OTHER_SOURCES": "other sources"
+    },
+    "capitalGainsPart": {
+      "SHORT_TERM_SLAB": "short-term gains taxed at your slab rates",
+      "SHORT_TERM_LISTED_EQUITY": "short-term gains on listed shares and equity funds",
+      "LONG_TERM_OTHER": "other long-term gains",
+      "LONG_TERM_LISTED_EQUITY": "long-term gains on listed shares and equity funds"
     }
   },
   "explanations": [

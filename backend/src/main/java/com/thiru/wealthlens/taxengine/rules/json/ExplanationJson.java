@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -8,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 import tools.jackson.databind.JsonNode;
 
 /** {@code content/explanations.json}, read into {@link Explanations} (W-116, D-671). */
@@ -26,13 +29,20 @@ public final class ExplanationJson {
             }
         }
         Map<ReasonCode, String> reasons = reasons(root, path);
-        Map<RegimeCode, String> regimeTerms = new LinkedHashMap<>();
-        PackJson.optionalObject(root, "terms", path).flatMap(terms -> PackJson.optionalObject(terms, "regime", path + ".terms"))
-                .ifPresent(regimes -> regimes.properties().forEach(regime -> regimeTerms.put(
-                        PackJson.construct(path + ".terms.regime", () -> new RegimeCode(regime.getKey())),
-                        PackJson.text(regimes, regime.getKey(), path + ".terms.regime"))));
         return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
-                reasons, regimeTerms));
+                reasons, terms(root, path, "regime", RegimeCode::new), terms(root, path, "head", HeadCode::valueOf),
+                terms(root, path, "capitalGainsPart", CapitalGainsPart::new)));
+    }
+
+    /** One map of {@code terms}: each code, read by {@code code}, to its words; absent is empty. */
+    private static <K> Map<K, String> terms(JsonNode root, String path, String kind, Function<String, K> code) {
+        Map<K, String> byCode = new LinkedHashMap<>();
+        String where = path + ".terms." + kind;
+        PackJson.optionalObject(root, "terms", path).flatMap(terms -> PackJson.optionalObject(terms, kind, path + ".terms"))
+                .ifPresent(words -> words.properties().forEach(entry -> byCode.put(
+                        PackJson.construct(where, () -> code.apply(entry.getKey())),
+                        PackJson.text(words, entry.getKey(), where))));
+        return byCode;
     }
 
     /** Each reason code's sentence (W-327a, D-678); a code worded twice is refused. */

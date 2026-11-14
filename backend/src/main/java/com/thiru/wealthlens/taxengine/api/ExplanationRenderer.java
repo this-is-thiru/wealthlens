@@ -56,6 +56,8 @@ final class ExplanationRenderer {
                 case ReasonFact.ShareFact share -> Optional.of(share.share().asPercentLabel());
                 case ReasonFact.CountFact count -> Optional.of(Integer.toString(count.count()));
                 case ReasonFact.TaxYearFact year -> Optional.of(year.taxYear().label());
+                case ReasonFact.HeadFact head -> Optional.ofNullable(explanations.headTerms().get(head.head()));
+                case ReasonFact.PartFact part -> Optional.ofNullable(explanations.partTerms().get(part.part()));
             };
             if (words.isEmpty()) {
                 return Optional.empty();

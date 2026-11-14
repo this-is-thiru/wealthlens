@@ -27,7 +27,7 @@ class ExplanationsTest {
         return new RulePack(SHIPPED.taxYear(), SHIPPED.layers(), SHIPPED.instruments(), SHIPPED.rules(), SHIPPED.ruleSets(),
                 SHIPPED.components(), SHIPPED.regimes(), SHIPPED.disallowanceSets(), SHIPPED.conditionSets(), SHIPPED.funds(),
                 SHIPPED.declarations(), SHIPPED.itrForms(), new Explanations(Optional.of("Not these: {limits}."),
-                        Map.of(explanation.rule(), explanation), Map.of(), Map.of()));
+                        Map.of(explanation.rule(), explanation), Map.of(), Map.of(), Map.of(), Map.of()));
     }
 
     @Test
@@ -62,14 +62,14 @@ class ExplanationsTest {
     void explanations_whenALimitIsExplainedButNoSentenceNamesTheOthers_isRefused() {
         // Given / When / Then — F37.3 needs the sentence for the limits that did not bind
         Explanation explanation = new Explanation(STANDARD, "{out} is deducted.", STANDARD_LIMITS);
-        assertThatThrownBy(() -> new Explanations(Optional.empty(), Map.of(STANDARD, explanation), Map.of(), Map.of()))
+        assertThatThrownBy(() -> new Explanations(Optional.empty(), Map.of(STANDARD, explanation), Map.of(), Map.of(), Map.of(), Map.of()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("otherLimits");
     }
 
     @Test
     void explanations_whenTheSharedSentenceLacksItsPlaceholder_isRefused() {
         // Given / When / Then
-        assertThatThrownBy(() -> new Explanations(Optional.of("Not these: {limit}."), Map.of(), Map.of(), Map.of()))
+        assertThatThrownBy(() -> new Explanations(Optional.of("Not these: {limit}."), Map.of(), Map.of(), Map.of(), Map.of(), Map.of()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("{limit}");
     }
 

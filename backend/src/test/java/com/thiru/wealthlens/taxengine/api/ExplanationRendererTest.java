@@ -8,6 +8,8 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -301,7 +303,7 @@ class ExplanationRendererTest {
     void explain_whenTheReasonsRegimeHasNoWord_showsLimitedByRatherThanAPlaceholder() {
         // Given — the year's content with no regime terms
         Explanations noTerms = new Explanations(PACK.explanations().otherLimits(), PACK.explanations().byRule(),
-                PACK.explanations().reasons(), Map.of());
+                PACK.explanations().reasons(), Map.of(), PACK.explanations().headTerms(), PACK.explanations().partTerms());
         TraceLine barred = hra().withLimitedBy("disallowed in the NEW_TAX_REGIME regime")
                 .withReason(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
 
@@ -473,5 +475,33 @@ class ExplanationRendererTest {
         // Then — the row's own sentence, then the reason with all three figures
         assertThat(explained).endsWith("It is the ₹1,50,000 distributed, less the ₹1,00,000 issue price and the ₹20,000"
                 + " charged in earlier years, never below nil.");
+    }
+
+    @Test
+    void explain_whenALossIsSetAgainstAnotherHead_namesBothHeadsInWords() {
+        // Given — SetOffNode:270: a house-property loss against salary
+        TraceLine setOff = line(new RuleId("SETOFF-HOUSE-PROPERTY"), MoneyValue.of(Money.of("1000000")),
+                MoneyValue.of(Money.of("150000"))).withLimitedBy("HOUSE_PROPERTY loss against SALARIES; order […]")
+                .withReason(new Reason(ReasonCodes.LOSS_SET_OFF_AGAINST_HEAD, Map.of(
+                        "loss", new ReasonFact.HeadFact(HeadCode.HOUSE_PROPERTY),
+                        "against", new ReasonFact.HeadFact(HeadCode.SALARIES))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(setOff, PACK.explanations()))
+                .endsWith("Your loss from house property is set against your income from salary.");
+    }
+
+    @Test
+    void explain_whenACarriedLossMeetsACapitalGainsPart_namesTheYearAndThePart() {
+        // Given — CarriedLossSetOff:199: the 2023-24 loss against short-term gains on listed shares
+        TraceLine carried = line(new RuleId("SETOFF-CARRIED-CAPITAL-GAINS"), MoneyValue.of(Money.of("50000")),
+                MoneyValue.of(Money.of("50000"))).withLimitedBy("short-term loss of 2023-24 against SHORT_TERM_LISTED_EQUITY")
+                .withReason(new Reason(ReasonCodes.CARRIED_LOSS_AGAINST_PART, Map.of(
+                        "year", new ReasonFact.TaxYearFact(TaxYearId.of(2023)),
+                        "part", new ReasonFact.PartFact(new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY")))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(carried, PACK.explanations()))
+                .endsWith("The loss of 2023-24 is set against your short-term gains on listed shares and equity funds.");
     }
 }

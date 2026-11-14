@@ -236,7 +236,7 @@ public final class ReasonCodes {
     public static final ReasonCode OS_EXPENSE_NOT_DEDUCTED = new ReasonCode("OS_EXPENSE_NOT_DEDUCTED");
 
     /** The expense is payable outside India untaxed, so nothing is deducted. (W-327c2, D-685) */
-    public static final ReasonCode OS_UNTAXED_ABROAD = new ReasonCode("OS_UNTAXED_ABROAD");
+    public static final ReasonCode UNTAXED_ABROAD = new ReasonCode("UNTAXED_ABROAD");
 
     /** A business trust's specified sum: distributed less issue price and earlier charges, never below nil. (W-327c2, D-685) */
     public static final ReasonCode BUSINESS_TRUST_SPECIFIED_SUM = new ReasonCode("BUSINESS_TRUST_SPECIFIED_SUM");
@@ -267,6 +267,66 @@ public final class ReasonCodes {
 
     /** Interest expense against dividend and unit income, within the row's limit. (W-327c2, D-685) */
     public static final ReasonCode DIVIDEND_INTEREST_LIMITED = new ReasonCode("DIVIDEND_INTEREST_LIMITED");
+
+    /** The line is for one entered property; a short confirmation. (W-327d1, D-687) */
+    public static final ReasonCode HP_FOR_THIS_PROPERTY = new ReasonCode("HP_FOR_THIS_PROPERTY");
+
+    /** Arrears of rent received, less the deduction the law allows off them. (W-327d1, D-687) */
+    public static final ReasonCode HP_ARREARS_LESS = new ReasonCode("HP_ARREARS_LESS");
+
+    /** The annual value of the owner's own residence is nil. (W-327d1, D-687) */
+    public static final ReasonCode HP_OWN_RESIDENCE_NIL = new ReasonCode("HP_OWN_RESIDENCE_NIL");
+
+    /** A let property's rent against its expected value, less local taxes paid. (W-327d1, D-687) */
+    public static final ReasonCode HP_ANNUAL_VALUE_LET = new ReasonCode("HP_ANNUAL_VALUE_LET");
+
+    /** A property not let: its expected value, less local taxes paid. (W-327d1, D-687) */
+    public static final ReasonCode HP_ANNUAL_VALUE_NOT_LET = new ReasonCode("HP_ANNUAL_VALUE_NOT_LET");
+
+    /** The rent receivable, less the rent that could not be realised. (W-327d1, D-687) */
+    public static final ReasonCode HP_LESS_UNREALISED_RENT = new ReasonCode("HP_LESS_UNREALISED_RENT");
+
+    /** Interest on own residences is held to an aggregate, each kind within its limit. (W-327d1, D-687) */
+    public static final ReasonCode HP_OWN_RESIDENCE_INTEREST_AGGREGATE = new ReasonCode("HP_OWN_RESIDENCE_INTEREST_AGGREGATE");
+
+    /** The priced choice with the least net payable, taken. (W-327d1, D-687) */
+    public static final ReasonCode ELECTION_CHOSEN = new ReasonCode("ELECTION_CHOSEN");
+
+    /** A priced choice not taken, its net payable being higher. (W-327d1, D-687) */
+    public static final ReasonCode ELECTION_NOT_CHOSEN = new ReasonCode("ELECTION_NOT_CHOSEN");
+
+    /** A choice the assessee stated, applied as stated and not priced. (W-327d1, D-687) */
+    public static final ReasonCode ELECTION_AS_STATED = new ReasonCode("ELECTION_AS_STATED");
+
+    /** Under the regime the loss is deemed given full effect and is not carried forward. (W-327d1, D-687) */
+    public static final ReasonCode LOSS_DEEMED_GIVEN_EFFECT = new ReasonCode("LOSS_DEEMED_GIVEN_EFFECT");
+
+    /** A house-property loss not set off is carried forward against that head. (W-327d1, D-687) */
+    public static final ReasonCode LOSS_CARRIED_FORWARD_HOUSE_PROPERTY = new ReasonCode("LOSS_CARRIED_FORWARD_HOUSE_PROPERTY");
+
+    /** A loss not set off that the law does not carry forward. (W-327d1, D-687) */
+    public static final ReasonCode LOSS_NOT_CARRIED_FORWARD = new ReasonCode("LOSS_NOT_CARRIED_FORWARD");
+
+    /** A head's loss set against another head's income. (W-327d1, D-687) */
+    public static final ReasonCode LOSS_SET_OFF_AGAINST_HEAD = new ReasonCode("LOSS_SET_OFF_AGAINST_HEAD");
+
+    /** A head's loss set against a capital-gains part. (W-327d1, D-687) */
+    public static final ReasonCode LOSS_SET_OFF_AGAINST_PART = new ReasonCode("LOSS_SET_OFF_AGAINST_PART");
+
+    /** A loss not determined in a return filed in time is not carried forward. (W-327d1, D-687) */
+    public static final ReasonCode CARRIED_LOSS_NOT_IN_TIME = new ReasonCode("CARRIED_LOSS_NOT_IN_TIME");
+
+    /** A carried loss past the years it may be carried. (W-327d1, D-687) */
+    public static final ReasonCode CARRIED_LOSS_EXPIRED = new ReasonCode("CARRIED_LOSS_EXPIRED");
+
+    /** What is left of a carried loss is carried forward again. (W-327d1, D-687) */
+    public static final ReasonCode CARRIED_LOSS_STILL_CARRIED = new ReasonCode("CARRIED_LOSS_STILL_CARRIED");
+
+    /** A carried loss set against a capital-gains part. (W-327d1, D-687) */
+    public static final ReasonCode CARRIED_LOSS_AGAINST_PART = new ReasonCode("CARRIED_LOSS_AGAINST_PART");
+
+    /** A carried loss set against a head's income. (W-327d1, D-687) */
+    public static final ReasonCode CARRIED_LOSS_AGAINST_HEAD = new ReasonCode("CARRIED_LOSS_AGAINST_HEAD");
 
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
@@ -345,7 +405,7 @@ public final class ReasonCodes {
             Map.entry(PREMIUM_SHARE_OF_SUM_ASSURED, Set.of("share", "sumAssured")),
             Map.entry(OS_FOR_THIS_ITEM, Set.of()),
             Map.entry(OS_EXPENSE_NOT_DEDUCTED, Set.of()),
-            Map.entry(OS_UNTAXED_ABROAD, Set.of()),
+            Map.entry(UNTAXED_ABROAD, Set.of()),
             Map.entry(BUSINESS_TRUST_SPECIFIED_SUM, Set.of("distributed", "issued", "earlier")),
             Map.entry(PF_CONTRIBUTION_ABOVE_THRESHOLD, Set.of()),
             Map.entry(PF_TAXABLE_ACCOUNT_INTEREST, Set.of()),
@@ -355,7 +415,27 @@ public final class ReasonCodes {
             Map.entry(GIFTS_FOR_THE_YEAR, Set.of()),
             Map.entry(LIFE_POLICY_EXCLUDED, Set.of()),
             Map.entry(LIFE_POLICY_ABOVE_PREMIUMS, Set.of("premiums")),
-            Map.entry(DIVIDEND_INTEREST_LIMITED, Set.of("income", "limit")));
+            Map.entry(DIVIDEND_INTEREST_LIMITED, Set.of("income", "limit")),
+            Map.entry(HP_FOR_THIS_PROPERTY, Set.of()),
+            Map.entry(HP_ARREARS_LESS, Set.of("deduction")),
+            Map.entry(HP_OWN_RESIDENCE_NIL, Set.of()),
+            Map.entry(HP_ANNUAL_VALUE_LET, Set.of("rent", "expected", "taxes")),
+            Map.entry(HP_ANNUAL_VALUE_NOT_LET, Set.of("expected", "taxes")),
+            Map.entry(HP_LESS_UNREALISED_RENT, Set.of("unrealised")),
+            Map.entry(HP_OWN_RESIDENCE_INTEREST_AGGREGATE, Set.of("aggregate")),
+            Map.entry(ELECTION_CHOSEN, Set.of()),
+            Map.entry(ELECTION_NOT_CHOSEN, Set.of()),
+            Map.entry(ELECTION_AS_STATED, Set.of()),
+            Map.entry(LOSS_DEEMED_GIVEN_EFFECT, Set.of("regime")),
+            Map.entry(LOSS_CARRIED_FORWARD_HOUSE_PROPERTY, Set.of()),
+            Map.entry(LOSS_NOT_CARRIED_FORWARD, Set.of()),
+            Map.entry(LOSS_SET_OFF_AGAINST_HEAD, Set.of("loss", "against")),
+            Map.entry(LOSS_SET_OFF_AGAINST_PART, Set.of("loss", "part")),
+            Map.entry(CARRIED_LOSS_NOT_IN_TIME, Set.of("year")),
+            Map.entry(CARRIED_LOSS_EXPIRED, Set.of("year", "years")),
+            Map.entry(CARRIED_LOSS_STILL_CARRIED, Set.of("year")),
+            Map.entry(CARRIED_LOSS_AGAINST_PART, Set.of("year", "part")),
+            Map.entry(CARRIED_LOSS_AGAINST_HEAD, Set.of("year", "head")));
 
     private ReasonCodes() {
     }

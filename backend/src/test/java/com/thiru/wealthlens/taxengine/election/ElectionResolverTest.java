@@ -24,6 +24,8 @@ import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.regime.PipelineSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -136,6 +138,7 @@ class ElectionResolverTest {
                 .singleElement().satisfies(line -> {
                     assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("100")));
                     assertThat(line.limitedBy().orElseThrow()).contains(OTHER_SOURCES_FIRST.toString());
+                    assertThat(line.reason()).contains(new Reason(ReasonCodes.ELECTION_CHOSEN, Map.of()));
                 });
     }
 
@@ -178,7 +181,10 @@ class ElectionResolverTest {
         assertThat(resolution.outcome().alternatives())
                 .containsExactly(new PricedAlternative<>(DEFAULT, Money.of("200")));
         assertThat(resolution.run().trace()).singleElement()
-                .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("stated by the assessee"));
+                .satisfies(line -> {
+                    assertThat(line.limitedBy().orElseThrow()).contains("stated by the assessee");
+                    assertThat(line.reason()).contains(new Reason(ReasonCodes.ELECTION_AS_STATED, Map.of()));
+                });
     }
 
     @Test

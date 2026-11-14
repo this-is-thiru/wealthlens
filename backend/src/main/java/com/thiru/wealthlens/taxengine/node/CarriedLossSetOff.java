@@ -9,6 +9,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.Comparator;
@@ -150,14 +153,17 @@ final class CarriedLossSetOff {
                         + " states no return fact, which " + losses.row() + " requires"))) {
             lines.add(ctx.traceLine(lines.size() + 1, losses.row(), StepKind.MEASURE, remaining, Money.ZERO)
                     .withLimitedBy("loss of " + arose + " not carried forward: not determined in a return filed in"
-                            + " time (" + losses.texts().notDeterminedInTimeCitation().orElseThrow() + ")"));
+                            + " time (" + losses.texts().notDeterminedInTimeCitation().orElseThrow() + ")")
+                    .withReason(new Reason(ReasonCodes.CARRIED_LOSS_NOT_IN_TIME, Map.of("year", new ReasonFact.TaxYearFact(year.arose())))));
             return false;
         }
         if (!losses.carry().span().holds(year.arose(), thisYear)) {
             lines.add(ctx.traceLine(lines.size() + 1, losses.row(), StepKind.MEASURE, remaining, remaining)
                     .withLimitedBy("loss of " + arose + " expired: carried for no more than "
                             + losses.carry().span().succeedingYears() + " tax years after it arose ("
-                            + losses.texts().expiredCitation() + ")"));
+                            + losses.texts().expiredCitation() + ")")
+                    .withReason(new Reason(ReasonCodes.CARRIED_LOSS_EXPIRED, Map.of("year", new ReasonFact.TaxYearFact(year.arose()),
+                            "years", new ReasonFact.CountFact(losses.carry().span().succeedingYears())))));
             return false;
         }
         return true;
@@ -174,7 +180,8 @@ final class CarriedLossSetOff {
         if (left.isGreaterThan(Money.ZERO)) {
             lines.add(ctx.traceLine(lines.size() + 1, losses.row(), StepKind.MEASURE, year.remaining(), left)
                     .withLimitedBy("loss of " + year.arose().label() + " still carried forward ("
-                            + losses.texts().stillCarriedCitation() + ")"));
+                            + losses.texts().stillCarriedCitation() + ")")
+                    .withReason(new Reason(ReasonCodes.CARRIED_LOSS_STILL_CARRIED, Map.of("year", new ReasonFact.TaxYearFact(year.arose())))));
         }
         return left;
     }
@@ -186,23 +193,29 @@ final class CarriedLossSetOff {
                 TemporallyApportionedCap.governingVersion(ctx.rule(portion.row()), ctx.inputs().temporal()));
         if (!verdict.applies()) {
             lines.add(ctx.traceLine(lines.size() + 1, portion.row(), StepKind.SET_OFF, amount, Money.ZERO)
-                    .withLimitedBy("loss of " + arose.label() + ": " + verdict.whyNot()));
+                    .withLimitedBy("loss of " + arose.label() + ": " + verdict.whyNot())
+                    .withReason(verdict.reason()));
             lines.add(ctx.traceLine(lines.size() + 1, portion.row(), StepKind.MEASURE, amount, amount)
                     .withLimitedBy("loss of " + arose.label() + " deemed to have been given full effect to, and not"
-                            + " carried forward (S2 s.202(3); 1961 s.115BAC(3))"));
+                            + " carried forward (S2 s.202(3); 1961 s.115BAC(3))")
+                    .withReason(new Reason(ReasonCodes.LOSS_DEEMED_GIVEN_EFFECT, Map.of("regime", new ReasonFact.RegimeFact(ctx.regime().code())))));
             return Money.ZERO;
         }
         Money available = income.getOrDefault(absorbedBy, Money.ZERO);
         Money taken = absorbedBy == HeadCode.CAPITAL_GAINS
                 ? parts.absorb(amount, portion.reaches(), lines, (sequence, part, gain, share) -> ctx.traceLine(
                         sequence, portion.row(), StepKind.SET_OFF, gain, share)
-                        .withLimitedBy(portion.setOffText().apply(part.toString())))
+                        .withLimitedBy(portion.setOffText().apply(part.toString()))
+                        .withReason(new Reason(ReasonCodes.CARRIED_LOSS_AGAINST_PART, Map.of(
+                                "year", new ReasonFact.TaxYearFact(arose), "part", new ReasonFact.PartFact(part)))))
                 : Money.min(amount, available);
         if (taken.isGreaterThan(Money.ZERO)) {
             income.put(absorbedBy, available.minus(taken));
             if (absorbedBy != HeadCode.CAPITAL_GAINS) {
                 lines.add(ctx.traceLine(lines.size() + 1, portion.row(), StepKind.SET_OFF, available, taken)
-                        .withLimitedBy(portion.setOffText().apply(absorbedBy.toString())));
+                        .withLimitedBy(portion.setOffText().apply(absorbedBy.toString()))
+                        .withReason(new Reason(ReasonCodes.CARRIED_LOSS_AGAINST_HEAD, Map.of(
+                                "year", new ReasonFact.TaxYearFact(arose), "head", new ReasonFact.HeadFact(absorbedBy)))));
             }
         }
         return amount.minus(taken);

@@ -34,6 +34,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -180,7 +183,8 @@ public final class SetOffNode implements ComputationNode {
                     .withRegimeVerdict(verdict));
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, loss)
                     .withLimitedBy("deemed to have been given"
-                    + " full effect to, and not carried forward (S2 s.202(3); 1961 s.115BAC(3)): " + verdict.whyNot()));
+                    + " full effect to, and not carried forward (S2 s.202(3); 1961 s.115BAC(3)): " + verdict.whyNot())
+                    .withReason(new Reason(ReasonCodes.LOSS_DEEMED_GIVEN_EFFECT, Map.of("regime", new ReasonFact.RegimeFact(ctx.regime().code())))));
             return Money.ZERO;
         }
         Money allowed = loss;
@@ -195,7 +199,9 @@ public final class SetOffNode implements ComputationNode {
         if (left.isGreaterThan(Money.ZERO)) {
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, left).withLimitedBy(houseProperty
                     ? "not set off: carried forward against income from house property (S2 s.110; 1961 s.71B) — W-081b"
-                    : "not set off, and not carried forward: S2 ss.110–115 carry no loss under other sources"));
+                    : "not set off, and not carried forward: S2 ss.110–115 carry no loss under other sources")
+                    .withReason(new Reason(houseProperty ? ReasonCodes.LOSS_CARRIED_FORWARD_HOUSE_PROPERTY
+                            : ReasonCodes.LOSS_NOT_CARRIED_FORWARD, Map.of())));
         }
         return houseProperty ? left : Money.ZERO;
     }
@@ -268,7 +274,9 @@ public final class SetOffNode implements ComputationNode {
                 run.took(lossHead, head.name(), taken);
                 lines.add(run.ctx().traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken)
                         .withLimitedBy(lossHead
-                        + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis()));
+                        + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis())
+                        .withReason(new Reason(ReasonCodes.LOSS_SET_OFF_AGAINST_HEAD, Map.of(
+                                "loss", new ReasonFact.HeadFact(lossHead), "against", new ReasonFact.HeadFact(head)))));
             }
         }
         return allowed.minus(remaining);
@@ -281,7 +289,9 @@ public final class SetOffNode implements ComputationNode {
                 lossHead, part, taken, run.ctx().traceLine(sequence, row, StepKind.SET_OFF, available, taken)).withLimitedBy(lossHead
                         + " loss against CAPITAL_GAINS " + part + "; order " + order.order().heads() + ", "
                         + order.basis() + "; within capital gains " + order.capitalGainsOrder().parts()
-                        + ", the declared default (OQ-32)"));
+                        + ", the declared default (OQ-32)")
+                .withReason(new Reason(ReasonCodes.LOSS_SET_OFF_AGAINST_PART, Map.of(
+                        "loss", new ReasonFact.HeadFact(lossHead), "part", new ReasonFact.PartFact(part)))));
     }
 
     /**

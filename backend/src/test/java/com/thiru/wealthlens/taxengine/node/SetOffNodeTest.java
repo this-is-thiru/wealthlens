@@ -127,6 +127,8 @@ class SetOffNodeTest {
             assertThat(line.out()).isEqualTo(rupees("150000"));
             assertThat(line.limitedBy().orElseThrow()).contains("HOUSE_PROPERTY loss against SALARIES")
                     .contains("[SALARIES, HOUSE_PROPERTY, OTHER_SOURCES, CAPITAL_GAINS]").contains("the declared default").contains("D-221");
+            assertThat(line.reason()).contains(new Reason(ReasonCodes.LOSS_SET_OFF_AGAINST_HEAD, Map.of(
+                    "loss", new ReasonFact.HeadFact(HeadCode.HOUSE_PROPERTY), "against", new ReasonFact.HeadFact(HeadCode.SALARIES))));
         });
     }
 
@@ -312,6 +314,8 @@ class SetOffNodeTest {
                 .satisfies(line -> {
                     assertThat(line.out()).isEqualTo(rupees("50000"));
                     assertThat(line.limitedBy().orElseThrow()).contains("2017-18 expired");
+                    assertThat(line.reason()).contains(new Reason(ReasonCodes.CARRIED_LOSS_EXPIRED, Map.of(
+                            "year", new ReasonFact.TaxYearFact(TaxYearId.of(2017)), "years", new ReasonFact.CountFact(8))));
                 });
     }
 
@@ -400,8 +404,10 @@ class SetOffNodeTest {
         assertThat(heads.capitalGains(SHORT_TERM_SLAB)).isEqualTo(Money.ZERO);
         assertThat(heads.capitalGains(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("20000"));
         assertThat(heads.total()).isEqualTo(Money.of("20000"));
-        assertThat(lines(result, StepKind.SET_OFF)).hasSize(2).allSatisfy(line ->
-                assertThat(line.limitedBy().orElseThrow()).contains("CAPITAL_GAINS").contains("OQ-32"));
+        assertThat(lines(result, StepKind.SET_OFF)).hasSize(2).allSatisfy(line -> {
+            assertThat(line.limitedBy().orElseThrow()).contains("CAPITAL_GAINS").contains("OQ-32");
+            assertThat(line.reason().map(Reason::code)).contains(ReasonCodes.LOSS_SET_OFF_AGAINST_PART);
+        });
     }
 
     @Test

@@ -38,7 +38,7 @@ final class DividendInterestAllowance {
         }
         if (interest.untaxedAbroad()) {
             return lines.nil(lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST), interest.claimed(), "dividend and unit income"
-                    + OtherSourcesLines.UNTAXED_ABROAD, new Reason(ReasonCodes.OS_UNTAXED_ABROAD, Map.of()));
+                    + OtherSourcesLines.UNTAXED_ABROAD, new Reason(ReasonCodes.UNTAXED_ABROAD, Map.of()));
         }
         Money allowed = interest.allowed();
         lines.add(lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST), StepKind.DEDUCTION, interest.claimed(), allowed,

@@ -271,7 +271,7 @@ class OtherSourcesNodeTest {
         assertThat(result.value().asMoney()).isEqualTo((Money.of("100000")));
         assertThat(result.trace().getLast().limitedBy()).hasValueSatisfying(
                 why -> assertThat(why).contains("payable outside India untaxed"));
-        assertThat(result.trace().getLast().reason()).contains(new Reason(ReasonCodes.OS_UNTAXED_ABROAD, Map.of()));
+        assertThat(result.trace().getLast().reason()).contains(new Reason(ReasonCodes.UNTAXED_ABROAD, Map.of()));
         assertThat(rowLines(result, RuleIds.OS_INTEREST)).allSatisfy(
                 line -> assertThat(line.reason()).contains(new Reason(ReasonCodes.OS_FOR_THIS_ITEM, Map.of())));
     }

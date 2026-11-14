@@ -57,7 +57,7 @@ final class OtherSourcesLines {
     /** An expense the row allows: nil where it is payable outside India untaxed, else the row's share of it. */
     Money deduction(RuleId rule, BaseId base, OtherSourceItem item, Money amount, String where) {
         if (item.payableOutsideIndiaUntaxed()) {
-            return nil(rule, amount, where + UNTAXED_ABROAD, new Reason(ReasonCodes.OS_UNTAXED_ABROAD, Map.of()));
+            return nil(rule, amount, where + UNTAXED_ABROAD, new Reason(ReasonCodes.UNTAXED_ABROAD, Map.of()));
         }
         Money allowed = applied(rule, base, amount);
         add(rule, StepKind.DEDUCTION, amount, allowed, where, new Reason(ReasonCodes.OS_FOR_THIS_ITEM, Map.of()));

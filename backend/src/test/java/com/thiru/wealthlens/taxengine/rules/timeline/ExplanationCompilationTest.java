@@ -220,6 +220,37 @@ class ExplanationCompilationTest {
                 .hasMessageContaining("no term for the regime FIRST_SCHEDULE_RATES");
     }
 
+    private static final String REGIME_TERMS =
+            "\"regime\": {\"NEW_TAX_REGIME\": \"the default regime\", \"FIRST_SCHEDULE_RATES\": \"the old regime\"}";
+
+    private static final String HEAD_TERMS = "\"head\": {\"SALARIES\": \"salary\", \"HOUSE_PROPERTY\": \"house property\","
+            + " \"BUSINESS_OR_PROFESSION\": \"business or profession\", \"CAPITAL_GAINS\": \"capital gains\","
+            + " \"OTHER_SOURCES\": \"other sources\"}";
+
+    @Test
+    void compile_whenAHeadHasNoWord_isRefused() {
+        // Given — every reason and regime worded, SALARIES left out of the heads
+        Timeline unnamed = withExplanations("{\"explanations\": [], \"reasons\": [" + reasonsExcept("") + "], \"terms\": {"
+                + REGIME_TERMS + ", " + HEAD_TERMS.replace("\"SALARIES\": \"salary\", ", "") + "}}");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(unnamed, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("no term for the head SALARIES");
+    }
+
+    @Test
+    void compile_whenADeclaredCapitalGainsPartHasNoWord_isRefused() {
+        // Given — CG-PARTS declares four parts; LONG_TERM_OTHER left out
+        Timeline unnamed = withExplanations("{\"explanations\": [], \"reasons\": [" + reasonsExcept("") + "], \"terms\": {"
+                + REGIME_TERMS + ", " + HEAD_TERMS + ", \"capitalGainsPart\": {\"SHORT_TERM_SLAB\": \"a\","
+                + " \"SHORT_TERM_LISTED_EQUITY\": \"b\", \"LONG_TERM_LISTED_EQUITY\": \"c\"}}}");
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(unnamed, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("no term for the capital-gains part LONG_TERM_OTHER");
+    }
+
     @Test
     void compile_whenTheShippedContentIsCompiled_carriesEveryReasonAndTheYearsRegimeTerms() {
         // Given / When
@@ -233,28 +264,34 @@ class ExplanationCompilationTest {
                 "ALLOWANCE_DISABILITY_NOT_LISTED", "ALLOWANCE_MONTHLY_LIMIT", "ALL_DEDUCTED",
                 "ASSET_TRANSFER_WRITTEN_DOWN", "ASSET_USE_COST_SHARE", "ASSET_USE_RENT",
                 "BUSINESS_TRUST_SPECIFIED_SUM", "CAP_ACTUAL_AMOUNTS", "CAP_AGGREGATE_CEILING", "CAP_APPORTIONED",
-                "CAP_FIXED", "CAP_IN_EXCESS", "CAP_SHARE", "CAR_PER_MONTH", "CAR_PER_MONTH_WITH_CHAUFFEUR",
-                "CAR_RUNNING_AND_WEAR", "COMMUTED_PENSION_LIMIT", "COMMUTED_PENSION_LIMIT_WITH_GRATUITY",
-                "CONDITION_NOT_MET", "DEDUCTED_IN_FULL", "DEDUCTIONS_WITHIN_INCOME", "DEDUCTION_LIMITED",
-                "DEPENDANT_NOTHING_SPENT", "DEPOSIT_INTEREST_SAVINGS_ONLY", "DISABILITY_CERTIFIED",
-                "DIVIDEND_INTEREST_LIMITED", "DONATION_CASH_LIMIT", "DONATION_QUALIFYING_LIMIT",
-                "DONATION_UNREPORTED", "DONATION_WITHIN_QUALIFYING_LIMIT", "DONATION_WITHOUT_LIMIT",
-                "EDUCATION_ABOVE_LIMIT", "EDUCATION_LOAN_OUTSIDE_YEARS", "EDUCATION_WITHIN_LIMIT",
-                "EMPLOYER_ACCRETION_SHARE", "EXCLUDED_BY_RULE", "FURNITURE_COST_SHARE", "FURNITURE_HIRE",
-                "GIFTS_BELOW_LIMIT", "GIFTS_FOR_THE_YEAR", "GIFTS_REACH_LIMIT", "GIFT_COVID_DEATH_LIMIT",
-                "GIFT_EXCLUDED", "GIFT_ON_ITS_OWN", "GROSS_TOTAL_LESS_SPECIAL_GAINS", "HEALTH_CHECKUP_SPLIT",
-                "HEALTH_PAID_IN_CASH", "HRA_NOT_RENTED", "LESS_RECOVERED", "LIFE_POLICY_ABOVE_PREMIUMS",
-                "LIFE_POLICY_EXCLUDED", "LOANS_WITHIN_PETTY_LIMIT", "LOAN_FOR_LISTED_DISEASE",
-                "LOAN_INTEREST_AT_BANK_RATE", "LOAN_SANCTION_CONDITION_NOT_MET", "LTC_ASSISTANCE_RECEIVED",
+                "CAP_FIXED", "CAP_IN_EXCESS", "CAP_SHARE", "CARRIED_LOSS_AGAINST_HEAD", "CARRIED_LOSS_AGAINST_PART",
+                "CARRIED_LOSS_EXPIRED", "CARRIED_LOSS_NOT_IN_TIME", "CARRIED_LOSS_STILL_CARRIED", "CAR_PER_MONTH",
+                "CAR_PER_MONTH_WITH_CHAUFFEUR", "CAR_RUNNING_AND_WEAR", "COMMUTED_PENSION_LIMIT",
+                "COMMUTED_PENSION_LIMIT_WITH_GRATUITY", "CONDITION_NOT_MET", "DEDUCTED_IN_FULL",
+                "DEDUCTIONS_WITHIN_INCOME", "DEDUCTION_LIMITED", "DEPENDANT_NOTHING_SPENT",
+                "DEPOSIT_INTEREST_SAVINGS_ONLY", "DISABILITY_CERTIFIED", "DIVIDEND_INTEREST_LIMITED",
+                "DONATION_CASH_LIMIT", "DONATION_QUALIFYING_LIMIT", "DONATION_UNREPORTED",
+                "DONATION_WITHIN_QUALIFYING_LIMIT", "DONATION_WITHOUT_LIMIT", "EDUCATION_ABOVE_LIMIT",
+                "EDUCATION_LOAN_OUTSIDE_YEARS", "EDUCATION_WITHIN_LIMIT", "ELECTION_AS_STATED", "ELECTION_CHOSEN",
+                "ELECTION_NOT_CHOSEN", "EMPLOYER_ACCRETION_SHARE", "EXCLUDED_BY_RULE", "FURNITURE_COST_SHARE",
+                "FURNITURE_HIRE", "GIFTS_BELOW_LIMIT", "GIFTS_FOR_THE_YEAR", "GIFTS_REACH_LIMIT",
+                "GIFT_COVID_DEATH_LIMIT", "GIFT_EXCLUDED", "GIFT_ON_ITS_OWN", "GROSS_TOTAL_LESS_SPECIAL_GAINS",
+                "HEALTH_CHECKUP_SPLIT", "HEALTH_PAID_IN_CASH", "HP_ANNUAL_VALUE_LET", "HP_ANNUAL_VALUE_NOT_LET",
+                "HP_ARREARS_LESS", "HP_FOR_THIS_PROPERTY", "HP_LESS_UNREALISED_RENT",
+                "HP_OWN_RESIDENCE_INTEREST_AGGREGATE", "HP_OWN_RESIDENCE_NIL", "HRA_NOT_RENTED", "LESS_RECOVERED",
+                "LIFE_POLICY_ABOVE_PREMIUMS", "LIFE_POLICY_EXCLUDED", "LOANS_WITHIN_PETTY_LIMIT",
+                "LOAN_FOR_LISTED_DISEASE", "LOAN_INTEREST_AT_BANK_RATE", "LOAN_SANCTION_CONDITION_NOT_MET",
+                "LOSS_CARRIED_FORWARD_HOUSE_PROPERTY", "LOSS_DEEMED_GIVEN_EFFECT", "LOSS_NOT_CARRIED_FORWARD",
+                "LOSS_SET_OFF_AGAINST_HEAD", "LOSS_SET_OFF_AGAINST_PART", "LTC_ASSISTANCE_RECEIVED",
                 "LTC_CHILD_BEYOND_LIMIT", "LTC_JOURNEYS_IN_BLOCK", "MEALS_IN_FULL", "MEDICAL_ABROAD_EXCLUDED",
                 "MEDICAL_TRAVEL_CONDITION_NOT_MET", "NOT_RESIDENT", "NOT_SPECIFIED_EMPLOYEE",
-                "OS_EXPENSE_NOT_DEDUCTED", "OS_FOR_THIS_ITEM", "OS_UNTAXED_ABROAD",
-                "PF_CONTRIBUTION_ABOVE_THRESHOLD", "PF_TAXABLE_ACCOUNT_INTEREST", "PREMIUM_SHARE_OF_SUM_ASSURED",
-                "REGIME_DISALLOWS", "REGIME_EXCLUDES_ROW", "RENT_OWNS_HOME_ELSEWHERE", "RENT_OWNS_HOME_HERE",
-                "RENT_RECEIVES_HRA", "RETIREMENT_ALLOWED_BEFORE", "RETIREMENT_BARRED", "RETIREMENT_CEILING_USED",
+                "OS_EXPENSE_NOT_DEDUCTED", "OS_FOR_THIS_ITEM", "PF_CONTRIBUTION_ABOVE_THRESHOLD",
+                "PF_TAXABLE_ACCOUNT_INTEREST", "PREMIUM_SHARE_OF_SUM_ASSURED", "REGIME_DISALLOWS",
+                "REGIME_EXCLUDES_ROW", "RENT_OWNS_HOME_ELSEWHERE", "RENT_OWNS_HOME_HERE", "RENT_RECEIVES_HRA",
+                "RETIREMENT_ALLOWED_BEFORE", "RETIREMENT_BARRED", "RETIREMENT_CEILING_USED",
                 "RETIREMENT_CEILING_USED_THIS_YEAR", "SALARY_INCLUDES_AGNIVEER", "SALARY_INCLUDES_EMPLOYER_EXCESS",
                 "SALARY_INCLUDES_PENSION_CONTRIBUTION", "SALARY_INCLUDES_PERQUISITES", "SECURITY_VALUE",
-                "WITHIN_LIMIT");
+                "UNTAXED_ABROAD", "WITHIN_LIMIT");
         assertThat(content.at("/terms/regime/NEW_TAX_REGIME").asString()).isEqualTo("the default regime");
     }
 

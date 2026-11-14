@@ -10,6 +10,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -293,7 +296,7 @@ public final class ElectionResolver {
         List<TraceLine> trace = new ArrayList<>(run.trace());
         for (PricedAlternative<T> alternative : outcome.alternatives()) {
             trace.add(line(trace.size() + 1, election, alternative, why(election, outcome, alternative, rules.pack()),
-                    rules));
+                    rules).withReason(reason(outcome, alternative)));
         }
         return withTrace(run, trace);
     }
@@ -312,6 +315,15 @@ public final class ElectionResolver {
     private static PipelineRunner.Result withTrace(PipelineRunner.Result run, List<TraceLine> trace) {
         return new PipelineRunner.Result(run.order(), run.values(), trace, run.annotations(), run.inputs(),
                 run.lawAndExec());
+    }
+
+    /** The same as {@link #why} as facts: stated as entered, or priced and taken or not (W-327d1, D-687). */
+    private static <T> Reason reason(ElectionOutcome<T> outcome, PricedAlternative<T> alternative) {
+        if (outcome.mode() == ElectionMode.USER_SPECIFIED) {
+            return new Reason(ReasonCodes.ELECTION_AS_STATED, Map.of());
+        }
+        return new Reason(alternative.choice().equals(outcome.chosen()) ? ReasonCodes.ELECTION_CHOSEN
+                : ReasonCodes.ELECTION_NOT_CHOSEN, Map.of());
     }
 
     private static <T> String why(Election<T> election, ElectionOutcome<T> outcome, PricedAlternative<T> alternative,
