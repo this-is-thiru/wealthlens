@@ -17,6 +17,9 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
@@ -24,6 +27,7 @@ import java.time.MonthDay;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -64,13 +68,16 @@ public final class AdvanceTaxNode implements ComputationNode {
                 liabilityRow.versionAt(ctx.inputs().temporal()).definition(), AdvanceTaxLiability.class, liabilityRow.id());
         List<TraceLine> lines = new ArrayList<>();
         TraceLine measured = ctx.traceLine(1, liabilityRow.id(), StepKind.MEASURE, bill, amount);
-        Optional<String> notLiable = exemptByAge(ctx, liability)
-                .or(() -> liability.reaches(amount) ? Optional.empty() : Optional.of("below the amount advance tax starts at"));
+        Optional<NotLiable> notLiable = exemptByAge(ctx, liability)
+                .or(() -> liability.reaches(amount) ? Optional.empty() : Optional.of(new NotLiable(
+                        "below the amount advance tax starts at", new Reason(ReasonCodes.ADVANCE_TAX_NOT_LIABLE_BELOW,
+                                Map.of("threshold", new ReasonFact.MoneyFact(liability.atLeast()))))));
         if (notLiable.isPresent()) {
-            lines.add(measured.withLimitedBy("not liable: " + notLiable.get()));
+            lines.add(measured.withLimitedBy("not liable: " + notLiable.get().text()).withReason(notLiable.get().reason()));
             return new NodeResult(new AdvanceTaxPosition(false, amount, List.of()), lines, List.of());
         }
-        lines.add(measured.withLimitedBy("liable: the bill less tax at source"));
+        lines.add(measured.withLimitedBy("liable: the bill less tax at source")
+                .withReason(new Reason(ReasonCodes.ADVANCE_TAX_LIABLE, Map.of())));
         RuleRow scheduleRow = ctx.ruleOf(RuleSetIds.RS_ADV_INSTALMENTS);
         InstalmentSchedule schedule = RuleDefinitions.require(
                 scheduleRow.versionAt(ctx.inputs().temporal()).definition(), InstalmentSchedule.class, scheduleRow.id());
@@ -82,21 +89,28 @@ public final class AdvanceTaxNode implements ComputationNode {
             Money owed = due.minus(paid).floorAtZero();
             instalments.add(new AdvanceTaxPosition.Instalment(dueOn, due, paid, owed));
             lines.add(ctx.traceLine(lines.size() + 1, scheduleRow.id(), StepKind.MEASURE, due, owed)
-                    .withLimitedBy("still owed by " + dueOn));
+                    .withLimitedBy("still owed by " + dueOn)
+                    .withReason(new Reason(ReasonCodes.ADVANCE_TAX_STILL_OWED, Map.of("date", new ReasonFact.DateFact(dueOn)))));
         }
         return new NodeResult(new AdvanceTaxPosition(true, amount, instalments), lines, List.of());
     }
 
     /** Why a resident individual of the row's age is not liable, or empty where the person is not such a one. */
-    private static Optional<String> exemptByAge(NodeContext ctx, AdvanceTaxLiability liability) {
+    private static Optional<NotLiable> exemptByAge(NodeContext ctx, AdvanceTaxLiability liability) {
         if (!(ctx.inputs().assessee() instanceof Individual individual)
                 || individual.residence() == ResidentialStatus.NON_RESIDENT) {
             return Optional.empty();
         }
         int ageAtYearEnd = Period.between(individual.dateOfBirth(), ctx.inputs().temporal().taxYearEnd()).getYears();
         return ageAtYearEnd >= liability.exemptFromAge()
-                ? Optional.of("a resident individual of " + ageAtYearEnd + " with no business income")
+                ? Optional.of(new NotLiable("a resident individual of " + ageAtYearEnd + " with no business income",
+                        new Reason(ReasonCodes.ADVANCE_TAX_NOT_LIABLE_BY_AGE,
+                                Map.of("age", new ReasonFact.CountFact(ageAtYearEnd)))))
                 : Optional.empty();
+    }
+
+    /** Why the person is not liable: the audit text and its reason (W-327e1, D-690). */
+    private record NotLiable(String text, Reason reason) {
     }
 
     /** The date in this financial year that falls on {@code day}: April to December in its first calendar year, else its second. */

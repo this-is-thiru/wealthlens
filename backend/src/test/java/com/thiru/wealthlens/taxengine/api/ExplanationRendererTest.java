@@ -534,4 +534,20 @@ class ExplanationRendererTest {
         assertThat(ExplanationRenderer.explain(derived, PACK.explanations())).endsWith("No record shows the STT on the"
                 + " sale; under the year's rule it was chargeable to securities transaction tax.");
     }
+
+    @Test
+    void explain_whenADefermentDateIsRelieved_writesTheDatesAndTheTaxLeftOut() {
+        // Given — InterestAndFeeNode:212: paid enough by 15 June 2026, and 87,750 left out, paid by 31 March 2027
+        TraceLine relieved = line(new RuleId("INT-DEFERMENT"), MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO))
+                .withLimitedBy("by 2026-06-15, paid enough; relieved 87750.00: …")
+                .withReason(new Reason(ReasonCodes.DEFERMENT_PAID_ENOUGH_RELIEVED, Map.of(
+                        "date", new ReasonFact.DateFact(LocalDate.of(2026, 6, 15)),
+                        "relieved", new ReasonFact.MoneyFact(Money.of("87750")),
+                        "paidBy", new ReasonFact.DateFact(LocalDate.of(2027, 3, 31)))));
+
+        // When / Then
+        assertThat(ExplanationRenderer.explain(relieved, PACK.explanations())).endsWith("By 15 June 2026 you had paid"
+                + " enough. The ₹87,750 of tax on income that arose after that date is left out, as it was paid by"
+                + " 31 March 2027.");
+    }
 }

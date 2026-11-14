@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.DefermentInterest;
 import com.thiru.wealthlens.taxengine.rules.definition.RefundInterest;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -21,6 +22,9 @@ import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -28,6 +32,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.Notice;
 import com.thiru.wealthlens.taxengine.trace.Severity;
 import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.time.MonthDay;
 import java.util.List;
@@ -109,9 +114,15 @@ class AdvanceTaxAndInterestTest {
         EngineInputs inputs = inputs(year, filing(year, Optional.empty(), List.of()), LocalDate.of(year, 4, 1), UNDER_SIXTY);
 
         // When
-        AdvanceTaxPosition position = (AdvanceTaxPosition) advance(year, "100000", inputs).value();
+        NodeResult advanced = advance(year, "100000", inputs);
+        AdvanceTaxPosition position = (AdvanceTaxPosition) advanced.value();
 
-        // Then — paid by then 0 / 30,000 / 30,000 / 50,000
+        // Then — liable, and each instalment says what is still owed by its date (W-327e1)
+        assertThat(advanced.trace()).extracting(TraceLine::reason).containsExactly(
+                Optional.of(reason(ReasonCodes.ADVANCE_TAX_LIABLE)),
+                Optional.of(owedBy(LocalDate.of(year, 6, 15))), Optional.of(owedBy(LocalDate.of(year, 9, 15))),
+                Optional.of(owedBy(LocalDate.of(year, 12, 15))), Optional.of(owedBy(LocalDate.of(year + 1, 3, 15))));
+        // and paid by then 0 / 30,000 / 30,000 / 50,000
         assertThat(position.liable()).isTrue();
         assertThat(position.amount()).isEqualTo(Money.of("80000"));
         assertThat(position.instalments()).containsExactly(
@@ -129,10 +140,14 @@ class AdvanceTaxAndInterestTest {
         EngineInputs inputs = inputs(2026, filing(2026, Optional.empty(), List.of()), LocalDate.of(2026, 4, 1), UNDER_SIXTY);
 
         // When
-        AdvanceTaxPosition position = (AdvanceTaxPosition) advance(2026, bill, inputs).value();
+        NodeResult advanced = advance(2026, bill, inputs);
+        AdvanceTaxPosition position = (AdvanceTaxPosition) advanced.value();
 
-        // Then
+        // Then — below, the reason names s.404's 10,000 (W-327e1)
         assertThat(position.liable()).isEqualTo(liable);
+        assertThat(advanced.trace().getFirst().reason()).contains(liable ? reason(ReasonCodes.ADVANCE_TAX_LIABLE)
+                : new Reason(ReasonCodes.ADVANCE_TAX_NOT_LIABLE_BELOW, Map.of("threshold",
+                        new ReasonFact.MoneyFact(Money.of("10000")))));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -150,6 +165,41 @@ class AdvanceTaxAndInterestTest {
                 RuleIds.INT_LATE_RETURN, Money.of("300"), RuleIds.INT_ADVANCE_SHORTFALL, Money.of("1500"),
                 RuleIds.INT_DEFERMENT, Money.of("1560"), RuleIds.FEE_LATE_RETURN, Money.of("5000")));
         assertThat(result.value().asMoney()).isEqualTo(Money.of("8360"));
+        // and each line's reason (W-327e1): June short of 12 % of 80,000, September at 30,000 past 36 % (28,800), December
+        // and March short; 234A one month from 1 August, 234B five from 1 April, both to 31 August; furnished late
+        assertThat(reasons(result, RuleIds.INT_DEFERMENT)).containsExactly(
+                dated(ReasonCodes.DEFERMENT_SHORT, LocalDate.of(year, 6, 15)),
+                dated(ReasonCodes.DEFERMENT_PAID_ENOUGH, LocalDate.of(year, 9, 15)),
+                dated(ReasonCodes.DEFERMENT_SHORT, LocalDate.of(year, 12, 15)),
+                dated(ReasonCodes.DEFERMENT_SHORT, LocalDate.of(year + 1, 3, 15)));
+        assertThat(reasons(result, RuleIds.INT_LATE_RETURN)).containsExactly(
+                months(1, LocalDate.of(year + 1, 8, 1), LocalDate.of(year + 1, 8, 31)));
+        assertThat(reasons(result, RuleIds.INT_ADVANCE_SHORTFALL)).containsExactly(
+                months(5, LocalDate.of(year + 1, 4, 1), LocalDate.of(year + 1, 8, 31)));
+        assertThat(reasons(result, RuleIds.FEE_LATE_RETURN)).containsExactly(
+                dated(ReasonCodes.FEE_RETURN_FURNISHED_LATE, LocalDate.of(year + 1, 7, 31)));
+    }
+
+    private static List<Reason> reasons(NodeResult result, RuleId rule) {
+        return result.trace().stream().filter(line -> line.rule().equals(rule)).map(line -> line.reason().orElseThrow())
+                .toList();
+    }
+
+    private static Reason reason(ReasonCode code) {
+        return new Reason(code, Map.of());
+    }
+
+    private static Reason dated(ReasonCode code, LocalDate date) {
+        return new Reason(code, Map.of("date", new ReasonFact.DateFact(date)));
+    }
+
+    private static Reason owedBy(LocalDate date) {
+        return dated(ReasonCodes.ADVANCE_TAX_STILL_OWED, date);
+    }
+
+    private static Reason months(int months, LocalDate from, LocalDate to) {
+        return new Reason(ReasonCodes.INTEREST_FOR_MONTHS, Map.of("months", new ReasonFact.CountFact(months),
+                "from", new ReasonFact.DateFact(from), "to", new ReasonFact.DateFact(to)));
     }
 
     @Test
@@ -180,6 +230,10 @@ class AdvanceTaxAndInterestTest {
         // Then
         assertThat(before).hasValue("not yet due: runs from 2027-08-01");
         assertThat(during).hasValue("4 months from 2026-08-01 to 2026-11-06");
+        assertThat(reasons(owed(2026, "100000", "1200000", early), RuleIds.INT_LATE_RETURN)).containsExactly(new Reason(
+                ReasonCodes.INTEREST_NOT_YET_DUE, Map.of("from", new ReasonFact.DateFact(LocalDate.of(2027, 8, 1)))));
+        assertThat(reasons(owed(2025, "100000", "1200000", late), RuleIds.INT_LATE_RETURN))
+                .containsExactly(months(4, LocalDate.of(2026, 8, 1), LocalDate.of(2026, 11, 6)));
     }
 
     private static Optional<String> lateReturnText(NodeResult result) {
@@ -195,8 +249,13 @@ class AdvanceTaxAndInterestTest {
         // When
         NodeResult result = owed(2025, "100000", "1200000", inputs);
 
-        // Then — 12,000 short at June × 3 % = 360
+        // Then — 12,000 short at June × 3 % = 360; the other three dates not yet reached
         assertThat(byRule(result)).containsExactlyEntriesOf(Map.of(RuleIds.INT_DEFERMENT, Money.of("360")));
+        assertThat(reasons(result, RuleIds.INT_DEFERMENT)).containsExactly(
+                dated(ReasonCodes.DEFERMENT_SHORT, LocalDate.of(2025, 6, 15)),
+                dated(ReasonCodes.DEFERMENT_NOT_YET_REACHED, LocalDate.of(2025, 9, 15)),
+                dated(ReasonCodes.DEFERMENT_NOT_YET_REACHED, LocalDate.of(2025, 12, 15)),
+                dated(ReasonCodes.DEFERMENT_NOT_YET_REACHED, LocalDate.of(2026, 3, 15)));
     }
 
     @Test
@@ -211,6 +270,13 @@ class AdvanceTaxAndInterestTest {
         // Then — 300 + 5,000; with the 30,000 balance the payable is 35,300
         assertThat(byRule(result)).containsExactlyInAnyOrderEntriesOf(Map.of(
                 RuleIds.INT_LATE_RETURN, Money.of("300"), RuleIds.FEE_LATE_RETURN, Money.of("5000")));
+        // and the reasons say so (W-327e1): not liable by age, so neither advance-tax interest runs
+        assertThat(advance(2025, "100000", inputs).trace().getFirst().reason()).contains(new Reason(
+                ReasonCodes.ADVANCE_TAX_NOT_LIABLE_BY_AGE, Map.of("age", new ReasonFact.CountFact(61))));
+        assertThat(reasons(result, RuleIds.INT_DEFERMENT)).hasSize(4)
+                .containsOnly(reason(ReasonCodes.INTEREST_NOT_LIABLE_TO_ADVANCE_TAX));
+        assertThat(reasons(result, RuleIds.INT_ADVANCE_SHORTFALL))
+                .containsExactly(reason(ReasonCodes.INTEREST_NOT_LIABLE_TO_ADVANCE_TAX));
     }
 
     @Test
@@ -224,6 +290,11 @@ class AdvanceTaxAndInterestTest {
         // Then — 234B April to July = 4 months × 300 = 1,200; 234C 1,560
         assertThat(byRule(result)).containsExactlyInAnyOrderEntriesOf(Map.of(
                 RuleIds.INT_ADVANCE_SHORTFALL, Money.of("1200"), RuleIds.INT_DEFERMENT, Money.of("1560")));
+        // and in time (W-327e1): the fee's due date, and 234A's span from 1 August not begun on 31 July
+        assertThat(reasons(result, RuleIds.FEE_LATE_RETURN)).containsExactly(
+                dated(ReasonCodes.FEE_RETURN_FURNISHED_IN_TIME, LocalDate.of(2026, 7, 31)));
+        assertThat(reasons(result, RuleIds.INT_LATE_RETURN)).containsExactly(new Reason(ReasonCodes.INTEREST_NOT_YET_DUE,
+                Map.of("from", new ReasonFact.DateFact(LocalDate.of(2026, 8, 1)))));
     }
 
     @ParameterizedTest(name = "paid {0} → shortfall interest {1}")
@@ -239,6 +310,9 @@ class AdvanceTaxAndInterestTest {
 
         // Then — 71,999: shortfall 8,001 → 8,000 × 1 % × 5 = 400; 72,000: nil
         assertThat(byRule(result).getOrDefault(RuleIds.INT_ADVANCE_SHORTFALL, Money.ZERO)).isEqualTo(Money.of(interest));
+        assertThat(reasons(result, RuleIds.INT_ADVANCE_SHORTFALL)).containsExactly("0".equals(interest)
+                ? reason(ReasonCodes.SHORTFALL_ADVANCE_TAX_PAID_ENOUGH)
+                : months(5, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 8, 31)));
     }
 
     @Test

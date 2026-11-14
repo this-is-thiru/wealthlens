@@ -147,6 +147,98 @@
       "why": "The new house, counted at {cost}, costs less than the {consideration} you received, so only that share of the gain is exempt."
     },
     {
+      "code": "ADVANCE_TAX_NOT_LIABLE_BY_AGE",
+      "why": "You are not liable to advance tax: you are resident, aged {age}, with no business income."
+    },
+    {
+      "code": "ADVANCE_TAX_NOT_LIABLE_BELOW",
+      "why": "You are not liable to advance tax: what is due after tax at source is below {threshold}."
+    },
+    {
+      "code": "ADVANCE_TAX_LIABLE",
+      "why": "You are liable to advance tax on the bill less the tax deducted or collected at source."
+    },
+    {
+      "code": "ADVANCE_TAX_STILL_OWED",
+      "why": "This is what is still owed of the instalments due by {date}."
+    },
+    {
+      "code": "CREDIT_TAX_AT_SOURCE",
+      "why": "Tax deducted or collected at source counts as paid."
+    },
+    {
+      "code": "CREDIT_ADVANCE_TAX",
+      "why": "Advance tax you paid counts as paid."
+    },
+    {
+      "code": "CREDIT_SELF_ASSESSMENT_TAX",
+      "why": "Self-assessment tax you paid counts as paid."
+    },
+    {
+      "code": "INTEREST_NOT_LIABLE_TO_ADVANCE_TAX",
+      "why": "You are not liable to advance tax, so no interest is due on it."
+    },
+    {
+      "code": "DEFERMENT_NOT_YET_REACHED",
+      "why": "The instalment date {date} has not come yet."
+    },
+    {
+      "code": "DEFERMENT_PAID_ENOUGH",
+      "why": "By {date} you had paid enough, so no interest is due for it."
+    },
+    {
+      "code": "DEFERMENT_SHORT",
+      "why": "By {date} you had paid less than the share due, so interest is due on the shortfall."
+    },
+    {
+      "code": "DEFERMENT_PAID_ENOUGH_RELIEVED",
+      "why": "By {date} you had paid enough. The {relieved} of tax on income that arose after that date is left out, as it was paid by {paidBy}."
+    },
+    {
+      "code": "DEFERMENT_SHORT_RELIEVED",
+      "why": "By {date} you had paid less than the share due. The {relieved} of tax on income that arose after that date is left out, as it was paid by {paidBy}."
+    },
+    {
+      "code": "DEFERMENT_PAID_ENOUGH_NOT_RELIEVED",
+      "why": "By {date} you had paid enough. The {tax} of tax on income that arose after that date is not left out: only {paid} of it was paid by {paidBy}."
+    },
+    {
+      "code": "DEFERMENT_SHORT_NOT_RELIEVED",
+      "why": "By {date} you had paid less than the share due. The {tax} of tax on income that arose after that date is not left out: only {paid} of it was paid by {paidBy}."
+    },
+    {
+      "code": "FEE_RETURN_FURNISHED_IN_TIME",
+      "why": "The return is furnished by its due date, {date}, so no fee is due."
+    },
+    {
+      "code": "FEE_RETURN_FURNISHED_LATE",
+      "why": "The return is furnished after its due date, {date}, so the late fee is due."
+    },
+    {
+      "code": "INTEREST_FOR_MONTHS",
+      "why": "Interest runs for {months} months, from {from} to {to}."
+    },
+    {
+      "code": "INTEREST_NOT_YET_DUE",
+      "why": "No interest yet: it runs only from {from}."
+    },
+    {
+      "code": "SHORTFALL_ADVANCE_TAX_PAID_ENOUGH",
+      "why": "The advance tax you paid reaches the share of the assessed tax the law asks for, so no interest is due."
+    },
+    {
+      "code": "REFUND_BELOW_SHARE",
+      "why": "A refund of {refund} is less than {share} of the tax of {tax}, so it carries no interest."
+    },
+    {
+      "code": "REFUND_INTEREST_ON_RETURN_PAYMENT",
+      "why": "Interest is added for {months} months, from {from} to {to}, on the part of the refund that returns the tax you paid on {paidOn}."
+    },
+    {
+      "code": "REFUND_INTEREST_ON_PREPAID_TAX",
+      "why": "Interest is added for {months} months, from {from} to {to}, on the part of the refund that returns tax at source and advance tax."
+    },
+    {
       "code": "CARRIED_LOSS_AGAINST_PART",
       "why": "The loss of {year} is set against your {part}."
     },

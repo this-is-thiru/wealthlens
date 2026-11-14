@@ -22,6 +22,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.trace.Notice;
 import com.thiru.wealthlens.taxengine.trace.Severity;
@@ -32,7 +35,9 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -143,7 +148,8 @@ public final class InterestAndFeeNode implements ComputationNode {
             Money base = calculation.base(bill.minus(advancePaid).minus(filing.taxAtSource()));
             int months = months(from, end, calculation.fractionOfMonthCountsWhole());
             Money interest = rule.perMonth().of(base).times(months);
-            add(row.id(), InterestAndFees.Kind.INTEREST, base, interest, period(months, from, end));
+            add(row.id(), InterestAndFees.Kind.INTEREST, base, interest, period(months, from, end),
+                    periodReason(months, from, end));
             if (interest.isGreaterThan(Money.ZERO) && !rule.statesPartOfMonth() && months != months(from, end, false)) {
                 annotate(new Notice(Severity.ATTENTION, "The section counts months and does not say part of a month; a part"
                         + " month is counted as a whole month, as the sections beside it do (OQ-39)", List.of(row.id())));
@@ -161,7 +167,9 @@ public final class InterestAndFeeNode implements ComputationNode {
             Money assessed = bill.minus(filing.taxAtSource()).floorAtZero();
             if (!advance.liable() || !rule.runsOn(advancePaid, assessed)) {
                 add(row.id(), InterestAndFees.Kind.INTEREST, assessed, Money.ZERO, advance.liable()
-                        ? "advance tax paid reaches the share of the assessed tax" : "not liable to advance tax");
+                        ? "advance tax paid reaches the share of the assessed tax" : "not liable to advance tax",
+                        new Reason(advance.liable() ? ReasonCodes.SHORTFALL_ADVANCE_TAX_PAID_ENOUGH
+                                : ReasonCodes.INTEREST_NOT_LIABLE_TO_ADVANCE_TAX, Map.of()));
                 return;
             }
             LocalDate from = ctx.inputs().temporal().taxYearEnd().plusDays(1);
@@ -179,7 +187,15 @@ public final class InterestAndFeeNode implements ComputationNode {
             int total = Math.max(counted, months(from, end, calculation.fractionOfMonthCountsWhole()));
             interest = interest.plus(rule.perMonth().of(calculation.base(shortfall)).times(total - counted));
             add(row.id(), InterestAndFees.Kind.INTEREST, calculation.base(assessed.minus(advancePaid)), interest,
-                    period(total, from, end));
+                    period(total, from, end), periodReason(total, from, end));
+        }
+
+        /** The months and their span as a reason, or the day it runs from where it has not begun (W-327e1, D-690). */
+        private static Reason periodReason(int months, LocalDate from, LocalDate end) {
+            return end.isBefore(from)
+                    ? new Reason(ReasonCodes.INTEREST_NOT_YET_DUE, Map.of("from", new ReasonFact.DateFact(from)))
+                    : new Reason(ReasonCodes.INTEREST_FOR_MONTHS, Map.of("months", new ReasonFact.CountFact(months),
+                            "from", new ReasonFact.DateFact(from), "to", new ReasonFact.DateFact(end)));
         }
 
         /** The months counted and over what span; a span not yet begun says so rather than running backwards (W-142a). */
@@ -209,7 +225,8 @@ public final class InterestAndFeeNode implements ComputationNode {
                 total = total.plus(interest);
                 String why = deferredBecause(reached, harboured, dueOn);
                 lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INTEREST, base, interest)
-                        .withLimitedBy(relieved.reason().map(reason -> why + "; " + reason).orElse(why)));
+                        .withLimitedBy(relieved.reason().map(reason -> why + "; " + reason).orElse(why))
+                        .withReason(deferredReason(reached, harboured, dueOn, relieved, relief.paidBy())));
                 flagIfCharged(interest);
             }
             if (total.isGreaterThan(Money.ZERO)) {
@@ -220,6 +237,31 @@ public final class InterestAndFeeNode implements ComputationNode {
                         + " relieved; less, or none, may be due if it arose after an instalment date and its tax was paid"
                         + " later", List.of(row.id())));
             }
+        }
+
+        /** A deferment date's reason, with its relief where relieved income arose after it (W-327e1 C1a, D-690). */
+        private Reason deferredReason(boolean reached, boolean harboured, LocalDate dueOn, DefermentRelief.AtDate relieved,
+                LocalDate paidBy) {
+            if (!advance.liable()) {
+                return new Reason(ReasonCodes.INTEREST_NOT_LIABLE_TO_ADVANCE_TAX, Map.of());
+            }
+            ReasonFact date = new ReasonFact.DateFact(dueOn);
+            if (!reached) {
+                return new Reason(ReasonCodes.DEFERMENT_NOT_YET_REACHED, Map.of("date", date));
+            }
+            if (!relieved.arose()) {
+                return new Reason(harboured ? ReasonCodes.DEFERMENT_PAID_ENOUGH : ReasonCodes.DEFERMENT_SHORT,
+                        Map.of("date", date));
+            }
+            ReasonFact by = new ReasonFact.DateFact(paidBy);
+            if (relieved.relieved()) {
+                return new Reason(harboured ? ReasonCodes.DEFERMENT_PAID_ENOUGH_RELIEVED : ReasonCodes.DEFERMENT_SHORT_RELIEVED,
+                        Map.of("date", date, "relieved", new ReasonFact.MoneyFact(relieved.leftOut()), "paidBy", by));
+            }
+            return new Reason(harboured ? ReasonCodes.DEFERMENT_PAID_ENOUGH_NOT_RELIEVED
+                    : ReasonCodes.DEFERMENT_SHORT_NOT_RELIEVED, Map.of("date", date, "tax",
+                            new ReasonFact.MoneyFact(relieved.arising()), "paidBy", by, "paid",
+                            new ReasonFact.MoneyFact(relieved.paidAfter())));
         }
 
         /** What a deferment date's line says of it, before any relief. */
@@ -240,7 +282,9 @@ public final class InterestAndFeeNode implements ComputationNode {
             boolean late = end.isAfter(filing.dueDate());
             Money fee = late ? rule.feeFor(totalIncome) : Money.ZERO;
             lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.FEE, totalIncome, fee)
-                    .withLimitedBy(late ? "furnished after " + filing.dueDate() : "furnished by " + filing.dueDate()));
+                    .withLimitedBy(late ? "furnished after " + filing.dueDate() : "furnished by " + filing.dueDate())
+                    .withReason(new Reason(late ? ReasonCodes.FEE_RETURN_FURNISHED_LATE
+                            : ReasonCodes.FEE_RETURN_FURNISHED_IN_TIME, Map.of("date", new ReasonFact.DateFact(filing.dueDate())))));
             if (late) {
                 items.add(new InterestAndFees.Item(row.id(), InterestAndFees.Kind.FEE, fee));
                 annotate(new Notice(Severity.ATTENTION, "The fee falls only on a person required to furnish a return; whether"
@@ -274,7 +318,10 @@ public final class InterestAndFeeNode implements ComputationNode {
             String until = filing.refundGrantedOn().isPresent() ? "granted on " + granted : "as if granted on " + granted;
             if (refund.isLessThan(rule.noInterestBelowShare().of(bill))) {
                 add(row.id(), InterestAndFees.Kind.RECEIVABLE, calculation.base(refund), Money.ZERO, "a refund of " + refund
-                        + " is less than " + rule.noInterestBelowShare() + " of the tax of " + bill + ": none");
+                        + " is less than " + rule.noInterestBelowShare() + " of the tax of " + bill + ": none",
+                        new Reason(ReasonCodes.REFUND_BELOW_SHARE, Map.of("refund", new ReasonFact.MoneyFact(refund),
+                                "share", new ReasonFact.ShareFact(rule.noInterestBelowShare()),
+                                "tax", new ReasonFact.MoneyFact(bill))));
                 return;
             }
             Money left = refund;
@@ -282,22 +329,37 @@ public final class InterestAndFeeNode implements ComputationNode {
                 Money slice = Money.min(left, payment.amount());
                 if (slice.isGreaterThan(Money.ZERO)) {
                     receivable(row, rule, slice, latest(end, payment.paidOn()), granted,
-                            "out of tax paid on the return on " + payment.paidOn() + ", " + until);
+                            "out of tax paid on the return on " + payment.paidOn() + ", " + until,
+                            Optional.of(payment.paidOn()));
                 }
                 left = left.minus(slice);
             }
             if (left.isGreaterThan(Money.ZERO)) {
                 LocalDate from = end.isAfter(filing.dueDate()) ? end : ctx.inputs().temporal().taxYearEnd().plusDays(1);
-                receivable(row, rule, left, from, granted, "out of tax at source and advance tax, " + until);
+                receivable(row, rule, left, from, granted, "out of tax at source and advance tax, " + until, Optional.empty());
             }
             refundNotices(row, !onReturn.isEmpty());
         }
 
-        private void receivable(RuleRow row, RefundInterest rule, Money slice, LocalDate from, LocalDate granted, String what) {
+        /** Interest on one slice of a refund; {@code paidOn} is the return payment it returns, empty for prepaid tax. */
+        private void receivable(RuleRow row, RefundInterest rule, Money slice, LocalDate from, LocalDate granted, String what,
+                Optional<LocalDate> paidOn) {
             Money base = calculation.base(slice);
             int months = months(from, granted, calculation.fractionOfMonthCountsWhole());
             add(row.id(), InterestAndFees.Kind.RECEIVABLE, base, rule.perMonth().of(base).times(months),
-                    period(months, from, granted) + "; " + what);
+                    period(months, from, granted) + "; " + what, refundReason(months, from, granted, paidOn));
+        }
+
+        /** A refund slice's reason: its months and span, and the payment it returns (W-327e1 C2a, D-690). */
+        private static Reason refundReason(int months, LocalDate from, LocalDate granted, Optional<LocalDate> paidOn) {
+            if (granted.isBefore(from)) {
+                return periodReason(months, from, granted);
+            }
+            Map<String, ReasonFact> facts = new HashMap<>(Map.of("months", new ReasonFact.CountFact(months),
+                    "from", new ReasonFact.DateFact(from), "to", new ReasonFact.DateFact(granted)));
+            paidOn.ifPresent(day -> facts.put("paidOn", new ReasonFact.DateFact(day)));
+            return new Reason(paidOn.isPresent() ? ReasonCodes.REFUND_INTEREST_ON_RETURN_PAYMENT
+                    : ReasonCodes.REFUND_INTEREST_ON_PREPAID_TAX, facts);
         }
 
         private void refundNotices(RuleRow row, boolean outOfTaxOnTheReturn) {
@@ -313,8 +375,9 @@ public final class InterestAndFeeNode implements ComputationNode {
             return one.isAfter(other) ? one : other;
         }
 
-        private void add(RuleId rule, InterestAndFees.Kind kind, Money base, Money amount, String why) {
-            lines.add(ctx.traceLine(lines.size() + 1, rule, StepKind.INTEREST, base, amount).withLimitedBy(why));
+        private void add(RuleId rule, InterestAndFees.Kind kind, Money base, Money amount, String why, Reason reason) {
+            lines.add(ctx.traceLine(lines.size() + 1, rule, StepKind.INTEREST, base, amount).withLimitedBy(why)
+                    .withReason(reason));
             if (amount.isGreaterThan(Money.ZERO)) {
                 items.add(new InterestAndFees.Item(rule, kind, amount));
             }

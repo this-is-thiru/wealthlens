@@ -10,6 +10,10 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import java.time.LocalDate;
 import java.util.List;
@@ -44,6 +48,9 @@ class RefundInterestTest {
         // Then — 1 April to 20 September: 5 months and 20 days, 6 months; 12,200 × 0.5 % × 6 = 366, kept out of what is owed:
         // the payable stays the refund of 12,250
         assertThat(receivable(run)).containsExactly(Money.of("366"));
+        assertThat(refundReasons(run)).containsExactly(new Reason(ReasonCodes.REFUND_INTEREST_ON_PREPAID_TAX, Map.of(
+                "months", new ReasonFact.CountFact(6), "from", new ReasonFact.DateFact(LocalDate.of(2027, 4, 1)),
+                "to", new ReasonFact.DateFact(GRANTED))));
         assertThat(run.result().valueOf(NodeIds.ROUND_NETPAYABLE)).isEqualTo(MoneyValue.of(Money.of("-12250")));
         assertThat(run.result().annotations()).flatExtracting(annotation -> annotation.notices())
                 .anySatisfy(notice -> assertThat(notice.message()).startsWith("Interest on a refund is income of the year"));
@@ -75,6 +82,15 @@ class RefundInterestTest {
         assertThat(run.result().trace()).filteredOn(line -> line.rule().equals(RuleIds.INT_REFUND)).singleElement()
                 .satisfies(line -> assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason)
                         .startsWith("a refund of 7250.00 is less than")));
+        // and its reason: 7,250 against a tenth (INT-REFUND's 10 %) of the tax of 87,750 (W-327e1)
+        assertThat(refundReasons(run)).containsExactly(new Reason(ReasonCodes.REFUND_BELOW_SHARE, Map.of(
+                "refund", new ReasonFact.MoneyFact(Money.of("7250")), "share", new ReasonFact.ShareFact(Rate.percent("10")),
+                "tax", new ReasonFact.MoneyFact(Money.of("87750")))));
+    }
+
+    private static List<Reason> refundReasons(GoldenCaseRunner.ShippedPipelineRun run) {
+        return run.result().trace().stream().filter(line -> line.rule().equals(RuleIds.INT_REFUND))
+                .map(line -> line.reason().orElseThrow()).toList();
     }
 
     @Test
@@ -106,6 +122,9 @@ class RefundInterestTest {
         // Then — all 12,250 out of the 20,000, from furnishing (the later of 15 July and 1 July) to 20 September: 2 months and
         // 6 days, 3 months; 12,200 × 0.5 % × 3 = 183
         assertThat(receivable(run)).containsExactly(Money.of("183"));
+        assertThat(refundReasons(run)).containsExactly(new Reason(ReasonCodes.REFUND_INTEREST_ON_RETURN_PAYMENT, Map.of(
+                "months", new ReasonFact.CountFact(3), "from", new ReasonFact.DateFact(ON_TIME),
+                "to", new ReasonFact.DateFact(GRANTED), "paidOn", new ReasonFact.DateFact(LocalDate.of(2027, 7, 1)))));
         assertThat(run.result().annotations()).flatExtracting(annotation -> annotation.notices())
                 .anySatisfy(notice -> assertThat(notice.message()).startsWith("The Act does not say which payment"));
     }

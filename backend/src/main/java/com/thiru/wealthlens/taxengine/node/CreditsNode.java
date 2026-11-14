@@ -8,13 +8,17 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -44,16 +48,19 @@ public final class CreditsNode implements ComputationNode {
         RuleId rule = ctx.ruleOf(RuleSetIds.RS_CREDIT_TAX_PAID).id();
         FilingFacts filing = ctx.inputs().filing();
         List<TraceLine> lines = new ArrayList<>();
-        Money total = credit(ctx, rule, "tax at source", filing.taxAtSource(), Money.ZERO, lines);
-        total = credit(ctx, rule, "advance tax", filing.totalAdvanceTaxPaid(), total, lines);
-        total = credit(ctx, rule, "self-assessment tax", filing.totalSelfAssessmentPaid(), total, lines);
+        Money total = credit(ctx, rule, "tax at source", ReasonCodes.CREDIT_TAX_AT_SOURCE, filing.taxAtSource(),
+                Money.ZERO, lines);
+        total = credit(ctx, rule, "advance tax", ReasonCodes.CREDIT_ADVANCE_TAX, filing.totalAdvanceTaxPaid(), total, lines);
+        total = credit(ctx, rule, "self-assessment tax", ReasonCodes.CREDIT_SELF_ASSESSMENT_TAX,
+                filing.totalSelfAssessmentPaid(), total, lines);
         return new NodeResult(MoneyValue.of(total), lines, List.of());
     }
 
     /** The running total with {@code amount} added, and a line for it. */
-    private static Money credit(NodeContext ctx, RuleId rule, String kind, Money amount, Money runningTotal,
-            List<TraceLine> lines) {
-        lines.add(ctx.traceLine(lines.size() + 1, rule, StepKind.MEASURE, amount, amount).withLimitedBy(kind));
+    private static Money credit(NodeContext ctx, RuleId rule, String kind, ReasonCode why, Money amount,
+            Money runningTotal, List<TraceLine> lines) {
+        lines.add(ctx.traceLine(lines.size() + 1, rule, StepKind.MEASURE, amount, amount).withLimitedBy(kind)
+                .withReason(new Reason(why, Map.of())));
         return runningTotal.plus(amount);
     }
 }

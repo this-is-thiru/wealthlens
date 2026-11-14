@@ -15,10 +15,13 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +85,10 @@ class CreditsAndBalanceTest {
         assertThat(result.trace()).hasSize(3).allSatisfy(line -> assertThat(line.rule()).isEqualTo(RuleIds.CREDIT_TAX_PAID));
         assertThat(result.trace()).extracting(line -> line.limitedBy().orElseThrow())
                 .containsExactly("tax at source", "advance tax", "self-assessment tax");
+        assertThat(result.trace()).extracting(TraceLine::reason).containsExactly(
+                Optional.of(new Reason(ReasonCodes.CREDIT_TAX_AT_SOURCE, Map.of())),
+                Optional.of(new Reason(ReasonCodes.CREDIT_ADVANCE_TAX, Map.of())),
+                Optional.of(new Reason(ReasonCodes.CREDIT_SELF_ASSESSMENT_TAX, Map.of())));
     }
 
     @Test

@@ -46,10 +46,22 @@ final class DefermentRelief {
      *
      * @param leftOut the tax left out of the date's share, nil where none
      * @param reason what the trace line says of it; {@code Optional.empty()} where no relieved income arose after the date
+     * @param arising the tax on relieved income arising after the date, nil where none (W-327e1, D-690)
+     * @param paidAfter the advance tax paid after the date and by the day relief asks, nil where no income arose
      */
-    record AtDate(Money leftOut, Optional<String> reason) {
+    record AtDate(Money leftOut, Optional<String> reason, Money arising, Money paidAfter) {
 
-        static final AtDate NONE = new AtDate(Money.ZERO, Optional.empty());
+        static final AtDate NONE = new AtDate(Money.ZERO, Optional.empty(), Money.ZERO, Money.ZERO);
+
+        /** Whether relieved income arose after the date at all, relieved or not. */
+        boolean arose() {
+            return reason.isPresent();
+        }
+
+        /** Whether its tax is left out. */
+        boolean relieved() {
+            return leftOut.isGreaterThan(Money.ZERO);
+        }
     }
 
     DefermentRelief(NodeContext ctx, DefermentInterest rule, Money due) {
@@ -75,10 +87,10 @@ final class DefermentRelief {
         Money paidAfter = filing.advanceTaxPaidBy(paidBy).minus(filing.advanceTaxPaidBy(date));
         if (paidAfter.isLessThan(leftOut)) {
             return new AtDate(Money.ZERO, Optional.of("not relieved: the " + leftOut + " of tax on income arising after "
-                    + date + " was not paid after it by " + paidBy + " (" + paidAfter + " was)"));
+                    + date + " was not paid after it by " + paidBy + " (" + paidAfter + " was)"), leftOut, paidAfter);
         }
         return new AtDate(leftOut, Optional.of("relieved " + leftOut + ": tax on income arising after " + date
-                + ", paid after it by " + paidBy));
+                + ", paid after it by " + paidBy), leftOut, paidAfter);
     }
 
     /** The day by which the tax on relieved income must be paid, in the year. */

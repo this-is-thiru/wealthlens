@@ -13,8 +13,12 @@ import com.thiru.wealthlens.taxengine.pipeline.InterestAndFees;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.ReasonCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.reason.Reason;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
+import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.test.CapitalGainsHarness;
 import com.thiru.wealthlens.taxengine.trace.Notice;
 import java.time.LocalDate;
@@ -68,6 +72,23 @@ class DefermentReliefTest {
                         "short by 2026-12-15; relieved 87750.00: tax on income arising after 2026-12-15, paid after it by"
                                 + " 2027-03-31",
                         "short by 2027-03-15");
+        assertThat(defermentReasons(run)).containsExactly(
+                relieved(ReasonCodes.DEFERMENT_PAID_ENOUGH_RELIEVED, LocalDate.of(2026, 6, 15)),
+                relieved(ReasonCodes.DEFERMENT_PAID_ENOUGH_RELIEVED, LocalDate.of(2026, 9, 15)),
+                relieved(ReasonCodes.DEFERMENT_SHORT_RELIEVED, LocalDate.of(2026, 12, 15)),
+                new Reason(ReasonCodes.DEFERMENT_SHORT, Map.of("date", new ReasonFact.DateFact(LocalDate.of(2027, 3, 15)))));
+    }
+
+    private static final LocalDate RELIEF_PAID_BY = LocalDate.of(2027, 3, 31);
+
+    private static Reason relieved(ReasonCode code, LocalDate date) {
+        return new Reason(code, Map.of("date", new ReasonFact.DateFact(date), "relieved",
+                new ReasonFact.MoneyFact(Money.of("87750")), "paidBy", new ReasonFact.DateFact(RELIEF_PAID_BY)));
+    }
+
+    private static List<Reason> defermentReasons(GoldenCaseRunner.ShippedPipelineRun run) {
+        return run.result().trace().stream().filter(line -> line.rule().equals(RuleIds.INT_DEFERMENT))
+                .map(line -> line.reason().orElseThrow()).toList();
     }
 
     @Test
@@ -81,6 +102,20 @@ class DefermentReliefTest {
         // Then — 393 + 1,182 + 1,974, and at 15 March 1 per cent of 7,750 short, base 7,700: 77; 3,626. The 90 per cent
         // test is met (80,000 against 78,975), so no shortfall interest
         assertThat(byRule(run)).containsExactlyEntriesOf(Map.of(RuleIds.INT_DEFERMENT, Money.of("3626")));
+        // and each date before the sale says why the 87,750 is not left out: 80,000 paid after it by 31 March (W-327e1)
+        Map<String, ReasonFact> notRelieved = Map.of("tax", new ReasonFact.MoneyFact(Money.of("87750")),
+                "paid", new ReasonFact.MoneyFact(Money.of("80000")), "paidBy", new ReasonFact.DateFact(RELIEF_PAID_BY));
+        assertThat(defermentReasons(run)).containsExactly(
+                shortNotRelieved(LocalDate.of(2026, 6, 15), notRelieved),
+                shortNotRelieved(LocalDate.of(2026, 9, 15), notRelieved),
+                shortNotRelieved(LocalDate.of(2026, 12, 15), notRelieved),
+                new Reason(ReasonCodes.DEFERMENT_SHORT, Map.of("date", new ReasonFact.DateFact(LocalDate.of(2027, 3, 15)))));
+    }
+
+    private static Reason shortNotRelieved(LocalDate date, Map<String, ReasonFact> facts) {
+        Map<String, ReasonFact> all = new HashMap<>(facts);
+        all.put("date", new ReasonFact.DateFact(date));
+        return new Reason(ReasonCodes.DEFERMENT_SHORT_NOT_RELIEVED, all);
     }
 
     @Test

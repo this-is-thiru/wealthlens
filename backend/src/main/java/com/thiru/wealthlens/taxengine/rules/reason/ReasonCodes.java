@@ -388,6 +388,75 @@ public final class ReasonCodes {
     /** The new house's counted cost is below the net consideration: a share is exempt. (W-327d2, D-688) */
     public static final ReasonCode CG_REINVESTMENT_SHARE = new ReasonCode("CG_REINVESTMENT_SHARE");
 
+    /** A resident individual of the row's age is not liable to advance tax. (W-327e1, D-690) */
+    public static final ReasonCode ADVANCE_TAX_NOT_LIABLE_BY_AGE = new ReasonCode("ADVANCE_TAX_NOT_LIABLE_BY_AGE");
+
+    /** What is due after tax at source is below the amount advance tax starts at. (W-327e1, D-690) */
+    public static final ReasonCode ADVANCE_TAX_NOT_LIABLE_BELOW = new ReasonCode("ADVANCE_TAX_NOT_LIABLE_BELOW");
+
+    /** Liable to advance tax on the bill less tax at source. (W-327e1, D-690) */
+    public static final ReasonCode ADVANCE_TAX_LIABLE = new ReasonCode("ADVANCE_TAX_LIABLE");
+
+    /** What is still owed of the instalments due by a date. (W-327e1, D-690) */
+    public static final ReasonCode ADVANCE_TAX_STILL_OWED = new ReasonCode("ADVANCE_TAX_STILL_OWED");
+
+    /** Tax at source credited. (W-327e1, D-690) */
+    public static final ReasonCode CREDIT_TAX_AT_SOURCE = new ReasonCode("CREDIT_TAX_AT_SOURCE");
+
+    /** Advance tax credited. (W-327e1, D-690) */
+    public static final ReasonCode CREDIT_ADVANCE_TAX = new ReasonCode("CREDIT_ADVANCE_TAX");
+
+    /** Self-assessment tax credited. (W-327e1, D-690) */
+    public static final ReasonCode CREDIT_SELF_ASSESSMENT_TAX = new ReasonCode("CREDIT_SELF_ASSESSMENT_TAX");
+
+    /** Not liable to advance tax, so no interest on it. (W-327e1, D-690) */
+    public static final ReasonCode INTEREST_NOT_LIABLE_TO_ADVANCE_TAX = new ReasonCode("INTEREST_NOT_LIABLE_TO_ADVANCE_TAX");
+
+    /** An instalment date not yet reached. (W-327e1, D-690) */
+    public static final ReasonCode DEFERMENT_NOT_YET_REACHED = new ReasonCode("DEFERMENT_NOT_YET_REACHED");
+
+    /** Enough paid by an instalment date. (W-327e1, D-690) */
+    public static final ReasonCode DEFERMENT_PAID_ENOUGH = new ReasonCode("DEFERMENT_PAID_ENOUGH");
+
+    /** Less than the share paid by an instalment date. (W-327e1, D-690) */
+    public static final ReasonCode DEFERMENT_SHORT = new ReasonCode("DEFERMENT_SHORT");
+
+    /** Enough paid by the date, and tax on income arising after it relieved. (W-327e1, D-690) */
+    public static final ReasonCode DEFERMENT_PAID_ENOUGH_RELIEVED = new ReasonCode("DEFERMENT_PAID_ENOUGH_RELIEVED");
+
+    /** Short by the date, and tax on income arising after it relieved. (W-327e1, D-690) */
+    public static final ReasonCode DEFERMENT_SHORT_RELIEVED = new ReasonCode("DEFERMENT_SHORT_RELIEVED");
+
+    /** Enough paid by the date; tax on income arising after it not relieved. (W-327e1, D-690) */
+    public static final ReasonCode DEFERMENT_PAID_ENOUGH_NOT_RELIEVED = new ReasonCode("DEFERMENT_PAID_ENOUGH_NOT_RELIEVED");
+
+    /** Short by the date; tax on income arising after it not relieved. (W-327e1, D-690) */
+    public static final ReasonCode DEFERMENT_SHORT_NOT_RELIEVED = new ReasonCode("DEFERMENT_SHORT_NOT_RELIEVED");
+
+    /** The return is furnished by its due date. (W-327e1, D-690) */
+    public static final ReasonCode FEE_RETURN_FURNISHED_IN_TIME = new ReasonCode("FEE_RETURN_FURNISHED_IN_TIME");
+
+    /** The return is furnished after its due date. (W-327e1, D-690) */
+    public static final ReasonCode FEE_RETURN_FURNISHED_LATE = new ReasonCode("FEE_RETURN_FURNISHED_LATE");
+
+    /** Interest for the months counted. (W-327e1, D-690) */
+    public static final ReasonCode INTEREST_FOR_MONTHS = new ReasonCode("INTEREST_FOR_MONTHS");
+
+    /** A span of interest not yet begun. (W-327e1, D-690) */
+    public static final ReasonCode INTEREST_NOT_YET_DUE = new ReasonCode("INTEREST_NOT_YET_DUE");
+
+    /** Advance tax paid reaches the share of the assessed tax. (W-327e1, D-690) */
+    public static final ReasonCode SHORTFALL_ADVANCE_TAX_PAID_ENOUGH = new ReasonCode("SHORTFALL_ADVANCE_TAX_PAID_ENOUGH");
+
+    /** A refund below the share of the tax carries no interest. (W-327e1, D-690) */
+    public static final ReasonCode REFUND_BELOW_SHARE = new ReasonCode("REFUND_BELOW_SHARE");
+
+    /** Refund interest on the slice returning a payment on the return. (W-327e1, D-690) */
+    public static final ReasonCode REFUND_INTEREST_ON_RETURN_PAYMENT = new ReasonCode("REFUND_INTEREST_ON_RETURN_PAYMENT");
+
+    /** Refund interest on the slice returning tax at source and advance tax. (W-327e1, D-690) */
+    public static final ReasonCode REFUND_INTEREST_ON_PREPAID_TAX = new ReasonCode("REFUND_INTEREST_ON_PREPAID_TAX");
+
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
@@ -515,7 +584,30 @@ public final class ReasonCodes {
             Map.entry(CG_REINVESTMENT_OUTSIDE_WINDOW, Set.of("house", "from", "to")),
             Map.entry(CG_REINVESTMENT_NO_GAIN, Set.of()),
             Map.entry(CG_REINVESTMENT_WHOLE, Set.of("cost", "consideration")),
-            Map.entry(CG_REINVESTMENT_SHARE, Set.of("cost", "consideration")));
+            Map.entry(CG_REINVESTMENT_SHARE, Set.of("cost", "consideration")),
+            Map.entry(ADVANCE_TAX_NOT_LIABLE_BY_AGE, Set.of("age")),
+            Map.entry(ADVANCE_TAX_NOT_LIABLE_BELOW, Set.of("threshold")),
+            Map.entry(ADVANCE_TAX_LIABLE, Set.of()),
+            Map.entry(ADVANCE_TAX_STILL_OWED, Set.of("date")),
+            Map.entry(CREDIT_TAX_AT_SOURCE, Set.of()),
+            Map.entry(CREDIT_ADVANCE_TAX, Set.of()),
+            Map.entry(CREDIT_SELF_ASSESSMENT_TAX, Set.of()),
+            Map.entry(INTEREST_NOT_LIABLE_TO_ADVANCE_TAX, Set.of()),
+            Map.entry(DEFERMENT_NOT_YET_REACHED, Set.of("date")),
+            Map.entry(DEFERMENT_PAID_ENOUGH, Set.of("date")),
+            Map.entry(DEFERMENT_SHORT, Set.of("date")),
+            Map.entry(DEFERMENT_PAID_ENOUGH_RELIEVED, Set.of("date", "relieved", "paidBy")),
+            Map.entry(DEFERMENT_SHORT_RELIEVED, Set.of("date", "relieved", "paidBy")),
+            Map.entry(DEFERMENT_PAID_ENOUGH_NOT_RELIEVED, Set.of("date", "tax", "paidBy", "paid")),
+            Map.entry(DEFERMENT_SHORT_NOT_RELIEVED, Set.of("date", "tax", "paidBy", "paid")),
+            Map.entry(FEE_RETURN_FURNISHED_IN_TIME, Set.of("date")),
+            Map.entry(FEE_RETURN_FURNISHED_LATE, Set.of("date")),
+            Map.entry(INTEREST_FOR_MONTHS, Set.of("months", "from", "to")),
+            Map.entry(INTEREST_NOT_YET_DUE, Set.of("from")),
+            Map.entry(SHORTFALL_ADVANCE_TAX_PAID_ENOUGH, Set.of()),
+            Map.entry(REFUND_BELOW_SHARE, Set.of("refund", "share", "tax")),
+            Map.entry(REFUND_INTEREST_ON_RETURN_PAYMENT, Set.of("months", "from", "to", "paidOn")),
+            Map.entry(REFUND_INTEREST_ON_PREPAID_TAX, Set.of("months", "from", "to")));
 
     private ReasonCodes() {
     }
