@@ -26,6 +26,11 @@ public record AmountInExcess(BaseId amount, CapShape threshold) implements CapSh
         }
     }
 
+    /** How far the amount is still below the threshold at {@code ctx}, nil once it is above (W-326a, D-696). */
+    public Money shortOfThreshold(CapContext ctx) {
+        return threshold.apply(ctx).value().minus(ctx.base(amount)).floorAtZero();
+    }
+
     @Override
     public CapResult apply(CapContext ctx) {
         Money above = threshold.apply(ctx).value();

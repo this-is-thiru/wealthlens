@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -177,5 +178,115 @@ class LeastOfTest {
         // When / Then — two limbs (W-144)
         assertThat(new LeastOf(List.of(limb("received", "600000"), limb("ceiling", "300000"))).shapeName())
                 .isEqualTo("least of 2 limbs");
+    }
+
+    @Nested
+    @DisplayName("Headroom — what would change it (W-326a, D-696); every figure worked by hand")
+    class WhatWouldChangeIt {
+
+        private static final BaseId RENT_PAID = new BaseId("RENT_PAID");
+
+        private static final BaseId HRA_RECEIVED = new BaseId("HRA_RECEIVED");
+
+        private static final BaseId SALARY = new BaseId("SALARY");
+
+        private static final BaseId CLAIMED = new BaseId("AMOUNT_CLAIMED");
+
+        private static final BaseId INTEREST = new BaseId("INTEREST");
+
+        /** HRA's three limbs as the rule writes them: received, rent less 10 % of salary, 50 % of salary. */
+        private static LeastOf hra() {
+            return new LeastOf(List.of(
+                    new LeastOf.Limb("received", new PercentOfBase(Rate.percent("100"), HRA_RECEIVED)),
+                    new LeastOf.Limb("rent less 10% of salary", new AmountInExcess(RENT_PAID,
+                            new PercentOfBase(Rate.percent("10"), SALARY))),
+                    new LeastOf.Limb("50% of salary", new PercentOfBase(Rate.percent("50"), SALARY))));
+        }
+
+        private static CapContext hraFacts(String rent) {
+            return new CapContext(Map.of(HRA_RECEIVED, Money.of("600000"), RENT_PAID, Money.of(rent),
+                    SALARY, Money.of("1320000")), Map.of(), Map.of());
+        }
+
+        @Test
+        void apply_whenRentBinds_saysHowMuchMoreRentReachesTheNextLimit() {
+            // When — rent 3,60,000 less 10 % of 13,20,000 = 2,28,000; received 6,00,000; 50 % of salary 6,60,000
+            CapResult result = hra().apply(hraFacts("360000"));
+
+            // Then — the next limit is the 6,00,000 received; rent rises one for one, so 3,72,000 more
+            assertThat(result.headroom()).hasValueSatisfying(headroom -> {
+                assertThat(headroom.input()).isEqualTo(RENT_PAID);
+                assertThat(headroom.more()).isEqualByComparingTo(Money.of("372000"));
+                assertThat(headroom.next()).isEqualByComparingTo(Money.of("600000"));
+            });
+        }
+
+        @Test
+        void apply_whenRentIsStillBelowTheThreshold_addsTheShortfallFirst() {
+            // When — rent 1,00,000 is 32,000 short of 10 % of 13,20,000, so that limb is nil; the other limit is 60,000
+            CapResult result = new LeastOf(List.of(
+                    new LeastOf.Limb("rent less 10% of salary", new AmountInExcess(RENT_PAID,
+                            new PercentOfBase(Rate.percent("10"), SALARY))),
+                    new LeastOf.Limb("ceiling", new Fixed(Money.of("60000"))))).apply(hraFacts("100000"));
+
+            // Then — 32,000 to reach the threshold, then 60,000 more: 92,000
+            assertThat(result.headroom()).hasValueSatisfying(headroom -> {
+                assertThat(headroom.more()).isEqualByComparingTo(Money.of("92000"));
+                assertThat(headroom.next()).isEqualByComparingTo(Money.of("60000"));
+            });
+        }
+
+        @Test
+        void apply_whenAPercentageBinds_dividesTheGapByItsRate() {
+            // When — 50 % of 40,000 claimed = 20,000 against a limit of 50,000
+            CapResult result = new LeastOf(List.of(
+                    new LeastOf.Limb("half the claim", new PercentOfBase(Rate.percent("50"), CLAIMED)),
+                    new LeastOf.Limb("limit", new Fixed(Money.of("50000")))))
+                    .apply(CapContext.of(CLAIMED, Money.of("40000")));
+
+            // Then — a gap of 30,000 at 50 % needs 60,000 more claimed
+            assertThat(result.headroom()).hasValueSatisfying(headroom -> {
+                assertThat(headroom.input()).isEqualTo(CLAIMED);
+                assertThat(headroom.more()).isEqualByComparingTo(Money.of("60000"));
+            });
+        }
+
+        @Test
+        void apply_whenAFixedLimitBinds_saysNothing() {
+            // When — interest 25,000 against a fixed 10,000: no amount raises a fixed limit
+            CapResult result = new LeastOf(List.of(
+                    new LeastOf.Limb("the interest", new PercentOfBase(Rate.percent("100"), INTEREST)),
+                    new LeastOf.Limb("the limit", new Fixed(Money.of("10000")))))
+                    .apply(CapContext.of(INTEREST, Money.of("25000")));
+
+            // Then
+            assertThat(result.limitedBy()).isEqualTo("the limit");
+            assertThat(result.headroom()).isEmpty();
+        }
+
+        @Test
+        void apply_whenAnotherLimbReadsTheSameInput_saysNothing() {
+            // When — 10 % and 50 % of the same salary: raising salary moves both limbs (C3a)
+            CapResult result = new LeastOf(List.of(
+                    new LeastOf.Limb("tenth", new PercentOfBase(Rate.percent("10"), SALARY)),
+                    new LeastOf.Limb("half", new PercentOfBase(Rate.percent("50"), SALARY))))
+                    .apply(CapContext.of(SALARY, Money.of("1320000")));
+
+            // Then
+            assertThat(result.limitedBy()).isEqualTo("tenth");
+            assertThat(result.headroom()).isEmpty();
+        }
+
+        @Test
+        void apply_whenTwoLimitsTie_saysNothing() {
+            // When — the interest 10,000 equals the fixed 10,000: raising it meets the other at once
+            CapResult result = new LeastOf(List.of(
+                    new LeastOf.Limb("the interest", new PercentOfBase(Rate.percent("100"), INTEREST)),
+                    new LeastOf.Limb("the limit", new Fixed(Money.of("10000")))))
+                    .apply(CapContext.of(INTEREST, Money.of("10000")));
+
+            // Then
+            assertThat(result.headroom()).isEmpty();
+        }
     }
 }

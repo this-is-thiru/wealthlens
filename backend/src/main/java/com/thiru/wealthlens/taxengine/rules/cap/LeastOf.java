@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.taxengine.rules.cap;
 
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -74,17 +76,40 @@ public record LeastOf(List<Limb> limbs) implements CapShape {
 
     @Override
     public CapResult apply(CapContext ctx) {
-        Limb winner = limbs.getFirst();
-        Money least = winner.shape().apply(ctx).value();
-
-        for (Limb limb : limbs.subList(1, limbs.size())) {
-            Money value = limb.shape().apply(ctx).value();
-            if (value.isLessThan(least)) {
-                least = value;
-                winner = limb;
+        List<Money> values = limbs.stream().map(limb -> limb.shape().apply(ctx).value()).toList();
+        int winner = 0;
+        for (int index = 1; index < values.size(); index++) {
+            if (values.get(index).isLessThan(values.get(winner))) {
+                winner = index;
             }
         }
-        return new CapResult(least, winner.name());
+        return new CapResult(values.get(winner), limbs.get(winner).name(), Optional.empty(),
+                headroom(ctx, winner, values));
+    }
+
+    /**
+     * How much more of the one amount that raises the winning limb would bring it to the next limit (W-326a, D-696);
+     * none where no single amount raises it, another limb reads that amount too, or no other limb is higher.
+     */
+    private Optional<Headroom> headroom(CapContext ctx, int winner, List<Money> values) {
+        Optional<BaseId> input = limbs.get(winner).shape().raisedBy(ctx);
+        if (input.isEmpty()) {
+            return Optional.empty();
+        }
+        Money least = values.get(winner);
+        Optional<Money> next = Optional.empty();
+        for (int index = 0; index < limbs.size(); index++) {
+            if (index == winner) {
+                continue;
+            }
+            if (limbs.get(index).shape().amountsRead().contains(input.get())) {
+                return Optional.empty();
+            }
+            Money value = values.get(index);
+            next = next.isEmpty() || value.isLessThan(next.get()) ? Optional.of(value) : next;
+        }
+        return next.filter(limit -> limit.isGreaterThan(least)).map(limit -> new Headroom(input.get(),
+                limbs.get(winner).shape().moreToRaiseBy(limit.minus(least), ctx), limit));
     }
 
     @Override

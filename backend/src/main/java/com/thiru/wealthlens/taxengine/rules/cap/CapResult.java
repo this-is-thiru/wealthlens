@@ -19,12 +19,18 @@ import java.util.Optional;
  *     where nothing did
  * @param reason the same as facts, for the explanation to put into words (W-327a1, D-679); empty for a
  *     {@code LeastOf}, whose limb the content words by name
+ * @param headroom what would change it, where a least-of can say (W-326a, D-696); empty otherwise
  */
-public record CapResult(Money value, String limitedBy, Optional<Reason> reason) {
+public record CapResult(Money value, String limitedBy, Optional<Reason> reason, Optional<Headroom> headroom) {
 
     /** A result whose {@code limitedBy} is its whole reason: a least-of's limb, which the content words by name. */
     public CapResult(Money value, String limitedBy) {
         this(value, limitedBy, Optional.empty());
+    }
+
+    /** A result with nothing to say about what would change it. */
+    public CapResult(Money value, String limitedBy, Optional<Reason> reason) {
+        this(value, limitedBy, reason, Optional.empty());
     }
 
     public CapResult {
@@ -35,8 +41,8 @@ public record CapResult(Money value, String limitedBy, Optional<Reason> reason) 
             throw new IllegalArgumentException(
                     "A CapResult must name what limited it; got " + (limitedBy == null ? "null" : "blank"));
         }
-        if (reason == null) {
-            throw new IllegalArgumentException("A CapResult's reason may not be null; pass Optional.empty()");
+        if (reason == null || headroom == null) {
+            throw new IllegalArgumentException("A CapResult's reason and headroom may not be null; pass Optional.empty()");
         }
     }
 }

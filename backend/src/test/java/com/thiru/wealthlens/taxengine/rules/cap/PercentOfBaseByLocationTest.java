@@ -87,4 +87,17 @@ class PercentOfBaseByLocationTest {
         // When / Then — the label a trace line shows when nothing narrower bound the result (W-144)
         assertThat(BY_CITY.shapeName()).isEqualTo("percentage of SALARY by LOCATION");
     }
+
+    @Test
+    void moreToRaiseBy_whenInABandedCity_dividesByTheBandsRate() {
+        // When / Then — 50 % in Bengaluru: 1,00,000 more of the limit needs 2,00,000 more salary (W-326a)
+        assertThat(BY_CITY.raisedBy(at("BENGALURU"))).contains(SALARY);
+        assertThat(BY_CITY.moreToRaiseBy(Money.of("100000"), at("BENGALURU"))).isEqualByComparingTo(Money.of("200000"));
+    }
+
+    @Test
+    void moreToRaiseBy_whenElsewhere_dividesByTheOtherRate() {
+        // When / Then — 40 % elsewhere: 1,00,000 needs 2,50,000
+        assertThat(BY_CITY.moreToRaiseBy(Money.of("100000"), at(PercentOfBaseByLocation.ANY_OTHER_PLACE))).isEqualByComparingTo(Money.of("250000"));
+    }
 }

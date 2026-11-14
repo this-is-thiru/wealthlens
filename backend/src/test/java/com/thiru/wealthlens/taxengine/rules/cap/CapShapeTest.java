@@ -456,4 +456,30 @@ class CapShapeTest {
             assertThat(byPopulation.countsRead()).containsExactly(PLACE);
         }
     }
+
+    @Test
+    void moreToRaiseBy_whenAPercentageOfABase_dividesByItsRate() {
+        // When / Then — 30 % of a base: 30,000 more needs 1,00,000 more of the base (W-326a)
+        PercentOfBase share = new PercentOfBase(Rate.percent("30"),
+                new BaseId("AMOUNT_CLAIMED"));
+        CapContext ctx = CapContext.of(new BaseId("AMOUNT_CLAIMED"),
+                Money.of("10000"));
+        assertThat(share.moreToRaiseBy(
+                Money.of("30000"), ctx))
+                .isEqualByComparingTo(Money.of("100000"));
+    }
+
+    @Test
+    void moreToRaiseBy_whenFixed_isRefusedAsNothingRaisesIt() {
+        // When / Then
+        Fixed fixed = new Fixed(Money.of("10000"));
+        assertThat(fixed.raisedBy(CapContext.of(
+                new BaseId("INTEREST"),
+                Money.of("1")))).isEmpty();
+        assertThatThrownBy(() -> fixed.moreToRaiseBy(
+                Money.of("1"), CapContext.of(
+                        new BaseId("INTEREST"),
+                        Money.of("1"))))
+                .isInstanceOf(IllegalStateException.class);
+    }
 }

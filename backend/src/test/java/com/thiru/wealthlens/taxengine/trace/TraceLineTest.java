@@ -113,6 +113,7 @@ class TraceLineTest {
                             rupees("1"),
                             Optional.of("  "),
                             verified(),
+                            Optional.empty(),
                             Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("blank");
@@ -166,12 +167,13 @@ class TraceLineTest {
         void aLineCarriesNoCommentaryOfItsOwn() {
             // A8's whole point. If this ever compiles with a notices accessor on TraceLine, the
             // layering has been undone and I27 stops being checkable. reason (W-327a, D-678 C2a) is a
-            // fact the node computes, like limitedBy, read from no content, so I27 still holds.
+            // fact the node computes, like limitedBy, read from no content, so I27 still holds; so is
+            // headroom (W-326a, D-696), computed by the cap and read from no content.
             assertThat(TraceLine.class.getRecordComponents())
                     .extracting(java.lang.reflect.RecordComponent::getName)
                     .containsExactly(
                             "sequence", "node", "rule", "kind", "in", "out", "limitedBy",
-                            "provenance", "reason");
+                            "provenance", "reason", "headroom");
         }
 
         @Test

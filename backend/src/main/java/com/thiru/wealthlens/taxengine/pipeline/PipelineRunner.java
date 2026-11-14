@@ -248,7 +248,8 @@ public final class PipelineRunner {
                 line.out(),
                 line.limitedBy(),
                 line.provenance(),
-                line.reason());
+                line.reason(),
+                line.headroom());
     }
 
     /** The pack layers that can change a number — A2 and G-11. */

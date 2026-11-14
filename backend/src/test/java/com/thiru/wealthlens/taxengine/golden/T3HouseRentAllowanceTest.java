@@ -115,4 +115,21 @@ class T3HouseRentAllowanceTest {
                     .satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
         }
     }
+
+    @Test
+    void run_whenRentBindsInT3One_carriesWhatWouldChangeIt() {
+        // Given — T3-1: HRA 6,00,000; rent 3,60,000 less a tenth of 13,20,000 = 2,28,000; 50 % in Bengaluru 6,60,000
+        SalaryGoldenCase golden = golden("T3-1");
+
+        // When
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(golden, golden.taxYears().getFirst());
+
+        // Then — the next limit is the 6,00,000 received, 3,72,000 more rent away (W-326a, through the runner's copy)
+        assertThat(run.result().trace()).filteredOn(line -> line.rule().equals(RuleIds.SAL_HOUSE_RENT_ALLOWANCE))
+                .singleElement().satisfies(line -> assertThat(line.headroom()).hasValueSatisfying(headroom -> {
+                    assertThat(headroom.input().value()).isEqualTo("RENT_PAID");
+                    assertThat(headroom.more()).isEqualByComparingTo(Money.of("372000"));
+                    assertThat(headroom.next()).isEqualByComparingTo(Money.of("600000"));
+                }));
+    }
 }

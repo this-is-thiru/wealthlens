@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-328 done (D-694), board D — next by board order W-326 ("what would change it", in rupees; not yet planned)
+Item            : W-326a done (D-696), board D — next by board order W-326b (the words: terms.input, the sentence, the renderer; not yet planned)
 Stage           : DONE (session 96, 2026-11-14) — committed and pushed
-Done today      : session 96: W-327d2 – W-327e3 (D-688 – D-693), W-327 complete; W-328 placed and done (D-691, D-694)
-Board           : W-327 complete, W-328 D; W-326 ·, then W-117 – W-123 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
-Next step       : confirm the W-328 pipeline run and record it in D-694; then probe and plan W-326
+Done today      : session 96: W-327d2 – W-327e3 (D-688 – D-693), W-327 complete; W-328 (D-691, D-694); W-326 split (D-695); W-326a (D-696)
+Board           : W-326, W-326a D; W-326b ·, then W-117 – W-123 ·; W-324 · (after AIS / 26AS); W-113a · (after F12); Phase 10: W-299, W-294 · (wait run logs)
+Next step       : confirm the W-326a pipeline run and record it in D-696; then plan W-326b (C2 levers; rounding the figure is its wording call)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-328 local: ProcessingLogIntegrationTest 10/0; 200-rep probe 200/200 (28/200 before); red 161/200; validate green; W-327e3 pipeline 43612809601 success (D-693)
-Files touched   : none beyond this file after the W-328 commit
-Last item commit: taxplanning W-328: make the processing-log tests wait for the record
-Updated         : 2026-11-14, session 96 — W-328 committed and pushed
+Last verify     : W-326a local: unit 4528/0, DraftComputation + Modulith 61/0, validate green; 2 red checks; W-328 pipeline 43614001742 success (D-694)
+Files touched   : none beyond this file after the W-326a commit
+Last item commit: taxplanning W-326a: carry what would change a least-of limit, as a fact on the line
+Updated         : 2026-11-14, session 96 — W-326a committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

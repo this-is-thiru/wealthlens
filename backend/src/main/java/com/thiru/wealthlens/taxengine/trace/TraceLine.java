@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.trace;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.cap.Headroom;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.reason.Reason;
@@ -46,6 +47,8 @@ import java.util.Optional;
  *     A computed fact like {@code limitedBy}, which stays the audit text, and not commentary: nothing in
  *     {@code content/} is read to build it, so a content edit still changes no line (I27). Empty where the
  *     line's node publishes none yet, and the explanation then shows {@code limitedBy}
+ * @param headroom what would change the figure, where a least-of could say (W-326a, D-696): a computed fact like
+ *     {@code reason}, carried from the cap; empty otherwise
  */
 public record TraceLine(
         int sequence,
@@ -56,7 +59,8 @@ public record TraceLine(
         NodeValue out,
         Optional<String> limitedBy,
         Provenance provenance,
-        Optional<Reason> reason) {
+        Optional<Reason> reason,
+        Optional<Headroom> headroom) {
 
     public TraceLine {
         if (sequence < 0) {
@@ -93,9 +97,14 @@ public record TraceLine(
                     "A TraceLine must carry its provenance; an unsourced figure is what this engine"
                             + " exists to avoid");
         }
-        if (reason == null) {
-            throw new IllegalArgumentException(
-                    "TraceLine.reason may not be null; pass Optional.empty() where the node publishes none");
+        requireOptional(reason, "reason");
+        requireOptional(headroom, "headroom");
+    }
+
+    private static void requireOptional(Optional<?> value, String field) {
+        if (value == null) {
+            throw new IllegalArgumentException("TraceLine." + field + " may not be null; pass Optional.empty() where the"
+                    + " node publishes none");
         }
     }
 
@@ -108,7 +117,8 @@ public record TraceLine(
             NodeValue in,
             NodeValue out,
             Provenance provenance) {
-        return new TraceLine(sequence, node, rule, kind, in, out, Optional.empty(), provenance, Optional.empty());
+        return new TraceLine(sequence, node, rule, kind, in, out, Optional.empty(), provenance, Optional.empty(),
+                Optional.empty());
     }
 
     /**
@@ -116,7 +126,7 @@ public record TraceLine(
      * bound. A copy; the record is immutable.
      */
     public TraceLine withLimitedBy(String bound) {
-        return new TraceLine(sequence, node, rule, kind, in, out, Optional.of(bound), provenance, reason);
+        return new TraceLine(sequence, node, rule, kind, in, out, Optional.of(bound), provenance, reason, headroom);
     }
 
     /**
@@ -132,12 +142,13 @@ public record TraceLine(
      * publishes one (W-327a1, D-679) — a least-of's limb is worded by name and carries none.
      */
     public TraceLine withCapResult(CapResult capped) {
-        TraceLine limited = withLimitedBy(capped.limitedBy());
+        TraceLine limited = new TraceLine(sequence, node, rule, kind, in, out, Optional.of(capped.limitedBy()),
+                provenance, reason, capped.headroom());
         return capped.reason().map(limited::withReason).orElse(limited);
     }
 
     /** This line, carrying why its output is what it is as facts (W-327a, D-678); {@code limitedBy} is kept. */
     public TraceLine withReason(Reason why) {
-        return new TraceLine(sequence, node, rule, kind, in, out, limitedBy, provenance, Optional.of(why));
+        return new TraceLine(sequence, node, rule, kind, in, out, limitedBy, provenance, Optional.of(why), headroom);
     }
 }

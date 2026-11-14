@@ -68,6 +68,11 @@ public record PercentOfBaseByLocation(BaseId base, BaseId location, List<Band> b
         return new CapResult(percent.of(ctx.base(base)), percent + " of " + base + " at " + place);
     }
 
+    /** The band's rate for the place {@code ctx} names (W-326a, D-696). */
+    public Rate percentAt(CapContext ctx) {
+        return percentFor(ctx.location(location));
+    }
+
     private Rate percentFor(String place) {
         if (ANY_OTHER_PLACE.equals(place)) {
             return otherwise;

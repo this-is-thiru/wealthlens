@@ -1,6 +1,9 @@
 package com.thiru.wealthlens.taxengine.rules.cap;
 
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,6 +60,40 @@ public sealed interface CapShape
      * needs entered, such as children and months, without restating the rows that need them (W-156e, D-350). A
      * composition reads what its parts read.
      */
+    /**
+     * The amount whose rise raises this shape, where one does at {@code ctx} (W-326a, D-696): a percentage's base at a
+     * rate above nil, an excess's amount where its threshold does not read it too. Empty for a shape no single amount
+     * raises.
+     */
+    default Optional<BaseId> raisedBy(CapContext ctx) {
+        return switch (this) {
+            case PercentOfBase percent -> Optional.of(percent.base()).filter(base -> percent.percent().compareTo(Rate.ZERO) > 0);
+            case PercentOfBaseByLocation byLocation -> Optional.of(byLocation.base())
+                    .filter(base -> byLocation.percentAt(ctx).compareTo(Rate.ZERO) > 0);
+            case AmountInExcess excess -> Optional.of(excess.amount())
+                    .filter(amount -> !excess.threshold().amountsRead().contains(amount));
+            case Fixed _, PerUnitPerPeriod _, SlabLadder _, PercentOfBaseByPopulation _, LeastOf _,
+                    AggregateWithCeiling _ -> Optional.empty();
+        };
+    }
+
+    /**
+     * How much more of {@link #raisedBy} lifts this shape by {@code rise} at {@code ctx}, exact (W-326a, D-696). An
+     * excess still below its threshold needs the shortfall first.
+     *
+     * @throws IllegalStateException for a shape no single amount raises
+     */
+    default Money moreToRaiseBy(Money rise, CapContext ctx) {
+        return switch (this) {
+            case PercentOfBase percent -> percent.percent().baseYielding(rise);
+            case PercentOfBaseByLocation byLocation -> byLocation.percentAt(ctx).baseYielding(rise);
+            case AmountInExcess excess -> rise.plus(excess.shortOfThreshold(ctx));
+            case Fixed _, PerUnitPerPeriod _, SlabLadder _, PercentOfBaseByPopulation _, LeastOf _,
+                    AggregateWithCeiling _ -> throw new IllegalStateException(
+                            "No single amount raises a " + shapeName() + ", so none can be asked for more of");
+        };
+    }
+
     default Set<BaseId> countsRead() {
         return switch (this) {
             case Fixed _, PercentOfBase _, SlabLadder _, PercentOfBaseByLocation _ -> Set.of();
