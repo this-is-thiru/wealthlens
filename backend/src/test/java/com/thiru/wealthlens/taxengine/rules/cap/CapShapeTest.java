@@ -482,4 +482,46 @@ class CapShapeTest {
                         Money.of("1"))))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    /**
+     * The shapes no single amount raises, beyond {@code Fixed} above: none is a percentage of one base or an excess of
+     * one amount, so each names no input and refuses to say how much more of one it needs (W-326a, W-326b).
+     */
+    private static List<CapShape> shapesNoSingleAmountRaises() {
+        BaseId salary = new BaseId("SALARY");
+        ComponentCode nps = new ComponentCode("EMPLOYEE_NPS");
+        return List.of(
+                new PerUnitPerPeriod(Money.of("3000"), Optional.of(new BaseId("CHILD")), 2, new BaseId("MONTH")),
+                new SlabLadder(List.of(new SlabLadder.Band(Money.ZERO, Optional.empty(), Rate.percent("10"))), salary),
+                new PercentOfBaseByPopulation(salary, new BaseId("PLACE"),
+                        List.of(new PercentOfBaseByPopulation.Band(1_500_000, Rate.percent("7.5"))), Rate.percent("5")),
+                new LeastOf(List.of(new LeastOf.Limb("limit", new Fixed(Money.of("2000000"))),
+                        new LeastOf.Limb("half", new PercentOfBase(Rate.percent("50"), salary)))),
+                new AggregateWithCeiling(List.of(nps, new ComponentCode("EMPLOYEE_PF")), Money.of("150000"),
+                        Map.of(nps, new PercentOfBase(Rate.percent("10"), salary))));
+    }
+
+    @Test
+    void raisingInput_whenNoSingleAmountRaisesTheShape_isEmpty() {
+        // Given
+        CapContext ctx = CapContext.of(new BaseId("SALARY"), Money.of("1"));
+
+        // When / Then
+        assertThat(shapesNoSingleAmountRaises()).hasSize(5).allSatisfy(shape -> {
+            assertThat(shape.raisingInput()).isEmpty();
+            assertThat(shape.raisedBy(ctx)).isEmpty();
+        });
+    }
+
+    @Test
+    void moreToRaiseBy_whenNoSingleAmountRaisesTheShape_isRefused() {
+        // Given
+        CapContext ctx = CapContext.of(new BaseId("SALARY"), Money.of("1"));
+
+        // When / Then
+        assertThat(shapesNoSingleAmountRaises()).hasSize(5).allSatisfy(shape ->
+                assertThatThrownBy(() -> shape.moreToRaiseBy(Money.of("1"), ctx))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("No single amount raises a " + shape.shapeName()));
+    }
 }
