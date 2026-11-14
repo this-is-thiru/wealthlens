@@ -432,6 +432,9 @@ Four features are read-heavy and none had a model. All four are **projections of
 the `TaxComputation` id they were derived from. A projection whose source id is stale is **rebuilt on
 read**, not served — the same discipline as `13` R-8's staleness sweep, applied to derived data.
 
+> **Erratum (W-113, 2026-11-14):** `F29`'s cost "one `FilingPosition`" and its materialisation in `tax_projections` assume a builder of `FilingPosition`, and none exists (`PipelineRunner.java:49` names it in a comment only) — `ForecastProjection` is built as `DraftForecast`, computed on every request from the draft's full computation and stored nowhere (D-664 C2a), so no collection needs erasing, retaining or sweeping; materialising waits for a measured budget that fails.
+> Verified by: `DraftComputationIntegrationTest#forecast_whenTheEmployersPartIsStated_showsTheThreeFiguresAndTheNextInstalmentAndStoresNothing` (no `tax_draft_computations` row).
+
 ---
 
 ## A11 — Invariants and tests

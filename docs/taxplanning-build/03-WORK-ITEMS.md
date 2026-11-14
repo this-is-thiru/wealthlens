@@ -1580,6 +1580,7 @@ if that is not enough for the item in hand.
 | W-323 | **ITR-2's accrual tables as cells** *(W-112a C5a, D-661)*: Schedule CG item F (*"Information about accrual/receipt of capital gain"*, by rate category, up to 15/6, 16/6 – 15/9, 16/9 – 15/12, 16/12 – 15/3, 16/3 – 31/3; Gazette 271435 p.50) and Schedule OS item 10 (winnings and dividends in the same five periods; `sources/2026-11-13-itr-schedules-ty-2025-26.md:1671`) laid out as cells, filled from the transfer and received dates W-112a reads | `DR 21`; W-112a (D-660) | after W-112a |
 | W-112b | Interest on a refund, both ways *(D-446)*: on a refund granted and later not due (S2 s.426; 1961 s.234D), and paid to the assessee (S2 s.437; 1961 s.244A); and confirm 1961 ss.214 – 217 do not reach TY 2025-26 | `DR 15` C1 `INT-EXCESSREFUND-001` | not read in session 46; needs a refund's grant and issue dates, which no draft holds. `notIncluded` says so |
 | W-113 | `ForecastProjection` + endpoint | `DR 20` F29 | **F29** |
+| W-113a | F29.3, the top three drivers by `RuleId` *(W-113 C4a, D-664)*: ranked from the diff between the employer's view of the year and the return, which needs F12's projection (`TDS-PROJ-001`); its plan states which diff it ranks | `DR 20` F29 | **F29.3**; after F12 |
 | W-114 | `CalendarProjection` + endpoint | `DR 20` F30 | **F30** |
 | W-115 | `CompletenessProjection` + endpoint | `DR 20` F33 | **F33** |
 | W-116 | `content/explanations.json` + renderer | `DR 20` F37 | **F37** |

@@ -6,6 +6,8 @@ import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationView;
+import com.thiru.wealthlens.taxplanning.compute.DraftForecast;
+import com.thiru.wealthlens.taxplanning.compute.DraftForecastService;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisation;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisationRequest;
 import java.time.LocalDate;
@@ -28,6 +30,7 @@ public class DraftComputationController {
 
     private final DraftComputationService service;
     private final CapitalGainsViewService capitalGainsViewService;
+    private final DraftForecastService forecastService;
 
     @PostMapping("/drafts/{draftId}/compute")
     public DraftComputationView compute(@PathVariable String email, @PathVariable String draftId,
@@ -38,6 +41,11 @@ public class DraftComputationController {
     @PostMapping("/drafts/{draftId}/compare-regimes")
     public RegimeComparison compare(@PathVariable String email, @PathVariable String draftId) {
         return service.compare(email, draftId);
+    }
+
+    @GetMapping("/drafts/{draftId}/forecast")
+    public DraftForecast forecast(@PathVariable String email, @PathVariable String draftId) {
+        return forecastService.forecast(email, draftId);
     }
 
     @PostMapping("/drafts/{draftId}/itr-form")

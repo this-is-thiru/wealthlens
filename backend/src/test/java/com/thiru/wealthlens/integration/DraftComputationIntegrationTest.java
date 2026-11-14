@@ -1131,4 +1131,101 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(amountAt(view.at("/changes/pay/0"), "/savingAlone")).isEqualByComparingTo("45500");
         assertThat(amountAt(view.at("/changes/following/0"), "/suggested")).isEqualByComparingTo("294000");
     }
+
+    private JsonNode forecast(String draftId) {
+        ResponseEntity<String> forecast = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/forecast", null, null);
+        assertThat(forecast.getStatusCode()).as(forecast.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(forecast.getBody());
+    }
+
+    private static BigDecimal forecastRupees(JsonNode forecast, String figure) {
+        return forecast.at("/" + figure + "/amountInRupees").decimalValue();
+    }
+
+    @Test
+    void forecast_whenTheEmployersPartIsStated_showsTheThreeFiguresAndTheNextInstalmentAndStoresNothing() {
+        // Given — 75,000 at source, 60,000 of it the employer's (W-113, D-664)
+        listedEquitySale();
+        String draftId = draft(true, "75000");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/filing/ofWhichByEmployer\", \"value\": {\"amountInRupees\": 60000}}]", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode forecast = forecast(draftId);
+
+        // Then — compute_whenTaxWasDeductedAtSource_creditsItAgainstTheBill's figures: 87,750 + 228 = 87,978; 75,000 − 60,000 =
+        // 15,000; 12,978 to the nearest ₹10 12,980; on 6-11-2026 December (75 % of 12,750 owed, none paid) is next
+        assertThat(forecastRupees(forecast, "liability")).isEqualByComparingTo("87978");
+        assertThat(forecastRupees(forecast, "byEmployer")).isEqualByComparingTo("60000");
+        assertThat(forecastRupees(forecast, "otherCredits")).isEqualByComparingTo("15000");
+        assertThat(forecastRupees(forecast, "rounding")).isEqualByComparingTo("2");
+        assertThat(forecastRupees(forecast, "net")).isEqualByComparingTo("12980");
+        assertThat(forecast.get("settlement").asString()).isEqualTo("PAYABLE_NOW");
+        assertThat(forecast.get("payableBy").asString()).isEqualTo("2026-12-15");
+        assertThat(forecast.get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(forecast.get("asOf").asString()).isEqualTo("2026-11-06");
+        assertThat(forecast.get("revision").asInt()).isEqualTo(2);
+        assertThat(forecast.get("notIncluded").size()).isEqualTo(10);
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isZero();
+    }
+
+    @Test
+    void forecast_whenMoreWasDeductedThanIsDue_isARefundAfterFilingWithNoDate() {
+        // Given — 87,750 − 1,00,004 = −12,254, to the nearest ₹10 −12,250; the employer's part not stated
+        listedEquitySale();
+
+        // When
+        JsonNode forecast = forecast(draft(true, "100004"));
+
+        // Then
+        assertThat(forecast.get("byEmployer").isNull()).isTrue();
+        assertThat(forecastRupees(forecast, "otherCredits")).isEqualByComparingTo("100004");
+        assertThat(forecastRupees(forecast, "net")).isEqualByComparingTo("-12250");
+        assertThat(forecast.get("settlement").asString()).isEqualTo("REFUND_AFTER_FILING");
+        assertThat(forecast.get("payableBy").isNull()).isTrue();
+    }
+
+    @Test
+    void forecast_whenTheDraftWasActedOnWithARegime_computesThatRegime() {
+        // Given
+        String draftId = draft(false, "0");
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status", "{\"status\": \"READY\"}", null);
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status",
+                "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}", null);
+
+        // When / Then
+        assertThat(forecast(draftId).get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+    }
+
+    @Test
+    void forecast_whenTheEmployersPartIsMoreThanTaxAtSource_isRefusedOnSave() {
+        // Given
+        String draftId = draft(false, "75000");
+
+        // When
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/filing/ofWhichByEmployer\", \"value\": {\"amountInRupees\": 75001}}]", "\"rev-1\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(saved.getBody()).contains("/filing");
+    }
+
+    @Test
+    void forecast_whenAnotherAccountAsksOrNoDueDateIsStated_expected400() {
+        // Given
+        String draftId = draft(false, "0");
+        ResponseEntity<String> anothers = call(HttpMethod.GET, "other@example.com", "/drafts/" + draftId + "/forecast", null, null);
+        call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, "[{\"op\": \"replace\", \"path\": \"/filing/dueDate\", \"value\": null}]",
+                "\"rev-1\"");
+
+        // When
+        ResponseEntity<String> undated = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/forecast", null, null);
+
+        // Then
+        assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getBody()).contains("/filing/dueDate");
+    }
 }

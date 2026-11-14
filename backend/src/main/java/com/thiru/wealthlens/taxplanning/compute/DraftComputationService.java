@@ -36,7 +36,7 @@ public class DraftComputationService {
      * a dividend without its received date (W-112a relieves only dated ones), and what no draft can state (interest on an
      * excess refund, W-112b; an Assessing Officer's order; the fees for a revised return or a report).
      */
-    private static final List<String> NOT_INCLUDED = List.of(
+    static final List<String> NOT_INCLUDED = List.of(
             "Relief for salary received in arrears or in advance",
             "Relief from interest for deferring advance tax on a dividend entered without the date it was received",
             "Interest charged on a refund later found not to be due, which only a regular assessment decides",

@@ -187,7 +187,7 @@ F11 ○ `W-124`–`W-132`; F28 ○ `W-133`.
 
 ### Tier MVP — the product surface
 
-#### F29 — Refund or payable forecast *(home screen)* — ○ `W-113`
+#### F29 — Refund or payable forecast *(home screen)* — ✅ `W-113` (D-664: F29.1 with the employer's part as stated, F29.2, F29.4; F29.3 ○ `W-113a`; F29.5 from the full computation, `DR 23` A10 erratum)
 | # | Acceptance criterion |
 |---|---|
 | F29.1 | Shows **three** figures separately: actual liability, projected employer deduction, other credits |
@@ -318,3 +318,4 @@ with current truth plus this log. Earlier text is in git (last version before th
 | 2026-09-23 | **Rewritten as current truth.** Glossary: FY/AY mapping for 1961-Act years, *assessee*, *timeline*, *rule version*, *manager*; "rule pack", never "snapshot"; default-regime code deferred to OQ-4. F1 restated for the timeline, lock files, three statuses and the publish gate (F1.10 added). F2.9 refusals added. F41 section explorer added. PR-5 (HUF) added, figures to be sourced. §2 and §7 merged into one scope table. **Item citations corrected** — N1–N8 and P2, P3, P5 cited the wrong items (10 of 14); P2's and P5's tests marked UNOWNED | D-046; review `reviews/2026-09-23-prd-techspec-review.md` |
 | 2026-09-23 | open question `O-4` → `OQ-4` | `W-045b`, ID glossary (START-HERE §11) |
 | 2026-09-24 | Glossary: default regime `NEW_TAX_REGIME`, opted-out `FIRST_SCHEDULE_RATES`; "new" allowed in the statutory phrase only | `W-045d`, D-051 |
+| 2026-11-14 | F29 built by `W-113` (`GET …/drafts/{draftId}/forecast`): the employer's part is the draft's `/filing/ofWhichByEmployer`; F29.3 moved to `W-113a`; F29.5 met from the full computation, not `FilingPosition` | `W-113`, D-664 |

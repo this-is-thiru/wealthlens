@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-112b done (D-663), committed and pushed; api-collection d1e1e2c
-Stage           : closed (owner "commit it and push", session 92); watch the push's pipeline and record its run in D-663
-Done today      : session 92: W-311 (D-659), W-112a (D-660), W-323 (D-661, D-662), W-112b (D-663)
-Board           : W-311, W-112a, W-323, W-112b D; Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-113
-Next step       : confirm the W-112b push's pipeline, record it in D-663; then W-113 by board order
+Item            : W-113 done (D-664), committed and pushed with api-collection
+Stage           : DONE (session 93, 2026-11-14) — review approved ("commit it and push"); pipeline to be checked
+Done today      : session 93: W-113 planned, approved C1a C2a C3a C4a C5, built; W-113a placed
+Board           : W-113 D, W-113a · (after F12); Phase 10 left: W-299, W-294 · (wait run logs §2.14 / §2.13); Phase 12 next: W-114
+Next step       : check W-113's pipeline run and record it in D-664; then W-114 by board order (plan first, §2)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-112b targeted 4,239 / 0 + JaCoCo gates; pipeline pending
-Files touched   : none beyond this file after the commit
-Last item commit: taxplanning W-112b: add the interest the Government pays on a refund
-Updated         : 2026-11-14, session 92 — W-112b closed and pushed
+Last verify     : targeted: DraftForecastServiceTest 6, DraftFilingTest 5, DraftComputationIntegrationTest#forecast_* 5 + 1, Architecture/Modulith/doc guards green; validate green; full tiers on the pipeline
+Files touched   : none beyond this file once committed
+Last item commit: taxplanning W-113: forecast a draft's refund after filing or payable now
+Updated         : 2026-11-14, session 93 — W-113 committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -63,6 +63,9 @@ forecast = actualLiability − employerWillDeduct − otherCredits
 `RECOMMENDATION`: this is the product's home screen. Ship it in MVP even if F12's projection is
 initially coarse — a forecast with a stated confidence beats no forecast.
 
+> **Erratum (W-113, 2026-11-14):** `employerWillDeduct = G4's TDS projection` and "names the top three drivers by rule ID", "drawn from the trace diff", rest on F12 and a `ScenarioDiff`, and neither exists — F12 is Tier Next (`01-PRD.md:268`) with no item building it, and `ScenarioDiff` is named only in `TraceLine`'s Javadoc — the employer's figure is the part of tax at source the draft states (`DraftInputs.Filing.ofWhichByEmployer`, D-664 C1a), and the drivers wait for that diff in `W-113a` (C4a); the forecast also gives the rounding to ₹10 as its own figure, so `liability − byEmployer − otherCredits + rounding = net`.
+> Verified by: `./mvnw test -pl backend -Dtest='DraftForecastServiceTest,DraftComputationIntegrationTest#forecast_*'`.
+
 ---
 
 ## F30 — The tax calendar *(what to do, this month)*
