@@ -1,0 +1,12 @@
+{
+  "code": "CG_STCG_TOTAL",
+  "_note": "A1, A3, A4, A6 – A8 are not computed (immovable property, non-residents, deemed, pass-through, DTAA). Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Total short-term capital gain",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_A2_GAIN",
+      "CG_A5_GAIN"
+    ]
+  }
+}

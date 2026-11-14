@@ -1,0 +1,12 @@
+{
+  "code": "CG_INCOMES",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Sum of Capital Gain Incomes",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_STCG_TOTAL",
+      "CG_LTCG_TOTAL"
+    ]
+  }
+}

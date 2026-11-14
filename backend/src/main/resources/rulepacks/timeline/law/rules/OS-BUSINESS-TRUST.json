@@ -1,0 +1,100 @@
+{
+  "ruleId": "OS-BUSINESS-TRUST",
+  "ruleSet": "RS-OS-BUSINESS-TRUST",
+  "_note": "A business trust's specified sum on a unit holder's units, under other sources, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(2)(k) \"specified sum = A-B-C (which shall be deemed to be zero, if the sum of B and C is greater than A)\" — A the aggregate distributed on the unit in the year or earlier, not Schedule V (Table: Sl. No. 3 or 4) income nor chargeable under s.223(2); B the issue amount; C the amount charged under this clause earlier (pp.138–139). TY 2025-26: 1961 s.56(2)(xii), the same formula, A excluding s.10(23FC), (23FCA) income and s.115UA(2) sums (FA 2023 s.32(b)). The formula is BusinessTrustUnits.specifiedSum; this row charges the whole of it. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(xii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(k)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "BUSINESS_TRUST"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.32(b) — s.56(2)(xii) of the Income-tax Act, 1961 inserted (w.e.f. 1-4-2024)",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as amended by the Finance Act, 2023 s.32(b) (Gazette CG-DL-E-31032023-244830, pp.28–29), s.56(2)(xii); the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for s.56 (docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md; docs/taxplanning-build/sources/2026-10-17-gifts.md B9)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(xii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(k)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "BUSINESS_TRUST"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(k)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(k), pp.138–139; Finance Act, 2026 does not amend s.92",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(k), pp.138–139; Finance Act, 2026 does not amend s.92",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

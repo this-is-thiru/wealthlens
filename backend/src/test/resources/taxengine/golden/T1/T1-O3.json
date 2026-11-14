@@ -1,0 +1,14 @@
+{
+  "id": "T1-O3",
+  "source": "DR 08 T1-O3 — Old regime, ₹50,000 above. TI ₹5,50,000",
+  "_source": "**Expected: ₹23,400.** Status `VERIFIED`.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "550000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "23400"
+  }
+}

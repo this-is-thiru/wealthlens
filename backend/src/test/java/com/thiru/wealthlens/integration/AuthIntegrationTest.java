@@ -4,13 +4,18 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.shared.privacy.PrivacySettings;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -23,6 +28,9 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PrivacySettings privacy;
 
     private String baseUrl() {
         return "http://localhost:" + RestAssured.port;
@@ -45,7 +53,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         RegistrationRequest request = new RegistrationRequest();
         request.setEmail("newuser@test.com");
         request.setPassword("password123");
-        request.setRole(com.thiru.wealthlens.auth.dto.AuthHelper.Role.USER);
+        request.setPrivacyNoticeVersion(privacy.notice().version());
 
         // WHEN / THEN
         given()
@@ -56,6 +64,65 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .then()
                 .statusCode(200)
                 .body(containsString("newuser@test.com"));
+    }
+
+    @Test
+    void register_whenTheBodyNamesARole_expected400AndNoAccount() {
+        // GIVEN — W-255: anyone could register as a super user by naming the role
+        String body = "{\"email\":\"chooser@test.com\",\"password\":\"password123\",\"role\":\"SUPER_USER\","
+                + "\"privacyNoticeVersion\":\"" + privacy.notice().version() + "\"}";
+
+        // WHEN / THEN
+        given()
+                .contentType(ContentType.JSON)
+                .body(body)
+                .when()
+                .post("/auth/register")
+                .then()
+                .statusCode(400)
+                .body(containsString("role"));
+        assertNull(storedLogin("chooser@test.com"));
+    }
+
+    @Test
+    void register_whenNoRole_storesUser() {
+        // GIVEN
+        RegistrationRequest request = registration("plain@test.com");
+
+        // WHEN
+        given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then().statusCode(200);
+
+        // THEN
+        assertEquals("USER", storedLogin("plain@test.com").getRoles());
+    }
+
+    @Test
+    void login_whenRegistered_tokenCarriesOnlyTheUserRoleAndCannotSeed() {
+        // GIVEN
+        RegistrationRequest request = registration("signed@test.com");
+        given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then().statusCode(200);
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setEmail("signed@test.com");
+        loginRequest.setPassword("password123");
+
+        // WHEN
+        String token = given().contentType(ContentType.JSON).body(loginRequest).when().post("/auth/login")
+                .then().statusCode(200).extract().path("access_token");
+
+        // THEN — the claims part of the JWT, read without the app's own parser; Spring Security adds FACTOR_PASSWORD,
+        // which is not a role, so the check is that ROLE_USER is the one role
+        String claims = new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), StandardCharsets.UTF_8);
+        assertTrue(claims.contains("\"ROLE_USER\""), claims);
+        assertEquals(1, claims.split("ROLE_", -1).length - 1, claims);
+        given().header("Authorization", "Bearer " + token).when().post("/charges/seed").then().statusCode(403);
+    }
+
+    private RegistrationRequest registration(String email) {
+        RegistrationRequest request = new RegistrationRequest();
+        request.setEmail(email);
+        request.setPassword("password123");
+        request.setPrivacyNoticeVersion(privacy.notice().version());
+        return request;
     }
 
     @Test
@@ -134,7 +201,6 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         RegistrationRequest request = new RegistrationRequest();
         request.setEmail(email);
         request.setPassword("password123");
-        request.setRole(com.thiru.wealthlens.auth.dto.AuthHelper.Role.USER);
 
         // WHEN / THEN
         given()

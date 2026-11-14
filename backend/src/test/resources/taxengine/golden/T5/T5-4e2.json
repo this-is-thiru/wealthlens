@@ -1,0 +1,34 @@
+{
+  "id": "T5-4e2",
+  "source": "DR 08 T5-4 variant — new regime, TY 2026-27",
+  "_source": "**New regime: exemption ₹0 with a stated reason, citing SAL-LTA-NEW-001.** T5-4a's facts; LTA gives a nil line naming the regime (D-153 C6).",
+  "regime": "NEW_TAX_REGIME",
+  "taxYears": [
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "LTA": "120000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "leaveTravel": [
+      {
+        "startedOn": "2027-02-10",
+        "mode": "AIR",
+        "amountIncurred": "68000",
+        "fareAdmissible": "80000"
+      }
+    ],
+    "leaveTravelLedger": {
+      "2026": {
+        "journeysClaimed": 1,
+        "carriedJourneyClaimed": false
+      }
+    }
+  },
+  "expected": {
+    "salaryExemptions": "0",
+    "limitedBy": "disallowed in the NEW_TAX_REGIME regime: Income-tax Act, 2025 s.202(2)(a) computes the new tax regime's total income without this exemption or deduction (REG-NEW-TAX-REGIME-NO-EXEMPTION)"
+  }
+}

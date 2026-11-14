@@ -3,7 +3,6 @@ package com.thiru.wealthlens.taxplanning.salary.service;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.taxplanning.enums.ProfileType;
 import com.thiru.wealthlens.taxplanning.enums.RegimeType;
-import com.thiru.wealthlens.taxplanning.policy.service.PolicyService;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryComponentDto;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileRequest;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
@@ -27,7 +26,6 @@ public class SalaryProfileService {
 
     private final SalaryProfileRepository profileRepo;
     private final TaxComputationRepository computationRepo;
-    private final PolicyService policyService;
 
     public SalaryProfileResponse createProfile(String email, SalaryProfileRequest request) {
         validateRequest(request);
@@ -76,7 +74,7 @@ public class SalaryProfileService {
         entity.setStatus(EntityStatus.ACTIVE);
 
         SalaryProfileEntity saved = profileRepo.save(entity);
-        log.info("Created salary profile {} for email {}", saved.getId(), email);
+        log.info("Created salary profile {}", saved.getId());
 
         if (request.getRegimeType() == RegimeType.NOT_DECIDED) {
             log.warn("Profile {} created with NOT_DECIDED regime. Tax computations require a chosen regime.", saved.getId());
@@ -149,7 +147,7 @@ public class SalaryProfileService {
         computationRepo.deleteAll(computations);
 
         profileRepo.delete(existing);
-        log.info("Deleted salary profile {} for email {}", profileId, email);
+        log.info("Deleted salary profile {}", profileId);
     }
 
     public SalaryProfileResponse getProfile(String email, String profileId) {

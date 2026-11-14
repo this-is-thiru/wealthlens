@@ -1,0 +1,140 @@
+{
+  "_note": "The claim catalogue (DR 22; W-117a, D-699): how a deduction or exemption is claimed. One entry for a rule. Texts type no figure — a figure comes from a {{RuleId.field}} placeholder, a section number from basis. Each year's pack keeps the entries of its own rules.",
+  "entries": [
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.11(1) (p.36) and Sch. III preamble (p.504) and Table Sl. 11 (p.506): the exemption's conditions (a) – (d) are the allowance's purpose, the prescribed extent, a home not owned, and rent actually paid — none is proof given to an employer; s.392(5)(b) (p.397) puts the duty to obtain evidence of prescribed claims on the employer. So the return takes the claim (owner's ruling, session 97, option (a)). s.392(4)(a)'s \"at his option\" (p.397) covers five other particulars and is not this entry's basis (erratum on DR 22 C2). provision1961: the 1961 Act's text is not read for this verdict — NOT_YET_VERIFIED. steps[2]: SAL-HOUSE-RENT-LANDLORD-PAN (r.205(2) Table Sl. 1; sources/2026-10-09-landlord-pan.md). Content: Claude's drafts, adopted by the owner (D-699).",
+      "rule": "SAL-HOUSE-RENT-ALLOWANCE",
+      "section": "SEC-HOUSE-RENT-ALLOWANCE",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "presence": "NOT_YET_VERIFIED"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.11(1) with Sch. III Table Sl. 11; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Keep a rent receipt for every month you pay rent.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "A receipt for each month's rent."
+        },
+        {
+          "order": 2,
+          "instruction": "If your rent for the year is more than {{SAL-HOUSE-RENT-LANDLORD-PAN.exceeds}}, get your landlord's name, address and PAN.",
+          "actor": "LANDLORD",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Give the receipts and those details to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "If you missed your employer's cut-off, claim it in your return instead.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "LANDLORD",
+          "askFor": "Their name, address and PAN, where your rent is above that figure."
+        },
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your rent, and the last day they take proofs."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Rent receipts",
+          "closedBy": "A receipt for each month you paid rent."
+        },
+        {
+          "name": "Your landlord's particulars",
+          "closedBy": "Their name, address and PAN, where your rent is above that figure."
+        }
+      ],
+      "mistakes": [
+        "Leaving dearness allowance out of the salary the limits are measured on.",
+        "Claiming for the whole year when you lived there for part of it.",
+        "Claiming for a home you own and live in."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025 s.133(6), Gazette CG-DL-E-22082025-265620 p.169 (read for D-142; \"only on the basis of the information relating to such donation\" re-read, session 97); 1961 s.80G(5D) Explanation 2A as DED-DONATION-UNREPORTED's provision (sources/2026-10-07-chapter-via.md M6). chapterViiiPart: s.133 sits under \"B.—Deductions in respect of certain payments\" (heading p.159; s.133 p.167; \"C.—\" begins p.171), same Gazette copy. appliesTo: the donees s.133(6) names only (D-142 C6; DR 22 erratum W-078f); the other donees are W-117b's. mistakes[1]: s.80G(5D) (sources/2026-10-07-chapter-via.md B27). Content: Claude's drafts, adopted by the owner (D-699).",
+      "rule": "DED-DONATION-UNREPORTED",
+      "section": "SEC-DONATIONS",
+      "channel": "THIRD_PARTY_REPORTED",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "NOT_ALLOWABLE_UNLESS_REPORTED",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80G(5D) Explanation 2A",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.133(6)",
+          "presence": "PRESENT"
+        }
+      },
+      "appliesTo": "A donation to a charitable institution or fund that has to report it to the tax department. Other donations are not covered here.",
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Ask the institution whether it reports your donation to the tax department.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Get its certificate of the donation.",
+          "actor": "INSTITUTION",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The institution's certificate of your donation."
+        },
+        {
+          "order": 3,
+          "instruction": "Check that the donation appears in your annual information statement before you file.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "Its certificate of your donation, and whether it has reported the donation to the tax department."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "The institution's certificate",
+          "closedBy": "The certificate it issues once it has reported the donation."
+        }
+      ],
+      "mistakes": [
+        "Claiming a donation the institution has not reported.",
+        "Claiming a cash donation above the limit."
+      ]
+    }
+  ]
+}

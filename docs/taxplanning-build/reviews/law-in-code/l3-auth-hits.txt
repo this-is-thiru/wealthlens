@@ -1,0 +1,15 @@
+## G2 1
+service/AuthService.java:139: Date expiration = new Date(System.currentTimeMillis() + 1000 * expirationTime);
+## G5 4
+dto/AuthHelper.java:31: roleHierarchy.put(Role.SUPER_USER, List.of(Role.ADMIN, Role.MANAGER, Role.EDITOR, Role.AUTHOR, Role.MODERATOR, Role.USER, Role.GUEST));
+dto/AuthHelper.java:32: roleHierarchy.put(Role.ADMIN, List.of(Role.MANAGER, Role.EDITOR, Role.AUTHOR, Role.MODERATOR, Role.USER, Role.GUEST));
+dto/AuthHelper.java:33: roleHierarchy.put(Role.MANAGER, List.of(Role.EDITOR, Role.AUTHOR, Role.MODERATOR, Role.USER, Role.GUEST));
+dto/AuthHelper.java:34: roleHierarchy.put(Role.EDITOR, List.of(Role.AUTHOR, Role.MODERATOR, Role.USER, Role.GUEST));
+## G7 3
+dto/AuthHelper.java:14: private static final String AUTHORITIES_KEY = "authorities";
+config/SecurityAuditorAware.java:15: private static final ThreadLocal<String> SYSTEM_AUDITOR = new ThreadLocal<>();
+service/UserDetailsImpl.java:15: private static final String DEFAULT_ROLE_PREFIX = "ROLE_";
+## G8 3
+service/UserValidator.java:35: return authorities.stream().map(GrantedAuthority::getAuthority).anyMatch(authority -> authority.equals("ROLE_SUPER_USER"));
+service/UserValidator.java:39: return user.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_SUPER_USER"));
+service/UserDetailsImpl.java:15: private static final String DEFAULT_ROLE_PREFIX = "ROLE_";

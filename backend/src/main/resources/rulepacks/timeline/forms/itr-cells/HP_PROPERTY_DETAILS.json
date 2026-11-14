@@ -1,0 +1,9 @@
+{
+  "code": "HP_PROPERTY_DETAILS",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Address, co-owners and tenants",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Enter the property's address, co-owners' and tenants' names and PAN: the computation does not hold them"
+  }
+}

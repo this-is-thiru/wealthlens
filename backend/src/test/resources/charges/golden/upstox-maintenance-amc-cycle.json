@@ -1,0 +1,21 @@
+{
+  "name": "upstox-maintenance-amc-cycle",
+  "describes": "Upstox's annual maintenance charge for a non-BSDA account, Rs 300, with the statutory card's 18% GST on it.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": null,
+    "segment": null,
+    "exchange": null,
+    "event": "AMC_CYCLE",
+    "price": 0,
+    "quantity": 0,
+    "transactionDate": "2025-12-31"
+  },
+  "expected": {
+    "lines": {
+      "AMC": 300.0,
+      "GST": 54.0
+    },
+    "total": 354.0
+  }
+}

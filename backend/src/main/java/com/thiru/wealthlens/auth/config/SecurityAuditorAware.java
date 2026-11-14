@@ -8,23 +8,24 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+/**
+ * Who wrote a row, for Spring Data auditing: the actor of a {@link #runAs} block, else the signed-in caller, else {@code
+ * "unknown"}. A scheduled job has no security context, so without {@link #runAs} its writes could not be told apart from any
+ * other write with no known author (W-257).
+ */
 @Component
 public class SecurityAuditorAware implements AuditorAware<String> {
 
-    // Thread-local storage for system/batch auditors
-    private static final ThreadLocal<String> SYSTEM_AUDITOR = new ThreadLocal<>();
+    private static final ThreadLocal<String> ACTOR = new ThreadLocal<>();
 
     @Override
     @NonNull
     public Optional<String> getCurrentAuditor() {
-
-        // Priority 1: Check if system/batch auditor is set programmatically
-        String systemAuditor = SYSTEM_AUDITOR.get();
-        if (systemAuditor != null) {
-            return Optional.of(systemAuditor);
+        String actor = ACTOR.get();
+        if (actor != null) {
+            return Optional.of(actor);
         }
 
-        // Priority 2: Check Spring Security's authenticated user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
             return Optional.of(authentication.getName());
@@ -33,17 +34,16 @@ public class SecurityAuditorAware implements AuditorAware<String> {
         return Optional.of("unknown");
     }
 
-    public String getAuditor() {
-        return getCurrentAuditor().orElse(null);
-    }
-
-    // Helper method to set auditor for system/batch processes
-    public static void setSystemAuditor(String auditor) {
-        SYSTEM_AUDITOR.set(auditor);
-    }
-
-    // Clear after use
-    public static void clearSystemAuditor() {
-        SYSTEM_AUDITOR.remove();
+    /**
+     * Runs {@code work} with {@code actor} as the author of every row it writes on this thread. The actor is cleared when the work
+     * ends, normally or not, so a pooled thread never carries it into a later write; a failure inside the work reaches the caller.
+     */
+    public void runAs(String actor, Runnable work) {
+        ACTOR.set(actor);
+        try {
+            work.run();
+        } finally {
+            ACTOR.remove();
+        }
     }
 }

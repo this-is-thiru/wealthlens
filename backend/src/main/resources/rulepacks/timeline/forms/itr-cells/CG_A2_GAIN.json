@@ -1,0 +1,11 @@
+{
+  "code": "CG_A2_GAIN",
+  "_note": "The loss disallowed u/s 94(7), (8) and deductions u/s 54 – 54F are not computed, so they add nothing. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Capital gain (short-term, equity share or equity-oriented fund, STT paid)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_A2_BALANCE"
+    ]
+  }
+}

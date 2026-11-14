@@ -1,0 +1,11 @@
+{
+  "code": "INTEREST_234A",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Interest u/s 234A",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "INT-LATE-RETURN"
+    ]
+  }
+}

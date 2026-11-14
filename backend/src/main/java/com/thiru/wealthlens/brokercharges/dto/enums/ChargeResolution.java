@@ -28,6 +28,14 @@ public enum ChargeResolution {
     NO_INSTRUMENT_PROFILE,
 
     /**
+     * The broker's card applied, but no statutory card covers this trade's scope and date (D-380,
+     * D-382), so the law's charges (securities transaction tax, stamp duty, GST) could not be
+     * assessed. The broker's own lines are still priced; the figure is short by whatever the law
+     * levies.
+     */
+    NO_STATUTORY_SCHEDULE,
+
+    /**
      * The computation depends on facts that may still change — user history, or FIFO lots not yet
      * uploaded. Correct as of now, but a candidate for recomputation.
      *
@@ -51,18 +59,17 @@ public enum ChargeResolution {
     /**
      * The resolutions under which the engine did not reach an answer it stands behind.
      *
-     * <p>{@code NO_MATCHING_RULES} belongs here because a card can resolve and still price nothing.
-     * An unscoped card — a maintenance card is the obvious one, since an AMC cycle carries no asset
-     * type to scope against — matches every dimension of a trade whose asset type has no card of its
-     * own. It wins by default, none of its rules declare that trade's event, and the result is a
-     * zero that looks deliberate. That is the failure this design exists to prevent, reached by a
-     * different route than a missing card.
+     * <p>{@code NO_MATCHING_RULES} belongs here because a card can resolve and still price nothing: it
+     * has an active rule for the event, but none that applies, because of the trade's side or a rule's
+     * eligibility condition. A card with no active rule for the event is not chosen at all (W-304), so
+     * an unscoped maintenance card no longer stands in for a missing trade card; that trade is
+     * {@code NO_SCHEDULE}.
      *
      * <p>{@code CORPORATE_ACTION_EXEMPT} is deliberately absent: a bonus allotment charging nothing
      * is an answer, not a gap.
      */
     public static final List<ChargeResolution> UNRESOLVED =
-            List.of(NO_SCHEDULE, NO_INSTRUMENT_PROFILE, NO_MATCHING_RULES, PROVISIONAL);
+            List.of(NO_SCHEDULE, NO_INSTRUMENT_PROFILE, NO_STATUTORY_SCHEDULE, NO_MATCHING_RULES, PROVISIONAL);
 
     /** Whether the engine reached a figure it stands behind. */
     public boolean isUnresolved() {

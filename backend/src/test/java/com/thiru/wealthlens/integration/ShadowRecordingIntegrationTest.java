@@ -13,6 +13,7 @@ import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
@@ -70,7 +71,7 @@ class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
 
     private static ProfitLossContext buy(String transactionId, AssetType assetType) {
         return new ProfitLossContext(transactionId, 100, TRADE_DATE, 1000.0, "INFY", BrokerName.ZERODHA,
-                "NSE", assetType, TransactionType.BUY, null, AccountType.SELF, HOLDER, List.of());
+                "NSE", assetType, TransactionType.BUY, null, AccountType.SELF, HOLDER, List.of(), TradeSegment.DELIVERY);
     }
 
     @Test
@@ -92,11 +93,11 @@ class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
         // Given — a disposal drawn from two lots of different ages, as the FIFO walk produces them
         ProfitLossContext context = new ProfitLossContext("txn-shadow-2", 100, TRADE_DATE, 1200.0, "INFY",
                 BrokerName.ZERODHA, "NSE", AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, HOLDER,
-                List.of(new BuyContext(40, LocalDate.of(2025, 1, 5), 900.0),
-                        new BuyContext(60, LocalDate.of(2025, 5, 20), 1100.0)));
+                List.of(new BuyContext(40, LocalDate.of(2025, 1, 5), 900.0, Optional.empty()),
+                        new BuyContext(60, LocalDate.of(2025, 5, 20), 1100.0, Optional.empty())), TradeSegment.DELIVERY);
 
-        // When
-        profitAndLossService.updateProfitAndLoss(UserMail.from(EMAIL), context);
+        // When -- a sale reaches the P&L through recordSale (W-169); its charge is recorded whatever the rows
+        profitAndLossService.recordSale(UserMail.from(EMAIL), context, Optional.empty(), List.of());
 
         // Then
         Optional<UserChargeEntity> recorded = userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-shadow-2");

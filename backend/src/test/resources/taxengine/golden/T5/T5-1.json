@@ -1,0 +1,32 @@
+{
+  "id": "T5-1",
+  "source": "DR 08 T5-1 — DED-80C-001 with DED-80C-NPS-CAP-001. VERIFIED",
+  "_source": "**Expected: ₹1,50,000 + ₹50,000 = ₹2,00,000.** Basic ₹10,00,000, no DA; employee PF ₹1,20,000; LIC ₹30,000; tuition ₹60,000 (two children); employee NPS ₹1,50,000. The policy's sum assured and issue date are not in DR 08: entered as ₹10,00,000 issued 1-6-2020, so the premium's share does not bind (erratum below DR 08 T5, D-153).",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "1000000",
+      "EMPLOYEE_PF": "120000",
+      "EMPLOYEE_NPS": "150000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "qualifyingPayments": {
+      "TUITION_FEES": "60000"
+    },
+    "lifeInsurancePolicies": [
+      {
+        "premiumPaid": "30000",
+        "sumAssured": "1000000",
+        "issuedOn": "2020-06-01"
+      }
+    ]
+  },
+  "expected": {
+    "chapterEightDeduction": "200000"
+  }
+}

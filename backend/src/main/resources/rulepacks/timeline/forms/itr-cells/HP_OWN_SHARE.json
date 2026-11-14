@@ -1,0 +1,9 @@
+{
+  "code": "HP_OWN_SHARE",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Annual value of the property owned (own percentage share x 1e)",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "ownShare"
+  }
+}

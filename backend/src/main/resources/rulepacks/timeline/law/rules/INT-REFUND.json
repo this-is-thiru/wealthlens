@@ -1,0 +1,100 @@
+{
+  "ruleId": "INT-REFUND",
+  "ruleSet": "RS-INT-REFUND",
+  "_note": "Interest the Central Government adds to a refund, 0.5 % for every month or part of a month: on a refund out of tax at source or advance tax from 1 April after the tax year (from furnishing where the return was late), on one out of tax paid on the return from furnishing or payment, whichever is later, each to the refund's grant; none where the refund is less than 10 % of the tax as determined. 1961 s.244A(1)(a), (aa) and proviso read the same; the amending Acts 2019 – 2026 touch only its provisos on orders (FA 2023 s.98, F(No. 2)A 2024 s.72). Sources: plans/W-112b.md; D-663.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.244A(1)(a), (aa), proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.437(1) Table Sl. 1, 2, (2)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "RefundInterest",
+        "perMonthPercent": "0.5",
+        "noInterestBelowSharePercent": "10"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.244A(1)(a), (aa), proviso, as in the thc.nic.in consolidation; provisos added by the Finance Act, 2023 s.98 and the Finance (No. 2) Act, 2024 s.72 do not reach (1)(a), (aa) or the proviso",
+        "gazetteRef": "Act 43 of 1961 (assent 13-9-1961), the date the repo's other as-enacted rows carry; the section's later insertion and substitutions as in the thc.nic.in consolidation; the Gazette issue not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.244A(1) p.704; amending Acts 2019 – 2026 searched (sources: act chain 2026-10-10; plans/W-112b.md)",
+        "accessedOn": "2026-11-14",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.244A(1)(a), (aa), proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.437(1) Table Sl. 1, 2, (2)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "RefundInterest",
+        "perMonthPercent": "0.5",
+        "noInterestBelowSharePercent": "10"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.437(1) Table Sl. 1, 2, (2)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.437(1) Table Sl. 1, 2, (2) p.451",
+        "accessedOn": "2026-11-14",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.437(1) Table Sl. 1, 2, (2) p.451",
+    "accessedOn": "2026-11-14",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

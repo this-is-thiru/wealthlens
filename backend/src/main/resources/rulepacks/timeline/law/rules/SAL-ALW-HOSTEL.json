@@ -1,0 +1,136 @@
+{
+  "ruleId": "SAL-ALW-HOSTEL",
+  "ruleSet": "RS-SAL-ALW-HOSTEL",
+  "_note": "An allowance for a child's hostel expenditure, exempt up to a prescribed amount per month per child for at most two children (D-101; rulebook SAL-ALW-PERS-001, H-2). TY 2026-27: Income-tax Rules, 2026 r.280(2) Table Sl. 8 (p.1782): \"Any allowance granted to an employee to meet the hostel expenditure on his child — Whole of India — ₹9000 per month per child up to a maximum of two children\"; not in the new regime. TY 2025-26: Income-tax Rules, 1962 r.2BB(2) Table Sl. 6 (consolidation p.4): \"Rs. 300 per month per child up to a maximum of two children\"; no notification changing the amount between 2011 and 2026 was found; not in r.2BB(3)'s list. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(ii), with Income-tax Rules, 1962 r.2BB(2) Table Sl. 6; excluded by r.2BB(3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 13, with Income-tax Rules, 2026 r.280(2) Table Sl. 8; excluded by s.202(2)(a)(ii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "ALLOWANCE_RECEIVED"
+            }
+          },
+          {
+            "name": "prescribed limit",
+            "shape": {
+              "type": "PerUnitPerPeriod",
+              "amount": "300",
+              "unit": "CHILD",
+              "maxUnits": 2,
+              "period": "MONTH"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Tenth Amendment) Rules, 2023, G.S.R. 452(E) — r.2BB(3) substituted (the allowances surviving s.115BAC); the latest change to r.2BB found",
+        "gazetteRef": "G.S.R. 452(E)",
+        "notifiedOn": "2023-06-21",
+        "effectiveFrom": "2023-06-21",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246719.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/11892059/Rule%2B-%2B2BB_en.pdf/fd9a5a13-a5e2-9baf-e18f-cb870d544553?t=1766001049047&version=2.0",
+        "sourceDescription": "Income Tax Department's consolidated Income-tax Rules, 1962 rule 2BB (6 pp.): (1)(a)–(f) p.1, (2) Table p.4–5, (3) p.6; r.2BB(3) as substituted by G.S.R. 452(E), gazette 2023/246719",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(ii), with Income-tax Rules, 1962 r.2BB(2) Table Sl. 6; excluded by r.2BB(3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 13, with Income-tax Rules, 2026 r.280(2) Table Sl. 8; excluded by s.202(2)(a)(ii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "ALLOWANCE_RECEIVED"
+            }
+          },
+          {
+            "name": "prescribed limit",
+            "shape": {
+              "type": "PerUnitPerPeriod",
+              "amount": "9000",
+              "unit": "CHILD",
+              "maxUnits": 2,
+              "period": "MONTH"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 280",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280, pp.1777–1783; Income-tax Act, 2025 Sch. III Table Sl. 12, 13 and s.202(2)(a)(ii)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

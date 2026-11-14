@@ -1,0 +1,965 @@
+{
+  "id": "ITR-1",
+  "_note": "Income-tax Rules, 2026 r.164(2) – (3), (12) (Gazette 271092 pp.1662 – 1664), for the tax year commencing 1 April 2026 only (r.164(1), (14)). Positive conditions, all of which hold: a resident other than not ordinarily resident; total income under (a) – (d) only, so no business income (D-523 C5a); (b) \"does not own more than two house property and does not have any brought forward loss or loss to be carried forward under the head\", the limit holding whether or not the head's income is nil (D-529 C3a); (c) \"does not have any loss under the head\" — its exception, \"except winnings from lottery or income from race horses\", is unwritten because the engine computes neither (OtherSourceKind.WINNINGS is refused; no input carries race-horse income) and is W-261 (D-529 C2a); (d) \"only long-term capital gains under section 198 not exceeding ₹ 125000\" — the LONG_TERM_LISTED_EQUITY part (CG-PART-LONG-LISTED, s.198(1)) — and no loss brought forward or to be carried forward. Bars r.164(3)(a) – (n): eleven clauses are the year's declarations ((i) is two), (e) the s.93 rows other than the family-pension (1)(d) rows, (k) total income as rounded under s.516. Furnishing: Table Sl. 3's three manners, and Sl. 4's paper form for an individual of eighty years or more at any time during the tax year; Sl. 2 (accounts audited under s.63) reaches only a person carrying on business, whom this form does not serve. TY 2025-26 (W-090d, D-652): Income-tax Rules, 1962 r.12(1)(a), kept live by the Income-tax Rules, 2026 r.164(14), as in force for AY 2026-27, rebuilt from its Gazette amendment chain (sources/2026-11-13-itr-forms-ty-2025-26.md) and the Gazette FORM ITR-1 (271423 p.16) under the owner's closing ruling. Positive conditions as TY 2026-27's: (a) \"an individual who is a resident other than not ordinarily resident\" (2018); (ii) not more than two house properties (2026) and no loss brought forward or to be carried forward under the head (2018); (iii) other sources with no loss under the head (2013), its lottery and race-horse exception unwritten as W-261 holds; (iv) only long-term capital gains under s.112A up to ₹1,25,000, no loss brought forward or carried forward (2025). Bars (I) – (VIII); (ID) reads the rows whose 1961 provision is s.57 other than (iia) — commuted pension and death gratuity are s.10 exemptions in the 1961 Act, not s.57 deductions. Kinds s.139(1), s.142(1)(i), s.148 (C1a). Furnishing r.12(3) Table Sl. 1 (2017; item (b) 2019): the three electronic manners, and paper at eighty or more on ITR-1. Schedules (W-092, D-654): TY 2025-26's version places the cells of the owner-adopted table (reviews/2026-11-13-w092-cell-table.md); TY 2026-27's forms are not located, so its version places none.",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "displayName": "SAHAJ (ITR-1)",
+      "cascadeOrder": 1,
+      "appliesTo": [
+        "INDIVIDUAL"
+      ],
+      "returnKinds": [
+        "S139_1",
+        "S142_1_I",
+        "S148"
+      ],
+      "positiveConditions": [
+        {
+          "type": "IsOrdinarilyResident"
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasIncomeUnderHead",
+            "head": "BUSINESS_OR_PROFESSION"
+          }
+        },
+        {
+          "type": "HousePropertiesOwnedAtMost",
+          "limit": 2
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossBroughtForward",
+            "head": "HOUSE_PROPERTY"
+          }
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossCarriedForward",
+            "head": "HOUSE_PROPERTY"
+          }
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossUnderHead",
+            "head": "OTHER_SOURCES"
+          }
+        },
+        {
+          "type": "CapitalGainsOnlyInParts",
+          "parts": [
+            "LONG_TERM_LISTED_EQUITY"
+          ]
+        },
+        {
+          "type": "CapitalGainsPartAtMost",
+          "part": "LONG_TERM_LISTED_EQUITY",
+          "limit": "125000"
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossBroughtForward",
+            "head": "CAPITAL_GAINS"
+          }
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossCarriedForward",
+            "head": "CAPITAL_GAINS"
+          }
+        }
+      ],
+      "bars": [
+        {
+          "reason": "r.12(1)(a) proviso (I): has assets (including financial interest in any entity) located outside India",
+          "condition": {
+            "type": "Declared",
+            "code": "ASSETS_OUTSIDE_INDIA"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/184509.pdf",
+            "sourceDescription": "egazette 2018/184509, Income-tax (Second Amendment) Rules, 2018, G.S.R. 332(E), substituting Income-tax Rules, 1962 r.12(1)(a) proviso item (I) by (I) – (IC), p.177",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (IA): has signing authority in any account located outside India",
+          "condition": {
+            "type": "Declared",
+            "code": "SIGNING_AUTHORITY_OUTSIDE_INDIA"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/184509.pdf",
+            "sourceDescription": "egazette 2018/184509, Income-tax (Second Amendment) Rules, 2018, G.S.R. 332(E), substituting Income-tax Rules, 1962 r.12(1)(a) proviso item (I) by (I) – (IC), p.177",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (IB): has income from any source outside India",
+          "condition": {
+            "type": "Declared",
+            "code": "INCOME_FROM_OUTSIDE_INDIA"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/184509.pdf",
+            "sourceDescription": "egazette 2018/184509, Income-tax (Second Amendment) Rules, 2018, G.S.R. 332(E), substituting Income-tax Rules, 1962 r.12(1)(a) proviso item (I) by (I) – (IC), p.177",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (IC): has income to be apportioned in accordance with provisions of section 5A",
+          "condition": {
+            "type": "Declared",
+            "code": "INCOME_APPORTIONED_BETWEEN_SPOUSES"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/184509.pdf",
+            "sourceDescription": "egazette 2018/184509, Income-tax (Second Amendment) Rules, 2018, G.S.R. 332(E), substituting Income-tax Rules, 1962 r.12(1)(a) proviso item (I) by (I) – (IC), p.177",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (ID): has claimed deduction under section 57, other than deduction claimed under clause (iia) thereof",
+          "condition": {
+            "type": "DeductionAllowedUnder",
+            "rows": [
+              "OS-BANKER-COMMISSION",
+              "OS-OTHER-EXPENDITURE",
+              "OS-COMPENSATION-INTEREST",
+              "OS-DIVIDEND-INTEREST"
+            ]
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/201697.pdf",
+            "sourceDescription": "egazette 2019/201697, Income-tax (Second Amendment) Rules, 2019, G.S.R. 279(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (ID) – (IG), p.250",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (IE): is a director in any company",
+          "condition": {
+            "type": "Declared",
+            "code": "DIRECTOR_IN_COMPANY"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/201697.pdf",
+            "sourceDescription": "egazette 2019/201697, Income-tax (Second Amendment) Rules, 2019, G.S.R. 279(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (ID) – (IG), p.250",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (IF): has held any unlisted equity share at any time during the previous year",
+          "condition": {
+            "type": "Declared",
+            "code": "UNLISTED_EQUITY_HELD"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/201697.pdf",
+            "sourceDescription": "egazette 2019/201697, Income-tax (Second Amendment) Rules, 2019, G.S.R. 279(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (ID) – (IG), p.250",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (IG): is assessable for the whole or any part of the income on which tax has been deducted at source in the hands of a person other than the assessee",
+          "condition": {
+            "type": "Declared",
+            "code": "TDS_ASSESSABLE_IN_ANOTHERS_HANDS"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/201697.pdf",
+            "sourceDescription": "egazette 2019/201697, Income-tax (Second Amendment) Rules, 2019, G.S.R. 279(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (ID) – (IG), p.250",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (II): has claimed any relief of tax under sections 90 or 90A",
+          "condition": {
+            "type": "Declared",
+            "code": "DOUBLE_TAXATION_AGREEMENT_RELIEF"
+          },
+          "provenance": {
+            "sourceUrl": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2020-08/Notification_No.342013.pdf",
+            "sourceDescription": "CBDT Notification 34/2013, Income-tax (3rd Amendment) Rules, 2013, S.O. 1111(E), 1 May 2013 — the Department copy (Notification_No.342013.pdf), READ under the owner's pre-October-2013 ruling (D-652), substituting the Income-tax Rules, 1962 r.12(1)(a) proviso, p.2",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (II): has claimed deduction of tax under section 91",
+          "condition": {
+            "type": "Declared",
+            "code": "UNILATERAL_FOREIGN_TAX_DEDUCTION"
+          },
+          "provenance": {
+            "sourceUrl": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2020-08/Notification_No.342013.pdf",
+            "sourceDescription": "CBDT Notification 34/2013, Income-tax (3rd Amendment) Rules, 2013, S.O. 1111(E), 1 May 2013 — the Department copy (Notification_No.342013.pdf), READ under the owner's pre-October-2013 ruling (D-652), substituting the Income-tax Rules, 1962 r.12(1)(a) proviso, p.2",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (III): has agricultural income, exceeding five thousand rupees",
+          "condition": {
+            "type": "DeclaredAmountAbove",
+            "code": "AGRICULTURAL_INCOME",
+            "limit": "5000"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, G.S.R. 226(E), FORM ITR-1 header \"agricultural income up to Rs.5 thousand\", p.16; the item's wording from CBDT Notification 49/2015 (S.O. 1660(E)), the Department copy, a cross-check under the owner's closing ruling (D-652)",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (IV): has total income, exceeding fifty lakh rupees",
+          "condition": {
+            "type": "Not",
+            "condition": {
+              "type": "IncomeAtMost",
+              "node": "round.totalincome",
+              "limit": "5000000"
+            }
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (IV) – (VI), p.163",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (V): has income taxable under section 115BBDA",
+          "condition": {
+            "type": "Declared",
+            "code": "INCOME_TAXABLE_UNDER_S115BBDA"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (IV) – (VI), p.163",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (VI): has income of the nature referred to in section 115BBE",
+          "condition": {
+            "type": "Declared",
+            "code": "UNEXPLAINED_INCOME_S115BBE"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (IV) – (VI), p.163",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (VII): is a person in whose case tax has been deducted under section 194N",
+          "condition": {
+            "type": "Declared",
+            "code": "CASH_WITHDRAWAL_TAX_DEDUCTED"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2021/226336.pdf",
+            "sourceDescription": "egazette 2021/226336, Income-tax (7th Amendment) Rules, 2021, G.S.R. 242(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (VII), (VIII), p.219; the 2020 items of those numbers omitted by egazette 2020/219667, p.272",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.12(1)(a) proviso (VIII): is a person in whose case payment or deduction of tax has been deferred under sub-section (2) of section 191 or sub-section (1C) of section 192",
+          "condition": {
+            "type": "Declared",
+            "code": "START_UP_SHARE_TAX_DEFERRED"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2021/226336.pdf",
+            "sourceDescription": "egazette 2021/226336, Income-tax (7th Amendment) Rules, 2021, G.S.R. 242(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (VII), (VIII), p.219; the 2020 items of those numbers omitted by egazette 2020/219667, p.272",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "excludes": [],
+      "furnishing": [
+        {
+          "manner": "DIGITAL_SIGNATURE",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1, item (c), p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "ELECTRONIC_VERIFICATION_CODE",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1, item (c), p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "ELECTRONIC_WITH_ITR_V",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+            "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1, item (c), p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "PAPER",
+          "conditions": [
+            {
+              "type": "AgeAtLeast",
+              "years": 80,
+              "subject": "SELF"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/201697.pdf",
+            "sourceDescription": "egazette 2019/201697, Income-tax (Second Amendment) Rules, 2019, G.S.R. 279(E), substituting Income-tax Rules, 1962 r.12(3) Table Sl. 1 item (b), p.251; the four manners of item (b) in egazette 2017/175133, p.164",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "schedules": [
+        {
+          "code": "PART-B",
+          "displayName": "Part B — Gross Total Income",
+          "fields": [
+            {
+              "path": "B1.i",
+              "cell": "SALARY_GROSS"
+            },
+            {
+              "path": "B1.ia",
+              "cell": "SALARY_17_1"
+            },
+            {
+              "path": "B1.ib",
+              "cell": "SALARY_PERQUISITES"
+            },
+            {
+              "path": "B1.ic",
+              "cell": "SALARY_17_3"
+            },
+            {
+              "path": "B1.ii",
+              "cell": "SALARY_EXEMPT_U10"
+            },
+            {
+              "path": "B1.iii",
+              "cell": "SALARY_NET"
+            },
+            {
+              "path": "B1.iv",
+              "cell": "SALARY_DEDUCTIONS_16"
+            },
+            {
+              "path": "B1.iva",
+              "cell": "SALARY_STANDARD_DEDUCTION"
+            },
+            {
+              "path": "B1.ivb",
+              "cell": "SALARY_ENTERTAINMENT"
+            },
+            {
+              "path": "B1.ivc",
+              "cell": "SALARY_PROFESSIONAL_TAX"
+            },
+            {
+              "path": "B1.v",
+              "cell": "SALARY_INCOME"
+            },
+            {
+              "path": "B2",
+              "cell": "HOUSE_PROPERTY_INCOME"
+            },
+            {
+              "path": "B3",
+              "cell": "OTHER_SOURCES_INCOME"
+            },
+            {
+              "path": "B4",
+              "cell": "GROSS_TOTAL_INCOME"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, FORM ITR-1 SAHAJ, Part B, p.17",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "PART-C",
+          "displayName": "Part C — Deductions and Taxable Total Income",
+          "fields": [
+            {
+              "path": "C.80C",
+              "cell": "DED_80C"
+            },
+            {
+              "path": "C.80CCC",
+              "cell": "DED_80CCC"
+            },
+            {
+              "path": "C.80CCD(1)",
+              "cell": "DED_80CCD_1"
+            },
+            {
+              "path": "C.80CCD(1B)",
+              "cell": "DED_80CCD_1B"
+            },
+            {
+              "path": "C.80CCD(2)",
+              "cell": "DED_80CCD_2"
+            },
+            {
+              "path": "C.80CCH",
+              "cell": "DED_80CCH"
+            },
+            {
+              "path": "C.80D",
+              "cell": "DED_80D"
+            },
+            {
+              "path": "C.80DD",
+              "cell": "DED_80DD"
+            },
+            {
+              "path": "C.80DDB",
+              "cell": "DED_80DDB"
+            },
+            {
+              "path": "C.80E",
+              "cell": "DED_80E"
+            },
+            {
+              "path": "C.80EE",
+              "cell": "DED_80EE"
+            },
+            {
+              "path": "C.80EEA",
+              "cell": "DED_80EEA"
+            },
+            {
+              "path": "C.80EEB",
+              "cell": "DED_80EEB"
+            },
+            {
+              "path": "C.80G",
+              "cell": "DED_80G"
+            },
+            {
+              "path": "C.80GG",
+              "cell": "DED_80GG"
+            },
+            {
+              "path": "C.80GGA",
+              "cell": "DED_80GGA"
+            },
+            {
+              "path": "C.80GGC",
+              "cell": "DED_80GGC"
+            },
+            {
+              "path": "C.80TTA",
+              "cell": "DED_80TTA"
+            },
+            {
+              "path": "C.80TTB",
+              "cell": "DED_80TTB"
+            },
+            {
+              "path": "C.80U",
+              "cell": "DED_80U"
+            },
+            {
+              "path": "C1",
+              "cell": "DEDUCTIONS_VI_A"
+            },
+            {
+              "path": "C2",
+              "cell": "TOTAL_INCOME"
+            },
+            {
+              "path": "C3(a).i",
+              "cell": "LTCG_112A_SALE"
+            },
+            {
+              "path": "C3(a).ii",
+              "cell": "LTCG_112A_COST"
+            },
+            {
+              "path": "C3(a).iii",
+              "cell": "LTCG_112A_GAIN"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, FORM ITR-1 SAHAJ, Part C, pp.17 – 18",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "code": "PART-D",
+          "displayName": "Part D — Computation of Tax Payable",
+          "fields": [
+            {
+              "path": "D1",
+              "cell": "TAX_ON_TOTAL_INCOME"
+            },
+            {
+              "path": "D2",
+              "cell": "TAX_REBATE_87A"
+            },
+            {
+              "path": "D3",
+              "cell": "TAX_AFTER_REBATE"
+            },
+            {
+              "path": "D4",
+              "cell": "TAX_CESS"
+            },
+            {
+              "path": "D5",
+              "cell": "TAX_LIABILITY"
+            },
+            {
+              "path": "D6",
+              "cell": "RELIEF_89"
+            },
+            {
+              "path": "D7",
+              "cell": "INTEREST_234A"
+            },
+            {
+              "path": "D8",
+              "cell": "INTEREST_234B"
+            },
+            {
+              "path": "D9",
+              "cell": "INTEREST_234C"
+            },
+            {
+              "path": "D10",
+              "cell": "FEE_234F"
+            },
+            {
+              "path": "D10(a)",
+              "cell": "FEE_234I"
+            },
+            {
+              "path": "D11",
+              "cell": "TOTAL_LIABILITY"
+            },
+            {
+              "path": "D12",
+              "cell": "TAXES_PAID"
+            },
+            {
+              "path": "D13",
+              "cell": "AMOUNT_PAYABLE"
+            },
+            {
+              "path": "D14",
+              "cell": "REFUND"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, FORM ITR-1 SAHAJ, Part D, p.18",
+            "accessedOn": "2026-11-13",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271423.pdf",
+        "sourceDescription": "Gazette CG-DL-E-30032026-271423, Income-tax (Second Amendment) Rules, 2026, G.S.R. 226(E), Income-tax Rules, 1962 r.12(1)(a) as in force for AY 2026-27 and FORM ITR-1, pp.15 – 16",
+        "accessedOn": "2026-11-13",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01",
+        "to": "2027-03-31"
+      },
+      "displayName": "SAHAJ (ITR-1)",
+      "cascadeOrder": 1,
+      "appliesTo": [
+        "INDIVIDUAL"
+      ],
+      "returnKinds": [
+        "S263_1",
+        "S268_1_A",
+        "S280"
+      ],
+      "positiveConditions": [
+        {
+          "type": "IsOrdinarilyResident"
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasIncomeUnderHead",
+            "head": "BUSINESS_OR_PROFESSION"
+          }
+        },
+        {
+          "type": "HousePropertiesOwnedAtMost",
+          "limit": 2
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossBroughtForward",
+            "head": "HOUSE_PROPERTY"
+          }
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossCarriedForward",
+            "head": "HOUSE_PROPERTY"
+          }
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossUnderHead",
+            "head": "OTHER_SOURCES"
+          }
+        },
+        {
+          "type": "CapitalGainsOnlyInParts",
+          "parts": [
+            "LONG_TERM_LISTED_EQUITY"
+          ]
+        },
+        {
+          "type": "CapitalGainsPartAtMost",
+          "part": "LONG_TERM_LISTED_EQUITY",
+          "limit": "125000"
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossBroughtForward",
+            "head": "CAPITAL_GAINS"
+          }
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "HasLossCarriedForward",
+            "head": "CAPITAL_GAINS"
+          }
+        }
+      ],
+      "bars": [
+        {
+          "reason": "r.164(3)(a): has assets (including financial interest in any entity) located outside India",
+          "condition": {
+            "type": "Declared",
+            "code": "ASSETS_OUTSIDE_INDIA"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(b): has signing authority in any account located outside India",
+          "condition": {
+            "type": "Declared",
+            "code": "SIGNING_AUTHORITY_OUTSIDE_INDIA"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(c): has income from any source outside India",
+          "condition": {
+            "type": "Declared",
+            "code": "INCOME_FROM_OUTSIDE_INDIA"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(d): has income to be apportioned in accordance with provisions of section 10",
+          "condition": {
+            "type": "Declared",
+            "code": "INCOME_APPORTIONED_BETWEEN_SPOUSES"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(e): has claimed deduction under section 93, other than deduction claimed under clause (d) of sub-section (1)",
+          "condition": {
+            "type": "DeductionAllowedUnder",
+            "rows": [
+              "OS-BANKER-COMMISSION",
+              "OS-OTHER-EXPENDITURE",
+              "OS-COMPENSATION-INTEREST",
+              "OS-COMMUTED-PENSION",
+              "OS-DEATH-GRATUITY",
+              "OS-DIVIDEND-INTEREST"
+            ]
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(f): is a director in any company",
+          "condition": {
+            "type": "Declared",
+            "code": "DIRECTOR_IN_COMPANY"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(g): has held any unlisted equity share at any time during the tax year",
+          "condition": {
+            "type": "Declared",
+            "code": "UNLISTED_EQUITY_HELD"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(h): is assessable for income on which tax has been deducted at source in the hands of a person other than the assessee",
+          "condition": {
+            "type": "Declared",
+            "code": "TDS_ASSESSABLE_IN_ANOTHERS_HANDS"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(i): has claimed relief of tax under section 159",
+          "condition": {
+            "type": "Declared",
+            "code": "DOUBLE_TAXATION_AGREEMENT_RELIEF"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(i): has claimed deduction of tax under section 160",
+          "condition": {
+            "type": "Declared",
+            "code": "UNILATERAL_FOREIGN_TAX_DEDUCTION"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(j): has agricultural income exceeding ₹ 5000",
+          "condition": {
+            "type": "DeclaredAmountAbove",
+            "code": "AGRICULTURAL_INCOME",
+            "limit": "5000"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(k): has total income exceeding fifty lakh rupees",
+          "condition": {
+            "type": "Not",
+            "condition": {
+              "type": "IncomeAtMost",
+              "node": "round.totalincome",
+              "limit": "5000000"
+            }
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1662",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(l): tax has been deducted under section 393(3) [Table: Sl. No. 5]",
+          "condition": {
+            "type": "Declared",
+            "code": "CASH_WITHDRAWAL_TAX_DEDUCTED"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1663",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(m): payment or deduction of tax has been deferred under section 391(2) or section 392(3)",
+          "condition": {
+            "type": "Declared",
+            "code": "START_UP_SHARE_TAX_DEFERRED"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1663",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "reason": "r.164(3)(n): has income on which the tax is determinable under Part A of Chapter XIII",
+          "condition": {
+            "type": "Declared",
+            "code": "SPECIAL_CASE_INCOME"
+          },
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3), p.1663",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "excludes": [
+
+      ],
+      "furnishing": [
+        {
+          "manner": "DIGITAL_SIGNATURE",
+          "conditions": [
+
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(12) Table, p.1664",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "ELECTRONIC_VERIFICATION_CODE",
+          "conditions": [
+
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(12) Table, p.1664",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "ELECTRONIC_WITH_ITR_V",
+          "conditions": [
+
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(12) Table, p.1664",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
+          "manner": "PAPER",
+          "conditions": [
+            {
+              "type": "AgeAtLeast",
+              "years": 80,
+              "subject": "SELF"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+            "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(12) Table, p.1664",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        }
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(1) – (3), pp.1662 – 1663",
+        "accessedOn": "2026-11-09",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ]
+}

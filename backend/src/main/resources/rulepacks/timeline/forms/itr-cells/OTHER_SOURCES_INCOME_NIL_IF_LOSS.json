@@ -1,0 +1,12 @@
+{
+  "code": "OTHER_SOURCES_INCOME_NIL_IF_LOSS",
+  "_note": "ITR-2 Part B-TI item 4a (Q4a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Net income from other sources chargeable to tax at normal applicable rates (enter nil if loss)",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "othersources.income"
+    ]
+  },
+  "sign": "NIL_IF_LOSS"
+}

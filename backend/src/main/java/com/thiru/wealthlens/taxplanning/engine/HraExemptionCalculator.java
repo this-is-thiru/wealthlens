@@ -11,12 +11,7 @@ import org.springframework.stereotype.Component;
 @Log4j2
 public class HraExemptionCalculator {
 
-    private static final long DAYS_PER_MONTH = 30;
     private static final long MONTHS_PER_YEAR = 12;
-    private static final List<String> METRO_CITIES = List.of(
-            "Mumbai", "Delhi", "Kolkata", "Chennai",
-            "Hyderabad", "Bengaluru", "Pune", "Ahmedabad"
-    );
 
     /**
      * Result of HRA exemption computation.

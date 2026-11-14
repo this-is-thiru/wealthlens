@@ -1,0 +1,9 @@
+portfolio/controller/PortfolioController.java:84:        if (report.isComplete()) {
+portfolio/service/ProfitAndLossService.java:136:		if (internalContext.isShortTermGain()) {
+portfolio/service/ProfitAndLossService.java:425:        if (internalContext.isShortTermHeld()) {
+portfolio/service/UserRecordsErasureService.java:79:        if (report.isComplete()) {
+brokercharges/service/ChargeReconciliationService.java:72:            boolean unresolved = computation.getResolution() != null && computation.getResolution().is
+brokercharges/engine/ChargeEngine.java:113:        if (!schedule.isRequiresInstrumentProfile()) {
+brokercharges/engine/ChargeEngine.java:174:        if (context.isCorporateAction()) {
+brokercharges/engine/ChargeEngine.java:257:        return !context.isCorporateAction() || rule.isAppliesToCorporateActions();
+brokercharges/engine/ChargeEngine.java:264:        if (!rule.isPerLot()) {

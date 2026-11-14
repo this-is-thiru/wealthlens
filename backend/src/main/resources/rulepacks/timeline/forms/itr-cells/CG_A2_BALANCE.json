@@ -1,0 +1,12 @@
+{
+  "code": "CG_A2_BALANCE",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Balance (short-term, equity share or equity-oriented fund, STT paid)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_A2_CONSIDERATION",
+      "-CG_A2_DEDUCTIONS"
+    ]
+  }
+}

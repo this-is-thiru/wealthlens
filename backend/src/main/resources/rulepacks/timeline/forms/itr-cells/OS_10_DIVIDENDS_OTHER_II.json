@@ -1,0 +1,16 @@
+{
+  "code": "OS_10_DIVIDENDS_OTHER_II",
+  "_note": "By the date each item was received. Drafted by Claude, adopted by the owner's rulings C1a – C4a (W-323, D-662); Gazette 271435 p.50 (CG F), pp.55 – 56 (OS 10).",
+  "label": "Dividend income referred in Sl. No. 1a(i), 16/6 to 15/9",
+  "source": {
+    "type": "FromOtherSourceAccrual",
+    "kinds": [
+      "DIVIDEND",
+      "UNIT_INCOME"
+    ],
+    "period": {
+      "from": "06-16",
+      "to": "09-15"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "code": "UNCOMMUTED_PENSION",
+  "_note": "A pension paid periodically by a former employer, and salary: \"any annuity or pension\" (S2 s.16(b), pp.37–38; 1961 s.17(1)(ii)), so the standard deduction reaches it; its lump-sum commutation is COMMUTED_PENSION. Family pension is not this: it is income of the family member, under other sources. Salary bases (W-242 C1a, owner ruling D-514): the accommodation salary only — Rules 2026 r.15(8)(k) takes \"any monetary payment, by whatever name called, from one or more employers\" and excludes in (vi) only \"commutation of pension\" among lump sums on leaving; it stands where BONUS stands. In none of the others: the HRA, gratuity, pension-scheme and provident-fund bases are \"dearness allowance, if the terms of employment so provide, but … all other allowances and perquisites\" excluded, and the entertainment base \"exclusive of any allowance, benefit or other perquisite\"; none names a pension, and as for bonus (D-094) the words are read as not reaching it. A reading, not a quoted exclusion. CASH: paid in money (DR 05 M2).",
+  "displayName": "Pension (uncommuted)",
+  "head": "SALARIES",
+  "kind": "SALARY",
+  "cashNature": "CASH",
+  "treatment": "TAXABLE",
+  "feedsInto": [
+    "SAL-SALARY-INCLUDES"
+  ],
+  "salaryBaseFor": [
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "onlyWhereTermsProvide": false
+    }
+  ],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16(b), pp.37–38; Income-tax Act, 1961 s.17(1)(ii) as on thc.nic.in, p.140; Income-tax Rules, 2026 r.15(8)(k), p.1548",
+    "accessedOn": "2026-11-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

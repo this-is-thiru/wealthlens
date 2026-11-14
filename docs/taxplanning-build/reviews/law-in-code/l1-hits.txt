@@ -1,0 +1,763 @@
+## G1 2
+rules/id/TaxYearId.java:48: return LocalDate.of(startYear, 4, 1);
+rules/id/TaxYearId.java:52: return LocalDate.of(startYear + 1, 3, 31);
+## G2 9
+rules/money/Money.java:72: return ofExact(amountInRupees.multiply(BigDecimal.valueOf(multiplier)));
+rules/money/Money.java:89: return ofExact(amountInRupees.multiply(BigDecimal.valueOf(part)).divide(BigDecimal.valueOf(whole), CALC));
+rules/money/Money.java:104: return ofExact(amountInRupees.multiply(BigDecimal.valueOf(numerator))
+rules/money/Money.java:105: .divide(BigDecimal.valueOf(denominator), CALC));
+rules/money/Money.java:169: BigDecimal rounded = lastFigure.compareTo(BigDecimal.valueOf(5)) >= 0
+rules/money/Rate.java:24: private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+rules/money/Rate.java:60: return Money.ofExact(base.amountInRupees().multiply(fraction, Money.CALC).multiply(BigDecimal.valueOf(part))
+rules/money/Rate.java:61: .divide(BigDecimal.valueOf(whole), Money.CALC));
+rules/id/TaxYearId.java:44: return "%d-%02d".formatted(startYear, (startYear + 1) % 100);
+## G3 12
+input/HouseProperty.java:55: if (ownershipShare.compareTo(Rate.ZERO) <= 0 || ownershipShare.compareTo(Rate.percent("100")) > 0) {
+rules/json/PackJson.java:175: return Money.of(raw);
+rules/json/PackJson.java:186: return Money.of(raw);
+rules/json/PackJson.java:198: return Rate.percent(raw);
+rules/json/RegistryJson.java:88: Rate.percent(PackJson.text(node, "conversionFactor", path)));
+rules/json/ShapeJson.java:228: return Money.of(raw);
+rules/money/Rate.java:26: public static final Rate ZERO = percent("0");
+rules/money/Rate.java:39: public static Rate percent(String percentage) {
+rules/money/Rate.java:40: return new Rate(new BigDecimal(percentage).divide(HUNDRED, Money.CALC));
+node/AssetPerquisite.java:100: return percent.percent();
+node/SurchargeNode.java:184: Money onLimited = limitedRate.of(part.limited());
+node/SurchargeNode.java:199: return limit.percent();
+## G4 115
+input/InputsFingerprint.java:106: switch (value) {
+rules/validate/PackValidator.java:357: return switch (version.validity()) {
+rules/validate/CapitalGainsPartReferences.java:100: version.definition().ifPresent(definition -> named.addAll(switch (definition) {
+rules/validate/CapitalGainsPartReferences.java:129: return switch (condition) {
+rules/pack/TemporallyApportionedCap.java:46: return switch (rule.midYearCombination()) {
+rules/pack/TemporallyApportionedCap.java:47: case PRORATE_PER_SEGMENT -> prorated(rule, t, ctx, segments);
+rules/pack/TemporallyApportionedCap.java:48: case LATEST_VERSION_GOVERNS -> capOf(rule, segments.getLast().version()).apply(ctx);
+rules/pack/TemporallyApportionedCap.java:49: case EARLIEST_VERSION_GOVERNS -> capOf(rule, segments.getFirst().version()).apply(ctx);
+rules/pack/TemporallyApportionedCap.java:50: case STATUTORY -> throw statutoryNotBuilt(rule);
+rules/pack/TemporallyApportionedCap.java:51: case UNDETERMINED -> throw undetermined(rule, segments);
+rules/pack/TemporallyApportionedCap.java:61: return switch (rule.midYearCombination()) {
+rules/pack/TemporallyApportionedCap.java:62: case LATEST_VERSION_GOVERNS -> segments.getLast().version();
+rules/pack/TemporallyApportionedCap.java:63: case EARLIEST_VERSION_GOVERNS -> segments.getFirst().version();
+rules/pack/TemporallyApportionedCap.java:64: case PRORATE_PER_SEGMENT -> throw new IllegalStateException("Rule " + rule.id()
+rules/pack/TemporallyApportionedCap.java:68: case STATUTORY -> throw statutoryNotBuilt(rule);
+rules/pack/TemporallyApportionedCap.java:69: case UNDETERMINED -> throw undetermined(rule, segments);
+rules/json/RegimeJson.java:146: return switch (tag) {
+rules/json/RegimeJson.java:169: switch (tag) {
+rules/json/RegimeJson.java:199: return switch (tag) {
+rules/json/RegimeJson.java:213: return switch (tag) {
+rules/json/RegistryJson.java:83: return switch (tag) {
+rules/json/RuleJson.java:76: return PackJson.optionalText(node, "prorationBasis", path).map(name -> switch (name) {
+rules/json/ConditionJson.java:70: switch (tag) {
+rules/json/ConditionJson.java:88: return switch (tag) {
+rules/json/ConditionJson.java:102: return switch (tag) {
+rules/json/ConditionJson.java:120: return switch (tag) {
+rules/json/ShapeJson.java:58: switch (tag) {
+rules/json/ShapeJson.java:79: switch (tag) {
+rules/json/ShapeJson.java:110: switch (tag) {
+rules/json/ShapeJson.java:199: ReliefShape shape = switch (tag) {
+rules/json/ValueJson.java:39: switch (presence) {
+rules/json/ValueJson.java:40: case PRESENT -> Provision.present(instrument, PackJson.text(node, "reference", path));
+rules/json/ValueJson.java:41: case ABSENT_IN_THIS_ACT -> Provision.absent(instrument);
+rules/json/ValueJson.java:42: case NOT_YET_VERIFIED -> Provision.notYetVerified(instrument);
+rules/json/DefinitionJson.java:69: return switch (tag) {
+rules/json/DefinitionJson.java:105: return switch (tag) {
+rules/json/DefinitionJson.java:146: return switch (tag) {
+rules/condition/AgeAtLeast.java:37: return switch (subject) {
+rules/condition/AgeAtLeast.java:38: case SELF -> "you are " + years + " or over";
+rules/condition/AgeAtLeast.java:39: case INSURED_PERSON -> "the insured person is " + years + " or over";
+rules/catalogue/SectionCatalogue.java:99: return PackJson.construct(path, () -> switch (type) {
+rules/timeline/TimelineReader.java:123: switch (directory) {
+rules/timeline/TimelineReader.java:124: case RULES -> addRule(path, stem, node, content);
+rules/timeline/TimelineReader.java:125: case REGIMES -> addRegime(path, stem, node, content);
+rules/timeline/TimelineReader.java:126: case DISALLOWANCES -> addDisallowanceSet(path, stem, node, content);
+rules/timeline/TimelineReader.java:127: case PIPELINES -> addPipelineNode(path, stem, node, content);
+rules/timeline/TimelineReader.java:128: case COMPONENTS -> addComponent(path, stem, node, content);
+rules/timeline/TimelineReader.java:129: case SECTIONS -> addSection(path, stem, node, content);
+rules/timeline/TimelineReader.java:130: case ACTS -> addAct(path, stem, node, content);
+rules/timeline/ClasspathRulePackProvider.java:110: return switch (url.getProtocol()) {
+rules/timeline/PackDiff.java:151: String key = switch (validity.path("type").asString()) {
+rules/coverage/CoverageRegister.java:48: return switch (coverage) {
+rules/coverage/CoverageRegister.java:89: return PackJson.construct(path, () -> switch (classification) {
+rules/coverage/CoverageRegister.java:90: case MODELLED -> new Coverage.Modelled(
+rules/coverage/CoverageRegister.java:93: case PLANNED -> new Coverage.Planned(
+rules/coverage/CoverageRegister.java:96: case DEFERRED -> new Coverage.Deferred(
+rules/coverage/CoverageRegister.java:99: case NOT_COMPUTATIONAL -> new Coverage.NotComputational();
+rules/coverage/CoverageRegister.java:100: case OUT_OF_SCOPE -> new Coverage.OutOfScope(
+node/HouseholdBenefitPerquisite.java:65: RuleId ruleId = switch (benefit.kind()) {
+node/HouseholdBenefitPerquisite.java:66: case SERVICES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_SERVICES);
+node/HouseholdBenefitPerquisite.java:67: case UTILITY_FROM_OUTSIDE_AGENCY, UTILITY_FROM_EMPLOYER_RESOURCES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_UTILITY);
+node/HouseholdBenefitPerquisite.java:68: case EDUCATION_FEES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION);
+node/HouseholdBenefitPerquisite.java:69: case CARRIER_TRAVEL -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_CARRIER_TRAVEL);
+node/OtherSourcesNode.java:148: return switch (item.kind()) {
+node/OtherSourcesNode.java:149: case INTEREST_ON_SECURITIES, SAVINGS_DEPOSIT_INTEREST, DEPOSIT_INTEREST, OTHER_INTEREST ->
+node/OtherSourcesNode.java:151: case DIVIDEND, UNIT_INCOME -> dividend(lines, where, item, lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST),
+node/OtherSourcesNode.java:153: case DEEMED_DIVIDEND -> dividend(lines, where, item, lines.row(RuleSetIds.RS_OS_DEEMED_DIVIDEND),
+node/OtherSourcesNode.java:155: case INTEREST_ON_COMPENSATION -> compensationInterest(lines, where, item);
+node/OtherSourcesNode.java:156: case FAMILY_PENSION -> familyPension(lines, where, item);
+node/OtherSourcesNode.java:157: case COMMUTED_FUND_PENSION, DEATH_GRATUITY -> wholeDeducted(lines, where, item);
+node/OtherSourcesNode.java:158: case KEYMAN_POLICY, FORFEITED_ADVANCE, TERMINATION_COMPENSATION, OTHER -> inFull(lines, where, item);
+node/OtherSourcesNode.java:159: case WINNINGS, EMPLOYEE_CONTRIBUTIONS, MACHINERY_LETTING, MACHINERY_AND_BUILDING_LETTING ->
+node/MotorCarPerquisite.java:70: lines.add(switch (vehicle.owner()) {
+node/MotorCarPerquisite.java:71: case EMPLOYER_CAR -> employerCar(ctx, vehicles, i, sequence);
+node/MotorCarPerquisite.java:72: case EMPLOYEE_CAR -> ownVehicle(ctx, vehicle, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_EMPLOYEE),
+node/MotorCarPerquisite.java:74: case EMPLOYEE_OTHER_CONVEYANCE -> ownVehicle(ctx, vehicle, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_CONVEYANCE), Money.ZERO,
+node/SpecifiedSecurityPerquisite.java:70: return switch (allotment.basis()) {
+node/SpecifiedSecurityPerquisite.java:99: return switch (basis) {
+node/MealPerquisite.java:46: lines.add(switch (meals.setting()) {
+node/MealPerquisite.java:47: case AT_WORK -> beyondTheLimit(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL_AT_WORK), meals, sequence);
+node/MealPerquisite.java:48: case PAID_VOUCHER -> appliesInRegime(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL_VOUCHER))
+node/MealPerquisite.java:52: case TEA_OR_SNACKS_AT_WORK -> notSalary(ctx, meals, sequence, "tea or snacks during working hours");
+node/MealPerquisite.java:53: case AT_WORK_REMOTE_OR_OFFSHORE -> notSalary(ctx, meals, sequence,
+node/MealPerquisite.java:55: case OTHERWISE -> inFull(ctx, meals, sequence, "food other than at work or by voucher");
+node/DonationDeduction.java:139: switch (donation.clause()) {
+node/DonationDeduction.java:140: case NAMED_FUND -> whole = whole.plus(amount);
+node/DonationDeduction.java:141: case FAMILY_PLANNING -> wholeLimited = wholeLimited.plus(amount);
+node/DonationDeduction.java:142: case DROUGHT_RELIEF_FUND -> half = half.plus(amount);
+node/DonationDeduction.java:143: case CHARITABLE_INSTITUTION, PUBLIC_BODY -> halfLimited = halfLimited.plus(amount);
+node/ExpenseBenefitPerquisite.java:45: lines.add(switch (benefit.kind()) {
+node/ExpenseBenefitPerquisite.java:46: case HOLIDAY, HOLIDAY_OWN_FACILITY_AT_PUBLIC_VALUE, FAMILY_ON_OFFICIAL_TOUR, TOUR_EXTENDED_AS_VACATION ->
+node/ExpenseBenefitPerquisite.java:48: case CREDIT_CARD -> benefit.whollyForWork() && benefit.officialUse().journeysAndCertificateKept()
+node/ExpenseBenefitPerquisite.java:52: case CLUB -> clubExclusion(ctx, benefit)
+node/ExpenseBenefitPerquisite.java:55: case OTHER -> valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_OTHER_BENEFIT), benefit, sequence, "at arm's-length cost");
+node/ExpenseBenefitPerquisite.java:56: case TELEPHONE -> nil(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_OTHER_BENEFIT), benefit, sequence,
+node/DisabilityDeduction.java:164: boolean related = switch (member.relationship()) {
+node/DisabilityDeduction.java:165: case SPOUSE, CHILD, PARENT, SIBLING -> true;
+node/DisabilityDeduction.java:166: case DEPENDANT_OTHER -> false;
+node/HealthInsuranceDeduction.java:100: switch (payment.kind()) {
+node/HealthInsuranceDeduction.java:101: case INSURANCE_PREMIUM -> {
+node/HealthInsuranceDeduction.java:105: case GOVERNMENT_HEALTH_SCHEME -> {
+node/HealthInsuranceDeduction.java:115: case PREVENTIVE_CHECKUP -> paid.checkups = paid.checkups.plus(payment.amount());
+node/HealthInsuranceDeduction.java:116: case MEDICAL_EXPENDITURE -> {
+node/HealthInsuranceDeduction.java:131: switch (member.relationship()) {
+node/HealthInsuranceDeduction.java:132: case SPOUSE -> covered.add(Bucket.FAMILY);
+node/HealthInsuranceDeduction.java:133: case CHILD -> {
+node/HealthInsuranceDeduction.java:140: case PARENT -> covered.add(Bucket.PARENTS);
+node/HealthInsuranceDeduction.java:141: case SIBLING, DEPENDANT_OTHER -> throw new IllegalArgumentException("Family member " + position
+node/SalaryBaseNode.java:114: boolean testPasses = switch (dearnessAllowance) {
+node/SalaryBaseNode.java:115: case WHERE_TERMS_PROVIDE -> employment.termsIncludeDearnessAllowance();
+node/SalaryBaseNode.java:116: case WHERE_IT_COUNTS_FOR_RETIREMENT -> employment.dearnessAllowanceCountsForRetirement();
+node/GiftIncome.java:60: switch (gift.kind()) {
+node/GiftIncome.java:61: case SUM_OF_MONEY -> sums = sums.plus(gift.value());
+node/GiftIncome.java:62: case IMMOVABLE_PROPERTY -> charged = charged.plus(chargedGift(lines, where + ": immovable property",
+node/GiftIncome.java:64: case OTHER_PROPERTY -> {
+## G5 184
+pipeline/CapitalGainsHead.java:37: return new CapitalGainsHead(Map.of(), Money.ZERO, Money.ZERO);
+pipeline/TaxByBasis.java:44: return new TaxByBasis(atSlabRates, Map.of());
+pipeline/PipelineRunner.java:13: import java.util.EnumMap;
+pipeline/PipelineRunner.java:205: Set<NodeId> ancestors = new HashSet<>(Set.of(slot));
+pipeline/PipelineRunner.java:237: Map<RulePackLayer, RulePackRef> layers = new EnumMap<>(RulePackLayer.class);
+pipeline/ComponentSet.java:6: import java.util.EnumMap;
+pipeline/ComponentSet.java:42: Map<HeadCode, List<Line>> copied = new EnumMap<>(HeadCode.class);
+pipeline/NodeContext.java:27: import java.util.EnumMap;
+pipeline/NodeContext.java:73: static final Declared NOTHING = new Declared(Optional.empty(), Set.of(), Set.of());
+pipeline/NodeContext.java:331: Map<AgeSubject, Integer> ages = new EnumMap<>(AgeSubject.class);
+pipeline/NodeContext.java:332: Map<AgeSubject, DisabilitySeverity> disabilities = new EnumMap<>(AgeSubject.class);
+input/LedgerSnapshot.java:85: Map.of(),
+input/LedgerSnapshot.java:89: Map.of(),
+input/LedgerSnapshot.java:91: Map.of());
+input/RetirementPayment.java:50: requireExactlyFor(component, entry, Set.of(RetirementEntry.OTHER_EMPLOYER_COMMUTATION),
+input/RetirementPayment.java:56: requireExactlyFor(component, entry, Set.of(RetirementEntry.OTHER_GRATUITY), separation.isPresent(),
+input/RetirementPayment.java:58: requireExactlyFor(component, entry, Set.of(RetirementEntry.OTHER_LEAVE_ENCASHMENT), leave.isPresent(),
+input/RetirementPayment.java:60: requireExactlyFor(component, entry, Set.of(RetirementEntry.STATUTORY_GRATUITY, RetirementEntry.RETRENCHMENT),
+input/RegimeElectionSnapshot.java:41: return new RegimeElectionSnapshot(Map.of(), Map.of());
+rules/temporal/TemporalContext.java:48: taxYear, taxYear.startsOn(), taxYear.endsOn(), asOfDate, Map.of());
+rules/temporal/TemporalContext.java:69: Map<TemporalAxis, LocalDate> merged = new java.util.EnumMap<>(TemporalAxis.class);
+rules/pack/RulePack.java:16: import java.util.EnumMap;
+rules/pack/RulePack.java:62: rules = rules == null ? Map.of() : Map.copyOf(rules);
+rules/pack/RulePack.java:63: ruleSets = ruleSets == null ? Map.of() : Map.copyOf(ruleSets);
+rules/pack/RulePack.java:64: components = components == null ? Map.of() : Map.copyOf(components);
+rules/pack/RulePack.java:65: regimes = regimes == null ? Map.of() : Map.copyOf(regimes);
+rules/pack/RulePack.java:66: disallowanceSets = disallowanceSets == null ? Map.of() : Map.copyOf(disallowanceSets);
+rules/pack/RulePack.java:67: conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
+rules/pack/RulePack.java:79: Map<RulePackLayer, RulePackRef> copied = new EnumMap<>(RulePackLayer.class);
+rules/pack/DisallowanceSet.java:51: disallowedRules = disallowedRules == null ? Set.of() : Set.copyOf(disallowedRules);
+rules/component/ComponentDefinition.java:71: feedsInto = feedsInto == null ? Set.of() : Set.copyOf(feedsInto);
+rules/component/ComponentDefinition.java:72: salaryBaseFor = salaryBaseFor == null ? Set.of() : Set.copyOf(salaryBaseFor);
+rules/cap/CapContext.java:57: this(bases, contributions, counts, Map.of());
+rules/cap/CapContext.java:62: this(bases, Map.of(), Map.of());
+rules/cap/CapContext.java:67: return new CapContext(Map.of(id, amount));
+rules/cap/CapContext.java:72: return new CapContext(Map.of(), contributions, Map.of());
+rules/condition/ItemFacts.java:23: public static final ItemFacts NONE = new ItemFacts(Map.of(), Map.of(), Map.of());
+rules/condition/ItemFacts.java:36: return new ItemFacts(Map.of(fact, code), Map.of(), Map.of());
+rules/condition/ConditionContext.java:79: Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty(), ItemFacts.NONE);
+rules/condition/ConditionContext.java:91: true, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, years), Map.of());
+rules/registry/TaxYearRegistryEntry.java:6: import java.util.EnumMap;
+rules/registry/TaxYearRegistryEntry.java:47: Map<RulePackLayer, RulePackRef> copied = new EnumMap<>(RulePackLayer.class);
+rules/timeline/RulePackLock.java:14: import java.util.EnumMap;
+rules/timeline/RulePackLock.java:66: Map<RulePackLayer, RulePackRef> layers = new EnumMap<>(RulePackLayer.class);
+rules/timeline/ShippedRulePacks.java:43: packs.put(year, new ClasspathRulePackProvider(root, Set.of(year), assembler).load(year));
+rules/timeline/ClasspathRulePackProvider.java:122: try (FileSystem archive = FileSystems.newFileSystem(uri, Map.of())) {
+rules/coverage/CoverageRegister.java:11: import java.util.EnumMap;
+rules/coverage/CoverageRegister.java:107: Map<SectionRef.Act, Map<String, Long>> counts = new EnumMap<>(SectionRef.Act.class);
+rules/regime/RegimeBehaviourRegistry.java:59: return new RegimeBehaviourRegistry(Map.of());
+rules/regime/RegimeSpec.java:66: appliesTo = appliesTo == null ? Set.of() : Set.copyOf(appliesTo);
+rules/regime/RegimeSpec.java:67: disallowances = disallowances == null ? Set.of() : Set.copyOf(disallowances);
+rules/regime/RegimeSpec.java:68: eligibility = eligibility == null ? Set.of() : Set.copyOf(eligibility);
+node/AgniveerDeduction.java:28: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_AGNIVEER_OWN, RuleSetIds.RS_DED_AGNIVEER_GOVERNMENT);
+node/RetirementNode.java:36: import java.util.EnumMap;
+node/RetirementNode.java:73: return Set.of(NodeIds.INPUTS_COMPONENTS);
+node/RetirementNode.java:78: return Set.of(RuleSetIds.RS_RET_ENTRY, RuleSetIds.RS_RET_AGGREGATE);
+node/RetirementNode.java:88: Map<RetirementEntry, Money> allowedThisYear = new EnumMap<>(RetirementEntry.class);
+node/RetirementNode.java:122: Set<RuleId> retirementRules = ctx.pack().membersOf(Set.of(RuleSetIds.RS_RET_ENTRY));
+node/RetirementNode.java:192: Map<BaseId, Money> paidIn = Map.of(PAYMENT_RECEIVED, received);
+node/RetirementNode.java:204: Map.of(PAYMENT_RECEIVED, received, AMOUNT_UNDER_STATUTE, entitlement.amountUnderStatute())));
+node/RetirementNode.java:226: new CapContext(Map.of(PAYMENT_RECEIVED, allowedThisYear.plus(received))));
+node/SalaryDeductionNode.java:55: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT,
+node/SalaryDeductionNode.java:65: return Set.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS, NodeIds.SALARY_BASE);
+node/SalaryDeductionNode.java:162: CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of(SALARY, salary)));
+node/ChapterEightNode.java:64: private static final Set<RuleSetId> PAYMENT_ROWS = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV, RuleSetIds.RS_DED_NPS_OWN);
+node/ChapterEightNode.java:65: private static final Set<RuleSetId> INVESTMENT_RULES = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV,
+node/ChapterEightNode.java:76: return Set.of(NodeIds.GTI, NodeIds.SETOFF, NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_BASE);
+node/MedicalTreatmentAbroadNode.java:55: return Set.of(NodeIds.SALARY_INCOMEBEFORETRAVEL);
+node/MedicalTreatmentAbroadNode.java:60: return Set.of(RuleSetIds.RS_PERQ_MEDABROAD_STAY, RuleSetIds.RS_PERQ_MEDABROAD_TRAVEL);
+node/MedicalTreatmentAbroadNode.java:86: CapResult excluded = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of(
+node/MedicalTreatmentAbroadNode.java:118: Map.of(NodeIds.SALARY_INCOMEBEFORETRAVEL, incomeBeforeTravel), Set.of(), Set.of(), Set.of(),
+node/HousePropertyInterest.java:40: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_HP_INTEREST, RuleSetIds.RS_HP_PRE_CONSTRUCTION,
+node/HouseholdBenefitPerquisite.java:33: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_SERVICES, RuleSetIds.RS_PERQ_UTILITY, RuleSetIds.RS_PERQ_EDUCATION,
+node/HouseholdBenefitPerquisite.java:86: new CapContext(Map.of())).value();
+node/OtherSourcesNode.java:75: private static final Map<OtherSourceKind, KindRow> IN_FULL = Map.of(
+node/OtherSourcesNode.java:84: private static final Map<OtherSourceKind, KindRow> WHOLE_DEDUCTED = Map.of(
+node/OtherSourcesNode.java:89: private static final Set<OtherSourceKind> BUSINESS_HEAD_KINDS = Set.of(OtherSourceKind.EMPLOYEE_CONTRIBUTIONS,
+node/OtherSourcesNode.java:99: return Set.of();
+node/OtherSourcesNode.java:104: return Set.of(RuleSetIds.RS_OS_INTEREST, RuleSetIds.RS_OS_DIVIDEND, RuleSetIds.RS_OS_DIVIDEND_INTEREST,
+node/GrossTotalIncomeNode.java:29: return Set.of(NodeIds.SETOFF);
+node/GrossTotalIncomeNode.java:34: return Set.of();
+node/MotorCarPerquisite.java:41: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_CAR_PARTLY, RuleSetIds.RS_PERQ_CAR_OWNRUN,
+node/MotorCarPerquisite.java:131: CapContext bases = new CapContext(Map.of(EXPENDITURE, vehicle.runningExpenditure(), TABLE_OFFICIAL_USE,
+node/MotorCarPerquisite.java:133: Map.of(), Map.of(MONTH, vehicle.months()));
+node/MotorCarPerquisite.java:176: .map(cc -> Map.of(CUBIC_CAPACITY_CC, (long) cc))
+node/MotorCarPerquisite.java:177: .orElse(Map.of());
+node/MotorCarPerquisite.java:178: return new ItemFacts(Map.of(ELECTRIC, Boolean.toString(engine.electric())), capacity, Map.of());
+node/MotorCarPerquisite.java:183: new CapContext(Map.of(), Map.of(), Map.of(MONTH, months))).value();
+node/TaxByBasisNode.java:62: return Set.of(NodeIds.ROUND_TOTALINCOME, NodeIds.SETOFF);
+node/TaxByBasisNode.java:67: return Set.of(RuleSetIds.RS_RATE_CG_SPECIAL, RuleSetIds.RS_RATE_SLAB, RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER,
+node/CessNode.java:40: return Set.of(NodeIds.TAX_AFTERREBATE, NodeIds.TAX_SURCHARGE);
+node/CessNode.java:45: return Set.of(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS);
+node/SalaryIncomeBeforeTravelNode.java:36: return Set.of(NodeIds.SALARY_GROSS, NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_RETIREMENT,
+node/SalaryIncomeBeforeTravelNode.java:42: return Set.of();
+node/TotalIncomeNode.java:25: return Set.of(NodeIds.GTI, NodeIds.CHAPTERVIII);
+node/TotalIncomeNode.java:30: return Set.of();
+node/SpecifiedSecurityPerquisite.java:36: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_SPECIFIED_SECURITY, RuleSetIds.RS_PERQ_SPECIFIED_DATE);
+node/ScheduleXvDeduction.java:109: Map.of(SALARY, salary, GOVERNMENT_SALARY, governmentSalary(ctx)), contributions, Map.of()));
+node/LoanPerquisite.java:30: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_LOAN, RuleSetIds.RS_PERQ_LOAN_PETTY);
+node/LoanPerquisite.java:46: ctx.ruleOf(RuleSetIds.RS_PERQ_LOAN_PETTY), ctx.inputs().temporal(), new CapContext(Map.of())).value();
+node/HousePropertyNode.java:52: return Set.of();
+node/HousePropertyNode.java:57: Set<RuleSetId> rules = new HashSet<>(Set.of(RuleSetIds.RS_HP_ANNUAL_VALUE, RuleSetIds.RS_HP_OWN_RESIDENCE,
+node/NotifiedRetirementLimits.java:101: new CapContext(Map.of())).value();
+node/MealPerquisite.java:32: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_MEAL, RuleSetIds.RS_PERQ_MEAL_AT_WORK, RuleSetIds.RS_PERQ_MEAL_VOUCHER);
+node/MealPerquisite.java:63: new CapContext(Map.of(MEAL_VALUE, total(meals)), Map.of(), Map.of(MEAL, meals.meals())));
+node/HeadTotalLines.java:40: return new ComponentSet(lines.isEmpty() ? Map.of() : Map.of(total.head(), lines));
+node/LeaveTravelExemption.java:98: Map.of(AMOUNT_INCURRED, covered.amountIncurred(), FARE_ADMISSIBLE, fare)));
+node/LeaveTravelExemption.java:218: new CapContext(Map.of(), Map.of(), Map.of(KM, km))).value();
+node/CapitalGainsTerm.java:46: Optional<RuleRow> row = ctx.optionalRuleOf(HOLDING_PERIOD, new ItemFacts(Map.of(ASSET, facts.assetKind(),
+node/CapitalGainsTerm.java:47: TRANSFER_EXCHANGE, exchange), Map.of(), Map.of()));
+node/GrossSalaryNode.java:47: return Set.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_PERQUISITES, NodeIds.EMPLOYER_CONTRIB_CHARGES);
+node/GrossSalaryNode.java:52: return Set.of(RuleSetIds.RS_SAL_SALARY_INCLUDES);
+node/AllowanceExemption.java:57: private static final Set<RuleSetId> PER_CHILD = Set.of(RuleSetIds.RS_SAL_ALW_CHILDREN_EDUCATION, RuleSetIds.RS_SAL_ALW_HOSTEL);
+node/AllowanceExemption.java:58: private static final Set<RuleSetId> ALLOWANCES = Set.of(RuleSetIds.RS_SAL_ALW_UNIFORM, RuleSetIds.RS_SAL_ALW_CONVEYANCE,
+node/AllowanceExemption.java:167: return new CapContext(Map.of(ALLOWANCE_RECEIVED, received), Map.of(),
+node/AllowanceExemption.java:168: Map.of(CHILD, use.childrenCovered().get(), MONTH, use.monthsCovered().orElseThrow()));
+node/AllowanceExemption.java:172: return new CapContext(Map.of(ALLOWANCE_RECEIVED, received, AMOUNT_INCURRED, incurred));
+node/RebateNode.java:52: return Set.of(NodeIds.TAX_BYBASIS, NodeIds.ROUND_TOTALINCOME);
+node/RebateNode.java:57: return Set.of(RuleSetIds.RS_REBATE);
+node/DepositInterestDeduction.java:36: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_SAVINGS_INTEREST, RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR,
+node/DonationDeduction.java:35: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DONATION_WHOLE, RuleSetIds.RS_DED_DONATION_HALF,
+node/CapitalGainsStt.java:72: Optional<RuleRow> row = ctx.optionalRuleOf(CHARGEABILITY, new ItemFacts(Map.of(SIDE, side.name(), ASSET,
+node/CapitalGainsStt.java:74: segment), Map.of(), Map.of(ACQUIRED_ON, bucket.facts().acquiredOn())));
+node/LoanInterestDeduction.java:32: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_EDUCATION_LOAN, RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER,
+node/AssetPerquisite.java:38: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_ASSET_USE, RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED,
+node/ExemptionNode.java:76: return Set.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_BASE);
+node/ExemptionNode.java:81: Set<RuleSetId> rules = new HashSet<>(Set.of(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE, RuleSetIds.RS_SAL_HOUSE_RENT_LANDLORD_PAN,
+node/ExemptionNode.java:184: Map.of(HRA_RECEIVED, allowance, RENT_PAID, tenancy.rentPaid(), SALARY, salary),
+node/ExemptionNode.java:185: Map.of(), Map.of(), Map.of(LOCATION, tenancy.location())));
+node/EmployerContributionNode.java:65: return Set.of(NodeIds.SALARY_BASE);
+node/EmployerContributionNode.java:70: return Set.of(RuleSetIds.RS_PERQ_EMPLOYER_CONTRIBUTION, RuleSetIds.RS_PERQ_EMPLOYER_ACCRETION,
+node/EmployerContributionNode.java:154: new CapContext(Map.of(CONTRIBUTION, entry.getValue(), SALARY, salary)));
+node/EmployerContributionNode.java:184: new CapContext(Map.of(INTEREST, interest.interestCredited(), BALANCE, balance)));
+node/MonetarySalaryIncomeNode.java:42: return Set.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_BASE, NodeIds.SALARY_EXEMPTIONS,
+node/RoundNetPayableNode.java:32: return Set.of(STEP.reads());
+node/RoundNetPayableNode.java:37: return Set.of(STEP.ruleSet());
+node/CapitalGainsNode.java:71: return Set.of();
+node/CapitalGainsNode.java:76: return Set.of(ROW, PARTS, DeclaredCapitalGainsParts.PARTS, CapitalGainsStt.CHARGEABILITY,
+node/CapitalGainsNode.java:169: return new ItemFacts(codes, Map.of(), Map.of(ACQUIRED_ON, facts.acquiredOn()));
+node/SetOffNode.java:37: import java.util.EnumMap;
+node/SetOffNode.java:85: return Set.of(NodeIds.SALARY_INCOME, NodeIds.HOUSEPROPERTY_INCOME, NodeIds.OTHERSOURCES_INCOME,
+node/SetOffNode.java:91: return Set.of(RuleSetIds.RS_SETOFF_ACROSS_HEADS, RuleSetIds.RS_SETOFF_HOUSE_PROPERTY, RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY,
+node/SetOffNode.java:99: Map<HeadCode, Money> heads = new EnumMap<>(HeadCode.class);
+node/SetOffNode.java:115: Map<HeadCode, Money> income = new EnumMap<>(HeadCode.class);
+node/GiftPerquisite.java:42: Money limit = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of())).value();
+node/ExpenseBenefitPerquisite.java:30: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_HOLIDAY, RuleSetIds.RS_PERQ_CREDIT_CARD, RuleSetIds.RS_PERQ_CLUB,
+node/DisabilityDeduction.java:41: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DISABILITY, RuleSetIds.RS_DED_DISABILITY_SEVERE,
+node/DisabilityDeduction.java:195: return TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(), new CapContext(Map.of()))
+node/PerquisiteNode.java:84: rules.addAll(Set.of(RuleSetIds.RS_PERQ_ACCOM, RuleSetIds.RS_PERQ_ACCOM_FURNITURE,
+node/PerquisiteNode.java:96: return Set.of(NodeIds.SALARY_BASE, NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_MONETARYINCOME);
+node/PerquisiteNode.java:135: Map<BaseId, Money> bases = new HashMap<>(Map.of(SALARY, salary));
+node/PerquisiteNode.java:138: .map(people -> Map.of(POPULATION, people))
+node/PerquisiteNode.java:139: .orElse(Map.of());
+node/PerquisiteNode.java:141: new CapContext(Map.copyOf(bases), Map.of(), population));
+node/PerquisiteNode.java:197: new CapContext(Map.of(FURNITURE_COST, cost))).value(), t.taxYear(), accommodation.occupied()))
+node/RentPaidDeduction.java:38: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_RENT_PAID);
+node/RentPaidDeduction.java:69: new CapContext(Map.of(RENT_PAID, rent, TOTAL_INCOME, totalIncomeBefore), Map.of(),
+node/RentPaidDeduction.java:70: Map.of(MONTH, declaration.monthsOfStay())));
+node/SurchargeNode.java:100: private static final Set<OtherSourceKind> DIVIDEND_KINDS = Set.of(OtherSourceKind.DIVIDEND,
+node/SurchargeNode.java:114: return Set.of(NodeIds.TAX_AFTERREBATE, NodeIds.ROUND_TOTALINCOME, NodeIds.SETOFF);
+node/SurchargeNode.java:119: return Set.of(RuleSetIds.RS_RATE_SUR, RuleSetIds.RS_RATE_SUR_EXCLUDING, RuleSetIds.RS_RATE_SUR_CEILING,
+node/RoundTotalIncomeNode.java:28: return Set.of(STEP.reads());
+node/RoundTotalIncomeNode.java:33: return Set.of(STEP.ruleSet());
+node/SpecifiedEmployee.java:52: new CapContext(Map.of())).value();
+node/SalaryIncomeNode.java:28: return Set.of(NodeIds.SALARY_INCOMEBEFORETRAVEL, NodeIds.SALARY_MEDICALTRAVEL);
+node/SalaryIncomeNode.java:33: return Set.of();
+node/PensionDeduction.java:62: Map.of(ComponentCodes.EMPLOYEE_NPS, residue, ComponentCodes.NPS_MINOR_DEPOSIT, minorDeposit)));
+node/ComponentPartitionNode.java:16: import java.util.EnumMap;
+node/ComponentPartitionNode.java:40: return Set.of();
+node/ComponentPartitionNode.java:45: return Set.of();
+node/ComponentPartitionNode.java:50: Map<HeadCode, List<ComponentSet.Line>> byHead = new EnumMap<>(HeadCode.class);
+node/HealthInsuranceDeduction.java:30: import java.util.EnumMap;
+node/HealthInsuranceDeduction.java:49: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_HEALTH_FAMILY, RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR,
+node/HealthInsuranceDeduction.java:75: Map<Bucket, Paid> buckets = new EnumMap<>(Bucket.class);
+node/HealthInsuranceDeduction.java:201: ctx.inputs().temporal(), new CapContext(Map.of())).value());
+node/HealthInsuranceDeduction.java:235: CapContext.ofContributions(Map.of(insurance, paid.insurance, medical, paid.medical)));
+node/HealthInsuranceDeduction.java:246: Map.of(AgeSubject.INSURED_PERSON, age), Map.of());
+node/SalaryBaseNode.java:26: import java.util.EnumMap;
+node/SalaryBaseNode.java:67: return Set.of(NodeIds.INPUTS_COMPONENTS);
+node/SalaryBaseNode.java:90: Map<HeadCode, List<ComponentSet.Line>> counted = new EnumMap<>(HeadCode.class);
+node/SalaryBaseNode.java:100: new SalaryBases(Map.of(rule, perEmployment)), version.provenance()));
+node/GiftIncome.java:29: private static final Set<GiftExclusion> COVID_GROUNDS = Set.of(GiftExclusion.COVID_TREATMENT,
+node/NetPayableNode.java:32: return Set.of(NodeIds.TAX_AFTERREBATE, NodeIds.TAX_SURCHARGE, NodeIds.TAX_CESS);
+node/NetPayableNode.java:37: return Set.of();
+## G6 131
+pipeline/NodeContext.java:294: if (rows.size() <= 1 && set.ground() == SelectionGround.REGIME) {
+pipeline/NodeContext.java:298: if (applying.size() > 1 || (applying.isEmpty() && expected == RuleSelection.EXACTLY_ONE)) {
+pipeline/NodeContext.java:302: + (expected == RuleSelection.EXACTLY_ONE ? "; exactly one must" : "; at most one may"));
+pipeline/NodeContext.java:312: if (ground == SelectionGround.REGIME) {
+input/EmployerExpenseBenefit.java:44: boolean cardOrClub = kind == ExpenseBenefitKind.CREDIT_CARD || kind == ExpenseBenefitKind.CLUB;
+input/EmployerExpenseBenefit.java:49: if (healthClubUniformForAll && kind != ExpenseBenefitKind.CLUB) {
+input/EmployerAccommodation.java:60: if (firstYearValue.isPresent() && provider != AccommodationProvider.EMPLOYER_OWNED
+input/EmployerAccommodation.java:61: && provider != AccommodationProvider.EMPLOYER_LEASED) {
+input/EmployerAccommodation.java:73: boolean owned = provider == AccommodationProvider.EMPLOYER_OWNED;
+input/EmployerAccommodation.java:88: if (provider == AccommodationProvider.HOTEL && furniture.isPresent()) {
+input/EmployerVehicle.java:62: boolean conveyance = owner == VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE;
+input/EmployerVehicle.java:68: if (owner != VehicleOwner.EMPLOYER_CAR && use == VehicleUse.WHOLLY_PRIVATE) {
+input/EmployerVehicle.java:72: if (employeeMeetsPrivateRunning && (owner != VehicleOwner.EMPLOYER_CAR || use != VehicleUse.PARTLY_OFFICIAL)) {
+input/EmployerVehicle.java:87: if (cost.isPresent() && owner != VehicleOwner.EMPLOYER_CAR) {
+input/GiftReceived.java:33: if (kind == GiftKind.SUM_OF_MONEY && consideration.isGreaterThan(Money.ZERO)) {
+input/RetirementPayment.java:62: if (arrearsReliefAllowed && entry != RetirementEntry.VOLUNTARY_RETIREMENT) {
+input/HousingLoan.java:47: if (use != LoanUse.ACQUISITION_OR_CONSTRUCTION && preConstructionInterest.isGreaterThan(Money.ZERO)) {
+input/HouseProperty.java:59: if (occupancy != HouseOccupancy.LET && (rentReceivable.isGreaterThan(Money.ZERO) || vacantPartOfYear)) {
+input/HouseProperty.java:77: boolean borrowedToAcquire = loans.stream().anyMatch(loan -> loan.use() == LoanUse.ACQUISITION_OR_CONSTRUCTION);
+input/EmployerHouseholdBenefit.java:38: boolean employerOnly = kind == HouseholdBenefitKind.UTILITY_FROM_EMPLOYER_RESOURCES
+input/EmployerHouseholdBenefit.java:39: || kind == HouseholdBenefitKind.CARRIER_TRAVEL;
+input/EmployerHouseholdBenefit.java:40: if (employerOnly && arrangement == BenefitArrangement.EMPLOYEE_OBLIGATION_MET) {
+input/EmployerHouseholdBenefit.java:44: if (carrierIsAirlineOrRailways && kind != HouseholdBenefitKind.CARRIER_TRAVEL) {
+rules/temporal/TemporalContext.java:60: if (axis == TemporalAxis.TAX_YEAR) {
+rules/temporal/Provision.java:20: if (presence == Presence.PRESENT && (reference == null || reference.isBlank())) {
+rules/temporal/RuleVersion.java:125: boolean pendingStatus = legalStatus == LegalStatus.PENDING_NOTIFICATION;
+rules/validate/PackValidator.java:113: .filter(set -> set.selection() == RuleSelection.EXACTLY_ONE && set.members().isEmpty())
+rules/validate/PackValidator.java:321: if (entry.getValue().axis() != TemporalAxis.TAX_YEAR) {
+rules/validate/PackValidator.java:378: if (row.axis() != TemporalAxis.TAX_YEAR) {
+rules/validate/PackValidator.java:383: if (inYear > 1 && row.midYearCombination() == MidYearCombination.UNDETERMINED) {
+rules/validate/PackValidator.java:389: if (row.midYearCombination() == MidYearCombination.STATUTORY) {
+rules/validate/CapitalGainsPartReferences.java:130: case ItemFactIs is when is.fact().equals(CapitalGainsPart.FACT) -> Stream.of(is.code());
+rules/pack/RulePack.java:126: if (version.publicationStatus() != PublicationStatus.PUBLISHED) {
+rules/pack/RuleRow.java:67: if (midYearCombination == MidYearCombination.STATUTORY && midYearCombinationRule == null) {
+rules/pack/RuleRow.java:72: if (midYearCombination != MidYearCombination.STATUTORY && midYearCombinationRule != null) {
+rules/pack/RuleRow.java:85: boolean prorated = combination == MidYearCombination.PRORATE_PER_SEGMENT;
+rules/component/ComponentDefinition.java:110: if (head.isEmpty() != (kind == ComponentKind.QUALIFYING_PAYMENT)) {
+rules/component/ComponentDefinition.java:119: return cashNature == CashNature.CASH;
+rules/cap/SlabLadder.java:109: if (!bands.getFirst().lowerExclusive().equals(Money.ZERO)) {
+rules/json/RuleSetJson.java:78: boolean ordered = set.selection() == RuleSelection.ALL_THAT_APPLY;
+rules/condition/IsCertifiedDisabled.java:34: return "a certificate of " + (minimum == DisabilitySeverity.SEVERE_DISABILITY
+rules/definition/DisabledTransportLimit.java:57: Money base = city.filter(which -> which == CommutingCity.OTHER_CITY)
+rules/registry/GoverningInstruments.java:33: return all().stream().anyMatch(i -> i.verificationLevel() == VerificationLevel.UNVERIFIED);
+rules/registry/Provenance.java:38: if (verificationLevel == VerificationLevel.UNVERIFIED && isBlank(whatToCheck)) {
+rules/registry/Provenance.java:52: return verificationLevel == VerificationLevel.UNVERIFIED;
+rules/timeline/RulePackCompiler.java:169: boolean published = version.publicationStatus() == PublicationStatus.PUBLISHED;
+rules/coverage/SectionRef.java:56: if (provision.presence() != Presence.PRESENT) {
+rules/coverage/CoverageRegister.java:200: } else if (row.versions().stream().noneMatch(v -> v.publicationStatus() == PublicationStatus.PUBLISHED)) {
+rules/regime/VehicleRoute.java:33: boolean prescribesForm = vehicle == ElectionVehicle.PRESCRIBED_FORM;
+rules/regime/RegimeSpec.java:113: if (isDefault && election.kind() != ElectionKind.DEFAULT_NO_ACTION) {
+election/ElectionOutcome.java:29: if (mode == ElectionMode.USER_SPECIFIED && alternatives.size() != 1) {
+election/HouseElection.java:53: .filter(i -> houses.get(i).occupancy() != HouseOccupancy.LET).boxed().toList();
+election/HouseElection.java:55: .filter(i -> houses.get(i).occupancy() == HouseOccupancy.OWN_RESIDENCE).boxed().toList();
+election/HouseElection.java:81: relabelled.add(house.occupancy() == HouseOccupancy.LET ? house
+election/ElectionResolver.java:320: if (outcome.mode() == ElectionMode.USER_SPECIFIED) {
+election/RegimeElection.java:74: return "regime " + choice + (regime.provision2025().presence() == Presence.PRESENT
+election/RegimeOffers.java:69: && inputs.elections().stateOf(regime.code()) != ElectionState.IN_EFFECT) {
+node/RetirementNode.java:153: if (payment.entry() == RetirementEntry.OTHER_EMPLOYER_COMMUTATION) {
+node/RetirementNode.java:208: if (payment.entry() == RetirementEntry.VOLUNTARY_RETIREMENT) {
+node/RetirementNode.java:240: if (payment.entry() != RetirementEntry.VOLUNTARY_RETIREMENT) {
+node/SalaryDeductionNode.java:177: if (allowance && employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT) {
+node/ChapterEightNode.java:99: .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
+node/ChapterEightNode.java:193: if (payment.code().equals(ComponentCodes.LIFE_INSURANCE_PREMIUM)) {
+node/ChapterEightNode.java:198: || definition.kind() != ComponentKind.QUALIFYING_PAYMENT) {
+node/ChapterEightNode.java:219: .filter(line -> line.kind() == StepKind.DEDUCTION)
+node/HousePropertyInterest.java:70: .filter(loan -> loan.purpose() == LoanPurpose.RESIDENTIAL_HOUSE)
+node/HousePropertyInterest.java:86: boolean ownResidence = property.occupancy() == HouseOccupancy.OWN_RESIDENCE;
+node/HousePropertyInterest.java:111: if (gathered.equals(Money.ZERO)) {
+node/HousePropertyInterest.java:127: if (amount.equals(Money.ZERO)) {
+node/HousePropertyInterest.java:160: if (loan.use() != LoanUse.ACQUISITION_OR_CONSTRUCTION
+node/HousePropertyInterest.java:161: || loan.preConstructionInterest().equals(Money.ZERO)) {
+node/HousePropertyInterest.java:164: RuleId row = property.occupancy() == HouseOccupancy.OWN_RESIDENCE
+node/HousePropertyInterest.java:181: if (loan.use() != LoanUse.ACQUISITION_OR_CONSTRUCTION || !loan.lenderCertificateHeld()) {
+node/HouseholdBenefitPerquisite.java:47: if (benefit.arrangement() == BenefitArrangement.EMPLOYER_PROVIDED
+node/OtherSourcesNode.java:169: if (item.kind() == OtherSourceKind.INTEREST_ON_SECURITIES) {
+node/OtherSourcesNode.java:192: Money commission = allowed && item.kind() == OtherSourceKind.INTEREST_ON_SECURITIES
+node/OtherSourcesNode.java:210: if (item.kind() == OtherSourceKind.DEEMED_DIVIDEND) {
+node/OtherSourcesNode.java:313: if (kind == OtherSourceKind.WINNINGS) {
+node/MotorCarPerquisite.java:65: if (vehicle.use() == VehicleUse.WHOLLY_OFFICIAL) {
+node/MotorCarPerquisite.java:92: if (car.use() == VehicleUse.WHOLLY_PRIVATE) {
+node/MotorCarPerquisite.java:150: if (vehicle.owner() == VehicleOwner.EMPLOYER_CAR && vehicle.employment() == employment
+node/MotorCarPerquisite.java:151: && vehicle.use() != VehicleUse.WHOLLY_OFFICIAL) {
+node/ScheduleXvDeduction.java:123: .filter(line -> employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT)
+node/ScheduleXvDeduction.java:124: .filter(line -> ctx.pack().components().get(line.code()).kind() == ComponentKind.SALARY)
+node/ScheduleXvDeduction.java:133: if (line.code().equals(ComponentCodes.GOVERNMENT_DEFERRED_ANNUITY)
+node/ScheduleXvDeduction.java:134: && employments.get(line.employment()).employerKind() != EmployerKind.GOVERNMENT) {
+node/HousePropertyNode.java:111: if (property.occupancy() == HouseOccupancy.OWN_RESIDENCE) {
+node/HousePropertyNode.java:119: boolean let = property.occupancy() == HouseOccupancy.LET;
+node/HousePropertyNode.java:139: if (property.unrealisedRent().equals(Money.ZERO)) {
+node/HousePropertyNode.java:158: .filter(property -> property.occupancy() == HouseOccupancy.OWN_RESIDENCE)
+node/NotifiedRetirementLimits.java:75: if (payment.entry() == RetirementEntry.OTHER_GRATUITY) {
+node/NotifiedRetirementLimits.java:102: Money allowedBefore = entry == RetirementEntry.OTHER_GRATUITY
+node/LeaveTravelExemption.java:211: boolean ratePerKilometre = journey.mode() == JourneyMode.NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT
+node/GrossSalaryNode.java:93: .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
+node/DepositInterestDeduction.java:51: .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST).toList();
+node/DepositInterestDeduction.java:53: .filter(item -> item.kind() == OtherSourceKind.DEPOSIT_INTEREST).toList();
+node/DepositInterestDeduction.java:113: .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST
+node/DepositInterestDeduction.java:114: || item.kind() == OtherSourceKind.DEPOSIT_INTEREST)
+node/DonationDeduction.java:154: if (donation.clause() == DonationClause.CHARITABLE_INSTITUTION && !donation.reportedByDonee()) {
+node/CapitalGainsStt.java:82: + (term == Term.LONG_TERM ? "; S2 s.198 / 1961 s.112A count a chargeable side as"
+node/LoanInterestDeduction.java:82: if (loan.purpose() == LoanPurpose.ELECTRIC_VEHICLE) {
+node/AssetPerquisite.java:85: Money written = transfer.kind() == TransferredAssetKind.OTHER
+node/AssetPerquisite.java:92: + (transfer.kind() == TransferredAssetKind.OTHER ? " of the cost" : " on the reducing balance")
+node/CarriedLossSetOff.java:181: Money taken = absorbedBy == HeadCode.CAPITAL_GAINS
+node/CarriedLossSetOff.java:188: if (absorbedBy != HeadCode.CAPITAL_GAINS) {
+node/EmployerContributionNode.java:140: if (contribution.fund() == EmployerFund.RECOGNISED_PROVIDENT_FUND) {
+node/SetOffNode.java:138: boolean houseProperty = lossHead == HeadCode.HOUSE_PROPERTY;
+node/SetOffNode.java:184: Money taken = head == HeadCode.CAPITAL_GAINS
+node/SetOffNode.java:189: if (head != HeadCode.CAPITAL_GAINS) {
+node/SetOffNode.java:215: if (carry.absorbedBy() == HeadCode.CAPITAL_GAINS) {
+node/SetOffNode.java:246: if (carry.absorbedBy() != HeadCode.CAPITAL_GAINS) {
+node/DisabilityDeduction.java:64: RuleId row = individual.disability().get() == DisabilitySeverity.SEVERE_DISABILITY
+node/DisabilityDeduction.java:104: RuleId row = severity == DisabilitySeverity.SEVERE_DISABILITY
+node/PerquisiteNode.java:158: boolean ownedOrLeased = accommodation.provider() == AccommodationProvider.EMPLOYER_OWNED
+node/PerquisiteNode.java:159: || accommodation.provider() == AccommodationProvider.EMPLOYER_LEASED;
+node/RentPaidDeduction.java:94: .anyMatch(line -> line.code().equals(ComponentCodes.HRA) && line.amount().isGreaterThan(Money.ZERO));
+node/SurchargeNode.java:212: if (received.equals(Money.ZERO)) {
+node/SurchargeNode.java:226: if (allowed.equals(Money.ZERO)) {
+node/HealthInsuranceDeduction.java:90: if (payment.paidInCash() && payment.kind() != HealthPaymentKind.PREVENTIVE_CHECKUP) {
+node/HealthInsuranceDeduction.java:94: if (payment.relevantTaxYears() > 1 && payment.kind() != HealthPaymentKind.INSURANCE_PREMIUM) {
+node/HealthInsuranceDeduction.java:106: if (bucket == Bucket.PARENTS) {
+node/HealthInsuranceDeduction.java:153: RuleVersion seniorRow = version(ctx, bucket == Bucket.FAMILY
+node/HealthInsuranceDeduction.java:174: .filter(payment -> payment.kind() == HealthPaymentKind.INSURANCE_PREMIUM)
+node/HealthInsuranceDeduction.java:219: boolean family = bucket == Bucket.FAMILY;
+node/GiftIncome.java:52: if (ground == GiftExclusion.COVID_DEATH_FROM_OTHERS) {
+node/GiftIncome.java:65: if (gift.consideration().equals(Money.ZERO)) {
+node/GiftIncome.java:83: if (covidDeathSums.equals(Money.ZERO)) {
+node/GiftIncome.java:108: if (ground == GiftExclusion.COVID_DEATH_FROM_OTHERS && gift.kind() != GiftKind.SUM_OF_MONEY) {
+node/DividendInterestAllowance.java:32: if (interest.claimed().equals(Money.ZERO)) {
+node/DividendInterestAllowance.java:74: if (item.kind() == OtherSourceKind.DIVIDEND || item.kind() == OtherSourceKind.UNIT_INCOME) {
+node/DividendInterestAllowance.java:78: if (item.kind() == OtherSourceKind.DIVIDEND) {
+## G7 216
+pipeline/SpecialRateId.java:17: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,63}$");
+pipeline/NodeContext.java:73: static final Declared NOTHING = new Declared(Optional.empty(), Set.of(), Set.of());
+result/ComputationId.java:17: private static final Pattern UUID_FORM =
+result/ComputationReceipt.java:27: private static final Pattern FORM = Pattern.compile("^TXC-\\d{4}-[A-Z2-7]{6}$");
+result/ComputationReceipt.java:32: private static final int LENGTH = 6;
+config/TaxEngineConfig.java:24: static final String ROOT = "rulepacks";
+input/CapitalGainsInput.java:117: private static final String CORPORATE_ACTION = "CORPORATE_ACTION";
+input/CapitalGainsInput.java:148: public static final SideVenue UNRECORDED = new SideVenue(Optional.empty(), Optional.empty());
+input/InputsFingerprint.java:72: private static final Pattern HEX = Pattern.compile("^[0-9a-f]{64}$");
+input/InputsFingerprint.java:74: private static final String ABSENT = "~";
+input/Separation.java:23: private static final int MONTHS = 10;
+rules/pack/RulePackRef.java:22: private static final Pattern CHECKSUM = Pattern.compile("^sha256:[0-9a-f]{64}$");
+rules/cap/PercentOfBaseByLocation.java:27: public static final String ANY_OTHER_PLACE = "ANY_OTHER_PLACE";
+rules/json/JsonPackAssembler.java:82: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/condition/ItemFacts.java:23: public static final ItemFacts NONE = new ItemFacts(Map.of(), Map.of(), Map.of());
+rules/definition/CapitalGainsPart.java:21: public static final ItemFactId FACT = new ItemFactId("capitalgains.part");
+rules/definition/CapitalGainsPart.java:23: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,63}$");
+rules/money/Money.java:26: public static final int SCALE = 2;
+rules/money/Money.java:33: public static final MathContext CALC = new MathContext(12, RoundingMode.HALF_UP);
+rules/money/Money.java:35: public static final Money ZERO = of("0");
+rules/money/Money.java:36: public static final Money TEN = of("10");
+rules/money/Rate.java:24: private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+rules/money/Rate.java:26: public static final Rate ZERO = percent("0");
+rules/id/ScheduleCode.java:14: private static final Pattern PATTERN = Pattern.compile("^[A-Z0-9-]{3,16}$");
+rules/id/ScheduleCode.java:16: private static final String SHAPE =
+rules/id/BaseId.java:22: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,63}$");
+rules/id/BaseId.java:24: private static final String SHAPE =
+rules/id/ItrFormCode.java:14: private static final Pattern PATTERN = Pattern.compile("^[A-Z0-9-]{3,16}$");
+rules/id/ItrFormCode.java:16: private static final String SHAPE =
+rules/id/RuleSetId.java:15: private static final Pattern PATTERN = Pattern.compile("^RS(-[A-Z0-9]{1,12}){1,7}$");
+rules/id/RuleSetId.java:17: private static final String SHAPE = "RS- then 1-7 hyphenated segments, e.g. RS-SAL-STANDARD-DEDUCTION";
+rules/id/ComponentCode.java:16: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,63}$");
+rules/id/ComponentCode.java:18: private static final String SHAPE =
+rules/id/ItemFactId.java:14: private static final Pattern PATTERN = Pattern.compile("^[a-z][a-z0-9.]{2,63}$");
+rules/id/ItemFactId.java:16: private static final String SHAPE = "lower-case, dot-separated, 3-64 characters, e.g. vehicle.engine";
+rules/id/NodeId.java:15: private static final Pattern PATTERN = Pattern.compile("^[a-z][a-z0-9.]{2,63}$");
+rules/id/NodeId.java:17: private static final String SHAPE =
+rules/id/RuleId.java:23: private static final Pattern PATTERN = Pattern.compile("^[A-Z]{2,8}(-[A-Z0-9]{1,12}){1,5}$");
+rules/id/RuleId.java:25: private static final String SHAPE =
+rules/id/RegimeCode.java:15: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,31}$");
+rules/id/RegimeCode.java:17: private static final String SHAPE =
+rules/catalogue/SectionCatalogueEntry.java:26: private static final Pattern KEY = Pattern.compile("^SEC(-[A-Z0-9]+)+$");
+rules/catalogue/SectionCatalogue.java:36: private static final String DIRECTORY = "content/sections/";
+rules/catalogue/SectionCatalogue.java:37: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/catalogue/SectionCatalogue.java:38: private static final List<String> DERIVED_FIELDS = List.of("availability", "history");
+rules/catalogue/SectionCatalogue.java:39: private static final Pattern PLACEHOLDER =
+rules/catalogue/SectionCatalogue.java:42: private static final Pattern TYPED_FIGURE =
+rules/timeline/RegimeElections.java:23: private static final String ELECTIONS = "elections";
+rules/timeline/RulePackLock.java:43: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/timeline/DisallowanceSetVersions.java:26: private static final String VERSIONS = "versions";
+rules/timeline/TimelineReader.java:47: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/timeline/TimelineReader.java:48: private static final String RULES = "law/rules";
+rules/timeline/TimelineReader.java:49: private static final String REGIMES = "law/regimes";
+rules/timeline/TimelineReader.java:51: private static final String DISALLOWANCES = "law/disallowances";
+rules/timeline/TimelineReader.java:52: private static final String PIPELINES = "exec/pipelines";
+rules/timeline/TimelineReader.java:54: private static final String COMPONENTS = "exec/components";
+rules/timeline/TimelineReader.java:56: private static final String SECTIONS = "content/sections";
+rules/timeline/TimelineReader.java:58: private static final String ACTS = "content/acts";
+rules/timeline/TimelineReader.java:59: private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, PIPELINES, COMPONENTS, SECTIONS,
+rules/timeline/TimelineReader.java:62: private static final String COVERAGE = "content/coverage.json";
+rules/timeline/TimelineReader.java:64: private static final String RULE_SETS = "law/rule-sets.json";
+rules/timeline/ClasspathRulePackProvider.java:41: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/timeline/RulePackCompiler.java:49: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/timeline/PackDiff.java:27: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/timeline/PackDiff.java:28: private static final String RULE_LEVEL = "(rule)";
+rules/timeline/PackDiff.java:29: private static final String ABSENT = "(absent)";
+rules/coverage/SectionRef.java:20: private static final Pattern CITATION = Pattern.compile("^s\\.([0-9]+[A-Z]*(?:-[A-Z]+)?)");
+rules/coverage/SectionRef.java:21: private static final Pattern SECTION = Pattern.compile("^[0-9]+[A-Z]*(?:-[A-Z]+)?$");
+rules/coverage/CoverageRegister.java:34: private static final String PATH = "content/coverage.json";
+rules/coverage/CoverageRegister.java:35: private static final JsonMapper MAPPER = JsonMapper.builder().build();
+rules/coverage/CoverageRegister.java:37: private static final String ACTS = "content/acts/";
+rules/regime/BehaviourId.java:21: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,63}$");
+rules/regime/ElectionRoute.java:19: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,63}$");
+rules/regime/DataDrivenRegimeBehaviour.java:13: public static final BehaviourId ID = new BehaviourId("DATA_DRIVEN");
+rules/regime/DataDrivenRegimeBehaviour.java:15: private static final DataDrivenRegimeBehaviour INSTANCE = new DataDrivenRegimeBehaviour();
+rules/regime/DisallowanceSetId.java:14: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_-]{1,63}$");
+rules/regime/ConditionSetId.java:14: private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_-]{1,63}$");
+node/AgniveerDeduction.java:28: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_AGNIVEER_OWN, RuleSetIds.RS_DED_AGNIVEER_GOVERNMENT);
+node/AgniveerDeduction.java:30: private static final BaseId AMOUNT_PAID = new BaseId("AMOUNT_PAID");
+node/OtherSourcesLines.java:34: static final String UNTAXED_ABROAD = ": payable outside India untaxed (S2 s.94(1)(b), (c); 1961"
+node/RetirementNode.java:61: static final ItemFactId RETIREMENT_ENTRY = new ItemFactId("retirement.entry");
+node/RetirementNode.java:63: private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
+node/RetirementNode.java:64: private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
+node/SalaryDeductionNode.java:52: private static final BaseId SALARY = new BaseId("SALARY");
+node/SalaryDeductionNode.java:55: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT,
+node/ChapterEightNode.java:63: private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
+node/ChapterEightNode.java:64: private static final Set<RuleSetId> PAYMENT_ROWS = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV, RuleSetIds.RS_DED_NPS_OWN);
+node/ChapterEightNode.java:65: private static final Set<RuleSetId> INVESTMENT_RULES = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV,
+node/MedicalTreatmentAbroadNode.java:44: private static final BaseId TREATMENT_AND_STAY = new BaseId("TREATMENT_AND_STAY");
+node/MedicalTreatmentAbroadNode.java:45: private static final BaseId PERMITTED_BY_RESERVE_BANK = new BaseId("PERMITTED_BY_RESERVE_BANK");
+node/MedicalTreatmentAbroadNode.java:46: private static final BaseId TRAVEL = new BaseId("TRAVEL");
+node/HousePropertyInterest.java:40: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_HP_INTEREST, RuleSetIds.RS_HP_PRE_CONSTRUCTION,
+node/HousePropertyInterest.java:44: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/HouseholdBenefitPerquisite.java:33: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_SERVICES, RuleSetIds.RS_PERQ_UTILITY, RuleSetIds.RS_PERQ_EDUCATION,
+node/HouseholdBenefitPerquisite.java:36: private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
+node/OtherSourcesNode.java:62: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/OtherSourcesNode.java:63: private static final BaseId DIVIDEND = new BaseId("DIVIDEND");
+node/OtherSourcesNode.java:64: private static final BaseId COMMISSION = new BaseId("COMMISSION");
+node/OtherSourcesNode.java:65: private static final BaseId EXPENDITURE = new BaseId("EXPENDITURE");
+node/OtherSourcesNode.java:66: private static final BaseId COMPENSATION_INTEREST = new BaseId("COMPENSATION_INTEREST");
+node/OtherSourcesNode.java:67: private static final BaseId COMMUTED_PENSION = new BaseId("COMMUTED_PENSION");
+node/OtherSourcesNode.java:68: private static final BaseId GRATUITY = new BaseId("GRATUITY");
+node/OtherSourcesNode.java:69: private static final BaseId BUSINESS_TRUST = new BaseId("BUSINESS_TRUST");
+node/OtherSourcesNode.java:75: private static final Map<OtherSourceKind, KindRow> IN_FULL = Map.of(
+node/OtherSourcesNode.java:84: private static final Map<OtherSourceKind, KindRow> WHOLE_DEDUCTED = Map.of(
+node/OtherSourcesNode.java:89: private static final Set<OtherSourceKind> BUSINESS_HEAD_KINDS = Set.of(OtherSourceKind.EMPLOYEE_CONTRIBUTIONS,
+node/MotorCarPerquisite.java:41: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_CAR_PARTLY, RuleSetIds.RS_PERQ_CAR_OWNRUN,
+node/MotorCarPerquisite.java:46: private static final ItemFactId ELECTRIC = new ItemFactId("vehicle.engine.electric");
+node/MotorCarPerquisite.java:47: private static final ItemFactId CUBIC_CAPACITY_CC = new ItemFactId("vehicle.engine.cc");
+node/MotorCarPerquisite.java:49: private static final BaseId MONTH = new BaseId("MONTH");
+node/MotorCarPerquisite.java:50: private static final BaseId CAR_COST = new BaseId("CAR_COST");
+node/MotorCarPerquisite.java:51: private static final BaseId EXPENDITURE = new BaseId("EXPENDITURE");
+node/MotorCarPerquisite.java:52: private static final BaseId TABLE_OFFICIAL_USE = new BaseId("TABLE_OFFICIAL_USE");
+node/MotorCarPerquisite.java:53: private static final BaseId CLAIMED_OFFICIAL_USE = new BaseId("CLAIMED_OFFICIAL_USE");
+node/LifePolicySums.java:38: private static final BaseId LIFE_POLICY = new BaseId("LIFE_POLICY");
+node/SpecifiedSecurityPerquisite.java:36: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_SPECIFIED_SECURITY, RuleSetIds.RS_PERQ_SPECIFIED_DATE);
+node/SpecifiedSecurityPerquisite.java:38: private static final BaseId SECURITY_VALUE = new BaseId("SECURITY_VALUE");
+node/ScheduleXvDeduction.java:39: private static final BaseId SALARY = new BaseId("SALARY");
+node/ScheduleXvDeduction.java:40: private static final BaseId GOVERNMENT_SALARY = new BaseId("GOVERNMENT_SALARY");
+node/LoanPerquisite.java:30: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_LOAN, RuleSetIds.RS_PERQ_LOAN_PETTY);
+node/LoanPerquisite.java:32: private static final BaseId INTEREST_AT_BANK_RATE = new BaseId("INTEREST_AT_BANK_RATE");
+node/HousePropertyNode.java:41: private static final BaseId ANNUAL_VALUE = new BaseId("ANNUAL_VALUE");
+node/HousePropertyNode.java:42: private static final BaseId ARREARS = new BaseId("ARREARS");
+node/HousePropertyNode.java:43: private static final BaseId UNREALISED_RENT = new BaseId("UNREALISED_RENT");
+node/NotifiedRetirementLimits.java:41: private static final BaseId AVERAGE_SALARY_BY_COMPLETED_YEARS = new BaseId("AVERAGE_SALARY_BY_COMPLETED_YEARS");
+node/NotifiedRetirementLimits.java:42: private static final BaseId LEAVE_SALARY_AT_CREDIT = new BaseId("LEAVE_SALARY_AT_CREDIT");
+node/NotifiedRetirementLimits.java:43: private static final BaseId AVERAGE_MONTHLY_SALARY = new BaseId("AVERAGE_MONTHLY_SALARY");
+node/NotifiedRetirementLimits.java:44: private static final int MONTHS_AVERAGED = 10;
+node/MealPerquisite.java:32: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_MEAL, RuleSetIds.RS_PERQ_MEAL_AT_WORK, RuleSetIds.RS_PERQ_MEAL_VOUCHER);
+node/MealPerquisite.java:34: private static final BaseId MEAL_VALUE = new BaseId("MEAL_VALUE");
+node/MealPerquisite.java:35: private static final BaseId MEAL = new BaseId("MEAL");
+node/LeaveTravelExemption.java:58: private static final BaseId AMOUNT_INCURRED = new BaseId("AMOUNT_INCURRED");
+node/LeaveTravelExemption.java:59: private static final BaseId FARE_ADMISSIBLE = new BaseId("FARE_ADMISSIBLE");
+node/LeaveTravelExemption.java:60: private static final BaseId KM = new BaseId("KM");
+node/CapitalGainsTerm.java:31: static final RuleSetId HOLDING_PERIOD = RuleSetIds.RS_CG_TERM;
+node/CapitalGainsTerm.java:33: private static final String UNRECORDED = "UNRECORDED";
+node/CapitalGainsTerm.java:35: private static final ItemFactId ASSET = new ItemFactId("capitalgains.asset");
+node/CapitalGainsTerm.java:37: private static final ItemFactId TRANSFER_EXCHANGE = new ItemFactId("trade.transfer.exchange");
+node/AllowanceExemption.java:57: private static final Set<RuleSetId> PER_CHILD = Set.of(RuleSetIds.RS_SAL_ALW_CHILDREN_EDUCATION, RuleSetIds.RS_SAL_ALW_HOSTEL);
+node/AllowanceExemption.java:58: private static final Set<RuleSetId> ALLOWANCES = Set.of(RuleSetIds.RS_SAL_ALW_UNIFORM, RuleSetIds.RS_SAL_ALW_CONVEYANCE,
+node/AllowanceExemption.java:60: private static final BaseId ALLOWANCE_RECEIVED = new BaseId("ALLOWANCE_RECEIVED");
+node/AllowanceExemption.java:61: private static final BaseId AMOUNT_INCURRED = new BaseId("AMOUNT_INCURRED");
+node/AllowanceExemption.java:62: private static final BaseId CHILD = new BaseId("CHILD");
+node/AllowanceExemption.java:63: private static final BaseId MONTH = new BaseId("MONTH");
+node/DepositInterestDeduction.java:36: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_SAVINGS_INTEREST, RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR,
+node/DepositInterestDeduction.java:39: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/DonationDeduction.java:35: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DONATION_WHOLE, RuleSetIds.RS_DED_DONATION_HALF,
+node/DonationDeduction.java:38: private static final BaseId AMOUNT_PAID = new BaseId("AMOUNT_PAID");
+node/DonationDeduction.java:39: private static final BaseId ADJUSTED_GTI = new BaseId("ADJUSTED_GTI");
+node/DonationDeduction.java:69: static final Group WHOLE = new Group(RuleSetIds.RS_DED_DONATION_WHOLE, "the whole, without limit");
+node/DonationDeduction.java:70: static final Group WHOLE_LIMITED =
+node/DonationDeduction.java:72: static final Group HALF = new Group(RuleSetIds.RS_DED_DONATION_HALF, "half, without limit");
+node/DonationDeduction.java:73: static final Group HALF_LIMITED =
+node/CapitalGainsStt.java:32: static final RuleSetId CHARGEABILITY = RuleSetIds.RS_STT_CHARGEABLE;
+node/CapitalGainsStt.java:34: private static final String UNKNOWN = "UNKNOWN";
+node/CapitalGainsStt.java:36: private static final String UNRECORDED = "UNRECORDED";
+node/CapitalGainsStt.java:38: private static final ItemFactId SIDE = new ItemFactId("stt.side");
+node/CapitalGainsStt.java:40: private static final ItemFactId ASSET = new ItemFactId("capitalgains.asset");
+node/CapitalGainsStt.java:42: private static final ItemFactId ACQUISITION = new ItemFactId("capitalgains.acquisition");
+node/CapitalGainsStt.java:44: private static final ItemFactId ACQUIRED_ON = new ItemFactId("capitalgains.acquired.on");
+node/CapitalGainsStt.java:46: private static final ItemFactId EXCHANGE = new ItemFactId("trade.exchange");
+node/CapitalGainsStt.java:48: private static final ItemFactId SEGMENT = new ItemFactId("trade.segment");
+node/LoanInterestDeduction.java:32: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_EDUCATION_LOAN, RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER,
+node/AssetPerquisite.java:38: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_ASSET_USE, RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED,
+node/AssetPerquisite.java:41: private static final BaseId ASSET_COST = new BaseId("ASSET_COST");
+node/AssetPerquisite.java:44: private static final ItemFactId ASSET_KIND = new ItemFactId("asset.kind");
+node/ExemptionNode.java:63: private static final BaseId HRA_RECEIVED = new BaseId("HRA_RECEIVED");
+node/ExemptionNode.java:64: private static final BaseId RENT_PAID = new BaseId("RENT_PAID");
+node/ExemptionNode.java:65: private static final BaseId SALARY = new BaseId("SALARY");
+node/ExemptionNode.java:66: private static final BaseId LOCATION = new BaseId("LOCATION");
+node/ExemptionNode.java:67: private static final ProrationBasis BY_DAYS_OCCUPIED = new Days();
+node/EmployerContributionNode.java:51: private static final BaseId CONTRIBUTIONS = new BaseId("CONTRIBUTIONS");
+node/EmployerContributionNode.java:52: private static final BaseId ACCRETION = new BaseId("ACCRETION");
+node/EmployerContributionNode.java:53: private static final BaseId CONTRIBUTION = new BaseId("CONTRIBUTION");
+node/EmployerContributionNode.java:54: private static final BaseId SALARY = new BaseId("SALARY");
+node/EmployerContributionNode.java:55: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/EmployerContributionNode.java:56: private static final BaseId BALANCE = new BaseId("BALANCE");
+node/MonetarySalaryIncomeNode.java:27: private static final Set<RuleSetId> RULES = rulesRead();
+node/RoundNetPayableNode.java:22: private static final RoundingStep STEP =
+node/CapitalGainsNode.java:46: private static final RuleSetId ROW = RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS;
+node/CapitalGainsNode.java:48: private static final RuleSetId PARTS = RuleSetIds.RS_CG_PART;
+node/CapitalGainsNode.java:50: private static final ItemFactId TERM = new ItemFactId("capitalgains.term");
+node/CapitalGainsNode.java:52: private static final ItemFactId ASSET = new ItemFactId("capitalgains.asset");
+node/CapitalGainsNode.java:54: private static final ItemFactId STT_ON_ACQUISITION = new ItemFactId("capitalgains.stt.acquisition");
+node/CapitalGainsNode.java:56: private static final ItemFactId STT_ON_TRANSFER = new ItemFactId("capitalgains.stt.transfer");
+node/CapitalGainsNode.java:58: private static final ItemFactId ACQUISITION = new ItemFactId("capitalgains.acquisition");
+node/CapitalGainsNode.java:60: private static final ItemFactId CORPORATE_ACTION = new ItemFactId("capitalgains.corporate.action");
+node/CapitalGainsNode.java:62: private static final ItemFactId ACQUIRED_ON = new ItemFactId("capitalgains.acquired.on");
+node/SetOffNode.java:69: private static final BaseId LOSS = new BaseId("LOSS");
+node/ExpenseBenefitPerquisite.java:30: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_HOLIDAY, RuleSetIds.RS_PERQ_CREDIT_CARD, RuleSetIds.RS_PERQ_CLUB,
+node/ExpenseBenefitPerquisite.java:34: private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
+node/DisabilityDeduction.java:41: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DISABILITY, RuleSetIds.RS_DED_DISABILITY_SEVERE,
+node/DisabilityDeduction.java:45: private static final BaseId AMOUNT_CLAIMED = new BaseId("AMOUNT_CLAIMED");
+node/PerquisiteNode.java:62: private static final BaseId SALARY = new BaseId("SALARY");
+node/PerquisiteNode.java:63: private static final BaseId EMPLOYER_COST = new BaseId("EMPLOYER_COST");
+node/PerquisiteNode.java:64: private static final BaseId POPULATION = new BaseId("POPULATION");
+node/PerquisiteNode.java:65: private static final BaseId FURNITURE_COST = new BaseId("FURNITURE_COST");
+node/PerquisiteNode.java:66: private static final BaseId SCALED_FIRST_YEAR_VALUE = new BaseId("SCALED_FIRST_YEAR_VALUE");
+node/PerquisiteNode.java:67: private static final ProrationBasis BY_DAYS_OCCUPIED = new Days();
+node/PerquisiteNode.java:70: private static final ItemFactId ACCOMMODATION_PROVIDER = new ItemFactId("accommodation.provider");
+node/PerquisiteNode.java:72: private static final Set<RuleSetId> RULES = rulesRead();
+node/RentPaidDeduction.java:38: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_RENT_PAID);
+node/RentPaidDeduction.java:40: private static final BaseId RENT_PAID = new BaseId("RENT_PAID");
+node/RentPaidDeduction.java:41: private static final BaseId TOTAL_INCOME = new BaseId("TOTAL_INCOME");
+node/RentPaidDeduction.java:42: private static final BaseId MONTH = new BaseId("MONTH");
+node/SurchargeNode.java:94: private static final BaseId LIMITED_PART_TAX = new BaseId("LIMITED_PART_TAX");
+node/SurchargeNode.java:100: private static final Set<OtherSourceKind> DIVIDEND_KINDS = Set.of(OtherSourceKind.DIVIDEND,
+node/RoundTotalIncomeNode.java:18: private static final RoundingStep STEP =
+node/PensionDeduction.java:36: private static final BaseId SALARY = new BaseId("SALARY");
+node/PensionDeduction.java:38: private static final ItemFactId EMPLOYER_KIND = new ItemFactId("employer.kind");
+node/DeclaredCapitalGainsParts.java:20: static final RuleSetId PARTS = RuleSetIds.RS_CG_PARTS;
+node/HealthInsuranceDeduction.java:49: static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_HEALTH_FAMILY, RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR,
+node/SalaryBaseNode.java:51: private static final List<RuleSetId> BASES = List.of(
+node/GiftIncome.java:28: private static final BaseId GIFT = new BaseId("GIFT");
+node/GiftIncome.java:29: private static final Set<GiftExclusion> COVID_GROUNDS = Set.of(GiftExclusion.COVID_TREATMENT,
+node/DividendInterestAllowance.java:21: private static final BaseId DIVIDEND = new BaseId("DIVIDEND");
+## G8 86
+result/ComputationReceipt.java:30: private static final String BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+input/CapitalGainsInput.java:117: private static final String CORPORATE_ACTION = "CORPORATE_ACTION";
+rules/cap/PercentOfBaseByLocation.java:27: public static final String ANY_OTHER_PLACE = "ANY_OTHER_PLACE";
+rules/json/RuleJson.java:77: case "DAYS" -> new Days();
+rules/json/RuleJson.java:78: case "CALENDAR_MONTHS" -> new CalendarMonths();
+rules/json/RuleJson.java:79: case "COMPLETED_MONTHS" -> new CompletedMonths();
+rules/regime/DataDrivenRegimeBehaviour.java:13: public static final BehaviourId ID = new BehaviourId("DATA_DRIVEN");
+node/AgniveerDeduction.java:30: private static final BaseId AMOUNT_PAID = new BaseId("AMOUNT_PAID");
+node/RetirementNode.java:63: private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
+node/RetirementNode.java:64: private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
+node/SalaryDeductionNode.java:52: private static final BaseId SALARY = new BaseId("SALARY");
+node/ChapterEightNode.java:63: private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
+node/MedicalTreatmentAbroadNode.java:44: private static final BaseId TREATMENT_AND_STAY = new BaseId("TREATMENT_AND_STAY");
+node/MedicalTreatmentAbroadNode.java:45: private static final BaseId PERMITTED_BY_RESERVE_BANK = new BaseId("PERMITTED_BY_RESERVE_BANK");
+node/MedicalTreatmentAbroadNode.java:46: private static final BaseId TRAVEL = new BaseId("TRAVEL");
+node/HousePropertyInterest.java:44: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/HouseholdBenefitPerquisite.java:36: private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
+node/OtherSourcesNode.java:62: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/OtherSourcesNode.java:63: private static final BaseId DIVIDEND = new BaseId("DIVIDEND");
+node/OtherSourcesNode.java:64: private static final BaseId COMMISSION = new BaseId("COMMISSION");
+node/OtherSourcesNode.java:65: private static final BaseId EXPENDITURE = new BaseId("EXPENDITURE");
+node/OtherSourcesNode.java:66: private static final BaseId COMPENSATION_INTEREST = new BaseId("COMPENSATION_INTEREST");
+node/OtherSourcesNode.java:67: private static final BaseId COMMUTED_PENSION = new BaseId("COMMUTED_PENSION");
+node/OtherSourcesNode.java:68: private static final BaseId GRATUITY = new BaseId("GRATUITY");
+node/OtherSourcesNode.java:69: private static final BaseId BUSINESS_TRUST = new BaseId("BUSINESS_TRUST");
+node/OtherSourcesNode.java:76: OtherSourceKind.KEYMAN_POLICY, new KindRow(RuleSetIds.RS_OS_KEYMAN_POLICY, new BaseId("KEYMAN"),
+node/OtherSourcesNode.java:78: OtherSourceKind.FORFEITED_ADVANCE, new KindRow(RuleSetIds.RS_OS_FORFEITED_ADVANCE, new BaseId("ADVANCE"),
+node/OtherSourcesNode.java:81: new BaseId("COMPENSATION"), "compensation on termination, not from the employer"),
+node/OtherSourcesNode.java:82: OtherSourceKind.OTHER, new KindRow(RuleSetIds.RS_OS_RESIDUAL, new BaseId("RESIDUAL"),
+node/MotorCarPerquisite.java:49: private static final BaseId MONTH = new BaseId("MONTH");
+node/MotorCarPerquisite.java:50: private static final BaseId CAR_COST = new BaseId("CAR_COST");
+node/MotorCarPerquisite.java:51: private static final BaseId EXPENDITURE = new BaseId("EXPENDITURE");
+node/MotorCarPerquisite.java:52: private static final BaseId TABLE_OFFICIAL_USE = new BaseId("TABLE_OFFICIAL_USE");
+node/MotorCarPerquisite.java:53: private static final BaseId CLAIMED_OFFICIAL_USE = new BaseId("CLAIMED_OFFICIAL_USE");
+node/LifePolicySums.java:38: private static final BaseId LIFE_POLICY = new BaseId("LIFE_POLICY");
+node/SpecifiedSecurityPerquisite.java:38: private static final BaseId SECURITY_VALUE = new BaseId("SECURITY_VALUE");
+node/ScheduleXvDeduction.java:39: private static final BaseId SALARY = new BaseId("SALARY");
+node/ScheduleXvDeduction.java:40: private static final BaseId GOVERNMENT_SALARY = new BaseId("GOVERNMENT_SALARY");
+node/LoanPerquisite.java:32: private static final BaseId INTEREST_AT_BANK_RATE = new BaseId("INTEREST_AT_BANK_RATE");
+node/HousePropertyNode.java:41: private static final BaseId ANNUAL_VALUE = new BaseId("ANNUAL_VALUE");
+node/HousePropertyNode.java:42: private static final BaseId ARREARS = new BaseId("ARREARS");
+node/HousePropertyNode.java:43: private static final BaseId UNREALISED_RENT = new BaseId("UNREALISED_RENT");
+node/NotifiedRetirementLimits.java:41: private static final BaseId AVERAGE_SALARY_BY_COMPLETED_YEARS = new BaseId("AVERAGE_SALARY_BY_COMPLETED_YEARS");
+node/NotifiedRetirementLimits.java:42: private static final BaseId LEAVE_SALARY_AT_CREDIT = new BaseId("LEAVE_SALARY_AT_CREDIT");
+node/NotifiedRetirementLimits.java:43: private static final BaseId AVERAGE_MONTHLY_SALARY = new BaseId("AVERAGE_MONTHLY_SALARY");
+node/MealPerquisite.java:34: private static final BaseId MEAL_VALUE = new BaseId("MEAL_VALUE");
+node/MealPerquisite.java:35: private static final BaseId MEAL = new BaseId("MEAL");
+node/LeaveTravelExemption.java:58: private static final BaseId AMOUNT_INCURRED = new BaseId("AMOUNT_INCURRED");
+node/LeaveTravelExemption.java:59: private static final BaseId FARE_ADMISSIBLE = new BaseId("FARE_ADMISSIBLE");
+node/CapitalGainsTerm.java:33: private static final String UNRECORDED = "UNRECORDED";
+node/CapitalGainsTerm.java:61: + (facts.corporateAction().equals(Optional.of("BONUS"))
+node/AllowanceExemption.java:60: private static final BaseId ALLOWANCE_RECEIVED = new BaseId("ALLOWANCE_RECEIVED");
+node/AllowanceExemption.java:61: private static final BaseId AMOUNT_INCURRED = new BaseId("AMOUNT_INCURRED");
+node/AllowanceExemption.java:62: private static final BaseId CHILD = new BaseId("CHILD");
+node/AllowanceExemption.java:63: private static final BaseId MONTH = new BaseId("MONTH");
+node/DepositInterestDeduction.java:39: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/DonationDeduction.java:38: private static final BaseId AMOUNT_PAID = new BaseId("AMOUNT_PAID");
+node/DonationDeduction.java:39: private static final BaseId ADJUSTED_GTI = new BaseId("ADJUSTED_GTI");
+node/CapitalGainsStt.java:34: private static final String UNKNOWN = "UNKNOWN";
+node/CapitalGainsStt.java:36: private static final String UNRECORDED = "UNRECORDED";
+node/AssetPerquisite.java:41: private static final BaseId ASSET_COST = new BaseId("ASSET_COST");
+node/ExemptionNode.java:63: private static final BaseId HRA_RECEIVED = new BaseId("HRA_RECEIVED");
+node/ExemptionNode.java:64: private static final BaseId RENT_PAID = new BaseId("RENT_PAID");
+node/ExemptionNode.java:65: private static final BaseId SALARY = new BaseId("SALARY");
+node/ExemptionNode.java:66: private static final BaseId LOCATION = new BaseId("LOCATION");
+node/EmployerContributionNode.java:51: private static final BaseId CONTRIBUTIONS = new BaseId("CONTRIBUTIONS");
+node/EmployerContributionNode.java:52: private static final BaseId ACCRETION = new BaseId("ACCRETION");
+node/EmployerContributionNode.java:53: private static final BaseId CONTRIBUTION = new BaseId("CONTRIBUTION");
+node/EmployerContributionNode.java:54: private static final BaseId SALARY = new BaseId("SALARY");
+node/EmployerContributionNode.java:55: private static final BaseId INTEREST = new BaseId("INTEREST");
+node/EmployerContributionNode.java:56: private static final BaseId BALANCE = new BaseId("BALANCE");
+node/SetOffNode.java:69: private static final BaseId LOSS = new BaseId("LOSS");
+node/ExpenseBenefitPerquisite.java:34: private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
+node/DisabilityDeduction.java:45: private static final BaseId AMOUNT_CLAIMED = new BaseId("AMOUNT_CLAIMED");
+node/PerquisiteNode.java:62: private static final BaseId SALARY = new BaseId("SALARY");
+node/PerquisiteNode.java:63: private static final BaseId EMPLOYER_COST = new BaseId("EMPLOYER_COST");
+node/PerquisiteNode.java:64: private static final BaseId POPULATION = new BaseId("POPULATION");
+node/PerquisiteNode.java:65: private static final BaseId FURNITURE_COST = new BaseId("FURNITURE_COST");
+node/PerquisiteNode.java:66: private static final BaseId SCALED_FIRST_YEAR_VALUE = new BaseId("SCALED_FIRST_YEAR_VALUE");
+node/RentPaidDeduction.java:40: private static final BaseId RENT_PAID = new BaseId("RENT_PAID");
+node/RentPaidDeduction.java:41: private static final BaseId TOTAL_INCOME = new BaseId("TOTAL_INCOME");
+node/RentPaidDeduction.java:42: private static final BaseId MONTH = new BaseId("MONTH");
+node/SurchargeNode.java:94: private static final BaseId LIMITED_PART_TAX = new BaseId("LIMITED_PART_TAX");
+node/PensionDeduction.java:36: private static final BaseId SALARY = new BaseId("SALARY");
+node/GiftIncome.java:28: private static final BaseId GIFT = new BaseId("GIFT");
+node/DividendInterestAllowance.java:21: private static final BaseId DIVIDEND = new BaseId("DIVIDEND");

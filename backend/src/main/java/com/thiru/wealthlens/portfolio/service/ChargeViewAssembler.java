@@ -124,8 +124,6 @@ public class ChargeViewAssembler {
         AssetCharges charges = new AssetCharges();
         charges.setBuy(buy);
         charges.setSell(sell);
-        charges.setDeductibleSellCharges(TMoney.scale(
-                outcomes.stream().mapToDouble(TradeOutcomeEntity::getDeductibleSellCharges).sum()));
         charges.setAllocatedOutBuyCharges(TMoney.scale(
                 lots.stream().mapToDouble(AssetEntity::getAllocatedBuyCharges).sum()));
         charges.setTotal(TMoney.add(buy == null ? 0.0 : buy.getTotal(), sell == null ? 0.0 : sell.getTotal()));

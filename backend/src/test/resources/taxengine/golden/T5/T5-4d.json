@@ -1,0 +1,33 @@
+{
+  "id": "T5-4d",
+  "source": "DR 08 T5-4 variant — the carried-over journey",
+  "_source": "**Journey in calendar 2026, none taken in the 2022-2025 block → carried-over journey allowed and not counted against the block's two (SAL-LTA-CARRY-001).** Shown by two journeys already claimed in the 2026–2029 block: the carried one is still exempt. Journey on 10-6-2026.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "LTA": "120000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "leaveTravel": [
+      {
+        "startedOn": "2026-06-10",
+        "mode": "AIR",
+        "amountIncurred": "68000",
+        "fareAdmissible": "80000"
+      }
+    ],
+    "leaveTravelLedger": {
+      "2026": {
+        "journeysClaimed": 2,
+        "carriedJourneyClaimed": false
+      }
+    }
+  },
+  "expected": {
+    "salaryExemptions": "68000"
+  }
+}

@@ -20,4 +20,8 @@ public interface AllowanceLimitRepository extends MongoRepository<AllowanceLimit
             String allowanceCode, String taxYear, EntityStatus status);
 
     List<AllowanceLimitEntity> findByTaxYearAndStatus(String taxYear, EntityStatus status);
+
+    /** A limit's natural key: NPS_EMPLOYER has one row per employer type in each regime. */
+    boolean existsByAllowanceCodeAndTaxYearAndRegimeTypeAndEmployerType(String allowanceCode, String taxYear,
+            RegimeType regimeType, EmployerType employerType);
 }

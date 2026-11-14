@@ -1,0 +1,120 @@
+{
+  "ruleId": "PERQ-CAR-PATH-CONVEYANCE",
+  "ruleSet": "RS-PERQ-CAR-PATH",
+  "_note": "The employee's own other automotive conveyance run at the employer's cost, used partly privately: Table II Sl. 3(b), the expenditure less a monthly sum, or a higher claim on records (PERQ-CAR-CONVEYANCE; D-113). Provisions, introduction and provenance are PERQ-CAR-CONVEYANCE's (W-154e2). Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(iv), with Income-tax Rules, 1962 r.3(2) Table II Sl. (3)(ii) and clause (B)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(f), with Income-tax Rules, 2026 r.15(3) Table II Sl. 3(b) and (3)(c)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "VehiclePath",
+        "computation": "OWN_CONVEYANCE_EXPENDITURE"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "vehicle.owner",
+          "code": "EMPLOYEE_OTHER_CONVEYANCE"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "vehicle.use",
+          "code": "PARTLY_OFFICIAL"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(2) stands as in the rule in force from 1-4-2009 (r.3(10)), its substituting notification not read",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/42998/Rule-3_2025-12-13_12-11-50_d5ea0b09d5ea0b_en.pdf/09d9b9ee-e51d-2f37-bc21-8c787c0061ea",
+        "sourceDescription": "Income Tax Department, consolidated Income-tax Rules, 1962 rule 3, r.3(2) Table II, clause (B) and Explanation, pp.2–3 (owner's download, 2026-09-28) — Income-tax Rules, 1962 r.3(2) Table II Sl. (3)(ii) and clause (B) as substituted from 1-4-2009 by Notification No. 94/2009 (S.O. 3245(E), 18-12-2009, the Income-tax (Thirteenth Amendment) Rules, 2009) and corrected by Notification No. 2/2010 (S.O. 66(E), 12-1-2010), both read in the Income Tax Department's own copies (D-172; the Gazette facsimiles, Part II s.3(ii), are not on egazette and are unread); the later amendments of rule 3 are read in the Gazette (G.S.R. 415(E) of 2020, 452(E), 615(E), 636(E) of 2023) and the Gazette amendment chain from 1-9-2025 to 31-3-2026 touches no part of rule 3 (docs/taxplanning-build/sources/2026-10-10-rule-3.md)",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(iv), with Income-tax Rules, 1962 r.3(2) Table II Sl. (3)(ii) and clause (B)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(f), with Income-tax Rules, 2026 r.15(3) Table II Sl. 3(b) and (3)(c)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "VehiclePath",
+        "computation": "OWN_CONVEYANCE_EXPENDITURE"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "vehicle.owner",
+          "code": "EMPLOYEE_OTHER_CONVEYANCE"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "vehicle.use",
+          "code": "PARTLY_OFFICIAL"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(3)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(3) Table II and (b)–(d), pp.1542–1543",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(3) Table II and (b)–(d), pp.1542–1543",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

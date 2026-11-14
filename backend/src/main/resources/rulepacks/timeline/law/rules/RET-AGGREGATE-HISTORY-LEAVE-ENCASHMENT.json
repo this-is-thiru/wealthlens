@@ -1,0 +1,132 @@
+{
+  "ruleId": "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT",
+  "ruleSet": "RS-RET-AGGREGATE-HISTORY",
+  "_note": "Which earlier tax years' retirement deductions form the B of RET-LEAVE-ENCASHMENT-AGGREGATE's A − B: both leave encashment entries — S2 s.19(2)(f), on \"any payment on account of cash equivalent of leave salary\", \"B = the aggregate amount of payment or payments which was received in any one or more earlier tax years and allowed as an exemption or a deduction\" (quoted in RET-LEAVE-ENCASHMENT-AGGREGATE's note), which names no entry of s.19(1) Table, so a Government employee's (Sl. 13) and any other employee's (Sl. 14) leave salary both count (owner's reading, D-339 C3a). TY 2025-26: 1961 s.10(10AA)(ii) provisos, \"to the same effect\" as that note records. Reached by the payment's entry (retirement.entry) and each earlier entry the ledger holds (retirement.earlier.entry). The row states the reach only; provisions, introduction and provenance are RET-LEAVE-ENCASHMENT-AGGREGATE's (W-155c1). Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10AA)(ii), first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(f)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_LEAVE_ENCASHMENT"
+        },
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "retirement.earlier.entry",
+              "code": "GOVERNMENT_LEAVE_ENCASHMENT"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "retirement.earlier.entry",
+              "code": "OTHER_LEAVE_ENCASHMENT"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 31/2023, S.O. 2276(E), under Income-tax Act, 1961 s.10(10AA)(ii): \"Rs. 25,00,000 (twenty-five lakhs rupees only) as the limit in relation to employees … who retire\", deemed in force from 1-4-2023; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "CG-DL-E-24052023-246047",
+        "notifiedOn": "2023-05-24",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246047.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10AA)(ii), first and second provisos, p.73; the notification's Gazette copy (CG-DL-E-24052023-246047), p.2; Income-tax Act, 1961 s.10(10AA)(ii), first and second provisos: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10AA)(ii), first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(f)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_LEAVE_ENCASHMENT"
+        },
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "retirement.earlier.entry",
+              "code": "GOVERNMENT_LEAVE_ENCASHMENT"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "retirement.earlier.entry",
+              "code": "OTHER_LEAVE_ENCASHMENT"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 31/2023, S.O. 2276(E), under Income-tax Act, 1961 s.10(10AA)(ii): \"Rs. 25,00,000 (twenty-five lakhs rupees only) as the limit in relation to employees … who retire\", deemed in force from 1-4-2023; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "CG-DL-E-24052023-246047",
+        "notifiedOn": "2023-05-24",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246047.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(f), pp.45–46, s.202(2)(a) p.227 and s.536(2)(j); the notification's Gazette copy (CG-DL-E-24052023-246047), p.2; Finance Act, 2026 searched in full: no amendment to s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(f), pp.45–46",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

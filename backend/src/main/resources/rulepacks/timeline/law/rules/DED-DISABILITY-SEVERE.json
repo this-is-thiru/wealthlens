@@ -1,0 +1,125 @@
+{
+  "ruleId": "DED-DISABILITY-SEVERE",
+  "ruleSet": "RS-DED-DISABILITY-SEVERE",
+  "_note": "A person with severe disability (80% or more, s.127(9)(g)): \"An individual, being resident in India, who is certified by a medical authority, at any time during the tax year, as a person with disability or person with severe disability, shall be allowed a deduction of ₹ 75000 or ₹ 125000, respectively\" (s.154(1), p.185); the certificate furnished with the return (s.154(2)) — an entry condition; meanings from s.127 (s.154(3)). rulebook DED-80U-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80U, is the TY 2025-26 version (W-075d3). D-138. TY 2025-26: Income-tax Act, 1961 s.80U(1) proviso (thc p.426): for a person with severe disability, \"one hundred and twenty-five thousand rupees\" — the same fixed row. sources/2026-10-07-chapter-via.md B18. D-146. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches the assessee by the certified severity (disability.severity = SEVERE_DISABILITY) — s.154(1) \"respectively\" / s.127(3) (W-156c, D-348).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80U(1), proviso; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.154(1)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "125000"
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "IsCertifiedDisabled",
+          "minimum": "SEVERE_DISABILITY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "disability.severity",
+          "code": "SEVERE_DISABILITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80U(1), proviso — subs. by Act 20 of 2015, s.24 (w.e.f. 1-4-2016)",
+        "gazetteRef": "Act 20 of 2015: Gazette of India, Extraordinary, Part II, Section 1, No. 24, 14-5-2015 (egazette 2015/163872), p.21",
+        "notifiedOn": "2015-05-14",
+        "effectiveFrom": "2016-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2015/163872.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80U(1) proviso, Explanation (d), pp.425–426",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80U after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md; none amends s.80U) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80U(1), proviso; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.154(1)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "125000"
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "IsCertifiedDisabled",
+          "minimum": "SEVERE_DISABILITY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "disability.severity",
+          "code": "SEVERE_DISABILITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.154(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.154, pp.185–186; s.127(9)(g), p.164",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.154, pp.185–186; s.127(9)(g), p.164",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

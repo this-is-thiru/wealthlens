@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.brokercharges.engine;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -37,6 +38,12 @@ import org.springframework.stereotype.Component;
  * every published dimension combined, and an exchange outweighs segment and asset type together
  * because NSE and BSE levy different transaction charges.
  *
+ * <h2>A card must have a rule for the event</h2>
+ * A card with no active rule for the trade's event disagrees with it too (D-613, W-304). A maintenance card
+ * scopes nothing, since an AMC cycle has no asset type, so on dimensions alone it agrees with every
+ * trade; where the trade's own card is missing it would be chosen, price nothing of its own, and the
+ * trade would read as priced. Excluded instead, the missing card is reported as missing.
+ *
  * <p>Ties on specificity go to the later start date, which is the card published most recently for
  * that scope. A remaining tie is a data error and is refused by name — picking either would be
  * arbitrary, and whichever was picked would quietly price every trade in the window.
@@ -60,39 +67,70 @@ public class ChargeScheduleResolver {
      */
     private final Map<ScopeKey, Optional<ChargeScheduleEntity>> cache = new ConcurrentHashMap<>();
 
+    /** The statutory cards' answers, kept apart so a broker-free key never answers for a broker's card. */
+    private final Map<ScopeKey, Optional<ChargeScheduleEntity>> statutoryCache = new ConcurrentHashMap<>();
+
     public Optional<ChargeScheduleEntity> resolve(ChargeContext context) {
         return cache.computeIfAbsent(ScopeKey.of(context), key -> select(context));
+    }
+
+    /**
+     * The statutory card for this trade: the one naming no broker (D-380, D-381), chosen among
+     * statutory cards by the same agreement, specificity and tie rules as a broker's card.
+     *
+     * <p>Resolved beside the broker's card, never ranked against it: the engine merges the two, so
+     * letting them compete would drop one card's charges. Absence is not warned about, because no
+     * statutory card ships until W-163b.
+     */
+    public Optional<ChargeScheduleEntity> resolveStatutory(ChargeContext context) {
+        return statutoryCache.computeIfAbsent(ScopeKey.withoutBroker(context), key -> selectStatutory(context));
     }
 
     /** Called when a schedule is published or superseded, so the next trade sees the new card. */
     public void evictAll() {
         cache.clear();
+        statutoryCache.clear();
     }
 
     private Optional<ChargeScheduleEntity> select(ChargeContext context) {
-        List<ChargeScheduleEntity> eligible = chargeScheduleRepository
-                .findCandidates(context.brokerName(), context.transactionDate())
-                .stream()
-                .filter(candidate -> agrees(candidate, context))
-                .toList();
+        List<ChargeScheduleEntity> eligible = agreeing(
+                chargeScheduleRepository.findCandidates(context.brokerName(), context.transactionDate()), context);
 
         if (eligible.isEmpty()) {
             log.warn("No charge schedule for broker={} on {} matching assetType={}, segment={}, exchange={},"
-                            + " planCode={}; transaction {} accrues no charges",
+                            + " planCode={} with a rule for event={}; transaction {} accrues no charges",
                     context.brokerName(), context.transactionDate(), context.assetType(), context.segment(),
-                    context.exchange(), context.planCode(), context.transactionId());
+                    context.exchange(), context.planCode(), context.event(), context.transactionId());
             return Optional.empty();
         }
+        return Optional.of(mostSpecific(eligible, context, "broker " + context.brokerName()));
+    }
 
+    private Optional<ChargeScheduleEntity> selectStatutory(ChargeContext context) {
+        List<ChargeScheduleEntity> eligible = agreeing(
+                chargeScheduleRepository.findStatutoryCandidates(context.transactionDate()), context);
+
+        return eligible.isEmpty()
+                ? Optional.empty()
+                : Optional.of(mostSpecific(eligible, context, "the statutory charges"));
+    }
+
+    private static List<ChargeScheduleEntity> agreeing(List<ChargeScheduleEntity> candidates, ChargeContext context) {
+        return candidates.stream().filter(candidate -> agrees(candidate, context)).toList();
+    }
+
+    private static ChargeScheduleEntity mostSpecific(
+            List<ChargeScheduleEntity> eligible, ChargeContext context, String whose) {
         int best = eligible.stream().mapToInt(ChargeScheduleResolver::specificity).max().orElseThrow();
         List<ChargeScheduleEntity> mostSpecific = eligible.stream()
                 .filter(candidate -> specificity(candidate) == best)
                 .toList();
 
-        return Optional.of(mostRecent(mostSpecific, context));
+        return mostRecent(mostSpecific, context, whose);
     }
 
-    private static ChargeScheduleEntity mostRecent(List<ChargeScheduleEntity> candidates, ChargeContext context) {
+    private static ChargeScheduleEntity mostRecent(
+            List<ChargeScheduleEntity> candidates, ChargeContext context, String whose) {
         if (candidates.size() == 1) {
             return candidates.getFirst();
         }
@@ -111,19 +149,26 @@ public class ChargeScheduleResolver {
             String codes = newest.stream()
                     .map(ChargeScheduleEntity::getScheduleCode)
                     .collect(Collectors.joining(", "));
-            throw new BadRequestException("More than one charge schedule is equally specific for broker "
-                    + context.brokerName() + " on " + context.transactionDate() + ": " + codes
+            throw new BadRequestException("More than one charge schedule is equally specific for "
+                    + whose + " on " + context.transactionDate() + ": " + codes
                     + ". Close one of their validity windows.");
         }
         return newest.getFirst();
     }
 
-    /** A declared dimension must agree; a null one matches anything. */
+    /** A declared dimension must agree, a null one matches anything, and an active rule must declare the event. */
     private static boolean agrees(ChargeScheduleEntity schedule, ChargeContext context) {
         return matches(schedule.getAssetType(), context.assetType())
                 && matches(schedule.getSegment(), context.segment())
                 && matches(schedule.getExchange(), context.exchange())
-                && matches(schedule.getPlanCode(), context.planCode());
+                && matches(schedule.getPlanCode(), context.planCode())
+                && declaresEvent(schedule, context.event());
+    }
+
+    private static boolean declaresEvent(ChargeScheduleEntity schedule, ChargeEvent event) {
+        return schedule.getRules() != null
+                && schedule.getRules().stream()
+                        .anyMatch(rule -> rule.isActive() && rule.getEvents() != null && rule.getEvents().contains(event));
     }
 
     private static boolean matches(Object declared, Object actual) {
@@ -154,11 +199,18 @@ public class ChargeScheduleResolver {
             TradeSegment segment,
             String exchange,
             String planCode,
+            ChargeEvent event,
             LocalDate transactionDate) {
 
         static ScopeKey of(ChargeContext context) {
             return new ScopeKey(context.brokerName(), context.assetType(), context.segment(),
-                    context.exchange(), context.planCode(), context.transactionDate());
+                    context.exchange(), context.planCode(), context.event(), context.transactionDate());
+        }
+
+        /** A statutory card is chosen whoever the broker is, so the broker is not part of its scope. */
+        static ScopeKey withoutBroker(ChargeContext context) {
+            return new ScopeKey(null, context.assetType(), context.segment(),
+                    context.exchange(), context.planCode(), context.event(), context.transactionDate());
         }
     }
 }

@@ -4,10 +4,12 @@ import com.thiru.wealthlens.helper.file.FileStream;
 import com.thiru.wealthlens.helper.file.FileType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.export.PortfolioExcelExporter;
 import com.thiru.wealthlens.shared.dto.EntityExportRequest;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
@@ -37,16 +39,19 @@ public class EntityExportService {
     private static final String FILE_NAME_DATE_FORMAT = "dd-MMMM-yyyy--hh-mm-ss-a";
 
     private final Environment env;
-    private final PortfolioService portfolioService;
+    private final PortfolioQueryService portfolioQueryService;
     private final TransactionService transactionService;
 
     public FileStream export(UserMail userMail, EntityExportRequest exportRequest) {
         String entityName = exportRequest.getEntityName();
         List<String> columns = exportRequest.getSelectedColumns();
+        if (entityName == null) {
+            throw new BadRequestException("Name the entity to export: one of assets, transactions, transactions-template");
+        }
 
         return switch (entityName) {
             case "assets" -> stream("portfolio-", PortfolioExcelExporter.assets(
-                    portfolioService.getExportEntities(userMail, exportRequest.getQueryFilters()), columns, false));
+                    portfolioQueryService.getExportEntities(userMail, exportRequest.getQueryFilters()), columns, false));
             case "transactions" -> stream("transaction-", PortfolioExcelExporter.transactions(
                     transactionService.getUserTransactions(userMail), columns));
             // The template's name is fixed: it is a blank form, not a dated extract of anything, and
@@ -81,6 +86,9 @@ public class EntityExportService {
         transaction.setStockName("Stock Name");
         transaction.setExchangeName("NSE");
         transaction.setBrokerName(BrokerName.ZERODHA);
+        transaction.setSegment(TradeSegment.DELIVERY);
+        transaction.setAccountType(AccountType.SELF);
+        transaction.setAccountHolder("Self");
         transaction.setAssetType(AssetType.EQUITY);
         transaction.setMaturityDate(LocalDate.now());
         transaction.setTransactionType(TransactionType.BUY);

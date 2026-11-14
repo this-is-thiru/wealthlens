@@ -1,0 +1,17 @@
+{
+  "code": "CG_F_LTCG_12_5_V",
+  "_note": "Accrual of the BFLA row, by transfer date. Drafted by Claude, adopted by the owner's rulings C1a – C4a (W-323, D-662); Gazette 271435 p.50 (CG F), pp.55 – 56 (OS 10).",
+  "label": "Long-term capital gains taxable at the rate of 12.5%, 16/3 to 31/3",
+  "source": {
+    "type": "FromCapitalGainsAccrual",
+    "parts": [
+      "LONG_TERM_LISTED_EQUITY",
+      "LONG_TERM_OTHER"
+    ],
+    "period": {
+      "from": "03-16",
+      "to": "03-31"
+    },
+    "settledColumn": "afterBroughtForward"
+  }
+}

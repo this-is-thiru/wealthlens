@@ -1,0 +1,33 @@
+{
+  "id": "T5-2",
+  "source": "DR 08 T5-2 — the H-7 regression: employee PF counted in the s.123 aggregate",
+  "_source": "**Assertion: the deduction is the same, but A3's reported 80C headroom differs by ₹1,20,000** — \"this is why the test must assert the trace, not just the total\". T5-1's facts; the s.123 line's aggregate is 1,20,000 + 30,000 + 60,000 + 1,00,000 = 3,10,000, not the regression's 1,90,000 (erratum below DR 08 T5, D-153).",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "1000000",
+      "EMPLOYEE_PF": "120000",
+      "EMPLOYEE_NPS": "150000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "qualifyingPayments": {
+      "TUITION_FEES": "60000"
+    },
+    "lifeInsurancePolicies": [
+      {
+        "premiumPaid": "30000",
+        "sumAssured": "1000000",
+        "issuedOn": "2020-06-01"
+      }
+    ]
+  },
+  "expected": {
+    "chapterEightDeduction": "200000",
+    "scheduleXvAggregate": "310000"
+  }
+}

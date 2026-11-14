@@ -1,0 +1,12 @@
+{
+  "code": "DED_80U",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Deduction u/s 80U",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "DED-DISABILITY",
+      "DED-DISABILITY-SEVERE"
+    ]
+  }
+}

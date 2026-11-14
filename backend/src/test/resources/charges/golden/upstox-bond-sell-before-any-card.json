@@ -1,0 +1,19 @@
+{
+  "name": "upstox-bond-sell-before-any-card",
+  "describes": "The same bond sell dated before 2025-04-01, when no Upstox card is in force: NO_SCHEDULE, the label a broker with no card at all still gets.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": "BOND",
+    "segment": null,
+    "exchange": null,
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 10,
+    "transactionDate": "2025-03-01"
+  },
+  "expected": {
+    "lines": {},
+    "total": 0.0,
+    "resolution": "NO_SCHEDULE"
+  }
+}

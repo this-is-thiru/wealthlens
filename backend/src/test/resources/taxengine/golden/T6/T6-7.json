@@ -1,0 +1,16 @@
+{
+  "id": "T6-7",
+  "source": "DR 08 T6-7 — senior citizen, DED-80TTB-001",
+  "_source": "\"Same interest figures, age 67, old regime.\" \"DED-80TTB-001: deposits in ANY account including time deposits, cap 50,000; min(14,000 + 90,000 , 50,000) = 50,000\"; \"DED-80TTA-001 does not apply to a senior citizen\"; \"Expected: ₹50,000, and DED-80TTA-001 absent from the trace.\" INFERENCE, not DR 08's (D-211 C3): \"the same interest figures\" read as T6-6's two interest items only, without its dividend.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "ageAtYearEnd": 67,
+  "taxYears": ["2025-26", "2026-27"],
+  "otherSources": [
+    {"kind": "SAVINGS_DEPOSIT_INTEREST", "received": "14000"},
+    {"kind": "DEPOSIT_INTEREST", "received": "90000"}
+  ],
+  "expected": {
+    "chapterEightDeduction": "50000",
+    "absentRules": ["DED-SAVINGS-INTEREST"]
+  }
+}

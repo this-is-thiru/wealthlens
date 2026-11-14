@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxplanning.recommendation;
 
+import com.thiru.wealthlens.taxplanning.compute.HrSupportLikelihood;
 import com.thiru.wealthlens.taxplanning.enums.AvailabilityPath;
-import com.thiru.wealthlens.taxplanning.enums.HrSupportLikelihood;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

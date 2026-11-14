@@ -1,0 +1,12 @@
+{
+  "code": "SALARY_STANDARD_DEDUCTION",
+  "_note": "Exactly one row applies in a regime (SalaryDeductionNode). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Standard deduction u/s 16(ia)",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
+      "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"
+    ]
+  }
+}

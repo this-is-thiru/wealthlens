@@ -1,0 +1,103 @@
+{
+  "ruleId": "DED-DEPENDANT-OWN-CLAIM",
+  "ruleSet": "RS-DED-DEPENDANT-OWN-CLAIM",
+  "_note": "Who s.127 does not take as a dependant: one who claims the deduction for their own disability (W-156h, D-354; W-156g). TY 2026-27: Income-tax Act, 2025 s.127(8), not a dependant who claimed s.154 (as DED-DISABLED-DEPENDANT's note quotes it). TY 2025-26: Income-tax Act, 1961 s.80DD Explanation (b), whose \"dependant\" ends \"and who has not claimed any deduction under section 80U in computing his total income for the assessment year relating to the previous year\" (thc p.344; docs/taxplanning-build/sources/2026-10-24-dependant.md D1). s.128 and 1961 s.80DDB have no such bar (D2; s.128(5)(a) takes s.127(9) only), which is why this is a row of its own rather than a condition on DED-DEPENDANT. Reached by the dependant's dependant.claims.own.disability; a dependant it does not reach is refused for s.127. Conditions only; provenance and introduction are DED-DEPENDANT's. Old regime only, as those rows.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80DD Explanation (b); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.127(8)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "dependant.claims.own.disability",
+          "code": "false"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2022 (6 of 2022), s.21 — s.80DD(2)(a), (3A) (the scheme's payout); s.80DD(1) as subs. by Act 20 of 2015, s.20 (w.e.f. 1-4-2016)",
+        "gazetteRef": "CG-DL-E-31032022-234693",
+        "notifiedOn": "2022-03-31",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80DD(1), (4), Explanation, pp.343–344, s.80DDB Explanation (i), p.345; Gazette CG-DL-E-31032022-234693, Finance Act, 2022 s.21, p.28",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80DD and s.80DDB after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80DD Explanation (b); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.127(8)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "dependant.claims.own.disability",
+          "code": "false"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.127(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.127(1), (8), (9), pp.162–164",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.127(1), (8), (9), pp.162–164",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

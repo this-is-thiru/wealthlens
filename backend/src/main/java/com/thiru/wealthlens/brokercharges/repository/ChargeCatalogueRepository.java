@@ -11,9 +11,8 @@ public interface ChargeCatalogueRepository extends MongoRepository<ChargeCatalog
     /**
      * The stored row for a code, or empty.
      *
-     * <p>Used both to decide whether seeding should skip a code and to backfill
-     * {@code deductibleForCapitalGains} onto one stored before that field existed, so it has to
-     * return the entity rather than a boolean.
+     * <p>Seeding skips a code already stored, so a catalogue entry that has priced something is
+     * never rewritten.
      */
     Optional<ChargeCatalogueEntity> findByCode(String code);
 

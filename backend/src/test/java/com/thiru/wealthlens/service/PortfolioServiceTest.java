@@ -7,23 +7,22 @@ import static org.mockito.Mockito.*;
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolution;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
-import com.thiru.wealthlens.portfolio.service.ChargeViewAssembler;
-import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
@@ -47,6 +46,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 @ExtendWith(MockitoExtension.class)
 class PortfolioServiceTest {
@@ -61,9 +61,6 @@ class PortfolioServiceTest {
     private ProfitAndLossService profitAndLossService;
 
     @Mock
-    private MongoTemplateService mongoTemplateService;
-
-    @Mock
     private TradeOutcomeService tradeOutcomeService;
 
     @Mock
@@ -76,12 +73,6 @@ class PortfolioServiceTest {
     private ChargeRecordingGateway chargeRecordingGateway;
 
     @Mock
-    private ChargeViewAssembler chargeViewAssembler;
-
-    @Mock
-    private HoldingPeriodService holdingPeriodService;
-
-    @Mock
     private TradeOutcomeRecorder tradeOutcomeRecorder;
 
     private TestablePortfolioService portfolioService;
@@ -92,7 +83,7 @@ class PortfolioServiceTest {
         portfolioService = testableService(new ChargeEngineProperties(true, true, false));
         userMail = UserMail.from("test@example.com");
         // Every trade is a first submission unless a test says otherwise (TL-7).
-        lenient().when(transactionService.recordTransaction(any(), any()))
+        lenient().when(transactionService.recordTransaction(any(), any(), any()))
                 .thenAnswer(invocation -> TransactionRecord.created("txn-new"));
     }
 
@@ -105,14 +96,11 @@ class PortfolioServiceTest {
                 portfolioRepository,
                 transactionService,
                 profitAndLossService,
-                mongoTemplateService,
                 tradeOutcomeService,
                 transactionRepository,
                 temporaryTransactionService,
                 chargeRecordingGateway,
-                chargeViewAssembler,
                 properties,
-                holdingPeriodService,
                 tradeOutcomeRecorder
         );
     }
@@ -126,19 +114,17 @@ class PortfolioServiceTest {
                 PortfolioRepository portfolioRepository,
                 TransactionService transactionService,
                 ProfitAndLossService profitAndLossService,
-                MongoTemplateService mongoTemplateService,
                 TradeOutcomeService tradeOutcomeService,
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
-                ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService, TradeOutcomeRecorder tradeOutcomeRecorder) {
+                TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
-                    mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                    tradeOutcomeService, transactionRepository,
+                    temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    holdingPeriodService, tradeOutcomeRecorder);
+                    tradeOutcomeRecorder);
         }
 
         void resetAddTransactionBehaviour() {
@@ -175,20 +161,17 @@ class PortfolioServiceTest {
                 PortfolioRepository portfolioRepository,
                 TransactionService transactionService,
                 ProfitAndLossService profitAndLossService,
-                MongoTemplateService mongoTemplateService,
                 TradeOutcomeService tradeOutcomeService,
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
-                ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService,
                 TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
-                    mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                    tradeOutcomeService, transactionRepository,
+                    temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    holdingPeriodService, tradeOutcomeRecorder);
+                    tradeOutcomeRecorder);
         }
 
         @Override
@@ -203,9 +186,9 @@ class PortfolioServiceTest {
         // Given: use real service so check is exercised
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
-                mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -221,9 +204,9 @@ class PortfolioServiceTest {
         // Given: use real service so check is exercised
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
-                mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -325,6 +308,46 @@ class PortfolioServiceTest {
         verify(transactionRepository, never()).saveAll(anyList());
     }
 
+    @Test
+    void redriveTemporaryTransactions_whenATradeIsRefused_failsOnlyThatItem() {
+        // Given -- two temporaries; the first breaks a trade rule (quantity 0) (W-281 C2a)
+        TransactionEntity refused = new TransactionEntity();
+        refused.setId("temp-refused");
+        AssetRequest zero = createAssetRequest("STOCK1");
+        zero.setQuantity(0.0);
+        refused.setAssetRequest(zero);
+        TransactionEntity fine = new TransactionEntity();
+        fine.setId("temp-fine");
+        fine.setAssetRequest(createAssetRequest("STOCK2"));
+        when(temporaryTransactionService.getAllTemporaryTransactions(userMail)).thenReturn(List.of(refused, fine));
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), eq(true))).thenReturn(false);
+
+        // When
+        RedriveResult result = portfolioService.redriveTemporaryTransactions(userMail);
+
+        // Then -- the refused one failed with the rule's reason; the other succeeded
+        assertTrue(result.getFailed().get("temp-refused").startsWith("Quantity must be greater than zero"));
+        assertEquals(List.of("temp-fine"), result.getSucceeded());
+    }
+
+    @Test
+    void redriveTemporaryTransactions_whenTheDatabaseFails_abortsTheRedrive() {
+        // Given -- one temporary, and the transaction store failing (W-281 C2a)
+        TransactionEntity waiting = new TransactionEntity();
+        waiting.setId("temp-1");
+        waiting.setAssetRequest(createAssetRequest("STOCK1"));
+        when(temporaryTransactionService.getAllTemporaryTransactions(userMail)).thenReturn(List.of(waiting));
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), eq(true))).thenReturn(false);
+        DataAccessResourceFailureException down = new DataAccessResourceFailureException("database unreachable");
+        when(transactionService.recordTransaction(any(), any(), any())).thenThrow(down);
+
+        // When / Then -- not reported as one item's failure: the redrive itself fails, so its transaction rolls back
+        DataAccessResourceFailureException thrown = assertThrows(DataAccessResourceFailureException.class,
+                () -> portfolioService.redriveTemporaryTransactions(userMail));
+        assertSame(down, thrown);
+        verify(transactionRepository, never()).saveAll(anyList());
+    }
+
     private AssetRequest createAssetRequest(String stockCode) {
         AssetRequest request = new AssetRequest();
         request.setStockCode(stockCode);
@@ -365,7 +388,7 @@ class PortfolioServiceTest {
     }
 
     private static ChargeComputation computed() {
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                 ChargeResolution.RESOLVED, List.of(), COMPUTED_CHARGES);
     }
 
@@ -519,7 +542,7 @@ class PortfolioServiceTest {
         // Given
         AssetRequest request = buyRequest();
         request.setPrice(0D);
-        when(temporaryTransactionService.filterOutTransaction(any(), any())).thenReturn(null);
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), any(TradeFlow.class))).thenReturn(null);
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
 
         // When / Then
@@ -544,7 +567,7 @@ class PortfolioServiceTest {
     }
 
     @Test
-    void updateQuantityBySavingReportAndProfitAndLoss1_recordsTradeOutcomesForEveryConsumedLot() {
+    void allocateSaleV2_recordsTradeOutcomesForEveryConsumedLot() {
         // Given -- a 4-unit sell across a 3-unit lot and a 5-unit lot
         List<AssetEntity> lots = new ArrayList<>(List.of(
                 sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10)),
@@ -556,7 +579,7 @@ class PortfolioServiceTest {
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
 
         // When
-        portfolioService.updateQuantityBySavingReportAndProfitAndLoss1(userMail, "sell-1", lots, sell);
+        portfolioService.allocateSaleV2(userMail, "sell-1", lots, sell);
 
         // Then -- both lots reach the recorder, with the partially consumed one carrying its
         // original quantity so buy-side charges can be pro-rated against the right denominator
@@ -570,7 +593,31 @@ class PortfolioServiceTest {
     }
 
     @Test
-    void updateQuantityBySavingReportAndProfitAndLoss_v1_doesNotRecordTradeOutcomesThroughTheNewPath() {
+    void allocateSaleV2_recordsTheSaleFromTheRowsTheRecorderSaved() {
+        // Given -- the recorder computes the sale's charges and net profit; the P&L must fold those rows (W-169)
+        List<AssetEntity> lots = new ArrayList<>(List.of(sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10))));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(3.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+        Optional<ChargeComputation> priced = Optional.of(computed());
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(priced);
+        List<TradeOutcomeContext> rows = List.of(TradeOutcomeContext.builder().netProfit(290.0).build());
+        when(tradeOutcomeRecorder.record(any(), any(), any(), any(), any())).thenReturn(rows);
+
+        // When
+        portfolioService.allocateSaleV2(userMail, "sell-1", lots, sell);
+
+        // Then -- priced, then recorded, then the P&L given those very rows
+        InOrder order = inOrder(chargeRecordingGateway, tradeOutcomeRecorder, profitAndLossService);
+        order.verify(chargeRecordingGateway).record(eq(userMail), any(ProfitLossContext.class));
+        order.verify(tradeOutcomeRecorder).record(eq(userMail), eq(sell), eq("sell-1"), any(), eq(priced));
+        order.verify(profitAndLossService).recordSale(eq(userMail), any(ProfitLossContext.class), eq(priced),
+                same(rows));
+    }
+
+    @Test
+    void allocateSale_doesNotRecordTradeOutcomesThroughTheNewPath() {
         // Given -- V1 is in live use and writes its outcomes through toTradeOutcomeContext.
         // If it ever reaches the recorder as well, every V1 sell is double-counted.
         List<AssetEntity> lots = new ArrayList<>(List.of(
@@ -581,11 +628,8 @@ class PortfolioServiceTest {
         sell.setTransactionDate(LocalDate.of(2025, 8, 10));
 
         when(portfolioRepository
-                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(
-                        any(), any(), any(), any()))
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
                 .thenReturn(lots);
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
 
         // When
         portfolioService.sellStock(userMail, "sell-1", sell);
@@ -604,7 +648,7 @@ class PortfolioServiceTest {
         // Given
         AssetRequest request = createAssetRequest("STOCK1");
         request.setTransactionType(TransactionType.BUY);
-        when(transactionService.recordTransaction(any(), any()))
+        when(transactionService.recordTransaction(any(), any(), any()))
                 .thenReturn(TransactionRecord.replayOf("txn-original"));
 
         // When
@@ -623,13 +667,13 @@ class PortfolioServiceTest {
         AssetRequest request = createAssetRequest("STOCK1");
         request.setTransactionType(TransactionType.BUY);
         request.setTempTransactionId("temp-1");
-        when(transactionService.recordTransaction(any(), any()))
+        when(transactionService.recordTransaction(any(), any(), any()))
                 .thenReturn(TransactionRecord.replayOf("txn-first-redrive"));
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
-                mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
 
         // When
         String result = realService.addTransaction(userMail, request, new ArrayList<>());
@@ -645,7 +689,7 @@ class PortfolioServiceTest {
         // Given
         AssetRequest request = createAssetRequest("STOCK1");
         request.setTransactionType(TransactionType.BUY);
-        when(transactionService.recordTransaction(any(), any()))
+        when(transactionService.recordTransaction(any(), any(), any()))
                 .thenReturn(TransactionRecord.created("txn-new"));
 
         // When
@@ -663,10 +707,8 @@ class PortfolioServiceTest {
         AssetEntity asset = sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10));
         asset.setBrokerCharges(10.0);
         when(portfolioRepository
-                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
 
         // When -- three successive single-unit sells
         for (int i = 0; i < 3; i++) {
@@ -686,4 +728,127 @@ class PortfolioServiceTest {
         }
         MoneyAssert.assertCanonical("V1 lifetime buy charge", 10.00, deducted);
     }
+
+    @Test
+    void sellStock_v1_writesEveryFieldOfTheOutcome() {
+        // Given -- a lot of 4 @ 100 (broker 10, misc 2) at Upstox on BSE; 3 sold @ 200 (broker 6, misc 1.5)
+        AssetEntity asset = sellableLot("buy-1", 4.0, 100.0, LocalDate.of(2024, 1, 10));
+        asset.setStockName("Lot Co");
+        asset.setExchangeName("BSE");
+        asset.setBrokerName(BrokerName.UPSTOX);
+        asset.setBrokerCharges(10.0);
+        asset.setMiscCharges(2.0);
+        when(portfolioRepository
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setAccountType(AccountType.OUTSOURCED);
+        sell.setAccountHolder("main");
+        sell.setQuantity(3.0);
+        sell.setPrice(200.0);
+        sell.setBrokerCharges(6.0);
+        sell.setMiscCharges(1.5);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        TradeOutcomeContext row = captor.getValue();
+        assertV1Identity(row);
+        assertV1Figures(row);
+    }
+
+    /** The fields V1 takes from the lot (stock, exchange, broker, asset type) and from the request (account). */
+    private void assertV1Identity(TradeOutcomeContext row) {
+        assertEquals(userMail.getEmail(), row.getEmail());
+        assertEquals("STOCK1", row.getStockCode());
+        assertEquals("Lot Co", row.getStockName());
+        assertEquals("BSE", row.getExchangeName());
+        assertEquals(BrokerName.UPSTOX, row.getBrokerName());
+        assertEquals(AssetType.EQUITY, row.getAssetType());
+        assertEquals(AccountType.OUTSOURCED, row.getAccountType());
+        assertEquals("main", row.getAccountHolder());
+        assertEquals(LocalDate.of(2024, 1, 10), row.getBuyDate());
+        assertEquals(LocalDate.of(2025, 8, 10), row.getSellDate());
+        // 2024-01-10 -> 2025-01-10 is 366 days (leap year); then 21+28+31+30+31+30+31+10 = 212
+        assertEquals(578L, row.getHoldingPeriodDays());
+        assertEquals("2025-2026", row.getFinancialYear());
+        assertEquals("sell-1", row.getSourceSellTransactionId());
+        assertEquals("asset-buy-1", row.getSourceBuyLotId());
+        assertEquals(Boolean.FALSE, row.getCorporateActionDerived());
+        assertEquals(List.of(), row.getAppliedCorporateActions());
+        assertEquals(AcquisitionMode.PURCHASE, row.getAcquisitionMode());
+        assertNull(row.getAcquisitionCorporateAction());
+    }
+
+    private static void assertV1Figures(TradeOutcomeContext row) {
+        MoneyAssert.assertMoney(100.0, row.getOriginalBuyPrice());
+        MoneyAssert.assertMoney(100.0, row.getCorporateActionAdjustedBuyPrice());
+        assertEquals(3.0, row.getBuyQuantity(), 0.0);
+        assertEquals(3.0, row.getSellQuantity(), 0.0);
+        MoneyAssert.assertMoney(7.5, row.getBuyBrokerCharges());   // LotChargeAllocator: 10 × 3 ÷ 4, nothing allocated before
+        MoneyAssert.assertMoney(1.5, row.getBuyMiscCharges());     // 2 × 3 ÷ 4
+        MoneyAssert.assertMoney(200.0, row.getSellPrice());
+        MoneyAssert.assertMoney(6.0, row.getSellBrokerCharges());  // 6 ÷ 3 × 3
+        MoneyAssert.assertMoney(1.5, row.getSellMiscCharges());    // 1.5 ÷ 3 × 3
+        MoneyAssert.assertMoney(309.0, row.getTotalBuyValue());    // 100 × 3 + 7.5 + 1.5
+        MoneyAssert.assertMoney(592.5, row.getTotalSellValue());   // 200 × 3 − 6 − 1.5
+        MoneyAssert.assertMoney(283.5, row.getNetProfit());
+        assertEquals(283.5 / 309.0 * 100, row.getProfitPercentage(), 1e-9);
+    }
+
+    @Test
+    void sellStock_v1_whenTheLotWasABonusAllotment_recordsItsAcquisition() {
+        // Given -- the lot's own record says how it was acquired; S.O. 5054(E) turns on it (W-088f)
+        AssetEntity asset = sellableLot("buy-1", 3.0, 0.0, LocalDate.of(2020, 1, 10));
+        asset.setCorporateActionType(CorporateActionType.BONUS);
+        when(portfolioRepository
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(1.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        assertEquals(AcquisitionMode.CORPORATE_ACTION, captor.getValue().getAcquisitionMode());
+        assertEquals(CorporateActionType.BONUS, captor.getValue().getAcquisitionCorporateAction());
+    }
+
+    @Test
+    void sellStock_v1_whenTheLotAndTheSaleWereTradedApart_recordsEachSidesVenue() {
+        // Given -- the lot on BSE for delivery, the sale on NSE intraday; V1's exchange_name is the lot's (D-295)
+        AssetEntity asset = sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10));
+        asset.setExchangeName("BSE");
+        asset.setSegment(TradeSegment.DELIVERY);
+        when(portfolioRepository
+                .findEligibleHoldingsForSell(any(), any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(1.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+        sell.setExchangeName("NSE");
+        sell.setSegment(TradeSegment.INTRADAY);
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        assertEquals("BSE", captor.getValue().getBuyExchangeName());
+        assertEquals(TradeSegment.DELIVERY, captor.getValue().getBuySegment());
+        assertEquals("NSE", captor.getValue().getSellExchangeName());
+        assertEquals(TradeSegment.INTRADAY, captor.getValue().getSellSegment());
+    }
+
 }

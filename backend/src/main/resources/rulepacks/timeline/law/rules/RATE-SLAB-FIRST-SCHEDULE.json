@@ -1,0 +1,92 @@
+{
+  "ruleId": "RATE-SLAB-FIRST-SCHEDULE",
+  "ruleSet": "RS-RATE-SLAB",
+  "_note": "01-rulebook.md:115-120 — identical to RATE-SLAB-OLD-2025 in every band and rate, restated in the 2025-Act idiom. Under-60 ladder (item I); the 60+ and 80+ variants are the separate rules RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79 and -AGE-80, selected in place of this one when their conditions hold (D-072). Spans TY 2025-26 (W-052c, D-082): FA 2026 First Schedule Part I-A Paragraph A (p.80), the 1961-Act rates for AY 2026-27, states the same bands, with \"previous year\" for Part I-B's \"tax year\". provision1961 corrected from \"Income-tax Act, 1961 First Schedule\": the 1961 Act does not state these rates. Rule set RS-RATE-SLAB (W-088m1, D-252): this table yields to the age ladders RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79 and -AGE-80, so it holds only where neither does — not (resident and sixty or more), the union of their conditions; before, TaxByBasisNode stated that replacement in Java.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "FIRST_SCHEDULE_RATES"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Finance Act, 2026",
+        "reference": "First Schedule Part I-A Paragraph A",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Finance Act, 2026",
+        "reference": "First Schedule Part I-B Paragraph A items (I), (II), (III)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "SlabLadder",
+        "base": "ROUNDED_TOTAL_INCOME",
+        "bands": [
+          {
+            "lowerExclusive": "0",
+            "upperInclusive": "250000",
+            "rate": "0"
+          },
+          {
+            "lowerExclusive": "250000",
+            "upperInclusive": "500000",
+            "rate": "5"
+          },
+          {
+            "lowerExclusive": "500000",
+            "upperInclusive": "1000000",
+            "rate": "20"
+          },
+          {
+            "lowerExclusive": "1000000",
+            "upperInclusive": null,
+            "rate": "30"
+          }
+        ]
+      },
+      "conditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "AllOf",
+            "all": [
+              {"type": "IsResident"},
+              {"type": "AgeAtLeast", "years": 60, "subject": "SELF"}
+            ]
+          }
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), First Schedule Parts I-A and I-B",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-31",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032026-271439, First Schedule Part I, B, Paragraph A",
+        "accessedOn": "2026-09-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+    "sourceDescription": "Gazette CG-DL-E-31032026-271439, First Schedule Part I, B, Paragraph A",
+    "accessedOn": "2026-09-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

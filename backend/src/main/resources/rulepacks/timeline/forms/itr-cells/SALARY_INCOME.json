@@ -1,0 +1,11 @@
+{
+  "code": "SALARY_INCOME",
+  "_note": "The head's income (SalaryIncomeNode). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Income chargeable under the head Salaries",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "salary.income"
+    ]
+  }
+}

@@ -1,0 +1,1409 @@
+package com.thiru.wealthlens.integration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
+import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
+import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
+import io.restassured.RestAssured;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+
+/**
+ * The first tax figure over HTTP: a stored draft, through the assembler and the shipped pipeline (W-103, W-104, W-107, W-109;
+ * D-442). The case is {@code DR 13} T13-1, worked by hand in {@code plans/W-089.md}: 1,00,000 of salary, 11,00,000 of listed-equity
+ * gains, 84,375 at 12.5 %, nil rebate, 3,375 of cess, a bill of 87,750. Computed on a fixed day, 6-11-2026, because interest for
+ * deferring advance tax runs to the day of computation (W-112, D-446): by then 15 June and 15 September have passed.
+ */
+class DraftComputationIntegrationTest extends AbstractIntegrationTest {
+
+    /** The day every computation here is made on. */
+    @TestConfiguration
+    static class FixedDay {
+
+        @Bean
+        @Primary
+        Clock fixedDay() {
+            return Clock.fixed(Instant.parse("2026-11-06T06:30:00Z"), ZoneId.of("Asia/Kolkata"));
+        }
+    }
+
+    private static final String OWNER = "computer@example.com";
+    private static final String REGIME = "{\"regime\": \"NEW_TAX_REGIME\"}";
+    private static final Path TRACE_SNAPSHOTS = Path.of("src/test/resources/taxplanning/trace-snapshots");
+    private static final JsonMapper JSON = JsonMapper.builder().build();
+    private static final String ENTRIES = """
+            [{"op": "add", "path": "/entered/employments/-", "value": {
+              "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": 175000}}],
+              "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
+              "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}},
+             {"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"},
+             {"op": "replace", "path": "/filing/taxAtSource", "value": {"amountInRupees": %s}}]""";
+
+    private ResponseEntity<String> call(HttpMethod method, String caller, String path, String body, String ifMatch) {
+        RestTemplate client = new RestTemplate(new JdkClientHttpRequestFactory());
+        client.setErrorHandler(new DefaultResponseErrorHandler() {
+            @Override
+            public boolean hasError(ClientHttpResponse response) {
+                return false;
+            }
+        });
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(generateToken(caller));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (ifMatch != null) {
+            headers.set(HttpHeaders.IF_MATCH, ifMatch);
+        }
+        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + path), method,
+                new HttpEntity<>(body, headers), String.class);
+    }
+
+    /** A profile, its draft for TY 2026-27 with the salary and {@code taxAtSource}, and the draft's id. */
+    private String draft(boolean holdsPortfolio, String taxAtSource) {
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT", "holdsPortfolio": %s}""".formatted(holdsPortfolio), null);
+        String profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, ENTRIES.formatted(taxAtSource),
+                "\"rev-0\"");
+        assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.OK);
+        return draftId;
+    }
+
+    /** T13-1's lot: bought 1-4-2024 for 5,00,000, sold on NSE on 1-9-2026 for 16,00,000, STT paid both sides. */
+    private void listedEquitySale() {
+        TradeOutcomeEntity row = new TradeOutcomeEntity();
+        row.setId("t13-lot");
+        row.setEmail(OWNER);
+        row.setStockCode("INFY");
+        row.setAssetType(AssetType.EQUITY);
+        row.setBuyDate(LocalDate.of(2024, 4, 1));
+        row.setSellDate(LocalDate.of(2026, 9, 1));
+        row.setBuyQuantity(1.0);
+        row.setSellQuantity(1.0);
+        row.setCorporateActionAdjustedBuyPrice(500000);
+        row.setSellPrice(1600000);
+        row.setBuyChargeBreakup(Map.of("STT", 1.0));
+        row.setSellChargeBreakup(Map.of("STT", 1.0));
+        row.setBuyBrokerCharges(1.0);
+        row.setSellBrokerCharges(1.0);
+        row.setSellExchangeName("NSE");
+        row.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        mongoTemplate.save(row);
+    }
+
+    /** A short lot and a deposit beside T13-1's: 10-1-2026 → 1-9-2026, 1,00,000 → 1,20,000; a deposit's interest elsewhere. */
+    private void shortLotAndDeposit() {
+        TradeOutcomeEntity lot = new TradeOutcomeEntity();
+        lot.setId("short-lot");
+        lot.setEmail(OWNER);
+        lot.setStockCode("TCS");
+        lot.setAssetType(AssetType.EQUITY);
+        lot.setBuyDate(LocalDate.of(2026, 1, 10));
+        lot.setSellDate(LocalDate.of(2026, 9, 1));
+        lot.setBuyQuantity(1.0);
+        lot.setSellQuantity(1.0);
+        lot.setCorporateActionAdjustedBuyPrice(100000);
+        lot.setSellPrice(120000);
+        lot.setBuyChargeBreakup(Map.of("STT", 1.0));
+        lot.setSellChargeBreakup(Map.of("STT", 1.0));
+        lot.setBuyBrokerCharges(1.0);
+        lot.setSellBrokerCharges(1.0);
+        lot.setSellExchangeName("NSE");
+        lot.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        mongoTemplate.save(lot);
+        TradeOutcomeEntity deposit = new TradeOutcomeEntity();
+        deposit.setId("deposit");
+        deposit.setEmail(OWNER);
+        deposit.setStockCode("FD-1");
+        deposit.setAssetType(AssetType.FD);
+        deposit.setBuyDate(LocalDate.of(2024, 5, 1));
+        deposit.setSellDate(LocalDate.of(2026, 9, 2));
+        deposit.setBuyQuantity(1.0);
+        deposit.setSellQuantity(1.0);
+        deposit.setCorporateActionAdjustedBuyPrice(100000);
+        deposit.setSellPrice(107000);
+        deposit.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        mongoTemplate.save(deposit);
+    }
+
+    private JsonNode compute(String draftId) {
+        return compute(draftId, REGIME);
+    }
+
+    private JsonNode compute(String draftId, String regime) {
+        ResponseEntity<String> computed = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute", regime, null);
+        assertThat(computed.getStatusCode()).as(computed.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(computed.getBody());
+    }
+
+    /**
+     * The published trace ({@code ComputedTax.Step}) against its approved snapshot, one line per step (W-142, C1a, C3a):
+     * any difference fails, the explanation's wording included. {@code -Dtrace.snapshot.write=true} rewrites the file.
+     */
+    private static void assertTraceMatches(JsonNode view, String snapshot) throws IOException {
+        StringBuilder lines = new StringBuilder();
+        for (JsonNode step : view.at("/tax/trace")) {
+            lines.append(step.get("sequence").asInt()).append(" | ").append(step.get("node").asString()).append(" | ")
+                    .append(step.get("rule").asString()).append(" | ").append(step.get("kind").asString()).append(" | ")
+                    .append(step.get("limitedBy").isNull() ? "-" : step.get("limitedBy").asString()).append('\n');
+        }
+        Path file = TRACE_SNAPSHOTS.resolve(snapshot + ".txt");
+        if (Boolean.getBoolean("trace.snapshot.write")) {
+            Files.writeString(file, lines.toString());
+        }
+        assertThat(file).as("%s is missing: run with -Dtrace.snapshot.write=true and read it", file).exists();
+        assertThat(lines.toString())
+                .as("the trace changed: if meant, rerun with -Dtrace.snapshot.write=true and review the diff of %s", file)
+                .isEqualTo(Files.readString(file));
+    }
+
+    @Test
+    void trace_whenT13IsComputed_matchesItsApprovedSnapshot() throws IOException {
+        // Given
+        listedEquitySale();
+        String draftId = draft(true, "0");
+
+        // When
+        JsonNode view = compute(draftId);
+
+        // Then
+        assertTraceMatches(view, "t13-new-regime-with-sale");
+    }
+
+    @Test
+    void trace_whenThePortfolioHoldsNoSale_matchesItsApprovedSnapshot() throws IOException {
+        // Given
+        String draftId = draft(true, "0");
+
+        // When
+        JsonNode view = compute(draftId);
+
+        // Then
+        assertTraceMatches(view, "t13-new-regime-no-sale");
+    }
+
+    @Test
+    void trace_whenT13IsComputedUnderTheOldRegime_matchesItsApprovedSnapshot() throws IOException {
+        // Given
+        listedEquitySale();
+        String draftId = draft(true, "0");
+
+        // When
+        JsonNode view = compute(draftId, "{\"regime\": \"FIRST_SCHEDULE_RATES\"}");
+
+        // Then
+        assertTraceMatches(view, "t13-old-regime-with-sale");
+    }
+
+    private static BigDecimal rupees(JsonNode view, String figure) {
+        return view.at("/tax/" + figure + "/amountInRupees").decimalValue();
+    }
+
+    @Test
+    void compute_whenT13IsEntered_chargesTheGoldenBill() {
+        // Given
+        listedEquitySale();
+        String draftId = draft(true, "0");
+
+        // When
+        JsonNode view = compute(draftId);
+
+        // Then — the same 87,750 the golden case gets from its own inputs; nothing paid in advance, so by 6-11-2026 June
+        // owes 13,100 × 3 % = 393 and September 39,400 × 3 % = 1,182: 87,750 + 1,575 = 89,325, to the nearest ₹10 89,330
+        assertThat(rupees(view, "bill")).isEqualByComparingTo("87750");
+        assertThat(rupees(view, "credits")).isEqualByComparingTo("0");
+        assertThat(view.at("/tax/advanceTax/liable").asBoolean()).isTrue();
+        assertThat(view.at("/tax/interestAndFees/0/rule").asString()).isEqualTo("INT-DEFERMENT");
+        assertThat(view.at("/tax/interestAndFees/0/amount/amountInRupees").decimalValue()).isEqualByComparingTo("1575");
+        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("89330");
+        assertThat(view.get("capitalGainsIncluded").asBoolean()).isTrue();
+        assertThat(view.get("revision").asInt()).isEqualTo(1);
+        assertThat(view.get("notIncluded").size()).isEqualTo(8);
+        assertThat(view.at("/tax/trace").size()).isPositive();
+    }
+
+    @Test
+    void compute_whenTaxWasDeductedAtSource_creditsItAgainstTheBill() {
+        // Given — 87,750 − 75,000 = 12,750, still ₹10,000 or more, so advance tax was due
+        listedEquitySale();
+
+        // When
+        JsonNode view = compute(draft(true, "75000"));
+
+        // Then — June 1,900 × 3 % = 57, September 5,700 × 3 % = 171: 12,978, to the nearest ₹10 12,980
+        assertThat(rupees(view, "bill")).isEqualByComparingTo("87750");
+        assertThat(rupees(view, "credits")).isEqualByComparingTo("75000");
+        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("12980");
+    }
+
+    @Test
+    void compute_whenARefundIsGranted_showsTheInterestAddedApartFromThePayable() {
+        // Given — 1,00,000 of salary is under the nil band, so the 10,000 at source is all refunded; furnished on time on
+        // 15-7-2027 and granted on 20-9-2027 (W-112b)
+        String draftId = draft(false, "10000");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/filing/furnishedOn", "value": "2027-07-15"},
+                 {"op": "add", "path": "/filing/refundGrantedOn", "value": "2027-09-20"}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode view = compute(draftId);
+
+        // Then — 1-4-2027 to 20-9-2027 is 6 months; 10,000 × 0.5 % × 6 = 300, outside the refund of 10,000
+        assertThat(view.at("/tax/interestOnRefund/0/rule").asString()).isEqualTo("INT-REFUND");
+        assertThat(view.at("/tax/interestOnRefund/0/amount/amountInRupees").decimalValue()).isEqualByComparingTo("300");
+        assertThat(view.at("/tax/interestAndFees").size()).isZero();
+        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("-10000");
+    }
+
+    @Test
+    void compute_whenMoreWasDeductedThanIsDue_showsARefundToTheNearestTen() {
+        // Given — 87,750 − 1,00,004 = −12,254; no advance tax was due, so nothing is owed on it
+        listedEquitySale();
+
+        // When / Then
+        assertThat(rupees(compute(draft(true, "100004")), "finalAmount")).isEqualByComparingTo("-12250");
+    }
+
+    @Test
+    void compute_whenTheProfileDoesNotHoldThePortfolio_readsNoGains() {
+        // Given — the same trades in the account, on a profile that does not hold them: 1,00,000 of salary is under the nil band
+        listedEquitySale();
+
+        // When
+        JsonNode view = compute(draft(false, "0"));
+
+        // Then
+        assertThat(rupees(view, "bill")).isEqualByComparingTo("0");
+        assertThat(view.get("capitalGainsIncluded").asBoolean()).isFalse();
+    }
+
+    @Test
+    void profile_whenASecondHoldsThePortfolio_expected400() {
+        // Given
+        draft(true, "0");
+
+        // When
+        ResponseEntity<String> second = call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "HUF", "pan": "PQRST5678K", "kind": "HUF", "residentialStatus": "RESIDENT",
+                 "holdsPortfolio": true}""", null);
+
+        // Then
+        assertThat(second.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void compute_whenNoDueDateIsStated_expected400NamingIt() {
+        // Given
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT"}""", null);
+        String profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+
+        // When
+        ResponseEntity<String> refused = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute", REGIME, null);
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("/filing/dueDate");
+    }
+
+    @Test
+    void compute_whenTheRegimeIsUnknown_expected400() {
+        // When / Then
+        assertThat(call(HttpMethod.POST, OWNER, "/drafts/" + draft(false, "0") + "/compute", "{\"regime\": \"NO_SUCH\"}", null)
+                .getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void byReceipt_whenTheOwnerAsks_isWhatWasShownAndAnotherAccountIsRefused() {
+        // Given
+        JsonNode view = compute(draft(false, "0"));
+        String receipt = view.at("/tax/receipt").asString();
+
+        // When
+        ResponseEntity<String> again = call(HttpMethod.GET, OWNER, "/computations/" + receipt, null, null);
+
+        // Then
+        assertThat(JSON.readTree(again.getBody())).isEqualTo(view);
+        assertThat(call(HttpMethod.GET, "other@example.com", "/computations/" + receipt, null, null).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(mongoTemplate.count(new Query(Criteria.where("email").is(OWNER)), DraftComputation.class)).isEqualTo(1);
+    }
+
+    @Test
+    void compute_whenRunTwiceOnOneRevision_givesOneFingerprint() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When / Then — dates of a run are not in it: asOf is the same day here
+        assertThat(compute(draftId).at("/tax/inputsFingerprint").asString())
+                .isEqualTo(compute(draftId).at("/tax/inputsFingerprint").asString());
+    }
+
+    @Test
+    void compareRegimes_whenAsked_pricesEveryRegimeAndChangesNothing() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> compared = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compare-regimes", null, null);
+
+        // Then
+        assertThat(compared.getStatusCode()).as(compared.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode comparison = JSON.readTree(compared.getBody());
+        assertThat(comparison.get("priced").size()).isEqualTo(2);
+        assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void byReceipt_whenBucketsDiffer_recordsWhatWasDecidedForEach() {
+        // Given
+        listedEquitySale();
+        shortLotAndDeposit();
+        JsonNode view = compute(draft(true, "0"));
+
+        // When
+        JsonNode buckets = JSON.readTree(call(HttpMethod.GET, OWNER, "/computations/" + view.at("/tax/receipt").asString(), null,
+                null).getBody()).at("/tax/capitalGainsBuckets");
+
+        // Then — sold 1-9, 1-9, 2-9: 16,00,000 − 5,00,000; 1,20,000 − 1,00,000; 1,07,000 − 1,00,000 left to other sources
+        assertThat(buckets.size()).isEqualTo(3);
+        JsonNode longLot = bucketGaining(buckets, "1100000");
+        assertThat(longLot.get("term").asString()).isEqualTo("LONG_TERM");
+        assertThat(longLot.get("termRow").asString()).isEqualTo("CG-TERM-LISTED-SECURITY");
+        assertThat(longLot.get("monthsRead").asInt()).isEqualTo(12);
+        JsonNode shortLot = bucketGaining(buckets, "20000");
+        assertThat(shortLot.get("term").asString()).isEqualTo("SHORT_TERM");
+        assertThat(shortLot.get("termRow").asString()).isEqualTo("CG-TERM-LISTED-SECURITY");
+        JsonNode deposit = bucketGaining(buckets, "7000");
+        assertThat(deposit.get("leftOutBy").asString()).isEqualTo("CG-DEPOSIT");
+        assertThat(deposit.get("term").isNull()).isTrue();
+    }
+
+    private static JsonNode bucketGaining(JsonNode buckets, String rupees) {
+        for (JsonNode bucket : buckets) {
+            if (bucket.at("/gain/amountInRupees").decimalValue().compareTo(new BigDecimal(rupees)) == 0) {
+                return bucket;
+            }
+        }
+        throw new AssertionError("No bucket gained " + rupees + " in " + buckets);
+    }
+
+    private String holderId() {
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT", "holdsPortfolio": true}""", null);
+        return mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+    }
+
+    private JsonNode capitalGains(String profileId, String query) {
+        ResponseEntity<String> view = call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/capital-gains/2026" + query, null, null);
+        assertThat(view.getStatusCode()).as(view.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(view.getBody());
+    }
+
+    private void heldLot() {
+        AssetEntity lot = new AssetEntity();
+        lot.setEmail(OWNER);
+        lot.setStockCode("HELD");
+        lot.setAssetType(AssetType.EQUITY);
+        lot.setExchangeName("NSE");
+        lot.setQuantity(10.0);
+        lot.setPrice(100);
+        lot.setTransactionDate(LocalDate.of(2025, 6, 1));
+        mongoTemplate.save(lot);
+    }
+
+    @Test
+    void capitalGains_whenChargesAreOnASale_namesEachOnesLimb() {
+        // Given — brokerage 100 and STT 80 on each side
+        TradeOutcomeEntity row = new TradeOutcomeEntity();
+        row.setId("charged");
+        row.setEmail(OWNER);
+        row.setStockCode("INFY");
+        row.setAssetType(AssetType.EQUITY);
+        row.setBuyDate(LocalDate.of(2024, 4, 1));
+        row.setSellDate(LocalDate.of(2026, 9, 1));
+        row.setBuyQuantity(1.0);
+        row.setSellQuantity(1.0);
+        row.setCorporateActionAdjustedBuyPrice(500000);
+        row.setSellPrice(1600000);
+        row.setBuyChargeBreakup(Map.of("BROKERAGE", 100.0, "STT", 80.0));
+        row.setSellChargeBreakup(Map.of("BROKERAGE", 100.0, "STT", 80.0));
+        row.setSellExchangeName("NSE");
+        row.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        mongoTemplate.save(row);
+
+        // When
+        JsonNode charges = capitalGains(holderId(), "").at("/realised/0/charges");
+
+        // Then
+        Map<String, String> limbs = new java.util.HashMap<>();
+        charges.forEach(charge -> limbs.put(charge.get("side").asString() + "/" + charge.get("code").asString(), charge.get("limb").asString()));
+        assertThat(limbs).containsEntry("ACQUISITION/BROKERAGE", "COST_OF_ACQUISITION")
+                .containsEntry("TRANSFER/BROKERAGE", "TRANSFER_EXPENDITURE")
+                .containsEntry("ACQUISITION/STT", "NOT_DEDUCTED")
+                .containsEntry("TRANSFER/STT", "NOT_DEDUCTED");
+    }
+
+    @Test
+    void capitalGains_whenHeldLotsAreAskedFor_readsEachLotsTermIfSoldThen() {
+        // Given — bought 1-6-2025; twelve calendar months end 1-6-2026, long-term only after it (D-303)
+        heldLot();
+        String id = holderId();
+
+        // When / Then
+        JsonNode may = capitalGains(id, "?asOf=2026-05-01").at("/held/0");
+        assertThat(may.get("term").asString()).as(may.toString()).isEqualTo("SHORT_TERM");
+        JsonNode june = capitalGains(id, "?asOf=2026-06-01").at("/held/0");
+        assertThat(june.get("term").asString()).as(june.toString()).isEqualTo("SHORT_TERM");
+        JsonNode longTerm = capitalGains(id, "?asOf=2026-06-02").at("/held/0");
+        assertThat(longTerm.get("term").asString()).isEqualTo("LONG_TERM");
+        assertThat(longTerm.get("termRow").asString()).isEqualTo("CG-TERM-LISTED-SECURITY");
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void capitalGains_whenTheProfileDoesNotHoldThePortfolio_expected400() {
+        // Given
+        draft(false, "0");
+        String id = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+
+        // When / Then
+        assertThat(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026", null, null).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void itrForm_whenTheYearsQuestionsAreUnanswered_choosesNoneNamingThemAndStoresNothing() {
+        // Given — the draft answers none of r.164(3)'s questions (W-091 C3a, D-653)
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> chosen = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/itr-form",
+                "{\"regime\": \"NEW_TAX_REGIME\", \"returnKind\": \"S263_1\"}", null);
+
+        // Then
+        assertThat(chosen.getStatusCode()).as(chosen.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode choice = JSON.readTree(chosen.getBody());
+        assertThat(choice.get("form").isNull()).as(chosen.getBody()).isTrue();
+        assertThat(choice.get("verdicts").get(0).get("form").asString()).isEqualTo("ITR-1");
+        assertThat(choice.get("verdicts").get(0).get("standing").asString()).isEqualTo("UNDETERMINED");
+        assertThat(choice.get("message").asString()).endsWith("to settle whether ITR-1 serves this return");
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void itrForm_whenTheReturnKindIsMissingOrNotTheYears_expected400NamingIt() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When / Then
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/itr-form",
+                "{\"regime\": \"NEW_TAX_REGIME\"}", null),
+                "A form choice needs a returnKind, the provision the return is furnished under, such as S263_1");
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/itr-form",
+                "{\"regime\": \"NEW_TAX_REGIME\", \"returnKind\": \"S139_1\"}", null),
+                "No form for 2026-27 serves the return kind S139_1; the year's kinds are [S263_1, S268_1_A, S280]");
+    }
+
+    private void assertRefused(ResponseEntity<String> response, String message) {
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(JSON.readTree(response.getBody()).get("message").asString()).isEqualTo(message);
+    }
+
+    @Test
+    void capitalGains_whenTheTaxYearIsNotItsStartYear_expected400NamingAWholeNumber() {
+        // Given
+        String id = holderId();
+
+        // When / Then — the owner's request of 2026-11-09 (W-263): the path takes the start year, 2026
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026-27", null, null),
+                "Parameter 'taxYear' must be a whole number, but was '2026-27'");
+    }
+
+    @Test
+    void capitalGains_whenAsOfFallsInAYearNoPackShipsFor_expected400NamingTheYearsShipped() {
+        // Given — 1 June 2027 is in TY 2027-28 (1 April 2027 to 31 March 2028); the application ships 2025-26 and 2026-27
+        String id = holderId();
+        heldLot();
+
+        // When / Then
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026?asOf=2027-06-01", null, null),
+                "No rule pack ships for 2027-28; the application ships [2025-26, 2026-27]");
+    }
+
+    @Test
+    void capitalGains_whenTheYearItselfShipsNoPack_expected400NamingTheYearsShipped() {
+        // Given
+        String id = holderId();
+
+        // When / Then
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2030", null, null),
+                "No rule pack ships for 2030-31; the application ships [2025-26, 2026-27]");
+    }
+
+    @Test
+    void compute_whenTheDraftIsForAYearNoPackShipsFor_expected400NamingTheYearsShipped() {
+        // Given — a draft for TY 2024-25, which a person may keep though the application ships 2025-26 and 2026-27 only
+        String profileId = holderId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2024/drafts", "{\"label\": \"Old\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        assertThat(call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, ENTRIES.formatted("0"), "\"rev-0\"").getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        // When / Then
+        String refusal = "No rule pack ships for 2024-25; the application ships [2025-26, 2026-27]";
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute", REGIME, null), refusal);
+        assertRefused(call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compare-regimes", null, null), refusal);
+    }
+
+    @Test
+    void capitalGains_whenAsOfIsNotADate_expected400NamingTheDateFormat() {
+        // Given
+        String id = holderId();
+
+        // When / Then
+        assertRefused(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026?asOf=June", null, null),
+                "Parameter 'asOf' must be a date as yyyy-MM-dd, but was 'June'");
+    }
+
+    @Test
+    void compareRegimes_whenARegimeWasElectedInAnEarlierYear_stillPricesBoth() {
+        // Given — filed TY 2025-26 on FIRST_SCHEDULE_RATES; a person with no business income has the free annual choice
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT"}""", null);
+        String id = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + id + "/workspaces/2025/drafts", "{\"label\": \"Filed\"}", null);
+        String filed = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/drafts/" + filed + "/status", "{\"status\": \"READY\"}", null);
+        call(HttpMethod.POST, OWNER, "/drafts/" + filed + "/status", "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}", null);
+        call(HttpMethod.POST, OWNER, "/profiles/" + id + "/workspaces/2026/drafts", "{\"label\": \"Next\"}", null);
+        String next = mongoTemplate.findAll(FilingDraft.class).stream().filter(d -> d.getTaxYearStart() == 2026).findFirst().orElseThrow().getId();
+        call(HttpMethod.PATCH, OWNER, "/drafts/" + next, "[{\"op\": \"replace\", \"path\": \"/filing/dueDate\", \"value\": \"2027-07-31\"}]", "\"rev-0\"");
+
+        // When
+        ResponseEntity<String> compared = call(HttpMethod.POST, OWNER, "/drafts/" + next + "/compare-regimes", null, null);
+
+        // Then
+        assertThat(compared.getStatusCode()).as(compared.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(JSON.readTree(compared.getBody()).get("priced").size()).isEqualTo(2);
+    }
+
+    private ResponseEntity<String> bring(String draftId, String map, String key, String value) {
+        return call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/brought/" + map + "/" + key + "\", \"value\": " + value + "}]", "\"rev-1\"");
+    }
+
+    private static String money(String rupees) {
+        return "{\"amountInRupees\": " + rupees + "}";
+    }
+
+    @Test
+    void compute_whenALongTermLossIsBroughtForward_setsItOffBeforeTheBill() {
+        // Given — 11,00,000 − 1,00,000 = 10,00,000; 3,00,000 of the nil band → 7,00,000; above 1,25,000 is 5,75,000; at 12.5 %
+        // 71,875; cess 2,875
+        listedEquitySale();
+        String draftId = draft(true, "0");
+        String loss = "{\"shortTermLoss\": " + money("0") + ", \"longTermLoss\": " + money("100000") + ", \"shortTermAbsorbedSince\": "
+                + money("0") + ", \"longTermAbsorbedSince\": " + money("0") + ", \"determinedInReturnFiledInTime\": true}";
+        assertThat(bring(draftId, "capitalLossCarriedForward", "2024", loss).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // When / Then
+        assertThat(rupees(compute(draftId), "bill")).isEqualByComparingTo("74750");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"", ", \"receivedOn\": \"2026-12-20\""})
+    void compute_whenADividendIsEnteredWithOrWithoutItsReceivedDate_takesItAndChargesTheBill(String receivedOn) {
+        // Given — salary 1,00,000 and a dividend of 14,00,000, its date given or left out as a draft saved before W-112a
+        // left it: 15,00,000 at the TY 2026-27 slabs is 20,000 + 40,000 + 45,000 = 1,05,000, no rebate above 12,00,000,
+        // cess 4,200
+        String draftId = draft(false, "0");
+        String dividend = "[{\"op\": \"add\", \"path\": \"/entered/otherSourceItems/-\", \"value\": {\"kind\": \"DIVIDEND\","
+                + " \"received\": " + money("1400000") + ", \"bankerCommission\": " + money("0") + ", \"interestExpense\": "
+                + money("0") + ", \"otherExpenditure\": " + money("0") + ", \"payableOutsideIndiaUntaxed\": false" + receivedOn
+                + "}}]";
+
+        // When
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, dividend, "\"rev-1\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(rupees(compute(draftId), "bill")).isEqualByComparingTo("109200");
+    }
+
+    @Test
+    void compute_whenAHousePropertyLossHasNoHousePropertyIncomeToMeet_changesNothing() {
+        // Given — a carried house-property loss meets only house-property income (2025 s.110), and this draft has none
+        listedEquitySale();
+        String draftId = draft(true, "0");
+        String loss = "{\"loss\": " + money("50000") + ", \"attributableToNewRegimeDisallowance\": " + money("0") + ", \"absorbedSince\": "
+                + money("0") + "}";
+        assertThat(bring(draftId, "housePropertyLossCarriedForward", "2024", loss).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // When / Then
+        assertThat(rupees(compute(draftId), "bill")).isEqualByComparingTo("87750");
+    }
+
+    @Test
+    void patch_whenWhatIsBroughtForwardIsMisspelt_expected400NamingIt() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> refused = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/brought/capitalLossCarried\", \"value\": {}}]", "\"rev-1\"");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("capitalLossCarried");
+    }
+
+    @Test
+    void byReceipt_whenShown_isStoredEncryptedAndTheReadIsRecorded() {
+        // Given
+        String receipt = compute(draft(false, "0")).at("/tax/receipt").asString();
+
+        // When
+        call(HttpMethod.GET, OWNER, "/computations/" + receipt, null, null);
+
+        // Then — DR 14 O1.1, O4
+        assertThat(mongoTemplate.getCollection("tax_draft_computations").find().first().getString("result_json")).startsWith("k1:");
+        assertThat(mongoTemplate.findAll(AccessRecord.class)).singleElement()
+                .satisfies(read -> assertThat(read.getSubject()).isEqualTo(ReadSubject.COMPUTATION))
+                .satisfies(read -> assertThat(read.getSubjectId()).isEqualTo(receipt));
+    }
+
+    @Test
+    void compute_whenTheDraftWasFlaggedStale_clearsTheFlag() {
+        // Given — W-138: flagged by the sweep after the law moved
+        String draftId = draft(false, "0");
+        FilingDraft draft = mongoTemplate.findById(draftId, FilingDraft.class);
+        draft.setStaleness(new DraftStaleness(LocalDate.of(2026, 11, 1).atStartOfDay(), "TXC-2026-AAAAAA", List.of("old"),
+                List.of("new"), List.of(), false));
+        mongoTemplate.save(draft);
+
+        // When
+        compute(draftId);
+
+        // Then — computed under the shipped pack, so current again; and the computation pins what it ran under
+        assertThat(mongoTemplate.findById(draftId, FilingDraft.class).getStaleness()).isNull();
+        DraftComputation stored = mongoTemplate.findAll(DraftComputation.class).getFirst();
+        assertThat(stored.getLawAndExec()).hasSize(2);
+        assertThat(stored.getRuleChecksums()).isNotEmpty().allSatisfy((rule, checksum) -> assertThat(checksum).startsWith("sha256:"));
+    }
+
+    /**
+     * W-238a's HRA case on a draft: basic 16,00,000, special allowance 8,00,000, rent 9,60,000 in Mumbai all year, and
+     * 2,92,500 deducted at source — the new regime's tax on that pay (worked in {@code TaxCalculatorOptimiseTest}), so
+     * nothing is short of advance tax on this fixed day and no interest enters a bill the optimiser chooses between.
+     */
+    private String rentingDraft() {
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT", "holdsPortfolio": false}""", null);
+        String profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/entered/employments/-", "value": {
+                  "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": 1600000}},
+                                 {"code": {"value": "SPECIAL_ALLOWANCE"}, "annualAmount": {"amountInRupees": 800000}}],
+                  "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
+                  "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}},
+                 {"op": "add", "path": "/entered/tenancies/-", "value": {
+                  "occupied": {"from": "2026-04-01", "to": "2027-03-31"}, "location": "MUMBAI",
+                  "ownedByAssessee": false, "rentPaid": {"amountInRupees": 960000}}},
+                 {"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"},
+                 {"op": "replace", "path": "/filing/taxAtSource", "value": {"amountInRupees": 292500}}]""", "\"rev-0\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        return draftId;
+    }
+
+    private ResponseEntity<String> optimise(String caller, String draftId, String body) {
+        return call(HttpMethod.POST, caller, "/drafts/" + draftId + "/optimise", body, null);
+    }
+
+    private static BigDecimal amountAt(JsonNode view, String pointer) {
+        return view.at(pointer + "/amountInRupees").decimalValue();
+    }
+
+    @Test
+    void optimise_whenHraTurnsTheOldRegimeCheaper_suggestsHraWithItsFactsAndChangesNothing() {
+        // Given — the bill is the tax before credits (TAX_NETPAYABLE). Before: new 2,92,500, nothing short at source, so
+        // no interest; old 5,38,200, and more with interest on the 2,45,700 short. After HRA 8,00,000: old 2,88,600, below
+        // what was deducted, so no interest; new still 2,92,500. HRA and the residual are both paid in money, so the move
+        // costs nothing in hand.
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId,
+                "{\"movable\": [\"HRA\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
+        assertThat(view.get("before").get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("292500");
+        assertThat(view.get("after").get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("288600");
+        assertThat(view.get("changes").get("pay").size()).isEqualTo(1);
+        JsonNode change = view.at("/changes/pay/0");
+        assertThat(change.get("component").asString()).isEqualTo("HRA");
+        assertThat(amountAt(change, "/current")).isEqualByComparingTo("0");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("800000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("3900");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("0");
+        assertThat(change.at("/facts/kind").asString()).isEqualTo("SALARY");
+        assertThat(change.at("/facts/cashNature").asString()).isEqualTo("CASH");
+        assertThat(change.at("/facts/feedsInto").toString())
+                .isEqualTo("[\"SAL-HOUSE-RENT-ALLOWANCE\",\"SAL-SALARY-INCLUDES\"]");
+        assertThat(amountAt(view, "/residualAfter")).isEqualByComparingTo("0");
+        assertThat(view.get("search").get("verified").toString()).isEqualTo("[\"HRA\"]");
+        // W-238f: the owner's table gives HRA HIGH (D-495)
+        assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"HRA\",\"likelihood\":\"HIGH\"}]");
+        assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void optimise_whenTheBreadthAskedExceedsTheSetting_expected400NamingIt() {
+        // Given — app.tax.optimiser.exhaustive-breadth ships at 6
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId, "{\"movable\": [\"HRA\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"verificationBreadth\": 7}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("at most 6").contains("not 7");
+    }
+
+    @Test
+    void optimise_whenAMovableCodeIsNotInThePack_expected400() {
+        // Given
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId,
+                "{\"movable\": [\"MEAL_COUPON\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("MEAL_COUPON");
+    }
+
+    @Test
+    void optimise_whenAnEmployeeContributionIsMovable_expected400() {
+        // Given — components/EMPLOYEE_NPS.json is EMPLOYEE_CONTRIBUTION: paid from take-home, not pay to move (W-238g)
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId,
+                "{\"movable\": [\"EMPLOYEE_NPS\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("EMPLOYEE_NPS").contains("EMPLOYEE_CONTRIBUTION")
+                .contains("name it under contributions");
+    }
+
+    @Test
+    void optimise_whenTheEmployeesNpsIsAContribution_addsItPaidFromTakeHomeWithNoHrSupport() {
+        // Given — TaxCalculatorOptimiseTest's W-238k case 1 on a draft: HRA 8,00,000 and NPS 2,00,000 (own NPS 50,000 under
+        // s.124(3) first, then s.123 1,50,000; 2,10,000 before W-114d) give old 13,50,000 → 2,26,200, below what was
+        // deducted, so no interest
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [\"HRA\"], \"contributions\":"
+                + " [\"EMPLOYEE_NPS\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
+        assertThat(view.get("after").get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("226200");
+        assertThat(view.get("changes").get("contributions").size()).isEqualTo(1);
+        JsonNode nps = view.at("/changes/contributions/0");
+        assertThat(nps.get("component").asString()).isEqualTo("EMPLOYEE_NPS");
+        assertThat(amountAt(nps, "/current")).isEqualByComparingTo("0");
+        assertThat(amountAt(nps, "/suggested")).isEqualByComparingTo("200000");
+        assertThat(amountAt(nps, "/cashImpact")).isEqualByComparingTo("-200000");
+        assertThat(nps.at("/facts/kind").asString()).isEqualTo("EMPLOYEE_CONTRIBUTION");
+        // W-238k C5a: HR support for HRA only, the contribution being the employee's own declaration
+        assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"HRA\",\"likelihood\":\"HIGH\"}]");
+    }
+
+    @Test
+    void optimise_whenTheFloorIsAboveTheTakeHomeAsEntered_expected400() {
+        // Given — cash as entered is 24,00,000 less a bill of 2,92,500; a floor of 30,00,000 is above all the pay
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId,
+                "{\"movable\": [\"HRA\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"3000000\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("below the floor");
+    }
+
+    @Test
+    void optimise_whenTheDraftIsAnotherAccounts_expected400() {
+        // Given
+        String draftId = rentingDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise("other@example.com", draftId,
+                "{\"movable\": [\"HRA\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    /** Basic 16,00,000 and special 8,00,000 from an OTHER employer, no rent, 2,92,500 at source (W-238c). */
+    private String salariedDraft() {
+        return salariedDraft(1600000, 800000, "");
+    }
+
+    /**
+     * Basic and special as given from an OTHER employer, no rent, 2,92,500 at source, with {@code addedOps} — patch
+     * operations, each followed by a comma — applied too (W-238d).
+     */
+    private String salariedDraft(int basic, int special, String addedOps) {
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT", "holdsPortfolio": false}""", null);
+        String profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}", null);
+        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/entered/employments/-", "value": {
+                  "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": %d}},
+                                 {"code": {"value": "SPECIAL_ALLOWANCE"}, "annualAmount": {"amountInRupees": %d}}],
+                  "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
+                  "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}},
+                 %s{"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"},
+                 {"op": "replace", "path": "/filing/taxAtSource", "value": {"amountInRupees": 292500}}]"""
+                .formatted(basic, special, addedOps), "\"rev-0\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        return draftId;
+    }
+
+    @Test
+    void optimise_whenSuperannuationIsMovableWithNoFundHistory_answersAtTheLimitAndSaysWhy() {
+        // Given — TaxCalculatorOptimiseTest's case: 0 → 7,50,000, 2,92,500 → 1,20,900; probes above 7,50,000 need the
+        // funds' history for the accretion, and the draft has none (W-238h)
+        String draftId = salariedDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"APPROVED_SUPERANNUATION_FUND\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("120900");
+        assertThat(amountAt(view, "/changes/funds/0/suggested")).isEqualByComparingTo("750000");
+        assertThat(view.at("/search/unpriced/missingInput").asString()).isEqualTo("retirementFundHistory");
+        assertThat(view.at("/search/unpriced/rule").asString()).isEqualTo("PERQ-EMPLOYER-ACCRETION");
+    }
+
+    @Test
+    void optimise_whenTheDraftHasAFundHistory_pricesEveryProbeAndSaysNothingIsCut() {
+        // Given — a history with nothing accrued, so the accretion beyond the limit is nil and the answer the same
+        String draftId = salariedDraft(1600000, 800000, """
+                {"op": "add", "path": "/entered/retirementFundHistory", "value": {
+                  "earlierExcessContributions": {"amountInRupees": 0}, "earlierTaxedAccretions": {"amountInRupees": 0},
+                  "incomeAccrued": {"amountInRupees": 0}, "openingBalance": {"amountInRupees": 100000},
+                  "closingBalance": {"amountInRupees": 100000}}},""");
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"APPROVED_SUPERANNUATION_FUND\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("120900");
+        assertThat(view.get("search").get("unpriced") == null || view.get("search").get("unpriced").isNull()).isTrue();
+    }
+
+    @Test
+    void optimise_whenTheEmployersNpsIsMovable_suggestsItAsAFundChange() {
+        // Given — TaxCalculatorOptimiseTest's case: 2,92,500 → 2,34,260 in the new regime with 2,24,000 (14 % of basic)
+        // into the NPS; the move is not take-home, so its cash impact is the whole of it
+        String draftId = salariedDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"NOTIFIED_PENSION_SCHEME\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("292500");
+        assertThat(view.get("after").get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("234260");
+        assertThat(view.get("changes").get("pay").size()).isZero();
+        JsonNode change = view.at("/changes/funds/0");
+        assertThat(change.get("fund").asString()).isEqualTo("NOTIFIED_PENSION_SCHEME");
+        assertThat(change.get("feedsInto").valueStream().map(JsonNode::asString).toList()).containsExactly(
+                "DED-NPS-EMPLOYER-GOVT", "DED-NPS-EMPLOYER-NEW-TAX-REGIME", "DED-NPS-EMPLOYER-OTHER",
+                "PERQ-EMPLOYER-ACCRETION", "PERQ-EMPLOYER-CONTRIBUTION", "SAL-INCLUDES-PENSION-CONTRIBUTION");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("224000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("58240");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-224000");
+        // W-238e1: TY 2026-27 holds the NPS regulations as the 2025 amendment left them, from its issue of 15-12-2025
+        // (C1a) — five events, none ending, and no unstated period
+        JsonNode terms = change.at("/liquidity/terms");
+        assertThat(terms.size()).isEqualTo(5);
+        assertThat(terms.valueStream().map(term -> term.get("from").asString()).distinct().toList())
+                .containsExactly("2025-12-15");
+        assertThat(terms.at("/0/event").asString())
+                .isEqualTo("Exit after fifteen years, at sixty or on superannuation, non-government sector");
+        assertThat(terms.at("/0/source").asString()).contains("CG-DL-E-16122025-268548");
+        assertThat(change.at("/liquidity/unstated").size()).isZero();
+        // W-238f: the owner's table gives the NPS EMPLOYER_DISCRETION (D-495)
+        assertThat(body.get("hrSupport").toString())
+                .isEqualTo("[{\"name\":\"NOTIFIED_PENSION_SCHEME\",\"likelihood\":\"EMPLOYER_DISCRETION\"}]");
+        assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
+    }
+
+    @Test
+    void optimise_whenTheProvidentFundIsMovable_expected400NamingBasic() {
+        // Given
+        String draftId = salariedDraft();
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"RECOGNISED_PROVIDENT_FUND\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("name BASIC movable");
+    }
+
+    @Test
+    void optimise_whenBasicIsMovableAndTheProvidentFundFollows_suggestsBothMoves() {
+        // Given — TaxCalculatorOptimiseTest's case: basic 10,00,000 → 22,50,000, the fund at its entered 12 % of basic
+        // 1,20,000 → 2,70,000, special to nil; 2,92,500 → 2,53,500 in the new regime, cash −1,50,000
+        String draftId = salariedDraft(1000000, 1400000, """
+                {"op": "add", "path": "/entered/employerContributions/-", "value": {"employment": 0,
+                  "fund": "RECOGNISED_PROVIDENT_FUND", "amount": {"amountInRupees": 120000}}},
+                """);
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId,
+                "{\"movable\": [\"BASIC\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("292500");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("253500");
+        JsonNode change = view.at("/changes/pay/0");
+        assertThat(change.get("component").asString()).isEqualTo("BASIC");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("2250000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("39000");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-150000");
+        JsonNode following = view.at("/changes/following/0");
+        assertThat(following.get("name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
+        assertThat(amountAt(following, "/suggested")).isEqualByComparingTo("270000");
+        assertThat(following.get("follows").toString()).isEqualTo("[\"BASIC\"]");
+        assertThat(view.get("changes").get("funds").size()).isZero();
+        // W-238f: basic is LOW in the owner's table (D-495); the provident fund only follows it, so has no entry
+        assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"BASIC\",\"likelihood\":\"LOW\"}]");
+    }
+
+    @Test
+    void optimise_whenTheEmployeesShareIsHeld_movesBasicAndTheEmployersShareOnly() {
+        // Given — TaxCalculatorOptimiseTest's W-238i case: as above plus EMPLOYEE_PF 1,20,000, held; the employer's share
+        // follows (basic 22,50,000, fund 2,70,000, saving 39,000), the withholding stays, so the cash impact is −1,50,000
+        String draftId = salariedDraft(1000000, 1400000, """
+                {"op": "add", "path": "/entered/employments/0/components/-", "value": {
+                  "code": {"value": "EMPLOYEE_PF"}, "annualAmount": {"amountInRupees": 120000}}},
+                {"op": "add", "path": "/entered/employerContributions/-", "value": {"employment": 0,
+                  "fund": "RECOGNISED_PROVIDENT_FUND", "amount": {"amountInRupees": 120000}}},
+                """);
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"providentFund\": {\"employeeShareFollowsBasic\": false}}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("253500");
+        JsonNode change = view.at("/changes/pay/0");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("2250000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("39000");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-150000");
+        assertThat(view.get("changes").get("following").size()).isEqualTo(1);
+        assertThat(view.at("/changes/following/0/name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
+    }
+
+    @Test
+    void optimise_whenAShareIsHeldButNotEntered_expected400NamingTheTerm() {
+        // Given
+        String draftId = salariedDraft(1000000, 1400000, "");
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"providentFund\": {\"employerShareFollowsBasic\": false}}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("employerShareFollowsBasic is false");
+    }
+
+    @Test
+    void optimise_whenTheBaseIncludesDearnessAllowance_followsOverBasicAndTheAllowance() {
+        // Given — TaxCalculatorOptimiseTest's W-238j case: basic 10L, DA 2L, special 14L, the fund 1,44,000 = 12 % of 12L;
+        // basic → 22,50,000, the fund → 0.12 × 24,50,000 = 2,94,000, 3,51,000 → 3,05,500, saving 45,500
+        String draftId = salariedDraft(1000000, 1400000, """
+                {"op": "add", "path": "/entered/employments/0/components/-", "value": {
+                  "code": {"value": "DEARNESS_ALLOWANCE"}, "annualAmount": {"amountInRupees": 200000}}},
+                {"op": "add", "path": "/entered/employerContributions/-", "value": {"employment": 0,
+                  "fund": "RECOGNISED_PROVIDENT_FUND", "amount": {"amountInRupees": 144000}}},
+                """);
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\","
+                + " \"providentFund\": {\"baseIncludesDearnessAllowance\": true}}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("351000");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("305500");
+        assertThat(amountAt(view.at("/changes/pay/0"), "/savingAlone")).isEqualByComparingTo("45500");
+        assertThat(amountAt(view.at("/changes/following/0"), "/suggested")).isEqualByComparingTo("294000");
+    }
+
+    private JsonNode forecast(String draftId) {
+        ResponseEntity<String> forecast = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/forecast", null, null);
+        assertThat(forecast.getStatusCode()).as(forecast.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(forecast.getBody());
+    }
+
+    private static BigDecimal forecastRupees(JsonNode forecast, String figure) {
+        return forecast.at("/" + figure + "/amountInRupees").decimalValue();
+    }
+
+    @Test
+    void forecast_whenTheEmployersPartIsStated_showsTheThreeFiguresAndTheNextInstalmentAndStoresNothing() {
+        // Given — 75,000 at source, 60,000 of it the employer's (W-113, D-664)
+        listedEquitySale();
+        String draftId = draft(true, "75000");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/filing/ofWhichByEmployer\", \"value\": {\"amountInRupees\": 60000}}]", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode forecast = forecast(draftId);
+
+        // Then — compute_whenTaxWasDeductedAtSource_creditsItAgainstTheBill's figures: 87,750 + 228 = 87,978; 75,000 − 60,000 =
+        // 15,000; 12,978 to the nearest ₹10 12,980; on 6-11-2026 December (75 % of 12,750 owed, none paid) is next
+        assertThat(forecastRupees(forecast, "liability")).isEqualByComparingTo("87978");
+        assertThat(forecastRupees(forecast, "byEmployer")).isEqualByComparingTo("60000");
+        assertThat(forecastRupees(forecast, "otherCredits")).isEqualByComparingTo("15000");
+        assertThat(forecastRupees(forecast, "rounding")).isEqualByComparingTo("2");
+        assertThat(forecastRupees(forecast, "net")).isEqualByComparingTo("12980");
+        assertThat(forecast.get("settlement").asString()).isEqualTo("PAYABLE_NOW");
+        assertThat(forecast.get("payableBy").asString()).isEqualTo("2026-12-15");
+        assertThat(forecast.get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(forecast.get("asOf").asString()).isEqualTo("2026-11-06");
+        assertThat(forecast.get("revision").asInt()).isEqualTo(2);
+        assertThat(forecast.get("notIncluded").size()).isEqualTo(10);
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isZero();
+    }
+
+    @Test
+    void forecast_whenMoreWasDeductedThanIsDue_isARefundAfterFilingWithNoDate() {
+        // Given — 87,750 − 1,00,004 = −12,254, to the nearest ₹10 −12,250; the employer's part not stated
+        listedEquitySale();
+
+        // When
+        JsonNode forecast = forecast(draft(true, "100004"));
+
+        // Then
+        assertThat(forecast.get("byEmployer").isNull()).isTrue();
+        assertThat(forecastRupees(forecast, "otherCredits")).isEqualByComparingTo("100004");
+        assertThat(forecastRupees(forecast, "net")).isEqualByComparingTo("-12250");
+        assertThat(forecast.get("settlement").asString()).isEqualTo("REFUND_AFTER_FILING");
+        assertThat(forecast.get("payableBy").isNull()).isTrue();
+    }
+
+    @Test
+    void forecast_whenTheDraftWasActedOnWithARegime_computesThatRegime() {
+        // Given
+        String draftId = draft(false, "0");
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status", "{\"status\": \"READY\"}", null);
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status",
+                "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}", null);
+
+        // When / Then
+        assertThat(forecast(draftId).get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+    }
+
+    @Test
+    void forecast_whenTheEmployersPartIsMoreThanTaxAtSource_isRefusedOnSave() {
+        // Given
+        String draftId = draft(false, "75000");
+
+        // When
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/filing/ofWhichByEmployer\", \"value\": {\"amountInRupees\": 75001}}]", "\"rev-1\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(saved.getBody()).contains("/filing");
+    }
+
+    @Test
+    void forecast_whenAnotherAccountAsksOrNoDueDateIsStated_expected400() {
+        // Given
+        String draftId = draft(false, "0");
+        ResponseEntity<String> anothers = call(HttpMethod.GET, "other@example.com", "/drafts/" + draftId + "/forecast", null, null);
+        call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, "[{\"op\": \"replace\", \"path\": \"/filing/dueDate\", \"value\": null}]",
+                "\"rev-1\"");
+
+        // When
+        ResponseEntity<String> undated = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/forecast", null, null);
+
+        // Then
+        assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getBody()).contains("/filing/dueDate");
+    }
+
+    private JsonNode calendar(String draftId) {
+        ResponseEntity<String> calendar = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/calendar", null, null);
+        assertThat(calendar.getStatusCode()).as(calendar.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(calendar.getBody());
+    }
+
+    private static JsonNode calendarEntry(JsonNode calendar, String on, String kind) {
+        for (JsonNode entry : calendar.get("entries")) {
+            if (entry.get("on").asString().equals(on) && entry.get("kind").asString().equals(kind)) {
+                return entry;
+            }
+        }
+        throw new AssertionError("No " + kind + " on " + on + " in " + calendar);
+    }
+
+    @Test
+    void calendar_whenNothingIsPaid_measuresEachCostAsOfTheDueDateAndStoresNothing() {
+        // Given — T13-1, sold 1-9-2026, nothing at source; computed on 6-11-2026 (W-114, D-665)
+        listedEquitySale();
+
+        // When
+        JsonNode calendar = calendar(draft(true, "0"));
+
+        // Then — DraftCalendarServiceTest's hand-worked costs: as of 6-11-2026 December would cost nothing, as of 31-7-2027
+        // it costs 7,934 − 2,670 = 5,264; 31 March 3,901; a day late 6,754
+        assertThat(calendar.get("asOf").asString()).isEqualTo("2026-11-06");
+        assertThat(calendar.get("measuredAsOf").asString()).isEqualTo("2027-07-31");
+        assertThat(calendar.get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(calendar.get("entries").size()).isEqualTo(6);
+        assertThat(calendarEntry(calendar, "2026-12-15", "ADVANCE_TAX_INSTALMENT").at("/costOfMissing/amountInRupees")
+                .decimalValue()).isEqualByComparingTo("5264");
+        assertThat(calendarEntry(calendar, "2027-03-31", "DEFERMENT_RELIEF_PAID_BY").at("/costOfMissing/amountInRupees")
+                .decimalValue()).isEqualByComparingTo("3901");
+        assertThat(calendarEntry(calendar, "2027-07-31", "RETURN_DUE").at("/costOfMissing/amountInRupees").decimalValue())
+                .isEqualByComparingTo("6754");
+        assertThat(calendar.get("entries").get(0).get("on").asString()).isEqualTo("2026-06-15");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isZero();
+    }
+
+    @Test
+    void calendar_whenAPastInstalmentWasPaid_showsWhatWasPaidAndCostsItNothing() {
+        // Given — 13,162.50 paid on 15-6-2026, all June's share
+        listedEquitySale();
+        String draftId = draft(true, "0");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/filing/advanceTaxPaid/-",
+                  "value": {"paidOn": "2026-06-15", "amount": {"amountInRupees": 13162.50}}}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode june = calendarEntry(calendar(draftId), "2026-06-15", "ADVANCE_TAX_INSTALMENT");
+
+        // Then
+        assertThat(june.at("/paidByThen/amountInRupees").decimalValue()).isEqualByComparingTo("13162.50");
+        assertThat(june.at("/amountToPay/amountInRupees").decimalValue()).isEqualByComparingTo("0");
+        assertThat(june.at("/costOfMissing/amountInRupees").decimalValue()).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void calendar_whenAnotherAccountAsksOrNoDueDateIsStated_expected400() {
+        // Given
+        String draftId = draft(false, "0");
+        ResponseEntity<String> anothers = call(HttpMethod.GET, "other@example.com", "/drafts/" + draftId + "/calendar", null, null);
+        call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, "[{\"op\": \"replace\", \"path\": \"/filing/dueDate\", \"value\": null}]",
+                "\"rev-1\"");
+
+        // When
+        ResponseEntity<String> undated = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/calendar", null, null);
+
+        // Then
+        assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(undated.getBody()).contains("/filing/dueDate");
+    }
+
+    private JsonNode completeness(String draftId) {
+        ResponseEntity<String> completeness = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/completeness", null, null);
+        assertThat(completeness.getStatusCode()).as(completeness.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(completeness.getBody());
+    }
+
+    /** Basic 10,00,000 and HRA 4,00,000, no rent, nothing paid (W-115, {@code DraftCompletenessServiceTest}). */
+    private String allowanceDraft() {
+        String draftId = draft(false, "0");
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "replace", "path": "/entered/employments/0/components/0/annualAmount/amountInRupees", "value": 1000000},
+                 {"op": "add", "path": "/entered/employments/0/components/-",
+                  "value": {"code": {"value": "HRA"}, "annualAmount": {"amountInRupees": 400000}}}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        return draftId;
+    }
+
+    @Test
+    void completeness_whenTheOldRegimeIsElected_ranksWhatEachMissingItemSavesAndStoresNothing() {
+        // Given — DraftCompletenessServiceTest's hand-worked worths, at 31.2 % on an income of 13,50,000
+        String draftId = allowanceDraft();
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status", "{\"status\": \"READY\"}", null);
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status",
+                "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}", null);
+
+        // When
+        JsonNode completeness = completeness(draftId);
+
+        // Then — rent 1,19,600, Schedule XV 46,800, own NPS 15,600, own health cover 7,800; 1,89,800 together
+        assertThat(completeness.get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(completeness.get("top").size()).isEqualTo(4);
+        assertThat(completeness.at("/top/0/rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
+        assertThat(completeness.at("/top/0/direction").asString()).isEqualTo("REDUCES");
+        assertThat(completeness.at("/top/0/location").asString()).isEqualTo("ANY_OTHER_PLACE");
+        assertThat(amountAt(completeness, "/top/0/rentNeeded")).isEqualByComparingTo("500000");
+        assertThat(amountAt(completeness, "/top/0/worth")).isEqualByComparingTo("119600");
+        assertThat(completeness.at("/top/1/rule").asString()).isEqualTo("DED-SCHEDULE-XV");
+        assertThat(amountAt(completeness, "/top/1/worth")).isEqualByComparingTo("46800");
+        assertThat(amountAt(completeness, "/top/2/worth")).isEqualByComparingTo("15600");
+        assertThat(amountAt(completeness, "/top/3/worth")).isEqualByComparingTo("7800");
+        assertThat(completeness.get("others").size()).isZero();
+        assertThat(amountAt(completeness, "/topWorth")).isEqualByComparingTo("189800");
+        assertThat(completeness.get("notIncluded").toString()).contains("W-324");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isZero();
+    }
+
+    @Test
+    void completeness_whenTheDefaultRegimeAllowsNoneOfIt_listsNothing() {
+        // Given — no election: the year's default, which allows no Schedule XV, s.124(3), health cover or HRA
+        String draftId = allowanceDraft();
+
+        // When
+        JsonNode completeness = completeness(draftId);
+
+        // Then
+        assertThat(completeness.get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(completeness.get("top").size()).isZero();
+        assertThat(amountAt(completeness, "/topWorth")).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void completeness_whenAnotherAccountAsks_expected400() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> anothers = call(HttpMethod.GET, "other@example.com", "/drafts/" + draftId + "/completeness",
+                null, null);
+
+        // Then
+        assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void compute_whenHraIsLimitedByTheAllowance_explainsTheLineInPlainLanguage() {
+        // Given — the renting draft with HRA 4,80,000 in the old regime: rent 9,60,000 less a tenth of 16,00,000 is
+        // 8,00,000 and Mumbai's half of salary is 8,00,000, so the allowance binds (W-116, D-671)
+        String draftId = rentingDraft();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/entered/employments/0/components/-",
+                  "value": {"code": {"value": "HRA"}, "annualAmount": {"amountInRupees": 480000}}}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+
+        // When
+        JsonNode view = compute(draftId, "{\"regime\": \"FIRST_SCHEDULE_RATES\"}");
+
+        // Then
+        JsonNode hra = null;
+        for (JsonNode step : view.at("/tax/trace")) {
+            if (step.get("rule").asString().equals("SAL-HOUSE-RENT-ALLOWANCE")) {
+                hra = step;
+            }
+        }
+        assertThat(hra).as("the HRA line").isNotNull();
+        assertThat(amountAt(hra, "/in")).isEqualByComparingTo("480000");
+        assertThat(amountAt(hra, "/out")).isEqualByComparingTo("480000");
+        assertThat(hra.get("explanation").asString()).isEqualTo(
+                "Of the ₹4,80,000 house rent allowance you received for this home, ₹4,80,000 is not taxed. All of the"
+                        + " allowance is exempt: it is below both other limits. Raising any of the other limits alone would"
+                        + " not change it: percentage of salary, rent less one-tenth of salary.");
+    }
+}

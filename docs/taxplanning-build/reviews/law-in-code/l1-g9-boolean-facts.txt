@@ -1,0 +1,13 @@
+node/RetirementNode.java:243 |         if (payment.arrearsReliefAllowed()) {
+node/HouseholdBenefitPerquisite.java:71 |         if (benefit.carrierIsAirlineOrRailways()) {
+node/HousePropertyInterest.java:181 |         if (loan.use() != LoanUse.ACQUISITION_OR_CONSTRUCTION || !loan.lenderCertificateHeld()) {
+node/MotorCarPerquisite.java:187 |         if (!vehicle.officialUse().journeysAndCertificateKept()) {
+node/NotifiedRetirementLimits.java:153 |                 .map(onlyWhereTerms -> !onlyWhereTerms || employment.termsIncludeDearnessAllowance())
+node/DonationDeduction.java:151 |         if (!cash.allows(donation.amount(), donation.paidInCash())) {
+node/DonationDeduction.java:154 |         if (donation.clause() == DonationClause.CHARITABLE_INSTITUTION && !donation.reportedByDonee()) {
+node/DonationDeduction.java:175 |             Money entered = donations.stream().filter(donation -> donation.clause().isWhole() == whole)
+node/CarriedLossSetOff.java:134 |         if (losses.carry().requiresReturnFiledInTime() && !year.determinedInReturnFiledInTime().orElseThrow(
+node/ExpenseBenefitPerquisite.java:48 |                 case CREDIT_CARD -> benefit.whollyForWork() && benefit.officialUse().journeysAndCertificateKep
+node/ExpenseBenefitPerquisite.java:65 |         boolean businessWithRecords = club.whollyForWork() && club.officialUse().journeysAndCertificateKept();
+node/ExpenseBenefitPerquisite.java:68 |             return businessWithRecords && club.healthClubUniformForAll() ? businessUniform : Optional.empty();
+node/HealthInsuranceDeduction.java:90 |         if (payment.paidInCash() && payment.kind() != HealthPaymentKind.PREVENTIVE_CHECKUP) {

@@ -55,15 +55,7 @@ public class ReportDataAggregator {
                             .error(classSummary.getErrorCount())
                             .build());
 
-            // Update status distribution
-            for (SurefireTestCase tc : suite.getTestCases()) {
-                TestStatus status = determineStatus(tc);
-                String statusKey = status.name();
-                statusDistribution.merge(statusKey, 1L, Long::sum);
-
-                String className = tc.getClassname();
-                timeByClass.merge(className, tc.getTime(), Double::sum);
-            }
+            tallyTestCases(suite, statusDistribution, timeByClass);
         }
 
         return ExecutionSummary.builder()
@@ -81,6 +73,14 @@ public class ReportDataAggregator {
                 .classStatusCounts(classStatusCounts)
                 .timeByClass(timeByClass)
                 .build();
+    }
+
+    private void tallyTestCases(SurefireTestSuite suite, Map<String, Long> statusDistribution,
+            Map<String, Double> timeByClass) {
+        for (SurefireTestCase tc : suite.getTestCases()) {
+            statusDistribution.merge(determineStatus(tc).name(), 1L, Long::sum);
+            timeByClass.merge(tc.getClassname(), tc.getTime(), Double::sum);
+        }
     }
 
     private TestClassSummary buildClassSummary(SurefireTestSuite suite) {

@@ -6,12 +6,14 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -36,6 +39,7 @@ public class TransactionEntity implements AuditableEntity {
 	private String id;
 
 	@Field("email")
+	@ValueConverter(SearchableIdentifier.class)
 	private String email;
 
 	@Field("stock_code")
@@ -95,6 +99,7 @@ public class TransactionEntity implements AuditableEntity {
 	private AccountType accountType;
 
 	@Field("account_holder")
+	@ValueConverter(SearchableIdentifier.class)
 	private String accountHolder;
 
 	@Field(name = "transaction_type", targetType = FieldType.STRING)
@@ -153,6 +158,15 @@ public class TransactionEntity implements AuditableEntity {
 
 	@Field("asset_request")
 	private AssetRequest assetRequest;
+
+	/**
+	 * The flow that received the trade: on a {@code TEMPORARY} one so its redrive uses the same flow (W-270), and on
+	 * every stored trade so the lot shape it was given can be told — V1 merges a same-day buy, V2 does not — when
+	 * {@code assets} is rebuilt (W-283a1, D-580). Absent on a bonus allotment, which no flow received, and on a
+	 * transaction stored before W-283a1 (a temporary before W-270 is redriven through V1, D-555 C2a).
+	 */
+	@Field("trade_flow")
+	private TradeFlow tradeFlow;
 
 	@Field("audit_metadata")
 	@Setter(value = AccessLevel.NONE)

@@ -1,0 +1,30 @@
+{
+  "code": "LEAVE_ENCASHMENT",
+  "_note": "Paid in money on retirement or termination, and salary: \"any payment received by an employee in respect of any period of leave not availed of by him\" (S2 s.16(h); 1961 s.17(1)(va)); RET-LEAVE-ENCASHMENT-GOVERNMENT, or any other employee's RET-LEAVE-ENCASHMENT-OTHER with its aggregate (D-106) (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
+  "displayName": "Leave encashment",
+  "head": "SALARIES",
+  "kind": "SALARY",
+  "cashNature": "CASH",
+  "treatment": "TAXABLE",
+  "feedsInto": [
+    "SAL-SALARY-INCLUDES",
+    "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+    "RET-LEAVE-ENCASHMENT-OTHER",
+    "RET-LEAVE-ENCASHMENT-AGGREGATE"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16(h) and s.19(1) Table Sl. 13–14; Income-tax Act, 1961 s.10(10)–(10C) and s.17",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "code": "SALARY_GROSS",
+  "_note": "salary.gross holds pay, perquisites and the employer-contribution excess (GrossSalaryNode); the medical-travel perquisite is added after it, in salary.income (SalaryIncomeNode) (Q1a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Gross salary",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "salary.gross",
+      "salary.medicaltravel"
+    ]
+  }
+}

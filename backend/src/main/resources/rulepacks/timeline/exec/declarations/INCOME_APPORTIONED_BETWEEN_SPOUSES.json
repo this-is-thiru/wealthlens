@@ -1,0 +1,16 @@
+{
+  "code": "INCOME_APPORTIONED_BETWEEN_SPOUSES",
+  "_note": "r.164(3)(d) and (6)(d): \"has income to be apportioned in accordance with provisions of section 10\". s.10: a husband and wife governed by the community of property system (\"COMMUNIAO DOS BENS\", Portuguese Civil Code of 1860) in Goa, Dadra and Nagar Haveli and Daman and Diu; income under each head other than \"Salaries\" divided equally. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (IC), \"section 5A\" (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
+  "question": "Is your income divided between you and your spouse under the community-of-property system?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(d), p.1662; r.164(6)(d), p.1663; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.10, p.35; egazette 2018/184509, Income-tax (Second Amendment) Rules, 2018, G.S.R. 332(E), Income-tax Rules, 1962 r.12(1)(a) proviso (IC), p.177",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

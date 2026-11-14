@@ -1,0 +1,12 @@
+{
+  "code": "BALANCE_AFTER_SETOFF",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Balance after set off current year losses",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "HEADS_TOTAL",
+      "-SETOFF_CURRENT_YEAR"
+    ]
+  }
+}

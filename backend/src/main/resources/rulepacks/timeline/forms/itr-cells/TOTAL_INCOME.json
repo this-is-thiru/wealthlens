@@ -1,0 +1,11 @@
+{
+  "code": "TOTAL_INCOME",
+  "_note": "Before rounding under s.288A. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Total income",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "totalincome"
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "ruleId": "HP-UNREALISED-RENT",
+  "ruleSet": "RS-HP-UNREALISED-RENT",
+  "_note": "Rent the owner cannot realise is left out of the actual rent received or receivable before the annual value is found — so it can bring the rent below the expected letting value, which then governs (D-157; rulebook HP-AV-UNREAL-001). TY 2026-27: Income-tax Act, 2025 s.21(4) \"The rent which cannot be realised by the owner shall not be included in computing the actual rent received or receivable, subject to the rules as may be made in this behalf\" (Gazette 265620, p.47); Income-tax Rules, 2026 r.21: \"the amount of rent which the owner cannot realise shall be equal to the amount of rent receivable by the assessee but not paid by a tenant of the assessee and so proved to be lost and irrecoverable where, — (a) the tenancy is bona fide; (b) the defaulting tenant has vacated, or steps have been taken to compel him to vacate the property; (c) the defaulting tenant is not in occupation of any other property of the assessee; and (d) the assessee has taken all reasonable steps to institute legal proceedings for the recovery of the unpaid rent or satisfies the Assessing Officer that legal proceedings would be futile\" (Gazette 271092, p.1551). TY 2025-26: Income-tax Act, 1961 s.23(1) Explanation, for clauses (b) and (c), \"the amount of actual rent received or receivable by the owner shall not include, subject to such rules as may be made in this behalf, the amount of rent which the owner cannot realise\" (thc p.146); Income-tax Rules, 1962 r.4, the same four conditions with \"rent payable but not paid\" and \"would be useless\" (substituted w.e.f. 1-4-2002; DoR compendium p.1.54). The conditions are an entry condition: HouseProperty.unrealisedRent is entered only where they hold. PercentOfBase 100 states the node's arithmetic: the whole of it leaves the actual rent. Unrealised rent realised later is income under HP-ARREARS. Stock-in-trade (s.21(5); 1961 s.23(5)) is deferred with the business head (D-155). Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.23(1) Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.21(4)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "UNREALISED_RENT"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.23 — subs. by Act 14 of 2001, s.14 (w.e.f. 1-4-2002); Income-tax Rules, 1962 r.4 subs. by the Income-tax (Eighth Amendment) Rules, 2001, S.O. 631(E), 2-7-2001 (Notification No. 198/2001, F. No. 142/38/2001-TPL), in force 1-4-2002",
+        "gazetteRef": "Act 14 of 2001: Gazette of India, Extraordinary, Part II, Section 1, 11-5-2001 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 26-5-2005, pp.107, 117; S.O. 631(E): the Gazette copy not found, the Department's page as relayed by the owner's ChatGPT share t_6ad1f9cb43088191bebeec3cbf177912 (D-186)",
+        "notifiedOn": "2001-05-11",
+        "effectiveFrom": "2002-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0506/0506-8-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/income-tax-rules",
+        "sourceDescription": "Income-tax Rules, 1962 r.4 on the Income Tax Department's consolidated rule page (D-176) — as substituted by the Income-tax (Eighth Amendment) Rules, 2001 (S.O. 631(E), 2-7-2001, w.e.f. 1-4-2002), whose Gazette text is not on egazette; no later amendment to 31-3-2026: the Department page and the amendment list (ChatGPT share t_6acb25ca…) agree, the Gazette amendment chain from 1-9-2025 is read and the 2024–2025 notifications are clear (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G7); Income-tax Act, 1961 s.23(1) Explanation as on thc.nic.in (current to Act 7 of 2019), p.146 — the Acts F(No.2)A 2019 … FA 2026 amend ss.22–27 only by the Finance Act, 2025 s.10 (s.23(2))",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.23(1) Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.21(4)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "UNREALISED_RENT"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.21(4); Income-tax Rules, 2026, G.S.R. 198(E), rule 21",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.21, p.1551; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.21(4), p.47",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.21, p.1551; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.21(4), p.47",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

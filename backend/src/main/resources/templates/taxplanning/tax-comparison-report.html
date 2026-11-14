@@ -13,6 +13,11 @@
         <p style="font-size: 0.9em; color: #666;">Generated on: <span th:text="${#temporals.format(generatedOn, 'dd MMMM yyyy')}">01 Jan 2025</span></p>
     </div>
 
+    <!-- Known errors (D-063, D-168): before every figure, worded once in KnownErrorsComputation.NOTICE -->
+    <div style="border: 2px solid #c62828; background-color: #ffebee; color: #b71c1c; padding: 10px; margin-bottom: 25px;">
+        <strong th:text="${knownErrors}">Known errors</strong>
+    </div>
+
     <!-- Employee Info -->
     <div style="margin-bottom: 25px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
         <h3 style="margin-top: 0; color: #37474f;">Employee Details</h3>

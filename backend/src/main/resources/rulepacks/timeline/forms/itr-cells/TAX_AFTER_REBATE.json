@@ -1,0 +1,12 @@
+{
+  "code": "TAX_AFTER_REBATE",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Tax after rebate",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "TAX_ON_TOTAL_INCOME",
+      "-TAX_REBATE_87A"
+    ]
+  }
+}

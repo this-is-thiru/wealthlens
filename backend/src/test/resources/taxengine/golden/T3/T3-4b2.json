@@ -1,0 +1,30 @@
+{
+  "id": "T3-4b2",
+  "source": "DR 08 T3-4b — T3-1's facts in the new regime, TY 2026-27",
+  "_source": "**Expected: … ₹0-with-a-reason.** \"SAL-HRA-005: Schedule III Sl. 11 is disallowed by s.202(2)(a)(i)\"; \"the trace MUST carry a line saying so — not an absent line\".",
+  "regime": "NEW_TAX_REGIME",
+  "taxYears": [
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "1200000",
+      "DEARNESS_ALLOWANCE": "120000",
+      "HRA": "600000"
+    },
+    "termsIncludeDearnessAllowance": true,
+    "tenancies": [
+      {
+        "from": "2026-04-01",
+        "to": "2027-03-31",
+        "location": "BENGALURU",
+        "ownedByAssessee": false,
+        "rentPaid": "360000"
+      }
+    ]
+  },
+  "expected": {
+    "salaryExemptions": "0",
+    "limitedBy": "disallowed in the NEW_TAX_REGIME regime: Income-tax Act, 2025 s.202(2)(a) computes the new tax regime's total income without this exemption or deduction (REG-NEW-TAX-REGIME-NO-EXEMPTION)"
+  }
+}

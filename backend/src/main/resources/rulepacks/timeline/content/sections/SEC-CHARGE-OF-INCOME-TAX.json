@@ -1,0 +1,57 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-161). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.4 'Charge of income-tax' (thc arrangement p.1) / 2025 s.4 (Gazette 265620 p.24). summary: S2 s.4(1), (2); the rate tables RATE-SLAB-NEW-TAX-REGIME (s.202(1)) and RATE-SLAB-FIRST-SCHEDULE* (First Schedule, Finance Act). routes[0]: RATE-SLAB-NEW-TAX-REGIME. routes[1]: the three First Schedule ladders (W-046, W-046b). disqualifiers[0]: s.4(4); TaxYearId is the unit of computation.",
+  "key": "SEC-CHARGE-OF-INCOME-TAX",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.4",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.4",
+    "presence": "PRESENT"
+  },
+  "plainName": "Charge of income-tax",
+  "summary": "Income-tax is charged on the total income of the tax year at the rates the year's Finance Act sets: the default regime's slab rates, or, if you opt out, the other slab rates, which differ for senior and very senior citizens.",
+  "routes": [
+    {
+      "name": "The default regime",
+      "description": "Tax at the default regime's slab rates.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-SLAB-NEW-TAX-REGIME"
+        }
+      ]
+    },
+    {
+      "name": "The other rates",
+      "description": "Tax at the other slab rates, by your age at the end of the year.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-SLAB-FIRST-SCHEDULE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-80"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Income the Act charges for a period other than the tax year.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Not built yet: the engine computes one tax year at a time."
+      }
+    }
+  ]
+}

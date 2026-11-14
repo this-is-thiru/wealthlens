@@ -1,0 +1,25 @@
+{
+  "name": "upstox-equity-intraday-sell-100k",
+  "describes": "A Rs 1,00,000 intraday sell at Upstox: 0.1% would be Rs 100, so the Rs 20 cap applies.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": "EQUITY",
+    "segment": "INTRADAY",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 100,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 25.0,
+      "EXCHANGE_TXN": 2.97,
+      "SEBI_FEE": 0.1,
+      "IPFT": 0.1,
+      "GST": 4.17
+    },
+    "total": 52.34
+  }
+}

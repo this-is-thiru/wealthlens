@@ -1,0 +1,26 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(r): \"payment made for purchase or construction of a residential house property the income from which is chargeable to tax under the head \"Income from house property\" (or which would, if it had not been used for the own residence of the assessee, have been chargeable to tax under that head), subject to satisfaction of conditions laid down in paragraph 3\" (Gazette 265620, p.562). D-130. Paragraph 3's inclusions and exclusions (pp.563–564) — entry conditions. TY 2025-26: Income-tax Act, 1961 s.80C(2)(xviii) (thc pp.331–332): \"for the purposes of purchase or construction of a residential house property\" — instalments, repayment of the amount borrowed from the listed lenders, stamp duty and registration, excluding s.24 expenditure. sources/2026-10-07-chapter-via.md; D-144.",
+  "code": "HOUSE_PURCHASE_PAYMENT",
+  "displayName": "Buying or building a residential house",
+  "kind": "QUALIFYING_PAYMENT",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(r), p.562; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(xviii), pp.331–332",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

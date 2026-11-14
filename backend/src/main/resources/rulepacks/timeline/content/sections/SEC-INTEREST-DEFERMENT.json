@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.234C / 2025 s.425 (coverage MODELLED by INT-DEFERMENT); the relief for capital gains and dividends arising after a date, s.425(4) / s.234C first proviso, is computed (W-112a, D-660); sources/2026-11-06-advance-tax-interest.md; D-446",
+  "key": "SEC-INTEREST-DEFERMENT",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.234C",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.425",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest for deferring advance tax",
+  "summary": "Interest on each instalment paid short of its share of the tax due on the return, unless enough was paid by the early dates; none on the tax of gains or dividends that arose after a date and were paid for later in the year.",
+  "routes": [
+    {
+      "name": "Interest for deferring advance tax",
+      "description": "Charged once at each instalment date on what fell short.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "INT-DEFERMENT"
+        }
+      ]
+    }
+  ]
+}

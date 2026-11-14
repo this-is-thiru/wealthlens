@@ -1,0 +1,67 @@
+{
+  "ruleId": "PERQ-RPF-CONTRIBUTION",
+  "ruleSet": "RS-PERQ-RPF-CONTRIBUTION",
+  "_note": "The employer's contributions to an employee's account in a recognised provident fund in excess of twelve per cent of the employee's salary are deemed received and are salary, TY 2025-26 only (D-151; rulebook PF-RPF12-001): Income-tax Act, 1961 Sch. IV Pt A r.6(a) (thc.nic.in p.856), \"contributions made by the employer in excess of twelve per cent. of the salary of the employee\", charged by s.17(1)(vi) (p.140). Salary is SAL-SALARY-FOR-RPF. Measured per employment — each employer's contribution to its fund against that employer's salary. The Income-tax Act, 2025 as enacted had the same limb in Sch. XI Pt A para 6(a) (Gazette 265620, p.550); the Finance Act, 2026 s.127(a)(iii) substituted para 6 without it from 1-4-2026, the day the Act commenced (Gazette 271439, pp.70–71) — so the 2025 Act never charged it and there is no TY 2026-27 version. Separate from, and additional to, the aggregate beyond ₹7,50,000 (PERQ-EMPLOYER-CONTRIBUTION), as rulebook R13 states. Every regime. The row reaches an employer contribution to a recognised provident fund only (employer.fund = RECOGNISED_PROVIDENT_FUND): r.6(a)'s \"contributions made by the employer\" are to the employee's account in a recognised provident fund (W-156e, D-350).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "Sch. IV Pt A r.6(a), with s.17(1)(vi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "presence": "ABSENT_IN_THIS_ACT"
+      },
+      "cap": {
+        "type": "AmountInExcess",
+        "amount": "CONTRIBUTION",
+        "threshold": {
+          "type": "PercentOfBase",
+          "percent": "12",
+          "base": "SALARY"
+        }
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "RECOGNISED_PROVIDENT_FUND"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), Sch. IV Pt A r.6(a) — \"twelve\" subs. by Act 26 of 1997, s.58 (w.e.f. 1-4-1998)",
+        "gazetteRef": "Gazette issue not found; s.58 read in the LegitQuest transcription of the Act, the Act's date (14-5-1997) in the thc.nic.in compilation, p.762 (D-185)",
+        "notifiedOn": "1997-05-14",
+        "effectiveFrom": "1998-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://www.legitquest.com/act/finance-act-1997/71C4",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.6(a), p.856 (footnote 5: \"twelve\" subs. by Act 26 of 1997, s.58, for \"ten\", w.e.f. 1-4-1998); s.17(1)(vi), p.140; Income-tax Act, 1961 Sch. IV Pt A r.6(a), with s.17(1)(vi): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+    "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.6(a), p.856 (footnote 5: \"twelve\" subs. by Act 26 of 1997, s.58, for \"ten\", w.e.f. 1-4-1998); s.17(1)(vi), p.140; Income-tax Act, 1961 Sch. IV Pt A r.6(a), with s.17(1)(vi): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+    "accessedOn": "2026-10-10",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

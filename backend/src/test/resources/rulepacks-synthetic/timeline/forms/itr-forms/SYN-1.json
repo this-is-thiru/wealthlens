@@ -1,0 +1,120 @@
+{
+  "id": "SYN-1",
+  "_note": "Synthetic form for W-090b (D-521): not law, never shipped. The bar changes in 2101-02, to prove a form is projected into a year as the version in force.",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2099-04-01",
+        "to": "2101-03-31"
+      },
+      "displayName": "Synthetic form one",
+      "cascadeOrder": 1,
+      "appliesTo": [
+        "INDIVIDUAL"
+      ],
+      "returnKinds": [
+        "SYN_ORIGINAL"
+      ],
+      "positiveConditions": [
+        {
+          "type": "IsResident"
+        }
+      ],
+      "bars": [
+        {
+          "reason": "synthetic yes-or-no bar",
+          "condition": {
+            "type": "Declared",
+            "code": "SYNTHETIC_YES_NO"
+          },
+          "provenance": {
+            "sourceUrl": "https://example.invalid/w-090b-synthetic",
+            "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "UNVERIFIED",
+            "whatToCheck": "nothing: a synthetic form proving the model"
+          }
+        }
+      ],
+      "excludes": [],
+      "furnishing": [
+        {
+          "manner": "SYN_ELECTRONIC",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://example.invalid/w-090b-synthetic",
+            "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "UNVERIFIED",
+            "whatToCheck": "nothing: a synthetic form proving the model"
+          }
+        }
+      ],
+      "provenance": {
+        "sourceUrl": "https://example.invalid/w-090b-synthetic",
+        "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+        "accessedOn": "2026-11-09",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "nothing: a synthetic form proving the model"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2101-04-01"
+      },
+      "displayName": "Synthetic form one",
+      "cascadeOrder": 1,
+      "appliesTo": [
+        "INDIVIDUAL"
+      ],
+      "returnKinds": [
+        "SYN_ORIGINAL"
+      ],
+      "positiveConditions": [
+        {
+          "type": "IsResident"
+        }
+      ],
+      "bars": [
+        {
+          "reason": "synthetic amount bar",
+          "condition": {
+            "type": "DeclaredAmountAbove",
+            "code": "SYNTHETIC_AMOUNT",
+            "limit": "1000"
+          },
+          "provenance": {
+            "sourceUrl": "https://example.invalid/w-090b-synthetic",
+            "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "UNVERIFIED",
+            "whatToCheck": "nothing: a synthetic form proving the model"
+          }
+        }
+      ],
+      "excludes": [],
+      "furnishing": [
+        {
+          "manner": "SYN_ELECTRONIC",
+          "conditions": [],
+          "provenance": {
+            "sourceUrl": "https://example.invalid/w-090b-synthetic",
+            "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+            "accessedOn": "2026-11-09",
+            "verificationLevel": "UNVERIFIED",
+            "whatToCheck": "nothing: a synthetic form proving the model"
+          }
+        }
+      ],
+      "provenance": {
+        "sourceUrl": "https://example.invalid/w-090b-synthetic",
+        "sourceDescription": "Synthetic form for W-090b: not law, never shipped.",
+        "accessedOn": "2026-11-09",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "nothing: a synthetic form proving the model"
+      }
+    }
+  ]
+}

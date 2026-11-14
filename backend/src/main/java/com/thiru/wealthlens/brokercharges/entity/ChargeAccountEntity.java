@@ -1,11 +1,14 @@
 package com.thiru.wealthlens.brokercharges.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -32,7 +36,8 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
  * it is skipped, so an accidental second upload is a no-op rather than a second charge.
  */
 @Data
-@AllArgsConstructor
+// A body binds through the no-arg constructor, so an omitted field keeps its initialiser (W-205).
+@AllArgsConstructor(onConstructor_ = @JsonCreator(mode = JsonCreator.Mode.DISABLED))
 @NoArgsConstructor
 @Document(value = "charge_accounts")
 @CompoundIndexes({
@@ -53,16 +58,19 @@ public class ChargeAccountEntity implements AuditableEntity {
     private String id;
 
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     /** Whose account this is. Matches the value carried on transactions. */
     @Field("account_holder")
+    @ValueConverter(SearchableIdentifier.class)
     private String accountHolder;
 
     @Field(name = "broker_name", targetType = FieldType.STRING)
     private BrokerName brokerName;
 
     @Field("demat_account_id")
+    @ValueConverter(SearchableIdentifier.class)
     private String dematAccountId;
 
     /** Rate variant this account is on, where the broker offers more than one. */
@@ -88,6 +96,7 @@ public class ChargeAccountEntity implements AuditableEntity {
 
     @Field("audit_metadata")
     @Setter(value = AccessLevel.NONE)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private AuditMetadata auditMetadata = new AuditMetadata();
 
     /** One completed billing cycle. */

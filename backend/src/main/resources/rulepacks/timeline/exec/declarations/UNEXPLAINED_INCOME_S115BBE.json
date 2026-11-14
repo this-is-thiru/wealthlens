@@ -1,0 +1,16 @@
+{
+  "code": "UNEXPLAINED_INCOME_S115BBE",
+  "_note": "Income-tax Rules, 1962 r.12(1)(a) proviso (VI): \"has income of the nature referred to in section 115BBE\" (2017). Its own code, not SPECIAL_CASE_INCOME, because their equivalence with the 2025 Act's Part A of Chapter XIII is unread (W-090d C3a, D-652). The engine computes no such income, so the person answers it. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 only: r.12(1) as in force for AY 2026-27.",
+  "question": "Do you have any income of the nature referred to in section 115BBE of the Income-tax Act, 1961?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2026-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+    "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (IV) – (VI), p.163",
+    "accessedOn": "2026-11-13",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

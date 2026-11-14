@@ -1,0 +1,14 @@
+{
+  "id": "T2-5",
+  "source": "DR 08 T2-5 — Old regime, the 37% band entry. TI ₹5,00,00,010",
+  "_source": "**Expected: ₹1,92,56,260** — exactly ₹10 above T2-4's old-regime figure.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "50000010",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "19256260"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(k): \"contribution for participation in unit-linked insurance plan of Life Insurance Corporation Mutual Fund, referred to in Schedule VII (Table: Sl. No. 20 or 21), as may be notified by the Central Government\", in the name of the individual, spouse or any child, or any member of a Hindu undivided family (Gazette 265620, pp.561–562) — the notification and whose name it is in are entry conditions. Counted in full: para 2 reaches para 1(a) alone (OQ-17 answered by the owner, D-154 C2a). TY 2025-26: Income-tax Act, 1961 s.80C(2)(xi) (sources B21). D-154.",
+  "code": "MUTUAL_FUND_UNIT_LINKED_PLAN",
+  "displayName": "Unit-linked plan of the LIC Mutual Fund",
+  "kind": "QUALIFYING_PAYMENT",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(k), pp.561–562; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(xi), pp.330–333",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

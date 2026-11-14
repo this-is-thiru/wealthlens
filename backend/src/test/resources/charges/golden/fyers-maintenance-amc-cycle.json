@@ -1,0 +1,21 @@
+{
+  "name": "fyers-maintenance-amc-cycle",
+  "describes": "Fyers charges no AMC: the card records Rs 0, so the cycle prices nil rather than NO_SCHEDULE.",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": null,
+    "segment": null,
+    "exchange": null,
+    "event": "AMC_CYCLE",
+    "price": 0,
+    "quantity": 0,
+    "transactionDate": "2025-12-31"
+  },
+  "expected": {
+    "lines": {
+      "AMC": 0.0,
+      "GST": 0.0
+    },
+    "total": 0.0
+  }
+}

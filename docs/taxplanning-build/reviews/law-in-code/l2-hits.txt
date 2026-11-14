@@ -1,0 +1,125 @@
+## G2 36
+recommendation/RestructuringEngine.java:240: return 0.30;
+recommendation/RestructuringEngine.java:245: return slab.getRatePercent() / 100.0;
+recommendation/RestructuringEngine.java:248: return 0.30;
+recommendation/RegimeAdvisor.java:32: if (profile.getInvestment80c() != null && profile.getInvestment80c() < 150000) {
+recommendation/RegimeAdvisor.java:33: long unclaimed80c = 150000 - profile.getInvestment80c();
+recommendation/RegimeAdvisor.java:34: long saving80c = Math.round(unclaimed80c * 0.30);
+recommendation/RegimeAdvisor.java:43: if (profile.getInvestment80d() != null && profile.getInvestment80d() < 25000) {
+recommendation/RegimeAdvisor.java:69: return Math.round(gap / 0.30);
+portfolio/MoneyBridge.java:31: BigDecimal exact = BigDecimal.valueOf(canonicalRupees);
+engine/PerquisiteValuationService.java:29: ? policy.getCarLeq1600ccOrEvWithDriver() * 12 : 96000L;
+engine/PerquisiteValuationService.java:32: ? policy.getCarGt1600ccWithDriver() * 12 : 120000L;
+engine/PerquisiteValuationService.java:37: ? policy.getCarLeq1600ccOrEvNoDriver() * 12 : 60000L;
+engine/PerquisiteValuationService.java:40: ? policy.getCarGt1600ccNoDriver() * 12 : 84000L;
+engine/PerquisiteValuationService.java:54: ? policy.getDriverPerquisiteMonthly() : 3000L;
+engine/PerquisiteValuationService.java:66: long perMealExempt = policy.getMealPerMealAmount() != null ? policy.getMealPerMealAmount() : 200L;
+engine/PerquisiteValuationService.java:116: ? policy.getCarLeq1600ccOrEvWithDriver() : 8000L;
+engine/PerquisiteValuationService.java:119: ? policy.getCarGt1600ccWithDriver() : 10000L;
+engine/PerquisiteValuationService.java:124: ? policy.getCarLeq1600ccOrEvNoDriver() : 5000L;
+engine/PerquisiteValuationService.java:127: ? policy.getCarGt1600ccNoDriver() : 7000L;
+engine/PerquisiteValuationService.java:147: ? policy.getDriverPerquisiteMonthly() : 3000L;
+engine/PerquisiteValuationService.java:161: long perMeal = policy.getMealPerMealAmount() != null ? policy.getMealPerMealAmount() : 200L;
+engine/PerquisiteValuationService.java:183: long annualLimit = policy.getGiftAnnualLimit() != null ? policy.getGiftAnnualLimit() : 15000L;
+engine/NewRegimeTaxEngine.java:77: double effectivePfRate = pfRate / 100.0;
+engine/NewRegimeTaxEngine.java:112: ? perquisitePolicy.getMealPerMealAmount() : 200;
+engine/NewRegimeTaxEngine.java:178: double effectiveNpsRate = npsRate / 100.0;
+engine/HraExemptionCalculator.java:57: if (rentPaidAnnual > 100_000) {
+engine/HraExemptionCalculator.java:62: long metroHra = Math.round(basicSalaryAnnual * 50.0 / 100.0);
+engine/HraExemptionCalculator.java:63: long nonMetroHra = Math.round(basicSalaryAnnual * 40.0 / 100.0);
+engine/HraExemptionCalculator.java:67: long rentCondition = Math.max(0L, rentPaidAnnual - Math.round(basicSalaryAnnual * 10.0 / 100.0));
+engine/HraExemptionCalculator.java:112: long tenPercentOfBasic = (long) (annualBasic * 0.10);
+engine/HraExemptionCalculator.java:115: long percentOfBasic = (long) (annualBasic * metroPercent / 100.0);
+engine/OldRegimeTaxEngine.java:93: double effectivePfRate = pfRate / 100.0;
+engine/AbstractTaxEngine.java:92: long cess = Math.round((taxAfterRebate + surcharge) * getCessRate(slabPolicy) / 100.0);
+engine/AbstractTaxEngine.java:159: tax += Math.round(taxableInSlab * slab.getRatePercent() / 100.0);
+engine/AbstractTaxEngine.java:195: return Math.round(taxAfterRelief * slab.getRatePercent() / 100.0);
+engine/AbstractTaxEngine.java:202: return slabPolicy.getCessPercentage() != null ? slabPolicy.getCessPercentage() : 4.0;
+## G4 15
+recommendation/RestructuringEngine.java:195: return switch (code) {
+recommendation/RestructuringEngine.java:229: return switch (allowance.getCode()) {
+recommendation/RestructuringEngine.java:263: .actionRequired(switch (allowance.getAvailabilityPath()) {
+recommendation/RestructuringEngine.java:264: case HR_RESTRUCTURE -> "Talk to HR";
+recommendation/RestructuringEngine.java:265: case SELF_DECLARE_ITR -> "Self-declare in ITR";
+recommendation/RestructuringEngine.java:266: case BOTH -> "Talk to HR or self-declare in ITR";
+recommendation/RestructuringEngine.java:267: case NOT_APPLICABLE -> "Auto-exempt — no action needed";
+portfolio/CapitalGainsAdapter.java:57: return switch (bucket.classification()) {
+portfolio/CapitalGainsAdapter.java:58: case SHORT_TERM, LONG_TERM -> Optional.of(engineBucket(bucket));
+portfolio/CapitalGainsAdapter.java:59: case NOT_CAPITAL_GAINS -> Optional.empty();
+portfolio/CapitalGainsAdapter.java:60: case UNCLASSIFIED -> throw new IllegalArgumentException("Realised gains of " + bucket.gainRupees() + " on "
+portfolio/CapitalGainsAdapter.java:63: case SPECULATIVE -> throw new IllegalArgumentException("Intraday gains of " + bucket.gainRupees()
+engine/TaxEngineFactory.java:17: return switch (regimeType) {
+engine/TaxEngineFactory.java:18: case NEW_REGIME -> newRegimeEngine;
+engine/TaxEngineFactory.java:19: case OLD_REGIME -> oldRegimeEngine;
+## G5 1
+engine/FormulaEvaluator.java:50: return evaluate(formula, Map.of(
+## G6 10
+recommendation/RestructuringEngine.java:79: .filter(a -> a.getStatus() == EntityStatus.ACTIVE)
+recommendation/RestructuringEngine.java:166: long recommendedTax = advice.getRecommendedRegime() == RegimeType.NEW_REGIME
+recommendation/RestructuringEngine.java:168: long originalTax = currentRegime == RegimeType.NEW_REGIME ? originalNewRegimeTax : originalOldRegimeTax;
+recommendation/RegimeAdvisor.java:31: if (recommended == RegimeType.NEW_REGIME) {
+salary/service/SalaryProfileService.java:81: if (request.getRegimeType() == RegimeType.NOT_DECIDED) {
+engine/PerquisiteValuationService.java:79: return engineSize == CarEngineSize.LEQ_1600CC_OR_EV;
+engine/PerquisiteValuationService.java:102: if (ownership == CarOwnership.EMPLOYEE_OWNED) {
+engine/NewRegimeTaxEngine.java:196: return slab.getRegimeType() == RegimeType.NEW_REGIME;
+engine/OldRegimeTaxEngine.java:257: return slab.getRegimeType() == RegimeType.OLD_REGIME;
+policy/service/PolicyService.java:50: existing.stream().filter(p -> p.getStatus() == EntityStatus.ACTIVE).forEach(p -> {
+## G7 12
+salary/dto/SalaryProfileResponse.java:53: private static final List<String> METRO_CITIES = Arrays.asList(
+salary/dto/KnownErrorsComputation.java:16: public static final String NOTICE = "Known errors: this calculator is being replaced and its results are"
+portfolio/MoneyBridge.java:16: private static final int PAISE_PLACES = 2;
+engine/HraExemptionCalculator.java:14: private static final long DAYS_PER_MONTH = 30;
+engine/HraExemptionCalculator.java:15: private static final long MONTHS_PER_YEAR = 12;
+engine/HraExemptionCalculator.java:16: private static final List<String> METRO_CITIES = List.of(
+policy/service/PolicySeederService.java:44: private static final String TAX_YEAR = "2025-26";
+policy/service/PolicySeederService.java:45: private static final String SLAB_NEW_FILE = "data/tax-policies/slab-policy-2025-26-new.json";
+policy/service/PolicySeederService.java:46: private static final String SLAB_OLD_FILE = "data/tax-policies/slab-policy-2025-26-old.json";
+policy/service/PolicySeederService.java:47: private static final String PERQUISITE_FILE = "data/tax-policies/perquisite-policy-2025-26.json";
+policy/service/PolicySeederService.java:48: private static final String CATALOGUE_FILE = "data/tax-policies/allowance-catalogue-2025-26.json";
+policy/service/PolicySeederService.java:49: private static final String LIMITS_FILE = "data/tax-policies/allowance-limits-2025-26.json";
+## G8 45
+recommendation/RestructuringEngine.java:189: .filter(c -> "SPECIAL_ALLOWANCE".equals(c.getAllowanceCode()))
+recommendation/RestructuringEngine.java:196: case "NPS_EMPLOYER", "MEAL_VOUCHER", "CAB_FACILITY", "HEALTH_CLUB" -> 1;
+recommendation/RestructuringEngine.java:197: case "HRA", "LTA", "CHILDREN_EDUCATION", "HOSTEL_ALLOWANCE" -> 2;
+recommendation/RestructuringEngine.java:198: case "FUEL_ALLOWANCE", "DRIVER_ALLOWANCE", "TELEPHONE", "BOOKS_PERIODICALS" -> 3;
+recommendation/RestructuringEngine.java:199: case "GIFT_VOUCHER", "UNIFORM_ALLOWANCE" -> 4;
+recommendation/RestructuringEngine.java:205: long basic = getComponentAmount(profile, "BASIC");
+recommendation/RestructuringEngine.java:230: case "CAR_COMPANY" -> perquisiteService.computeCarPerquisiteMonthly(
+recommendation/RestructuringEngine.java:233: case "DRIVER_ALLOWANCE" -> perquisiteService.computeDriverPerquisiteMonthly(true, policy) * 12;
+engine/NewRegimeTaxEngine.java:71: long employerPf = getComponentAmount(profile, "EMPLOYER_PF");
+engine/NewRegimeTaxEngine.java:72: long basic = getComponentAmount(profile, "BASIC");
+engine/NewRegimeTaxEngine.java:73: Double pfRate = resolveRatePercent("EMPLOYER_PF", taxYear, getRegime(), employer);
+engine/NewRegimeTaxEngine.java:85: long employerNps = getComponentAmount(profile, "NPS_EMPLOYER");
+engine/NewRegimeTaxEngine.java:89: .resolve("NPS_EMPLOYER", taxYear, regime, employer)
+engine/NewRegimeTaxEngine.java:101: long mealVoucher = getComponentAmount(profile, "MEAL_VOUCHER");
+engine/NewRegimeTaxEngine.java:105: .resolve("MEAL_VOUCHER", taxYear, regime, employer)
+engine/NewRegimeTaxEngine.java:131: long giftVoucher = getComponentAmount(profile, "GIFT_VOUCHER");
+engine/NewRegimeTaxEngine.java:135: .resolve("GIFT_VOUCHER", taxYear, regime, employer)
+engine/NewRegimeTaxEngine.java:172: long employerNps = getComponentAmount(profile, "NPS_EMPLOYER");
+engine/NewRegimeTaxEngine.java:173: long basic = getComponentAmount(profile, "BASIC");
+engine/NewRegimeTaxEngine.java:174: Double npsRate = resolveRatePercent("NPS_EMPLOYER", taxYear, getRegime(), employer);
+engine/NewRegimeTaxEngine.java:204: vars.put("basic", getComponentAmount(profile, "BASIC"));
+engine/NewRegimeTaxEngine.java:206: vars.put("actual_nps", getComponentAmount(profile, "NPS_EMPLOYER"));
+engine/OldRegimeTaxEngine.java:87: long employerPf = getComponentAmount(profile, "EMPLOYER_PF");
+engine/OldRegimeTaxEngine.java:88: long basic = getComponentAmount(profile, "BASIC");
+engine/OldRegimeTaxEngine.java:89: Double pfRate = resolveRatePercent("EMPLOYER_PF", taxYear, getRegime(), employer);
+engine/OldRegimeTaxEngine.java:101: long employerNps = getComponentAmount(profile, "NPS_EMPLOYER");
+engine/OldRegimeTaxEngine.java:105: .resolve("NPS_EMPLOYER", taxYear, regime, employer)
+engine/OldRegimeTaxEngine.java:117: long mealVoucher = getComponentAmount(profile, "MEAL_VOUCHER");
+engine/OldRegimeTaxEngine.java:125: long giftVoucher = getComponentAmount(profile, "GIFT_VOUCHER");
+engine/OldRegimeTaxEngine.java:141: long booksAmount = getComponentAmount(profile, "BOOKS_PERIODICALS");
+engine/OldRegimeTaxEngine.java:148: long telephoneAmount = getComponentAmount(profile, "TELEPHONE");
+engine/OldRegimeTaxEngine.java:155: long uniformAmount = getComponentAmount(profile, "UNIFORM");
+engine/OldRegimeTaxEngine.java:223: long professionalTax = getComponentAmount(profile, "PROFESSIONAL_TAX");
+engine/OldRegimeTaxEngine.java:268: long basicSalaryAnnual = getComponentAmount(profile, "BASIC");
+engine/OldRegimeTaxEngine.java:302: .resolve("CHILDREN_EDUCATION", taxYear, getRegime(), profile.getEmployerType())
+engine/OldRegimeTaxEngine.java:320: .resolve("HOSTEL_ALLOWANCE", taxYear, getRegime(), profile.getEmployerType())
+engine/OldRegimeTaxEngine.java:336: vars.put("basic", getComponentAmount(profile, "BASIC"));
+engine/OldRegimeTaxEngine.java:338: vars.put("actual_nps", getComponentAmount(profile, "NPS_EMPLOYER"));
+engine/AbstractTaxEngine.java:100: long employeePf = getComponentAmount(profile, "EMPLOYEE_PF");
+engine/AbstractTaxEngine.java:101: long professionalTax = getComponentAmount(profile, "PROFESSIONAL_TAX");
+policy/service/PolicySeederService.java:71: String name = "SLAB_" + regime;
+policy/service/PolicySeederService.java:84: return new Part("PERQUISITE", PERQUISITE_FILE, 0, 1);
+policy/service/PolicySeederService.java:90: return new Part("PERQUISITE", PERQUISITE_FILE, 1, 0);
+policy/service/PolicySeederService.java:112: return new Part("ALLOWANCE_CATALOGUE", CATALOGUE_FILE, added, present);
+policy/service/PolicySeederService.java:131: return new Part("ALLOWANCE_LIMITS", LIMITS_FILE, added, present);

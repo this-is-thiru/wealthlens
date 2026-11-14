@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+    <!-- PERMANENT — by design, each with its reason -->
+    <!-- Main code: plain camelCase method names; tests: methodName_whenCondition_expectedResult -->
+    <suppress id="methodNameTest" files="[\\/]src[\\/]main[\\/]"/>
+    <suppress id="methodNameMain" files="[\\/]src[\\/]test[\\/]"/>
+    <!-- ArchUnit's own convention names rule fields in lower_snake_case -->
+    <suppress checks="ConstantName" files="[\\/]architecture[\\/]ArchitectureTest\.java$"/>
+
+    <!-- BASELINE START — legacy violations recorded 2026-09-23 (W-045a). May only shrink. -->
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]WealthLensApplication\.java$"/>
+    <suppress checks="ConstantName" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]dto[\\/]AuthHelper\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]dto[\\/]AuthHelper\.java$"/>
+    <suppress checks="MemberName" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]dto[\\/]LoginResponse\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]filter[\\/]AuthFilter\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]service[\\/]AuthService\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]service[\\/]UserValidator\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]config[\\/]ChargeIndexInitializer\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]engine[\\/]ChargeFormulaEvaluator\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]service[\\/]ChargeRecordingGatewayImpl\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]service[\\/]ChargeSeederService\.java$"/>
+    <suppress checks="TodoComment" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]corporate[\\/]service[\\/]CorporateActionService\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]finance[\\/]service[\\/]FinancesService\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]helper[\\/]file[\\/]FileHelper\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]config[\\/]PortfolioIndexInitializer\.java$"/>
+    <suppress checks="ParameterNumber" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]dto[\\/]context[\\/]ProfitLossContext\.java$"/>
+    <suppress checks="StaticVariableName" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]entity[\\/]AssetEntity\.java$"/>
+    <suppress checks="TodoComment" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]entity[\\/]AssetEntity\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]AnalyticsService\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]AnalyticsService\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]PortfolioService\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]PortfolioService\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]PortfolioService\.java$"/>
+    <suppress checks="NeedBraces" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]PortfolioService\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]TradeMatchingService\.java$"/>
+    <suppress checks="NeedBraces" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]TradeMatchingService\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]TradeOutcomeRecorder\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]UserRecordsErasureService\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]parser[\\/]model[\\/]AssetRequestParserImpl\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]config[\\/]TransactionSafetyAuditor\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]entity[\\/]query[\\/]QueryBuilder\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]collection[\\/]TCollectionUtil\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]collection[\\/]TJsonMapper\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]collection[\\/]TOptional\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]collection[\\/]TStringUtil\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]math[\\/]DoubleUtil\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]parser[\\/]ExcelParser\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]time[\\/]TLocalDate\.java$"/>
+    <suppress checks="StaticVariableName" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]time[\\/]TLocalDate\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]time[\\/]TLocalDateTime\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]time[\\/]TLocalTime\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]transaction[\\/]ExcelHeaders\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]AbstractTaxEngine\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]AbstractTaxEngine\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]NewRegimeTaxEngine\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]NewRegimeTaxEngine\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]NewRegimeTaxEngine\.java$"/>
+    <suppress checks="EmptyBlock" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]OldRegimeTaxEngine\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]OldRegimeTaxEngine\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]OldRegimeTaxEngine\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]policy[\\/]service[\\/]AllowanceResolutionService\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]recommendation[\\/]RestructuringEngine\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]recommendation[\\/]RestructuringEngine\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]recommendation[\\/]RestructuringEngine\.java$"/>
+    <suppress id="methodNameMain" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]salary[\\/]repository[\\/]SalaryProfileRepository\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]salary[\\/]service[\\/]SalaryProfileService\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]engine[\\/]ChargeGoldenFileTest\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]engine[\\/]ChargeInvariantTest\.java$"/>
+    <suppress checks="ConstantName" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]AbstractIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]AnalyticsIntegrationTest\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]AnalyticsIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]AuthIntegrationTest\.java$"/>
+    <suppress checks="AbbreviationAsWordInName" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]CorporateActionIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]CorporateActionIntegrationTest\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]CorporateActionIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]EntityExportIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]FinancesIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]MongoTemplateIntegrationTest\.java$"/>
+    <suppress checks="AbbreviationAsWordInName" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]PortfolioIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]PortfolioIntegrationTest\.java$"/>
+    <suppress checks="NeedBraces" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]PortfolioIntegrationTest\.java$"/>
+    <suppress checks="ParameterNumber" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]PortfolioIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]ProfitAndLossIntegrationTest\.java$"/>
+    <suppress checks="ParameterNumber" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]ProfitAndLossIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]TaxPlanningControllerIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]TemporaryTransactionIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]TransactionIntegrationTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]AnalyticsServiceTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]FinancesServiceTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]PortfolioServiceTest\.java$"/>
+    <suppress checks="ParameterNumber" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]PortfolioServiceTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]ProfitAndLossServiceTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]TemporaryTransactionServiceTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]TradeMatchingServiceTest\.java$"/>
+    <suppress checks="ParameterNumber" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]service[\\/]TradeMatchingServiceTest\.java$"/>
+    <suppress checks="MethodLength" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]input[\\/]InputsFingerprintTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]HraExemptionCalculatorTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]MarginalReliefCalculatorTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]NewRegimeTaxEngineTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]OldRegimeTaxEngineTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]PerquisiteValuationServiceTest\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]condition[\\/]ConditionTest\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]json[\\/]PackJsonTest\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]json[\\/]PackJsonTest\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]regime[\\/]RegimeBehaviourRegistryTest\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]util[\\/]calculator[\\/]XirrCalculatorTest\.java$"/>
+    <!-- BASELINE END -->
+</suppressions>

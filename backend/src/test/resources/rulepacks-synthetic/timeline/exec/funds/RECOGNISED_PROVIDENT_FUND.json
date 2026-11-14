@@ -1,0 +1,59 @@
+{
+  "code": "RECOGNISED_PROVIDENT_FUND",
+  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack (W-238e); not law, never shipped. Original note: The rules an employer's contribution to a recognised provident fund feeds (W-238e). By its condition on employer.fund: PERQ-RPF-CONTRIBUTION charges the contribution beyond its share of salary (1961 Sch. IV Pt A r.6(a)), TY 2025-26 only, so a later year's pack drops it. PERQ-EMPLOYER-CONTRIBUTION adds up every employer contribution to a recognised provident fund, the notified pension scheme and an approved superannuation fund and charges the excess over its limit (S2 s.17(1)(h); 1961 s.17(2)(vii); D-126); PERQ-EMPLOYER-ACCRETION charges the accretion on that excess (S2 s.17(1)(i); 1961 s.17(2)(viia); D-127). Neither reads employer.fund in a condition: EmployerContributionNode reaches both with every contribution (W-238e).",
+  "displayName": "The employer's contribution to a recognised provident fund",
+  "feedsInto": [
+    "PERQ-EMPLOYER-ACCRETION",
+    "PERQ-EMPLOYER-CONTRIBUTION",
+    "PERQ-RPF-CONTRIBUTION"
+  ],
+  "validity": {
+    "from": "2025-04-01"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(h), (i); Income-tax Act, 1961 Sch. IV Pt A r.6(a): as each rule row in feedsInto cites them",
+    "accessedOn": "2026-11-08",
+    "verificationLevel": "UNVERIFIED",
+    "whatToCheck": "Open Gazette 265620 at s.17(1)(h) and (i), and the 1961 Act's Sch. IV Pt A r.6(a): confirm each takes the employer's contribution to a recognised provident fund, and that no other provision takes it"
+  },
+  "liquidity": {
+    "terms": [
+      {
+        "event": "Full withdrawal",
+        "terms": "The whole balance: on retirement after the age of fifty-five; on retirement for permanent and total incapacity; before migrating abroad; on retrenchment or a voluntary retirement scheme; otherwise on ceasing to be an employee, after twelve months out of covered employment. These are the terms of the fund the EPFO runs; an exempted establishment's fund has its own rules.",
+        "validity": {
+          "from": "2026-06-29"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/273957.pdf",
+          "sourceDescription": "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), Gazette Part II s.3(i) No. 473 of 29-06-2026, CG-DL-E-01072026-273957, para. 49(1), (2), p.89",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Partial withdrawal",
+        "terms": "At least one thousand rupees, up to the whole balance above a minimum balance of 25% of all contributions (the employee's and the employer's, with interest), after twelve months' membership: for illness, for education (at most ten times), for marriage (five times), for housing (five times), and in special circumstances (twice in a financial year).",
+        "validity": {
+          "from": "2026-06-29"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/273957.pdf",
+          "sourceDescription": "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), Gazette Part II s.3(i) No. 473 of 29-06-2026, CG-DL-E-01072026-273957, para. 46, p.87",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    ],
+    "unstated": [
+      {
+        "validity": {
+          "from": "2025-04-01",
+          "to": "2026-06-28"
+        },
+        "reason": "The Employees' Provident Funds Scheme, 1952 governed until the 2026 Scheme superseded it; the pack holds no Gazette copy of it to read its terms from (W-238e2)"
+      }
+    ]
+  }
+}

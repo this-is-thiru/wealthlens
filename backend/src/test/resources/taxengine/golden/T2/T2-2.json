@@ -1,0 +1,14 @@
+{
+  "id": "T2-2",
+  "source": "DR 08 T2-2 — New regime, one rounding step above. TI ₹50,00,010 — **the `H-1` test**",
+  "_source": "**Expected: ₹11,23,210.**",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "5000010",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "1123210"
+  }
+}

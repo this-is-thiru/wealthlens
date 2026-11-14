@@ -1,0 +1,14 @@
+{
+  "id": "T2-8",
+  "source": "W-140a — New regime, the last income where the 1-crore relief binds (TI = 10196940)",
+  "_source": "Worked by hand in docs/taxplanning-build/sources/2026-11-07-boundary-figures.md, row T2-8",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "10196940",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "3156340"
+  }
+}

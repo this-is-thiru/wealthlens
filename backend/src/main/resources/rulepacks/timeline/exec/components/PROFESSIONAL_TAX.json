@@ -1,0 +1,27 @@
+{
+  "code": "PROFESSIONAL_TAX",
+  "_note": "A tax on employment the employee pays (article 276(2)). Under SALARIES because s.19(1) Table Sl. 1 (1961 s.16(iii)) deducts it in computing that head; paid out of salary, so CASH_OUTFLOW and not salary — it feeds SAL-TAX-ON-EMPLOYMENT, not SAL-SALARY-INCLUDES (D-093).",
+  "displayName": "Professional tax (tax on employment)",
+  "head": "SALARIES",
+  "kind": "STATUTORY_DEDUCTION",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "SAL-TAX-ON-EMPLOYMENT"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 1, p.41: \"Sum paid by the assessee as a tax on employment\" — paid by the employee, hence a cash outflow; 1961 s.16(iii) (thc.nic.in p.140) the same for TY 2025-26",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "ruleId": "DED-DONATION-CASH",
+  "ruleSet": "RS-DED-DONATION-CASH",
+  "_note": "The cash bar: \"Any deduction for a donation over ₹ 2000 shall be allowed only if the payment is made by a mode other than cash\" (s.133(5), p.169) — per donation; one over the limit in cash is allowed nothing, one within it is allowed as any other. A definition (CashPaymentLimit), not a cap, because the excess is not what is disallowed. Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(5D) (thc p.353): \"No deduction shall be allowed under this section in respect of donation of any sum exceeding two thousand rupees unless such sum is paid by any mode other than cash\"; Explanation 5: only a sum of money. The same definition. sources/2026-10-07-chapter-via.md B27. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(5D); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(5); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "CashPaymentLimit",
+        "atMost": "2000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80G(5D) — \"two thousand rupees\" subs. by Act 7 of 2017, s.35 (w.e.f. 1-4-2018)",
+        "gazetteRef": "Act 7 of 2017: Gazette of India, Extraordinary, Part II, Section 1, No. 7, 31-3-2017 (egazette 2017/175141), p.19",
+        "notifiedOn": "2017-03-31",
+        "effectiveFrom": "2018-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175141.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80G(5D), Explanation 5, p.353; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80G after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 and the Finance Acts of 2020 to 2025 (read for Chapter VI-A in W-075d0 and W-075d5, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(5D); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(5); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "CashPaymentLimit",
+        "atMost": "2000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(5)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(5), p.169; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(5), p.169; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-07",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

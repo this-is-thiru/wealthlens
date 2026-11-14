@@ -1,0 +1,25 @@
+{
+  "name": "zerodha-equity-options-buy-10k-premium",
+  "describes": "An option bought for Rs 10,000 of premium: stamp duty 0.003% of the premium is Rs 0.30, which the whole-rupee rounding the statutory cards use takes to Rs 0; no STT on a buy.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "OPTIONS",
+    "exchange": "NSE",
+    "event": "BUY",
+    "price": 100,
+    "quantity": 100,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STAMP_DUTY": 0.0,
+      "EXCHANGE_TXN": 3.5,
+      "SEBI_FEE": 0.01,
+      "IPFT": 0.05,
+      "GST": 4.24
+    },
+    "total": 27.8
+  }
+}

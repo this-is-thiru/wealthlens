@@ -1,0 +1,1788 @@
+{
+  "_note": "Plain-language sentences for trace lines (PRD F37; W-116, D-671). Content: it changes no number and holds none (SC-2) — {out} is the line's figure and {in} what it started from, filled from the trace. byLimit is keyed by each limit's name exactly as the rule's least-of names it, and the pack refuses an entry whose limits differ. Drafted by Claude from each rule's section entry and limit names, for the owner's adoption (C5). Every rule of the timeline is explained here or listed in notALine with the reason it never names a trace line of its own (W-325d, D-672 C2a); the compiler refuses a listed rule the timeline does not hold or one also explained, and copies notALine into no pack. reasons word the reason codes the engine publishes when a line names no limit, filling each fact by name; terms.regime names each regime in plain words, never its legal title (W-327a, D-678 C3a); the compiler refuses an unworded code or regime.",
+  "otherLimits": "Raising any of the other limits alone would not change it: {limits}.",
+  "reasons": [
+    {
+      "code": "ACCOMMODATION_CONTINUED_CAP",
+      "why": "It is capped at {cap}, the first year's value raised by the cost inflation index."
+    },
+    {
+      "code": "ACCOMMODATION_LESS_RENT",
+      "why": "The accommodation is valued at {value}, less the {rent} rent you paid."
+    },
+    {
+      "code": "ALLOWANCE_DISABILITY_NOT_LISTED",
+      "why": "Nothing is exempt: your disability is not among those this year's rules list for this allowance."
+    },
+    {
+      "code": "ALLOWANCE_MONTHLY_LIMIT",
+      "why": "It is limited to {limit}, the monthly limit for the months covered."
+    },
+    {
+      "code": "ALL_DEDUCTED",
+      "why": "All of it is deducted."
+    },
+    {
+      "code": "ASSET_TRANSFER_WRITTEN_DOWN",
+      "why": "The asset is valued at {written} after {years} completed years of wear and tear, less the {price} you paid for it."
+    },
+    {
+      "code": "ASSET_USE_COST_SHARE",
+      "why": "It is a yearly share of the asset's cost for the {months} months you used it, less the {recovered} you paid back."
+    },
+    {
+      "code": "ASSET_USE_RENT",
+      "why": "It is the rent your employer paid for it, less the {recovered} you paid back."
+    },
+    {
+      "code": "BUSINESS_TRUST_SPECIFIED_SUM",
+      "why": "It is the {distributed} distributed, less the {issued} issue price and the {earlier} charged in earlier years, never below nil."
+    },
+    {
+      "code": "CAP_ACTUAL_AMOUNTS",
+      "why": "Your amounts together are within the overall ceiling, so all of them count."
+    },
+    {
+      "code": "CAP_AGGREGATE_CEILING",
+      "why": "It is limited by the overall ceiling of {ceiling} on these amounts together."
+    },
+    {
+      "code": "CAP_APPORTIONED",
+      "why": "The law changed during the year, so each part of the year has its own limit for its share of the year."
+    },
+    {
+      "code": "CAP_FIXED",
+      "why": "It is a fixed amount of {amount}."
+    },
+    {
+      "code": "CAP_IN_EXCESS",
+      "why": "Only the part above {threshold} counts."
+    },
+    {
+      "code": "CAP_SHARE",
+      "why": "It is {share} of the amount it applies to."
+    },
+    {
+      "code": "CARRIED_LOSS_AGAINST_HEAD",
+      "why": "The loss of {year} is set against your income from {head}."
+    },
+    {
+      "code": "CG_PART_LOSS",
+      "why": "It is a loss in your {part}."
+    },
+    {
+      "code": "CG_PART_GAIN",
+      "why": "It is your {part}."
+    },
+    {
+      "code": "CG_INDEXED_MEASURE_NIL",
+      "why": "With its cost indexed, the cost is above what it sold for, so nothing is left to tax at the indexed rate."
+    },
+    {
+      "code": "CG_SHORT_TERM_LOSS_SET_OFF_AGAINST_PART",
+      "why": "Your short-term capital loss is set against your {part}."
+    },
+    {
+      "code": "CG_LONG_TERM_LOSS_SET_OFF_AGAINST_PART",
+      "why": "Your long-term capital loss is set against your {part}."
+    },
+    {
+      "code": "CG_SHORT_TERM_LOSS_CARRIED_FORWARD",
+      "why": "The rest of your short-term capital loss is carried forward to later years."
+    },
+    {
+      "code": "CG_LONG_TERM_LOSS_CARRIED_FORWARD",
+      "why": "The rest of your long-term capital loss is carried forward to later years."
+    },
+    {
+      "code": "CG_CHARGE_TRANSFER_EXPENDITURE",
+      "why": "This charge is an expense of the sale, so it is deducted from the gain."
+    },
+    {
+      "code": "CG_CHARGE_COST_OF_ACQUISITION",
+      "why": "This charge is part of what the asset cost you, so it is deducted from the gain."
+    },
+    {
+      "code": "CG_CHARGE_NOT_DEDUCTED",
+      "why": "The law does not let this charge be deducted from the gain."
+    },
+    {
+      "code": "CG_COST_INDEXED",
+      "why": "Its cost of {cost} is indexed from {from} to {to}, to {indexed}."
+    },
+    {
+      "code": "CG_LEFT_TO_ANOTHER_HEAD",
+      "why": "Another head of income taxes this gain, so it is left out here and entered there."
+    },
+    {
+      "code": "CG_STT_ON_BUY",
+      "why": "No record shows the STT on the buy; under the year's rule it was {state}."
+    },
+    {
+      "code": "CG_STT_ON_SALE",
+      "why": "No record shows the STT on the sale; under the year's rule it was {state}."
+    },
+    {
+      "code": "CG_HELD_LONG_TERM",
+      "why": "Held from {bought} to {sold}, more than {months} months, so it is long-term."
+    },
+    {
+      "code": "CG_HELD_SHORT_TERM",
+      "why": "Held from {bought} to {sold}, not more than {months} months, so it is short-term."
+    },
+    {
+      "code": "CG_REINVESTMENT_OUTSIDE_WINDOW",
+      "why": "The new house, dated {house}, is outside the window from {from} to {to}, so nothing is exempt."
+    },
+    {
+      "code": "CG_REINVESTMENT_NO_GAIN",
+      "why": "The sales this claim covers show no gain together, so nothing is exempt."
+    },
+    {
+      "code": "CG_REINVESTMENT_WHOLE",
+      "why": "The new house, counted at {cost}, costs at least the {consideration} you received, so the whole gain is exempt."
+    },
+    {
+      "code": "CG_REINVESTMENT_SHARE",
+      "why": "The new house, counted at {cost}, costs less than the {consideration} you received, so only that share of the gain is exempt."
+    },
+    {
+      "code": "ADVANCE_TAX_NOT_LIABLE_BY_AGE",
+      "why": "You are not liable to advance tax: you are resident, aged {age}, with no business income."
+    },
+    {
+      "code": "ADVANCE_TAX_NOT_LIABLE_BELOW",
+      "why": "You are not liable to advance tax: what is due after tax at source is below {threshold}."
+    },
+    {
+      "code": "ADVANCE_TAX_LIABLE",
+      "why": "You are liable to advance tax on the bill less the tax deducted or collected at source."
+    },
+    {
+      "code": "ADVANCE_TAX_STILL_OWED",
+      "why": "This is what is still owed of the instalments due by {date}."
+    },
+    {
+      "code": "CREDIT_TAX_AT_SOURCE",
+      "why": "Tax deducted or collected at source counts as paid."
+    },
+    {
+      "code": "CREDIT_ADVANCE_TAX",
+      "why": "Advance tax you paid counts as paid."
+    },
+    {
+      "code": "CREDIT_SELF_ASSESSMENT_TAX",
+      "why": "Self-assessment tax you paid counts as paid."
+    },
+    {
+      "code": "INTEREST_NOT_LIABLE_TO_ADVANCE_TAX",
+      "why": "You are not liable to advance tax, so no interest is due on it."
+    },
+    {
+      "code": "DEFERMENT_NOT_YET_REACHED",
+      "why": "The instalment date {date} has not come yet."
+    },
+    {
+      "code": "DEFERMENT_PAID_ENOUGH",
+      "why": "By {date} you had paid enough, so no interest is due for it."
+    },
+    {
+      "code": "DEFERMENT_SHORT",
+      "why": "By {date} you had paid less than the share due, so interest is due on the shortfall."
+    },
+    {
+      "code": "DEFERMENT_PAID_ENOUGH_RELIEVED",
+      "why": "By {date} you had paid enough. The {relieved} of tax on income that arose after that date is left out, as it was paid by {paidBy}."
+    },
+    {
+      "code": "DEFERMENT_SHORT_RELIEVED",
+      "why": "By {date} you had paid less than the share due. The {relieved} of tax on income that arose after that date is left out, as it was paid by {paidBy}."
+    },
+    {
+      "code": "DEFERMENT_PAID_ENOUGH_NOT_RELIEVED",
+      "why": "By {date} you had paid enough. The {tax} of tax on income that arose after that date is not left out: only {paid} of it was paid by {paidBy}."
+    },
+    {
+      "code": "DEFERMENT_SHORT_NOT_RELIEVED",
+      "why": "By {date} you had paid less than the share due. The {tax} of tax on income that arose after that date is not left out: only {paid} of it was paid by {paidBy}."
+    },
+    {
+      "code": "FEE_RETURN_FURNISHED_IN_TIME",
+      "why": "The return is furnished by its due date, {date}, so no fee is due."
+    },
+    {
+      "code": "FEE_RETURN_FURNISHED_LATE",
+      "why": "The return is furnished after its due date, {date}, so the late fee is due."
+    },
+    {
+      "code": "INTEREST_FOR_MONTHS",
+      "why": "Interest runs for {months} months, from {from} to {to}."
+    },
+    {
+      "code": "INTEREST_NOT_YET_DUE",
+      "why": "No interest yet: it runs only from {from}."
+    },
+    {
+      "code": "SHORTFALL_ADVANCE_TAX_PAID_ENOUGH",
+      "why": "The advance tax you paid reaches the share of the assessed tax the law asks for, so no interest is due."
+    },
+    {
+      "code": "REFUND_BELOW_SHARE",
+      "why": "A refund of {refund} is less than {share} of the tax of {tax}, so it carries no interest."
+    },
+    {
+      "code": "REFUND_INTEREST_ON_RETURN_PAYMENT",
+      "why": "Interest is added for {months} months, from {from} to {to}, on the part of the refund that returns the tax you paid on {paidOn}."
+    },
+    {
+      "code": "REFUND_INTEREST_ON_PREPAID_TAX",
+      "why": "Interest is added for {months} months, from {from} to {to}, on the part of the refund that returns tax at source and advance tax."
+    },
+    {
+      "code": "RELIEF_ABOVE_NO_THRESHOLD",
+      "why": "Your total income is above none of the thresholds this relief starts at, so it gives nothing."
+    },
+    {
+      "code": "RELIEF_MARGINAL_AT_THRESHOLD",
+      "why": "Marginal relief: the tax, with surcharge, may exceed the tax at {threshold} by no more than your income exceeds {threshold}."
+    },
+    {
+      "code": "RELIEF_INCOME_ABOVE_CEILING",
+      "why": "Your total income is above {ceiling}, so this rebate gives nothing."
+    },
+    {
+      "code": "RELIEF_LESSER_OF_TAX_AND_MAXIMUM",
+      "why": "It is the tax itself, up to {maximum}."
+    },
+    {
+      "code": "RELIEF_INCOME_NOT_ABOVE_THRESHOLD",
+      "why": "Your total income is not above {threshold}, so this relief gives nothing."
+    },
+    {
+      "code": "RELIEF_TAX_ABOVE_EXCESS",
+      "why": "It is the tax above the {excess} by which your income exceeds {threshold}, so the tax left is no more than that excess."
+    },
+    {
+      "code": "RELIEF_NONE",
+      "why": "No relief applies."
+    },
+    {
+      "code": "RELIEF_CONDITION_NOT_MET",
+      "why": "Nothing is given: a condition of this relief is not met."
+    },
+    {
+      "code": "REBATE_LIMITED_TO_SLAB_TAX",
+      "why": "It is held to the tax at slab rates, {tax}."
+    },
+    {
+      "code": "SURCHARGE_ON_TOTAL_INCOME",
+      "why": "Surcharge is at {rate}, the rate on your total income, as it is greater than the {other} on your income without dividends and special-rate gains."
+    },
+    {
+      "code": "SURCHARGE_ON_INCOME_EXCLUDING",
+      "why": "Surcharge is at {rate}, the rate on your income without dividends and special-rate gains, as it is greater than the {other} on your total income."
+    },
+    {
+      "code": "SURCHARGE_LIMITED_PART",
+      "why": "On the tax for dividends ({dividends}) and for special-rate gains ({special}), surcharge is held to the limit the law sets."
+    },
+    {
+      "code": "TAX_AT_SLAB_RATES_ON_REST",
+      "why": "Slab rates apply to your total income of {income}, less the {special} of capital gains taxed at their own rates."
+    },
+    {
+      "code": "CG_TAXED_AT_SPECIAL_RATE",
+      "why": "Your {part} is taxed at its own rate, not at your slab rates."
+    },
+    {
+      "code": "CG_SHORTFALL_TAKEN_FROM_PART",
+      "why": "Your other income leaves {shortfall} of the basic exemption unused, so {taken} of your {part} is not taxed."
+    },
+    {
+      "code": "CARRIED_LOSS_AGAINST_PART",
+      "why": "The loss of {year} is set against your {part}."
+    },
+    {
+      "code": "CARRIED_LOSS_EXPIRED",
+      "why": "The loss of {year} has expired: a loss can be carried for only {years} tax years."
+    },
+    {
+      "code": "CARRIED_LOSS_NOT_IN_TIME",
+      "why": "The loss of {year} is not carried forward: it was not determined in a return filed in time."
+    },
+    {
+      "code": "CARRIED_LOSS_STILL_CARRIED",
+      "why": "What is left of the loss of {year} is carried forward."
+    },
+    {
+      "code": "CAR_PER_MONTH",
+      "why": "It is the set amount for each of the {months} months."
+    },
+    {
+      "code": "CAR_PER_MONTH_WITH_CHAUFFEUR",
+      "why": "It is the set amount for each of the {months} months, plus the amount for a chauffeur."
+    },
+    {
+      "code": "CAR_RUNNING_AND_WEAR",
+      "why": "It is the running cost plus {wear} of wear and tear for {months} months, less the {charged} you were charged."
+    },
+    {
+      "code": "COMMUTED_PENSION_LIMIT",
+      "why": "It is limited to {limit}, the share of the pension's commuted value the law exempts."
+    },
+    {
+      "code": "COMMUTED_PENSION_LIMIT_WITH_GRATUITY",
+      "why": "It is limited to {limit}, the smaller share of the pension's commuted value the law exempts when you also received gratuity."
+    },
+    {
+      "code": "CONDITION_NOT_MET",
+      "why": "Nothing is deducted: a condition of this deduction is not met."
+    },
+    {
+      "code": "DEDUCTED_IN_FULL",
+      "why": "All of it is deducted: it is within the limit of {limit}."
+    },
+    {
+      "code": "DEDUCTIONS_WITHIN_INCOME",
+      "why": "Deductions cannot be more than the income they are taken from."
+    },
+    {
+      "code": "DEDUCTION_LIMITED",
+      "why": "It is limited to {limit}."
+    },
+    {
+      "code": "DEPENDANT_NOTHING_SPENT",
+      "why": "Nothing is deducted: nothing was spent on or deposited for the dependant's care."
+    },
+    {
+      "code": "DEPOSIT_INTEREST_SAVINGS_ONLY",
+      "why": "Only savings-account interest is deducted for you; interest on time deposits is deducted only for a senior citizen."
+    },
+    {
+      "code": "DISABILITY_CERTIFIED",
+      "why": "It is the amount the law sets for a certified disability of this degree."
+    },
+    {
+      "code": "DIVIDEND_INTEREST_LIMITED",
+      "why": "Interest expense is deducted against your dividend and unit income of {income}, up to {limit}."
+    },
+    {
+      "code": "DONATION_CASH_LIMIT",
+      "why": "Nothing is deducted: it was paid in cash above {limit}."
+    },
+    {
+      "code": "DONATION_QUALIFYING_LIMIT",
+      "why": "The qualifying limit is a share of your adjusted gross total income of {adjusted}."
+    },
+    {
+      "code": "DONATION_UNREPORTED",
+      "why": "Nothing is deducted: the donee has not reported this donation."
+    },
+    {
+      "code": "DONATION_WITHIN_QUALIFYING_LIMIT",
+      "why": "These donations are deducted within the qualifying limit."
+    },
+    {
+      "code": "DONATION_WITHOUT_LIMIT",
+      "why": "These donations are deducted without a qualifying limit."
+    },
+    {
+      "code": "EDUCATION_ABOVE_LIMIT",
+      "why": "The cost of {cost} a month exceeds {limit} a month per child, so the whole for {months} months is taxed, less the {recovered} you paid back."
+    },
+    {
+      "code": "EDUCATION_LOAN_OUTSIDE_YEARS",
+      "why": "Nothing is deducted: interest counts only for the initial tax year {initial} and the {years} years after it."
+    },
+    {
+      "code": "EDUCATION_WITHIN_LIMIT",
+      "why": "The cost of {cost} a month is within {limit} a month per child, so it is not taxed."
+    },
+    {
+      "code": "ELECTION_AS_STATED",
+      "why": "You stated this choice, so it is applied as you stated it."
+    },
+    {
+      "code": "ELECTION_CHOSEN",
+      "why": "Of the choices priced, this one gives the least tax, so it is taken."
+    },
+    {
+      "code": "ELECTION_NOT_CHOSEN",
+      "why": "This choice gives more tax than the one taken."
+    },
+    {
+      "code": "EMPLOYER_ACCRETION_SHARE",
+      "why": "It is the share of the fund's income this year that is earned on contributions above the limit, this year's and earlier years' taxed ones."
+    },
+    {
+      "code": "EXCLUDED_BY_RULE",
+      "why": "So nothing is added to your salary for it."
+    },
+    {
+      "code": "FURNITURE_COST_SHARE",
+      "why": "It is a yearly share of the furniture's cost, less the {charges} you paid."
+    },
+    {
+      "code": "FURNITURE_HIRE",
+      "why": "It is the hire charges, less the {charges} you paid."
+    },
+    {
+      "code": "GIFTS_BELOW_LIMIT",
+      "why": "Gifts of {given} from this employer are below {limit}, so none of it is taxed."
+    },
+    {
+      "code": "GIFTS_FOR_THE_YEAR",
+      "why": "It is the year's total of these gifts, measured against the threshold the law sets."
+    },
+    {
+      "code": "GIFTS_REACH_LIMIT",
+      "why": "Gifts of {given} from this employer reach {limit}, so all of it is taxed."
+    },
+    {
+      "code": "GIFT_COVID_DEATH_LIMIT",
+      "why": "Sums received on a death related to the Covid pandemic are excluded up to the limit."
+    },
+    {
+      "code": "GIFT_EXCLUDED",
+      "why": "This gift is excluded, so it is not taxed."
+    },
+    {
+      "code": "GIFT_ON_ITS_OWN",
+      "why": "This gift is measured on its own against the threshold the law sets."
+    },
+    {
+      "code": "GROSS_TOTAL_LESS_SPECIAL_GAINS",
+      "why": "Gross total income here leaves out the {gains} of capital gains taxed at special rates."
+    },
+    {
+      "code": "HEALTH_CHECKUP_SPLIT",
+      "why": "It is split as you claimed: {family} for your family and {parents} for your parents."
+    },
+    {
+      "code": "HEALTH_PAID_IN_CASH",
+      "why": "Nothing is deducted: it was paid in cash, which the rules do not allow for this payment."
+    },
+    {
+      "code": "HP_ANNUAL_VALUE_LET",
+      "why": "It was let at {rent}, against an expected {expected}, less {taxes} of local taxes paid."
+    },
+    {
+      "code": "HP_ANNUAL_VALUE_NOT_LET",
+      "why": "It was not let: its expected value is {expected}, less {taxes} of local taxes paid."
+    },
+    {
+      "code": "HP_ARREARS_LESS",
+      "why": "It is the arrears of rent received, less the {deduction} the law allows off them."
+    },
+    {
+      "code": "HP_FOR_THIS_PROPERTY",
+      "why": "This line is for one property you entered."
+    },
+    {
+      "code": "HP_LESS_UNREALISED_RENT",
+      "why": "It is the rent receivable, less the {unrealised} you could not realise."
+    },
+    {
+      "code": "HP_OWN_RESIDENCE_INTEREST_AGGREGATE",
+      "why": "Interest on your own residences is limited to {aggregate} in all, each kind within its own limit."
+    },
+    {
+      "code": "HP_OWN_RESIDENCE_NIL",
+      "why": "Its annual value is nil: it is your own residence."
+    },
+    {
+      "code": "HRA_NOT_RENTED",
+      "why": "Nothing is exempt for this home: it is your own, or no rent was paid."
+    },
+    {
+      "code": "LESS_RECOVERED",
+      "why": "It is the amount less the {recovered} you paid back."
+    },
+    {
+      "code": "LIFE_POLICY_ABOVE_PREMIUMS",
+      "why": "Only the sum above the {premiums} of premium not already deducted or counted is income."
+    },
+    {
+      "code": "LIFE_POLICY_EXCLUDED",
+      "why": "The sums received under this policy are excluded from income."
+    },
+    {
+      "code": "LOANS_WITHIN_PETTY_LIMIT",
+      "why": "Loans of {lent} from this employer do not exceed {limit}, so nothing is taxed for them."
+    },
+    {
+      "code": "LOAN_FOR_LISTED_DISEASE",
+      "why": "The loan is for treating a disease the rules list, so it is not taxed."
+    },
+    {
+      "code": "LOAN_INTEREST_AT_BANK_RATE",
+      "why": "Interest at {rate} a year on the month-end balances comes to {interest}, less the {paid} you paid."
+    },
+    {
+      "code": "LOAN_SANCTION_CONDITION_NOT_MET",
+      "why": "Nothing is deducted: the loan does not meet a condition on its sanction or the house."
+    },
+    {
+      "code": "LOSS_CARRIED_FORWARD_HOUSE_PROPERTY",
+      "why": "The rest is carried forward, to be set against income from house property in later years."
+    },
+    {
+      "code": "LOSS_DEEMED_GIVEN_EFFECT",
+      "why": "Under {regime} the loss is treated as already used, and is not carried forward."
+    },
+    {
+      "code": "LOSS_NOT_CARRIED_FORWARD",
+      "why": "The rest is not set off, and cannot be carried forward."
+    },
+    {
+      "code": "LOSS_SET_OFF_AGAINST_HEAD",
+      "why": "Your loss from {loss} is set against your income from {against}."
+    },
+    {
+      "code": "LOSS_SET_OFF_AGAINST_PART",
+      "why": "Your loss from {loss} is set against your {part}."
+    },
+    {
+      "code": "LTC_ASSISTANCE_RECEIVED",
+      "why": "It is limited to the travel assistance you received."
+    },
+    {
+      "code": "LTC_CHILD_BEYOND_LIMIT",
+      "why": "Nothing is exempt for this child: the concession covers only {children} surviving children."
+    },
+    {
+      "code": "LTC_JOURNEYS_IN_BLOCK",
+      "why": "Nothing is exempt for this journey: the rules exempt only {journeys} journeys in each block of {years} calendar years."
+    },
+    {
+      "code": "MEALS_IN_FULL",
+      "why": "All of it is taxed: no limit reaches food provided this way this year."
+    },
+    {
+      "code": "MEDICAL_ABROAD_EXCLUDED",
+      "why": "{excluded} of it is not taxed."
+    },
+    {
+      "code": "MEDICAL_TRAVEL_CONDITION_NOT_MET",
+      "why": "None of it is excluded: a condition for excluding the travel is not met."
+    },
+    {
+      "code": "NOT_RESIDENT",
+      "why": "Nothing is deducted: this deduction is only for a resident."
+    },
+    {
+      "code": "NOT_SPECIFIED_EMPLOYEE",
+      "why": "These benefits are not taxed for you: your salary paid in money, {salary}, does not exceed {threshold}, and you are not a director or a holder of a substantial interest."
+    },
+    {
+      "code": "OS_EXPENSE_NOT_DEDUCTED",
+      "why": "Nothing is deducted: this expense is not allowed against this kind of income."
+    },
+    {
+      "code": "OS_FOR_THIS_ITEM",
+      "why": "This line is for one item you entered."
+    },
+    {
+      "code": "PF_CONTRIBUTION_ABOVE_THRESHOLD",
+      "why": "Your contribution above the threshold goes into a taxable contribution account."
+    },
+    {
+      "code": "PF_TAXABLE_ACCOUNT_INTEREST",
+      "why": "It is the interest earned in that taxable contribution account."
+    },
+    {
+      "code": "PREMIUM_SHARE_OF_SUM_ASSURED",
+      "why": "The premium counts only up to {share} of the sum assured of {sumAssured}."
+    },
+    {
+      "code": "REGIME_DISALLOWS",
+      "why": "It is not allowed under {regime}."
+    },
+    {
+      "code": "REGIME_EXCLUDES_ROW",
+      "why": "This rule does not apply under {regime}."
+    },
+    {
+      "code": "RENT_OWNS_HOME_ELSEWHERE",
+      "why": "Nothing is deducted: you own and live in a home elsewhere."
+    },
+    {
+      "code": "RENT_OWNS_HOME_HERE",
+      "why": "Nothing is deducted: you own a home where you live or work."
+    },
+    {
+      "code": "RENT_RECEIVES_HRA",
+      "why": "Nothing is deducted: you receive house rent allowance, which is exempted instead."
+    },
+    {
+      "code": "RETIREMENT_ALLOWED_BEFORE",
+      "why": "Nothing is deducted: a deduction under this entry was already allowed in {year}."
+    },
+    {
+      "code": "RETIREMENT_BARRED",
+      "why": "Nothing is deducted: the rules bar a deduction under this entry this year."
+    },
+    {
+      "code": "RETIREMENT_CEILING_USED",
+      "why": "The ceiling across all your employers and years is reduced by the {before} allowed in earlier years."
+    },
+    {
+      "code": "RETIREMENT_CEILING_USED_THIS_YEAR",
+      "why": "The ceiling across all your employers and years is reduced by the {before} allowed in earlier years and the {thisYear} allowed on this year's earlier payments."
+    },
+    {
+      "code": "SALARY_INCLUDES_AGNIVEER",
+      "why": "This is the Central Government's contribution to your Agniveer Corpus Fund account."
+    },
+    {
+      "code": "SALARY_INCLUDES_EMPLOYER_EXCESS",
+      "why": "This is your employer's retirement contributions above the limit, worked out on their own lines."
+    },
+    {
+      "code": "SALARY_INCLUDES_PENSION_CONTRIBUTION",
+      "why": "This is your employer's contribution to your pension-scheme account."
+    },
+    {
+      "code": "SALARY_INCLUDES_PERQUISITES",
+      "why": "This is the value of your perquisites, worked out on their own lines."
+    },
+    {
+      "code": "SECURITY_VALUE",
+      "why": "{units} units at a fair market value of {value} in all, less the {paid} you paid."
+    },
+    {
+      "code": "UNTAXED_ABROAD",
+      "why": "Nothing is deducted: it is payable outside India without tax deducted."
+    },
+    {
+      "code": "WITHIN_LIMIT",
+      "why": "All of it is exempt: it is within the limit of {limit}."
+    }
+  ],
+  "terms": {
+    "regime": {
+      "FIRST_SCHEDULE_RATES": "the old regime",
+      "NEW_TAX_REGIME": "the default regime"
+    },
+    "head": {
+      "SALARIES": "salary",
+      "HOUSE_PROPERTY": "house property",
+      "BUSINESS_OR_PROFESSION": "business or profession",
+      "CAPITAL_GAINS": "capital gains",
+      "OTHER_SOURCES": "other sources"
+    },
+    "capitalGainsPart": {
+      "SHORT_TERM_SLAB": "short-term gains taxed at your slab rates",
+      "SHORT_TERM_LISTED_EQUITY": "short-term gains on listed shares and equity funds",
+      "LONG_TERM_OTHER": "other long-term gains",
+      "LONG_TERM_LISTED_EQUITY": "long-term gains on listed shares and equity funds"
+    },
+    "sttState": {
+      "CHARGEABLE": "chargeable to securities transaction tax"
+    }
+  },
+  "headroom": {
+    "AMOUNT_CLAIMED": "Spending {more} more on this would raise it to {next}.",
+    "AMOUNT_INCURRED": "Spending {more} more on what this allowance is for would raise it to {next}.",
+    "RENT_PAID": "Paying {more} more in rent would raise it to {next}."
+  },
+  "explanations": [
+    {
+      "rule": "ADV-INSTALMENTS",
+      "what": "This line works out how much advance tax was still owed by an instalment date."
+    },
+    {
+      "rule": "ADV-LIABILITY",
+      "what": "This line works out whether you must pay advance tax this year, and how much."
+    },
+    {
+      "rule": "CG-CHARGE-COST",
+      "what": "Of the {in} charged on the purchase, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-CHARGE-MISC",
+      "what": "Of the {in} of other charges, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-CHARGE-STT",
+      "what": "Of the {in} of securities transaction tax, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-CHARGE-TRANSFER",
+      "what": "Of the {in} charged on the sale, {out} is deducted in working out the gain."
+    },
+    {
+      "rule": "CG-DEPOSIT",
+      "what": "This gain of {in} is left out of capital gains: a deposit's earnings are entered as interest under income from other sources."
+    },
+    {
+      "rule": "CG-EXEMPT-RESIDENTIAL-HOUSE",
+      "what": "Of the {in} gain, the part put into a residential house is not taxed, leaving {out}."
+    },
+    {
+      "rule": "CG-INDEXED-COST-LAND-BUILDING",
+      "what": "With its cost indexed for inflation, the {in} gain is {out}."
+    },
+    {
+      "rule": "CG-TERM-LAND-BUILDING",
+      "what": "This line decides whether the {in} gain is short-term or long-term, from how long the asset was held."
+    },
+    {
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "what": "This line decides whether the {in} gain is short-term or long-term, from how long the asset was held."
+    },
+    {
+      "rule": "CREDIT-TAX-PAID",
+      "what": "{out} of tax already paid is credited against your bill."
+    },
+    {
+      "rule": "DED-AGNIVEER-GOVERNMENT",
+      "what": "{out} of the government's contribution to your Agniveer Corpus Fund is deducted."
+    },
+    {
+      "rule": "DED-AGNIVEER-OWN",
+      "what": "{out} of your own subscription to the Agniveer Corpus Fund is deducted."
+    },
+    {
+      "rule": "DED-DEPOSIT-INTEREST-SENIOR",
+      "what": "{out} of your deposit interest is deducted.",
+      "byLimit": {
+        "the interest": "All of the interest is deducted, since it is within the limit.",
+        "the limit": "The deduction is capped by the limit for a senior citizen's deposit interest; interest above it is taxed."
+      }
+    },
+    {
+      "rule": "DED-DISABILITY",
+      "what": "{out} is deducted because you are a person with disability."
+    },
+    {
+      "rule": "DED-DISABILITY-SEVERE",
+      "what": "{out} is deducted because you are a person with severe disability."
+    },
+    {
+      "rule": "DED-DISABLED-DEPENDANT",
+      "what": "{out} is deducted for the care of a dependant with disability.",
+      "byLimit": {
+        "the amount spent or deposited": "The deduction is what you spent or deposited, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for the dependant's disability; spending more would not raise it."
+      }
+    },
+    {
+      "rule": "DED-DISABLED-DEPENDANT-SEVERE",
+      "what": "{out} is deducted for the care of a dependant with severe disability.",
+      "byLimit": {
+        "the amount spent or deposited": "The deduction is what you spent or deposited, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for severe disability; spending more would not raise it."
+      }
+    },
+    {
+      "rule": "DED-DONATION-CASH",
+      "what": "Donations paid in cash above the amount allowed are not deducted; {out} is deducted on this line."
+    },
+    {
+      "rule": "DED-DONATION-HALF",
+      "what": "{out} is deducted for donations allowed at half their amount."
+    },
+    {
+      "rule": "DED-DONATION-QUALIFYING",
+      "what": "This line sets the qualifying limit that some donations are deducted within: a share of your adjusted gross total income."
+    },
+    {
+      "rule": "DED-DONATION-WHOLE",
+      "what": "{out} is deducted for donations allowed in full."
+    },
+    {
+      "rule": "DED-EDUCATION-LOAN",
+      "what": "{out} of the interest on your loan for higher education is deducted."
+    },
+    {
+      "rule": "DED-ELECTRIC-VEHICLE-LOAN",
+      "what": "{out} of the interest on your loan for an electric vehicle is deducted."
+    },
+    {
+      "rule": "DED-HEALTH-CASH-PERMITTED",
+      "what": "Only a preventive health check-up may be paid in cash; {out} of this cash payment is deducted."
+    },
+    {
+      "rule": "DED-HEALTH-CHECKUP",
+      "what": "This line splits your preventive health check-ups between your own family's limit and your parents', as you claimed them."
+    },
+    {
+      "rule": "DED-HEALTH-FAMILY",
+      "what": "{out} is deducted for health insurance and care for you and your family."
+    },
+    {
+      "rule": "DED-HEALTH-FAMILY-SENIOR",
+      "what": "{out} is deducted for health insurance and care for you and your family, at the senior citizen's limit."
+    },
+    {
+      "rule": "DED-HEALTH-PARENTS",
+      "what": "{out} is deducted for health insurance and care for your parents."
+    },
+    {
+      "rule": "DED-HEALTH-PARENTS-SENIOR",
+      "what": "{out} is deducted for health insurance and care for your parents, at the senior citizen's limit."
+    },
+    {
+      "rule": "DED-HOUSE-LOAN",
+      "what": "{out} of the interest on your loan for a house is deducted."
+    },
+    {
+      "rule": "DED-HOUSE-LOAN-EARLIER",
+      "what": "{out} of the interest on your loan for a first house is deducted."
+    },
+    {
+      "rule": "DED-NPS-EMPLOYER-GOVT",
+      "what": "{out} of your government employer's contribution to your pension account is deducted."
+    },
+    {
+      "rule": "DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+      "what": "{out} of your employer's contribution to your pension account is deducted under the default regime."
+    },
+    {
+      "rule": "DED-NPS-EMPLOYER-OTHER",
+      "what": "{out} of your employer's contribution to your pension account is deducted."
+    },
+    {
+      "rule": "DED-NPS-OWN",
+      "what": "{out} of your own contribution to your pension account is deducted."
+    },
+    {
+      "rule": "DED-PREMIUM-SHARE",
+      "what": "This line limits a life insurance premium to a share of the policy's sum assured before it counts towards your savings deduction."
+    },
+    {
+      "rule": "DED-RENT-PAID",
+      "what": "Of the {in} rent you paid, {out} is deducted.",
+      "byLimit": {
+        "rent less 10% of total income": "It is limited by how far your rent exceeds a share of your total income; paying more rent would raise it, up to the next limit.",
+        "5000 per month": "It is limited by the sum allowed for each month you stayed; paying more rent would not raise it.",
+        "25% of total income": "It is limited by a share of your total income; paying more rent would not raise it."
+      }
+    },
+    {
+      "rule": "DED-SAVINGS-INTEREST",
+      "what": "{out} of your savings account interest is deducted.",
+      "byLimit": {
+        "the interest": "All of the interest is deducted, since it is within the limit.",
+        "the limit": "The deduction is capped by the limit for savings account interest; interest above it is taxed."
+      }
+    },
+    {
+      "rule": "DED-SCHEDULE-XV",
+      "what": "{out} is deducted for your savings and payments under Schedule XV."
+    },
+    {
+      "rule": "DED-SPECIFIED-DISEASE",
+      "what": "{out} is deducted for the treatment of a specified disease.",
+      "byLimit": {
+        "paid less reimbursed": "The deduction is what you paid less what was reimbursed, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for the patient's age; paying more would not raise it."
+      }
+    },
+    {
+      "rule": "DED-SPECIFIED-DISEASE-SENIOR",
+      "what": "{out} is deducted for the treatment of a specified disease of a senior citizen.",
+      "byLimit": {
+        "paid less reimbursed": "The deduction is what you paid less what was reimbursed, which is within the limit.",
+        "the limit": "The deduction is capped by the limit for a senior citizen; paying more would not raise it."
+      }
+    },
+    {
+      "rule": "DED-WITHIN-GROSS-TOTAL",
+      "what": "Your deductions of {in} together are limited to your gross total income of {out}."
+    },
+    {
+      "rule": "FEE-LATE-RETURN",
+      "what": "A fee of {out} is charged for furnishing the return after its due date."
+    },
+    {
+      "rule": "HP-ANNUAL-VALUE",
+      "what": "The annual value of this house is {out}."
+    },
+    {
+      "rule": "HP-ARREARS",
+      "what": "{out} of the arrears of rent you received is income from house property."
+    },
+    {
+      "rule": "HP-INTEREST",
+      "what": "{out} of the interest on the loan for this house is deducted."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE",
+      "what": "A house you live in yourself has no annual value, so no income arises from it."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-INTEREST",
+      "what": "{out} of the interest on the loan for the house you live in is deducted."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-INTEREST-CAP",
+      "what": "{out} of the interest on the loans for the houses you live in is deducted, within the limit for those houses together."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
+      "what": "{out} is deducted this year as an instalment of the interest from before the house you live in was finished."
+    },
+    {
+      "rule": "HP-PRE-CONSTRUCTION",
+      "what": "{out} is deducted this year as an instalment of the interest from before this house was finished."
+    },
+    {
+      "rule": "HP-STANDARD-DEDUCTION",
+      "what": "From the house's annual value of {in}, {out} is deducted as the standard deduction."
+    },
+    {
+      "rule": "HP-UNREALISED-RENT",
+      "what": "Rent you could not realise is left out before this house's annual value is found."
+    },
+    {
+      "rule": "INT-ADVANCE-SHORTFALL",
+      "what": "Interest of {out} is charged because the advance tax paid fell short of what was due for the year."
+    },
+    {
+      "rule": "INT-DEFERMENT",
+      "what": "Interest of {out} is charged because advance tax instalments were paid late or short."
+    },
+    {
+      "rule": "INT-LATE-RETURN",
+      "what": "Interest of {out} is charged because the return was furnished after its due date."
+    },
+    {
+      "rule": "INT-REFUND",
+      "what": "Interest of {out} is paid to you on your refund."
+    },
+    {
+      "rule": "OS-BANKER-COMMISSION",
+      "what": "{out} paid to a banker to realise interest on securities is deducted."
+    },
+    {
+      "rule": "OS-BUSINESS-TRUST",
+      "what": "{out} distributed by a business trust on your units is income from other sources."
+    },
+    {
+      "rule": "OS-COMMUTED-PENSION",
+      "what": "{out} of a commuted pension from an insurer's pension fund is deducted."
+    },
+    {
+      "rule": "OS-COMPENSATION-INTEREST",
+      "what": "{out} of the interest on compensation is deducted."
+    },
+    {
+      "rule": "OS-COMPENSATION-INTEREST-INCOME",
+      "what": "{out} of interest on compensation is income from other sources."
+    },
+    {
+      "rule": "OS-DEATH-GRATUITY",
+      "what": "{out} of a government gratuity received on an employee's death is deducted."
+    },
+    {
+      "rule": "OS-DIVIDEND",
+      "what": "{out} of dividends is income from other sources."
+    },
+    {
+      "rule": "OS-DIVIDEND-INTEREST",
+      "what": "{out} of interest you paid to earn dividend and unit income is deducted, within the share of that income allowed."
+    },
+    {
+      "rule": "OS-FAMILY-PENSION",
+      "what": "{out} of your family pension is deducted."
+    },
+    {
+      "rule": "OS-FAMILY-PENSION-NEW-TAX-REGIME",
+      "what": "{out} of your family pension is deducted under the default regime."
+    },
+    {
+      "rule": "OS-FORFEITED-ADVANCE",
+      "what": "{out} of an advance forfeited when the sale of an asset fell through is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT",
+      "what": "{out} of sums received as gifts is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT-COVID-DEATH",
+      "what": "{out} received by the family of a person whose death was related to the Covid pandemic is left out of income."
+    },
+    {
+      "rule": "OS-GIFT-EXCLUSION",
+      "what": "{out} of this gift is left out of income, on the ground you claimed."
+    },
+    {
+      "rule": "OS-GIFT-IMMOVABLE",
+      "what": "{out} of this gift of land or a building is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT-PROPERTY-BOUGHT",
+      "what": "{out} of this property bought below its value is income from other sources."
+    },
+    {
+      "rule": "OS-GIFT-PROPERTY-FREE",
+      "what": "{out} of property received free this year is income from other sources."
+    },
+    {
+      "rule": "OS-INTEREST",
+      "what": "{out} of interest is income from other sources."
+    },
+    {
+      "rule": "OS-KEYMAN-POLICY",
+      "what": "{out} received under a keyman insurance policy is income from other sources."
+    },
+    {
+      "rule": "OS-LIFE-POLICY",
+      "what": "{out} received under this life policy is income from other sources."
+    },
+    {
+      "rule": "OS-LIFE-POLICY-RATIO",
+      "what": "{out} received under this life policy is left out of income, its premium being within the share of the sum assured allowed."
+    },
+    {
+      "rule": "OS-OTHER-EXPENDITURE",
+      "what": "{out} spent to earn this income is deducted."
+    },
+    {
+      "rule": "OS-PF-TAXABLE-INTEREST",
+      "what": "This line finds the interest on your own provident fund contributions above the threshold, which is taxed under other sources."
+    },
+    {
+      "rule": "OS-RESIDUAL",
+      "what": "{out} of this income falls under other sources, under no other head."
+    },
+    {
+      "rule": "OS-TERMINATION-COMPENSATION",
+      "what": "{out} of compensation for the end or change of your employment is income from other sources."
+    },
+    {
+      "rule": "PERQ-ACCOM-FURNITURE",
+      "what": "Furniture in the accommodation your employer provides is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ACCOM-GOVERNMENT",
+      "what": "Accommodation the government provides you as its employee is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ACCOM-HOTEL",
+      "what": "Hotel accommodation from your employer is valued at {out} as a perquisite.",
+      "byLimit": {
+        "hotel charges": "It is valued at the hotel charges your employer paid, which are below the share of your salary.",
+        "twenty-four per cent of salary": "It is valued at a share of your salary, which is below the hotel charges."
+      }
+    },
+    {
+      "rule": "PERQ-ACCOM-LEASED",
+      "what": "Accommodation your employer leases for you is valued at {out} as a perquisite.",
+      "byLimit": {
+        "lease rental": "It is valued at the lease rental your employer pays, which is below the share of your salary.",
+        "ten per cent of salary": "It is valued at a share of your salary, which is below the lease rental."
+      }
+    },
+    {
+      "rule": "PERQ-ACCOM-OWNED",
+      "what": "Accommodation your employer owns and provides is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-CAR",
+      "what": "A car your employer transferred to you is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-ELECTRONIC",
+      "what": "A computer or electronic item your employer transferred to you is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-OTHER",
+      "what": "An asset your employer transferred to you is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-USE",
+      "what": "The use of an asset belonging to or hired by your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-ASSET-USE-EXCLUDED",
+      "what": "The use of this kind of asset from your employer is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-CONVEYANCE",
+      "what": "The use of a conveyance from your employer is valued at {out} as a perquisite.",
+      "byLimit": {
+        "the expenditure less the Table's amount per month": "It is your employer's expenditure less the fixed amount the rules allow for official use.",
+        "the expenditure less the higher official use claimed": "It is your employer's expenditure less the higher official use you claimed with records."
+      }
+    },
+    {
+      "rule": "PERQ-CAR-EMPLOYEE",
+      "what": "The use of your own car, paid for by your employer, is valued at {out} as a perquisite.",
+      "byLimit": {
+        "the expenditure less the Table's amount for official use": "It is your employer's expenditure less the fixed amount the rules allow for official use.",
+        "the expenditure less the higher official use claimed": "It is your employer's expenditure less the higher official use you claimed with records."
+      }
+    },
+    {
+      "rule": "PERQ-CAR-OWNRUN-ELECTRIC",
+      "what": "Your employer's electric car, used partly privately with you meeting its private running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-OWNRUN-LARGE",
+      "what": "Your employer's larger car, used partly privately with you meeting its private running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-OWNRUN-SMALL",
+      "what": "Your employer's smaller car, used partly privately with you meeting its private running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-ELECTRIC",
+      "what": "Your employer's electric car, used partly privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-LARGE",
+      "what": "Your employer's larger car, used partly privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-SMALL",
+      "what": "Your employer's smaller car, used partly privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-OFFICIAL",
+      "what": "A vehicle used wholly for official duties is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CAR-PRIVATE",
+      "what": "Your employer's car, used only privately with your employer meeting its running is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CARRIER-TRAVEL",
+      "what": "Free or cheaper travel from your employer, a carrier, is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB",
+      "what": "Club expenditure your employer paid is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB-BUSINESS",
+      "what": "Club expenditure incurred wholly for business is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB-BUSINESS-UNIFORM",
+      "what": "Club expenditure incurred wholly for business, on the conditions the rules set, is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CLUB-UNIFORM",
+      "what": "A health club or sports facility provided uniformly to all employees is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-CREDIT-CARD",
+      "what": "Expenses on a credit card your employer provides or pays for is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-CREDIT-CARD-OFFICIAL",
+      "what": "Credit card expenses incurred wholly for official purposes are not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-EDUCATION",
+      "what": "Education your employer pays for a member of your household is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-EDUCATION-FREE",
+      "what": "Free education for your child by reason of your employment is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-EMPLOYER-ACCRETION",
+      "what": "{out} of the interest and other accretion on your employer's contributions is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-EMPLOYER-CONTRIBUTION",
+      "what": "{out} of your employer's contributions to your provident, pension and superannuation funds is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-GIFT",
+      "what": "A gift, voucher or token from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-HOLIDAY",
+      "what": "Holiday expenses your employer paid is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-LOAN",
+      "what": "An interest-free or cheaper loan from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-LOAN-PETTY",
+      "what": "A small loan from your employer, within the limit, is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL",
+      "what": "Free food and drink from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-AT-WORK",
+      "what": "Food and drink at work beyond the amount allowed for each meal is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-REMOTE",
+      "what": "Food at work in a remote area or an off-shore installation is not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-TEA-SNACKS",
+      "what": "Tea or snacks at work are not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEAL-VOUCHER",
+      "what": "Meal vouchers beyond the amount allowed for each meal is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-MEDABROAD-STAY",
+      "what": "Medical treatment and stay abroad paid by your employer comes to {out} on this line.",
+      "byLimit": {
+        "the treatment and stay": "It is set by what the treatment and stay cost.",
+        "the extent permitted by the Reserve Bank of India": "It is set by the extent the Reserve Bank of India permits."
+      }
+    },
+    {
+      "rule": "PERQ-MEDABROAD-TRAVEL",
+      "what": "Of the {in} your employer spent on travel abroad for medical treatment, {out} is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-OTHER-BENEFIT",
+      "what": "Another benefit or amenity from your employer is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-RPF-CONTRIBUTION",
+      "what": "{out} of your employer's contribution to your recognised provident fund, the part above a share of your salary, is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-RPF-INTEREST",
+      "what": "{out} of the interest on your recognised provident fund, the part above the notified rate, is taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-SERVICES",
+      "what": "A sweeper, gardener, watchman or personal attendant your employer pays for is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-SPECIFIED-EMPLOYEE",
+      "what": "Some benefits are taxed only for an employee whose pay in money exceeds a limit; this line checks that limit."
+    },
+    {
+      "rule": "PERQ-SPECIFIED-SECURITY",
+      "what": "Shares or securities your employer allotted or transferred to you free or cheaper is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "PERQ-TELEPHONE",
+      "what": "Telephone and mobile phone expenses your employer pays are not taxed as a perquisite."
+    },
+    {
+      "rule": "PERQ-UTILITY",
+      "what": "Gas, electricity or water your employer provides for your household is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "RATE-CG-LONG-LISTED-EQUITY",
+      "what": "On {in} of long-term gain on listed shares and equity funds, the tax is {out}."
+    },
+    {
+      "rule": "RATE-CG-LONG-OTHER",
+      "what": "This long-term capital gain comes to {out} on this line.",
+      "byLimit": {
+        "twelve and one-half per cent of the gain": "It is the lower of the two ways the law allows, here the one without indexation.",
+        "twenty per cent of the gain computed with indexed cost": "It is the lower of the two ways the law allows, here the one with indexed cost."
+      }
+    },
+    {
+      "rule": "RATE-CG-SHORT-LISTED-EQUITY",
+      "what": "On {in} of short-term gain on listed shares and equity funds, the tax is {out}."
+    },
+    {
+      "rule": "RATE-CG-SHORTFALL-ORDER",
+      "what": "This line takes from your gains taxed at special rates any part of the basic exemption your other income leaves unused."
+    },
+    {
+      "rule": "RATE-HEALTH-EDUCATION-CESS",
+      "what": "On tax and surcharge of {in}, the health and education cess is {out}."
+    },
+    {
+      "rule": "RATE-ROUND-PAYABLE",
+      "what": "The tax payable of {in} is rounded to {out}."
+    },
+    {
+      "rule": "RATE-ROUND-TOTAL-INCOME",
+      "what": "Your total income of {in} is rounded to {out}."
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE",
+      "what": "This is the tax on your income at the old regime's slab rates."
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+      "what": "This is the tax on your income at the old regime's slab rates for a senior citizen."
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
+      "what": "This is the tax on your income at the old regime's slab rates for a very senior citizen."
+    },
+    {
+      "rule": "RATE-SLAB-NEW-TAX-REGIME",
+      "what": "This is the tax on your income at the default regime's slab rates."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE",
+      "what": "On tax of {in}, the surcharge under the old regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-CEILING",
+      "what": "Marginal relief of {out} keeps the surcharge from taking more than your income above its threshold."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-EXCLUDING",
+      "what": "On tax of {in}, the surcharge under the old regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-LIMIT",
+      "what": "On tax of {in} from dividends and gains whose surcharge is capped, the surcharge is {out}."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME",
+      "what": "On tax of {in}, the surcharge under the default regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-CEILING",
+      "what": "Marginal relief of {out} keeps the surcharge from taking more than your income above its threshold."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-EXCLUDING",
+      "what": "On tax of {in}, the surcharge under the default regime is {out}."
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-LIMIT",
+      "what": "On tax of {in} from dividends and gains whose surcharge is capped, the surcharge is {out}."
+    },
+    {
+      "rule": "REBATE-NEW-TAX-REGIME",
+      "what": "On tax of {in}, a rebate of {out} is allowed under the default regime."
+    },
+    {
+      "rule": "REBATE-NEW-TAX-REGIME-EXCESS",
+      "what": "On tax of {in}, a rebate of {out} keeps the tax from exceeding your income above the rebate's limit."
+    },
+    {
+      "rule": "REBATE-RESIDENT-INDIVIDUAL",
+      "what": "On tax of {in}, a rebate of {out} is allowed to a resident individual."
+    },
+    {
+      "rule": "RET-COMMUTED-PENSION-FUND",
+      "what": "Of the {in} commuted pension you received from a pension fund, {out} is not taxed."
+    },
+    {
+      "rule": "RET-COMMUTED-PENSION-GOVERNMENT",
+      "what": "Of the {in} commuted pension you received from the government, {out} is not taxed."
+    },
+    {
+      "rule": "RET-COMMUTED-PENSION-OTHER",
+      "what": "Of the {in} commuted pension you received, {out} is not taxed."
+    },
+    {
+      "rule": "RET-GRATUITY-AGGREGATE",
+      "what": "Of the {in} gratuity you received, {out} is not taxed within the ceiling across all your employers and years."
+    },
+    {
+      "rule": "RET-GRATUITY-GOVERNMENT",
+      "what": "Of the {in} government gratuity you received, {out} is not taxed."
+    },
+    {
+      "rule": "RET-GRATUITY-OTHER",
+      "what": "{out} of your gratuity is not taxed.",
+      "byLimit": {
+        "gratuity received": "All of the gratuity is exempt, since it is within the other limits.",
+        "notified limit": "The exemption is capped by the limit the government notifies; gratuity above it is taxed.",
+        "half a month's salary for each completed year": "The exemption is capped by your salary and completed years of service; gratuity above it is taxed."
+      }
+    },
+    {
+      "rule": "RET-GRATUITY-STATUTORY",
+      "what": "{out} of your gratuity is not taxed.",
+      "byLimit": {
+        "gratuity received": "All of the gratuity is exempt, since it is within the statutory amount.",
+        "amount under the gratuity statute": "The exemption is capped by the amount the gratuity statute works out; gratuity above it is taxed."
+      }
+    },
+    {
+      "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE",
+      "what": "Of the {in} leave encashment you received, {out} is not taxed within the ceiling across all your employers and years."
+    },
+    {
+      "rule": "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+      "what": "Of the {in} leave encashment you received from the government, {out} is not taxed."
+    },
+    {
+      "rule": "RET-LEAVE-ENCASHMENT-OTHER",
+      "what": "{out} of your leave encashment is not taxed.",
+      "byLimit": {
+        "payment received": "All of the payment is exempt, since it is within the other limits.",
+        "leave at credit valued at the ten-month average salary": "The exemption is capped by your leave at credit, valued at your average salary.",
+        "ten months' average salary": "The exemption is capped by a multiple of your average salary.",
+        "notified limit": "The exemption is capped by the limit the government notifies; the payment above it is taxed.",
+        "leave salary at credit": "The exemption is capped by the leave salary at your credit."
+      }
+    },
+    {
+      "rule": "RET-RETRENCHMENT",
+      "what": "{out} of your retrenchment compensation is not taxed.",
+      "byLimit": {
+        "compensation received": "All of the compensation is exempt, since it is within the other limits.",
+        "amount under the retrenchment statute": "The exemption is capped by the amount the retrenchment statute works out.",
+        "notified limit": "The exemption is capped by the limit the government notifies; compensation above it is taxed."
+      }
+    },
+    {
+      "rule": "RET-RETRENCHMENT-APPROVED-SCHEME",
+      "what": "Of the {in} retrenchment compensation you received under an approved scheme, {out} is not taxed."
+    },
+    {
+      "rule": "RET-VOLUNTARY-RETIREMENT",
+      "what": "{out} of your voluntary retirement compensation is not taxed.",
+      "byLimit": {
+        "compensation received": "All of the compensation is exempt, since it is within the limit.",
+        "limit": "The exemption is capped by the limit the law sets; compensation above it is taxed."
+      }
+    },
+    {
+      "rule": "SAL-ALW-CHILDREN-EDUCATION",
+      "what": "{out} of your children's education allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since it is within the limit.",
+        "prescribed limit": "The exemption is capped by the limit the rules prescribe for each child; a larger allowance would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-ALW-CONVEYANCE",
+      "what": "{out} of your conveyance allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since you spent at least as much on conveyance for your duties.",
+        "amount actually incurred": "The exemption is limited to what you actually spent on conveyance for your duties; spending more for your duties would raise it."
+      }
+    },
+    {
+      "rule": "SAL-ALW-HOSTEL",
+      "what": "{out} of your children's hostel allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since it is within the limit.",
+        "prescribed limit": "The exemption is capped by the limit the rules prescribe for each child; a larger allowance would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-ALW-TRANSPORT-DISABLED",
+      "what": "Of the {in} transport allowance you received, {out} is not taxed."
+    },
+    {
+      "rule": "SAL-ALW-UNIFORM",
+      "what": "{out} of your uniform allowance is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt, since you spent at least as much on the uniform.",
+        "amount actually incurred": "The exemption is limited to what you actually spent on the uniform; spending more on it would raise it."
+      }
+    },
+    {
+      "rule": "SAL-ENTMT-ALLOWANCE",
+      "what": "{out} of your entertainment allowance is deducted from your salary.",
+      "byLimit": {
+        "one-fifth of salary": "The deduction is capped by a share of your salary.",
+        "limit": "The deduction is capped by the limit the law sets."
+      }
+    },
+    {
+      "rule": "SAL-HOUSE-RENT-ALLOWANCE",
+      "what": "Of the {in} house rent allowance you received for this home, {out} is not taxed.",
+      "byLimit": {
+        "allowance received": "All of the allowance is exempt: it is below both other limits.",
+        "rent less one-tenth of salary": "It is limited by how far your rent exceeds a share of your salary; paying more rent, with evidence, would raise it, up to the next limit.",
+        "percentage of salary": "It is limited by the share of your salary the home's location allows; paying more rent would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-LEAVE-TRAVEL-CHILDREN",
+      "what": "The leave travel concession covers a limited number of your surviving children; this line applies that count."
+    },
+    {
+      "rule": "SAL-LEAVE-TRAVEL-CONCESSION",
+      "what": "{out} of your leave travel concession is not taxed.",
+      "byLimit": {
+        "amount actually incurred": "The exemption is what you actually spent on the journey, which is within the fare allowed.",
+        "fare admissible": "The exemption is capped by the fare the rules allow for the journey; spending more would not raise it."
+      }
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "what": "This is the salary your accommodation is valued against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-EMPLOYEE-PENSION",
+      "what": "This is the salary your own pension contribution is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-EMPLOYER-PENSION",
+      "what": "This is the salary your employer's pension contribution is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ENTMT",
+      "what": "This is the salary the entertainment allowance deduction is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-GRATUITY",
+      "what": "This is the salary your gratuity and leave encashment are measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-HRA",
+      "what": "This is the salary your house rent allowance is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-FOR-RPF",
+      "what": "This is the salary your employer's provident fund contribution is measured against: the pay lines the law counts for it."
+    },
+    {
+      "rule": "SAL-SALARY-INCLUDES",
+      "what": "{out} of what you received is salary."
+    },
+    {
+      "rule": "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE",
+      "what": "{out} is deducted from your salary as the standard deduction.",
+      "byLimit": {
+        "statutory amount": "It is the amount the law sets, whatever you spend.",
+        "salary": "It is limited by your salary, which is below the amount the law sets."
+      }
+    },
+    {
+      "rule": "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
+      "what": "{out} is deducted from your salary as the standard deduction.",
+      "byLimit": {
+        "statutory amount": "It is the amount the law sets, whatever you spend.",
+        "salary": "It is limited by your salary, which is below the amount the law sets."
+      }
+    },
+    {
+      "rule": "SAL-TAX-ON-EMPLOYMENT",
+      "what": "{out} of tax on employment is deducted from your salary."
+    },
+    {
+      "rule": "SETOFF-ACROSS-HEADS",
+      "what": "This line sets a loss under one head against your income under the other heads."
+    },
+    {
+      "rule": "SETOFF-CARRIED-CAPITAL-GAINS",
+      "what": "This line sets a capital loss carried from an earlier year against this year's gains."
+    },
+    {
+      "rule": "SETOFF-CARRIED-DISALLOWED-PART",
+      "what": "This line deals with the part of a carried house property loss that comes from a deduction the default regime disallows: set off in the old regime, lost in the default one."
+    },
+    {
+      "rule": "SETOFF-CARRIED-HOUSE-PROPERTY",
+      "what": "This line sets a house property loss carried from an earlier year against this year's income from house property."
+    },
+    {
+      "rule": "SETOFF-HOUSE-PROPERTY",
+      "what": "{out} of your loss from house property is set off against your other income.",
+      "byLimit": {
+        "the loss": "All of the loss is set off, since it is within the limit.",
+        "the limit": "The set-off is capped by the limit the law sets; the rest of the loss is carried forward where the law allows."
+      }
+    },
+    {
+      "rule": "SETOFF-WITHIN-CAPITAL-GAINS",
+      "what": "This line totals your capital gains and losses of each kind and sets a loss against gains in the order shown."
+    },
+    {
+      "rule": "STT-PURCHASE-DELIVERY",
+      "what": "This line reads whether securities transaction tax was chargeable on the purchase, which decides how the gain is taxed."
+    },
+    {
+      "rule": "STT-SALE-DELIVERY",
+      "what": "This line reads whether securities transaction tax was chargeable on the sale, which decides how the gain is taxed."
+    },
+    {
+      "rule": "STT-SALE-NONDELIVERY",
+      "what": "This line reads whether securities transaction tax was chargeable on the sale, which decides how the gain is taxed."
+    }
+  ],
+  "notALine": [
+    {
+      "rule": "CG-DERIVATIVE",
+      "reason": "Refuses the sale: CapitalGainsScope throws, so no line is written."
+    },
+    {
+      "rule": "CG-NOT-MODELLED-IMPROVEMENT",
+      "reason": "Names only a notice (CapitalGainsNode), never a line."
+    },
+    {
+      "rule": "CG-NOT-MODELLED-STAMPDUTY",
+      "reason": "Names only a notice (CapitalGainsNode), never a line."
+    },
+    {
+      "rule": "CG-NOT-MODELLED-VALUE2001",
+      "reason": "Names only a notice (CapitalGainsNode), never a line."
+    },
+    {
+      "rule": "CG-PART-LONG-LISTED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-LONG-NOTIFIED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-LONG-OTHER",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-LONG-OTHER-LAND-BUILDING",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-SHORT-LISTED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-SHORT-SLAB",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PART-SHORT-SLAB-LAND-BUILDING",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: CapitalGainsNode chooses the part a gain falls in; the line names the gain's rule."
+    },
+    {
+      "rule": "CG-PARTS",
+      "reason": "Read for a value inside another rule's line: the capital-gains parts, read by DeclaredCapitalGainsParts."
+    },
+    {
+      "rule": "CG-SPECULATIVE",
+      "reason": "Refuses the sale: CapitalGainsScope throws, so no line is written."
+    },
+    {
+      "rule": "DED-DEPENDANT",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: DisabilityDeduction reads who the dependant is; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-DEPENDANT-OWN-CLAIM",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: DisabilityDeduction bars the claim; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-DONATION-UNREPORTED",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: DonationDeduction bars the share; the line names the share's row."
+    },
+    {
+      "rule": "DED-HEALTH-INSURANCE-LIMB",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction chooses the limb; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-HEALTH-INSURANCE-PAID",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction checks how the premium was paid; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-HEALTH-MEDICAL-LIMB",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction chooses the limb; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-HEALTH-SPREAD",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HealthInsuranceDeduction spreads a premium over its years; the line names the deduction's row."
+    },
+    {
+      "rule": "DED-SCHEDULE-XV-GOVERNMENT-SALARY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: ScheduleXvDeduction chooses the limit; the line names the deduction's row."
+    },
+    {
+      "rule": "HP-OWN-RESIDENCE-HIGHER-LIMIT",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: HousePropertyInterest chooses the higher limit; the line names the interest row."
+    },
+    {
+      "rule": "INT-CALCULATION",
+      "reason": "Names only a notice (InterestAndFeeNode), never a line."
+    },
+    {
+      "rule": "OS-LIFE-POLICY-PREMIUM",
+      "reason": "Read for a value inside another rule's line: read by LifePolicySums into the life policy line."
+    },
+    {
+      "rule": "PERQ-ACCOM-CONTINUED",
+      "reason": "Read for a value inside another rule's line: a cap on the accommodation row's line, read by PerquisiteNode."
+    },
+    {
+      "rule": "PERQ-CAR-CHAUFFEUR",
+      "reason": "Read for a value inside another rule's line: added by MotorCarPerquisite to the car row's value."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-CONVEYANCE",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-EMPLOYEE",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-OWNRUN",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-PARTLY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-CAR-PATH-PRIVATE",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: a path names a line only when its computation is not a perquisite (MotorCarPerquisite), and this one's is not."
+    },
+    {
+      "rule": "PERQ-SPECIFIED-DATE",
+      "reason": "Read for a value inside another rule's line: the valuation date, read by SpecifiedSecurityPerquisite into the specified security's line."
+    },
+    {
+      "rule": "RATE-CG-COST-INFLATION-INDEX",
+      "reason": "Read for a value inside another rule's line: the cost inflation index, read by CapitalGainsIndexation into the indexed-cost line."
+    },
+    {
+      "rule": "RATE-COST-INFLATION-INDEX",
+      "reason": "Read for a value inside another rule's line: the cost inflation index, read by PerquisiteNode into the perquisite's line."
+    },
+    {
+      "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "reason": "Checked at build time only: a disallowance basis, read by PackValidator."
+    },
+    {
+      "rule": "REG-NEW-TAX-REGIME-NO-SETOFF",
+      "reason": "Checked at build time only: a disallowance basis, read by PackValidator."
+    },
+    {
+      "rule": "RET-AGGREGATE-HISTORY-GRATUITY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: NotifiedRetirementLimits reads earlier receipts; the line names the gratuity row."
+    },
+    {
+      "rule": "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: NotifiedRetirementLimits reads earlier receipts; the line names the leave encashment row."
+    },
+    {
+      "rule": "RET-BAR-ARREARS-RELIEF",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: RetirementNode names it in the entry line's reason."
+    },
+    {
+      "rule": "RET-BAR-ONCE-ONLY",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: RetirementNode names it in the entry line's reason."
+    },
+    {
+      "rule": "RET-GRATUITY-AVERAGING",
+      "reason": "Read for a value inside another rule's line: the averaging period, read by NotifiedRetirementLimits into the gratuity line."
+    },
+    {
+      "rule": "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT",
+      "reason": "Read for a value inside another rule's line: read by RetirementNode into the entry row's line."
+    },
+    {
+      "rule": "SAL-HOUSE-RENT-LANDLORD-PAN",
+      "reason": "Names only a notice (ExemptionNode), never a line."
+    },
+    {
+      "rule": "SAL-INCLUDES-PENSION-CONTRIBUTION",
+      "reason": "A condition only: it chooses or bars, and the line names another rule: GrossSalaryNode decides what salary includes; the line names the salary row."
+    },
+    {
+      "rule": "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
+      "reason": "Read for a value inside another rule's line: read by LeaveTravelExemption into the leave travel line."
+    },
+    {
+      "rule": "SAL-LEAVE-TRAVEL-JOURNEYS",
+      "reason": "Read for a value inside another rule's line: read by LeaveTravelExemption into the leave travel line."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "code": "OS_PF_INTEREST",
+  "_note": "The engine computes one total; the form splits it by proviso (Q3a). Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest accrued on contributions to provident fund taxable under the provisos to s.10(11) and (12), all four together",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "PROVIDENT_FUND_INTEREST"
+    ]
+  }
+}

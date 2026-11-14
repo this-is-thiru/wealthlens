@@ -9,7 +9,7 @@
                  { "quantity": 400, "price": 100, "acquisitionDate": "2025-03-01" }
                ] },
   "expected": {
-    "lines": { "EXIT_LOAD": 400.00, "STT": 1.00 },
+    "lines": { "BROKERAGE": 0.00, "EXIT_LOAD": 400.00, "STT": 1.00 },
     "resolution": "RESOLVED",
     "total": 401.00
   }

@@ -1,0 +1,71 @@
+{
+  "ruleId": "RATE-SUR-NEW-TAX-REGIME-EXCLUDING",
+  "ruleSet": "RS-RATE-SUR-EXCLUDING",
+  "_note": "FA 2026 s.2(4)(b) Table Sl. 10 clause (iii) (p.7) and s.3(4)(b) Table Sl. 10 clause (iii) (p.14): \"where the total income (excluding dividend income or capital gains under the provisions of sections 111A, 112 and 112A [s.3: 196, 197 and 198]) exceeds Rs. 2,00,00,000, at the rate of twenty-five per cent.\" There is no 37% clause for this person. The surcharge rate is not marginal: the band the income falls in sets one rate for the whole tax; W-056 looks the band up and takes the greater of this row's rate and the -EXCLUDING row's (D-084). The limit on the tax attributable to dividend income and the special gains (15%) is the -LIMIT row (rulebook RATE-SUR-SPLIT-001; W-088c, D-246); the excluding income is total income less dividend income and the special-rate capital gains. Spans TY 2025-26 (s.2, AY 2026-27) and TY 2026-27 (s.3): the same figures.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Finance Act, 2026",
+        "reference": "s.2(4)(b) Table Sl. 10, clause (iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Finance Act, 2026",
+        "reference": "s.3(4)(b) Table Sl. 10, clause (iii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "SlabLadder",
+        "base": "TOTAL_INCOME_EXCLUDING_DIVIDENDS_AND_GAINS",
+        "bands": [
+          {
+            "lowerExclusive": "0",
+            "upperInclusive": "20000000",
+            "rate": "0"
+          },
+          {
+            "lowerExclusive": "20000000",
+            "upperInclusive": null,
+            "rate": "25"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), ss.2(4), 3(4); First Schedule Parts I-A and I-B, Paragraph F",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-31",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.2(4)(b) Table Sl. 10 (p.7), s.3(4)(b) Table Sl. 10 (p.14)",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+    "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.2(4)(b) Table Sl. 10 (p.7), s.3(4)(b) Table Sl. 10 (p.14)",
+    "accessedOn": "2026-09-25",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

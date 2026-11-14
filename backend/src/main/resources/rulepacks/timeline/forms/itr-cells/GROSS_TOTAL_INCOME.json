@@ -1,0 +1,11 @@
+{
+  "code": "GROSS_TOTAL_INCOME",
+  "_note": "After set-off of losses. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Gross total income",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "gti"
+    ]
+  }
+}

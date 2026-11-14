@@ -1,0 +1,13 @@
+{
+  "code": "OS_INTEREST_OTHERS",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest: others including interest from Companies, NBFCs & HFCs",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "INTEREST_ON_SECURITIES",
+      "OTHER_INTEREST",
+      "INTEREST_ON_COMPENSATION"
+    ]
+  }
+}

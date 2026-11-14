@@ -1,0 +1,9 @@
+{
+  "code": "HP_ARREARS",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Arrears/Unrealized rent received during the year less 30%",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "arrears"
+  }
+}
