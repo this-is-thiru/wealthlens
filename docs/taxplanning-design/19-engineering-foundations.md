@@ -501,6 +501,9 @@ public interface TaxJob {
 | `AutoArchive` | weekly | **yes** | `11-filing-drafts.md` F6's 18-month rule |
 | `RetentionPurge` | monthly | **yes** | `14-operational-design.md` O5; **refuses to run** if the retention period cannot be derived from the packs |
 
+> **Erratum (W-123, 2026-11-15):** `GeneratePdf` is not built as a job — no `ComputationCompleted` event and no on-event form of a job exist, and a cached PDF would be a second stored copy of a person's tax position; the report is rendered on request from the stored computation and kept nowhere, which revises D-449 C1a (owner, W-123 C2a; D-702).
+> Verified by: `grep -rn ComputationCompleted backend/src/main/java` returns nothing; `backend/src/main/java/com/thiru/wealthlens/taxplanning/jobs/TaxJob.java` (`name`, `timeout`, `run` — no trigger).
+
 `RECOMMENDATION`: singleton jobs take a Mongo-backed lease (`tax_job_leases`, TTL-indexed) rather than
 requiring a scheduler. `FACT (CLAUDE.md)`: multi-document transactions need a replica set **and** a
 flag, so a lease with a TTL and a fencing token is the shape that works whether or not the flag is on.

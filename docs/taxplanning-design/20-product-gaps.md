@@ -217,6 +217,9 @@ Step 5  Other income and property             → the remaining heads
    … at every step, F33 says what the next step is worth
 ```
 
+> **Erratum (W-122, 2026-11-15):** step 1 cannot take "gross CTC + city" as written — the engine takes pay by component and nothing splits a cost to company, and a city decides nothing until a home is rented; step 1 enters the year's gross pay as one fully taxable pay component, nothing assumed, and the city moves to step 2 with the rent. The band is measured: the tax as the draft stands down to one run with every measured item filled to its room, income not yet entered stated as outside it (owner, W-122 C2a, C3a; D-701).
+> Verified by: `backend/src/main/java/com/thiru/wealthlens/taxengine/input/SalaryComponent.java` (`code`, `annualAmount` — a component, no cost-to-company input); `grep -rliE 'coarse|confidenceBand|onboarding' backend/src/main/java` returns nothing.
+
 `RECOMMENDATION`: **every step must produce a valid computation**, with its own trace and an explicit
 confidence band. `D-NOSILENT` applies to the product as well as the engine — a coarse estimate
 labelled coarse is honest; a coarse estimate presented as final is not.

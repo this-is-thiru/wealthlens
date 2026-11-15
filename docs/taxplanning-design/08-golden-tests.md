@@ -571,6 +571,9 @@ taxable LTA = 1,20,000 − 68,000                                      = 52,000
 | New regime | exemption **₹0** with a stated reason, citing `SAL-LTA-NEW-001` |
 | Journey in calendar 2026, none taken in the 2022-2025 block | carried-over journey allowed and **not** counted against the block's two — `SAL-LTA-CARRY-001` |
 
+> **Erratum (W-119, 2026-11-15):** the "No expenditure evidence" variant is wrong — missing evidence never changes the computed tax; the exemption is computed on the expenditure entered, and the missing evidence shows as a gap with what closes it (owner, W-119 C6a; D-700). `W-119d` tests it.
+> Verified by: `12-claim-integrity.md:88` (exposure gap: "Surface it, with what evidence would close it"), which this variant contradicted.
+
 > **Erratum (W-077, 2026-10-08, D-153).** Facts these cases leave out, entered so they do not bind, and how each is run:
 > **T5-1, T5-2:** the LIC policy's sum assured and issue date are not stated; entered as ₹10,00,000 issued 1-6-2020, so
 > the premium's share (`DED-PREMIUM-SHARE`) is ₹1,00,000 and the ₹30,000 counts in full. **T5-2** has no headroom

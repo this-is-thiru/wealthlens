@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-117b (claim catalogue, employer-optional entries) — APPROVED C1a C2a C3a C4a + draft content, board E, NOT built (plans/W-117b.md); planning ahead: W-118 plan in progress
-Stage           : APPROVED, awaiting a build session (owner: plans from Fable, building by Opus); W-117a follow-up committed and pushed, pipeline pending
-Done today      : session 97: W-326b follow-up committed 384a893b, pipeline 43619226337 success (D-697); W-117a built (D-699)
-Board           : W-117 D (split); W-117a D, W-117b E, W-117c – d ·; W-118 – W-123 ·; W-324 ·; W-113a ·; Phase 10: W-299, W-294 ·
-Next step       : (1) record the W-117a follow-up's pipeline in D-699. (2) BUILD W-117b from plans/W-117b.md (read ss.123 – 126, Sch. XV, r.278 in full first; coverage step in the plan's header). (3) planning ahead: finish plans/W-118.md — probe so far: no Form 16 data exists; measure a claim's tax effect by a second run withholding its rules at NodeContext.inRegime (20 of 76 node classes ask it)
+Item            : BUILD NEXT: W-117b. Ten plans APPROVED, NOT built, in build order: W-117b, W-118, W-119a, W-119b, W-119c, W-119d, W-122a, W-121 (needs W-118 built), W-123a, W-123b — each in plans/<id>.md with its choices ruled in its header
+Stage           : planning done as far as it goes without a build; awaiting a BUILD session (owner: plans from Fable, building by Opus)
+Done today      : session 98 (planning): W-119, W-122, W-123 split (D-700 – D-702); W-119b1 placed (D-703); ten plans approved; r.205(2) read in the Gazette (sources/2026-11-15-evidence-of-claims.md); errata on DR 12, DR 08 T5-4, DR 20 F34, DR 19 E8; PRD F10, F23 – F25, F34; committed and pushed on the owner's "commit it and push"
+Board           : W-117b E, W-117c – d ·; W-118 E; W-119a – d E, W-119b1 ·; W-120 ·; W-121 E; W-122a E, W-122b – c ·; W-123a – b E; W-324 ·; W-113a ·; Phase 10: W-299, W-294 ·
+Next step       : BUILD session (Opus): build W-117b from plans/W-117b.md, stop at its report for the owner's review; then the rest in the order above, one item at a time. Each plan was written cold on 2026-11-14 / 15 at d44536db — grep every path and name before relying on it, and stop and report where a plan's "confirm as built" step fails. PLANNING (Fable), only after builds: W-117c / W-117d (after W-117b), W-122b (measure the extra run on the pipeline first), W-122c, W-120 (after W-119b; search r.205's amendments first, E4), W-119b1 (after W-119c)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : W-117a follow-up: ClaimCatalogueTest 24/0, validate green, 1 red check; W-117a pipeline 43621547774 FAILURE (coverage gate 0.84, D-699)
-Files touched   : none uncommitted but this file
+Last verify     : `./mvnw validate` by the commit gate on the planning commit; no test run (documents only); W-117a follow-up pipeline 43622308587 success (D-699)
+Files touched   : none (the planning commit holds everything; only this file may differ)
 Last item commit: taxplanning W-117a: test the claim catalogue's parts refusing to be built without what they are for
-Updated         : 2026-11-14, session 97 — W-117a follow-up committed; W-117b approved, not built
+Updated         : 2026-11-15, session 98 closed — planning committed and pushed; the grep in the resume check returns the planning commit, not the item commit above (known false mismatch)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

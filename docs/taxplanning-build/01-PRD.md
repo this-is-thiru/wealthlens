@@ -182,7 +182,7 @@ Design: `21-itr-forms.md`
 Design: `07-architecture.md` X1.3 · `13-edge-cases.md` R-10 · `11-filing-drafts.md` F4.1
 
 #### F10 — PDF report · F11 — Form 16 ingestion · F28 — Excel import
-See `04-product-spec.md` and `19-engineering-foundations.md` E9.1. Owning items: F10 ○ `W-123`;
+See `04-product-spec.md` and `19-engineering-foundations.md` E9.1. Owning items: F10 ○ `W-123a`, `W-123b`;
 F11 ○ `W-124`–`W-132`; F28 ○ `W-133`.
 
 ### Tier MVP — the product surface
@@ -215,7 +215,7 @@ Design: `20-product-gaps.md` F30
 | F33.2 | Items that **increase** tax are shown alongside those that reduce it |
 | F33.3 | Ranked, top five surfaced |
 
-#### F34 — Progressive onboarding — ○ `W-122`
+#### F34 — Progressive onboarding — ○ `W-122a` – `W-122c`
 | # | Acceptance criterion |
 |---|---|
 | F34.1 | A valid computation exists after step 1 |
@@ -260,9 +260,10 @@ what disqualifies me — and, when signed in, whether it applies to me and what 
 
 Design: `00-BRIEF.md` §6.3 · `22-claim-catalogue.md`
 
-#### F23–F25 — Claim integrity — ○ `W-119`, `W-120`
-See `12-claim-integrity.md` C2, C3. Statutory maximum, evidenced maximum, declared; statutory
-overshoot **blocks**; documentation checklist names the counterparty.
+#### F23–F25 — Claim integrity — ○ `W-119a` – `W-119d`, `W-120`
+See `12-claim-integrity.md` C2, C3. The amount allowed on the facts, the amount evidenced, the gap
+and what closes it; a claim the law forbids on the facts is a nil line with its reason (contradictory facts are
+refused in words), never in the total; documentation checklist names the counterparty.
 
 ### Tier Next
 F12 TDS projection · F13 gap analysis · F14 optimiser · F15 break-even · F16 advance tax ·
@@ -324,3 +325,6 @@ with current truth plus this log. Earlier text is in git (last version before th
 | 2026-11-14 | F30: the regime election in the calendar, its deadline from the pack, priced by the regime comparison (`W-114b`); the employer proof cut-off and the revised-return window left out (no measurable cost) | `W-114b`, D-667 |
 | 2026-11-14 | F30: the health limbs' last day in the calendar, priced by a run with each party's premium (`W-114c`); own NPS moved to `W-114d` — its contribution counts under Schedule XV first | `W-114c`, D-668 |
 | 2026-11-14 | Own NPS claimed under s.124(3) before s.123 (s.124(5), (10) bar only the same rupee), which corrects an under-deduction and the optimiser's NPS suggestion; F30 gains own NPS's last day (`W-114d`) | `W-114d`, D-669 |
+| 2026-11-15 | F23, F24: no declared amount and nothing blocked — a draft claims what its facts produce, already capped; the panel shows allowed, evidenced and the gap; a forbidden claim is a nil line with its reason, and contradictory facts are refused in words, as today (`W-119` C2a, C3a); missing evidence never changes the tax (C6a) | `W-119`, D-700 |
+| 2026-11-15 | F34: split into the steps (`W-122a`), the band and the coarse label (`W-122b`) and the first figure (`W-122c`); step 1 is gross pay as one taxable component, nothing assumed; the band is measured by one more run; a figure is coarse until all five steps are answered | `W-122`, D-701 |
+| 2026-11-15 | F10: split into the report (`W-123a`) and the copy before erasure (`W-123b`); rendered on request from the stored computation and kept nowhere — no `GeneratePdf` job, revising D-449 C1a; the disclaimer's Acts named from the year's instruments | `W-123`, D-702 |

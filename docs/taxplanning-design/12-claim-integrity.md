@@ -80,6 +80,9 @@ For **every** claim, the product computes three numbers and the two gaps between
 | **E** | **Evidenced maximum** | the most the user's **recorded evidence** supports | `ProofOfClaim` amounts (`M3.3`), parsed document fields (`M4`), third-party data where available |
 | **D** | **Declared amount** | what the draft currently claims | `DraftInputs` (`11-filing-drafts.md` F4) |
 
+> **Erratum (W-119, 2026-11-15):** the product has no declared amount `D` apart from the facts, and no `ProofOfClaim` — the engine takes facts and computes each claim already capped, so what a draft claims is `S` and a statutory overshoot cannot be entered; the panel shows two amounts (allowed on the facts, evidenced) and one gap (allowed less evidenced, with what closes it), room under a ceiling stays F33's, and evidence is a `taxplanning` record on the draft, not an engine input (owner, W-119 C2a, C4a, C5a; D-700).
+> Verified by: `backend/src/main/java/com/thiru/wealthlens/taxengine/input/EnteredFacts.java:17` (`DeclaredClaim` and `ProofOfClaim` named as types no item produces); `grep -rn 'DeclaredClaim\|ProofOfClaim' backend/src/main` returns that line only.
+
 Two derived quantities, and they mean opposite things:
 
 | Quantity | Formula | Meaning | Product behaviour |
@@ -162,6 +165,9 @@ precisely the behaviour to avoid.
 
 `RECOMMENDATION`: these are **errors, not warnings.** The computation must refuse to produce a total
 that includes a statutorily impossible claim (`D-NOSILENT` applied to inputs, not just to rules).
+
+> **Erratum (W-119, 2026-11-15):** "refuse to produce a total" is not what happens for most of these rows — a claim the law forbids on the facts computes to a nil line carrying its reason in words, and the total excludes it; only facts that contradict each other are refused, in words, before anything is computed (three houses each entered as an own residence, a house with rent entered as an own residence, an insured senior's medical expenditure, interest left out of house property that differs from the loans under ss.130 – 131). Either way no total holds a forbidden claim and nothing is silent (owner, W-119 C3a, "as today"; D-700).
+> Verified by: `RegimeVerdict.java:25-29` (`whyNot()`: "What a nil line says where the rule is not applied"); `ExemptionNodeTest.java:168` and `RentPaidDeductionTest.java:178` (nil lines); `HousePropertyNodeTest.java:149`, `:186`, `HealthInsuranceDeductionTest.java:206`, `HousePropertyInterestTest.java:306` (refusals) — all under `backend/src/test/java/com/thiru/wealthlens/taxengine/node/`.
 
 ### C3.2 Payment-mode and documentation rules — verified, and frequently missed
 
@@ -314,6 +320,9 @@ Adding to `04-product-spec.md`:
 | **F26** | **"What the department already sees"** | C4.1 and C4.2 evaluated against the user's own figures; framed as visibility and obligation, never as avoidance | `rule 163`, `rule 237` | 0.7 | 2 | 0.9 | 2 | **0.63** | **Next** |
 | **F27** | **Year-on-year self-comparison** | Swings against the user's own prior `ACTED_ON` drafts flagged both ways | C3.4, `11-filing-drafts.md` F3 | 0.6 | 2 | 0.95 | 1 | **1.14** | **Next** |
 
+> **Erratum (W-119, 2026-11-15):** F23's "declared" and F24's "a statutory overshoot **blocks** the total" assume a declared amount that does not exist — F23 shows the allowed amount, the evidenced amount and the gap; F24 is every C3.1 check proven to keep the claim out of the total, by a nil line with its reason or by refusing contradictory facts (owner, W-119 C2a, C3a; D-700).
+> Verified by: the two errata above (C2, C3.1).
+
 `INFERENCE`: F24 and F25 score higher than most of the original MVP set, and they should — they are
 cheap, they rest entirely on rules already in the pack, and they prevent the class of error the user
 cannot detect unaided.
@@ -357,3 +366,6 @@ turns a compliance tool into an evasion tool, and the engineering is identical e
 | **T12-12** | No third-party source for dividend income | reconciliation reports `CANNOT_COMPARE`, **not** `MATCHED` |
 | **T12-13** | 80C declared ₹1,50,000, evidenced ₹40,000, statutory maximum ₹1,50,000 | headroom 0, exposure gap ₹1,10,000, and the evidence list that closes it |
 | **T12-14** | Any output containing the words "safe", "unlikely to be questioned" or a peer average | **fails a copy test** — asserted against the rendered strings |
+
+> **Erratum (W-119, 2026-11-15):** T12-2 cannot be constructed — no input declares HRA at an amount, so there is nothing above ₹2,28,000 to block; the rows that say "declared" read "allowed on the facts". `W-119d` takes T12-1 to T12-14 row by row (owner, W-119 C2a; D-700).
+> Verified by: the C2 erratum above.
