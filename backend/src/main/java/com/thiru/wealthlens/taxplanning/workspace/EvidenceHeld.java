@@ -7,9 +7,6 @@ import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +46,7 @@ public record EvidenceHeld(List<Integer> receiptedMonths, List<Money> journeyExp
         List<Tenancy> tenancies = entered.tenancies();
         requireMatched("/evidence/receiptedMonths", receiptedMonths.size(), "/entered/tenancies", tenancies.size());
         for (int i = 0; i < receiptedMonths.size(); i++) {
-            long months = monthsInTheYear(tenancies.get(i), taxYear);
+            long months = tenancies.get(i).monthsOccupiedIn(taxYear);
             int receipted = receiptedMonths.get(i);
             if (receipted < 0 || receipted > months) {
                 throw new IllegalArgumentException("/evidence/receiptedMonths/" + i + " must be from nil to the " + months
@@ -87,20 +84,5 @@ public record EvidenceHeld(List<Integer> receiptedMonths, List<Money> journeyExp
                     + " /entered/qualifyingPayments entry has");
         }
         return under.stream().map(QualifyingPayment::amount).reduce(Money.ZERO, Money::plus);
-    }
-
-    /** The calendar months the tenancy touches within the tax year: a month's rent has a month's receipt. */
-    private static long monthsInTheYear(Tenancy tenancy, TaxYearId taxYear) {
-        LocalDate from = later(tenancy.occupied().from(), taxYear.startsOn());
-        LocalDate to = earlier(tenancy.occupied().to().orElse(taxYear.endsOn()), taxYear.endsOn());
-        return to.isBefore(from) ? 0 : ChronoUnit.MONTHS.between(YearMonth.from(from), YearMonth.from(to)) + 1;
-    }
-
-    private static LocalDate later(LocalDate first, LocalDate second) {
-        return first.isAfter(second) ? first : second;
-    }
-
-    private static LocalDate earlier(LocalDate first, LocalDate second) {
-        return first.isBefore(second) ? first : second;
     }
 }
