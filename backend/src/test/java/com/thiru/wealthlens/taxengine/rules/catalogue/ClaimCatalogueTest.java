@@ -6,15 +6,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.Presence;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
+import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.timeline.RulePackCompiler;
 import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
 import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
+import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -506,5 +514,98 @@ class ClaimCatalogueTest {
         assertThatThrownBy(() -> RulePackCompiler.compile(timeline, TaxYearId.of(2026)))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("DED-DONATION-UNREPORTED steps[1].instruction types \"7\"");
+    }
+
+    /** C2a: a year's entry is whole — its section's names beside it and each placeholder's figure for the year. */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void compile_whenAnEntryNamesAFigure_carriesItsSectionsNamesAndTheYearsFigure(int year) {
+        // When
+        JsonNode compiled = MAPPER.readTree(
+                RulePackCompiler.compile(SHIPPED, TaxYearId.of(year)).files().get(ClaimCatalogue.FILE));
+
+        // Then — SAL-HOUSE-RENT-LANDLORD-PAN.exceeds is 100000 in both years' versions; HP-OWN-RESIDENCE-INTEREST-CAP's
+        // conditionsMet and aggregate 200000, anyOtherCase 30000 (each version's definition)
+        JsonNode houseRent = compiled.path("entries").path(5);
+        assertThat(houseRent.path("rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
+        assertThat(houseRent.path("plainName").asString()).isEqualTo("House Rent Allowance");
+        assertThat(houseRent.path("summary").asString()).startsWith("If your salary includes a house rent allowance");
+        assertThat(houseRent.path("figures").path("SAL-HOUSE-RENT-LANDLORD-PAN.exceeds").asString()).isEqualTo("100000");
+        JsonNode homeLoan = compiled.path("entries").path(4).path("figures");
+        assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.conditionsMet").asString()).isEqualTo("200000");
+        assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.anyOtherCase").asString()).isEqualTo("30000");
+        assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.aggregate").asString()).isEqualTo("200000");
+        assertThat(compiled.path("entries").path(0).path("figures").isEmpty()).isTrue();
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"completionYearsAfterBorrowingYear", "type"})
+    void verify_whenAPlaceholderNamesAFieldThatIsNotAnAmount_isRefused(String field) {
+        // Given — a count of years (a number), and the definition's type (text that is not a figure)
+        Timeline timeline = edited(entries -> step(entries, HOUSE_RENT_ENTRY, 1).put("instruction",
+                "Ask after {{HP-OWN-RESIDENCE-INTEREST-CAP." + field + "}}."));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline).verify(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining(field + ", which not every version of the rule defines as an amount");
+    }
+
+    @Test
+    void compile_whenAPlaceholdersRuleHasNoVersionInTheYear_isRefused() {
+        // Given — the landlord threshold kept for TY 2025-26 only
+        Timeline t = SHIPPED;
+        RuleId landlord = new RuleId("SAL-HOUSE-RENT-LANDLORD-PAN");
+        RuleRow row = t.rules().get(landlord);
+        Map<RuleId, RuleRow> rules = new HashMap<>(t.rules());
+        rules.put(landlord, new RuleRow(row.id(), row.axis(), row.versions().subList(0, 1), row.headProvenance()));
+        Timeline timeline = new Timeline(rules, t.ruleSets(), t.regimes(), t.ruleSources(), t.regimeSources(),
+                t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
+                t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
+                t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(), t.claimCatalogue(), t.sections(),
+                t.acts());
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(timeline, TaxYearId.of(2026)))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("names SAL-HOUSE-RENT-LANDLORD-PAN.exceeds, which 2026-27 gives as []");
+    }
+
+    @Test
+    void construction_whenAPackHoldsAClaimForARuleItLacksOrAClaimLacksItsNames_isRefused() {
+        // Given
+        TaxYearId year = TaxYearId.of(2026);
+        RulePack pack = new ClasspathRulePackProvider("rulepacks", Set.of(year),
+                new JsonPackAssembler(LockedInstruments.of(year))).load(year);
+        CompiledClaim shipped = pack.claims().getFirst();
+        ClaimCatalogueEntry entry = shipped.entry();
+        CompiledClaim stranger = new CompiledClaim(new ClaimCatalogueEntry(entry.rule(), List.of(new RuleId("DED-NOT-A-RULE")),
+                entry.section(), entry.channel(), entry.chapterViiiPart(), entry.ifMissingFromForm16(), entry.basis(),
+                entry.guidance()), shipped.plainName(), shipped.summary(), Map.of());
+
+        // When / Then
+        assertThatThrownBy(() -> new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), pack.rules(),
+                pack.ruleSets(), pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(),
+                pack.funds(), pack.declarations(), pack.itrForms(), pack.explanations(), List.of(stranger)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("has a claim for DED-NOT-A-RULE, which is not a rule of the year");
+        assertThatThrownBy(() -> new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), pack.rules(),
+                pack.ruleSets(), pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(),
+                pack.funds(), pack.declarations(), pack.itrForms(), pack.explanations(), null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must carry its claims");
+        assertThatThrownBy(() -> new CompiledClaim(entry, " ", shipped.summary(), Map.of()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("plain name and summary");
+        assertThatThrownBy(() -> new CompiledClaim(null, shipped.plainName(), shipped.summary(), Map.of()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs its entry");
+        assertThatThrownBy(() -> new CompiledClaim(entry, null, shipped.summary(), Map.of()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("plain name and summary");
+        assertThatThrownBy(() -> new CompiledClaim(entry, shipped.plainName(), null, Map.of()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("plain name and summary");
+        assertThatThrownBy(() -> new CompiledClaim(entry, shipped.plainName(), " ", Map.of()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("plain name and summary");
+        assertThatThrownBy(() -> new CompiledClaim(entry, shipped.plainName(), shipped.summary(), null))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("an empty map for none");
+        assertThat(pack.claims()).extracting(claim -> claim.entry().rule().value()).contains("SAL-HOUSE-RENT-ALLOWANCE");
     }
 }

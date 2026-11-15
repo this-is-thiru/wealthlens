@@ -237,7 +237,7 @@ Design: `20-product-gaps.md` F30
 | F37.2 | Every trace line has a template, or the `RuleId` is shown — never blank |
 | F37.3 | The explanation names what would change the outcome, using `limitedBy` |
 
-#### F40 — Claim playbooks — ○ `W-117`, `W-118`, `W-121`
+#### F40 — Claim playbooks — ◐ `W-117`, `W-118` (D-705: served per draft — F40.2 and F40.3's 80G verdict by entry, F40.4's measured worth by a second run with the claim withheld; a donation is served unmeasured, ○ `W-117e`), `W-121`
 | # | Acceptance criterion |
 |---|---|
 | F40.1 | Every claimable rule has a catalogue entry, or the rule pack fails to load |

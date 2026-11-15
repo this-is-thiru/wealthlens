@@ -25,6 +25,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -56,7 +57,7 @@ class NodeContextDeclarationsTest {
         }
         return new RulePack(SHIPPED.taxYear(), SHIPPED.layers(), SHIPPED.instruments(), SHIPPED.rules(),
                 SHIPPED.ruleSets(), SHIPPED.components(), SHIPPED.regimes(), SHIPPED.disallowanceSets(),
-                SHIPPED.conditionSets(), SHIPPED.funds(), catalogue, Map.of(), Explanations.none());
+                SHIPPED.conditionSets(), SHIPPED.funds(), catalogue, Map.of(), Explanations.none(), List.of());
     }
 
     private static ConditionContext conditions(Map<DeclarationCode, Declaration> answers) {

@@ -163,6 +163,10 @@
       "why": "This is what is still owed of the instalments due by {date}."
     },
     {
+      "code": "CLAIM_WITHHELD",
+      "why": "Left out of this run to measure what the claim is worth."
+    },
+    {
       "code": "CREDIT_TAX_AT_SOURCE",
       "why": "Tax deducted or collected at source counts as paid."
     },

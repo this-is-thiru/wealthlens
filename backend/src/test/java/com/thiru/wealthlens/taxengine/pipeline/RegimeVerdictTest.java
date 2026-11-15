@@ -18,6 +18,7 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.util.Map;
 import java.util.Set;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -103,5 +104,45 @@ class RegimeVerdictTest {
                 .hasMessageContaining("no reason for not applying");
         assertThatThrownBy(verdict::reason).isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("no reason for not applying");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void inRegime_whenTheRunWithholdsTheRule_isWithheldBeforeTheRegimeIsAsked(int year) {
+        // Given — a rule the new regime would disallow, withheld in a run of it (W-118 C1a)
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        NodeContext ctx = NodeContext.forRun(pack, pack.regimes().get(NEW_TAX_REGIME), NodeHarness.plainTaxpayer(),
+                Set.of(RuleIds.SAL_TAX_ON_EMPLOYMENT));
+
+        // When
+        RegimeVerdict withheld = ctx.inRegime(RuleIds.SAL_TAX_ON_EMPLOYMENT,
+                pack.rule(RuleIds.SAL_TAX_ON_EMPLOYMENT).versions().getFirst());
+        RegimeVerdict other = ctx.inRegime(RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE,
+                pack.rule(RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE).versions().getFirst());
+
+        // Then — withholding answers first, says so in words and as a reason; another rule is asked as before
+        assertThat(withheld).isInstanceOf(RegimeVerdict.Withheld.class);
+        assertThat(withheld.applies()).isFalse();
+        assertThat(withheld.whyNot()).isEqualTo("left out of this run to measure what the claim is worth");
+        assertThat(withheld.reason()).isEqualTo(new Reason(ReasonCodes.CLAIM_WITHHELD, Map.of()));
+        assertThat(other).isInstanceOf(RegimeVerdict.ExcludedByRow.class);
+    }
+
+    @Test
+    void forRun_whenTheWithheldRulesAreNull_isRefused() {
+        // Given
+        TaxYearId taxYear = TaxYearId.of(2026);
+        RulePack pack = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+
+        // When / Then
+        assertThatThrownBy(() -> NodeContext.forRun(pack, pack.regimes().get(NEW_TAX_REGIME),
+                NodeHarness.plainTaxpayer(), (Set<RuleId>) null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("the rules withheld (an empty set for none)");
     }
 }

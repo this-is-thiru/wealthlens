@@ -1379,6 +1379,58 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void claims_whenHraIsClaimedInTheOldRegime_measuresItsWorthDatesItsStepsAndStoresNothing() {
+        // Given — the renting draft with HRA 4,80,000, the old regime elected: the allowance binds, so 4,80,000 is
+        // exempt (compute_whenHraIsLimitedByTheAllowance_…). With it, 28,80,000 − 4,80,000 − 50,000 = 23,50,000:
+        // 1,12,500 + 30 % of 13,50,000 = 5,17,500, with cess 5,38,200. Without it, 28,30,000: 1,12,500 + 5,49,000 =
+        // 6,61,500, with cess 6,87,960. So 1,49,760
+        String draftId = rentingDraft();
+        ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
+                [{"op": "add", "path": "/entered/employments/0/components/-",
+                  "value": {"code": {"value": "HRA"}, "annualAmount": {"amountInRupees": 480000}}}]""", "\"rev-1\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status", "{\"status\": \"READY\"}", null);
+        call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/status",
+                "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}", null);
+
+        // When
+        ResponseEntity<String> response = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/claims", null, null);
+
+        // Then — HRA's last step is by the return's due date, the draft's 31 July 2027; the landlord step names the
+        // rule's threshold of 1,00,000
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode claims = JSON.readTree(response.getBody());
+        assertThat(claims.get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(claims.get("claimed").size()).isEqualTo(1);
+        assertThat(claims.at("/claimed/0/playbook/rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
+        assertThat(amountAt(claims, "/claimed/0/allowed")).isEqualByComparingTo("480000");
+        assertThat(amountAt(claims, "/claimed/0/worth")).isEqualByComparingTo("149760");
+        assertThat(claims.at("/claimed/0/stepDates/0/order").asInt()).isEqualTo(4);
+        assertThat(claims.at("/claimed/0/stepDates/0/on").asString()).isEqualTo("2027-07-31");
+        assertThat(claims.at("/claimed/0/playbook/guidance/steps/1/instruction").asString()).contains("₹1,00,000");
+        assertThat(claims.at("/claimed/0/playbook/basis/ifMissingFromForm16").asString())
+                .isEqualTo("CLAIMABLE_IN_RETURN");
+        assertThat(claims.get("notClaimed").size()).isEqualTo(7);
+        assertThat(claims.at("/notClaimed/0/worth").isMissingNode() || claims.at("/notClaimed/0/worth").isNull())
+                .isTrue();
+        assertThat(claims.get("notIncluded").toString()).contains("Form 16", "W-117e");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isZero();
+    }
+
+    @Test
+    void claims_whenAnotherAccountAsks_expected400() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> anothers = call(HttpMethod.GET, "other@example.com", "/drafts/" + draftId + "/claims", null,
+                null);
+
+        // Then
+        assertThat(anothers.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void compute_whenHraIsLimitedByTheAllowance_explainsTheLineInPlainLanguage() {
         // Given — the renting draft with HRA 4,80,000 in the old regime: rent 9,60,000 less a tenth of 16,00,000 is
         // 8,00,000 and Mumbai's half of salary is 8,00,000, so the allowance binds (W-116, D-671)

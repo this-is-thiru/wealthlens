@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsTerm;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
+import com.thiru.wealthlens.taxengine.optimise.ClaimPricing;
 import com.thiru.wealthlens.taxengine.optimise.DeductionRoomPricing;
 import com.thiru.wealthlens.taxengine.optimise.RentRoomPricing;
 import com.thiru.wealthlens.taxengine.optimise.SalaryOptimiser;
@@ -299,6 +300,28 @@ public class TaxCalculator {
     public List<DeductionRoom> priceDeductionRoom(EngineInputs inputs) {
         RulePack pack = shipped(inputs.taxYear());
         return DeductionRoomPricing.price(REGISTRY, pack, spec(pack, inputs.regime()), inputs);
+    }
+
+    /**
+     * How each claim of the year is made, by rule id as the pack holds them (W-118): every claim, made or not.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public List<ClaimPlaybook> claimPlaybooks(TaxYearId year) {
+        return shipped(year).claims().stream().map(ClaimPlaybook::of).toList();
+    }
+
+    /**
+     * Each claim the inputs' computation allows, with what it takes off total income and off the bill, each measured by
+     * a second run with the claim withheld (W-118 C1a).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public List<PricedClaim> priceClaims(EngineInputs inputs) {
+        RulePack pack = shipped(inputs.taxYear());
+        return ClaimPricing.price(REGISTRY, pack, spec(pack, inputs.regime()), inputs).stream()
+                .map(measured -> new PricedClaim(ClaimPlaybook.of(measured.claim()), measured.allowed(), measured.worth()))
+                .toList();
     }
 
     /**

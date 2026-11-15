@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.catalogue.ClaimCatalogue;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.pack.PackAssembler;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
@@ -57,6 +58,7 @@ public final class JsonPackAssembler implements PackAssembler {
         JsonNode declarations = parse(layerContents, "exec/declarations.json");
         JsonNode itrForms = parse(layerContents, "forms/itr-forms.json");
         JsonNode explanations = parse(layerContents, "content/explanations.json");
+        JsonNode claims = parse(layerContents, ClaimCatalogue.FILE);
 
         return new RulePack(
                 taxYear,
@@ -71,7 +73,8 @@ public final class JsonPackAssembler implements PackAssembler {
                 RegistryJson.funds(funds, "exec/funds.json"),
                 RegistryJson.declarations(declarations, "exec/declarations.json"),
                 ItrFormJson.forms(itrForms, "forms/itr-forms.json"),
-                ExplanationJson.explanations(explanations, "content/explanations.json"));
+                ExplanationJson.explanations(explanations, "content/explanations.json"),
+                ClaimCatalogue.compiled(claims, ClaimCatalogue.FILE));
     }
 
     private static JsonNode parse(Map<String, String> contents, String file) {

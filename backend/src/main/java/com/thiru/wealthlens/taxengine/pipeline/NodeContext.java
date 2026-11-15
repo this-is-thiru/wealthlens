@@ -82,19 +82,24 @@ public final class NodeContext {
     /** How this run recomputes a slot at another value; one that cannot says so when asked. */
     private final Recomputation recomputation;
 
+    /** The rules this run leaves out to measure a claim's worth (W-118 C1a); empty in an ordinary run. */
+    private final Set<RuleId> withheld;
+
     private NodeContext(
             RulePack pack,
             RegimeSpec regime,
             EngineInputs inputs,
             Map<NodeId, NodeValue> computed,
             Declared declared,
-            Recomputation recomputation) {
+            Recomputation recomputation,
+            Set<RuleId> withheld) {
         this.pack = pack;
         this.regime = regime;
         this.inputs = inputs;
         this.computed = computed;
         this.declared = declared;
         this.recomputation = recomputation;
+        this.withheld = withheld;
     }
 
     /**
@@ -102,20 +107,32 @@ public final class NodeContext {
      * to {@link #put} results and to derive each node's view.
      */
     public static NodeContext forRun(RulePack pack, RegimeSpec regime, EngineInputs inputs) {
+        return forRun(pack, regime, inputs, Set.of());
+    }
+
+    /** The same, leaving {@code withheld} out, as a withholding run's recomputation must (W-118 C1a). */
+    public static NodeContext forRun(RulePack pack, RegimeSpec regime, EngineInputs inputs, Set<RuleId> withheld) {
         return forRun(pack, regime, inputs, (target, pinned, value) -> {
             throw new IllegalStateException("This context cannot re-enter the computation to recompute " + target
                     + "; only a pipeline run, or a NodeHarness given .recomputation(...), can");
-        });
+        }, withheld);
     }
 
     /** The same, able to recompute a slot at another value — the runner's, and a node test's (D-086). */
     public static NodeContext forRun(RulePack pack, RegimeSpec regime, EngineInputs inputs, Recomputation recomputation) {
-        if (pack == null || regime == null || inputs == null || recomputation == null) {
+        return forRun(pack, regime, inputs, recomputation, Set.of());
+    }
+
+    /** The same, leaving {@code withheld} out of the run: {@link #inRegime} answers {@link RegimeVerdict.Withheld}. */
+    public static NodeContext forRun(RulePack pack, RegimeSpec regime, EngineInputs inputs, Recomputation recomputation,
+            Set<RuleId> withheld) {
+        if (pack == null || regime == null || inputs == null || recomputation == null || withheld == null) {
             throw new IllegalArgumentException(
-                    "A NodeContext needs a pack, a regime, the inputs and a recomputation; the engine fetches none"
-                            + " of them for itself");
+                    "A NodeContext needs a pack, a regime, the inputs, a recomputation and the rules withheld (an"
+                            + " empty set for none); the engine fetches none of them for itself");
         }
-        return new NodeContext(pack, regime, inputs, new LinkedHashMap<>(), Declared.NOTHING, recomputation);
+        return new NodeContext(pack, regime, inputs, new LinkedHashMap<>(), Declared.NOTHING, recomputation,
+                Set.copyOf(withheld));
     }
 
     /** This node's view: the same values, restricted to what it declared. */
@@ -123,7 +140,7 @@ public final class NodeContext {
         if (node == null) {
             throw new IllegalArgumentException("Cannot scope a NodeContext to a null node");
         }
-        return new NodeContext(pack, regime, inputs, computed, Declared.by(node), recomputation);
+        return new NodeContext(pack, regime, inputs, computed, Declared.by(node), recomputation, withheld);
     }
 
     /** Record a node's output. The runner's call, after {@code evaluate}. */
@@ -373,7 +390,8 @@ public final class NodeContext {
     }
 
     /**
-     * Whether a rule applies in this regime, and why not where it does not (D-165): first the version's own
+     * Whether a rule applies in this regime, and why not where it does not (D-165): first whether the run withholds it
+     * (W-118), then the version's own
      * {@code regimes}, then every disallowance set the regime references. The one place a node asks — a node reading
      * {@code regimes().appliesIn} itself would apply a rule the regime forbids ({@code ArchitectureTest}).
      *
@@ -381,6 +399,9 @@ public final class NodeContext {
      * @param version the version in force for the node's purpose
      */
     public RegimeVerdict inRegime(RuleId rule, RuleVersion version) {
+        if (withheld.contains(rule)) {
+            return new RegimeVerdict.Withheld();
+        }
         if (!version.regimes().appliesIn(regime.code())) {
             return new RegimeVerdict.ExcludedByRow(regime.code());
         }

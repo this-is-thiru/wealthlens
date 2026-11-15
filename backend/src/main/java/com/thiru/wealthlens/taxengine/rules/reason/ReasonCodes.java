@@ -16,6 +16,9 @@ public final class ReasonCodes {
     /** The rule's row is written for other regimes (D-166). */
     public static final ReasonCode REGIME_EXCLUDES_ROW = new ReasonCode("REGIME_EXCLUDES_ROW");
 
+    /** The rule is left out of a run that measures a claim's worth (W-118 C1a). */
+    public static final ReasonCode CLAIM_WITHHELD = new ReasonCode("CLAIM_WITHHELD");
+
     /** A {@code Fixed} cap: the amount itself (W-327a1, D-679). */
     public static final ReasonCode CAP_FIXED = new ReasonCode("CAP_FIXED");
 
@@ -506,6 +509,7 @@ public final class ReasonCodes {
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
             Map.entry(REGIME_EXCLUDES_ROW, Set.of("regime")),
+            Map.entry(CLAIM_WITHHELD, Set.of()),
             Map.entry(CAP_FIXED, Set.of("amount")),
             Map.entry(CAP_SHARE, Set.of("share")),
             Map.entry(CAP_IN_EXCESS, Set.of("threshold")),

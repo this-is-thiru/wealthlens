@@ -3,12 +3,14 @@ package com.thiru.wealthlens.taxengine.rules.catalogue;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.json.PackJson;
 import com.thiru.wealthlens.taxengine.rules.json.ValueJson;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +33,7 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
     public static final String FILE = "content/claim-catalogue.json";
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
+    private static final Pattern AMOUNT = Pattern.compile("\\d+(\\.\\d+)?");
     private static final Pattern PLACEHOLDER =
             Pattern.compile("\\{\\{([A-Z]{2,8}(?:-[A-Z0-9]{1,12}){1,5})\\.([a-zA-Z][a-zA-Z0-9]*)}}");
 
@@ -66,6 +69,21 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
         }
         return PackJson.construct(FILE, () -> new ClaimCatalogue(
                 PackJson.array(file, "entries", FILE, element -> entry(element.node(), element.path()))));
+    }
+
+    /** A year's compiled catalogue file (W-118 C2a): each entry with its section's names and its figures. */
+    public static List<CompiledClaim> compiled(JsonNode file, String path) {
+        return PackJson.array(file, "entries", path, element -> PackJson.construct(element.path(), () -> new CompiledClaim(
+                entry(element.node(), element.path()),
+                PackJson.text(element.node(), "plainName", element.path()),
+                PackJson.text(element.node(), "summary", element.path()),
+                figures(PackJson.object(element.node(), "figures", element.path())))));
+    }
+
+    private static Map<String, Money> figures(JsonNode node) {
+        Map<String, Money> figures = new TreeMap<>();
+        node.properties().forEach(figure -> figures.put(figure.getKey(), Money.of(figure.getValue().asString())));
+        return figures;
     }
 
     private static ClaimCatalogueEntry entry(JsonNode node, String path) {
@@ -153,8 +171,9 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
             String field = placeholder.group(2);
             if (!timeline.rules().containsKey(rule)) {
                 problems.add(where + " names rule " + rule + ", which is not in the timeline");
-            } else if (!everyVersionDefines(timeline.ruleSources().get(rule), field)) {
-                problems.add(where + " names " + rule + "." + field + ", which not every version of the rule defines");
+            } else if (!everyVersionDefinesAnAmount(timeline.ruleSources().get(rule), field)) {
+                problems.add(where + " names " + rule + "." + field + ", which not every version of the rule defines"
+                        + " as an amount");
             }
         }
         Matcher typed = SectionCatalogue.TYPED_FIGURE.matcher(placeholder.replaceAll(""));
@@ -164,14 +183,28 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
         }
     }
 
-    private static boolean everyVersionDefines(String ruleSource, String field) {
+    /** An amount is what a pack can carry as a figure and a page can format as rupees (W-118 C2a). */
+    private static boolean everyVersionDefinesAnAmount(String ruleSource, String field) {
         JsonNode versions = MAPPER.readTree(ruleSource).path("versions");
         for (JsonNode version : versions) {
-            if (!version.path("definition").has(field)) {
+            JsonNode value = version.path("definition").path(field);
+            if (!value.isString() || !AMOUNT.matcher(value.asString()).matches()) {
                 return false;
             }
         }
         return !versions.isEmpty();
+    }
+
+    /** Each {@code RULE-ID.field} the entry's texts name, for the compiler to give its year's figure (W-118 C2a). */
+    public static Set<String> placeholdersOf(ClaimCatalogueEntry entry) {
+        Set<String> placeholders = new TreeSet<>();
+        for (String text : texts(entry.guidance()).values()) {
+            Matcher placeholder = PLACEHOLDER.matcher(text);
+            while (placeholder.find()) {
+                placeholders.add(placeholder.group(1) + "." + placeholder.group(2));
+            }
+        }
+        return placeholders;
     }
 
     /** Every text a person reads, by its field path, in the order the guidance states them. */

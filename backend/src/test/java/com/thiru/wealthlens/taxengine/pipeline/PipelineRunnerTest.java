@@ -267,6 +267,10 @@ class PipelineRunnerTest {
                             null, pack, regimeRunning(pack, COMPONENTS), NodeHarness.plainTaxpayer()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("fetches none of them");
+            assertThatThrownBy(() -> PipelineRunner.run(registry(pack), pack, regimeRunning(pack, COMPONENTS),
+                            NodeHarness.plainTaxpayer(), null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("the rules withheld");
         }
     }
 

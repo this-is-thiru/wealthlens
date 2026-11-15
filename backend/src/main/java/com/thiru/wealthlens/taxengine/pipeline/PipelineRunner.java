@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.pipeline;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.InputsFingerprint;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
@@ -96,9 +97,18 @@ public final class PipelineRunner {
      */
     public static Result run(
             NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs) {
-        if (registry == null || pack == null || regime == null || inputs == null) {
+        return run(registry, pack, regime, inputs, Set.of());
+    }
+
+    /**
+     * The same run with {@code withheld} left out, each rule's line nil and saying so — the bill without a claim, to set
+     * beside the bill with it (W-118 C1a).
+     */
+    public static Result run(
+            NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs, Set<RuleId> withheld) {
+        if (registry == null || pack == null || regime == null || inputs == null || withheld == null) {
             throw new IllegalArgumentException(
-                    "A pipeline run needs a registry, a pack, a regime and the inputs; the engine"
+                    "A pipeline run needs a registry, a pack, a regime, the inputs and the rules withheld; the engine"
                             + " fetches none of them for itself");
         }
 
@@ -108,7 +118,8 @@ public final class PipelineRunner {
         List<NodeId> order = new ArrayList<>(ordered.size());
         Map<NodeId, NodeValue> values = new LinkedHashMap<>();
         NodeContext context =
-                NodeContext.forRun(pack, regime, inputs, new RunRecomputation(ordered, pack, regime, inputs, values));
+                NodeContext.forRun(pack, regime, inputs,
+                        new RunRecomputation(ordered, pack, regime, inputs, values, withheld), withheld);
         List<TraceLine> trace = new ArrayList<>();
         List<TraceAnnotation> annotations = new ArrayList<>();
 
@@ -157,7 +168,8 @@ public final class PipelineRunner {
             RulePack pack,
             RegimeSpec regime,
             EngineInputs inputs,
-            Map<NodeId, NodeValue> computed)
+            Map<NodeId, NodeValue> computed,
+            Set<RuleId> withheld)
             implements Recomputation {
 
         /**
@@ -172,7 +184,7 @@ public final class PipelineRunner {
                         + " in this pipeline, so it cannot be recomputed at another value of it");
             }
             Set<NodeId> needed = ancestorsOf(target, ordered);
-            NodeContext store = NodeContext.forRun(pack, regime, inputs);
+            NodeContext store = NodeContext.forRun(pack, regime, inputs, withheld);
             store.put(pinned, value);
             NodeValue answer = value;
             for (ComputationNode node : ordered) {
@@ -195,7 +207,7 @@ public final class PipelineRunner {
         @Override
         public NodeValue recomputeOn(NodeId target, EngineInputs other) {
             Set<NodeId> needed = ancestorsOf(target, ordered);
-            NodeContext store = NodeContext.forRun(pack, regime, other);
+            NodeContext store = NodeContext.forRun(pack, regime, other, withheld);
             NodeValue answer = null;
             for (ComputationNode node : ordered) {
                 if (needed.contains(node.produces())) {

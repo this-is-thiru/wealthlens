@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.pack;
 
 import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
+import com.thiru.wealthlens.taxengine.rules.catalogue.CompiledClaim;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
@@ -22,10 +23,12 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * One tax year's law, as data.
@@ -50,6 +53,7 @@ import java.util.stream.Collectors;
  * @param declarations the questions the year asks the person and the engine cannot compute, by code (W-090a1)
  * @param itrForms the year's return forms, by code — the {@code forms} layer (W-090b)
  * @param explanations the year's plain-language sentences for trace lines — the {@code content} layer (W-116)
+ * @param claims the year's claim catalogue, compiled whole (W-118 C2a); each claim of rules the pack holds
  */
 public record RulePack(
         TaxYearId taxYear,
@@ -64,7 +68,8 @@ public record RulePack(
         Map<EmployerFundCode, EmployerFundDefinition> funds,
         Map<DeclarationCode, DeclarationDefinition> declarations,
         Map<ItrFormCode, ItrFormSpec> itrForms,
-        Explanations explanations) {
+        Explanations explanations,
+        List<CompiledClaim> claims) {
 
     public RulePack {
         if (taxYear == null) {
@@ -89,6 +94,23 @@ public record RulePack(
         requireOnlyPublishedVersions(taxYear, rules);
         requireSetMembersAreRulesOfOneSet(taxYear, rules, ruleSets);
         requireExplanationsFitTheirRules(taxYear, rules, explanations);
+        claims = List.copyOf(requireClaimsOfTheYearsRules(taxYear, rules, claims));
+    }
+
+    /** A claim speaks for rules of the year only: the compiler trims what the year lacks (W-117b, W-118). */
+    private static List<CompiledClaim> requireClaimsOfTheYearsRules(TaxYearId taxYear, Map<RuleId, RuleRow> rules,
+            List<CompiledClaim> claims) {
+        if (claims == null) {
+            throw new IllegalArgumentException(taxYear + " must carry its claims; pass List.of() for none");
+        }
+        for (CompiledClaim claim : claims) {
+            Stream.concat(Stream.of(claim.entry().rule()), claim.entry().covers().stream())
+                    .filter(rule -> !rules.containsKey(rule)).findFirst().ifPresent(rule -> {
+                        throw new IllegalArgumentException(taxYear + " has a claim for " + rule
+                                + ", which is not a rule of the year");
+                    });
+        }
+        return claims;
     }
 
     /**

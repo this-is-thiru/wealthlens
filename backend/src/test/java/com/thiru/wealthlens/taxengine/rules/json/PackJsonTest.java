@@ -863,7 +863,8 @@ class PackJsonTest {
                                     "exec/funds.json", resource("exec/funds.json"),
                                     "exec/declarations.json", resource("exec/declarations.json"),
                                     "forms/itr-forms.json", resource("forms/itr-forms.json"),
-                                    "content/explanations.json", resource("content/explanations.json")));
+                                    "content/explanations.json", resource("content/explanations.json"),
+                                    "content/claim-catalogue.json", resource("content/claim-catalogue.json")));
 
             assertThat(pack.rules()).hasSize(237);
             // r.164(2) and (4)'s forms, in force for TY 2026-27 (W-090c2)
@@ -900,7 +901,8 @@ class PackJsonTest {
                                     "exec/funds.json", resource("exec/funds.json"),
                                     "exec/declarations.json", resource("exec/declarations.json"),
                                     "forms/itr-forms.json", resource("forms/itr-forms.json"),
-                                    "content/explanations.json", resource("content/explanations.json")));
+                                    "content/explanations.json", resource("content/explanations.json"),
+                                    "content/claim-catalogue.json", resource("content/claim-catalogue.json")));
 
             var slab = pack.rule(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-TAX-REGIME"));
             var cap = slab.versions().getFirst().cap().orElseThrow();

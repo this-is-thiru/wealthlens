@@ -87,4 +87,25 @@ public sealed interface RegimeVerdict {
             return new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(regime)));
         }
     }
+
+    /**
+     * The rule is left out of this run on purpose, so the bill without the claim can be set beside the bill with it
+     * (W-118 C1a): a claim's worth is the difference, measured as every other figure is, by the pipeline.
+     */
+    record Withheld() implements RegimeVerdict {
+        @Override
+        public boolean applies() {
+            return false;
+        }
+
+        @Override
+        public String whyNot() {
+            return "left out of this run to measure what the claim is worth";
+        }
+
+        @Override
+        public Reason reason() {
+            return new Reason(ReasonCodes.CLAIM_WITHHELD, Map.of());
+        }
+    }
 }

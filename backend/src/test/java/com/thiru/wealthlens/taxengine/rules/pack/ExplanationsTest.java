@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -27,7 +28,7 @@ class ExplanationsTest {
         return new RulePack(SHIPPED.taxYear(), SHIPPED.layers(), SHIPPED.instruments(), SHIPPED.rules(), SHIPPED.ruleSets(),
                 SHIPPED.components(), SHIPPED.regimes(), SHIPPED.disallowanceSets(), SHIPPED.conditionSets(), SHIPPED.funds(),
                 SHIPPED.declarations(), SHIPPED.itrForms(), new Explanations(Optional.of("Not these: {limits}."),
-                        Map.of(explanation.rule(), explanation), Map.of(), ExplanationTerms.none(), Map.of()));
+                        Map.of(explanation.rule(), explanation), Map.of(), ExplanationTerms.none(), Map.of()), List.of());
     }
 
     @Test

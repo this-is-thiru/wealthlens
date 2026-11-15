@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.catalogue.ClaimCatalogue;
+import com.thiru.wealthlens.taxengine.rules.catalogue.ClaimCatalogueEntry;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
@@ -114,23 +115,31 @@ public final class RulePackCompiler {
         }
         files.put("forms/itr-forms.json", render(forms.set("forms", itrForms(timeline, taxYear))));
         files.put("content/explanations.json", render(explanations(timeline, taxYear, ruleChecksums.keySet())));
-        files.put(ClaimCatalogue.FILE, render(claimCatalogue(timeline, ruleChecksums.keySet())));
+        files.put(ClaimCatalogue.FILE, render(claimCatalogue(timeline, taxYear, ruleChecksums.keySet())));
         return new CompiledPack(taxYear, files, ruleChecksums);
     }
 
     /**
      * The year's claim catalogue, once the whole catalogue is checked (W-117a): the entries whose lead rule it holds,
-     * each covering only the rules it holds (W-117b), so a pack names no rule it does not carry.
+     * each covering only the rules it holds (W-117b), so a pack names no rule it does not carry; and each whole (W-118
+     * C2a) — its section's plain name and summary beside it, and the year's figure for every placeholder its texts name.
      */
-    private static ObjectNode claimCatalogue(Timeline timeline, Set<RuleId> yearsRules) {
-        ClaimCatalogue.of(timeline).verify(timeline);
+    private static ObjectNode claimCatalogue(Timeline timeline, TaxYearId taxYear, Set<RuleId> yearsRules) {
+        ClaimCatalogue catalogue = ClaimCatalogue.of(timeline);
+        catalogue.verify(timeline);
         Map<String, JsonNode> byRule = new TreeMap<>();
         timeline.claimCatalogue().ifPresent(source -> MAPPER.readTree(source).path("entries")
                 .forEach(entry -> byRule.put(entry.path("rule").asText(), entry)));
+        Map<String, ClaimCatalogueEntry> parsed = new TreeMap<>();
+        catalogue.entries().forEach(entry -> parsed.put(entry.rule().value(), entry));
         ArrayNode kept = MAPPER.createArrayNode();
         byRule.forEach((rule, entry) -> {
             if (yearsRules.contains(new RuleId(rule))) {
                 ObjectNode copy = (ObjectNode) entry.deepCopy();
+                JsonNode section = MAPPER.readTree(timeline.sections().get(entry.path("section").asString()));
+                copy.put("plainName", section.path("plainName").asString());
+                copy.put("summary", section.path("summary").asString());
+                copy.set("figures", figures(timeline, taxYear, ClaimCatalogue.placeholdersOf(parsed.get(rule))));
                 if (copy.has("covers")) {
                     ArrayNode covered = copy.putArray("covers");
                     entry.path("covers").forEach(id -> {
@@ -143,6 +152,29 @@ public final class RulePackCompiler {
             }
         });
         return object().set("entries", kept);
+    }
+
+    /**
+     * Each placeholder's figure for the year: the field's value in the rule's versions the year holds, which must be one
+     * value — a figure that changes within the year, or a rule the year does not hold, has no one figure to show.
+     */
+    private static ObjectNode figures(Timeline timeline, TaxYearId taxYear, Set<String> placeholders) {
+        ObjectNode figures = object();
+        for (String placeholder : placeholders) {
+            int dot = placeholder.indexOf('.');
+            RuleId rule = new RuleId(placeholder.substring(0, dot));
+            String field = placeholder.substring(dot + 1);
+            JsonNode versions = MAPPER.readTree(timeline.ruleSources().get(rule)).path("versions");
+            Set<String> values = new TreeSet<>();
+            versionsIn(timeline.rules().get(rule), taxYear)
+                    .forEach(index -> values.add(versions.get(index).path("definition").path(field).asString()));
+            if (values.size() != 1) {
+                throw new PackValidationException(ClaimCatalogue.FILE + " names " + placeholder + ", which "
+                        + taxYear.label() + " gives as " + values + "; a claim's figure must be one value for the year");
+            }
+            figures.put(placeholder, values.iterator().next());
+        }
+        return figures;
     }
 
     /**
