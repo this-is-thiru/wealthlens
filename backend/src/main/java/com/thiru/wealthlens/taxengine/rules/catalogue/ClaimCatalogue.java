@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -37,11 +38,18 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
         entries = List.copyOf(entries);
         Set<RuleId> seen = new TreeSet<>((left, right) -> left.value().compareTo(right.value()));
         for (ClaimCatalogueEntry entry : entries) {
-            if (!seen.add(entry.rule())) {
-                throw new IllegalArgumentException("A claim catalogue has one entry for a rule, but " + entry.rule()
-                        + " has two");
+            for (RuleId rule : spokenFor(entry)) {
+                if (!seen.add(rule)) {
+                    throw new IllegalArgumentException("A claim catalogue has one entry for a rule, but " + rule
+                            + " has two");
+                }
             }
         }
+    }
+
+    /** The entry's lead rule, then the rules it covers. */
+    private static List<RuleId> spokenFor(ClaimCatalogueEntry entry) {
+        return Stream.concat(Stream.of(entry.rule()), entry.covers().stream()).toList();
     }
 
     /** The timeline's catalogue; a timeline without the file has an empty one. */
@@ -64,6 +72,7 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
         JsonNode basis = PackJson.object(node, "basis", path);
         return PackJson.construct(path, () -> new ClaimCatalogueEntry(
                 new RuleId(PackJson.text(node, "rule", path)),
+                PackJson.arrayOrEmpty(node, "covers", path, element -> new RuleId(element.node().asString())),
                 PackJson.text(node, "section", path),
                 PackJson.enumValue(node, "channel", path, ClaimChannel.class),
                 PackJson.optionalText(node, "chapterViiiPart", path)
@@ -114,9 +123,9 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
     }
 
     /**
-     * Refuses the catalogue, listing every problem: an entry for a rule or a section the timeline does not have, a
-     * figure typed into text, and a placeholder naming a rule the timeline does not have or a field not every version
-     * of that rule defines.
+     * Refuses the catalogue, listing every problem: an entry for, or covering, a rule the timeline does not have, a
+     * section it does not have, a figure typed into text, and a placeholder naming a rule the timeline does not have or
+     * a field not every version of that rule defines.
      */
     public void verify(Timeline timeline) {
         Set<String> problems = new TreeSet<>();
@@ -125,6 +134,8 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
             if (!timeline.rules().containsKey(entry.rule())) {
                 problems.add(where + " is for a rule that is not in the timeline");
             }
+            entry.covers().stream().filter(covered -> !timeline.rules().containsKey(covered)).forEach(covered ->
+                    problems.add(where + " covers rule " + covered + ", which is not in the timeline"));
             if (!timeline.sections().containsKey(entry.section())) {
                 problems.add(where + " names section " + entry.section() + ", which the section catalogue does not have");
             }

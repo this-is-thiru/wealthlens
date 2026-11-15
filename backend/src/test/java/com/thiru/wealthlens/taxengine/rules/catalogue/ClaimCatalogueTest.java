@@ -18,16 +18,20 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * The claim catalogue's frame and its two pilots (W-117a, D-699): the shipped entries say what {@code DR 22} asks of them
- * (T22-1, T22-2, T22-10, T22-11 as content checks), and each invariant refuses a deliberate violation.
+ * The claim catalogue's frame, its two pilots (W-117a, D-699) and its employer-optional entries (W-117b): the shipped
+ * entries say what {@code DR 22} asks of them (T22-1, T22-2, T22-10, T22-11 as content checks), and each invariant
+ * refuses a deliberate violation.
  *
- * <p>Expected values are the plan's adopted content and the provisions read in the Gazette, typed here by hand.
+ * <p>Expected values are the plans' adopted content and the provisions read in the Gazette (and, for the 1961 Act, the
+ * thc.nic.in copy the rules cite), typed here by hand.
  */
 class ClaimCatalogueTest {
 
@@ -35,8 +39,16 @@ class ClaimCatalogueTest {
     private static final Timeline SHIPPED = TimelineReader.read(Path.of("src/main/resources/rulepacks/timeline"));
     private static final RuleId HOUSE_RENT = new RuleId("SAL-HOUSE-RENT-ALLOWANCE");
     private static final RuleId DONATION = new RuleId("DED-DONATION-UNREPORTED");
+    private static final RuleId INVESTMENTS = new RuleId("DED-SCHEDULE-XV");
+    private static final RuleId OWN_PENSION = new RuleId("DED-NPS-OWN");
+    private static final RuleId HEALTH = new RuleId("DED-HEALTH-FAMILY");
+    private static final RuleId HOME_LOAN_INTEREST = new RuleId("HP-OWN-RESIDENCE-INTEREST-CAP");
+    private static final RuleId LEAVE_TRAVEL = new RuleId("SAL-LEAVE-TRAVEL-CONCESSION");
+    private static final RuleId TAX_ON_EMPLOYMENT = new RuleId("SAL-TAX-ON-EMPLOYMENT");
     private static final int HOUSE_RENT_ENTRY = 0;
     private static final int DONATION_ENTRY = 1;
+    private static final int HEALTH_ENTRY = 4;
+    private static final int LEAVE_TRAVEL_ENTRY = 6;
 
     /** The shipped timeline with its claim catalogue edited. */
     private static Timeline edited(Consumer<JsonNode> edit) {
@@ -60,13 +72,14 @@ class ClaimCatalogueTest {
     }
 
     @Test
-    void verify_whenTheShippedCatalogueIsChecked_passesWithItsTwoPilots() {
+    void verify_whenTheShippedCatalogueIsChecked_passesWithItsEightEntries() {
         // Given
         ClaimCatalogue catalogue = ClaimCatalogue.of(SHIPPED);
 
         // When / Then
         assertThatCode(() -> catalogue.verify(SHIPPED)).doesNotThrowAnyException();
-        assertThat(catalogue.entries()).extracting(ClaimCatalogueEntry::rule).containsExactly(HOUSE_RENT, DONATION);
+        assertThat(catalogue.entries()).extracting(ClaimCatalogueEntry::rule).containsExactly(HOUSE_RENT, DONATION,
+                INVESTMENTS, OWN_PENSION, HEALTH, HOME_LOAN_INTEREST, LEAVE_TRAVEL, TAX_ON_EMPLOYMENT);
     }
 
     /** T22-1's shape for the pilot: an employer-optional claim missing from Form 16 is claimable in the return. */
@@ -75,14 +88,16 @@ class ClaimCatalogueTest {
         // When
         ClaimCatalogueEntry entry = shipped(HOUSE_RENT);
 
-        // Then — Sch. III Sl. 11 and s.392(5)(b), Gazette 2025/265620 pp.506, 397; the 1961 text is not read for this
+        // Then — Sch. III Sl. 11 and s.392(5)(b), Gazette 2025/265620 pp.506, 397; 1961 s.10(13A), thc.nic.in p.77
         assertThat(entry.channel()).isEqualTo(ClaimChannel.EMPLOYER_OPTIONAL);
         assertThat(entry.ifMissingFromForm16()).isEqualTo(AbsenceFromForm16.CLAIMABLE_IN_RETURN);
         assertThat(entry.chapterViiiPart()).isEmpty();
+        assertThat(entry.covers()).isEmpty();
         assertThat(entry.section()).isEqualTo("SEC-HOUSE-RENT-ALLOWANCE");
         assertThat(entry.basis().provision2025().reference())
                 .isEqualTo("s.11(1) with Sch. III Table Sl. 11; s.392(5)(b)");
-        assertThat(entry.basis().provision1961().presence()).isEqualTo(Presence.NOT_YET_VERIFIED);
+        assertThat(entry.basis().provision1961().reference()).isEqualTo("s.10(13A)");
+        assertThat(entry.basis().provision1961().presence()).isEqualTo(Presence.PRESENT);
         assertThat(entry.guidance().steps()).hasSize(4).last()
                 .satisfies(last -> assertThat(last.by()).isEqualTo(ClaimDeadline.RETURN_DUE));
     }
@@ -115,6 +130,123 @@ class ClaimCatalogueTest {
         assertThat(entry.basis().provision1961().reference()).isEqualTo("s.80G(5D) Explanation 2A");
         assertThat(entry.guidance().appliesTo()).isPresent();
         assertThat(entry.guidance().steps()).hasSize(3).noneMatch(ClaimStep::warnsOfLateReturnBar);
+    }
+
+    /**
+     * T22-1 for W-117b's six entries: none of the provisions read sets a condition about the employer, so each is
+     * employer-optional and claimable in the return. Part, section and both provisions as read (sources/2026-11-14-claim-channel.md C9 – C16).
+     */
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', nullValues = "-", textBlock = """
+            DED-SCHEDULE-XV               | SEC-INVESTMENT-DEDUCTION      | B | s.80C       | s.123 with Sch. XV; s.392(5)(b)
+            DED-NPS-OWN                   | SEC-PENSION-SCHEME            | B | s.80CCD(1B) | s.124(3) – (5), (10); s.392(5)(b)
+            DED-HEALTH-FAMILY             | SEC-HEALTH-INSURANCE          | B | s.80D       | s.126; s.392(5)(b)
+            HP-OWN-RESIDENCE-INTEREST-CAP | SEC-HOUSE-PROPERTY-DEDUCTIONS | - | s.24(b)     | s.22(1)(b), (2), (4); s.392(4)(a)
+            SAL-LEAVE-TRAVEL-CONCESSION   | SEC-LEAVE-TRAVEL-CONCESSION   | - | s.10(5)     | s.11(1) with Sch. III Table Sl. 8; s.392(5)(b)
+            SAL-TAX-ON-EMPLOYMENT         | SEC-DEDUCTIONS-FROM-SALARY    | - | s.16(iii)   | s.19(1) Table Sl. 1; s.392(5)(b)
+            """)
+    void of_whenAnEmployerOptionalEntryIsRead_isClaimableInTheReturnOnItsReadBasis(String rule, String section,
+            String part, String provision1961, String provision2025) {
+        // When
+        ClaimCatalogueEntry entry = shipped(new RuleId(rule));
+
+        // Then
+        assertThat(entry.channel()).isEqualTo(ClaimChannel.EMPLOYER_OPTIONAL);
+        assertThat(entry.ifMissingFromForm16()).isEqualTo(AbsenceFromForm16.CLAIMABLE_IN_RETURN);
+        assertThat(entry.section()).isEqualTo(section);
+        assertThat(entry.chapterViiiPart()).isEqualTo(Optional.ofNullable(part).map(ChapterViiiPart::valueOf));
+        assertThat(entry.basis().provision1961().reference()).isEqualTo(provision1961);
+        assertThat(entry.basis().provision1961().presence()).isEqualTo(Presence.PRESENT);
+        assertThat(entry.basis().provision2025().reference()).isEqualTo(provision2025);
+        assertThat(entry.basis().provision2025().presence()).isEqualTo(Presence.PRESENT);
+        assertThat(entry.guidance().steps()).noneMatch(ClaimStep::warnsOfLateReturnBar).last()
+                .satisfies(last -> assertThat(last.by()).isEqualTo(ClaimDeadline.RETURN_DUE));
+    }
+
+    /** C1a: one claim, several rules — the entry speaks for the section's other rules (W-117b plan, probe). */
+    @Test
+    void of_whenAnEntryIsOneClaimOfSeveralRules_coversTheRest() {
+        // When / Then — health has ten rules, home-loan interest five, leave travel four
+        assertThat(shipped(HEALTH).covers()).extracting(RuleId::value).containsExactly("DED-HEALTH-CASH-PERMITTED",
+                "DED-HEALTH-CHECKUP", "DED-HEALTH-FAMILY-SENIOR", "DED-HEALTH-INSURANCE-LIMB", "DED-HEALTH-INSURANCE-PAID",
+                "DED-HEALTH-MEDICAL-LIMB", "DED-HEALTH-PARENTS", "DED-HEALTH-PARENTS-SENIOR", "DED-HEALTH-SPREAD");
+        assertThat(shipped(HOME_LOAN_INTEREST).covers()).extracting(RuleId::value).containsExactly("HP-OWN-RESIDENCE",
+                "HP-OWN-RESIDENCE-HIGHER-LIMIT", "HP-OWN-RESIDENCE-INTEREST", "HP-OWN-RESIDENCE-PRE-CONSTRUCTION");
+        assertThat(shipped(LEAVE_TRAVEL).covers()).extracting(RuleId::value).containsExactly(
+                "SAL-LEAVE-TRAVEL-CHILDREN", "SAL-LEAVE-TRAVEL-DISTANCE-RATE", "SAL-LEAVE-TRAVEL-JOURNEYS");
+        assertThat(shipped(TAX_ON_EMPLOYMENT).covers()).isEmpty();
+    }
+
+    /** C2a: home-loan interest names its limits from the cap's definition fields, never as typed figures. */
+    @Test
+    void of_whenHomeLoanInterestIsRead_namesItsLimitsByPlaceholderAndAsksTheLender() {
+        // When
+        ClaimGuidance guidance = shipped(HOME_LOAN_INTEREST).guidance();
+
+        // Then — s.22(2)(a)(ii), (4): the certificate is the lender's
+        assertThat(guidance.steps().get(0).actor()).isEqualTo(ClaimActor.LENDER);
+        assertThat(guidance.steps().get(1).instruction()).contains("{{HP-OWN-RESIDENCE-INTEREST-CAP.conditionsMet}}",
+                "{{HP-OWN-RESIDENCE-INTEREST-CAP.anyOtherCase}}", "{{HP-OWN-RESIDENCE-INTEREST-CAP.aggregate}}");
+        assertThat(guidance.askWhom()).extracting(ClaimRequest::whom).contains(ClaimActor.LENDER);
+    }
+
+    /** C4a: leave travel is claimable only on assistance the employer paid, and says so before any other step. */
+    @Test
+    void of_whenLeaveTravelIsRead_appliesToAssistanceTheEmployerPaid() {
+        // When
+        ClaimGuidance guidance = shipped(LEAVE_TRAVEL).guidance();
+
+        // Then — Sch. III Table Sl. 8(a): "received by, or due to, such individual ... from his employer"
+        assertThat(guidance.appliesTo()).hasValueSatisfying(text -> assertThat(text).contains("nothing to claim"));
+        assertThat(guidance.steps().get(0).instruction()).contains("nothing to claim");
+    }
+
+    @Test
+    void of_whenARuleIsCoveredByTwoEntries_isRefused() {
+        // Given — red check 1
+        Timeline timeline = edited(entries ->
+                ((ArrayNode) entries.path(LEAVE_TRAVEL_ENTRY).path("covers")).add("DED-HEALTH-SPREAD"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("one entry for a rule, but DED-HEALTH-SPREAD has two");
+    }
+
+    @Test
+    void of_whenAnEntryCoversItsOwnRule_isRefused() {
+        // Given
+        Timeline timeline = edited(entries ->
+                ((ObjectNode) entries.path(HOUSE_RENT_ENTRY)).putArray("covers").add("SAL-HOUSE-RENT-ALLOWANCE"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("one entry for a rule, but SAL-HOUSE-RENT-ALLOWANCE has two");
+    }
+
+    @Test
+    void verify_whenAnEntryCoversARuleNotInTheTimeline_isRefused() {
+        // Given
+        Timeline timeline = edited(entries ->
+                ((ArrayNode) entries.path(HEALTH_ENTRY).path("covers")).add("DED-NOT-A-RULE"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline).verify(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("DED-HEALTH-FAMILY covers rule DED-NOT-A-RULE, which is not in the timeline");
+    }
+
+    @Test
+    void of_whenTheHealthEntryIsMarkedPartC_isRefusedByI24() {
+        // Given — red check 2: s.126 sits in Part B (heading p.159), so no step warns of the late-return bar
+        Timeline timeline = edited(entries -> ((ObjectNode) entries.path(HEALTH_ENTRY)).put("chapterViiiPart", "C"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("I24")
+                .hasMessageContaining("DED-HEALTH-FAMILY is in Part C");
     }
 
     @ParameterizedTest
@@ -300,6 +432,7 @@ class ClaimCatalogueTest {
         // Given
         Provision act = Provision.present("Income-tax Act, 2025", "s.133(6)");
         ClaimStep step = new ClaimStep(1, "Keep the receipt.", ClaimActor.YOU, ClaimDeadline.NONE, Optional.empty(), false);
+        List<RuleId> none = List.of();
         ClaimGuidance guidance = new ClaimGuidance(Optional.empty(), List.of(step), List.of(), List.of(), List.of());
         ClaimBasis basis = new ClaimBasis(act, act);
 
@@ -320,25 +453,48 @@ class ClaimCatalogueTest {
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("both Acts");
         assertThatThrownBy(() -> new ClaimGuidance(Optional.empty(), List.of(step), null, List.of(), List.of()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("empty lists for none");
-        assertThatThrownBy(() -> new ClaimCatalogueEntry(HOUSE_RENT, " ", ClaimChannel.RETURN_ONLY, Optional.empty(),
-                AbsenceFromForm16.CLAIMABLE_IN_RETURN, basis, guidance))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs a rule, a section");
-        assertThatThrownBy(() -> new ClaimCatalogueEntry(HOUSE_RENT, "SEC-DONATIONS", ClaimChannel.RETURN_ONLY,
+        assertThatThrownBy(() -> new ClaimCatalogueEntry(HOUSE_RENT, none, " ", ClaimChannel.RETURN_ONLY,
+                Optional.empty(), AbsenceFromForm16.CLAIMABLE_IN_RETURN, basis, guidance))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs a rule, covers");
+        assertThatThrownBy(() -> new ClaimCatalogueEntry(HOUSE_RENT, null, "SEC-DONATIONS", ClaimChannel.RETURN_ONLY,
+                Optional.empty(), AbsenceFromForm16.CLAIMABLE_IN_RETURN, basis, guidance))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("an empty list for none");
+        assertThatThrownBy(() -> new ClaimCatalogueEntry(HOUSE_RENT, none, "SEC-DONATIONS", ClaimChannel.RETURN_ONLY,
                 Optional.empty(), AbsenceFromForm16.CLAIMABLE_IN_RETURN, basis, null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("guidance");
     }
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
-    void compile_whenAYearHoldsBothRules_keepsBothEntriesWithoutTheirNotes(int year) {
+    void compile_whenAYearHoldsEveryLeadRule_keepsEveryEntryWithoutItsNotes(int year) {
         // When
         JsonNode compiled = MAPPER.readTree(
                 RulePackCompiler.compile(SHIPPED, TaxYearId.of(year)).files().get(ClaimCatalogue.FILE));
 
         // Then — ordered by rule id; note fields are not law or content, so the pack drops them
         assertThat(compiled.path("entries")).extracting(entry -> entry.path("rule").asText())
-                .containsExactly("DED-DONATION-UNREPORTED", "SAL-HOUSE-RENT-ALLOWANCE");
+                .containsExactly("DED-DONATION-UNREPORTED", "DED-HEALTH-FAMILY", "DED-NPS-OWN", "DED-SCHEDULE-XV",
+                        "HP-OWN-RESIDENCE-INTEREST-CAP", "SAL-HOUSE-RENT-ALLOWANCE", "SAL-LEAVE-TRAVEL-CONCESSION",
+                        "SAL-TAX-ON-EMPLOYMENT");
         assertThat(compiled.path("entries").path(0).has("_sources")).isFalse();
+        assertThat(compiled.path("entries").path(5).has("covers")).isFalse();
+    }
+
+    /** A pack names no rule it does not carry: r.278(1)(iii)(B)'s rate begins in TY 2026-27 (its validity). */
+    @ParameterizedTest(name = "TY {0}")
+    @CsvSource({
+        "2025, SAL-LEAVE-TRAVEL-CHILDREN|SAL-LEAVE-TRAVEL-JOURNEYS",
+        "2026, SAL-LEAVE-TRAVEL-CHILDREN|SAL-LEAVE-TRAVEL-DISTANCE-RATE|SAL-LEAVE-TRAVEL-JOURNEYS"
+    })
+    void compile_whenACoveredRuleIsNotInTheYear_dropsItFromThatYearsCovers(int year, String covered) {
+        // When
+        JsonNode compiled = MAPPER.readTree(
+                RulePackCompiler.compile(SHIPPED, TaxYearId.of(year)).files().get(ClaimCatalogue.FILE));
+
+        // Then
+        JsonNode leaveTravel = compiled.path("entries").path(6);
+        assertThat(leaveTravel.path("rule").asText()).isEqualTo("SAL-LEAVE-TRAVEL-CONCESSION");
+        assertThat(leaveTravel.path("covers")).extracting(JsonNode::asText).containsExactly(covered.split("\\|"));
     }
 
     @Test

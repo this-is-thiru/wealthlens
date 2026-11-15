@@ -41,11 +41,12 @@ class ContentPerturbationTest {
     private static final Set<String> IDENTITY = Set.of("key", "act", "rule", "code");
 
     /**
-     * The claim catalogue's fields that are codes from closed sets or links, not text (W-117a): rewriting one would be
-     * refused as an unknown code before any text could be shown to change nothing.
+     * The claim catalogue's fields that are codes from closed sets or links, not text (W-117a), with {@code covers}, a
+     * list of rule ids (W-117b): rewriting one would be refused as an unknown code before any text could be shown to
+     * change nothing.
      */
     private static final Set<String> CLAIM_CODES = Set.of("section", "channel", "chapterViiiPart", "ifMissingFromForm16",
-            "actor", "by", "whom", "presence");
+            "actor", "by", "whom", "presence", "covers");
 
     private static final String CONTENT_FILE = "content/explanations.json";
 
@@ -219,7 +220,11 @@ private static void rewriteForm(JsonNode node) {
         if (node instanceof ObjectNode object) {
             for (String name : Set.copyOf(object.propertyNames())) {
                 JsonNode value = object.get(name);
-                if (value.isString() && !IDENTITY.contains(name) && !CLAIM_CODES.contains(name)) {
+                boolean named = IDENTITY.contains(name) || CLAIM_CODES.contains(name);
+                if (named && !value.isObject()) {
+                    continue;
+                }
+                if (value.isString()) {
                     object.put(name, value.asString() + " (rewritten)");
                 } else {
                     rewrite(value);

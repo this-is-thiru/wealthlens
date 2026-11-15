@@ -1,8 +1,8 @@
 {
-  "_note": "The claim catalogue (DR 22; W-117a, D-699): how a deduction or exemption is claimed. One entry for a rule. Texts type no figure — a figure comes from a {{RuleId.field}} placeholder, a section number from basis. Each year's pack keeps the entries of its own rules.",
+  "_note": "The claim catalogue (DR 22; W-117a, D-699): how a deduction or exemption is claimed. One entry for a rule: a rule is named, as an entry's rule or in its covers, once. Texts type no figure — a figure comes from a {{RuleId.field}} placeholder, a section number from basis. Each year's pack keeps the entries whose rule it holds, covering only the rules it holds.",
   "entries": [
     {
-      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.11(1) (p.36) and Sch. III preamble (p.504) and Table Sl. 11 (p.506): the exemption's conditions (a) – (d) are the allowance's purpose, the prescribed extent, a home not owned, and rent actually paid — none is proof given to an employer; s.392(5)(b) (p.397) puts the duty to obtain evidence of prescribed claims on the employer. So the return takes the claim (owner's ruling, session 97, option (a)). s.392(4)(a)'s \"at his option\" (p.397) covers five other particulars and is not this entry's basis (erratum on DR 22 C2). provision1961: the 1961 Act's text is not read for this verdict — NOT_YET_VERIFIED. steps[2]: SAL-HOUSE-RENT-LANDLORD-PAN (r.205(2) Table Sl. 1; sources/2026-10-09-landlord-pan.md). Content: Claude's drafts, adopted by the owner (D-699).",
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.11(1) (p.36) and Sch. III preamble (p.504) and Table Sl. 11 (p.506): the exemption's conditions (a) – (d) are the allowance's purpose, the prescribed extent, a home not owned, and rent actually paid — none is proof given to an employer; s.392(5)(b) (p.397) puts the duty to obtain evidence of prescribed claims on the employer. So the return takes the claim (owner's ruling, session 97, option (a)). s.392(4)(a)'s \"at his option\" (p.397) covers five other particulars and is not this entry's basis (erratum on DR 22 C2). provision1961: s.10(13A) and its Explanation, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.77 — the same conditions, none about proof given to an employer (W-117b C3a; sources/2026-11-14-claim-channel.md C16). steps[2]: SAL-HOUSE-RENT-LANDLORD-PAN (r.205(2) Table Sl. 1; sources/2026-10-09-landlord-pan.md). Content: Claude's drafts, adopted by the owner (D-699).",
       "rule": "SAL-HOUSE-RENT-ALLOWANCE",
       "section": "SEC-HOUSE-RENT-ALLOWANCE",
       "channel": "EMPLOYER_OPTIONAL",
@@ -10,7 +10,8 @@
       "basis": {
         "provision1961": {
           "instrument": "Income-tax Act, 1961",
-          "presence": "NOT_YET_VERIFIED"
+          "reference": "s.10(13A)",
+          "presence": "PRESENT"
         },
         "provision2025": {
           "instrument": "Income-tax Act, 2025",
@@ -134,6 +135,448 @@
       "mistakes": [
         "Claiming a donation the institution has not reported.",
         "Claiming a cash donation above the limit."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.123 (p.159) and Sch. XV paras 1 – 3 (pp.561 – 564) read in full: no condition about the employer or proof given to one; s.392(5)(b) (p.397) binds the payer only (the HRA inference, C3). chapterViiiPart: s.123 under \"B.—Deductions in respect of certain payments\" (p.159). steps[1]: Sch. XV para 1(f), an employee's contribution to a recognised provident fund. mistakes[1]: para 3(b)(iii) excludes what s.22 allows; mistakes[2]: para 1(q) excludes development fees and donations. provision1961: s.80C, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.330. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "DED-SCHEDULE-XV",
+      "section": "SEC-INVESTMENT-DEDUCTION",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80C",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.123 with Sch. XV; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Start from the provident fund your employer already takes from your salary: it counts towards this deduction.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Add what you paid in the year: life insurance premiums, your children's tuition fees, the principal repaid on your home loan and the listed savings schemes.",
+          "actor": "YOU",
+          "by": "TAX_YEAR_END",
+          "warnsOfLateReturnBar": false,
+          "produces": "A receipt or statement for each payment."
+        },
+        {
+          "order": 3,
+          "instruction": "Give the proofs to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Claim in your return whatever your employer did not count.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your investments, and the last day they take proofs."
+        },
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A statement of what you paid in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Payment receipts and statements",
+          "closedBy": "A receipt or statement for each payment, dated in the tax year."
+        }
+      ],
+      "mistakes": [
+        "Forgetting that the provident fund taken from your salary already counts.",
+        "Counting home-loan interest here: only the principal repaid counts.",
+        "Counting development fees or donations to a school as tuition fees."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.124 (pp.160 – 161) read in full: the word \"employer\" appears only in (1) and (2), the employer's contribution (W-117c's); (3) – (5) and (10), the person's own contribution, carry no employer condition; s.392(5)(b) (p.397) binds the payer only. steps[1], mistakes[0]: s.124(5) and (10) — an amount allowed under s.123 is not allowed here, and the reverse. chapterViiiPart: Part B (p.159). provision1961: s.80CCD(1B) and its proviso, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.339. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "DED-NPS-OWN",
+      "section": "SEC-PENSION-SCHEME",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80CCD(1B)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.124(3) – (5), (10); s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check how much of your own pension scheme contribution is already counted with your investments.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Pay the rest into your own pension scheme account before the tax year ends.",
+          "actor": "YOU",
+          "by": "TAX_YEAR_END",
+          "warnsOfLateReturnBar": false,
+          "produces": "Your pension scheme account statement for the year."
+        },
+        {
+          "order": 3,
+          "instruction": "Give the statement to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "If you missed your employer's cut-off, claim it in your return instead.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your pension scheme contribution, and the last day they take proofs."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Pension scheme statement",
+          "closedBy": "A statement of what you paid into your own account in the tax year."
+        }
+      ],
+      "mistakes": [
+        "Counting the same contribution both with your investments and here."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.126 (pp.161 – 162) read in full: no condition about the employer; s.392(5)(b) (p.397) binds the payer only. steps[1]: s.126(9) — any mode but cash, cash allowed for a preventive health check-up. steps[3]: s.126(8)(a), the senior citizen's limit. steps[4]: s.126(8)(b), (10)(a), (c). mistakes[1]: s.126(7) — medical expenditure on a senior citizen is allowed only where no premium was paid for that person (narrowed at build from the draft's \"the same person\"). covers: the section's other rules (C1a). chapterViiiPart: Part B (p.159). provision1961: s.80D, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.341. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "DED-HEALTH-FAMILY",
+      "covers": [
+        "DED-HEALTH-CASH-PERMITTED",
+        "DED-HEALTH-CHECKUP",
+        "DED-HEALTH-FAMILY-SENIOR",
+        "DED-HEALTH-INSURANCE-LIMB",
+        "DED-HEALTH-INSURANCE-PAID",
+        "DED-HEALTH-MEDICAL-LIMB",
+        "DED-HEALTH-PARENTS",
+        "DED-HEALTH-PARENTS-SENIOR",
+        "DED-HEALTH-SPREAD"
+      ],
+      "section": "SEC-HEALTH-INSURANCE",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80D",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.126; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Pay every premium by a method other than cash; only a preventive health check-up may be paid in cash.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Get the insurer's certificate of each premium, showing the period it covers.",
+          "actor": "INSTITUTION",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The insurer's certificate of the premium."
+        },
+        {
+          "order": 3,
+          "instruction": "Note the age of each person insured, your parents included: a senior citizen has a higher limit.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Where you paid a premium for several years at once, count only this year's share.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 5,
+          "instruction": "Give the certificates to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 6,
+          "instruction": "If you missed your employer's cut-off, claim it in your return instead.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "Its certificate of each premium you paid, with the period it covers."
+        },
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your health insurance, and the last day they take proofs."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Insurer's certificate",
+          "closedBy": "A certificate for each premium, showing the period it covers."
+        }
+      ],
+      "mistakes": [
+        "Paying a premium in cash.",
+        "Claiming medical expenses for a senior citizen whose health insurance premium you also paid."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.22 (pp.47 – 48) read in full: no condition about the employer; the higher limit needs \"a certificate from the person to whom interest is payable\" (s.22(2)(a)(ii), (4)). A loss under \"Income from house property\" is one of the five particulars s.392(4)(a) (p.397, C1) lets a person give the employer \"at his option\" — here a true basis. steps[2]: the higher limit's conditions, s.22(2)(a)(i) – (ii); the limits by placeholder from conditionsMet, anyOtherCase and aggregate (s.22(2), (5)). mistakes[0]: Sch. XV para 3(a)(iii) takes principal repaid. covers: the own-residence rules (C1a). provision1961: s.24(b) and its provisos, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.147. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "HP-OWN-RESIDENCE-INTEREST-CAP",
+      "covers": [
+        "HP-OWN-RESIDENCE",
+        "HP-OWN-RESIDENCE-HIGHER-LIMIT",
+        "HP-OWN-RESIDENCE-INTEREST",
+        "HP-OWN-RESIDENCE-PRE-CONSTRUCTION"
+      ],
+      "section": "SEC-HOUSE-PROPERTY-DEDUCTIONS",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.24(b)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.22(1)(b), (2), (4); s.392(4)(a)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Get your lender's certificate of the interest payable for the year, showing any later loan taken to repay the first.",
+          "actor": "LENDER",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The lender's certificate of interest."
+        },
+        {
+          "order": 2,
+          "instruction": "Check your limit: up to {{HP-OWN-RESIDENCE-INTEREST-CAP.conditionsMet}} where the loan bought or built the home, the work was completed within the time the law allows and you hold the lender's certificate; up to {{HP-OWN-RESIDENCE-INTEREST-CAP.anyOtherCase}} otherwise; never more than {{HP-OWN-RESIDENCE-INTEREST-CAP.aggregate}} for all your homes together.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "If you want less tax deducted from your salary, give your employer the loss from your home on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Claim it in your return either way.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "LENDER",
+          "askFor": "A certificate of the interest payable for the year, including on any loan taken to repay the first."
+        },
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for a loss from your home, and the last day they take it."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Lender's certificate of interest",
+          "closedBy": "The certificate for the year, from the person the interest is payable to."
+        }
+      ],
+      "mistakes": [
+        "Counting principal repaid as interest: the principal belongs with your investments.",
+        "Using the higher limit when the home was not completed in time after the loan was taken."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — Sch. III Table Sl. 8 (p.505): the sum must be \"received by, or due to, such individual\" from his employer, and is exempt only up to \"expenses actually incurred\"; nothing about proof given to the employer; s.392(5)(b) (p.397) binds the payer only. Income-tax Rules, 2026 r.278 (Gazette CG-DL-E-20032026-271092 pp.1775 – 1776) read in full: fares by mode, two journeys in a block of four calendar years from the calendar year 2022 (2), the carry-over (3) – (4), the two-children limit (5) – (6); no employer-proof condition. appliesTo, steps[1]: C4a — no assistance from the employer means nothing to claim. mistakes[1]: r.278(2), calendar years. covers: r.278's rules (C1a); SAL-LEAVE-TRAVEL-DISTANCE-RATE is TY 2026-27's only, so TY 2025-26's pack covers the other two. provision1961: s.10(5) and its proviso, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.67 (r.2B of the 1962 Rules is not this entry's basis). Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "SAL-LEAVE-TRAVEL-CONCESSION",
+      "covers": [
+        "SAL-LEAVE-TRAVEL-CHILDREN",
+        "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
+        "SAL-LEAVE-TRAVEL-JOURNEYS"
+      ],
+      "section": "SEC-LEAVE-TRAVEL-CONCESSION",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.10(5)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.11(1) with Sch. III Table Sl. 8; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "appliesTo": "Travel assistance your employer actually paid you for a journey in India. With no assistance from your employer there is nothing to claim.",
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check that your employer pays you travel assistance: without it there is nothing to claim.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Travel in India and keep the tickets for each journey.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "A ticket for each journey and each person travelling."
+        },
+        {
+          "order": 3,
+          "instruction": "Check how many journeys you have already used in the current block of calendar years.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Claim through your employer's process, with the tickets.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 5,
+          "instruction": "If your employer paid the assistance but taxed it, claim it in your return.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "Their process for claiming travel assistance, and the last day they take tickets."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Travel tickets",
+          "closedBy": "A ticket for each journey and each person travelling."
+        }
+      ],
+      "mistakes": [
+        "Claiming without having travelled.",
+        "Treating the block of years as tax years: it runs in calendar years."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.19(1) Table Sl. 1 (p.41): \"Sum paid by the assessee as a tax on employment\", the entire amount; no condition about the employer; s.392(5)(b) (p.397) binds the payer only. mistakes[0]: \"Sum paid\" — tax due but unpaid is not deducted. provision1961: s.16(iii), thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.140. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "SAL-TAX-ON-EMPLOYMENT",
+      "section": "SEC-DEDUCTIONS-FROM-SALARY",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.16(iii)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.19(1) Table Sl. 1; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check your payslips for the tax on employment your employer took and paid to the State.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Where you paid it yourself, keep the receipt.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The State's receipt for the tax you paid."
+        },
+        {
+          "order": 3,
+          "instruction": "Claim in your return what your employer did not count.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [],
+      "evidence": [
+        {
+          "name": "Receipt for tax paid yourself",
+          "closedBy": "The State's receipt for each payment you made yourself."
+        }
+      ],
+      "mistakes": [
+        "Claiming tax that was due but not paid in the year."
       ]
     }
   ]

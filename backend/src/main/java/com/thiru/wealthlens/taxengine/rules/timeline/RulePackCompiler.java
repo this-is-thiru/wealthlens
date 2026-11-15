@@ -118,7 +118,10 @@ public final class RulePackCompiler {
         return new CompiledPack(taxYear, files, ruleChecksums);
     }
 
-    /** The year's claim catalogue: the entries of the rules it holds, once the whole catalogue is checked (W-117a). */
+    /**
+     * The year's claim catalogue, once the whole catalogue is checked (W-117a): the entries whose lead rule it holds,
+     * each covering only the rules it holds (W-117b), so a pack names no rule it does not carry.
+     */
     private static ObjectNode claimCatalogue(Timeline timeline, Set<RuleId> yearsRules) {
         ClaimCatalogue.of(timeline).verify(timeline);
         Map<String, JsonNode> byRule = new TreeMap<>();
@@ -127,7 +130,16 @@ public final class RulePackCompiler {
         ArrayNode kept = MAPPER.createArrayNode();
         byRule.forEach((rule, entry) -> {
             if (yearsRules.contains(new RuleId(rule))) {
-                kept.add(entry);
+                ObjectNode copy = (ObjectNode) entry.deepCopy();
+                if (copy.has("covers")) {
+                    ArrayNode covered = copy.putArray("covers");
+                    entry.path("covers").forEach(id -> {
+                        if (yearsRules.contains(new RuleId(id.asString()))) {
+                            covered.add(id);
+                        }
+                    });
+                }
+                kept.add(copy);
             }
         });
         return object().set("entries", kept);

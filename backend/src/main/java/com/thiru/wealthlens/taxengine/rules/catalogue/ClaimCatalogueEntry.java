@@ -1,13 +1,16 @@
 package com.thiru.wealthlens.taxengine.rules.catalogue;
 
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * How one deduction or exemption is claimed ({@code DR 22}; W-117a, D-699): the gap between a figure the engine can
  * compute and a person knowing whether to write to their employer, wait, or claim it in the return.
  *
- * @param rule the pack rule the entry is for; a catalogue has one entry for a rule
+ * @param rule the pack rule the entry is for, and whose presence in a year keeps the entry in that year's pack
+ * @param covers the other rules the entry speaks for, where one claim is several rules (W-117b C1a); a catalogue
+ *     names a rule, as lead or covered, in one entry only
  * @param section the section catalogue entry that names and summarises it, by key
  * @param channel how the claim reaches the computed tax
  * @param chapterViiiPart the Part of Chapter VIII its section sits in, for a deduction under that Chapter
@@ -15,16 +18,17 @@ import java.util.Optional;
  * @param basis where the law puts it on that channel
  * @param guidance what the person does
  */
-public record ClaimCatalogueEntry(RuleId rule, String section, ClaimChannel channel,
+public record ClaimCatalogueEntry(RuleId rule, List<RuleId> covers, String section, ClaimChannel channel,
         Optional<ChapterViiiPart> chapterViiiPart, AbsenceFromForm16 ifMissingFromForm16, ClaimBasis basis,
         ClaimGuidance guidance) {
 
     public ClaimCatalogueEntry {
-        if (rule == null || section == null || section.isBlank() || channel == null || chapterViiiPart == null
+        if (rule == null || covers == null || section == null || section.isBlank() || channel == null || chapterViiiPart == null
                 || ifMissingFromForm16 == null || basis == null || guidance == null) {
-            throw new IllegalArgumentException("A claim catalogue entry needs a rule, a section, a channel, a"
+            throw new IllegalArgumentException("A claim catalogue entry needs a rule, covers (an empty list for none), a section, a channel, a"
                     + " chapterViiiPart (Optional.empty() outside Chapter VIII), ifMissingFromForm16, a basis and guidance");
         }
+        covers = List.copyOf(covers);
         requireLateReturnWarningInPartCOnly(rule, chapterViiiPart, guidance);
     }
 
