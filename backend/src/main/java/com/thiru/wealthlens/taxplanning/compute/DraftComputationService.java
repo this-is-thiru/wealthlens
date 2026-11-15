@@ -14,11 +14,18 @@ import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -72,6 +79,7 @@ public class DraftComputationService {
         stored.setEmail(email);
         stored.setDraftId(draftId);
         stored.setRevision(view.revision());
+        stored.setComputedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
         stored.setResultJson(MAPPER.writeValueAsString(view));
         stored.setLawAndExec(tax.lawAndExec());
         stored.setRuleChecksums(taxCalculator.ruleChecksums(TaxYearId.of(assembled.draft().getTaxYearStart()), rulesRead(tax)));
@@ -131,6 +139,31 @@ public class DraftComputationService {
                 request.residualCode(), request.cashFloorRupees(), breadth,
                 request.providentFundTerms()));
         return DraftOptimisation.of(optimisation, hrSupportTable);
+    }
+
+    /**
+     * Every computation of a profile, newest first, each read recorded (W-123b C1a): the receipts a person takes each
+     * report by before asking for the profile to be erased.
+     *
+     * @throws BadRequestException if the profile is not this account's, or is held for erasure
+     */
+    @Transactional(readOnly = true)
+    public List<ComputationListing> computations(String email, String profileId) {
+        Map<String, FilingDraft> drafts = draftService.profileDrafts(email, profileId).stream()
+                .collect(Collectors.toMap(FilingDraft::getId, Function.identity()));
+        return repository.findByDraftIdIn(drafts.keySet()).stream()
+                .sorted(Comparator.comparing(DraftComputation::getComputedAt,
+                        Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder()))
+                        .thenComparing(DraftComputation::getReceipt))
+                .map(stored -> listing(email, stored, drafts.get(stored.getDraftId())))
+                .toList();
+    }
+
+    private ComputationListing listing(String email, DraftComputation stored, FilingDraft draft) {
+        ComputedTax tax = MAPPER.readValue(stored.getResultJson(), DraftComputationView.class).tax();
+        taxAccessLog.record(email, ReadSubject.COMPUTATION, stored.getReceipt());
+        return new ComputationListing(stored.getReceipt(), tax.taxYear(), draft.getLabel(), stored.getRevision(),
+                tax.regime(), Optional.ofNullable(stored.getComputedAt()));
     }
 
     /**

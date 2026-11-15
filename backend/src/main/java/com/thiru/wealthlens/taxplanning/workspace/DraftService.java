@@ -74,6 +74,16 @@ public class DraftService {
         return drafts.stream().map(DraftView::of).toList();
     }
 
+    /**
+     * Every draft of a profile this account holds, across its years (W-123b): what its computations are listed by.
+     *
+     * @throws BadRequestException if the profile is not this account's, or is held for erasure
+     */
+    public List<FilingDraft> profileDrafts(String email, String profileId) {
+        taxProfileService.owned(email, profileId);
+        return draftRepository.findByProfileId(profileId);
+    }
+
     /** The draft's figures are current again: it was just computed under the shipped pack (W-138). */
     public void clearStaleness(String draftId) {
         draftRepository.findById(draftId).filter(draft -> draft.getStaleness() != null).ifPresent(draft -> {

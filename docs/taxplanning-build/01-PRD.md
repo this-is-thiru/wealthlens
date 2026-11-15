@@ -182,7 +182,7 @@ Design: `21-itr-forms.md`
 Design: `07-architecture.md` X1.3 · `13-edge-cases.md` R-10 · `11-filing-drafts.md` F4.1
 
 #### F10 — PDF report · F11 — Form 16 ingestion · F28 — Excel import
-See `04-product-spec.md` and `19-engineering-foundations.md` E9.1. Owning items: F10 ◐ `W-123a` (D-712: one stored computation as a PDF on request — every line with its rule and figure, unverified rules marked, one disclaimer), ○ `W-123b`;
+See `04-product-spec.md` and `19-engineering-foundations.md` E9.1. Owning items: F10 ✅ `W-123a` (D-712: one stored computation as a PDF on request — every line with its rule and figure, unverified rules marked, one disclaimer), `W-123b` (D-713: a profile's computations listed, so each report can be taken before erasure);
 F11 ○ `W-124`–`W-132`; F28 ○ `W-133`.
 
 ### Tier MVP — the product surface

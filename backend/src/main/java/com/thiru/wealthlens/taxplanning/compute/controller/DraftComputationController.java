@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.api.ItrFormChoice;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
+import com.thiru.wealthlens.taxplanning.compute.ComputationListing;
 import com.thiru.wealthlens.taxplanning.compute.ComputationReportService;
 import com.thiru.wealthlens.taxplanning.compute.DraftCalendar;
 import com.thiru.wealthlens.taxplanning.compute.DraftCalendarService;
@@ -22,6 +23,7 @@ import com.thiru.wealthlens.taxplanning.compute.DraftOnboardingService;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisation;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisationRequest;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -114,6 +116,12 @@ public class DraftComputationController {
     @GetMapping("/computations/{receipt}")
     public DraftComputationView byReceipt(@PathVariable String email, @PathVariable String receipt) {
         return service.byReceipt(email, receipt);
+    }
+
+    /** Every computation of a profile, newest first: the receipts to take each report by before erasure (W-123b C1a). */
+    @GetMapping("/profiles/{profileId}/computations")
+    public List<ComputationListing> computations(@PathVariable String email, @PathVariable String profileId) {
+        return service.computations(email, profileId);
     }
 
     /** The same receipt as a PDF, made on request and kept nowhere (W-123a C4a). */

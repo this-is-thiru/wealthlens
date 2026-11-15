@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * A user's request to erase one of their profiles (W-235 C3a). Accepted, not done: the erasure follows the hold the receipt names.
- * {@code AuthFilter} refuses a caller whose token is not the path's email.
+ * {@code AuthFilter} refuses a caller whose token is not the path's email. Once asked, nothing of the profile can be read, so
+ * the copy comes first: {@code GET …/profiles/{profileId}/computations} lists its receipts and {@code GET
+ * …/computations/{receipt}/report} gives each one's PDF (D-477 C1a, W-123b).
  */
 @RequiredArgsConstructor
 @RestController

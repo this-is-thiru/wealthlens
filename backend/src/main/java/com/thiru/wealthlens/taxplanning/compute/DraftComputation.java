@@ -4,6 +4,7 @@ import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
 import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -52,6 +53,13 @@ public class DraftComputation implements AuditableEntity {
     /** The checksum, then, of each rule its trace read: what later names the rules that changed under it (W-138). */
     @Field("rule_checksums")
     private Map<String, String> ruleChecksums;
+
+    /**
+     * When it was computed, in UTC, from the clock (W-123b): its own field, since the audit's created-at is never filled
+     * for an entity whose id is set before saving. Null for one stored before W-123b.
+     */
+    @Field("computed_at")
+    private LocalDateTime computedAt;
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
