@@ -22,17 +22,20 @@ import java.util.Map;
  * @param receiptedMonths for each tenancy, the months of it for which a rent receipt is held (C1a)
  * @param journeyExpenditure for each leave-travel journey, the expenditure for which evidence is held (C5a)
  * @param qualifyingPayments for each Schedule XV payment code entered, the amount for which evidence is held (C4a)
+ * @param chapterViii what is held for the other Chapter VIII entries (W-119b1); nothing when absent, which every draft
+ *     stored before W-119b1 is
  */
 public record EvidenceHeld(List<Integer> receiptedMonths, List<Money> journeyExpenditure,
-        Map<ComponentCode, Money> qualifyingPayments) {
+        Map<ComponentCode, Money> qualifyingPayments, ChapterViiiEvidence chapterViii) {
 
     /** Nothing recorded — what every draft stored before W-119b reads as. */
-    public static final EvidenceHeld NONE = new EvidenceHeld(List.of(), List.of(), Map.of());
+    public static final EvidenceHeld NONE = new EvidenceHeld(List.of(), List.of(), Map.of(), ChapterViiiEvidence.NONE);
 
     public EvidenceHeld {
         receiptedMonths = receiptedMonths == null ? List.of() : List.copyOf(receiptedMonths);
         journeyExpenditure = journeyExpenditure == null ? List.of() : List.copyOf(journeyExpenditure);
         qualifyingPayments = qualifyingPayments == null ? Map.of() : Map.copyOf(qualifyingPayments);
+        chapterViii = chapterViii == null ? ChapterViiiEvidence.NONE : chapterViii;
     }
 
     /**
@@ -61,16 +64,17 @@ public record EvidenceHeld(List<Integer> receiptedMonths, List<Money> journeyExp
         }
         qualifyingPayments.forEach((code, amount) -> requireWithin("/evidence/qualifyingPayments/" + code, amount,
                 paidUnder(entered.qualifyingPayments(), code), "what is entered as paid under " + code));
+        chapterViii.requireFits(entered);
     }
 
-    private static void requireMatched(String evidence, int evidenced, String entries, int entered) {
+    static void requireMatched(String evidence, int evidenced, String entries, int entered) {
         if (evidenced != 0 && evidenced != entered) {
             throw new IllegalArgumentException(evidence + " holds " + evidenced + " but " + entries + " holds " + entered
                     + "; it is matched to them by position, so it is empty or as long — remove an entry's evidence with it");
         }
     }
 
-    private static void requireWithin(String field, Money amount, Money bound, String what) {
+    static void requireWithin(String field, Money amount, Money bound, String what) {
         if (amount.isLessThan(Money.ZERO) || amount.isGreaterThan(bound)) {
             throw new IllegalArgumentException(field + " must be from nil to " + bound + ", " + what + ", but was "
                     + amount);

@@ -698,7 +698,14 @@
     "JOURNEY_EXPENDITURE": "Evidence of the {amount} of travel spending not yet evidenced would evidence it.",
     "QUALIFYING_PAYMENT": "Evidence of the {amount} paid but not yet evidenced would evidence it.",
     "LANDLORD_ON_FILE": "Your landlord's name, address and PAN are on file for this draft.",
-    "LANDLORD_NOT_ON_FILE": "Your landlord's name, address and PAN are not all on file for this draft."
+    "LANDLORD_NOT_ON_FILE": "Your landlord's name, address and PAN are not all on file for this draft.",
+    "HEALTH_PAYMENT": "The insurer's certificate or the receipt for the {amount} not yet evidenced would evidence it.",
+    "DONATION": "The receipt for the {amount} given but not yet evidenced would evidence it.",
+    "EDUCATION_LOAN_INTEREST": "The lender's certificate of interest paid for the {amount} not yet evidenced would evidence it.",
+    "PURPOSE_LOAN_INTEREST": "The lender's certificate of interest for the {amount} not yet evidenced would evidence it.",
+    "DEPENDANT_SUPPORT": "Bills or the scheme's receipts for the {amount} not yet evidenced would evidence it.",
+    "SPECIFIED_DISEASE_TREATMENT": "Bills for the {amount} of treatment not yet evidenced would evidence it.",
+    "AGNIVEER_SUBSCRIPTION": "The fund's statement of your own subscription for the {amount} not yet evidenced would evidence it."
   },
   "report": {
     "TITLE": "Your tax computation",

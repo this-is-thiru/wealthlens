@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-117e DONE (D-716). Next by board order: W-119b1 — not planned yet; then W-120, W-122b, W-122c, W-329
-Stage           : nothing in progress; W-117d fix 5647c099 and W-117e committed and pushed; pipeline being watched
-Done today      : session 100: W-122a (D-710), W-121 (D-711), W-123a (D-712), W-123b (D-713), W-117c (D-714), W-117d (D-715, fix 5647c099), W-117e (D-716)
-Board           : W-117e D; W-119b1 ·, W-120 ·, W-122b – c ·, W-329 ·; W-113a, W-324 blocked
-Next step       : read the pipeline result for the W-117e push; if green, plan W-119b1 (stop for approval); if red, fix first
+Item            : W-119b1 DONE (D-717). Next by board order: W-120 (the documentation checklist) — not planned yet; then W-122b, W-122c, W-329
+Stage           : nothing in progress; W-119b1 committed and pushed with api-collection; pipeline being watched
+Done today      : session 100: W-122a (D-710), W-121 (D-711), W-123a (D-712), W-123b (D-713), W-117c (D-714), W-117d (D-715, fix 5647c099), W-117e (D-716), W-119b1 (D-717)
+Board           : W-119b1 D; W-120 ·, W-122b – c ·, W-329 ·; W-113a, W-324 blocked
+Next step       : read the pipeline result for the W-119b1 push; if green, plan W-120 (stop for approval); if red, fix first
 Owner actions   : unchanged from session 99; open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710); W-329
-Last verify     : local named classes green (D-716); pipeline 43726990935 (W-117d) red — fixed by 5647c099
+Last verify     : local named classes green (D-717); W-117e pipeline 43728151758 green
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-117e: price donations as a claim
+Last item commit: taxplanning W-119b1: record what a person can show for the other Chapter VIII claims
 Updated         : 2026-11-15, session 100
 ```
 

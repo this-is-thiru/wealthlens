@@ -114,6 +114,8 @@ public class DraftClaimIntegrityService {
             closes.put(EvidenceKind.RENT_RECEIPTS, Long.toString(facts.monthsNotReceipted()));
             closes.put(EvidenceKind.JOURNEY_EXPENDITURE, facts.travelNotEvidenced().inIndianNotation());
             closes.put(EvidenceKind.QUALIFYING_PAYMENT, facts.paymentsNotEvidenced().inIndianNotation());
+            kinds.stream().filter(ChapterViiiCuts::isChapterViii).forEach(kind ->
+                    closes.put(kind, facts.chapterViiiNotEvidenced(kind).inIndianNotation()));
             kinds.forEach(kind -> says.add(sentences.of(kind.name()).replace("{months}", closes.get(kind))
                     .replace("{amount}", closes.get(kind))));
         } else {

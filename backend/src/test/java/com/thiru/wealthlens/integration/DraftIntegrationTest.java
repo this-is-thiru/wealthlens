@@ -554,6 +554,35 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(after.get("trace")).isEqualTo(before.get("trace"));
     }
 
+    /** W-119b1: evidence for a donation is the product's record too; recording it moves no figure and no fingerprint. */
+    @Test
+    void patch_whenChapterViiiEvidenceIsRecorded_keepsItAndMovesNoFigureOrFingerprint() {
+        // Given — a ₹10,000 donation to a named fund, computed before any evidence of it
+        renting();
+        ResponseEntity<String> donated = save("[{\"op\": \"add\", \"path\": \"/entered/donations/-\", \"value\":"
+                + " {\"clause\": \"NAMED_FUND\", \"amount\": {\"amountInRupees\": 10000}, \"paidInCash\": false,"
+                + " \"reportedByDonee\": false}}]", "\"rev-1\"");
+        assertThat(donated.getStatusCode()).as(donated.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode before = computed();
+
+        // When — a receipt for ₹4,000 of it
+        ResponseEntity<String> saved = save("[{\"op\": \"add\", \"path\": \"/evidence/chapterViii\", \"value\":"
+                + " {\"donations\": [{\"amountInRupees\": 4000}]}}]", "\"rev-2\"");
+        JsonNode after = computed();
+        ResponseEntity<String> beyond = save("[{\"op\": \"replace\", \"path\":"
+                + " \"/evidence/chapterViii/donations/0/amountInRupees\", \"value\": 12000}]", "\"rev-3\"");
+
+        // Then
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/3", null, null).getBody())
+                .contains("\"chapterViii\":{\"donations\":[{\"amountInRupees\":4000}]}");
+        assertThat(after.get("inputsFingerprint")).isEqualTo(before.get("inputsFingerprint"));
+        assertThat(after.get("finalAmount")).isEqualTo(before.get("finalAmount"));
+        assertThat(after.get("trace")).isEqualTo(before.get("trace"));
+        assertThat(beyond.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(beyond.getBody()).contains("/evidence/chapterViii/donations/0 must be from nil to");
+    }
+
     @Test
     void patch_whenEvidenceDoesNotFitTheEntries_expected400NamingIt() {
         // Given

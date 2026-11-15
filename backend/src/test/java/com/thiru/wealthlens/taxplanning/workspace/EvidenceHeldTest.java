@@ -52,7 +52,7 @@ class EvidenceHeldTest {
     }
 
     private static EvidenceHeld evidence(List<Integer> months, List<Money> journeys, Map<ComponentCode, Money> payments) {
-        return new EvidenceHeld(months, journeys, payments);
+        return new EvidenceHeld(months, journeys, payments, ChapterViiiEvidence.NONE);
     }
 
     @Test

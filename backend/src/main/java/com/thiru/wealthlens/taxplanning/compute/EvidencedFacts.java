@@ -39,13 +39,14 @@ record EvidencedFacts(EnteredFacts entered, EvidenceHeld held, TaxYearId taxYear
         if (!entered.qualifyingPayments().isEmpty()) {
             kinds.add(EvidenceKind.QUALIFYING_PAYMENT);
         }
+        ChapterViiiCuts.kindsEntered(entered, kinds);
         return kinds;
     }
 
     /** Every kind cut to what is held. */
     EnteredFacts supported() {
-        return withLeaveTravel(withPayments(withRent(entered, held.receiptedMonths()), held.qualifyingPayments()),
-                held.journeyExpenditure());
+        return ChapterViiiCuts.cut(withLeaveTravel(withPayments(withRent(entered, held.receiptedMonths()),
+                held.qualifyingPayments()), held.journeyExpenditure()), held.chapterViii());
     }
 
     /** One kind cut to nothing held, the rest as entered: what that kind's evidence bears on. */
@@ -54,6 +55,7 @@ record EvidencedFacts(EnteredFacts entered, EvidenceHeld held, TaxYearId taxYear
             case RENT_RECEIPTS -> withRent(entered, List.of());
             case JOURNEY_EXPENDITURE -> withLeaveTravel(entered, List.of());
             case QUALIFYING_PAYMENT -> withPayments(entered, Map.of());
+            default -> ChapterViiiCuts.nothingHeldFor(entered, kind);
         };
     }
 
@@ -73,6 +75,11 @@ record EvidencedFacts(EnteredFacts entered, EvidenceHeld held, TaxYearId taxYear
             outstanding = outstanding.plus(entered.leaveTravel().get(i).amountIncurred().minus(journeyEvidenced(i)));
         }
         return outstanding;
+    }
+
+    /** What a Chapter VIII family's entries came to beyond what is evidenced (W-119b1). */
+    Money chapterViiiNotEvidenced(EvidenceKind kind) {
+        return ChapterViiiCuts.notEvidenced(entered, held.chapterViii(), kind);
     }
 
     /** What the Schedule XV payments came to beyond what is evidenced. */

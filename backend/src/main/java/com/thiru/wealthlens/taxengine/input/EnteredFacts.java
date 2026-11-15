@@ -314,6 +314,78 @@ public record EnteredFacts(
                 houseReinvestments);
     }
 
+    /** The same facts with donations replaced — how evidence held is measured against them (W-119b1). */
+    public EnteredFacts withDonations(List<Donation> replaced) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies,
+                healthPayments, disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest,
+                purposeLoanInterest, agniveerCorpusFund, rentDeclaration, replaced, houseProperties,
+                otherSourceItems, providentFundAccounts, giftsReceived, businessTrustUnits, lifePolicyReceipts,
+                claimedLifePolicies, absorptionOrder, houseReinvestments);
+    }
+
+    /** The same facts with education-loan interest replaced — how evidence held is measured against them (W-119b1). */
+    public EnteredFacts withEducationLoanInterest(List<EducationLoanInterest> replaced) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies,
+                healthPayments, disabledDependantSupport, specifiedDiseaseTreatment, replaced, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems,
+                providentFundAccounts, giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies,
+                absorptionOrder, houseReinvestments);
+    }
+
+    /** The same facts with purpose-loan interest replaced — how evidence held is measured against them (W-119b1). */
+    public EnteredFacts withPurposeLoanInterest(List<PurposeLoanInterest> replaced) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies,
+                healthPayments, disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, replaced,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems,
+                providentFundAccounts, giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies,
+                absorptionOrder, houseReinvestments);
+    }
+
+    /** The same facts with the support of a dependant with disability replaced — how evidence held is measured against them (W-119b1). */
+    public EnteredFacts withDisabledDependantSupport(List<DisabledDependantSupport> replaced) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies,
+                healthPayments, replaced, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems,
+                providentFundAccounts, giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies,
+                absorptionOrder, houseReinvestments);
+    }
+
+    /** The same facts with specified-disease treatment replaced — how evidence held is measured against them (W-119b1). */
+    public EnteredFacts withSpecifiedDiseaseTreatment(List<SpecifiedDiseaseTreatment> replaced) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies,
+                healthPayments, disabledDependantSupport, replaced, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems,
+                providentFundAccounts, giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies,
+                absorptionOrder, houseReinvestments);
+    }
+
+    /** The same facts with the Agniveer fund replaced — how evidence held is measured against them (W-119b1). */
+    public EnteredFacts withAgniveerCorpusFund(Optional<AgniveerCorpusFund> replaced) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies,
+                healthPayments, disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest,
+                purposeLoanInterest, replaced, rentDeclaration, donations, houseProperties, otherSourceItems,
+                providentFundAccounts, giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies,
+                absorptionOrder, houseReinvestments);
+    }
+
     /** The same facts with the homes replaced — how rent's worth is measured (W-115, D-670). */
     public EnteredFacts withTenancies(List<Tenancy> homes) {
         return new EnteredFacts(employments, homes, leaveTravel, allowanceUses, disabledTransport, retirementPayments,

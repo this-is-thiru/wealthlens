@@ -21,6 +21,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxplanning.workspace.ChapterViiiEvidence;
 import com.thiru.wealthlens.taxplanning.workspace.EvidenceHeld;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
@@ -80,7 +81,7 @@ class T12ClaimIntegrityPanelTest {
     void t12_01_whenEightOfTwelveMonthsAreReceipted_showsAllowedEvidencedAndTheGap() {
         // When
         List<DraftClaimIntegrity.Row> rows = PANEL.rows(inputs(t31("360000")),
-                new EvidenceHeld(List.of(8), List.of(), Map.of()), true);
+                new EvidenceHeld(List.of(8), List.of(), Map.of(), ChapterViiiEvidence.NONE), true);
 
         // Then — DR 12 C2: limb (b) 3,60,000 − 1,32,000 = 2,28,000; receipts for 8 months, 2,40,000 − 1,32,000 = 1,08,000
         assertThat(rows).singleElement().satisfies(row -> {
@@ -127,7 +128,7 @@ class T12ClaimIntegrityPanelTest {
 
         // When
         List<DraftClaimIntegrity.Row> rows = PANEL.rows(inputs(entered),
-                new EvidenceHeld(List.of(), List.of(), Map.of(tuition, Money.of("40000"))), false);
+                new EvidenceHeld(List.of(), List.of(), Map.of(tuition, Money.of("40000")), ChapterViiiEvidence.NONE), false);
 
         // Then — 1,50,000 − 40,000 = 1,10,000, and the evidence that closes it
         assertThat(rows).singleElement().satisfies(row -> {

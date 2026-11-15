@@ -260,7 +260,7 @@ what disqualifies me — and, when signed in, whether it applies to me and what 
 
 Design: `00-BRIEF.md` §6.3 · `22-claim-catalogue.md`
 
-#### F23–F25 — Claim integrity — ◐ `W-119a` – `W-119d`, `W-120` (F24 proven whole-computation, D-706; evidence held, D-707; F23's panel — allowed, evidenced, gap — D-708; `DR 12` C8's rows run or recorded as not run, and the copy test, D-709; checklist ○ `W-120`)
+#### F23–F25 — Claim integrity — ◐ `W-119a` – `W-119d`, `W-120` (F24 proven whole-computation, D-706; evidence held, D-707, for the other Chapter VIII claims too, D-717; F23's panel — allowed, evidenced, gap — D-708; `DR 12` C8's rows run or recorded as not run, and the copy test, D-709; checklist ○ `W-120`)
 See `12-claim-integrity.md` C2, C3. The amount allowed on the facts, the amount evidenced, the gap
 and what closes it; a claim the law forbids on the facts is a nil line with its reason (contradictory facts are
 refused in words), never in the total; documentation checklist names the counterparty.
