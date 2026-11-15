@@ -328,6 +328,15 @@ public class TaxCalculator {
     }
 
     /**
+     * What is said of a claim made, in the year's words, by sentence code (W-121 C3a).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Map<String, String> claimSentences(TaxYearId year) {
+        return shipped(year).explanations().claims();
+    }
+
+    /**
      * Each claim the inputs' computation allows, with what it takes off total income and off the bill, each measured by
      * a second run with the claim withheld (W-118 C1a).
      *
@@ -336,7 +345,8 @@ public class TaxCalculator {
     public List<PricedClaim> priceClaims(EngineInputs inputs) {
         RulePack pack = shipped(inputs.taxYear());
         return ClaimPricing.price(REGISTRY, pack, spec(pack, inputs.regime()), inputs).stream()
-                .map(measured -> new PricedClaim(ClaimPlaybook.of(measured.claim()), measured.allowed(), measured.worth()))
+                .map(measured -> new PricedClaim(ClaimPlaybook.of(measured.claim()), measured.allowed(), measured.worth(),
+                        measured.finalAmount(), measured.finalAmountWithout()))
                 .toList();
     }
 

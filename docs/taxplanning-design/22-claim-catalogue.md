@@ -301,6 +301,17 @@ public record Materiality(Money taxEffect, MaterialityBand band) {
 | `BELOW_TYPICAL_EFFORT` | *"Worth ₹78. Claiming it needs a certificate from your insurer. Your call."* |
 | `MATERIAL` | ranked normally in `A3` and `F33` |
 
+> **Erratum (W-121, 2026-11-15, D-711):** `classify` is wrong at both edges, and the ₹100 band has no source — s.516
+> rounds the amount payable to the nearest ₹10, five or more upward (`RATE-ROUND-PAYABLE`, `rounding: toNearest 10,
+> roundsUpFrom 5`), so whether a claim changes the final figure turns on where the bill sits, not on the claim's size: a
+> claim worth ₹8.32 can leave it unchanged (balance 6,604 → 6,595.68, both 6,600) and one worth ₹4.16 can change it
+> (6,605 → 6,600.84, so 6,610 → 6,600). Built instead: the final amount is **measured** with the claim and without it, and
+> each claim made carries both and whether they differ, with the year's content sentence where they do not (owner, W-121
+> C1a, C3a, C4a). No band and no `Materiality` type; "below typical effort" is not built — the worth is shown in rupees
+> and the person judges the effort (C2a). Nothing is suppressed: every claim made is listed whatever the outcome.
+> Verified by: `backend/src/test/java/com/thiru/wealthlens/taxengine/optimise/ClaimFinalAmountTest.java`,
+> `backend/src/main/java/com/thiru/wealthlens/taxengine/optimise/ClaimPricing.java` (`finalAmount`).
+
 `RECOMMENDATION`: **materiality never suppresses an item that increases income.** A small *deduction*
 may be skipped on a cost-benefit basis; small *income* must still be reported, because C1's
 reconciliation is about matching third-party data, not about the rupees. That asymmetry is the honest

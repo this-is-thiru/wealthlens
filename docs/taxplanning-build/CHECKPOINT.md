@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-122a DONE (D-710). BUILD NEXT: W-121, then W-123a, W-123b — each in plans/<id>.md; placed: W-117e, W-119b1, W-120, W-117c/d, W-122b/c
-Stage           : nothing in progress; W-122a committed and pushed with api-collection
-Done today      : session 100: W-122a (D-710) — onboarding steps on the draft, GET …/onboarding
-Board           : W-122a D; W-121 E; W-123a – b E; W-117c – e ·, W-119b1 ·, W-120 ·, W-122b – c ·; W-324 ·; Phase 10: W-299, W-294 ·
-Next step       : check W-122a's pipeline, then BUILD W-121 from plans/W-121.md, stop at its report. Grep every path first. Locally only NAMED test classes; full tiers on the pipeline; WealthLensModulithTest before every commit
-Owner actions   : unchanged from session 99 (§3.24/W-316 … rotate Mongo password and JWT key); open: ClaimCatalogueEntry 8 components; W-122a's two findings (READY reopened by a step patch; a step added twice) — D-710
-Last verify     : local named classes green (D-710); pipeline for the W-122a commit not yet checked
+Item            : W-121 DONE (D-711). BUILD NEXT: W-123a, then W-123b — each in plans/<id>.md; placed: W-117e, W-119b1, W-120, W-117c/d, W-122b/c
+Stage           : nothing in progress; W-121 committed and pushed with api-collection
+Done today      : session 100: W-122a (D-710, 98a29bde, pipeline 43719000243 success); W-121 (D-711)
+Board           : W-122a D, W-121 D; W-123a – b E; W-117c – e ·, W-119b1 ·, W-120 ·, W-122b – c ·; W-324 ·; Phase 10: W-299, W-294 ·
+Next step       : check W-121's pipeline, then BUILD W-123a from plans/W-123a.md, stop at its report. Grep every path first. Locally only NAMED test classes; full tiers on the pipeline; WealthLensModulithTest before every commit
+Owner actions   : unchanged from session 99 (§3.24/W-316 … rotate Mongo password and JWT key); open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710)
+Last verify     : local named classes green (D-711); pipeline for the W-121 commit not yet checked
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-122a: record which onboarding steps are answered and show what each open one is worth
+Last item commit: taxplanning W-121: measure whether each claim changes the amount finally payable
 Updated         : 2026-11-15, session 100
 ```
 

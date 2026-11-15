@@ -35,13 +35,27 @@ public record DraftClaims(LocalDate asOf, String regime, int revision, List<Clai
      *     a step by the employer's cut-off, or by no deadline, has none (W-118 C5a)
      * @param allowed what it takes off total income, where the computation allows it
      * @param worth what it takes off the bill, where the computation allows it, measured by a second run
+     * @param finalAmount the amount finally payable with the claim and without it, where the computation allows it
+     *     (W-121 C3a)
      */
     public record Claim(ClaimPlaybook playbook, List<StepDate> stepDates, Optional<Money> allowed,
-            Optional<Money> worth) {
+            Optional<Money> worth, Optional<FinalAmount> finalAmount) {
 
         public Claim {
             stepDates = List.copyOf(stepDates);
         }
+    }
+
+    /**
+     * The amount finally payable — the bill less credits, with interest and fees, rounded — measured both ways (W-121
+     * C1a, C4a). Every claim made is listed whatever this says (F40.5).
+     *
+     * @param withClaim as the draft stands
+     * @param withoutClaim with the claim withheld
+     * @param changes whether the two differ
+     * @param says where they do not, the year's sentence saying so; empty otherwise
+     */
+    public record FinalAmount(Money withClaim, Money withoutClaim, boolean changes, Optional<String> says) {
     }
 
     /** The day a step falls on. */

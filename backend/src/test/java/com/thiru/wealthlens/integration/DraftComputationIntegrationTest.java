@@ -1405,6 +1405,9 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(claims.at("/claimed/0/playbook/rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
         assertThat(amountAt(claims, "/claimed/0/allowed")).isEqualByComparingTo("480000");
         assertThat(amountAt(claims, "/claimed/0/worth")).isEqualByComparingTo("149760");
+        assertThat(claims.at("/claimed/0/finalAmount/changes").asBoolean()).isTrue();
+        assertThat(claims.at("/claimed/0/finalAmount/says").isMissingNode() || claims.at("/claimed/0/finalAmount/says").isNull())
+                .isTrue();
         assertThat(claims.at("/claimed/0/stepDates/0/order").asInt()).isEqualTo(4);
         assertThat(claims.at("/claimed/0/stepDates/0/on").asString()).isEqualTo("2027-07-31");
         assertThat(claims.at("/claimed/0/playbook/guidance/steps/1/instruction").asString()).contains("₹1,00,000");

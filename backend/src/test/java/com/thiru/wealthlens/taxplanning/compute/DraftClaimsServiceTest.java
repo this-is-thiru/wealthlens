@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.FilingFacts;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -18,6 +19,7 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -60,6 +62,38 @@ class DraftClaimsServiceTest {
             assertThat(claim.worth()).contains(Money.of("10400"));
             assertThat(claim.stepDates()).containsExactly(new DraftClaims.StepDate(2, YEAR_END),
                     new DraftClaims.StepDate(4, RETURN_DUE));
+            assertThat(claim.finalAmount()).hasValueSatisfying(amount -> {
+                assertThat(amount.changes()).isTrue();
+                assertThat(amount.says()).isEmpty();
+            });
+        });
+    }
+
+    @Test
+    void claimed_whenAClaimLeavesTheFinalAmountWhereItWas_listsItWithItsWorthAndSaysSo() {
+        // Given — 40 of tuition and 99,996 deducted at source, as ClaimFinalAmountTest works it: worth 8.32; the balance
+        // 6,604 without the claim and 6,595.68 with it both round to 6,600
+        EngineInputs tuition = tuitionPaid("FIRST_SCHEDULE_RATES");
+        EngineInputs inputs = new EngineInputs(tuition.taxYear(), tuition.regime(), tuition.temporal(),
+                tuition.entered().withQualifyingPayments(
+                        List.of(new QualifyingPayment(new ComponentCode("TUITION_FEES"), Money.of("40")))),
+                tuition.assessee(), tuition.family(), tuition.ledgers(), tuition.elections(), tuition.capitalGains(),
+                new FilingFacts(RETURN_DUE, Optional.empty(), List.of(), Money.of("99996"), List.of(), Map.of(),
+                        Optional.empty()));
+
+        // When
+        List<DraftClaims.Claim> claimed = SERVICE.claimed(inputs);
+
+        // Then — listed, not dropped (F40.5)
+        assertThat(claimed).singleElement().satisfies(claim -> {
+            assertThat(claim.worth()).contains(Money.of("8.32"));
+            assertThat(claim.finalAmount()).hasValueSatisfying(amount -> {
+                assertThat(amount.withClaim()).isEqualTo(Money.of("6600"));
+                assertThat(amount.withoutClaim()).isEqualTo(Money.of("6600"));
+                assertThat(amount.changes()).isFalse();
+                assertThat(amount.says()).hasValueSatisfying(says -> assertThat(says)
+                        .startsWith("Making this claim does not change what you finally pay"));
+            });
         });
     }
 
@@ -78,6 +112,7 @@ class DraftClaimsServiceTest {
         assertThat(others).allSatisfy(claim -> {
             assertThat(claim.allowed()).isEmpty();
             assertThat(claim.worth()).isEmpty();
+            assertThat(claim.finalAmount()).isEmpty();
         });
         assertThat(others.get(4).stepDates()).containsExactly(new DraftClaims.StepDate(4, RETURN_DUE));
     }

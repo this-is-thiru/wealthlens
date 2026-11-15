@@ -34,8 +34,10 @@ public final class ClaimPricing {
      *
      * @param allowed what the claim takes off total income
      * @param worth what the claim takes off the bill
+     * @param finalAmount the amount finally payable, rounded, as the inputs stand
+     * @param finalAmountWithout the same with the claim withheld (W-121 C1a)
      */
-    public record Measured(CompiledClaim claim, Money allowed, Money worth) {
+    public record Measured(CompiledClaim claim, Money allowed, Money worth, Money finalAmount, Money finalAmountWithout) {
     }
 
     /** Each claim of the year with a line above nil, by rule id as the pack holds them, measured. */
@@ -49,7 +51,8 @@ public final class ClaimPricing {
                 PipelineRunner.Result without = PipelineRunner.run(registry, pack, regime, inputs, rules);
                 priced.add(new Measured(claim,
                         totalIncome(without).minus(totalIncome(base)).floorAtZero(),
-                        DeductionRoomPricing.bill(without).minus(DeductionRoomPricing.bill(base)).floorAtZero()));
+                        DeductionRoomPricing.bill(without).minus(DeductionRoomPricing.bill(base)).floorAtZero(),
+                        finalAmount(base), finalAmount(without)));
             }
         }
         return List.copyOf(priced);
@@ -58,6 +61,10 @@ public final class ClaimPricing {
     private static boolean isInTheComputation(PipelineRunner.Result run, Set<RuleId> rules) {
         return run.trace().stream().anyMatch(line -> rules.contains(line.rule())
                 && line.out() instanceof MoneyValue money && money.amount().isGreaterThan(Money.ZERO));
+    }
+
+    private static Money finalAmount(PipelineRunner.Result run) {
+        return ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount();
     }
 
     private static Money totalIncome(PipelineRunner.Result run) {

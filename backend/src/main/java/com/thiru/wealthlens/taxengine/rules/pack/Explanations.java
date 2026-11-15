@@ -26,20 +26,28 @@ import java.util.stream.Collectors;
  *     {@code {next}} (W-326b, D-697); an input with none says nothing (03-advisory A4.4)
  * @param evidence what a claim's evidence says, by sentence code, filling {@code {amount}} or {@code {months}} (W-119c
  *     C4a): the words for an amount allowed against what documents support, never a judgement of risk ({@code DR 12} C7)
+ * @param claims what is said of a claim made, by sentence code, filling nothing (W-121 C3a)
  */
 public record Explanations(Optional<String> otherLimits, Map<RuleId, Explanation> byRule,
-        Map<ReasonCode, String> reasons, ExplanationTerms terms, Map<BaseId, String> headroom, Map<String, String> evidence) {
+        Map<ReasonCode, String> reasons, ExplanationTerms terms, Map<BaseId, String> headroom, Map<String, String> evidence,
+        Map<String, String> claims) {
 
-    private static final Pattern EVIDENCE_CODE = Pattern.compile("[A-Z][A-Z_]{1,63}");
+    private static final Pattern SENTENCE_CODE = Pattern.compile("[A-Z][A-Z_]{1,63}");
 
     public Explanations {
         if (otherLimits == null || byRule == null || reasons == null || terms == null || headroom == null
-                || evidence == null) {
+                || evidence == null || claims == null) {
             throw new IllegalArgumentException("Explanations need otherLimits (Optional.empty() for none), byRule,"
-                    + " reasons, terms, headroom and evidence (empty for none)");
+                    + " reasons, terms, headroom, evidence and claims (empty for none)");
         }
+        claims.forEach((code, sentence) -> {
+            if (!SENTENCE_CODE.matcher(code).matches()) {
+                throw new IllegalArgumentException("claims." + code + ": a sentence code is upper-case with underscores");
+            }
+            Explanation.requireProse("claims." + code, sentence, Set.of());
+        });
         evidence.forEach((code, sentence) -> {
-            if (!EVIDENCE_CODE.matcher(code).matches()) {
+            if (!SENTENCE_CODE.matcher(code).matches()) {
                 throw new IllegalArgumentException("evidence." + code + ": a sentence code is upper-case with underscores");
             }
             Explanation.requireProse("evidence." + code, sentence, Set.of("{amount}", "{months}"));
@@ -56,6 +64,7 @@ public record Explanations(Optional<String> otherLimits, Map<RuleId, Explanation
         reasons = Map.copyOf(reasons);
         headroom = Map.copyOf(headroom);
         evidence = Map.copyOf(evidence);
+        claims = Map.copyOf(claims);
     }
 
     /** Each regime in words. */
@@ -91,6 +100,6 @@ public record Explanations(Optional<String> otherLimits, Map<RuleId, Explanation
 
     /** A pack with no explanations: every line shows its rule id (F37.2). */
     public static Explanations none() {
-        return new Explanations(Optional.empty(), Map.of(), Map.of(), ExplanationTerms.none(), Map.of(), Map.of());
+        return new Explanations(Optional.empty(), Map.of(), Map.of(), ExplanationTerms.none(), Map.of(), Map.of(), Map.of());
     }
 }

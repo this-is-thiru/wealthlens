@@ -27,6 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DraftClaimsService {
 
+    /** The year's sentence for a claim that does not change the amount finally payable (W-121 C3a). */
+    private static final String FINAL_AMOUNT_UNCHANGED = "FINAL_AMOUNT_UNCHANGED";
+
     /** Stated with every draft's claims beyond what every computation states (W-118 C3a, C4a; owner, session 99). */
     private static final List<String> NOT_INCLUDED = List.of(
             "No Form 16 is compared yet: each claim says what its absence from Form 16 would mean (W-118 C4a)",
@@ -58,8 +61,10 @@ public class DraftClaimsService {
 
     /** The claims the computation allows, measured; separate from {@link #claims} so it is tested on the engine alone. */
     List<DraftClaims.Claim> claimed(EngineInputs inputs) {
+        Map<String, String> sentences = taxCalculator.claimSentences(inputs.taxYear());
         return taxCalculator.priceClaims(inputs).stream()
-                .map(priced -> claim(priced.playbook(), inputs, Optional.of(priced)))
+                .map(priced -> claim(priced.playbook(), inputs, Optional.of(priced),
+                        Optional.of(finalAmount(priced, sentences))))
                 .toList();
     }
 
@@ -68,17 +73,31 @@ public class DraftClaimsService {
         Set<String> made = claimed.stream().map(claim -> claim.playbook().rule()).collect(Collectors.toSet());
         return taxCalculator.claimPlaybooks(inputs.taxYear()).stream()
                 .filter(playbook -> !made.contains(playbook.rule()))
-                .map(playbook -> claim(playbook, inputs, Optional.empty()))
+                .map(playbook -> claim(playbook, inputs, Optional.empty(), Optional.empty()))
                 .toList();
     }
 
-    private static DraftClaims.Claim claim(ClaimPlaybook playbook, EngineInputs inputs, Optional<PricedClaim> priced) {
+    /** @throws IllegalStateException if the year's content has no sentence for a claim that changes nothing */
+    private static DraftClaims.FinalAmount finalAmount(PricedClaim priced, Map<String, String> sentences) {
+        if (priced.changesFinalAmount()) {
+            return new DraftClaims.FinalAmount(priced.finalAmount(), priced.finalAmountWithout(), true, Optional.empty());
+        }
+        String says = sentences.get(FINAL_AMOUNT_UNCHANGED);
+        if (says == null) {
+            throw new IllegalStateException("The year's content has no claims." + FINAL_AMOUNT_UNCHANGED);
+        }
+        return new DraftClaims.FinalAmount(priced.finalAmount(), priced.finalAmountWithout(), false, Optional.of(says));
+    }
+
+    private static DraftClaims.Claim claim(ClaimPlaybook playbook, EngineInputs inputs, Optional<PricedClaim> priced,
+            Optional<DraftClaims.FinalAmount> finalAmount) {
         Map<String, LocalDate> dated = Map.of("TAX_YEAR_END", inputs.temporal().taxYearEnd(),
                 "RETURN_DUE", inputs.filing().dueDate());
         List<DraftClaims.StepDate> dates = playbook.guidance().steps().stream()
                 .filter(step -> dated.containsKey(step.by()))
                 .map(step -> new DraftClaims.StepDate(step.order(), dated.get(step.by())))
                 .toList();
-        return new DraftClaims.Claim(playbook, dates, priced.map(PricedClaim::allowed), priced.map(PricedClaim::worth));
+        return new DraftClaims.Claim(playbook, dates, priced.map(PricedClaim::allowed), priced.map(PricedClaim::worth),
+                finalAmount);
     }
 }
