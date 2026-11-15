@@ -58,6 +58,16 @@ produced on demand** — which is exactly the case for `20-product-gaps.md` F39'
 | **T — Third-party reported** | Allowable **only** if the counterparty reported it | **80G donations** | **s.133(6)** — *"only on the basis of the information … furnished by such institution or fund"* |
 | **P — Employer-provided only** | Not a claim at all; the employer must actually do it | Employer NPS (s.124(1)); employer paying tax on a non-monetary perquisite (s.392(2)) | ss.124(1), 392(2) |
 
+> **Erratum (W-117c, 2026-11-15, D-714):** two rows are wrong against the Gazette. **R:** 80TTA / 80TTB (s.153) are not
+> "return only" — r.205(2) Table Sl. 4 lists any Chapter VIII deduction among the claims an employee gives the employer,
+> and s.392(4)(a)(iv) lets other-head income (savings interest) be given *"at his option"*; the catalogue holds them
+> `EMPLOYER_OPTIONAL` (owner, W-117c C1a). The **regime election** is not a claim and has no rule; it is not catalogued
+> (C4a). **R+:** the certificate is not "retained per r.164(11)" — ss.154(2)(a), (c) and 127(6) require a copy
+> *"furnished … along with the return of income"*, and a certificate needing reassessment renewed (ss.154(2)(b),
+> 127(7)); the 1961 ss.80U(2) and 80DD(4) say the same (C2a).
+> Verified by: `docs/taxplanning-build/sources/2026-11-14-claim-channel.md` C17 – C23 (Gazette 2025/265620 pp.160,
+> 162 – 164, 185 – 186; Rules 2026/271092 p.1687; thc.nic.in 1961 copy pp.339, 343, 424 – 426).
+
 > **Erratum (W-078f, 2026-10-09):** channel T does not cover every 80G donation — s.133(6) conditions the deduction on the donee's report only *"in case of a donation made to an institution or fund referred in
 > sub-section (1)(b)(ii)"* — a fund or institution established in India for a charitable purpose that is a registered
 > non-profit organisation or a Schedule VII (Table: Sl. No. 1) institution or fund approved under section 354; the named funds of (1)(a), the

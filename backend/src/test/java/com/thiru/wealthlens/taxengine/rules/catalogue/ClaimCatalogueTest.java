@@ -53,6 +53,11 @@ class ClaimCatalogueTest {
     private static final RuleId HOME_LOAN_INTEREST = new RuleId("HP-OWN-RESIDENCE-INTEREST-CAP");
     private static final RuleId LEAVE_TRAVEL = new RuleId("SAL-LEAVE-TRAVEL-CONCESSION");
     private static final RuleId TAX_ON_EMPLOYMENT = new RuleId("SAL-TAX-ON-EMPLOYMENT");
+    private static final RuleId SAVINGS_INTEREST = new RuleId("DED-SAVINGS-INTEREST");
+    private static final RuleId SENIOR_DEPOSIT_INTEREST = new RuleId("DED-DEPOSIT-INTEREST-SENIOR");
+    private static final RuleId DISABILITY = new RuleId("DED-DISABILITY");
+    private static final RuleId DISABLED_DEPENDANT = new RuleId("DED-DISABLED-DEPENDANT");
+    private static final RuleId EMPLOYER_PENSION = new RuleId("DED-NPS-EMPLOYER-OTHER");
     private static final int HOUSE_RENT_ENTRY = 0;
     private static final int DONATION_ENTRY = 1;
     private static final int HEALTH_ENTRY = 4;
@@ -80,14 +85,62 @@ class ClaimCatalogueTest {
     }
 
     @Test
-    void verify_whenTheShippedCatalogueIsChecked_passesWithItsEightEntries() {
+    void verify_whenTheShippedCatalogueIsChecked_passesWithItsThirteenEntries() {
         // Given
         ClaimCatalogue catalogue = ClaimCatalogue.of(SHIPPED);
 
         // When / Then
         assertThatCode(() -> catalogue.verify(SHIPPED)).doesNotThrowAnyException();
         assertThat(catalogue.entries()).extracting(ClaimCatalogueEntry::rule).containsExactly(HOUSE_RENT, DONATION,
-                INVESTMENTS, OWN_PENSION, HEALTH, HOME_LOAN_INTEREST, LEAVE_TRAVEL, TAX_ON_EMPLOYMENT);
+                INVESTMENTS, OWN_PENSION, HEALTH, HOME_LOAN_INTEREST, LEAVE_TRAVEL, TAX_ON_EMPLOYMENT, SAVINGS_INTEREST,
+                SENIOR_DEPOSIT_INTEREST, DISABILITY, DISABLED_DEPENDANT, EMPLOYER_PENSION);
+    }
+
+    /**
+     * W-117c's five entries, each on the channel its provisions set (sources/2026-11-14-claim-channel.md C17 – C23):
+     * savings interest may go through the employer (s.392(4)(a)(iv), r.205(2) Sl. 4; C1a); a disability claim needs the
+     * certificate furnished with the return (ss.154(2), 127(6); C2a); the employer's contribution is the employer's to
+     * make (s.124(1); C3a). Section, Part and both provisions as read.
+     */
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', textBlock = """
+            DED-SAVINGS-INTEREST        | SEC-SAVINGS-INTEREST        | D | EMPLOYER_OPTIONAL    | CLAIMABLE_IN_RETURN | s.80TTA     | s.153(1)(a), (c), (2)(a); s.392(4)(a)(iv), (5)(b)
+            DED-DEPOSIT-INTEREST-SENIOR | SEC-DEPOSIT-INTEREST-SENIOR | D | EMPLOYER_OPTIONAL    | CLAIMABLE_IN_RETURN | s.80TTB     | s.153(1)(b), (2)(b); s.392(4)(a)(iv), (5)(b)
+            DED-DISABILITY              | SEC-DISABILITY              | E | RETURN_WITH_DOCUMENT | CLAIMABLE_IN_RETURN | s.80U       | s.154
+            DED-DISABLED-DEPENDANT      | SEC-DISABLED-DEPENDANT      | B | RETURN_WITH_DOCUMENT | CLAIMABLE_IN_RETURN | s.80DD      | s.127
+            DED-NPS-EMPLOYER-OTHER      | SEC-PENSION-SCHEME          | B | EMPLOYER_PROVIDED    | NOTHING_TO_CLAIM    | s.80CCD(2)  | s.124(1), (2)
+            """)
+    void of_whenAReturnSideOrEmployerProvidedEntryIsRead_isOnTheChannelItsProvisionsSet(String rule, String section,
+            String part, ClaimChannel channel, AbsenceFromForm16 verdict, String provision1961, String provision2025) {
+        // When
+        ClaimCatalogueEntry entry = shipped(new RuleId(rule));
+
+        // Then
+        assertThat(entry.channel()).isEqualTo(channel);
+        assertThat(entry.ifMissingFromForm16()).isEqualTo(verdict);
+        assertThat(entry.section()).isEqualTo(section);
+        assertThat(entry.chapterViiiPart()).contains(ChapterViiiPart.valueOf(part));
+        assertThat(entry.basis().provision1961().reference()).isEqualTo(provision1961);
+        assertThat(entry.basis().provision1961().presence()).isEqualTo(Presence.PRESENT);
+        assertThat(entry.basis().provision2025().reference()).isEqualTo(provision2025);
+        assertThat(entry.basis().provision2025().presence()).isEqualTo(Presence.PRESENT);
+        assertThat(entry.guidance().steps()).noneMatch(ClaimStep::warnsOfLateReturnBar).last()
+                .satisfies(last -> assertThat(last.by()).isEqualTo(ClaimDeadline.RETURN_DUE));
+    }
+
+    /** C2a: ss.154(2)(a), (c) and 127(6) — a copy of the certificate goes with the return, and a lapsing one is renewed. */
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"DED-DISABILITY", "DED-DISABLED-DEPENDANT"})
+    void of_whenADisabilityEntryIsRead_furnishesTheCertificateWithTheReturnAndRenewsIt(String rule) {
+        // When
+        ClaimCatalogueEntry entry = shipped(new RuleId(rule));
+
+        // Then
+        assertThat(entry.guidance().steps()).anySatisfy(step -> assertThat(step.instruction())
+                .contains("certificate", "with your return"));
+        assertThat(entry.guidance().steps()).anySatisfy(step -> assertThat(step.instruction()).contains("reassessed"));
+        assertThat(entry.guidance().evidence()).anySatisfy(evidence -> assertThat(evidence.closedBy())
+                .contains("with your return"));
     }
 
     /** T22-1's shape for the pilot: an employer-optional claim missing from Form 16 is claimable in the return. */
@@ -183,6 +236,12 @@ class ClaimCatalogueTest {
         assertThat(shipped(LEAVE_TRAVEL).covers()).extracting(RuleId::value).containsExactly(
                 "SAL-LEAVE-TRAVEL-CHILDREN", "SAL-LEAVE-TRAVEL-DISTANCE-RATE", "SAL-LEAVE-TRAVEL-JOURNEYS");
         assertThat(shipped(TAX_ON_EMPLOYMENT).covers()).isEmpty();
+        assertThat(shipped(DISABILITY).covers()).extracting(RuleId::value).containsExactly("DED-DISABILITY-SEVERE");
+        assertThat(shipped(DISABLED_DEPENDANT).covers()).extracting(RuleId::value).containsExactly("DED-DEPENDANT",
+                "DED-DEPENDANT-OWN-CLAIM", "DED-DISABLED-DEPENDANT-SEVERE");
+        assertThat(shipped(EMPLOYER_PENSION).covers()).extracting(RuleId::value).containsExactly(
+                "DED-NPS-EMPLOYER-GOVT", "DED-NPS-EMPLOYER-NEW-TAX-REGIME");
+        assertThat(shipped(SAVINGS_INTEREST).covers()).isEmpty();
     }
 
     /** C2a: home-loan interest names its limits from the cap's definition fields, never as typed figures. */
@@ -481,11 +540,12 @@ class ClaimCatalogueTest {
 
         // Then — ordered by rule id; note fields are not law or content, so the pack drops them
         assertThat(compiled.path("entries")).extracting(entry -> entry.path("rule").asText())
-                .containsExactly("DED-DONATION-UNREPORTED", "DED-HEALTH-FAMILY", "DED-NPS-OWN", "DED-SCHEDULE-XV",
-                        "HP-OWN-RESIDENCE-INTEREST-CAP", "SAL-HOUSE-RENT-ALLOWANCE", "SAL-LEAVE-TRAVEL-CONCESSION",
-                        "SAL-TAX-ON-EMPLOYMENT");
+                .containsExactly("DED-DEPOSIT-INTEREST-SENIOR", "DED-DISABILITY", "DED-DISABLED-DEPENDANT",
+                        "DED-DONATION-UNREPORTED", "DED-HEALTH-FAMILY", "DED-NPS-EMPLOYER-OTHER", "DED-NPS-OWN",
+                        "DED-SAVINGS-INTEREST", "DED-SCHEDULE-XV", "HP-OWN-RESIDENCE-INTEREST-CAP",
+                        "SAL-HOUSE-RENT-ALLOWANCE", "SAL-LEAVE-TRAVEL-CONCESSION", "SAL-TAX-ON-EMPLOYMENT");
         assertThat(compiled.path("entries").path(0).has("_sources")).isFalse();
-        assertThat(compiled.path("entries").path(5).has("covers")).isFalse();
+        assertThat(compiled.path("entries").path(10).has("covers")).isFalse();
     }
 
     /** A pack names no rule it does not carry: r.278(1)(iii)(B)'s rate begins in TY 2026-27 (its validity). */
@@ -500,7 +560,7 @@ class ClaimCatalogueTest {
                 RulePackCompiler.compile(SHIPPED, TaxYearId.of(year)).files().get(ClaimCatalogue.FILE));
 
         // Then
-        JsonNode leaveTravel = compiled.path("entries").path(6);
+        JsonNode leaveTravel = compiled.path("entries").path(11);
         assertThat(leaveTravel.path("rule").asText()).isEqualTo("SAL-LEAVE-TRAVEL-CONCESSION");
         assertThat(leaveTravel.path("covers")).extracting(JsonNode::asText).containsExactly(covered.split("\\|"));
     }
@@ -526,12 +586,12 @@ class ClaimCatalogueTest {
 
         // Then — SAL-HOUSE-RENT-LANDLORD-PAN.exceeds is 100000 in both years' versions; HP-OWN-RESIDENCE-INTEREST-CAP's
         // conditionsMet and aggregate 200000, anyOtherCase 30000 (each version's definition)
-        JsonNode houseRent = compiled.path("entries").path(5);
+        JsonNode houseRent = compiled.path("entries").path(10);
         assertThat(houseRent.path("rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
         assertThat(houseRent.path("plainName").asString()).isEqualTo("House Rent Allowance");
         assertThat(houseRent.path("summary").asString()).startsWith("If your salary includes a house rent allowance");
         assertThat(houseRent.path("figures").path("SAL-HOUSE-RENT-LANDLORD-PAN.exceeds").asString()).isEqualTo("100000");
-        JsonNode homeLoan = compiled.path("entries").path(4).path("figures");
+        JsonNode homeLoan = compiled.path("entries").path(9).path("figures");
         assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.conditionsMet").asString()).isEqualTo("200000");
         assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.anyOtherCase").asString()).isEqualTo("30000");
         assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.aggregate").asString()).isEqualTo("200000");

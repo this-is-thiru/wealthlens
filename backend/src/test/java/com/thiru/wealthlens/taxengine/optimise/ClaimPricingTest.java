@@ -112,7 +112,7 @@ class ClaimPricingTest {
 
         // Then — SAL-HOUSE-RENT-LANDLORD-PAN.exceeds 1,00,000; HP-OWN-RESIDENCE-INTEREST-CAP 2,00,000 and 30,000
         // (its TY 2026-27 version's definition)
-        assertThat(playbooks).hasSize(8);
+        assertThat(playbooks).hasSize(13);
         ClaimPlaybook houseRent = playbook(playbooks, "SAL-HOUSE-RENT-ALLOWANCE");
         assertThat(houseRent.plainName()).isEqualTo("House Rent Allowance");
         assertThat(houseRent.guidance().steps().get(1).instruction())

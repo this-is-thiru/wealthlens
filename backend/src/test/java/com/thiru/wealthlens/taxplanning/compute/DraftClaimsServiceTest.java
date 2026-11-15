@@ -105,16 +105,17 @@ class DraftClaimsServiceTest {
         // When
         List<DraftClaims.Claim> others = SERVICE.notClaimed(inputs, SERVICE.claimed(inputs));
 
-        // Then — the year's other seven, by rule id as the pack holds them; HRA's last step alone is dated
-        assertThat(others).extracting(claim -> claim.playbook().rule()).containsExactly("DED-DONATION-UNREPORTED",
-                "DED-HEALTH-FAMILY", "DED-NPS-OWN", "HP-OWN-RESIDENCE-INTEREST-CAP", "SAL-HOUSE-RENT-ALLOWANCE",
-                "SAL-LEAVE-TRAVEL-CONCESSION", "SAL-TAX-ON-EMPLOYMENT");
+        // Then — the year's other twelve, by rule id as the pack holds them (W-117c added five); HRA's last step is dated
+        assertThat(others).extracting(claim -> claim.playbook().rule()).containsExactly("DED-DEPOSIT-INTEREST-SENIOR",
+                "DED-DISABILITY", "DED-DISABLED-DEPENDANT", "DED-DONATION-UNREPORTED", "DED-HEALTH-FAMILY",
+                "DED-NPS-EMPLOYER-OTHER", "DED-NPS-OWN", "DED-SAVINGS-INTEREST", "HP-OWN-RESIDENCE-INTEREST-CAP",
+                "SAL-HOUSE-RENT-ALLOWANCE", "SAL-LEAVE-TRAVEL-CONCESSION", "SAL-TAX-ON-EMPLOYMENT");
         assertThat(others).allSatisfy(claim -> {
             assertThat(claim.allowed()).isEmpty();
             assertThat(claim.worth()).isEmpty();
             assertThat(claim.finalAmount()).isEmpty();
         });
-        assertThat(others.get(4).stepDates()).containsExactly(new DraftClaims.StepDate(4, RETURN_DUE));
+        assertThat(others.get(9).stepDates()).containsExactly(new DraftClaims.StepDate(4, RETURN_DUE));
     }
 
     @Test

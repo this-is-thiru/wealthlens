@@ -578,6 +578,318 @@
       "mistakes": [
         "Claiming tax that was due but not paid in the year."
       ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.153 (p.185) read in full: no employer condition; (1)(a) and (2)(a) savings deposits, excluding time deposits. channel (W-117c C1a): s.392(4)(a)(iv) (p.397) lets other-head income be given to the employer at the person's option, and r.205(2) Table Sl. 4 (Rules, G.S.R. 198(E), p.1687) lists any Chapter VIII deduction; s.392(5)(b) binds the payer only. chapterViiiPart: Part D (p.185). provision1961: s.80TTA, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF pp.424 – 425. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-SAVINGS-INTEREST",
+      "section": "SEC-SAVINGS-INTEREST",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "D",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80TTA",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.153(1)(a), (c), (2)(a); s.392(4)(a)(iv), (5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Add up the interest every savings account paid you in the year, from banks, co-operative banks and the Post Office.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The year's interest on each savings account."
+        },
+        {
+          "order": 2,
+          "instruction": "Tell your employer of the interest and the deduction only if you want less tax deducted from your salary.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Enter the interest as income in your return; the deduction is worked out from it.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A statement of the interest each savings account paid in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Interest statement",
+          "closedBy": "Each bank's or the Post Office's statement of savings interest for the tax year."
+        }
+      ],
+      "mistakes": [
+        "Counting fixed-deposit interest as savings interest.",
+        "Leaving the interest out of income because the deduction covers it."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.153 (p.185) read in full: no employer condition; (1)(b) and (2)(b) a senior citizen's interest on deposits in any account, time deposits included. channel (W-117c C1a): as the savings-interest entry, s.392(4)(a)(iv) and r.205(2) Table Sl. 4. chapterViiiPart: Part D (p.185). provision1961: s.80TTB, thc.nic.in PDF p.425; s.80TTA excludes a person s.80TTB applies to (p.424). Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-DEPOSIT-INTEREST-SENIOR",
+      "section": "SEC-DEPOSIT-INTEREST-SENIOR",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "D",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80TTB",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.153(1)(b), (2)(b); s.392(4)(a)(iv), (5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Add up the interest on every deposit, fixed deposits included, from banks, co-operative banks and the Post Office.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The year's interest on each deposit."
+        },
+        {
+          "order": 2,
+          "instruction": "Tell your employer or pension payer of the interest and the deduction only if you want less tax deducted.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Enter the interest as income in your return; the deduction is worked out from it.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A statement of the interest each deposit paid in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Interest statement",
+          "closedBy": "Each bank's or the Post Office's statement of deposit interest for the tax year."
+        }
+      ],
+      "mistakes": [
+        "Claiming it for a year before you are a senior citizen.",
+        "Claiming the savings-interest deduction as well."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.154 (pp.185 – 186) read in full: no employer condition; (2)(a) a copy of the medical authority's certificate furnished, (2)(b) a certificate needing reassessment renewed, (2)(c) in the prescribed form and manner along with the return. channel and verdict (W-117c C2a). chapterViiiPart: Part E (p.185). provision1961: s.80U(2) and proviso, thc.nic.in PDF p.426. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-DISABILITY",
+      "covers": [
+        "DED-DISABILITY-SEVERE"
+      ],
+      "section": "SEC-DISABILITY",
+      "channel": "RETURN_WITH_DOCUMENT",
+      "chapterViiiPart": "E",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80U",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.154",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Get a certificate of your disability from a medical authority.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The medical authority's certificate."
+        },
+        {
+          "order": 2,
+          "instruction": "If the certificate says the disability is to be reassessed, get a new certificate before it expires.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Furnish a copy of the certificate with your return, in the form the Rules prescribe.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [],
+      "evidence": [
+        {
+          "name": "Disability certificate",
+          "closedBy": "A copy furnished with your return, current for the tax year."
+        }
+      ],
+      "mistakes": [
+        "Using a certificate that has expired.",
+        "A dependant also claiming for you as their dependant."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.127 (pp.162 – 164) read in full: no employer condition; (6) a copy of the medical authority's certificate furnished in the prescribed form and manner along with the return; (7) a reassessment certificate renewed; (8) the dependant must not claim under s.154; (9)(b) who is a dependant. channel and verdict (W-117c C2a). chapterViiiPart: Part B (p.159). provision1961: s.80DD(4) and proviso, thc.nic.in PDF p.343. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-DISABLED-DEPENDANT",
+      "covers": [
+        "DED-DEPENDANT",
+        "DED-DEPENDANT-OWN-CLAIM",
+        "DED-DISABLED-DEPENDANT-SEVERE"
+      ],
+      "section": "SEC-DISABLED-DEPENDANT",
+      "channel": "RETURN_WITH_DOCUMENT",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80DD",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.127",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check the person is your spouse, child, parent, brother or sister, and depends on you wholly or mainly.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Keep the bills for their treatment, training and care, or the receipts of the approved scheme you pay into for them.",
+          "actor": "YOU",
+          "by": "TAX_YEAR_END",
+          "warnsOfLateReturnBar": false,
+          "produces": "Bills or scheme receipts for the year."
+        },
+        {
+          "order": 3,
+          "instruction": "Get a certificate of their disability from a medical authority; if it says the disability is to be reassessed, get a new one before it expires.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The medical authority's certificate."
+        },
+        {
+          "order": 4,
+          "instruction": "Furnish a copy of the certificate with your return, in the form the Rules prescribe.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [],
+      "evidence": [
+        {
+          "name": "Dependant's disability certificate",
+          "closedBy": "A copy furnished with your return, current for the tax year."
+        },
+        {
+          "name": "Bills or scheme receipts",
+          "closedBy": "The bills or receipts for what you spent or paid in the tax year."
+        }
+      ],
+      "mistakes": [
+        "Claiming for a dependant who claims the deduction for their own disability.",
+        "Using a certificate that has expired."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.124(1) – (2) (p.160) re-read: the deduction arises only \"if the employer makes any contribution\" to the person's pension account. channel and verdict (W-117c C3a): nothing to claim without the employer's contribution; one made and missing from Form 16 is taken by the return. chapterViiiPart: Part B (p.159). provision1961: s.80CCD(2), thc.nic.in PDF p.339. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-NPS-EMPLOYER-OTHER",
+      "covers": [
+        "DED-NPS-EMPLOYER-GOVT",
+        "DED-NPS-EMPLOYER-NEW-TAX-REGIME"
+      ],
+      "section": "SEC-PENSION-SCHEME",
+      "channel": "EMPLOYER_PROVIDED",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "NOTHING_TO_CLAIM",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80CCD(2)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.124(1), (2)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check your payslips, or your employer's certificate of tax deducted from your salary, for your employer's contribution to your pension scheme account.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "If your employer made no contribution, there is nothing to claim.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "If your employer did contribute and their certificate of tax deducted does not show the deduction, claim it in your return.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "A statement of what they contributed to your pension scheme account in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Employer's contribution",
+          "closedBy": "Your payslips or pension scheme statement showing the employer's contribution for the tax year."
+        }
+      ],
+      "mistakes": [
+        "Counting your own contribution here."
+      ]
     }
   ]
 }

@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-123b DONE (D-713). Every approved plan is now built. Placed, not planned: W-329 (audit created-at), W-117c/d/e, W-119b1, W-120, W-122b/c, W-324
-Stage           : nothing in progress; W-123b committed and pushed with api-collection
-Done today      : session 100: W-122a (D-710), W-121 (D-711), W-123a (D-712), W-123b (D-713)
-Board           : W-122a D, W-121 D, W-123a D, W-123b D; W-329 ·; W-117c – e ·, W-119b1 ·, W-120 ·, W-122b – c ·; W-324 ·
-Next step       : check W-123b's pipeline; then ask the owner which item to plan next (board order on STATE line 63)
+Item            : W-117c DONE (D-714). Next by board order: W-117d (the coverage check, I23) — not planned yet; then W-117e, W-119b1, W-120, W-122b, W-122c, W-329
+Stage           : nothing in progress; W-117c committed and pushed
+Done today      : session 100: W-122a (D-710), W-121 (D-711), W-123a (D-712), W-123b (D-713), W-117c (D-714)
+Board           : W-117c D; W-117d ·, W-117e ·, W-119b1 ·, W-120 ·, W-122b – c ·, W-329 ·; W-113a, W-324 blocked
+Next step       : check W-117c's pipeline; then plan W-117d (probe first: count deduction/exemption rules with no entry), stop for approval
 Owner actions   : unchanged from session 99; open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710); W-329
-Last verify     : local named classes green (D-713); pipeline for the W-123b commit not yet checked
+Last verify     : local named classes green (D-714); pipeline for the W-117c commit not yet checked
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-123b: list a profile's computations so each report can be taken before erasure
+Last item commit: taxplanning W-117c: catalogue the savings-interest, disability and employer-NPS claims
 Updated         : 2026-11-15, session 100
 ```
 

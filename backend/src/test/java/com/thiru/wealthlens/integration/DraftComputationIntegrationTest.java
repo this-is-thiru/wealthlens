@@ -1413,7 +1413,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(claims.at("/claimed/0/playbook/guidance/steps/1/instruction").asString()).contains("₹1,00,000");
         assertThat(claims.at("/claimed/0/playbook/basis/ifMissingFromForm16").asString())
                 .isEqualTo("CLAIMABLE_IN_RETURN");
-        assertThat(claims.get("notClaimed").size()).isEqualTo(7);
+        assertThat(claims.get("notClaimed").size()).isEqualTo(12);
         assertThat(claims.at("/notClaimed/0/worth").isMissingNode() || claims.at("/notClaimed/0/worth").isNull())
                 .isTrue();
         assertThat(claims.get("notIncluded").toString()).contains("Form 16", "W-117e");
