@@ -31,7 +31,7 @@ class DraftForecastServiceTest {
             List<ComputedTax.AdvanceTax.Instalment> instalments, String finalAmount) {
         return new ComputedTax("id", "receipt", "2026-27", "NEW_TAX_REGIME", Money.of(bill), Money.of(bill), Money.of(credits),
                 new ComputedTax.AdvanceTax(!instalments.isEmpty(), Money.ZERO, instalments, Optional.empty()), interest, List.of(),
-                Money.of(finalAmount), "fingerprint", List.of(), List.of(), List.of());
+                Money.of(finalAmount), "fingerprint", List.of(), List.of(), List.of(), List.of());
     }
 
     private static final List<ComputedTax.Owed> DEFERMENT = List.of(new ComputedTax.Owed("INT-DEFERMENT", "INTEREST", Money.of("228")));

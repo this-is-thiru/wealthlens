@@ -29,7 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
  * A draft's claim integrity, computed on every request and stored nowhere (W-119c): the draft run as it stands, with
  * every evidenced figure cut to what is held, and with each kind of evidence held to nothing (owner's ruling at build,
  * session 99). A rule whose lines move when a kind is held to nothing is a claim that kind bears on — no list of rules is
- * kept, so a rule added to the pack later is covered with no change here.
+ * kept, so a rule added to the pack later is covered with no change here. A rent row says whether the landlord's
+ * particulars are on file only where the engine asked for something on its rule (owner's ruling, W-119d): the threshold
+ * is the engine's to know.
  */
 @Service
 @Transactional(readOnly = true)
@@ -70,7 +72,10 @@ public class DraftClaimIntegrityService {
     /** The rows, by rule id; separate from {@link #claimIntegrity} so it is tested on the engine alone. */
     List<DraftClaimIntegrity.Row> rows(EngineInputs inputs, EvidenceHeld held, boolean landlordsOnFile) {
         EvidencedFacts facts = new EvidencedFacts(inputs.entered(), held, inputs.taxYear());
-        Map<String, Money> asItStands = byRule(inputs, inputs.entered());
+        ComputedTax standing = taxCalculator.compute(inputs);
+        Map<String, Money> asItStands = byRule(standing);
+        Set<String> asked = new TreeSet<>();
+        standing.notices().forEach(notice -> asked.addAll(notice.relatedRules()));
         ComputedTax supported = taxCalculator.compute(with(inputs, facts.supported()));
         Map<String, Money> evidenced = byRule(supported);
         Map<String, Set<EvidenceKind>> bearsOn = new TreeMap<>();
@@ -88,13 +93,18 @@ public class DraftClaimIntegrityService {
             Money supportedAmount = amount(evidenced, rule);
             Money gap = allowed.minus(supportedAmount);
             rows.add(new DraftClaimIntegrity.Row(rule, allowed, supportedAmount, gap, limitedBy(supported, rule),
-                    says(gap, kinds, facts, landlordsOnFile, sentences)));
+                    says(gap, kinds, facts, asked.contains(rule) ? Optional.of(landlordsOnFile) : Optional.empty(),
+                            sentences)));
         });
         return List.copyOf(rows);
     }
 
-    private static List<String> says(Money gap, Set<EvidenceKind> kinds, EvidencedFacts facts, boolean landlordsOnFile,
-            Sentences sentences) {
+    /**
+     * @param landlordsOnFile whether the draft's landlords' particulars are on file, where the engine asked for something
+     *     on the row's rule (r.205(2) asks only above its threshold, which the engine knows and this does not)
+     */
+    private static List<String> says(Money gap, Set<EvidenceKind> kinds, EvidencedFacts facts,
+            Optional<Boolean> landlordsOnFile, Sentences sentences) {
         List<String> says = new ArrayList<>();
         if (gap.equals(Money.ZERO)) {
             says.add(sentences.of("FULLY_EVIDENCED"));
@@ -110,7 +120,7 @@ public class DraftClaimIntegrityService {
             says.add(sentences.of("RISES_WITH_LESS_EVIDENCE"));
         }
         if (kinds.contains(EvidenceKind.RENT_RECEIPTS)) {
-            says.add(sentences.of(landlordsOnFile ? "LANDLORD_ON_FILE" : "LANDLORD_NOT_ON_FILE"));
+            landlordsOnFile.ifPresent(onFile -> says.add(sentences.of(onFile ? "LANDLORD_ON_FILE" : "LANDLORD_NOT_ON_FILE")));
         }
         return says;
     }

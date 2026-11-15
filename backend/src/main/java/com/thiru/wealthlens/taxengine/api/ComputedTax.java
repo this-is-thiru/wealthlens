@@ -25,10 +25,31 @@ import java.util.Optional;
  * @param lawAndExec the rule pack's layer versions
  * @param trace each step, in order
  * @param capitalGainsBuckets what was decided for each bucket (D-410)
+ * @param notices what the engine asks of the person, each on the step it is about (W-119c follow-up): a request, never
+ *     a figure; none where a computation stored before it was read back
  */
 public record ComputedTax(String computationId, String receipt, String taxYear, String regime, Money totalIncome, Money bill,
         Money credits, AdvanceTax advanceTax, List<Owed> interestAndFees, List<Owed> interestOnRefund, Money finalAmount, String inputsFingerprint, List<String> lawAndExec, List<Step> trace,
-        List<Bucket> capitalGainsBuckets) {
+        List<Bucket> capitalGainsBuckets, List<Notice> notices) {
+
+    public ComputedTax {
+        notices = notices == null ? List.of() : List.copyOf(notices);
+    }
+
+    /**
+     * Something the engine asks of the person.
+     *
+     * @param sequence the step it is on
+     * @param severity how much it matters, as the engine's {@code Severity} names it
+     * @param message the request in words
+     * @param relatedRules the rules it is about
+     */
+    public record Notice(int sequence, String severity, String message, List<String> relatedRules) {
+
+        public Notice {
+            relatedRules = List.copyOf(relatedRules);
+        }
+    }
 
     /**
      * One capital-gains bucket's outcome. {@code leftOutBy} is null where the head took it; the term's three are null where not.
