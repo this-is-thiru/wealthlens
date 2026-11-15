@@ -45,10 +45,10 @@
     },
     {
       "kind": "CONDITION_FAILED",
-      "description": "The same interest claimed under any other provision, such as house property, is not checked yet.",
+      "description": "The same interest claimed under any other provision, such as business income, is not checked yet.",
       "enforcedBy": {
         "type": "NotModelled",
-        "reason": "house property income is not built"
+        "reason": "Not built yet: it comes with the business head."
       }
     }
   ]

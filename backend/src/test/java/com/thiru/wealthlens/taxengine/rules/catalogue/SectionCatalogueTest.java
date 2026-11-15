@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.coverage.CoverageRegister;
 import com.thiru.wealthlens.taxengine.rules.coverage.SectionRef;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
 import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -19,6 +20,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -54,6 +56,41 @@ class SectionCatalogueTest {
 
     @TempDir
     Path copy;
+
+    /** W-119a: no entry says a check is missing because house property income is not built — it is (W-078). */
+    @Test
+    void entries_whenTheShippedCatalogueIsRead_giveNoReasonThatHousePropertyIsNotBuilt() {
+        // Given
+        Timeline timeline = TimelineReader.read(TIMELINE);
+
+        // When
+        Stream<String> stale = SectionCatalogue.of(timeline).entries().values().stream()
+                .filter(entry -> entry.disqualifiers().stream().anyMatch(disqualifier -> disqualifier.enforcedBy()
+                        instanceof EnforcedBy.NotModelled notModelled
+                        && notModelled.reason().equals("house property income is not built")))
+                .map(SectionCatalogueEntry::key);
+
+        // Then
+        assertThat(stale).isEmpty();
+    }
+
+    /**
+     * W-119a C3a: the same interest under house property and under s.130 or s.131 is refused by the section's own rule's
+     * row, which chooses the loans compared ({@code HousePropertyInterest.requireChapterEightShareMatches}).
+     */
+    @ParameterizedTest(name = "{0}")
+    @CsvSource({"SEC-HOUSE-LOAN-INTEREST, DED-HOUSE-LOAN", "SEC-HOUSE-LOAN-INTEREST-EARLIER, DED-HOUSE-LOAN-EARLIER"})
+    void entries_whenAHouseLoanSectionIsRead_linksTheSameInterestTwiceToItsOwnRule(String section, String rule) {
+        // Given
+        Timeline timeline = TimelineReader.read(TIMELINE);
+
+        // When
+        Disqualifier last = SectionCatalogue.of(timeline).entries().get(section).disqualifiers().getLast();
+
+        // Then
+        assertThat(last.enforcedBy()).isEqualTo(new EnforcedBy.ByRule(new RuleId(rule)));
+        assertThat(last.description()).contains("house property");
+    }
 
     @Test
     void verify_whenTheShippedTimelineIsChecked_passes() {

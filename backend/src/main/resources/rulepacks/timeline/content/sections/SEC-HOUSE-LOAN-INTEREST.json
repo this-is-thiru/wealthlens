@@ -53,10 +53,10 @@
     },
     {
       "kind": "CONDITION_FAILED",
-      "description": "The same interest claimed under any other provision, such as house property, is not checked yet.",
+      "description": "The same interest claimed under house property as well: the interest left out of house property must equal the interest entered here, or the computation is refused.",
       "enforcedBy": {
-        "type": "NotModelled",
-        "reason": "house property income is not built"
+        "type": "ByRule",
+        "rule": "DED-HOUSE-LOAN"
       }
     }
   ]
