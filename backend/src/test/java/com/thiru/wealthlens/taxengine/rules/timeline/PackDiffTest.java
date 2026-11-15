@@ -70,6 +70,7 @@ class PackDiffTest {
         Path root = timelineCopy();
         Files.delete(root.resolve("law/rules/RATE-SLAB-FIRST-SCHEDULE.json"));
         withoutExplanationOf(root, "RATE-SLAB-FIRST-SCHEDULE");
+        withoutCataloguePlaceOf(root, "RATE-SLAB-FIRST-SCHEDULE");
         CompiledPack full = compile(TIMELINE, TY_2026);
         CompiledPack without = compile(root, TY_2026);
 
@@ -149,6 +150,27 @@ class PackDiffTest {
             }
         });
         ((ObjectNode) file).set("explanations", kept);
+        Files.writeString(content, MAPPER.writeValueAsString(file));
+    }
+
+    /** A removed rule leaves the claim catalogue's lists too, as I23 asks of a real removal (W-117d). */
+    private static void withoutCataloguePlaceOf(Path root, String rule) throws IOException {
+        Path content = root.resolve("content/claim-catalogue.json");
+        ObjectNode file = (ObjectNode) MAPPER.readTree(Files.readString(content));
+        ArrayNode notYet = MAPPER.createArrayNode();
+        file.path("notYetCatalogued").forEach(listed -> {
+            if (!listed.asString().equals(rule)) {
+                notYet.add(listed);
+            }
+        });
+        ArrayNode notAClaim = MAPPER.createArrayNode();
+        file.path("notAClaim").forEach(listed -> {
+            if (!listed.path("rule").asString().equals(rule)) {
+                notAClaim.add(listed);
+            }
+        });
+        file.set("notYetCatalogued", notYet);
+        file.set("notAClaim", notAClaim);
         Files.writeString(content, MAPPER.writeValueAsString(file));
     }
 
