@@ -690,6 +690,16 @@
     "AMOUNT_INCURRED": "Spending {more} more on what this allowance is for would raise it to {next}.",
     "RENT_PAID": "Paying {more} more in rent would raise it to {next}."
   },
+  "evidence": {
+    "FULLY_EVIDENCED": "Fully evidenced.",
+    "NOT_YET_EVIDENCED": "{amount} of it is not yet evidenced.",
+    "RISES_WITH_LESS_EVIDENCE": "This is larger with less evidence held, because another claim takes over where evidence is missing.",
+    "RENT_RECEIPTS": "Rent receipts for the {months} months not yet receipted would evidence it.",
+    "JOURNEY_EXPENDITURE": "Evidence of the {amount} of travel spending not yet evidenced would evidence it.",
+    "QUALIFYING_PAYMENT": "Evidence of the {amount} paid but not yet evidenced would evidence it.",
+    "LANDLORD_ON_FILE": "Your landlord's name, address and PAN are on file for this draft.",
+    "LANDLORD_NOT_ON_FILE": "Your landlord's name, address and PAN are not all on file for this draft."
+  },
   "explanations": [
     {
       "rule": "ADV-INSTALMENTS",

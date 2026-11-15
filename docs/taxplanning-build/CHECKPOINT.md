@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : BUILD NEXT: W-119c. Approved, not built, in build order: W-119c, W-119d, W-122a, W-121, W-123a, W-123b — each in plans/<id>.md; W-117e placed (after W-117c); W-119b1 placed (after W-119c)
-Stage           : W-119b DONE (D-707), committed and pushed on the owner's "commit and push" (with api-collection's Ravi patch)
-Done today      : session 99: W-117b (D-704), W-118 (D-705), W-119a (D-706, pipeline 43675982948 success), W-119b (D-707)
-Board           : W-117e ·; W-119a D, W-119b D, W-119c – d E, W-119b1 ·; W-120 ·; W-121 E; W-122a E, W-122b – c ·; W-123a – b E; W-324 ·; W-113a ·; Phase 10: W-299, W-294 ·
-Next step       : check W-119b's pipeline; then BUILD W-119c from plans/W-119c.md, stop at its report. Plans were written cold at d44536db — grep every path and name first. Open owner question: ClaimCatalogueEntry has 8 components (CLAUDE.md >7)
+Item            : BUILD NEXT: W-119d. Approved, not built, in build order: W-119d, W-122a, W-121, W-123a, W-123b — each in plans/<id>.md; placed: W-117e (after W-117c), W-119b1 (after W-119c)
+Stage           : W-119c DONE (D-708), committed and pushed on the owner's "commit and push", after W-119b's Modulith fix c53a8c63
+Done today      : session 99: W-117b, W-118, W-119a, W-119b (+ fix c53a8c63), W-119c pushed; owner reminder: a package-wide -Dtest glob is a tier — name classes only
+Board           : W-119b D, W-119c D, W-119d E, W-119b1 ·; W-117e ·; W-120 ·; W-121 E; W-122a E, W-122b – c ·; W-123a – b E; W-324 ·; W-113a ·; Phase 10: W-299, W-294 ·
+Next step       : check the pipeline on the W-119c push (W-119b's was red on Modulith; the fix rides with it); then BUILD W-119d from plans/W-119d.md, stop at its report. Before any commit run WealthLensModulithTest. Open owner question: ClaimCatalogueEntry has 8 components (CLAUDE.md >7)
 Owner actions   : after deploy: §3.24 then redrive per listed user (W-316); §3.22 then §2.12 per listed user (W-313); §3.23 (W-312); §3.21 (W-304); §3.20 (W-303); §3.18, §3.19, then §2.14 (W-297, once; backup first) and its per-user §2.12 → §2.11; §3.17 → §2.13 → per user §2.12 → §2.2 → §2.11; §3.16; Q-1 (PS-8), Q-2 (AMC periods); rotate the Mongo password and JWT key pasted in session 82
-Last verify     : EvidenceHeldTest 8, DraftIntegrationTest 29, TaxProfileIntegrationTest 17, DraftComputationIntegrationTest 62, taxplanning unit 309 green; ./mvnw validate green; full tiers on the pipeline
-Files touched   : none (the W-119b commit holds everything)
-Last item commit: taxplanning W-119b: record what a person can show for each claim
-Updated         : 2026-11-15, session 99 — W-119b committed and pushed
+Last verify     : WealthLensModulithTest, EvidenceHeldTest, EnteredFactsBindingTest, DraftClaimIntegrityServiceTest, DraftIntegrationTest green; ./mvnw validate green; full tiers on the pipeline only
+Files touched   : none (the W-119c commit holds everything)
+Last item commit: taxplanning W-119c: show each claim's allowed, evidenced and gap
+Updated         : 2026-11-15, session 99 — W-119b fix and W-119c committed and pushed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

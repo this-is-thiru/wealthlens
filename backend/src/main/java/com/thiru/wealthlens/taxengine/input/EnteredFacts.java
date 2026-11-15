@@ -326,6 +326,18 @@ public record EnteredFacts(
                 houseReinvestments);
     }
 
+    /** The same facts with the leave-travel journeys replaced — how what evidence supports is measured (W-119c). */
+    public EnteredFacts withLeaveTravel(List<Journey> journeys) {
+        return new EnteredFacts(employments, tenancies, journeys, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies, healthPayments,
+                disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems, providentFundAccounts,
+                giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, absorptionOrder,
+                houseReinvestments);
+    }
+
     /** The same facts with the Form No. 31 declaration replaced — how s.134's worth is measured (W-115, D-670). */
     public EnteredFacts withRentDeclaration(Optional<RentDeclaration> declaration) {
         return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,

@@ -221,6 +221,7 @@ public final class RulePackCompiler {
             requireEveryLeverRaisesALimit(timeline, explanations);
             content.set("reasons", reasons(explanations));
             content.set("headroom", words(explanations.headroom(), BaseId::value));
+            content.set("evidence", words(explanations.evidence(), Function.identity()));
             content.set("terms", object().<ObjectNode>set("regime", regimeTerms(timeline, taxYear, explanations))
                     .<ObjectNode>set("head", words(explanations.headTerms(), HeadCode::name))
                     .<ObjectNode>set("capitalGainsPart", words(explanations.partTerms(), CapitalGainsPart::value))

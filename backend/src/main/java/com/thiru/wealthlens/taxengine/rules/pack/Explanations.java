@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -23,15 +24,26 @@ import java.util.stream.Collectors;
  * @param terms the words for the codes a reason names
  * @param headroom what would change a figure, one sentence per input worth naming as a lever, with {@code {more}} and
  *     {@code {next}} (W-326b, D-697); an input with none says nothing (03-advisory A4.4)
+ * @param evidence what a claim's evidence says, by sentence code, filling {@code {amount}} or {@code {months}} (W-119c
+ *     C4a): the words for an amount allowed against what documents support, never a judgement of risk ({@code DR 12} C7)
  */
 public record Explanations(Optional<String> otherLimits, Map<RuleId, Explanation> byRule,
-        Map<ReasonCode, String> reasons, ExplanationTerms terms, Map<BaseId, String> headroom) {
+        Map<ReasonCode, String> reasons, ExplanationTerms terms, Map<BaseId, String> headroom, Map<String, String> evidence) {
+
+    private static final Pattern EVIDENCE_CODE = Pattern.compile("[A-Z][A-Z_]{1,63}");
 
     public Explanations {
-        if (otherLimits == null || byRule == null || reasons == null || terms == null || headroom == null) {
+        if (otherLimits == null || byRule == null || reasons == null || terms == null || headroom == null
+                || evidence == null) {
             throw new IllegalArgumentException("Explanations need otherLimits (Optional.empty() for none), byRule,"
-                    + " reasons, terms and headroom (empty for none)");
+                    + " reasons, terms, headroom and evidence (empty for none)");
         }
+        evidence.forEach((code, sentence) -> {
+            if (!EVIDENCE_CODE.matcher(code).matches()) {
+                throw new IllegalArgumentException("evidence." + code + ": a sentence code is upper-case with underscores");
+            }
+            Explanation.requireProse("evidence." + code, sentence, Set.of("{amount}", "{months}"));
+        });
         reasons.forEach(Explanations::requireReason);
         headroom.forEach((input, sentence) -> Explanation.requireProse("headroom." + input.value(), sentence,
                 Set.of("{more}", "{next}")));
@@ -43,6 +55,7 @@ public record Explanations(Optional<String> otherLimits, Map<RuleId, Explanation
         byRule = Map.copyOf(byRule);
         reasons = Map.copyOf(reasons);
         headroom = Map.copyOf(headroom);
+        evidence = Map.copyOf(evidence);
     }
 
     /** Each regime in words. */
@@ -78,6 +91,6 @@ public record Explanations(Optional<String> otherLimits, Map<RuleId, Explanation
 
     /** A pack with no explanations: every line shows its rule id (F37.2). */
     public static Explanations none() {
-        return new Explanations(Optional.empty(), Map.of(), Map.of(), ExplanationTerms.none(), Map.of());
+        return new Explanations(Optional.empty(), Map.of(), Map.of(), ExplanationTerms.none(), Map.of(), Map.of());
     }
 }

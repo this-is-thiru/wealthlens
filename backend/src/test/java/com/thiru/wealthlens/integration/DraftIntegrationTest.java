@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.profile.Landlord;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -568,5 +570,44 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(beyond.getBody()).contains("/evidence/receiptedMonths/0", "12 months");
         assertThat(unmatched.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(unmatched.getBody()).contains("/evidence/receiptedMonths holds 2 but /entered/tenancies holds 1");
+    }
+
+    @Test
+    void claimIntegrity_whenSixMonthsAreReceipted_showsTheGapAndMovesNothingStored() {
+        // Given — basic 16,00,000, HRA 4,80,000, rent 9,60,000 in Mumbai, the old regime elected; computed once, so one
+        // computation is stored. Rent for six of twelve months is 4,80,000, less a tenth of salary 1,60,000 is 3,20,000,
+        // under Mumbai's half of salary 8,00,000 and the allowance 4,80,000: 4,80,000 allowed, 3,20,000 evidenced, 1,60,000
+        renting();
+        save("""
+                [{"op": "add", "path": "/entered/employments/0/components/-",
+                  "value": {"code": {"value": "HRA"}, "annualAmount": {"amountInRupees": 480000}}},
+                 {"op": "add", "path": "/evidence", "value": {"receiptedMonths": [6]}}]""", "\"rev-1\"");
+        status("{\"status\": \"READY\"}");
+        status("{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}");
+        String fingerprint = computed().get("inputsFingerprint").asString();
+        long stored = mongoTemplate.count(new Query(), DraftComputation.class);
+
+        // When
+        ResponseEntity<String> response = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/claim-integrity", null, null);
+
+        // Then
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode panel = JsonMapper.builder().build().readTree(response.getBody());
+        assertThat(panel.get("rows").size()).isEqualTo(1);
+        assertThat(panel.at("/rows/0/rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
+        assertThat(panel.at("/rows/0/allowed/amountInRupees").decimalValue()).isEqualByComparingTo("480000");
+        assertThat(panel.at("/rows/0/evidenced/amountInRupees").decimalValue()).isEqualByComparingTo("320000");
+        assertThat(panel.at("/rows/0/gap/amountInRupees").decimalValue()).isEqualByComparingTo("160000");
+        assertThat(panel.at("/rows/0/says").toString()).contains("6 months not yet receipted", "not all on file");
+        assertThat(panel.get("notIncluded").toString()).contains("W-119b1");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isEqualTo(stored);
+        assertThat(computed().get("inputsFingerprint").asString()).isEqualTo(fingerprint);
+    }
+
+    @Test
+    void claimIntegrity_whenAnotherAccountAsks_expected400() {
+        // When / Then
+        assertThat(call(HttpMethod.GET, OTHER, "/drafts/" + draftId + "/claim-integrity", null, null).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 }

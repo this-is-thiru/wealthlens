@@ -36,7 +36,16 @@ public final class ExplanationJson {
                 terms(root, path, "capitalGainsPart", CapitalGainsPart::new),
                 terms(root, path, "sttState", Function.identity())));
         return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
-                reasons, terms, headroom(root, path)));
+                reasons, terms, headroom(root, path), evidence(root, path)));
+    }
+
+    /** {@code evidence}: what a claim's evidence says, by sentence code (W-119c C4a); absent is none. */
+    private static Map<String, String> evidence(JsonNode root, String path) {
+        Map<String, String> byCode = new LinkedHashMap<>();
+        String where = path + ".evidence";
+        PackJson.optionalObject(root, "evidence", path).ifPresent(sentences -> sentences.properties()
+                .forEach(entry -> byCode.put(entry.getKey(), PackJson.text(sentences, entry.getKey(), where))));
+        return byCode;
     }
 
     /** {@code headroom}: each lever's sentence, by input (W-326b, D-697); absent is none. */

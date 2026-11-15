@@ -43,4 +43,9 @@ public record Tenancy(DateRange occupied, String location, boolean ownedByAssess
         LocalDate to = until.isBefore(taxYear.endsOn()) ? until : taxYear.endsOn();
         return to.isBefore(from) ? 0 : ChronoUnit.MONTHS.between(YearMonth.from(from), YearMonth.from(to)) + 1;
     }
+
+    /** The same home and period with another rent — what evidence supports is measured on it (W-119c). */
+    public Tenancy withRentPaid(Money rent) {
+        return new Tenancy(occupied, location, ownedByAssessee, rent);
+    }
 }

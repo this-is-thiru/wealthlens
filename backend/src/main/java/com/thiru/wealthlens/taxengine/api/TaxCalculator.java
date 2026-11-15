@@ -312,6 +312,16 @@ public class TaxCalculator {
     }
 
     /**
+     * What a claim's evidence says in the year's words, by sentence code, each to be filled with {@code {amount}} or
+     * {@code {months}} (W-119c C4a).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Map<String, String> evidenceSentences(TaxYearId year) {
+        return shipped(year).explanations().evidence();
+    }
+
+    /**
      * Each claim the inputs' computation allows, with what it takes off total income and off the bill, each measured by
      * a second run with the claim withheld (W-118 C1a).
      *

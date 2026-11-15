@@ -308,7 +308,7 @@ class ExplanationRendererTest {
         // Given — the year's content with no regime terms
         Explanations noTerms = new Explanations(PACK.explanations().otherLimits(), PACK.explanations().byRule(),
                 PACK.explanations().reasons(), new ExplanationTerms(Map.of(), PACK.explanations().headTerms(),
-                PACK.explanations().partTerms(), PACK.explanations().sttStateTerms()), PACK.explanations().headroom());
+                PACK.explanations().partTerms(), PACK.explanations().sttStateTerms()), PACK.explanations().headroom(), Map.of());
         TraceLine barred = hra().withLimitedBy("disallowed in the NEW_TAX_REGIME regime")
                 .withReason(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
 
