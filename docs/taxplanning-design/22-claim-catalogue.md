@@ -377,6 +377,14 @@ FY 2026-27 showing savings and time-deposit interest separately"* is. The separa
 | **I25** | every `EvidenceRequirement` names what closes it |
 | **I26** | every `ClaimStep` with a deadline resolves against the tax calendar (`F30`) |
 
+> **Erratum (W-117d, 2026-11-15, D-715):** no data says which rules write a deduction or exemption — a line's kind is set
+> in node code — so I23 holds as a hand classification checked against the engine (owner, W-117d C1a – C3a): every rule
+> of the timeline is catalogued, on `notYetCatalogued` (a claim with no entry yet; the list only shrinks) or on
+> `notAClaim` with a reason (`NOT_A_DEDUCTION_OR_EXEMPTION`, or `APPLIES_WITHOUT_A_CLAIM` for a standard deduction, a
+> bar or a cap), once; `ClaimCatalogue.verify` refuses a rule placed nowhere (T22-12) or a listed rule the timeline
+> lacks, and the golden cases' deduction and exemption lines must not fall on `NOT_A_DEDUCTION_OR_EXEMPTION`.
+> Verified by: `ClaimCatalogueTest`, `ClaimCatalogueCoverageTest`.
+
 ### Tests
 
 | ID | Case | Expected |

@@ -25,9 +25,14 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>An entry checks itself as it is read: its steps' numbering, the late-return warning its Part needs (I24), what
  * closes each piece of evidence (I25) and each step's deadline (I26). {@link #verify} checks the rest against the
- * timeline, because a rule, a section or a placeholder is only a link if what it names exists.
+ * timeline, because a rule, a section or a placeholder is only a link if what it names exists, and I23: every rule of a
+ * timeline that has a catalogue is spoken for once — by an entry, as not yet catalogued, or as not a claim (W-117d).
+ *
+ * @param entries how each catalogued claim is made
+ * @param notYetCatalogued the deductions and exemptions a person claims that have no entry yet; only shrinks
+ * @param notAClaim every other rule, and why it has no entry
  */
-public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
+public record ClaimCatalogue(List<ClaimCatalogueEntry> entries, List<RuleId> notYetCatalogued, List<NotAClaim> notAClaim) {
 
     /** The catalogue's file, in a timeline and in a year's pack. */
     public static final String FILE = "content/claim-catalogue.json";
@@ -39,6 +44,8 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
 
     public ClaimCatalogue {
         entries = List.copyOf(entries);
+        notYetCatalogued = List.copyOf(notYetCatalogued);
+        notAClaim = List.copyOf(notAClaim);
         Set<RuleId> seen = new TreeSet<>((left, right) -> left.value().compareTo(right.value()));
         for (ClaimCatalogueEntry entry : entries) {
             for (RuleId rule : spokenFor(entry)) {
@@ -48,6 +55,21 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
                 }
             }
         }
+        Stream.concat(notYetCatalogued.stream(), notAClaim.stream().map(NotAClaim::rule)).forEach(rule -> {
+            if (!seen.add(rule)) {
+                throw new IllegalArgumentException("I23 — " + rule + " is placed twice: a rule is catalogued, not yet"
+                        + " catalogued or not a claim, once");
+            }
+        });
+    }
+
+    /** Every rule the catalogue speaks for: its entries' lead and covered rules, then both lists. */
+    private Set<RuleId> placed() {
+        Set<RuleId> placed = new TreeSet<>((left, right) -> left.value().compareTo(right.value()));
+        entries.forEach(entry -> placed.addAll(spokenFor(entry)));
+        placed.addAll(notYetCatalogued);
+        notAClaim.forEach(rule -> placed.add(rule.rule()));
+        return placed;
     }
 
     /** The entry's lead rule, then the rules it covers. */
@@ -57,7 +79,8 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
 
     /** The timeline's catalogue; a timeline without the file has an empty one. */
     public static ClaimCatalogue of(Timeline timeline) {
-        return timeline.claimCatalogue().map(ClaimCatalogue::read).orElseGet(() -> new ClaimCatalogue(List.of()));
+        return timeline.claimCatalogue().map(ClaimCatalogue::read)
+                .orElseGet(() -> new ClaimCatalogue(List.of(), List.of(), List.of()));
     }
 
     private static ClaimCatalogue read(String content) {
@@ -68,7 +91,11 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
             throw new PackValidationException(FILE + ": not well-formed JSON — " + e.getOriginalMessage(), e);
         }
         return PackJson.construct(FILE, () -> new ClaimCatalogue(
-                PackJson.array(file, "entries", FILE, element -> entry(element.node(), element.path()))));
+                PackJson.array(file, "entries", FILE, element -> entry(element.node(), element.path())),
+                PackJson.arrayOrEmpty(file, "notYetCatalogued", FILE, element -> new RuleId(element.node().asString())),
+                PackJson.arrayOrEmpty(file, "notAClaim", FILE, element -> PackJson.construct(element.path(),
+                        () -> new NotAClaim(new RuleId(PackJson.text(element.node(), "rule", element.path())),
+                                PackJson.enumValue(element.node(), "because", element.path(), NotAClaimReason.class))))));
     }
 
     /** A year's compiled catalogue file (W-118 C2a): each entry with its section's names and its figures. */
@@ -143,10 +170,20 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries) {
     /**
      * Refuses the catalogue, listing every problem: an entry for, or covering, a rule the timeline does not have, a
      * section it does not have, a figure typed into text, and a placeholder naming a rule the timeline does not have or
-     * a field not every version of that rule defines.
+     * a field not every version of that rule defines; and, where the timeline has a catalogue, I23: a listed rule the
+     * timeline does not have, and a timeline rule the catalogue does not speak for.
      */
     public void verify(Timeline timeline) {
         Set<String> problems = new TreeSet<>();
+        if (timeline.claimCatalogue().isPresent()) {
+            Set<RuleId> placed = placed();
+            Stream.concat(notYetCatalogued.stream(), notAClaim.stream().map(NotAClaim::rule))
+                    .filter(rule -> !timeline.rules().containsKey(rule)).forEach(rule ->
+                            problems.add(FILE + " lists " + rule + ", which is not in the timeline"));
+            timeline.rules().keySet().stream().filter(rule -> !placed.contains(rule)).forEach(rule ->
+                    problems.add("I23 — " + rule + " is not catalogued, not listed as not yet catalogued and not"
+                            + " listed as not a claim"));
+        }
         for (ClaimCatalogueEntry entry : entries) {
             String where = FILE + " " + entry.rule();
             if (!timeline.rules().containsKey(entry.rule())) {

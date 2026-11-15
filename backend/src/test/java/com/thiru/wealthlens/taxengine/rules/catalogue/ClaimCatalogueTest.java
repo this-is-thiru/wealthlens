@@ -75,6 +75,103 @@ class ClaimCatalogueTest {
                 Optional.of(MAPPER.writeValueAsString(file)), t.sections(), t.acts());
     }
 
+    /** The shipped timeline with its claim catalogue file edited as a whole, its lists included (W-117d). */
+    private static Timeline editedFile(Consumer<ObjectNode> edit) {
+        ObjectNode file = (ObjectNode) MAPPER.readTree(SHIPPED.claimCatalogue().orElseThrow());
+        edit.accept(file);
+        Timeline t = SHIPPED;
+        return new Timeline(t.rules(), t.ruleSets(), t.regimes(), t.ruleSources(), t.regimeSources(),
+                t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
+                t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
+                t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(),
+                Optional.of(MAPPER.writeValueAsString(file)), t.sections(), t.acts());
+    }
+
+    /** T22-12, I23: a rule the catalogue places nowhere fails the build, naming it. */
+    @Test
+    void verify_whenARuleIsPlacedNowhere_isRefusedByI23NamingIt() {
+        // Given — the rounding rule taken off the not-a-claim list
+        Timeline timeline = editedFile(file -> {
+            ArrayNode notAClaim = (ArrayNode) file.path("notAClaim");
+            for (int i = 0; i < notAClaim.size(); i++) {
+                if (notAClaim.get(i).path("rule").asText().equals("RATE-ROUND-PAYABLE")) {
+                    notAClaim.remove(i);
+                    return;
+                }
+            }
+        });
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline).verify(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("I23 — RATE-ROUND-PAYABLE is not catalogued");
+    }
+
+    @Test
+    void of_whenACataloguedRuleIsAlsoListed_isRefusedAsPlacedTwice() {
+        // Given
+        Timeline timeline = editedFile(file -> ((ArrayNode) file.path("notYetCatalogued")).add("DED-SCHEDULE-XV"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline)).hasMessageContaining("DED-SCHEDULE-XV is placed twice");
+    }
+
+    @Test
+    void verify_whenAListedRuleIsNotInTheTimeline_isRefused() {
+        // Given
+        Timeline timeline = editedFile(file -> ((ArrayNode) file.path("notYetCatalogued")).add("DED-NO-SUCH-RULE"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline).verify(timeline))
+                .hasMessageContaining("lists DED-NO-SUCH-RULE, which is not in the timeline");
+    }
+
+    @Test
+    void of_whenANotAClaimReasonIsUnknown_isRefused() {
+        // Given
+        Timeline timeline = editedFile(file -> ((ObjectNode) file.path("notAClaim").path(0)).put("because", "OBVIOUS"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline)).isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("because");
+    }
+
+    @Test
+    void construction_whenARuleOutsideTheCatalogueLacksItsRuleOrReason_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> new NotAClaim(null, NotAClaimReason.APPLIES_WITHOUT_A_CLAIM))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("its rule and why");
+        assertThatThrownBy(() -> new NotAClaim(HOUSE_RENT, null))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("its rule and why");
+    }
+
+    /** A timeline with no catalogue file (a test fixture's) has nothing to cover, so I23 does not apply. */
+    @Test
+    void verify_whenTheTimelineHasNoCatalogue_checksNoCoverage() {
+        // Given
+        Timeline t = SHIPPED;
+        Timeline bare = new Timeline(t.rules(), t.ruleSets(), t.regimes(), t.ruleSources(), t.regimeSources(),
+                t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
+                t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
+                t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(), Optional.empty(), t.sections(),
+                t.acts());
+
+        // When / Then
+        assertThatCode(() -> ClaimCatalogue.of(bare).verify(bare)).doesNotThrowAnyException();
+    }
+
+    /** W-117d's hand: every one of the timeline's rules is placed once — 35 catalogued, 41 not yet, 168 not a claim. */
+    @Test
+    void of_whenTheShippedCatalogueIsRead_placesEveryRuleOnce() {
+        // When
+        ClaimCatalogue catalogue = ClaimCatalogue.of(SHIPPED);
+
+        // Then
+        assertThat(catalogue.notYetCatalogued()).hasSize(41);
+        assertThat(catalogue.notAClaim()).hasSize(168);
+        assertThat(SHIPPED.rules()).hasSize(244);
+    }
+
     private static ObjectNode step(JsonNode entries, int entry, int index) {
         return (ObjectNode) entries.path(entry).path("steps").path(index);
     }

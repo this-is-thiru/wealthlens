@@ -42,11 +42,12 @@ class ContentPerturbationTest {
 
     /**
      * The claim catalogue's fields that are codes from closed sets or links, not text (W-117a), with {@code covers}, a
-     * list of rule ids (W-117b): rewriting one would be refused as an unknown code before any text could be shown to
+     * list of rule ids (W-117b), and the coverage lists' rule ids and reasons (W-117d): rewriting one would be refused as
+     * an unknown code before any text could be shown to
      * change nothing.
      */
     private static final Set<String> CLAIM_CODES = Set.of("section", "channel", "chapterViiiPart", "ifMissingFromForm16",
-            "actor", "by", "whom", "presence", "covers");
+            "actor", "by", "whom", "presence", "covers", "notYetCatalogued", "because");
 
     private static final String CONTENT_FILE = "content/explanations.json";
 
