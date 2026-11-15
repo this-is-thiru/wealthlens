@@ -700,6 +700,31 @@
     "LANDLORD_ON_FILE": "Your landlord's name, address and PAN are on file for this draft.",
     "LANDLORD_NOT_ON_FILE": "Your landlord's name, address and PAN are not all on file for this draft."
   },
+  "report": {
+    "TITLE": "Your tax computation",
+    "RECEIPT": "Receipt {receipt}",
+    "TAX_YEAR": "Tax year {taxYear}",
+    "TOTAL_INCOME": "Total income",
+    "FINAL_AMOUNT": "Amount finally payable, or refundable where below nil",
+    "COLUMN_STEP": "What was worked out",
+    "COLUMN_RULE": "Rule",
+    "COLUMN_FIGURE": "Figure",
+    "KIND_INCOME": "Income",
+    "KIND_EXEMPTION": "Exemptions",
+    "KIND_DEDUCTION": "Deductions",
+    "KIND_SET_OFF": "Losses set off",
+    "KIND_TAX": "Tax charged",
+    "KIND_RELIEF": "Relief",
+    "KIND_ROUNDING": "Rounding",
+    "KIND_MEASURE": "Figures other rules are worked out on",
+    "KIND_INTEREST": "Interest",
+    "KIND_FEE": "Fees",
+    "NOT_VERIFIED": "Not verified",
+    "RULE_NOT_RECORDED": "This computation did not record which text of this rule it read, so no verification status is stated for it.",
+    "RULE_CHANGED_SINCE": "This rule has changed since this computation, so no verification status is stated for it.",
+    "PACK_UPDATED_SINCE": "The rule data has been updated since this computation was made: it was computed under {computedUnder}, and the current data is {current}. The figures below are as they were computed.",
+    "DISCLAIMER": "These figures are computed from {act}, {financeAct} and {rules} for tax year {taxYear}, on the information you entered. They are an aid to planning, not tax advice, and not a filing. A figure marked \"not verified\" rests on a rule that has not been confirmed against a primary source. Check anything material with a qualified professional before acting on it."
+  },
   "claims": {
     "FINAL_AMOUNT_UNCHANGED": "Making this claim does not change what you finally pay: the amount payable, with any interest and fees, is rounded as the law requires, and the rounding takes up what this claim is worth. It is still yours to make."
   },

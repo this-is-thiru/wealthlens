@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-121 DONE (D-711). BUILD NEXT: W-123a, then W-123b — each in plans/<id>.md; placed: W-117e, W-119b1, W-120, W-117c/d, W-122b/c
-Stage           : nothing in progress; W-121 committed and pushed with api-collection
-Done today      : session 100: W-122a (D-710, 98a29bde, pipeline 43719000243 success); W-121 (D-711)
-Board           : W-122a D, W-121 D; W-123a – b E; W-117c – e ·, W-119b1 ·, W-120 ·, W-122b – c ·; W-324 ·; Phase 10: W-299, W-294 ·
-Next step       : check W-121's pipeline, then BUILD W-123a from plans/W-123a.md, stop at its report. Grep every path first. Locally only NAMED test classes; full tiers on the pipeline; WealthLensModulithTest before every commit
-Owner actions   : unchanged from session 99 (§3.24/W-316 … rotate Mongo password and JWT key); open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710)
-Last verify     : local named classes green (D-711); pipeline for the W-121 commit not yet checked
+Item            : W-123a DONE (D-712). BUILD NEXT: W-123b from plans/W-123b.md; placed: W-117e, W-119b1, W-120, W-117c/d, W-122b/c
+Stage           : nothing in progress; W-123a committed and pushed with api-collection
+Done today      : session 100: W-122a (D-710), W-121 (D-711), W-123a (D-712)
+Board           : W-122a D, W-121 D, W-123a D; W-123b E; W-117c – e ·, W-119b1 ·, W-120 ·, W-122b – c ·; W-324 ·
+Next step       : check W-123a's pipeline, then BUILD W-123b, stop at its report. Grep every path first. Locally only the item's own classes + validate + Modulith + ArchitectureTest; everything else on the pipeline
+Owner actions   : unchanged from session 99; open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710)
+Last verify     : local named classes green (D-712); pipeline for the W-123a commit not yet checked
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-121: measure whether each claim changes the amount finally payable
+Last item commit: taxplanning W-123a: render one stored computation as a PDF report
 Updated         : 2026-11-15, session 100
 ```
 

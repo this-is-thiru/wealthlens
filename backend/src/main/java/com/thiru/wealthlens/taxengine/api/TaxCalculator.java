@@ -53,6 +53,7 @@ import com.thiru.wealthlens.taxengine.rules.regime.ElectionKind;
 import com.thiru.wealthlens.taxengine.rules.regime.FormRef;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.VehicleRoute;
+import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -66,6 +67,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -324,7 +326,7 @@ public class TaxCalculator {
      * @throws IllegalArgumentException where no pack ships for the year
      */
     public Map<String, String> evidenceSentences(TaxYearId year) {
-        return shipped(year).explanations().evidence();
+        return shipped(year).explanations().sentences().evidence();
     }
 
     /**
@@ -333,7 +335,7 @@ public class TaxCalculator {
      * @throws IllegalArgumentException where no pack ships for the year
      */
     public Map<String, String> claimSentences(TaxYearId year) {
-        return shipped(year).explanations().claims();
+        return shipped(year).explanations().sentences().claims();
     }
 
     /**
@@ -439,6 +441,47 @@ public class TaxCalculator {
         }
         return Optional.of(rulePacks.load(year).layers().values().stream().filter(ref -> ref.layer().affectsComputation())
                 .map(Object::toString).sorted().toList());
+    }
+
+    /**
+     * The computation report's sentences in the year's words, by code (W-123a C3a).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Map<String, String> reportSentences(TaxYearId year) {
+        return shipped(year).explanations().sentences().report();
+    }
+
+    /**
+     * How the year's governing instruments are cited (W-123a C3a).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public InstrumentCitations instrumentCitations(TaxYearId year) {
+        GoverningInstruments instruments = shipped(year).instruments();
+        return new InstrumentCitations(instruments.act().citation(), instruments.financeAct().citation(),
+                instruments.rules().citation());
+    }
+
+    /**
+     * The verification levels each of {@code ruleIds} the year's pack holds states, across its versions' sources and
+     * the instruments that introduced them, by name (W-123a C1a) — a rule it no longer holds is left out, as
+     * {@link #ruleChecksums} leaves it.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Map<String, Set<String>> verificationLevels(TaxYearId year, Set<String> ruleIds) {
+        Map<String, Set<String>> levels = new TreeMap<>();
+        shipped(year).rules().forEach((id, row) -> {
+            if (ruleIds.contains(id.value())) {
+                levels.put(id.value(), row.versions().stream()
+                        .flatMap(version -> Stream.of(version.provenance().verificationLevel(),
+                                version.introducedBy().verificationLevel()))
+                        .map(Enum::name)
+                        .collect(Collectors.toCollection(TreeSet::new)));
+            }
+        });
+        return levels;
     }
 
     /**

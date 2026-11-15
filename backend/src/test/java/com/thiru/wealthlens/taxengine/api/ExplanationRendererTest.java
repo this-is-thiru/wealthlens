@@ -21,6 +21,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.ExplanationTerms;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.Sentences;
 import com.thiru.wealthlens.taxengine.rules.reason.Reason;
 import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
@@ -308,7 +309,7 @@ class ExplanationRendererTest {
         // Given — the year's content with no regime terms
         Explanations noTerms = new Explanations(PACK.explanations().otherLimits(), PACK.explanations().byRule(),
                 PACK.explanations().reasons(), new ExplanationTerms(Map.of(), PACK.explanations().headTerms(),
-                PACK.explanations().partTerms(), PACK.explanations().sttStateTerms()), PACK.explanations().headroom(), Map.of(), Map.of());
+                PACK.explanations().partTerms(), PACK.explanations().sttStateTerms()), PACK.explanations().headroom(), Sentences.NONE);
         TraceLine barred = hra().withLimitedBy("disallowed in the NEW_TAX_REGIME regime")
                 .withReason(new Reason(ReasonCodes.REGIME_DISALLOWS, Map.of("regime", new ReasonFact.RegimeFact(NEW_TAX_REGIME))));
 

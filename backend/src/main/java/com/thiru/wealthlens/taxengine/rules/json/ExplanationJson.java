@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanation;
 import com.thiru.wealthlens.taxengine.rules.pack.ExplanationTerms;
 import com.thiru.wealthlens.taxengine.rules.pack.Explanations;
+import com.thiru.wealthlens.taxengine.rules.pack.Sentences;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,12 +37,13 @@ public final class ExplanationJson {
                 terms(root, path, "capitalGainsPart", CapitalGainsPart::new),
                 terms(root, path, "sttState", Function.identity())));
         return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
-                reasons, terms, headroom(root, path), sentences(root, path, "evidence"), sentences(root, path, "claims")));
+                reasons, terms, headroom(root, path), PackJson.construct(path, () -> new Sentences(sentences(root, path, "evidence"),
+                        sentences(root, path, "claims"), sentences(root, path, "report")))));
     }
 
     /**
-     * Sentences by code: {@code evidence}, what a claim's evidence says (W-119c C4a), and {@code claims}, what is said of a
-     * claim made (W-121 C3a); absent is none.
+     * One section of sentences by code — {@code evidence} (W-119c C4a), {@code claims} (W-121 C3a), {@code report}
+     * (W-123a); absent is none.
      */
     private static Map<String, String> sentences(JsonNode root, String path, String section) {
         Map<String, String> byCode = new LinkedHashMap<>();

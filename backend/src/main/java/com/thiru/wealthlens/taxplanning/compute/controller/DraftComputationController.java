@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.api.ItrFormChoice;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
+import com.thiru.wealthlens.taxplanning.compute.ComputationReportService;
 import com.thiru.wealthlens.taxplanning.compute.DraftCalendar;
 import com.thiru.wealthlens.taxplanning.compute.DraftCalendarService;
 import com.thiru.wealthlens.taxplanning.compute.DraftClaimIntegrity;
@@ -24,6 +25,9 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +50,7 @@ public class DraftComputationController {
     private final DraftClaimsService claimsService;
     private final DraftClaimIntegrityService claimIntegrityService;
     private final DraftOnboardingService onboardingService;
+    private final ComputationReportService reportService;
 
     @PostMapping("/drafts/{draftId}/compute")
     public DraftComputationView compute(@PathVariable String email, @PathVariable String draftId,
@@ -109,5 +114,13 @@ public class DraftComputationController {
     @GetMapping("/computations/{receipt}")
     public DraftComputationView byReceipt(@PathVariable String email, @PathVariable String receipt) {
         return service.byReceipt(email, receipt);
+    }
+
+    /** The same receipt as a PDF, made on request and kept nowhere (W-123a C4a). */
+    @GetMapping("/computations/{receipt}/report")
+    public ResponseEntity<byte[]> report(@PathVariable String email, @PathVariable String receipt) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + receipt + ".pdf\"")
+                .body(reportService.report(email, receipt));
     }
 }

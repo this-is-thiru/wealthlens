@@ -53,4 +53,34 @@ class TaxCalculatorPackIdentityTest {
         assertThat(CALCULATOR.ruleChecksums(TY_2026, Set.of("ADV-INSTALMENTS", "NO-SUCH-RULE")))
                 .isEqualTo(Map.of("ADV-INSTALMENTS", expected));
     }
+
+    @Test
+    void instrumentCitations_whenTheYearShips_areTheLocksInstruments() throws IOException {
+        // Given
+        JsonNode instruments = lock().get("instruments");
+
+        // When
+        InstrumentCitations citations = CALCULATOR.instrumentCitations(TY_2026);
+
+        // Then
+        assertThat(citations).isEqualTo(new InstrumentCitations(instruments.at("/act/citation").asString(),
+                instruments.at("/financeAct/citation").asString(), instruments.at("/rules/citation").asString()));
+    }
+
+    @Test
+    void verificationLevels_whenARuleIsUnverifiedInOneYearOnly_saysSoForThatYear() {
+        // Given — INT-CALCULATION's TY 2025-26 version cites r.119A with its introducedBy and provenance UNVERIFIED; its
+        // TY 2026-27 version is SOURCE_CHECKED in both (law/rules/INT-CALCULATION.json)
+        TaxCalculator bothYears = new TaxCalculator(ShippedRulePacks.compile("rulepacks", Set.of(TaxYearId.of(2025), TY_2026)));
+        Set<String> asked = Set.of("INT-CALCULATION", "NOT-A-RULE");
+
+        // When
+        Map<String, Set<String>> then = bothYears.verificationLevels(TaxYearId.of(2025), asked);
+        Map<String, Set<String>> now = bothYears.verificationLevels(TY_2026, asked);
+
+        // Then
+        assertThat(then).containsOnlyKeys("INT-CALCULATION");
+        assertThat(then.get("INT-CALCULATION")).contains("UNVERIFIED");
+        assertThat(now.get("INT-CALCULATION")).containsExactly("SOURCE_CHECKED");
+    }
 }
