@@ -369,3 +369,17 @@ turns a compliance tool into an evasion tool, and the engineering is identical e
 
 > **Erratum (W-119, 2026-11-15):** T12-2 cannot be constructed — no input declares HRA at an amount, so there is nothing above ₹2,28,000 to block; the rows that say "declared" read "allowed on the facts". `W-119d` takes T12-1 to T12-14 row by row (owner, W-119 C2a; D-700).
 > Verified by: the C2 erratum above.
+
+> **Erratum (W-119d, 2026-11-15):** how each row is run (D-709). **T12-1, T12-3, T12-4, T12-13** — `T12ClaimIntegrityPanelTest`
+> (the panel, W-119c); **T12-5 to T12-10** — `T12ClaimIntegrityTest` (whole computations through the shipped pipeline);
+> **T12-14** — `ForbiddenWordingTest`, read from every content file and the draft reads' fixed texts; a guard in the panel
+> class fails if an id has no test and is not listed here as not run. **T12-2** is not run (the erratum above).
+> **T12-11 is not run:** no rule cites r.163(1)(f) and nothing computes a return-filing obligation — it is C4.1, feature
+> F26, tier Next, with no work item; none is created now. **T12-12 is not run:** no department data is imported, so there is
+> no third-party source to compare against (C3.3; it waits on the import W-324 names). **T12-9 and T12-10's "blocked"**
+> means the engine refuses the contradicting facts in words (W-119a C2a), not a status. **T12-3's `ACTION_REQUIRED`** is
+> the engine's notice on the first HRA line; the panel says whether the draft's landlords' particulars are on file.
+> **T12-13** reads without "declared": allowed on the facts ₹1,50,000, evidenced ₹40,000. **T12-8** is a new engine case:
+> ₹1,500 in cash to a charitable institution that has not reported — no cash bar (s.133(5)), the share nil naming the
+> report bar (s.133(6)).
+> Verified by: the three test classes named, and `grep -rn '163(1)' backend/src/main/resources/rulepacks/timeline` (nothing).
