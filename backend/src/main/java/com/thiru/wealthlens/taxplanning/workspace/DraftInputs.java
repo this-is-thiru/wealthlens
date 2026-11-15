@@ -7,9 +7,12 @@ import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A draft's document: the year's entries, the engine's own model, and what has been paid (D-441 C1a, D-442 C1a).
@@ -21,18 +24,21 @@ import java.util.Optional;
  *     which every draft stored before W-239a is, since none could name one
  * @param evidence what the person can show for their claims (W-119b); never handed to the engine, and nothing when
  *     absent, which every draft stored before W-119b is
+ * @param onboarding which groups of questions the person has answered (W-122a); never handed to the engine, and none when
+ *     absent, which every draft stored before W-122a is
  */
 public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot brought, ThirdParties thirdParties,
-        EvidenceHeld evidence) {
+        EvidenceHeld evidence, Onboarding onboarding) {
 
     public DraftInputs {
         thirdParties = thirdParties == null ? ThirdParties.NONE : thirdParties;
         evidence = evidence == null ? EvidenceHeld.NONE : evidence;
+        onboarding = onboarding == null ? Onboarding.NONE : onboarding;
     }
 
     static DraftInputs blank() {
         return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of(), Map.of(), null, null), LedgerSnapshot.empty(),
-                ThirdParties.NONE, EvidenceHeld.NONE);
+                ThirdParties.NONE, EvidenceHeld.NONE, Onboarding.NONE);
     }
 
     /** A stored draft's inputs, read for a job that is not editing it (retention, W-239a). */
@@ -51,6 +57,20 @@ public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot br
         public ThirdParties {
             landlordIds = landlordIds == null ? List.of() : List.copyOf(landlordIds);
             lenderIds = lenderIds == null ? List.of() : List.copyOf(lenderIds);
+        }
+    }
+
+    /**
+     * The steps the person has marked answered, "nothing to enter" included (W-122a C1a); any may be marked or opened
+     * again at any time (C4a). Set by the person, never inferred from the entries.
+     */
+    public record Onboarding(Set<OnboardingStep> answered) {
+
+        static final Onboarding NONE = new Onboarding(Set.of());
+
+        public Onboarding {
+            answered = answered == null || answered.isEmpty() ? Set.of()
+                    : Collections.unmodifiableSet(EnumSet.copyOf(answered));
         }
     }
 

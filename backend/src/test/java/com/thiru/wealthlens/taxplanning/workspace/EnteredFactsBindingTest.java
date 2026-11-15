@@ -49,6 +49,41 @@ class EnteredFactsBindingTest {
     }
 
     @Test
+    void read_whenStoredBeforeOnboardingExisted_answersNoStep() {
+        // When — a draft stored before W-122a has no onboarding
+        DraftInputs read = DraftInputsMapper.read("{\"entered\": null, \"filing\": null, \"brought\": null}");
+
+        // Then
+        assertThat(read.onboarding().answered()).isEmpty();
+    }
+
+    @Test
+    void requireBinds_whenAnOnboardingStepIsUnknown_namesWhere() {
+        // Given
+        JsonNode tree = JsonPatchApplier.apply(DraftInputsMapper.tree(DraftInputsMapper.blank()), DraftInputsMapper.tree(
+                "[{\"op\": \"add\", \"path\": \"/onboarding/answered/-\", \"value\": \"SALARY\"}]"));
+
+        // When / Then
+        assertThatThrownBy(() -> DraftInputsMapper.requireBinds(tree))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("/onboarding/answered");
+    }
+
+    @Test
+    void requireBinds_whenAStepIsAnswered_keepsIt() {
+        // Given
+        JsonNode tree = JsonPatchApplier.apply(DraftInputsMapper.tree(DraftInputsMapper.blank()), DraftInputsMapper.tree(
+                "[{\"op\": \"add\", \"path\": \"/onboarding/answered/-\", \"value\": \"INVESTMENTS_AND_INSURANCE\"}]"));
+
+        // When
+        DraftInputsMapper.requireBinds(tree);
+
+        // Then
+        assertThat(DraftInputsMapper.read(DraftInputsMapper.text(tree)).onboarding().answered())
+                .containsExactly(OnboardingStep.INVESTMENTS_AND_INSURANCE);
+    }
+
+    @Test
     void requireBinds_whenAFieldIsMisspelt_namesWhereWithoutTheValue() {
         // Given
         JsonNode tree = JsonPatchApplier.apply(DraftInputsMapper.tree(DraftInputsMapper.blank()),

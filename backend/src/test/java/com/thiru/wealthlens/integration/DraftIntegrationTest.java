@@ -610,4 +610,57 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(call(HttpMethod.GET, OTHER, "/drafts/" + draftId + "/claim-integrity", null, null).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST);
     }
+
+    /** W-122a C1a: which steps are answered is the product's record; marking one changes no figure and no fingerprint. */
+    @Test
+    void patch_whenAnOnboardingStepIsAnswered_keepsItInTheRevisionAndMovesNoFigureOrFingerprint() {
+        // Given — computed before any step is answered
+        renting();
+        JsonNode before = computed();
+
+        // When — step 4 answered: nothing to invest
+        ResponseEntity<String> saved = save("[{\"op\": \"add\", \"path\": \"/onboarding/answered/-\","
+                + " \"value\": \"INVESTMENTS_AND_INSURANCE\"}]", "\"rev-1\"");
+        JsonNode after = computed();
+        ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/onboarding", null, null);
+
+        // Then
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/2", null, null).getBody())
+                .contains("\"answered\":[\"INVESTMENTS_AND_INSURANCE\"]");
+        assertThat(after.get("inputsFingerprint")).isEqualTo(before.get("inputsFingerprint"));
+        assertThat(after.get("finalAmount")).isEqualTo(before.get("finalAmount"));
+        assertThat(after.get("trace")).isEqualTo(before.get("trace"));
+        assertThat(read.getStatusCode()).as(read.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode onboarding = JsonMapper.builder().build().readTree(read.getBody());
+        assertThat(onboarding.get("revision").asInt()).isEqualTo(2);
+        assertThat(onboarding.get("next").asString()).isEqualTo("PAY");
+        assertThat(onboarding.at("/steps/3/step").asString()).isEqualTo("INVESTMENTS_AND_INSURANCE");
+        assertThat(onboarding.at("/steps/3/answered").asBoolean()).isTrue();
+        assertThat(onboarding.at("/steps/0/answered").asBoolean()).isFalse();
+    }
+
+    @Test
+    void patch_whenAnOnboardingStepIsUnknownOrTheRevisionStale_isRefused() {
+        // Given
+        renting();
+
+        // When
+        ResponseEntity<String> unknown = save(
+                "[{\"op\": \"add\", \"path\": \"/onboarding/answered/-\", \"value\": \"SALARY\"}]", "\"rev-1\"");
+        ResponseEntity<String> stale = save(
+                "[{\"op\": \"add\", \"path\": \"/onboarding/answered/-\", \"value\": \"PAY\"}]", "\"rev-0\"");
+
+        // Then
+        assertThat(unknown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(unknown.getBody()).contains("/onboarding/answered");
+        assertThat(stale.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void onboarding_whenAnotherAccountAsks_expected400() {
+        // When / Then
+        assertThat(call(HttpMethod.GET, OTHER, "/drafts/" + draftId + "/onboarding", null, null).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
 }

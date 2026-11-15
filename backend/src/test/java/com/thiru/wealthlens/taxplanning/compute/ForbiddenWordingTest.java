@@ -51,6 +51,7 @@ class ForbiddenWordingTest {
                     .forEach(file -> texts(read(file), file.toString(), sentences));
         }
         READS.forEach(read -> notIncluded(read).forEach(text -> sentences.add(read.getSimpleName() + ": " + text)));
+        DraftOnboardingService.NOT_MEASURED.values().forEach(text -> sentences.add("DraftOnboardingService: " + text));
 
         // When
         List<String> judging = sentences.stream().filter(sentence -> FORBIDDEN.matcher(sentence).find()).toList();

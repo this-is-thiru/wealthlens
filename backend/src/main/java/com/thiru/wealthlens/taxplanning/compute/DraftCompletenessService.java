@@ -7,7 +7,6 @@ import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -61,14 +60,25 @@ public class DraftCompletenessService {
 
     /** Every item worth something, largest first, ties by rule; separate from {@link #completeness} so it is tested on the engine alone. */
     List<DraftCompleteness.Item> items(EngineInputs inputs) {
-        List<DraftCompleteness.Item> items = new ArrayList<>();
-        taxCalculator.priceDeductionRoom(inputs).forEach(room -> items.add(new DraftCompleteness.Item(room.rule(),
+        return ranked(Stream.concat(deductionRooms(inputs).stream(), rentRoom(inputs).stream()));
+    }
+
+    /** The Chapter VIII rooms worth something, ranked as {@link #items} ranks; onboarding's step 4 (W-122a C3a). */
+    List<DraftCompleteness.Item> deductionRooms(EngineInputs inputs) {
+        return ranked(taxCalculator.priceDeductionRoom(inputs).stream().map(room -> new DraftCompleteness.Item(room.rule(),
                 DraftCompleteness.Direction.REDUCES, room.counted(), room.room(), Optional.empty(), Optional.empty(),
                 room.taxSaved())));
-        taxCalculator.priceRentRoom(inputs).ifPresent(rent -> items.add(new DraftCompleteness.Item(rent.rule(),
+    }
+
+    /** The rent room, where it is worth something; onboarding's step 2 (W-122a C3a). */
+    List<DraftCompleteness.Item> rentRoom(EngineInputs inputs) {
+        return ranked(taxCalculator.priceRentRoom(inputs).stream().map(rent -> new DraftCompleteness.Item(rent.rule(),
                 DraftCompleteness.Direction.REDUCES, rent.counted(), rent.room(), Optional.of(rent.rentNeeded()),
                 rent.location(), rent.taxSaved())));
-        return items.stream()
+    }
+
+    private static List<DraftCompleteness.Item> ranked(Stream<DraftCompleteness.Item> items) {
+        return items
                 .filter(item -> item.worth().isGreaterThan(Money.ZERO))
                 .sorted(Comparator.comparing(DraftCompleteness.Item::worth, Comparator.<Money>reverseOrder())
                         .thenComparing(DraftCompleteness.Item::rule))

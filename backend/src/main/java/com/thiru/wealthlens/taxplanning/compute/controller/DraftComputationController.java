@@ -16,6 +16,8 @@ import com.thiru.wealthlens.taxplanning.compute.DraftComputationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationView;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecast;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecastService;
+import com.thiru.wealthlens.taxplanning.compute.DraftOnboarding;
+import com.thiru.wealthlens.taxplanning.compute.DraftOnboardingService;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisation;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisationRequest;
 import java.time.LocalDate;
@@ -43,6 +45,7 @@ public class DraftComputationController {
     private final DraftCompletenessService completenessService;
     private final DraftClaimsService claimsService;
     private final DraftClaimIntegrityService claimIntegrityService;
+    private final DraftOnboardingService onboardingService;
 
     @PostMapping("/drafts/{draftId}/compute")
     public DraftComputationView compute(@PathVariable String email, @PathVariable String draftId,
@@ -68,6 +71,11 @@ public class DraftComputationController {
     @GetMapping("/drafts/{draftId}/completeness")
     public DraftCompleteness completeness(@PathVariable String email, @PathVariable String draftId) {
         return completenessService.completeness(email, draftId);
+    }
+
+    @GetMapping("/drafts/{draftId}/onboarding")
+    public DraftOnboarding onboarding(@PathVariable String email, @PathVariable String draftId) {
+        return onboardingService.onboarding(email, draftId);
     }
 
     @GetMapping("/drafts/{draftId}/claims")
