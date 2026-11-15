@@ -89,9 +89,9 @@ class ClaimPricingTest {
     }
 
     @Test
-    void priceClaims_whenOnlyAReportedDonationIsMade_pricesNoClaim() {
-        // Given — a reported donation, deducted under DED-DONATION-WHOLE, which no catalogue entry covers; the
-        // reported-donation entry's rule is the s.133(6) bar, never a deduction line (owner's ruling, session 99)
+    void priceClaims_whenADonationToANamedFundIsMade_pricesItAsTheDonationsClaim() {
+        // Given — ₹10,000 to a named fund, deducted whole under DED-DONATION-WHOLE (s.133(1)(a)), which the donations
+        // entry leads (W-117e C1a); the reported-donation entry's rule is the s.133(6) bar and stays unpriced
         EnteredFacts entered = paid(List.of(), List.of());
         EnteredFacts withDonation = new EnteredFacts(entered.employments(), List.of(), List.of(), List.of(),
                 Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
@@ -100,8 +100,16 @@ class ClaimPricingTest {
                 List.of(new Donation(DonationClause.NAMED_FUND, Money.of("10000"), false, true)), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of());
 
-        // When / Then
-        assertThat(CALCULATOR.priceClaims(inputs("FIRST_SCHEDULE_RATES", withDonation))).isEmpty();
+        // When
+        List<PricedClaim> claims = CALCULATOR.priceClaims(inputs("FIRST_SCHEDULE_RATES", withDonation));
+
+        // Then — with it, 9,50,000 − 10,000 = 9,40,000: 12,500 + 88,000 = 1,00,500 + 4,020 = 1,04,520; without it,
+        // 1,06,600; so 2,080
+        assertThat(claims).singleElement().satisfies(claim -> {
+            assertThat(claim.playbook().rule()).isEqualTo("DED-DONATION-WHOLE");
+            assertThat(claim.allowed()).isEqualTo(Money.of("10000"));
+            assertThat(claim.worth()).isEqualTo(Money.of("2080"));
+        });
     }
 
     /** T22-10 and T22-11 as behaviour: the landlord step carries the rule's threshold in rupees. */
@@ -112,7 +120,7 @@ class ClaimPricingTest {
 
         // Then — SAL-HOUSE-RENT-LANDLORD-PAN.exceeds 1,00,000; HP-OWN-RESIDENCE-INTEREST-CAP 2,00,000 and 30,000
         // (its TY 2026-27 version's definition)
-        assertThat(playbooks).hasSize(13);
+        assertThat(playbooks).hasSize(14);
         ClaimPlaybook houseRent = playbook(playbooks, "SAL-HOUSE-RENT-ALLOWANCE");
         assertThat(houseRent.plainName()).isEqualTo("House Rent Allowance");
         assertThat(houseRent.guidance().steps().get(1).instruction())

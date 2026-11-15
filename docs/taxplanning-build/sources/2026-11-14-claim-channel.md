@@ -74,3 +74,10 @@ above). Rules: as above, from the W-119b reading (`2026-11-15-evidence-of-claims
 **What follows for the plan:** `DR 22` C2's R row names 80TTA / 80TTB as "the employer cannot apply it"; C21 says an
 employee may give them to the employer. Its R+ row says the certificate is "retained per r.164(11)"; C18 and C19 say a
 copy is **furnished with the return**. Both go to the owner as choices, with errata to follow on approval.
+
+## W-117e — donations as a claim (2026-11-15, session 100)
+
+| # | Finding | Status | Page |
+|---|---|---|---|
+| C24 | **s.133** (Act 2025, Gazette 2025/265620) read: (1)(a) *"the whole of the aggregate of the sum or the sums paid by the assessee, in the tax year as donations to"* the named funds; (1)(b) *"an amount equal to 50% of the aggregate"* to the drought fund, (ii) a registered charitable fund or institution, (iii) – (vi) government, housing authorities, minority corporations, places of worship; (2) the qualifying limit over (1)(a)(xxiii), (xxiv) and (1)(b)(ii) – (vi); (3) a sum allowed here qualifies under no other provision; (4) *"only for donation made as a sum of money"*; (5) *"Any deduction for a donation over ₹ 2000 shall be allowed only if the payment is made by a mode other than cash"*; (6) the donee's report, for (1)(b)(ii) only. **No employer condition.** | READ | 167 – 169 |
+| C25 | **1961 s.80G** (thc.nic.in, owner's ruling W-117b C3a): (1) the whole of certain sums plus half of the balance, or half; (2)(a) the funds; (4) the qualifying limit on gross total income as reduced; (5D) *"No deduction shall be allowed … in respect of donation of any sum exceeding two thousand rupees unless such sum is paid by any mode other than cash"*; Explanation 5 — a sum of money only. **No employer condition.** | READ (thc.nic.in, C3a) | PDF 348 – 353 |

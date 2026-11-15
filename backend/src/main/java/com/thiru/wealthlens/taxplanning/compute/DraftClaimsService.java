@@ -34,8 +34,8 @@ public class DraftClaimsService {
     private static final List<String> NOT_INCLUDED = List.of(
             "No Form 16 is compared yet: each claim says what its absence from Form 16 would mean (W-118 C4a)",
             "A claim's worth is measured only where the computation allows it; one not made is priced by completeness (F33)",
-            "A reported donation is listed as not claimed, without a worth: its catalogue entry names the reporting bar,"
-                    + " not the rules that deduct it (W-117e)",
+            "A donation is priced with the donations entry; the reported-donation entry says when the institution's"
+                    + " report is needed, and is listed as not claimed, without a worth (W-117e)",
             "Claims overlap: each worth is measured with every other claim as it stands, so worths need not add up");
 
     private final DraftService draftService;

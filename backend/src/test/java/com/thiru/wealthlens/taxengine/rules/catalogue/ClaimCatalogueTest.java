@@ -58,6 +58,7 @@ class ClaimCatalogueTest {
     private static final RuleId DISABILITY = new RuleId("DED-DISABILITY");
     private static final RuleId DISABLED_DEPENDANT = new RuleId("DED-DISABLED-DEPENDANT");
     private static final RuleId EMPLOYER_PENSION = new RuleId("DED-NPS-EMPLOYER-OTHER");
+    private static final RuleId DONATIONS = new RuleId("DED-DONATION-WHOLE");
     private static final int HOUSE_RENT_ENTRY = 0;
     private static final int DONATION_ENTRY = 1;
     private static final int HEALTH_ENTRY = 4;
@@ -160,14 +161,14 @@ class ClaimCatalogueTest {
         assertThatCode(() -> ClaimCatalogue.of(bare).verify(bare)).doesNotThrowAnyException();
     }
 
-    /** W-117d's hand: every one of the timeline's rules is placed once — 35 catalogued, 41 not yet, 168 not a claim. */
+    /** W-117d's hand: every one of the timeline's rules is placed once — 38 catalogued, 38 not yet, 168 not a claim (W-117e moved three). */
     @Test
     void of_whenTheShippedCatalogueIsRead_placesEveryRuleOnce() {
         // When
         ClaimCatalogue catalogue = ClaimCatalogue.of(SHIPPED);
 
         // Then
-        assertThat(catalogue.notYetCatalogued()).hasSize(41);
+        assertThat(catalogue.notYetCatalogued()).hasSize(38);
         assertThat(catalogue.notAClaim()).hasSize(168);
         assertThat(SHIPPED.rules()).hasSize(244);
     }
@@ -182,7 +183,7 @@ class ClaimCatalogueTest {
     }
 
     @Test
-    void verify_whenTheShippedCatalogueIsChecked_passesWithItsThirteenEntries() {
+    void verify_whenTheShippedCatalogueIsChecked_passesWithItsFourteenEntries() {
         // Given
         ClaimCatalogue catalogue = ClaimCatalogue.of(SHIPPED);
 
@@ -190,7 +191,28 @@ class ClaimCatalogueTest {
         assertThatCode(() -> catalogue.verify(SHIPPED)).doesNotThrowAnyException();
         assertThat(catalogue.entries()).extracting(ClaimCatalogueEntry::rule).containsExactly(HOUSE_RENT, DONATION,
                 INVESTMENTS, OWN_PENSION, HEALTH, HOME_LOAN_INTEREST, LEAVE_TRAVEL, TAX_ON_EMPLOYMENT, SAVINGS_INTEREST,
-                SENIOR_DEPOSIT_INTEREST, DISABILITY, DISABLED_DEPENDANT, EMPLOYER_PENSION);
+                SENIOR_DEPOSIT_INTEREST, DISABILITY, DISABLED_DEPENDANT, EMPLOYER_PENSION, DONATIONS);
+    }
+
+    /**
+     * W-117e: the rules that deduct a donation are one claim, priced together, since s.133(2)'s qualifying limit caps
+     * both rates (C1a); no employer condition in s.133 or the 1961 s.80G (sources/2026-11-14-claim-channel.md C24, C25).
+     */
+    @Test
+    void of_whenTheDonationsEntryIsRead_isEmployerOptionalAndCoversBothRatesAndTheLimit() {
+        // When
+        ClaimCatalogueEntry entry = shipped(DONATIONS);
+
+        // Then
+        assertThat(entry.channel()).isEqualTo(ClaimChannel.EMPLOYER_OPTIONAL);
+        assertThat(entry.ifMissingFromForm16()).isEqualTo(AbsenceFromForm16.CLAIMABLE_IN_RETURN);
+        assertThat(entry.section()).isEqualTo("SEC-DONATIONS");
+        assertThat(entry.chapterViiiPart()).contains(ChapterViiiPart.B);
+        assertThat(entry.covers()).extracting(RuleId::value).containsExactly("DED-DONATION-HALF", "DED-DONATION-QUALIFYING");
+        assertThat(entry.basis().provision1961().reference()).isEqualTo("s.80G(1), (2), (4)");
+        assertThat(entry.basis().provision2025().reference()).isEqualTo("s.133(1), (2); s.392(5)(b)");
+        assertThat(entry.guidance().steps().get(0).instruction()).contains("{{DED-DONATION-CASH.atMost}}");
+        assertThat(entry.guidance().steps()).last().satisfies(last -> assertThat(last.by()).isEqualTo(ClaimDeadline.RETURN_DUE));
     }
 
     /**
@@ -638,11 +660,11 @@ class ClaimCatalogueTest {
         // Then — ordered by rule id; note fields are not law or content, so the pack drops them
         assertThat(compiled.path("entries")).extracting(entry -> entry.path("rule").asText())
                 .containsExactly("DED-DEPOSIT-INTEREST-SENIOR", "DED-DISABILITY", "DED-DISABLED-DEPENDANT",
-                        "DED-DONATION-UNREPORTED", "DED-HEALTH-FAMILY", "DED-NPS-EMPLOYER-OTHER", "DED-NPS-OWN",
+                        "DED-DONATION-UNREPORTED", "DED-DONATION-WHOLE", "DED-HEALTH-FAMILY", "DED-NPS-EMPLOYER-OTHER", "DED-NPS-OWN",
                         "DED-SAVINGS-INTEREST", "DED-SCHEDULE-XV", "HP-OWN-RESIDENCE-INTEREST-CAP",
                         "SAL-HOUSE-RENT-ALLOWANCE", "SAL-LEAVE-TRAVEL-CONCESSION", "SAL-TAX-ON-EMPLOYMENT");
         assertThat(compiled.path("entries").path(0).has("_sources")).isFalse();
-        assertThat(compiled.path("entries").path(10).has("covers")).isFalse();
+        assertThat(compiled.path("entries").path(11).has("covers")).isFalse();
     }
 
     /** A pack names no rule it does not carry: r.278(1)(iii)(B)'s rate begins in TY 2026-27 (its validity). */
@@ -657,7 +679,7 @@ class ClaimCatalogueTest {
                 RulePackCompiler.compile(SHIPPED, TaxYearId.of(year)).files().get(ClaimCatalogue.FILE));
 
         // Then
-        JsonNode leaveTravel = compiled.path("entries").path(11);
+        JsonNode leaveTravel = compiled.path("entries").path(12);
         assertThat(leaveTravel.path("rule").asText()).isEqualTo("SAL-LEAVE-TRAVEL-CONCESSION");
         assertThat(leaveTravel.path("covers")).extracting(JsonNode::asText).containsExactly(covered.split("\\|"));
     }
@@ -683,12 +705,12 @@ class ClaimCatalogueTest {
 
         // Then — SAL-HOUSE-RENT-LANDLORD-PAN.exceeds is 100000 in both years' versions; HP-OWN-RESIDENCE-INTEREST-CAP's
         // conditionsMet and aggregate 200000, anyOtherCase 30000 (each version's definition)
-        JsonNode houseRent = compiled.path("entries").path(10);
+        JsonNode houseRent = compiled.path("entries").path(11);
         assertThat(houseRent.path("rule").asString()).isEqualTo("SAL-HOUSE-RENT-ALLOWANCE");
         assertThat(houseRent.path("plainName").asString()).isEqualTo("House Rent Allowance");
         assertThat(houseRent.path("summary").asString()).startsWith("If your salary includes a house rent allowance");
         assertThat(houseRent.path("figures").path("SAL-HOUSE-RENT-LANDLORD-PAN.exceeds").asString()).isEqualTo("100000");
-        JsonNode homeLoan = compiled.path("entries").path(9).path("figures");
+        JsonNode homeLoan = compiled.path("entries").path(10).path("figures");
         assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.conditionsMet").asString()).isEqualTo("200000");
         assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.anyOtherCase").asString()).isEqualTo("30000");
         assertThat(homeLoan.path("HP-OWN-RESIDENCE-INTEREST-CAP.aggregate").asString()).isEqualTo("200000");

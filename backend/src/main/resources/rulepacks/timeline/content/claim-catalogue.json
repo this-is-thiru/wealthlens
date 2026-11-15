@@ -890,15 +890,85 @@
       "mistakes": [
         "Counting your own contribution here."
       ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.133 (pp.167 – 169) read: (1)(a) the whole of donations to the named funds, (1)(b) half of donations to the others, (2) the qualifying limit over both, (3) a sum allowed here qualifies under no other provision, (4) money only, (5) the cash bar, (6) the donee's report for (1)(b)(ii) only, which the reported-donation entry covers; no employer condition, and r.205(2) Table Sl. 4 lists any Chapter VIII deduction (W-117e C2a). One claim of three rules, priced together (C1a); the cash bar stays outside, named by placeholder (C3a). chapterViiiPart: Part B (p.159). provision1961: s.80G(1), (2), (4), (5D), Explanation 5, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF pp.348 – 353. Content: Claude's drafts, adopted by the owner (W-117e plan, session 100).",
+      "rule": "DED-DONATION-WHOLE",
+      "covers": [
+        "DED-DONATION-HALF",
+        "DED-DONATION-QUALIFYING"
+      ],
+      "section": "SEC-DONATIONS",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80G(1), (2), (4)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.133(1), (2); s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "appliesTo": "Donations of money to a fund, institution or body that the law names for this deduction. For a charitable institution or fund that must report your donation, see also the reported-donation entry.",
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Give by any way other than cash if a donation is more than {{DED-DONATION-CASH.atMost}}.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Get a receipt from the fund or institution, with its name and the amount.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "A receipt for each donation."
+        },
+        {
+          "order": 3,
+          "instruction": "Give the receipt to your employer on the declaration form they give you if you want less tax deducted.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Otherwise claim it in your return.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A receipt for each donation, with its name and the amount."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Donation receipt",
+          "closedBy": "The receipt for each donation made in the tax year."
+        }
+      ],
+      "mistakes": [
+        "Giving goods or services instead of money.",
+        "Paying more than the limit in cash.",
+        "Counting the same sum again under another section."
+      ]
     }
   ],
   "notYetCatalogued": [
     "CG-EXEMPT-RESIDENTIAL-HOUSE",
     "DED-AGNIVEER-GOVERNMENT",
     "DED-AGNIVEER-OWN",
-    "DED-DONATION-HALF",
-    "DED-DONATION-QUALIFYING",
-    "DED-DONATION-WHOLE",
     "DED-EDUCATION-LOAN",
     "DED-ELECTRIC-VEHICLE-LOAN",
     "DED-HOUSE-LOAN",
