@@ -27,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * A taxpayer's profile and the people and accounts it refers to, over HTTP and into Mongo (W-096 – W-098, D-440): only the owner
@@ -199,6 +201,31 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         assertThat(call(HttpMethod.GET, OWNER, path, null).getBody()).contains("PQRXXXXX8K").doesNotContain("PQRST5678K");
     }
 
+    /** W-119b C2a: r.205(2) asks for the lender's address; one stored before W-119b holds none and reads with none. */
+    @Test
+    void lender_whenStoredWithAndWithoutAnAddress_readsItBackOrNone() {
+        // Given
+        String path = OWNER + "/profiles/" + createdProfileId() + "/lenders";
+        call(HttpMethod.POST, OWNER, path, "{\"name\": \"HDFC\", \"kind\": \"BANK\"}");
+
+        // When
+        String withoutAddress = mongoTemplate.getCollection("tax_lenders").find().first().toJson();
+        call(HttpMethod.POST, OWNER, path, "{\"name\": \"SBI\", \"address\": \"Mumbai\", \"kind\": \"BANK\"}");
+        JsonNode lenders = JsonMapper.builder().build().readTree(call(HttpMethod.GET, OWNER, path, null).getBody());
+
+        // Then — the first stores no address field at all, as a lender stored before W-119b
+        assertThat(withoutAddress).doesNotContain("\"address\"");
+        assertThat(lenders.size()).isEqualTo(2);
+        for (JsonNode lender : lenders) {
+            JsonNode address = lender.path("address");
+            if (lender.path("name").asString().equals("SBI")) {
+                assertThat(address.asString()).isEqualTo("Mumbai");
+            } else {
+                assertThat(address.isNull() || address.isMissingNode()).as(lender.toString()).isTrue();
+            }
+        }
+    }
+
     @Test
     void employer_whenTheTanIsTakenInTheProfile_expected400ButAnotherProfileMayHoldIt() {
         // Given
@@ -235,14 +262,15 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
                  "pan": "PQRST5678K"}""");
         call(HttpMethod.POST, OWNER, path + "employers", "{\"name\": \"Acme\", \"tan\": \"BLRA12345B\", \"type\": \"PRIVATE\"}");
         call(HttpMethod.POST, OWNER, path + "landlords", "{\"name\": \"Ravi\", \"address\": \"Bengaluru\", \"pan\": \"LMNOP4321Q\"}");
-        call(HttpMethod.POST, OWNER, path + "lenders", "{\"name\": \"Meera\", \"pan\": \"FGHIJ8765K\", \"kind\": \"OTHER\"}");
+        call(HttpMethod.POST, OWNER, path + "lenders",
+                "{\"name\": \"Meera\", \"address\": \"Pune\", \"pan\": \"FGHIJ8765K\", \"kind\": \"OTHER\"}");
 
         // Then — DR 14 O1.1: what Mongo holds names none of them; what the app reads back is unchanged
         assertThat(stored("tax_profiles")).doesNotContain(PAN, "Self", "1985-06-01");
         assertThat(stored("tax_family_members")).doesNotContain("PQRST5678K", "Asha", "1986-02-01", "\"DISABILITY\"");
         assertThat(stored("tax_employers")).doesNotContain("BLRA12345B");
         assertThat(stored("tax_landlords")).doesNotContain("LMNOP4321Q", "Ravi", "Bengaluru");
-        assertThat(stored("tax_lenders")).doesNotContain("FGHIJ8765K", "Meera");
+        assertThat(stored("tax_lenders")).doesNotContain("FGHIJ8765K", "Meera", "Pune");
         Document profile = mongoTemplate.getCollection("tax_profiles").find().first();
         assertThat(profile.getString("pan")).startsWith("k1:");
         // HMAC-SHA256 of ABCDE1234F under the test digest key (bytes 0x1F … 0x3E), computed with Python's hmac, not the code

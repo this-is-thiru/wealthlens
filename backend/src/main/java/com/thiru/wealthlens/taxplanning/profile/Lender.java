@@ -31,6 +31,11 @@ public class Lender implements AuditableEntity, ProfileScoped {
     @Field("name")
     private String name;
 
+    /** The lender's address, which r.205(2) asks of a person claiming house-property interest; none on a lender stored before W-119b. */
+    @ValueConverter(EncryptedField.class)
+    @Field("address")
+    private String address;
+
     @ValueConverter(EncryptedField.class)
     @Field("pan")
     private String pan;

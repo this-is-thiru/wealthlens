@@ -19,16 +19,20 @@ import java.util.Optional;
  * @param brought what earlier years carried in, as the user's last return states it (W-234, D-445)
  * @param thirdParties the landlords and lenders this draft relies on ({@code DR 15} F3; W-239a, D-506); none when absent,
  *     which every draft stored before W-239a is, since none could name one
+ * @param evidence what the person can show for their claims (W-119b); never handed to the engine, and nothing when
+ *     absent, which every draft stored before W-119b is
  */
-public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot brought, ThirdParties thirdParties) {
+public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot brought, ThirdParties thirdParties,
+        EvidenceHeld evidence) {
 
     public DraftInputs {
         thirdParties = thirdParties == null ? ThirdParties.NONE : thirdParties;
+        evidence = evidence == null ? EvidenceHeld.NONE : evidence;
     }
 
     static DraftInputs blank() {
         return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of(), Map.of(), null, null), LedgerSnapshot.empty(),
-                ThirdParties.NONE);
+                ThirdParties.NONE, EvidenceHeld.NONE);
     }
 
     /** A stored draft's inputs, read for a job that is not editing it (retention, W-239a). */

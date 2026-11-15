@@ -506,4 +506,67 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
                 .extracting(AccessRecord::getSubject, AccessRecord::getSubjectId)
                 .containsExactlyInAnyOrder(tuple(ReadSubject.DRAFT, draftId), tuple(ReadSubject.DRAFT_REVISION, draftId));
     }
+
+    /** A salary, a tenancy for the whole of TY 2026-27 and a due date, saved as revision 1. */
+    private void renting() {
+        ResponseEntity<String> saved = save("""
+                [{"op": "add", "path": "/entered/employments/-", "value": {
+                  "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": 1600000}}],
+                  "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
+                  "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}},
+                 {"op": "add", "path": "/entered/tenancies/-", "value": {
+                  "occupied": {"from": "2026-04-01", "to": "2027-03-31"}, "location": "MUMBAI",
+                  "ownedByAssessee": false, "rentPaid": {"amountInRupees": 960000}}},
+                 {"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"}]""", "\"rev-0\"");
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+    }
+
+    private JsonNode computed() {
+        ResponseEntity<String> computed = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute",
+                "{\"regime\": \"FIRST_SCHEDULE_RATES\"}", null);
+        assertThat(computed.getStatusCode()).as(computed.getBody()).isEqualTo(HttpStatus.OK);
+        return JsonMapper.builder().build().readTree(computed.getBody()).get("tax");
+    }
+
+    /** W-119 C6a: what a person can show is the product's record; recording it changes no figure and no fingerprint. */
+    @Test
+    void patch_whenEvidenceIsRecorded_keepsItInTheRevisionAndMovesNoFigureOrFingerprint() {
+        // Given — computed before any evidence is recorded
+        renting();
+        JsonNode before = computed();
+
+        // When — eight of the tenancy's twelve months receipted
+        ResponseEntity<String> saved = save(
+                "[{\"op\": \"add\", \"path\": \"/evidence\", \"value\": {\"receiptedMonths\": [8]}}]", "\"rev-1\"");
+        JsonNode after = computed();
+
+        // Then
+        assertThat(saved.getStatusCode()).as(saved.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(JsonMapper.builder().build().readTree(saved.getBody()).at("/inputs/evidence/receiptedMonths/0").asInt())
+                .isEqualTo(8);
+        assertThat(call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/2", null, null).getBody())
+                .contains("\"receiptedMonths\":[8]");
+        assertThat(after.get("inputsFingerprint")).isEqualTo(before.get("inputsFingerprint"));
+        assertThat(after.get("totalIncome")).isEqualTo(before.get("totalIncome"));
+        assertThat(after.get("finalAmount")).isEqualTo(before.get("finalAmount"));
+        assertThat(after.get("trace")).isEqualTo(before.get("trace"));
+    }
+
+    @Test
+    void patch_whenEvidenceDoesNotFitTheEntries_expected400NamingIt() {
+        // Given
+        renting();
+
+        // When — thirteen months of a twelve-month tenancy; months for two tenancies when one is entered
+        ResponseEntity<String> beyond = save(
+                "[{\"op\": \"add\", \"path\": \"/evidence\", \"value\": {\"receiptedMonths\": [13]}}]", "\"rev-1\"");
+        ResponseEntity<String> unmatched = save(
+                "[{\"op\": \"add\", \"path\": \"/evidence\", \"value\": {\"receiptedMonths\": [8, 8]}}]", "\"rev-1\"");
+
+        // Then
+        assertThat(beyond.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(beyond.getBody()).contains("/evidence/receiptedMonths/0", "12 months");
+        assertThat(unmatched.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(unmatched.getBody()).contains("/evidence/receiptedMonths holds 2 but /entered/tenancies holds 1");
+    }
 }

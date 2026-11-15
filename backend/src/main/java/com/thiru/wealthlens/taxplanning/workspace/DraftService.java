@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxplanning.workspace;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.taxengine.api.DeclarationQuestion;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileReferenceService;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
@@ -146,6 +147,8 @@ public class DraftService {
         DraftInputsMapper.requireBinds(inputs);
         DraftInputs bound = DraftInputsMapper.read(DraftInputsMapper.text(inputs));
         requireNewThirdPartiesHeld(draft, bound.thirdParties());
+        bound.evidence().requireFits(bound.entered() == null ? EnteredFacts.none() : bound.entered(),
+                TaxYearId.of(draft.getTaxYearStart()));
         // A patch may remove /filing whole; the draft then answers nothing, and compute asks for its due date
         taxCalculator.requireAsked(TaxYearId.of(draft.getTaxYearStart()),
                 Optional.ofNullable(bound.filing()).map(DraftInputs.Filing::declarations).orElse(Map.of()));
