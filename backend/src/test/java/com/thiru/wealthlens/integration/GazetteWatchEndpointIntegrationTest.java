@@ -15,8 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * The Gazette watch's two endpoints: {@code SUPER_USER} only, and the cursor validated and recorded with its caller (W-236).
- * Called with the JDK's client, as {@code TaxPlanningControllerIntegrationTest} calls {@code /tax-planning} with a plain
- * client: RestAssured 5.5.7 throws a NullPointerException inside its own response handling on these paths, while the
+ * Called with the JDK's client: RestAssured 5.5.7 throws a NullPointerException inside its own response handling on these paths, while the
  * server's answers are correct (403, 200, 400 — seen with this client).
  */
 class GazetteWatchEndpointIntegrationTest extends AbstractIntegrationTest {

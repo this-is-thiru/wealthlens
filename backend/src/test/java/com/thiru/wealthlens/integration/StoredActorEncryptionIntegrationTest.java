@@ -30,13 +30,13 @@ class StoredActorEncryptionIntegrationTest extends AbstractIntegrationTest {
     private static final String OWNER = "owner@example.com";
 
     /** Every collection whose entity holds {@code AuditMetadata}, listed by hand from the 36 entities, and the cursor. */
-    private static final String[] ACTOR_COLLECTIONS = {"allowance_catalogue", "allowance_limits", "assets", "charge_accounts",
-        "charge_catalogue", "charge_instruments", "charge_schedules", "corporate_action", "insurances",
-        "lastly_performed_corporate_action", "perquisite_policies", "privacy_breach_intimations", "privacy_breach_notices",
-        "privacy_consents", "privacy_erasure_requests", "privacy_grievances", "profit_and_loss", "salary_profiles", "tax_bank_accounts",
-        "tax_computations", "tax_draft_computations", "tax_draft_revisions", "tax_employers", "tax_family_members", "tax_filing_drafts",
-        "tax_landlords", "tax_lenders", "tax_profile_erasures", "tax_profiles", "tax_regime_election_history", "tax_slab_policies",
-        "tax_year_registry", "tax_year_workspaces", "trade_outcomes", "transactions", "user_charges", "tax_gazette_cursor"};
+    private static final String[] ACTOR_COLLECTIONS = {"assets", "charge_accounts", "charge_catalogue",
+        "charge_instruments", "charge_schedules", "corporate_action", "insurances", "lastly_performed_corporate_action",
+        "privacy_breach_intimations", "privacy_breach_notices", "privacy_consents", "privacy_erasure_requests",
+        "privacy_grievances", "profit_and_loss", "tax_bank_accounts", "tax_draft_computations", "tax_draft_revisions",
+        "tax_employers", "tax_family_members", "tax_filing_drafts", "tax_landlords", "tax_lenders",
+        "tax_profile_erasures", "tax_profiles", "tax_regime_election_history", "tax_year_workspaces", "trade_outcomes",
+        "transactions", "user_charges", "tax_gazette_cursor"};
 
     @Autowired
     private TaxJobRunner runner;

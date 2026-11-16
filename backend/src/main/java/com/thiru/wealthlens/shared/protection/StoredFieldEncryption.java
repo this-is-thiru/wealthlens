@@ -60,8 +60,6 @@ public class StoredFieldEncryption {
             identifiers("user_charges", EMAIL, "account_holder"),
             identifiers("charge_accounts", EMAIL, "account_holder", "demat_account_id"),
             identifiers("lastly_performed_corporate_action", EMAIL),
-            identifiers("salary_profiles", EMAIL),
-            identifiers("tax_computations", EMAIL),
             identifiers("tax_profiles", EMAIL),
             identifiers("tax_profile_erasures", EMAIL),
             identifiers("tax_draft_computations", EMAIL),

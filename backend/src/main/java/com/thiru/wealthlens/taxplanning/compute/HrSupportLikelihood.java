@@ -3,7 +3,7 @@ package com.thiru.wealthlens.taxplanning.compute;
 /**
  * How likely an employer is to agree to a change of one component or fund ({@code 03-advisory.md} A2.6
  * {@code hrSupportLikelihood}). A product judgement with no legal source: reported beside a change, never a veto (A2.2
- * C10). Kept from the legacy path so one concept has one word (W-238f C2a); W-159 retires that path, not this type.
+ * C10). Kept from the legacy path so one concept has one word (W-238f C2a); W-159 retired that path, not this type.
  */
 public enum HrSupportLikelihood {
     /** A common, flexible component that employers routinely re-split on request. */

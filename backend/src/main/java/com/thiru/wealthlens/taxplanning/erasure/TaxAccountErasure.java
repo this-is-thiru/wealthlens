@@ -12,8 +12,6 @@ import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
-import com.thiru.wealthlens.taxplanning.salary.entity.SalaryProfileEntity;
-import com.thiru.wealthlens.taxplanning.salary.entity.TaxComputationEntity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +22,7 @@ import org.springframework.stereotype.Component;
 /**
  * A person's tax data, held and erased with their account (W-237d). Each profile is held as W-235 holds one, so the tax jobs
  * leave it alone and it reads as absent; at erasure every profile goes, and so does what is kept by email rather than under a
- * profile: the older flow's salary profiles and computations, any draft computation left without its draft, and the record of
- * each read the person made, and the record of each profile they asked to erase. After a restore, it applies again each profile
+ * profile: any draft computation left without its draft, the record of each read the person made, and the record of each profile they asked to erase. After a restore, it applies again each profile
  * erasure and hold the restored snapshot predates (W-237f C2a′).
  */
 @Component
@@ -54,8 +51,6 @@ public class TaxAccountErasure implements PersonalDataHolder {
         for (TaxpayerProfile profile : profiles.findByEmail(email)) {
             profileRemoval.remove(profile);
         }
-        mongoTemplate.remove(query(where("email").is(email)), SalaryProfileEntity.class);
-        mongoTemplate.remove(query(where("email").is(email)), TaxComputationEntity.class);
         mongoTemplate.remove(query(where("email").is(email)), DraftComputation.class);
         mongoTemplate.remove(query(where("principal").is(email)), AccessRecord.class);
         mongoTemplate.remove(query(where("email").is(email)), ProfileErasure.class);

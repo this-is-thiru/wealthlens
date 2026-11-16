@@ -124,7 +124,7 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule exports_carry_no_third_party_data =
             noClasses()
-                    .that().resideInAPackage("..taxplanning.document..")
+                    .that().resideInAPackage("..taxplanning.compute..").and().haveSimpleNameStartingWith("ComputationReport")
                     .should().dependOnClassesThat().haveNameMatching(".*\\.taxplanning\\.profile\\.(Landlord|Lender)\\w*")
                     .because("DR 14 O1.1 and DR 15 F3 exclude third-party data from any export the user shares");
 

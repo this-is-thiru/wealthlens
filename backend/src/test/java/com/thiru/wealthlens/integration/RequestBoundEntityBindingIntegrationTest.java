@@ -7,9 +7,6 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.taxplanning.policy.entity.AllowanceCatalogueEntity;
-import com.thiru.wealthlens.taxplanning.policy.entity.PerquisitePolicyEntity;
-import com.thiru.wealthlens.taxplanning.policy.entity.TaxSlabPolicyEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.ObjectMapper;
@@ -40,9 +37,6 @@ class RequestBoundEntityBindingIntegrationTest extends AbstractIntegrationTest {
         ChargeScheduleEntity schedule = mvcMapper.readValue(EMPTY, ChargeScheduleEntity.class);
         ChargeAccountEntity account = mvcMapper.readValue(EMPTY, ChargeAccountEntity.class);
         AssetEntity asset = mvcMapper.readValue(EMPTY, AssetEntity.class);
-        TaxSlabPolicyEntity slabPolicy = mvcMapper.readValue(EMPTY, TaxSlabPolicyEntity.class);
-        PerquisitePolicyEntity perquisitePolicy = mvcMapper.readValue(EMPTY, PerquisitePolicyEntity.class);
-        AllowanceCatalogueEntity allowance = mvcMapper.readValue(EMPTY, AllowanceCatalogueEntity.class);
 
         // Then
         assertThat(schedule.getRules()).isNotNull();
@@ -53,9 +47,6 @@ class RequestBoundEntityBindingIntegrationTest extends AbstractIntegrationTest {
         assertThat(asset.getSellTransactionIds()).isNotNull();
         assertThat(asset.getCorporateActions()).isNotNull();
         assertThat(asset.getAuditMetadata()).isNotNull();
-        assertThat(slabPolicy.getAuditMetadata()).isNotNull();
-        assertThat(perquisitePolicy.getAuditMetadata()).isNotNull();
-        assertThat(allowance.getAuditMetadata()).isNotNull();
     }
 
     @Test

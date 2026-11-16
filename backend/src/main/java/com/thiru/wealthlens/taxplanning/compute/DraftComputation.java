@@ -20,7 +20,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 
 /**
  * A computation as it was shown, with the draft revision it read, so a figure can be explained later ({@code DR 19} E6). Its own
- * collection: the legacy module still writes {@code tax_computations} (D-442).
+ * collection, {@code tax_draft_computations}: the legacy module held {@code tax_computations} when it was built (D-442).
  */
 @Data
 @NoArgsConstructor

@@ -34,7 +34,7 @@ a row in **Phase 15 — Post-deployment cleanup** of the backlog (YouTrack paren
 and taken once its run is logged below for every database it applies to (D-286).
 
 **Every file a step here saves is personal data, and is deleted (W-237f C3a).** A `mongoexport` taken as a step's way back
-(§0.5, §1A, §2.1 – §2.5, §1.s, §1.r) is the owner's own copy, and Act s.8(7)(a) reaches it as it reaches the database. Delete
+(§0.5, §0.8, §1A, §2.1 – §2.5, §1.s, §1.r) is the owner's own copy, and Act s.8(7)(a) reaches it as it reaches the database. Delete
 it once its step's result is in the run log and checked, or once the longest snapshot retention in §1.s has passed,
 whichever is first. The run-log line says "export deleted".
 
@@ -57,10 +57,11 @@ against the named database.
 | 0.1 | Environment, replica set, a `SUPER_USER` | check | check |
 | 0.2 | Duplicate checks before the unique indexes | run | run |
 | 0.3 | `profit_and_loss.version` present | **done**: 0 without (2026-10-27) | **done**: 0 without (2026-10-27) |
+| 0.8 | Legacy salary and policy collections: count, back up, drop (W-159) | run | run |
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.0 – 2.14 | Tax planning, by hand, in order | per step | per step |
+| 2.1 – 2.14 | Tax planning, by hand, in order (2.0 retired by W-159) | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -196,7 +197,7 @@ the new build refuses to read, and `tax_employers`' unique index `tax_employer_t
   `pan_digest` index is now **sparse** (a profile held for erasure has no digest); a start cannot change the options of the
   old index of that name, so this drop is also what lets it be created.
 - **Only these eleven collections.** The tax-policy collections (`tax_slab_policies`, `tax_year_registry`, …) share the
-  `tax_` prefix and are **not** touched.
+  `tax_` prefix and are **not** touched here; §0.8 drops them (W-159).
 
 1. **Keys** (once per environment, not per database): `openssl rand -base64 32`, twice — one for `TAX_DATA_KEY`, one for
    `TAX_DIGEST_KEY`. Each must decode to 32 bytes, or the app stops at start naming the property. Never reuse one key
@@ -237,7 +238,8 @@ build are encrypted and the previous build cannot read them: drop those collecti
 **Why.** `salary_profiles` and `tax_computations` (the `/tax-planning` salary flow) hold salary structure, deduction
 figures, a disability flag and pasted CTC text in plain text, which `DR 14` O1.1 says must be encrypted. W-134's
 encryption does not cover them. W-159 removes the module and these collections instead (D-448 C1a), so the counts
-here are what W-159's plan has to account for.
+here are what W-159's plan has to account for. **W-159 is built (D-726):** step 1's count is now §0.8 step 1, run there
+with the drop; step 2's hold is met once the board shows `W-159 D`.
 
 1. **Count** (read-only; one query, every database):
 
@@ -282,12 +284,56 @@ once per environment: for the test keys of `FieldCipherTest` (`AAECAw…Hh8=` / 
 `k1:S2S9g4PmcIjT3j52RiPQbAfhd5GQLs4wzEgLXeegdyJPvg==`. It reads nothing and writes nothing. Do not paste the keys into a
 shared terminal history: prefix the command with a space where the shell ignores those, or clear the history after.
 
+### 0.8 W-159 (D-726) — the legacy salary and policy collections, backed up and dropped · owner, `mongosh` · **every database · before the one deploy**
+
+**Why.** W-159 removed the older salary flow (`/tax-planning/user/**`) and the policy store it computed from. Nothing in
+the build reads or writes these seven collections any more: `salary_profiles` and `tax_computations` (salary structure,
+deduction figures, a disability flag and pasted CTC text, in plain text — §0.6), and `tax_slab_policies`,
+`perquisite_policies`, `allowance_catalogue`, `allowance_limits`, `tax_year_registry` (filled by the retired §2.0).
+Left in place they would be personal data held for no purpose, and the encryption sweep (§1.r) no longer reaches the
+two salary collections — so this runs **before** the deploy and before §1.r.
+
+1. **Count before** (read-only; one query, every database; it replaces §0.6 step 1):
+
+   ```js
+   db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+     .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+       const legacy = ["salary_profiles", "tax_computations", "tax_slab_policies", "perquisite_policies", "allowance_catalogue",
+    "allowance_limits", "tax_year_registry"];
+       return { database: n, present: d.getCollectionNames().filter(c => legacy.includes(c)),
+         counts: legacy.map(c => ({ c, n: d.getCollection(c).countDocuments({}) })),
+         disabled: d.salary_profiles.countDocuments({ is_physically_disabled: true }),
+         sourceText: d.salary_profiles.countDocuments({ source_text: { $nin: [null, ""] } }),
+         accounts: d.salary_profiles.distinct("email") }; }) }])
+   ```
+
+   Record each database's counts, `disabled` and `sourceText` in the run log, and the **number** of `accounts` — never
+   the emails themselves. **Stop** and tell the owner first if `sourceText` is above 0 or `accounts` holds anyone but
+   the owner and test accounts: that person's data is then exported for them before anything is dropped (W-159 C2).
+2. **Back up** each collection step 1 counts above 0:
+   `mongoexport --uri "<uri>" --db <db> --collection <c> --out legacy-<c>-before-w159.json`.
+3. **Drop** (these seven, nothing else):
+
+   ```js
+   ["salary_profiles", "tax_computations", "tax_slab_policies", "perquisite_policies", "allowance_catalogue",
+    "allowance_limits", "tax_year_registry"].map(c => ({ c, dropped: db.getCollection(c).drop() }))
+   ```
+
+   A second run returns `dropped: false` for each and changes nothing, as §0.5's drop does.
+4. **Count after**: step 1's query again — `present` is `[]` and every count 0 on every database.
+
+**Way back.** Deploy the previous build, then `mongoimport` each step-2 file into its collection. Delete the step-2 files
+as the export rule above says, once step 4 is logged.
+
+**Removed after use:** W-331 / WL-47, with §0.6, once this step is logged for every database.
+
+
 ## 1. On every deploy — startup, automatic; confirm in the log
 
 | # | Item / decision | What happens at startup | Check | If it fails |
 |---|---|---|---|---|
 | 1.1 | **W-079a** (D-210), **W-088s** (D-268) | `TaxEngineConfig` compiles every year in `rulepacks/shipped-years.json` (**2025-26, 2026-27**) and verifies each against its lock (`rulepacks/<year>.lock.json`) | The app starts. There is no database step: the rule packs ship in the JAR | **The boot stops** with a lock mismatch. Nothing reaches a database. Deploy the previous build; never edit a lock in place |
-| 1.2 | **W-088u8a** (D-281, D-282) | **Nothing.** Tax policies are no longer seeded at boot: see §2.0 | — | — |
+| 1.2 | **W-088u8a** (D-281, D-282) | **Nothing.** Tax policies are neither seeded nor read: §2.0 is retired and §0.8 drops their collections (W-159) | — | — |
 | 1.3 | **W-088u8c** (D-285) | **Nothing.** The W-086a financial-year rewrite no longer runs at boot: see §2.3. No `CommandLineRunner` remains | — | — |
 | 1.4 | **W-088u8b** (D-284) | **Nothing.** `trade_outcomes` is no longer rebuilt at boot when empty: see §2.2 | — | — |
 | 1.5 | Charge engine (ADR-27) | `ChargeReadinessAuditor` counts the rate cards when the engine is pricing | Grep the log for `NO RATE CARDS`. Expected on a database never seeded (prod today) until §1B runs; `Charges engine ready: N rate card(s)` otherwise | Run §1A / §1B before anyone trades |
@@ -447,7 +493,7 @@ logged `Account erasure <id> done`** (read-only; replace `<stored email>` with t
 db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
   .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const e = "<stored email>";
     return { database: n, left: ["assets", "transactions", "trade_outcomes", "profit_and_loss", "user_charges",
-      "charge_accounts", "lastly_performed_corporate_action", "insurances", "salary_profiles", "tax_computations",
+      "charge_accounts", "lastly_performed_corporate_action", "insurances",
       "tax_profiles", "tax_draft_computations", "privacy_grievances", "privacy_breach_intimations"].reduce((sum, c) =>
         sum + d.getCollection(c).countDocuments({ email: e }), d.user_details.countDocuments({ email: e })
         + d.tax_access_log.countDocuments({ principal: e }) + d.privacy_processing_log.countDocuments({ principal: e })
@@ -607,7 +653,7 @@ read the same `TAX_DATA_KEY` / `TAX_DIGEST_KEY`, so the environment does not cha
 From W-253 the identifiers are stored encrypted too, in a form one value always stores the same, so queries and unique
 indexes still work: `email` in `transactions` (and in a temporary transaction's `asset_request`), `assets`,
 `profit_and_loss`, `trade_outcomes`, `user_charges`, `charge_accounts`, `lastly_performed_corporate_action`, `insurances`,
-`salary_profiles`, `tax_computations`, `tax_profiles`, `tax_profile_erasures`, `tax_draft_computations`,
+`tax_profiles`, `tax_profile_erasures`, `tax_draft_computations`,
 `privacy_consents`, `privacy_erasure_requests`, `privacy_breach_intimations`, `privacy_grievances`; `account_holder` in
 `transactions` (and `asset_request.accountHolder`), `assets`, `trade_outcomes`, `user_charges`, `charge_accounts`;
 `charge_accounts.demat_account_id`; `principal` in `privacy_processing_log` and `tax_access_log`, and
@@ -641,7 +687,7 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
     const ids = { transactions: ["email", "account_holder", "asset_request.email", "asset_request.accountHolder"],
       assets: ["email", "account_holder"], profit_and_loss: ["email"], trade_outcomes: ["email", "account_holder"],
       user_charges: ["email", "account_holder"], charge_accounts: ["email", "account_holder", "demat_account_id"],
-      lastly_performed_corporate_action: ["email"], salary_profiles: ["email"], tax_computations: ["email"],
+      lastly_performed_corporate_action: ["email"],
       tax_profiles: ["email"], tax_profile_erasures: ["email"], tax_draft_computations: ["email"],
       tax_access_log: ["principal"], privacy_consents: ["email"], privacy_erasure_requests: ["email"],
       privacy_breach_intimations: ["email"], privacy_breach_notices: ["affected"] };
@@ -906,7 +952,11 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 > time: the figures recorded here (2026-10-20 and 2026-10-27, run log) are from the databases as they were. They run
 > after §1A and §1B.
 
-### 2.0 W-088u8a (D-281, D-282) — seed the TY 2025-26 tax policies · `SUPER_USER` · **required on a fresh database**
+### 2.0 W-088u8a (D-281, D-282) — seed the TY 2025-26 tax policies · **retired by W-159 (D-726) · do not run**
+
+> **Retired.** W-159 removed the seed endpoint, the policies and the code that read them; W-148 (WL-30), which was to
+> remove this step, is merged into W-159. §0.8 backs up and drops the collections this step filled. Kept below as the
+> record of what those collections held.
 
 **Why.** The tax engines read the slab, perquisite and allowance policies. They are seeded only when a `SUPER_USER`
 asks (D-280), never at boot.

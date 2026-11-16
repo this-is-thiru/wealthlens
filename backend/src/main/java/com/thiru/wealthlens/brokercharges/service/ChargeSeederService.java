@@ -43,7 +43,7 @@ import tools.jackson.databind.node.ObjectNode;
  * author. See ADR-27.
  *
  * <h2>It fails fast, unlike the seeder it is modelled on</h2>
- * {@code PolicySeederService} logs and continues when a file will not load. That is the wrong
+ * The tax-policy seeder (retired by W-159) logged and continued when a file would not load. That is the wrong
  * behaviour here: an application that starts with a malformed or missing rate card goes on to price
  * real trades from whatever did load, and the resulting charges look exactly like correct ones.
  * A bad card stops startup (AC-9).

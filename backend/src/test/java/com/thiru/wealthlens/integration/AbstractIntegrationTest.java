@@ -5,7 +5,6 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
-import com.thiru.wealthlens.taxplanning.policy.service.PolicySeederService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.restassured.RestAssured;
@@ -19,7 +18,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Isolated;
@@ -42,17 +40,10 @@ public abstract class AbstractIntegrationTest {
     private static final int JWT_EXPIRATION_SECONDS = 60 * 30;
 
     /**
-     * Collections the tax-policy seed fills ({@link #seedTaxPolicies()}, before every test — idempotent, so after
-     * the first it writes nothing) and shared read-only by every test. Everything else is per-test state and is cleared
-     * after each test. Anything not listed here is wiped, so a new collection needs no
+     * Reference data shared read-only by every test. Everything else is per-test state and is cleared after each test. Anything not listed here is wiped, so a new collection needs no
      * change to this class — which is the point.
      */
     private static final Set<String> SEEDED_REFERENCE_COLLECTIONS = Set.of(
-            "allowance_catalogue",
-            "allowance_limits",
-            "tax_slab_policies",
-            "tax_year_registry",
-            "perquisite_policies",
             // Written by ChargeSeederService, which since ADR-27 runs only when asked. Dropping it
             // between tests would leave whichever test seeds it carrying the cost for the rest, and
             // any rate card published afterwards would be rejected for naming codes the catalogue
@@ -101,21 +92,12 @@ public abstract class AbstractIntegrationTest {
     protected MongoTemplate mongoTemplate;
 
     @Autowired
-    private PolicySeederService policySeederService;
-
-    @Autowired
     private FieldCipher fieldCipher;
 
     @BeforeAll
     void setUpRestAssured() {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
-    }
-
-    /** The policies the application no longer seeds at boot (D-280): tests that compute tax need them on file. */
-    @BeforeEach
-    void seedTaxPolicies() {
-        policySeederService.seed(false, "integration-test");
     }
 
     /**
