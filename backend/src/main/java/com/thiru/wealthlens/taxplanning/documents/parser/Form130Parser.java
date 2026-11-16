@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -32,8 +31,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Reads a Form No. 130 ({@code DR 06} G5.1): at L1 its parts by their headings and every line by its printed label, from the
- * year's layout in the pack (W-126a, W-126b); at L2 each line's value cells by its kind (W-127a). Every failure is a reading
- * with its reason, never an exception ({@code DR 07} X2.5).
+ * year's layout in the pack (W-126a, W-126b); at L2 each line's value cells by its kind (W-127a); at L3 a cell the form's
+ * printed sums determine (W-127b). Every failure is a reading with its reason, never an exception ({@code DR 07} X2.5).
  */
 @Component
 @RequiredArgsConstructor
@@ -58,7 +57,7 @@ public class Form130Parser implements DocumentParser {
 
     @Override
     public String version() {
-        return "2";
+        return "3";
     }
 
     /** @throws IllegalArgumentException where no pack ships for {@code year} — the upload refuses such a year first */
@@ -117,7 +116,9 @@ public class Form130Parser implements DocumentParser {
             }
             List<String> unmapped = unmapped();
             ParseOutcome outcome = missing || !unmapped.isEmpty() ? ParseOutcome.PARTIAL : ParseOutcome.SUCCESS;
-            return new DocumentReading(outcome, fields, unmapped, notes);
+            Inference.Filled filled = Inference.fill(fields, layout.sums());
+            notes.addAll(filled.notes());
+            return new DocumentReading(outcome, filled.fields(), unmapped, notes);
         }
 
         /** The parts a line sits in, outermost first. */
@@ -196,7 +197,7 @@ public class Form130Parser implements DocumentParser {
             String[] cells = printed.trim().split("\\s+");
             List<ExtractedField> columns = new ArrayList<>();
             for (int at = 0; at < cells.length; at++) {
-                columns.add(located(line.path() + "." + key(line.columns().get(at)), Optional.of(cells[at]),
+                columns.add(located(CertificateLayout.cellPath(line.path(), Optional.of(line.columns().get(at))), Optional.of(cells[at]),
                         Optional.of(values.get().get(at)), READ_CONFIDENCE, place));
             }
             return columns;
@@ -205,16 +206,6 @@ public class Form130Parser implements DocumentParser {
         private static ExtractedField located(String path, Optional<String> text, Optional<ExtractedValue> value,
                 double confidence, FieldLocation place) {
             return new ExtractedField(path, text, value, confidence, Optional.of(place), Optional.empty());
-        }
-
-        /** A column's printed heading as a path word: "Gross Amount" is {@code grossAmount}. */
-        private static String key(String heading) {
-            String[] words = heading.trim().split("\\s+");
-            StringBuilder key = new StringBuilder(words[0].toLowerCase(Locale.ROOT));
-            for (int at = 1; at < words.length; at++) {
-                key.append(Character.toUpperCase(words[at].charAt(0))).append(words[at].substring(1).toLowerCase(Locale.ROOT));
-            }
-            return key.toString();
         }
 
         private void claim(Found found) {

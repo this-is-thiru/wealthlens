@@ -23,14 +23,14 @@ class CertificateSpecTest {
     @Test
     void newSpec_whenTheTitleIsBlank_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), SOURCE))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), SOURCE))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
     @Test
     void newSpec_whenTheProvenanceIsMissing_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), null))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
@@ -98,6 +98,56 @@ class CertificateSpecTest {
         // When / Then
         assertThatThrownBy(() -> new CertificatePart("partA", null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate part needs its printed heading: partA");
+    }
+
+    private static final CertificateCell TOTAL = new CertificateCell("partA.total", Optional.empty());
+
+    @Test
+    void newCell_whenTheColumnIsNullRatherThanEmpty_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateCell("partA.total", null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A certificate cell names its line, and its column or none");
+    }
+
+    @Test
+    void newCell_whenTheLineIsMissing_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateCell(null, Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A certificate cell names its line, and its column or none");
+    }
+
+    @Test
+    void newTerm_whenTheCellIsMissing_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateTerm(null, 1))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("A sum's term is a cell with a sign of +1 or -1");
+    }
+
+    @Test
+    void newIdentity_whenItHasNoTerm_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateIdentity(TOTAL, List.of(), 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A printed sum needs its target, at least one term and its page");
+    }
+
+    @Test
+    void newIdentity_whenThePageIsZero_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateIdentity(TOTAL,
+                List.of(new CertificateTerm(new CertificateCell("partA.part", Optional.empty()), 1)), 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A printed sum needs its target, at least one term and its page");
+    }
+
+    @Test
+    void newIdentity_whenTheTargetIsMissing_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateIdentity(null, List.of(), 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A printed sum needs its target, at least one term and its page");
     }
 
     @Test

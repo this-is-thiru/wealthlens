@@ -1,8 +1,11 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateCell;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificatePart;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateSpec;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateTerm;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateValueKind;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -18,7 +21,10 @@ import tools.jackson.databind.JsonNode;
  */
 public final class CertificateJson {
 
-    private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "provenance");
+    private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "identities", "provenance");
+    private static final Set<String> IDENTITY_KEYS = Set.of("target", "terms", "page");
+    private static final Set<String> TARGET_KEYS = Set.of("line", "column");
+    private static final Set<String> TERM_KEYS = Set.of("line", "column", "sign");
     private static final Set<String> PART_KEYS = Set.of("path", "heading");
     private static final Set<String> FIELD_KEYS = Set.of("path", "row", "label", "kind", "columns", "repeating", "page");
 
@@ -44,7 +50,22 @@ public final class CertificateJson {
         return PackJson.construct(where, () -> new CertificateSpec(code, PackJson.text(node, "title", where),
                 PackJson.array(node, "parts", where, e -> part(e.node(), e.path())),
                 PackJson.array(node, "fields", where, e -> field(e.node(), e.path())),
+                PackJson.arrayOrEmpty(node, "identities", where, e -> identity(e.node(), e.path())),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
+    }
+
+    private static CertificateIdentity identity(JsonNode node, String path) {
+        requireOnly(node, IDENTITY_KEYS, path);
+        return PackJson.construct(path, () -> new CertificateIdentity(cell(PackJson.object(node, "target", path), path + ".target", TARGET_KEYS),
+                PackJson.array(node, "terms", path, e -> PackJson.construct(e.path(), () -> new CertificateTerm(
+                        cell(e.node(), e.path(), TERM_KEYS), PackJson.integer(e.node(), "sign", e.path())))),
+                PackJson.integer(node, "page", path)));
+    }
+
+    private static CertificateCell cell(JsonNode node, String path, Set<String> known) {
+        requireOnly(node, known, path);
+        return PackJson.construct(path, () -> new CertificateCell(PackJson.text(node, "line", path),
+                PackJson.optionalText(node, "column", path)));
     }
 
     private static CertificatePart part(JsonNode node, String path) {

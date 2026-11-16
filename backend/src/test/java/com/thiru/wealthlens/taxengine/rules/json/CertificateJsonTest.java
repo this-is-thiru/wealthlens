@@ -140,6 +140,86 @@ class CertificateJsonTest {
                 .isInstanceOf(PackValidationException.class).hasMessageContaining("is printed on a page from 1");
     }
 
+    private static final String TOTAL = "{\"path\": \"partA.total\", \"label\": \"Total\", \"kind\": \"AMOUNT\", \"page\": 1}";
+    private static final String PART = "{\"path\": \"partA.part\", \"label\": \"Part\", \"kind\": \"AMOUNT\", \"page\": 1}";
+    private static final String SPLIT = "{\"path\": \"partA.split\", \"label\": \"Split\", \"kind\": \"AMOUNT\","
+            + " \"columns\": [\"Gross Amount\", \"Deductible Amount\"], \"page\": 1}";
+
+    private static CertificateSpec withSum(String sum) {
+        String json = certificate("SYN_1", NAME, TOTAL, PART, SPLIT).replace(", \"provenance\"", ", \"identities\": [" + sum + "], \"provenance\"");
+        return CertificateJson.certificate(MAPPER.readTree(json), PATH);
+    }
+
+    @Test
+    void certificate_whenASumIsPrinted_readsItsTargetAndSignedTerms() {
+        // When
+        CertificateSpec spec = withSum("{\"target\": {\"line\": \"partA.total\"}, \"terms\": [{\"line\": \"partA.part\", \"sign\": 1},"
+                + " {\"line\": \"partA.split\", \"column\": \"Deductible Amount\", \"sign\": -1}], \"page\": 2}");
+
+        // Then
+        var sum = spec.identities().get(0);
+        assertThat(sum.target().line()).isEqualTo("partA.total");
+        assertThat(sum.terms()).extracting(term -> term.sign()).containsExactly(1, -1);
+        assertThat(sum.terms().get(1).cell().column()).contains("Deductible Amount");
+        assertThat(sum.page()).isEqualTo(2);
+    }
+
+    @Test
+    void certificate_whenASumNamesAnUndeclaredLine_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withSum("{\"target\": {\"line\": \"partA.total\"}, \"terms\": [{\"line\": \"partA.none\", \"sign\": 1}],"
+                + " \"page\": 1}"))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("partA.none, which it does not declare");
+    }
+
+    @Test
+    void certificate_whenASumNamesALineThatIsNotAnAmount_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withSum("{\"target\": {\"line\": \"partA.total\"}, \"terms\": [{\"line\": \"partA.name\", \"sign\": 1}],"
+                + " \"page\": 1}"))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("partA.name, which is not an amount");
+    }
+
+    @Test
+    void certificate_whenASumOmitsTheColumnOfASplitLine_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withSum("{\"target\": {\"line\": \"partA.total\"}, \"terms\": [{\"line\": \"partA.split\", \"sign\": 1}],"
+                + " \"page\": 1}"))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("a cell the line does not print");
+    }
+
+    @Test
+    void certificate_whenASumNamesAColumnTheLineDoesNotPrint_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withSum("{\"target\": {\"line\": \"partA.total\"}, \"terms\": [{\"line\": \"partA.split\","
+                + " \"column\": \"Qualifying Amount\", \"sign\": 1}], \"page\": 1}"))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("a cell the line does not print");
+    }
+
+    @Test
+    void certificate_whenATermsSignIsNotPlusOrMinusOne_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withSum("{\"target\": {\"line\": \"partA.total\"}, \"terms\": [{\"line\": \"partA.part\", \"sign\": 2}],"
+                + " \"page\": 1}"))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("a sign of +1 or -1");
+    }
+
+    @Test
+    void certificate_whenASumNamesItsTargetAmongItsTerms_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withSum("{\"target\": {\"line\": \"partA.total\"}, \"terms\": [{\"line\": \"partA.total\", \"sign\": 1}],"
+                + " \"page\": 1}"))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("names partA.total twice");
+    }
+
+    @Test
+    void certificate_whenATargetCarriesASign_refusesTheProperty() {
+        // When / Then
+        assertThatThrownBy(() -> withSum("{\"target\": {\"line\": \"partA.total\", \"sign\": 1}, \"terms\": [{\"line\": \"partA.part\","
+                + " \"sign\": 1}], \"page\": 1}"))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("unknown property sign");
+    }
+
     @Test
     void certificate_whenTheCodeIsLowerCase_refuses() {
         // When / Then

@@ -1,6 +1,6 @@
 {
   "id": "FORM_130",
-  "_note": "Income-tax Rules, 2026, Appendix III, Form No. 130 (Gazette 271092 pp.2274 – 2280), prescribed by r.215(1) Table Sl. No. 1. Part A and Part C (Annexure-I) only (D-729 C3a); Part B and Annexure-II are W-126c. Each label is the printed words with the typesetter's line breaks joined and without the row number, which the form prints in its own column; what the form prints in the value column (\"(refer Note 1)\", \"(dd/mm/yyyy)\", \"(Yes/No)\") is not part of a label. Printed wording kept as printed: row 2 \"Allowances to the exempt under section 11\"; row 6 straight quotes, row 7(a) curly ones. Read by eye against the page images (W-126a C3a). No amendment to 12-11-2026 touches the form (sources/2026-11-16-form-130.md).",
+  "_note": "Income-tax Rules, 2026, Appendix III, Form No. 130 (Gazette 271092 pp.2274 – 2280), prescribed by r.215(1) Table Sl. No. 1. Part A and Part C (Annexure-I) only (D-729 C3a); Part B and Annexure-II are W-126c. Each label is the printed words with the typesetter's line breaks joined and without the row number, which the form prints in its own column; what the form prints in the value column (\"(refer Note 1)\", \"(dd/mm/yyyy)\", \"(Yes/No)\") is not part of a label. Printed wording kept as printed: row 2 \"Allowances to the exempt under section 11\"; row 6 straight quotes, row 7(a) curly ones. Read by eye against the page images (W-126a C3a). No amendment to 12-11-2026 touches the form (sources/2026-11-16-form-130.md). The sums the form prints (identities, W-127b) are each a target and signed terms as printed in brackets: 2(f), 3, 5, 6, 8, 9, 11 (the Deductible Amount column, row 11 being the \"Aggregate of deductible amount\"; 10(j) is the heading 10(k) totals), 12, 17, 21; 1(d) prints only \"Total\" and row 3 fixes it.",
   "versions": [
     {
       "validity": {
@@ -558,6 +558,260 @@
           "row": "21",
           "label": "Net tax payable (17-18-19-20)",
           "kind": "AMOUNT",
+          "page": 2278
+        }
+      ],
+      "identities": [
+        {
+          "target": {
+            "line": "partC.annexureI.row2f"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row2a",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row2b",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row2c",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row2e",
+              "sign": 1
+            }
+          ],
+          "page": 2276
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row3"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row1d",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row2f",
+              "sign": -1
+            }
+          ],
+          "page": 2276
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row5"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row4a",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row4b",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row4c",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row4d",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row4e",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row4f",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row4g",
+              "sign": 1
+            }
+          ],
+          "page": 2277
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row6"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row3",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row1e",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row5",
+              "sign": -1
+            }
+          ],
+          "page": 2277
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row8"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row7a",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row7b",
+              "sign": -1
+            }
+          ],
+          "page": 2277
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row9"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row6",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row8",
+              "sign": 1
+            }
+          ],
+          "page": 2277
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row11",
+            "column": "Deductible Amount"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row10a",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10b",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10c",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10d",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10e",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10f",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10g",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10h",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10i",
+              "column": "Deductible Amount",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row10k",
+              "column": "Deductible Amount",
+              "sign": 1
+            }
+          ],
+          "page": 2278
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row12"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row9",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row11",
+              "column": "Deductible Amount",
+              "sign": -1
+            }
+          ],
+          "page": 2278
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row17"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row13",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row15",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row16",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row14",
+              "sign": -1
+            }
+          ],
+          "page": 2278
+        },
+        {
+          "target": {
+            "line": "partC.annexureI.row21"
+          },
+          "terms": [
+            {
+              "line": "partC.annexureI.row17",
+              "sign": 1
+            },
+            {
+              "line": "partC.annexureI.row18",
+              "sign": -1
+            },
+            {
+              "line": "partC.annexureI.row19",
+              "sign": -1
+            },
+            {
+              "line": "partC.annexureI.row20",
+              "sign": -1
+            }
+          ],
           "page": 2278
         }
       ],

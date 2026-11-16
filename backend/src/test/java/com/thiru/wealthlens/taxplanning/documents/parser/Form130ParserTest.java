@@ -92,6 +92,26 @@ class Form130ParserTest {
     }
 
     @Test
+    void read_whenRow3IsBlankAndItsSumsTermsArePrinted_infersIt() throws Exception {
+        // Given — 1(d) 12,00,000.00 and 2(f) 0.00 printed, row 3 blank: 3 = 1(d) - 2(f) = 12,00,000
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.put("partC.annexureI.row1d", "12,00,000.00");
+        values.put("partC.annexureI.row2f", "0.00");
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(Form130Fixture.certificate(LAYOUT, values, Map.of(), Set.of())),
+                YEAR);
+
+        // Then
+        ExtractedField row3 = byPath(reading).get("partC.annexureI.row3");
+        assertThat(row3.interpretedValue()).contains(new ExtractedValue.MoneyRead(Money.of("1200000")));
+        assertThat(row3.confidence()).isEqualTo(0.80);
+        assertThat(reading.parserNotes()).containsExactly(
+                "Inferred partC.annexureI.row3 from the sum printed for partC.annexureI.row3");
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+    }
+
+    @Test
     void read_whenACellIsNotNumbersOnly_keepsItsTextUnreadAndNamesIt() throws Exception {
         // Given
         Map<String, String> values = new HashMap<>(VALUES);

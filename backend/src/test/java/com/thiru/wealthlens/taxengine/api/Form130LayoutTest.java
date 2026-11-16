@@ -143,6 +143,45 @@ class Form130LayoutTest {
         assertThat(byPath.get("partC.annexureI.row1").kind()).isEqualTo("NONE");
     }
 
+    /** The sums pp.2276 – 2278 print, as "target = ±term …", each cell by its line's row id ("Deductible" its column). */
+    private static final List<String> SUMS = List.of(
+            "2f = +2a +2b +2c +2e (p.2276)",
+            "3 = +1d -2f (p.2276)",
+            "5 = +4a +4b +4c +4d +4e +4f +4g (p.2277)",
+            "6 = +3 +1e -5 (p.2277)",
+            "8 = +7a -7b (p.2277)",
+            "9 = +6 +8 (p.2277)",
+            "11.deductibleAmount = +10a.deductibleAmount +10b.deductibleAmount +10c.deductibleAmount +10d.deductibleAmount"
+                    + " +10e.deductibleAmount +10f.deductibleAmount +10g.deductibleAmount +10h.deductibleAmount"
+                    + " +10i.deductibleAmount +10k.deductibleAmount (p.2278)",
+            "12 = +9 -11.deductibleAmount (p.2278)",
+            "17 = +13 +15 +16 -14 (p.2278)",
+            "21 = +17 -18 -19 -20 (p.2278)");
+
+    @Test
+    void certificate_whenTaxYear2026_27_holdsTheSumsTheFormPrints() {
+        // When
+        CertificateLayout layout = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow();
+
+        // Then
+        List<String> sums = layout.sums().stream().map(sum -> rowOf(sum.target().path()) + " ="
+                + sum.terms().stream().map(term -> " " + (term.sign() > 0 ? "+" : "-") + rowOf(term.path())).collect(Collectors.joining())
+                + " (p." + sum.page() + ")").toList();
+        assertThat(sums).containsExactlyElementsOf(SUMS);
+    }
+
+    private static String rowOf(String path) {
+        return path.substring("partC.annexureI.row".length());
+    }
+
+    @Test
+    void cellPath_whenTheLineHasColumns_isTheLineAndTheHeadingInCamelCase() {
+        // When / Then
+        assertThat(CertificateLayout.cellPath("partC.annexureI.row10a", java.util.Optional.of("Gross Amount")))
+                .isEqualTo("partC.annexureI.row10a.grossAmount");
+        assertThat(CertificateLayout.cellPath("partC.annexureI.row3", java.util.Optional.empty())).isEqualTo("partC.annexureI.row3");
+    }
+
     @Test
     void certificate_whenTaxYear2025_26_isEmptySinceTheRules2026PrescribeIt() {
         // When / Then — the Income-tax Rules, 2026 govern TY 2026-27 on (YR-ACT-004); TY 2025-26's is Form 16 (W-126e)
