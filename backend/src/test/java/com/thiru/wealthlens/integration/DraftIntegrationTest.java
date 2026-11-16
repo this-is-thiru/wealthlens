@@ -673,6 +673,53 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void firstFigure_whenGrossPayAndADueDateAreGiven_computesBothRegimesCoarseAndAnswersStepOne() throws Exception {
+        // Given — gross pay 12,00,000, the return due 31-07-2027, the profile born 1985
+
+        // When
+        ResponseEntity<String> response = call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/first-figure",
+                """
+                {"label": "First figure", "grossPay": {"amountInRupees": 1200000}, "dueDate": "2027-07-31"}""", null);
+
+        // Then — new regime: 11,25,000 taxable, 20,000 + 32,500 = 52,500, all rebated (≤ 60,000): 0. Old regime:
+        // 11,50,000 taxable, 1,12,500 + 45,000 = 1,57,500 + cess 6,300 = 1,63,800; band down to 88,920 (W-122b's rooms)
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode first = JsonMapper.builder().build().readTree(response.getBody());
+        String created = first.get("draftId").asString();
+        assertThat(first.get("revision").asInt()).isEqualTo(1);
+        assertThat(first.get("figures").size()).isEqualTo(2);
+        JsonNode byDefault = first.at("/figures/0");
+        assertThat(byDefault.at("/tax/regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(byDefault.at("/tax/bill/amountInRupees").decimalValue()).isEqualByComparingTo("0");
+        assertThat(byDefault.get("coarse").asBoolean()).isTrue();
+        JsonNode old = first.at("/figures/1");
+        assertThat(old.at("/tax/regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(old.at("/tax/bill/amountInRupees").decimalValue()).isEqualByComparingTo("163800");
+        assertThat(old.get("coarse").asBoolean()).isTrue();
+        assertThat(old.at("/band/lower/amountInRupees").decimalValue()).isEqualByComparingTo("88920");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isEqualTo(2);
+        JsonNode steps = JsonMapper.builder().build().readTree(
+                call(HttpMethod.GET, OWNER, "/drafts/" + created + "/onboarding", null, null).getBody());
+        assertThat(steps.at("/steps/0/answered").asBoolean()).isTrue();
+        assertThat(steps.at("/next").asString()).isEqualTo("PAY_STRUCTURE_AND_RENT");
+    }
+
+    @Test
+    void firstFigure_whenNoDueDateIsGiven_expected400AndCreatesNoDraft() {
+        // Given
+        long drafts = mongoTemplate.count(new Query(), FilingDraft.class);
+
+        // When
+        ResponseEntity<String> response = call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/first-figure",
+                "{\"label\": \"First figure\", \"grossPay\": {\"amountInRupees\": 1200000}}", null);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("/dueDate");
+        assertThat(mongoTemplate.count(new Query(), FilingDraft.class)).isEqualTo(drafts);
+    }
+
+    @Test
     void documentChecklist_whenAnotherAccountAsks_expected400() {
         // When / Then
         assertThat(call(HttpMethod.GET, OTHER, "/drafts/" + draftId + "/document-checklist", null, null).getStatusCode())

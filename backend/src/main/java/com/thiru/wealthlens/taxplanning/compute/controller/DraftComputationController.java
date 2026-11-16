@@ -18,6 +18,9 @@ import com.thiru.wealthlens.taxplanning.compute.DraftComputationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationView;
 import com.thiru.wealthlens.taxplanning.compute.DraftDocumentChecklist;
 import com.thiru.wealthlens.taxplanning.compute.DraftDocumentChecklistService;
+import com.thiru.wealthlens.taxplanning.compute.DraftFirstFigure;
+import com.thiru.wealthlens.taxplanning.compute.DraftFirstFigureRequest;
+import com.thiru.wealthlens.taxplanning.compute.DraftFirstFigureService;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecast;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecastService;
 import com.thiru.wealthlens.taxplanning.compute.DraftOnboarding;
@@ -54,6 +57,7 @@ public class DraftComputationController {
     private final DraftClaimsService claimsService;
     private final DraftClaimIntegrityService claimIntegrityService;
     private final DraftDocumentChecklistService documentChecklistService;
+    private final DraftFirstFigureService firstFigureService;
     private final DraftOnboardingService onboardingService;
     private final ComputationReportService reportService;
 
@@ -61,6 +65,12 @@ public class DraftComputationController {
     public DraftComputationView compute(@PathVariable String email, @PathVariable String draftId,
             @RequestBody Map<String, String> body) {
         return service.compute(email, draftId, body.get("regime"));
+    }
+
+    @PostMapping("/profiles/{profileId}/workspaces/{taxYear}/first-figure")
+    public DraftFirstFigure firstFigure(@PathVariable String email, @PathVariable String profileId,
+            @PathVariable int taxYear, @RequestBody DraftFirstFigureRequest request) {
+        return firstFigureService.firstFigure(email, profileId, taxYear, request);
     }
 
     @PostMapping("/drafts/{draftId}/compare-regimes")
