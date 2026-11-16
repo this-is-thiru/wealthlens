@@ -427,6 +427,20 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(computation);
     }
 
+    /** One of several computations of a draft at revision 1, by its own receipt and time (W-329a). */
+    private void computationAt(String draftId, String receipt, LocalDateTime computedAt, List<String> lawAndExec) {
+        DraftComputation computation = new DraftComputation();
+        computation.setId("computation-" + receipt);
+        computation.setReceipt(receipt);
+        computation.setDraftId(draftId);
+        computation.setRevision(1);
+        computation.setComputedAt(computedAt);
+        computation.setResultJson("{}");
+        computation.setLawAndExec(lawAndExec);
+        computation.setRuleChecksums(pinnedWithOneChanged());
+        mongoTemplate.save(computation);
+    }
+
     private Map<String, String> pinnedWithOneChanged() {
         String unchanged = taxCalculator.ruleChecksums(TaxYearId.of(2026), Set.of("ADV-LIABILITY")).get("ADV-LIABILITY");
         return Map.of("ADV-INSTALMENTS", "sha256:0", "ADV-LIABILITY", unchanged);
@@ -452,6 +466,39 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(staleness.since()).isEqualTo(LocalDateTime.parse("2026-11-06T06:30:00"));
         assertThat(mongoTemplate.findAll(DraftComputation.class)).hasSize(1);
         assertThat(stored("ready").getAuditMetadata().getUpdatedBy()).isEqualTo("staleness-sweep");
+    }
+
+    @Test
+    void stalenessSweep_whenTwoComputationsShareARevision_readsTheLaterOne() {
+        // Given — W-122c's first figure stores one computation per regime at revision 1; the audit's createdAt is never
+        // filled for them (W-329), so it cannot break the tie. The later one was made under an older law layer
+        workspace("workspace-1", null);
+        draft("ready", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
+        List<String> current = taxCalculator.packVersions(TaxYearId.of(2026)).orElseThrow();
+        computationAt("ready", "receipt-earlier", LocalDateTime.parse("2026-11-06T09:00:00"), current);
+        computationAt("ready", "receipt-later", LocalDateTime.parse("2026-11-06T09:01:00"), withOlder("LAW"));
+
+        // When
+        runner.run(stalenessSweep);
+
+        // Then
+        assertThat(stored("ready").getStaleness()).isNotNull();
+        assertThat(stored("ready").getStaleness().receipt()).isEqualTo("receipt-later");
+    }
+
+    @Test
+    void stalenessSweep_whenTwoComputationsShareARevisionAndNeitherHasATime_breaksTheTieByReceipt() {
+        // Given — both stored before W-123b's computed_at; "receipt-b" sorts after "receipt-a"
+        workspace("workspace-1", null);
+        draft("ready", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
+        computationAt("ready", "receipt-a", null, taxCalculator.packVersions(TaxYearId.of(2026)).orElseThrow());
+        computationAt("ready", "receipt-b", null, withOlder("LAW"));
+
+        // When
+        runner.run(stalenessSweep);
+
+        // Then
+        assertThat(stored("ready").getStaleness().receipt()).isEqualTo("receipt-b");
     }
 
     @Test

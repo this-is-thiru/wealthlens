@@ -31,6 +31,15 @@ import tools.jackson.databind.json.JsonMapper;
 @RequiredArgsConstructor
 public class StalenessSweep implements TaxJob {
 
+    /**
+     * A draft's latest computation: by revision, then by when it was computed, then by receipt — a total order, since one
+     * revision can hold a computation per regime (W-122c) and the audit's creation time is never filled for a
+     * computation (W-329). One stored before W-123b has no time and sorts first.
+     */
+    private static final Comparator<DraftComputation> LATEST = Comparator.comparingInt(DraftComputation::getRevision)
+            .thenComparing(DraftComputation::getComputedAt, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(DraftComputation::getReceipt);
+
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
     private final FilingDraftRepository drafts;
@@ -58,9 +67,7 @@ public class StalenessSweep implements TaxJob {
                 log.warn("Job {} lost its lease; stopping", name());
                 return;
             }
-            Optional<DraftComputation> latest = computations.findByDraftId(draft.getId()).stream()
-                    .max(Comparator.comparingInt(DraftComputation::getRevision)
-                            .thenComparing(computation -> computation.getAuditMetadata().getCreatedAt()));
+            Optional<DraftComputation> latest = computations.findByDraftId(draft.getId()).stream().max(LATEST);
             TaxYearId year = TaxYearId.of(draft.getTaxYearStart());
             Optional<List<String>> current = taxCalculator.packVersions(year);
             if (latest.isPresent() && current.isEmpty()) {
