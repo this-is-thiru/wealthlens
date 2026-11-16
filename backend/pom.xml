@@ -69,6 +69,11 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>itextpdf</artifactId>
         </dependency>
+        <!-- iText 5 opens an encrypted PDF only through BouncyCastle: an uploaded certificate may be one (W-126b) -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+        </dependency>
 
         <!-- Spring Modulith -->
         <dependency>

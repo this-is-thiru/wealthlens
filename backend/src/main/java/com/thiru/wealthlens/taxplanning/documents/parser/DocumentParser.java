@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxplanning.documents.parser;
 
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
 
 /**
@@ -20,5 +21,6 @@ public interface DocumentParser {
     /** Changes when what the parser reads changes, so an attempt can be repeated by a later version. */
     String version();
 
-    DocumentReading read(DocumentContent content);
+    /** Reads {@code content} as {@code year}'s form: the layout a form is matched against is the year's law (D-731 C1a). */
+    DocumentReading read(DocumentContent content, TaxYearId year);
 }

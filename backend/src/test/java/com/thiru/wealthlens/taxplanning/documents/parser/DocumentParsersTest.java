@@ -95,7 +95,7 @@ class DocumentParsersTest {
         }
 
         @Override
-        public DocumentReading read(DocumentContent content) {
+        public DocumentReading read(DocumentContent content, TaxYearId year) {
             return new DocumentReading(ParseOutcome.SUCCESS, List.of(new ExtractedField("partC.annexureI.rowA",
                     Optional.of("No"), Optional.of(new ExtractedValue.FlagRead(false)), 1, Optional.empty(),
                     Optional.empty())), List.of(), List.of());

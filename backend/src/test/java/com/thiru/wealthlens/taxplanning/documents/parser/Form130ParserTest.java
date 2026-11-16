@@ -1,0 +1,196 @@
+package com.thiru.wealthlens.taxplanning.documents.parser;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.thiru.wealthlens.taxengine.api.CertificateLayout;
+import com.thiru.wealthlens.taxengine.api.TaxCalculator;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+/** Form No. 130 read by L1: every line found by its printed label, its value cells kept verbatim (W-126b). */
+class Form130ParserTest {
+
+    private static final TaxCalculator CALCULATOR = new TaxCalculator(ShippedRulePacks.compile("rulepacks",
+            Set.of(TaxYearId.of(2025), TaxYearId.of(2026))));
+    private static final TaxYearId YEAR = TaxYearId.of(2026);
+    private static final CertificateLayout LAYOUT = CALCULATOR.certificate(YEAR, new CertificateCode("FORM_130")).orElseThrow();
+    private static final Form130Parser PARSER = new Form130Parser(CALCULATOR);
+    private static final Map<String, String> VALUES = Map.of(
+            "partA.certificateNo", "QWERTY1",
+            "partA.employer.tan", "MUMA12345B",
+            "partA.employee.name", "Asha Rao",
+            "partC.annexureI.rowA", "No",
+            "partC.annexureI.row1a", "12,00,000.00",
+            "partC.annexureI.row1e", "0.00",
+            "partC.annexureI.row7a", "15,000.00",
+            "partC.annexureI.row10a", "1,50,000.00 1,50,000.00",
+            "partC.annexureI.row21", "0.00");
+
+    private static long linesOf(String prefix) {
+        return LAYOUT.lines().stream().filter(line -> !line.repeating() && line.path().startsWith(prefix)).count();
+    }
+
+    private static Map<String, ExtractedField> byPath(DocumentReading reading) {
+        return reading.extractedFields().stream().collect(Collectors.toMap(ExtractedField::fieldPath, Function.identity()));
+    }
+
+    @Test
+    void read_whenAWholeCertificate_findsEveryLineWithItsPrintedValue() throws Exception {
+        // Given
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then
+        assertThat(reading.parserNotes()).isEmpty();
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        Map<String, ExtractedField> fields = byPath(reading);
+        assertThat(fields).hasSize((int) linesOf(""));
+        VALUES.forEach((path, value) -> assertThat(fields.get(path).rawText()).as(path).contains(value));
+        assertThat(fields.get("partC.annexureI.row1").rawText()).isEmpty();
+        assertThat(fields.get("partC.annexureI.row4c").rawText()).isEmpty();
+        assertThat(fields.get("partA.employer.name").rawText()).isEmpty();
+        assertThat(fields.values()).allSatisfy(field -> {
+            assertThat(field.confidence()).isEqualTo(0.95);
+            assertThat(field.interpretedValue()).isEmpty();
+            assertThat(field.location()).hasValueSatisfying(place -> assertThat(place.width()).isPositive());
+        });
+    }
+
+    @Test
+    void read_whenOnlyPartAIsIssued_findsPartAAndSaysPartCIsAbsent() throws Exception {
+        // Given — Part C Note 1: the last employer may issue Part C alone
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI"));
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        assertThat(reading.extractedFields()).hasSize((int) linesOf("partA."));
+        assertThat(reading.parserNotes()).containsExactly("PART C (Annexure-I) is not in this certificate");
+    }
+
+    @Test
+    void read_whenLabelsWrapElsewhereAndQuotesAreStraight_stillFindsThem() throws Exception {
+        // Given — a break inside a word, a break elsewhere, and row 7(a) with straight quotes
+        Map<String, String> labels = Map.of(
+                "partC.annexureI.row1e", "Reported total amount of salary received from other employ-<br/>er(s)",
+                "partC.annexureI.row2a", "Travel concession or assistance<br/>under section 11 being of the nature referred to in"
+                        + " Schedule III [Table: Sl. No. 8]",
+                "partC.annexureI.row7a", "Amount chargeable under any head of income other than \"Salaries\" as per section"
+                        + " 392(4)(a)(iv)");
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(Form130Fixture.certificate(LAYOUT, VALUES, labels,
+                Set.of())), YEAR);
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        Map<String, ExtractedField> fields = byPath(reading);
+        assertThat(fields.get("partC.annexureI.row1e").rawText()).contains("0.00");
+        assertThat(fields).containsKey("partC.annexureI.row2a");
+        assertThat(fields.get("partC.annexureI.row7a").rawText()).contains("15,000.00");
+    }
+
+    @Test
+    void read_whenARowIsNotPrinted_isPartialNamingIt() throws Exception {
+        // Given
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI.row4c"));
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        assertThat(reading.parserNotes()).containsExactly(
+                "Not found: partC.annexureI.row4c (Gratuity under section 19(1) [Table: Sl. No.3,4,5,6])");
+        assertThat(reading.extractedFields()).hasSize((int) linesOf("") - 1);
+    }
+
+    @Test
+    void read_whenTheCertificateIsNotAForm130_fails() throws Exception {
+        // Given — no PART A heading
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partA"));
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
+        assertThat(reading.parserNotes()).containsExactly("Not a Form No. 130: no PART A");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"password-rc4.pdf", "password-aes.pdf"})
+    void read_whenThePdfNeedsAPassword_failsSayingSo(String name) throws Exception {
+        // Given
+        byte[] pdf = Form130Fixture.withPassword(name);
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then — DR 13 row 71
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
+        assertThat(reading.parserNotes()).singleElement().asString().contains("password");
+    }
+
+    @Test
+    void read_whenThePdfIsProtectedOnlyAgainstEditing_readsIt() throws Exception {
+        // Given — a whole certificate printing 12,00,000.00 in row 1(a), AES-encrypted with an owner password and no user
+        // password by pypdf 6.14.0: it opens without one, as an issuer's protected copy may
+        byte[] pdf = Form130Fixture.withPassword("owner-only.pdf");
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        assertThat(byPath(reading).get("partC.annexureI.row1a").rawText()).contains("12,00,000.00");
+    }
+
+    @Test
+    void read_whenThePageIsAnImageOnly_failsForWantOfText() throws Exception {
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(Form130Fixture.scanned()), YEAR);
+
+        // Then — DR 13 row 72
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
+        assertThat(reading.parserNotes()).singleElement().asString().contains("no text layer");
+    }
+
+    @Test
+    void read_whenTheBytesAreNotAPdf_failsSayingSo() {
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent("not a pdf".getBytes(StandardCharsets.US_ASCII)), YEAR);
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
+        assertThat(reading.parserNotes()).singleElement().asString().startsWith("Not a PDF");
+    }
+
+    @Test
+    void read_whenTheYearPrescribesNoForm130_failsSayingSo() throws Exception {
+        // Given
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+
+        // When — TY 2025-26's pack has no FORM_130 (W-126a)
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), TaxYearId.of(2025));
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
+        assertThat(reading.parserNotes()).containsExactly("No Form No. 130 layout is in force in 2025-26");
+    }
+}

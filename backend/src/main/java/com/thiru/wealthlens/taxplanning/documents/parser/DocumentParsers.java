@@ -51,7 +51,7 @@ public record DocumentParsers(Map<DocumentType, DocumentParser> byType, Clock cl
         }
         Clock utc = clock.withZone(ZoneOffset.UTC);
         LocalDateTime startedAt = LocalDateTime.now(utc);
-        DocumentReading reading = parser.read(content);
+        DocumentReading reading = parser.read(content, document.taxYear());
         LocalDateTime finishedAt = LocalDateTime.now(utc);
         return new ParseAttempt(UUID.randomUUID().toString(), document.documentId(),
                 new ParserRun(parser.id(), parser.version(), startedAt, finishedAt), reading.outcome(),
