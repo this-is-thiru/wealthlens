@@ -54,7 +54,7 @@ class ItrFormReferencesTest {
         }
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
-                PACK.declarations(), byCode, Explanations.none(), List.of());
+                PACK.declarations(), byCode, Explanations.none(), Map.of(), List.of());
         List<String> problems = new ArrayList<>();
         ItrFormReferences.check(pack, problems);
         return problems;

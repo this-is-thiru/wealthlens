@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
@@ -12,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.json.CertificateJson;
 import com.thiru.wealthlens.taxengine.rules.json.ItrFormJson;
 import com.thiru.wealthlens.taxengine.rules.json.PackJson;
 import com.thiru.wealthlens.taxengine.rules.json.RegimeJson;
@@ -71,12 +73,14 @@ public final class TimelineReader {
     private static final String ITR_FORMS = "forms/itr-forms";
     /** The cells the forms' schedules place, one per file (W-092 C2a). */
     private static final String ITR_CELLS = "forms/itr-cells";
+    /** The certificates an employer or bank issues, one per file, a version per span of years (W-126a). */
+    private static final String CERTIFICATES = "forms/certificates";
     /** The section catalogue, carried verbatim for its own reader (D-060). */
     private static final String SECTIONS = "content/sections";
     /** Each Act's section list, carried verbatim for the coverage register (D-066). */
     private static final String ACTS = "content/acts";
     private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, CONDITION_SETS, PIPELINES, COMPONENTS, FUNDS,
-            DECLARATIONS, ITR_FORMS, ITR_CELLS, SECTIONS, ACTS);
+            DECLARATIONS, ITR_FORMS, ITR_CELLS, CERTIFICATES, SECTIONS, ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
     /** The trace lines' plain-language sentences, one file for every year; each pack keeps its own rules' (W-116). */
@@ -149,6 +153,7 @@ public final class TimelineReader {
         private final Map<ItrFormCode, FormFile> itrFormFiles = new HashMap<>();
         private final Map<CellCode, ScheduleCell> itrCells = new HashMap<>();
         private final Map<CellCode, String> itrCellSources = new HashMap<>();
+        private final Map<CertificateCode, String> certificateSources = new HashMap<>();
         private final Map<NodeId, String> pipelineNodes = new HashMap<>();
         private final Map<String, String> sections = new HashMap<>();
         private final Map<String, String> acts = new HashMap<>();
@@ -183,7 +188,7 @@ public final class TimelineReader {
                 case COMPONENTS -> addComponent(path, stem, node, content);
                 case FUNDS -> addFund(path, stem, node, content);
                 case DECLARATIONS -> addDeclaration(path, stem, node, content);
-                case ITR_FORMS, ITR_CELLS -> addFormsLayer(directory, path, stem, node, content);
+                case ITR_FORMS, ITR_CELLS, CERTIFICATES -> addFormsLayer(directory, path, stem, node, content);
                 case SECTIONS -> addSection(path, stem, node, content);
                 case ACTS -> addAct(path, stem, node, content);
                 default -> throw new IllegalStateException(directory + " is a known directory with no reader");
@@ -252,10 +257,12 @@ public final class TimelineReader {
             declarationSources.put(declaration.code(), content);
         }
 
-        /** The forms layer's files: a form, or a cell its schedules place (W-092). */
+        /** The forms layer's files: a form, a cell its schedules place (W-092), or a certificate (W-126a). */
         private void addFormsLayer(String directory, String path, String stem, JsonNode node, String content) {
             if (ITR_CELLS.equals(directory)) {
                 addItrCell(path, stem, node, content);
+            } else if (CERTIFICATES.equals(directory)) {
+                addCertificate(path, stem, node, content);
             } else {
                 addItrForm(path, stem, node, content);
             }
@@ -273,6 +280,14 @@ public final class TimelineReader {
             requireNamedFor(path, stem, cell.code().value());
             itrCells.put(cell.code(), cell);
             itrCellSources.put(cell.code(), content);
+        }
+
+        /** Every version is read now, so a malformed certificate fails the timeline, not a year's pack (W-126a). */
+        private void addCertificate(String path, String stem, JsonNode node, String content) {
+            CertificateCode code = PackJson.construct(path, () -> new CertificateCode(PackJson.text(node, "id", path)));
+            requireNamedFor(path, stem, code.value());
+            SetVersions.everyVersion(node, path, CertificateJson::certificate);
+            certificateSources.put(code, content);
         }
 
         private void addSection(String path, String stem, JsonNode node, String content) {
@@ -293,7 +308,7 @@ public final class TimelineReader {
                     (version, where) -> ItrFormJson.form(version, where, itrCells)));
             return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources,
                     conditionSetSources, components, componentSources,
-                    funds, fundSources, declarations, declarationSources, itrFormSources, itrCells, itrCellSources, pipelineNodes, coverage, explanations, claimCatalogue, sections, acts);
+                    funds, fundSources, declarations, declarationSources, itrFormSources, itrCells, itrCellSources, pipelineNodes, coverage, explanations, claimCatalogue, sections, certificateSources, acts);
         }
     }
 

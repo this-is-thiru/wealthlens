@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
@@ -56,6 +57,7 @@ import java.util.Optional;
  * @param sections the section catalogue ({@code content/sections/}), each entry's file verbatim by its
  *     key. Like the register it describes the whole timeline, so no year's pack is compiled from it
  *     (D-060)
+ * @param certificateSources each certificate's file verbatim, by code, versioned as a return form is (W-126a)
  * @param acts each Act's section list ({@code content/acts/}), verbatim by the Act's code: what the
  *     coverage register must list exactly, for an Act that has one (D-066)
  */
@@ -81,6 +83,7 @@ public record Timeline(
         Optional<String> explanations,
         Optional<String> claimCatalogue,
         Map<String, String> sections,
+        Map<CertificateCode, String> certificateSources,
         Map<String, String> acts) {
 
     public Timeline {
@@ -105,6 +108,7 @@ public record Timeline(
         claimCatalogue = Objects.requireNonNull(claimCatalogue,
                 "claimCatalogue: Optional.empty() where the timeline has none");
         sections = Map.copyOf(sections);
+        certificateSources = Map.copyOf(certificateSources);
         acts = Map.copyOf(acts);
     }
 }

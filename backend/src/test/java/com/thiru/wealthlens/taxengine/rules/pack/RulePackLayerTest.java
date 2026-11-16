@@ -131,7 +131,7 @@ class RulePackLayerTest {
                 Map.of(),
                 Map.of(),
                 Map.of(),
-                Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), List.of());
+                Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), Map.of(), List.of());
     }
 
     @Nested
@@ -253,7 +253,7 @@ class RulePackLayerTest {
                                     Map.of(),
                                     Map.of(),
                                     Map.of(),
-                                    Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), List.of()))
+                                    Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), Map.of(), List.of()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("calls itself");
         }
@@ -269,7 +269,7 @@ class RulePackLayerTest {
                                     Map.of(),
                                     Map.of(),
                                     Map.of(),
-                                    Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), List.of()))
+                                    Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), Map.of(), List.of()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("would compute nothing");
         }

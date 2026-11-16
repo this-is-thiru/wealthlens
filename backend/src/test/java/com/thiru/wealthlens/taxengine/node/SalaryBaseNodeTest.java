@@ -93,7 +93,7 @@ class SalaryBaseNodeTest {
                         component(shipped, HRA, Set.of()))
                 .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
-                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of(), Explanations.none(), List.of());
+                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds(), Map.of(), Map.of(), Explanations.none(), Map.of(), List.of());
     }
 
     /** Basic is in every base, and outright in the entertainment one, which DA is not in (D-105). */

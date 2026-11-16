@@ -74,6 +74,7 @@ public final class JsonPackAssembler implements PackAssembler {
                 RegistryJson.declarations(declarations, "exec/declarations.json"),
                 ItrFormJson.forms(itrForms, "forms/itr-forms.json"),
                 ExplanationJson.explanations(explanations, "content/explanations.json"),
+                CertificateJson.certificates(itrForms, "forms/itr-forms.json"),
                 ClaimCatalogue.compiled(claims, ClaimCatalogue.FILE));
     }
 

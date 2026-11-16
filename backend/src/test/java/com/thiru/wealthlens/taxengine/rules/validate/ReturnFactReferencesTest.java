@@ -43,7 +43,7 @@ class ReturnFactReferencesTest {
                         LocalDate.of(2026, 11, 9), VerificationLevel.UNVERIFIED, "Nothing: synthetic"));
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(SET, set), PACK.funds(),
-                PACK.declarations(), PACK.itrForms(), Explanations.none(), List.of());
+                PACK.declarations(), PACK.itrForms(), Explanations.none(), Map.of(), List.of());
         List<String> problems = new ArrayList<>();
         ReturnFactReferences.check(pack, problems);
         return problems;

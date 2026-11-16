@@ -40,6 +40,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSelector;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrSelection;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleMapper;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -321,6 +322,16 @@ public class TaxCalculator {
     public Money billWithRoomsFilled(EngineInputs inputs, Set<RoomFamily> families) {
         RulePack pack = shipped(inputs.taxYear());
         return RoomFilling.billWithRoomsFilled(REGISTRY, pack, spec(pack, inputs.regime()), inputs, families);
+    }
+
+    /**
+     * The year's printed layout of {@code code}, read from the Gazette (W-126a): its parts by heading and its lines by label,
+     * for a parser to find them by. Empty where the year's law prescribes no such certificate.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Optional<CertificateLayout> certificate(TaxYearId year, CertificateCode code) {
+        return Optional.ofNullable(shipped(year).certificates().get(code)).map(CertificateLayout::of);
     }
 
     /**

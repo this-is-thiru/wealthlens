@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -46,7 +47,7 @@ class ExplanationCompilationTest {
                 t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
                 t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
                 t.itrCellSources(), t.pipelineNodes(), t.coverage(), Optional.of(content),
-                t.claimCatalogue(), t.sections(), t.acts());
+                t.claimCatalogue(), t.sections(), Map.of(), t.acts());
     }
 
     private static JsonNode explanationOf(CompiledPack pack, String rule) {

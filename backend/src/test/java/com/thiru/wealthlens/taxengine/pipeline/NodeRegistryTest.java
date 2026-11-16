@@ -396,7 +396,7 @@ class NodeRegistryTest {
                 Map.of(),
                 Map.of(),
                 Map.of(),
-                Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), List.of());
+                Map.of(), Map.of(), Map.of(), Map.of(), Explanations.none(), Map.of(), List.of());
     }
 
     private static RuleRow stdDeductionRule() {

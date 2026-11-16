@@ -5,7 +5,9 @@ import com.thiru.wealthlens.taxengine.rules.catalogue.CompiledClaim;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
 import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateSpec;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
@@ -52,6 +54,7 @@ import java.util.stream.Stream;
  * @param funds the employer-fund registry, by code (W-238e)
  * @param declarations the questions the year asks the person and the engine cannot compute, by code (W-090a1)
  * @param itrForms the year's return forms, by code — the {@code forms} layer (W-090b)
+ * @param certificates the certificates an employer or bank issues in the year, by code — the {@code forms} layer (W-126a)
  * @param explanations the year's plain-language sentences for trace lines — the {@code content} layer (W-116)
  * @param claims the year's claim catalogue, compiled whole (W-118 C2a); each claim of rules the pack holds
  */
@@ -69,6 +72,7 @@ public record RulePack(
         Map<DeclarationCode, DeclarationDefinition> declarations,
         Map<ItrFormCode, ItrFormSpec> itrForms,
         Explanations explanations,
+        Map<CertificateCode, CertificateSpec> certificates,
         List<CompiledClaim> claims) {
 
     public RulePack {
@@ -89,6 +93,7 @@ public record RulePack(
         funds = funds == null ? Map.of() : Map.copyOf(funds);
         declarations = declarations == null ? Map.of() : Map.copyOf(declarations);
         itrForms = itrForms == null ? Map.of() : Map.copyOf(itrForms);
+        certificates = Map.copyOf(certificates);
 
         requireRulesFiledUnderTheirOwnIds(taxYear, rules);
         requireOnlyPublishedVersions(taxYear, rules);

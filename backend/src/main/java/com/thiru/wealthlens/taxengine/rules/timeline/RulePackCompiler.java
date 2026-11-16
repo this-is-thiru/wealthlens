@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.EmployerFundCode;
@@ -112,6 +113,11 @@ public final class RulePackCompiler {
         if (!timeline.itrCellSources().isEmpty()) {
             // Written only once a cell exists, so a pack with none compiles as it did before W-092
             forms.set("cells", itrCells(timeline));
+        }
+        ArrayNode certificates = certificates(timeline, taxYear);
+        if (!certificates.isEmpty()) {
+            // Written only once the year has one, so a year with none compiles as it did before W-126a
+            forms.set("certificates", certificates);
         }
         files.put("forms/itr-forms.json", render(forms.set("forms", itrForms(timeline, taxYear))));
         files.put("content/explanations.json", render(explanations(timeline, taxYear, ruleChecksums.keySet())));
@@ -419,6 +425,16 @@ public final class RulePackCompiler {
                     "forms/itr-forms/" + code.value() + ".json").ifPresent(forms::add);
         }
         return forms;
+    }
+
+    /** The certificates in force in the year, each as its year's version (W-126a). */
+    private static ArrayNode certificates(Timeline timeline, TaxYearId taxYear) {
+        ArrayNode certificates = MAPPER.createArrayNode();
+        for (CertificateCode code : sorted(timeline.certificateSources().keySet(), CertificateCode::value)) {
+            SetVersions.forTaxYear(MAPPER.readTree(timeline.certificateSources().get(code)), taxYear,
+                    "forms/certificates/" + code.value() + ".json").ifPresent(certificates::add);
+        }
+        return certificates;
     }
 
     /** The eligibility condition sets in force in the year, each as its year's version (W-244). */

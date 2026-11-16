@@ -73,7 +73,7 @@ class ClaimCatalogueTest {
                 t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
                 t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
                 t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(),
-                Optional.of(MAPPER.writeValueAsString(file)), t.sections(), t.acts());
+                Optional.of(MAPPER.writeValueAsString(file)), t.sections(), Map.of(), t.acts());
     }
 
     /** The shipped timeline with its claim catalogue file edited as a whole, its lists included (W-117d). */
@@ -85,7 +85,7 @@ class ClaimCatalogueTest {
                 t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
                 t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
                 t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(),
-                Optional.of(MAPPER.writeValueAsString(file)), t.sections(), t.acts());
+                Optional.of(MAPPER.writeValueAsString(file)), t.sections(), Map.of(), t.acts());
     }
 
     /** T22-12, I23: a rule the catalogue places nowhere fails the build, naming it. */
@@ -154,7 +154,7 @@ class ClaimCatalogueTest {
         Timeline bare = new Timeline(t.rules(), t.ruleSets(), t.regimes(), t.ruleSources(), t.regimeSources(),
                 t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
                 t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
-                t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(), Optional.empty(), t.sections(),
+                t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(), Optional.empty(), t.sections(), Map.of(),
                 t.acts());
 
         // When / Then
@@ -767,7 +767,7 @@ class ClaimCatalogueTest {
         Timeline timeline = new Timeline(rules, t.ruleSets(), t.regimes(), t.ruleSources(), t.regimeSources(),
                 t.disallowanceSetSources(), t.conditionSetSources(), t.components(), t.componentSources(), t.funds(),
                 t.fundSources(), t.declarations(), t.declarationSources(), t.itrFormSources(), t.itrCells(),
-                t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(), t.claimCatalogue(), t.sections(),
+                t.itrCellSources(), t.pipelineNodes(), t.coverage(), t.explanations(), t.claimCatalogue(), t.sections(), Map.of(),
                 t.acts());
 
         // When / Then
@@ -791,12 +791,12 @@ class ClaimCatalogueTest {
         // When / Then
         assertThatThrownBy(() -> new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), pack.rules(),
                 pack.ruleSets(), pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(),
-                pack.funds(), pack.declarations(), pack.itrForms(), pack.explanations(), List.of(stranger)))
+                pack.funds(), pack.declarations(), pack.itrForms(), pack.explanations(), Map.of(), List.of(stranger)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("has a claim for DED-NOT-A-RULE, which is not a rule of the year");
         assertThatThrownBy(() -> new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), pack.rules(),
                 pack.ruleSets(), pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets(),
-                pack.funds(), pack.declarations(), pack.itrForms(), pack.explanations(), null))
+                pack.funds(), pack.declarations(), pack.itrForms(), pack.explanations(), Map.of(), null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("must carry its claims");
         assertThatThrownBy(() -> new CompiledClaim(entry, " ", shipped.summary(), Map.of()))

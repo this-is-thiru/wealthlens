@@ -1,0 +1,572 @@
+{
+  "id": "FORM_130",
+  "_note": "Income-tax Rules, 2026, Appendix III, Form No. 130 (Gazette 271092 pp.2274 – 2280), prescribed by r.215(1) Table Sl. No. 1. Part A and Part C (Annexure-I) only (D-729 C3a); Part B and Annexure-II are W-126c. Each label is the printed words with the typesetter's line breaks joined and without the row number, which the form prints in its own column; what the form prints in the value column (\"(refer Note 1)\", \"(dd/mm/yyyy)\", \"(Yes/No)\") is not part of a label. Printed wording kept as printed: row 2 \"Allowances to the exempt under section 11\"; row 6 straight quotes, row 7(a) curly ones. Read by eye against the page images (W-126a C3a). No amendment to 12-11-2026 touches the form (sources/2026-11-16-form-130.md).",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "title": "Certificate under section 395 for tax deducted at source on salary paid to an employee under section 392 or pension or interest income of specified senior citizen under section 393(1) [Table: Sl. No. 8(iii)]",
+      "parts": [
+        {
+          "path": "partA",
+          "heading": "PART A"
+        },
+        {
+          "path": "partA.employer",
+          "heading": "Details of the employer/specified bank"
+        },
+        {
+          "path": "partA.employee",
+          "heading": "Details of the employee/ specified senior citizen"
+        },
+        {
+          "path": "partC.annexureI",
+          "heading": "PART C (Annexure-I)"
+        }
+      ],
+      "fields": [
+        {
+          "path": "partA.certificateNo",
+          "label": "Certificate No.",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.lastUpdatedOn",
+          "label": "Last updated on",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employer.name",
+          "row": "1",
+          "label": "Name",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employer.address",
+          "row": "2",
+          "label": "Address",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employer.pan",
+          "row": "3",
+          "label": "Permanent Account Number",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employer.tan",
+          "row": "4",
+          "label": "Tax Deduction and Collection Account Number",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employer.email",
+          "row": "5",
+          "label": "Email id",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employer.contact",
+          "row": "6",
+          "label": "Contact number",
+          "kind": "TEXT",
+          "page": 2274,
+          "columns": [
+            "Country Code",
+            "Number"
+          ]
+        },
+        {
+          "path": "partA.employer.taxYear",
+          "row": "7",
+          "label": "Tax year",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employer.period",
+          "row": "8",
+          "label": "Period with the employer",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employee.name",
+          "row": "9",
+          "label": "Name",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employee.address",
+          "row": "10",
+          "label": "Address",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partA.employee.pan",
+          "row": "11",
+          "label": "Permanent Account Number",
+          "kind": "TEXT",
+          "page": 2274
+        },
+        {
+          "path": "partC.annexureI.rowA",
+          "row": "A",
+          "label": "Whether opting out of taxation under section 202(1)?",
+          "kind": "YES_NO",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row1",
+          "row": "1",
+          "label": "Gross Salary",
+          "kind": "NONE",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row1a",
+          "row": "1(a)",
+          "label": "Salary as per provisions contained in section 16",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row1b",
+          "row": "1(b)",
+          "label": "Value of perquisites under section 17 (as per Form No. 123, wherever applicable)",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row1c",
+          "row": "1(c)",
+          "label": "Profits in lieu of salary under section 18 (as per Form No. 123, wherever applicable)",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row1d",
+          "row": "1(d)",
+          "label": "Total",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row1e",
+          "row": "1(e)",
+          "label": "Reported total amount of salary received from other employer(s)",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row2",
+          "row": "2",
+          "label": "Allowances to the exempt under section 11",
+          "kind": "NONE",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row2a",
+          "row": "2(a)",
+          "label": "Travel concession or assistance under section 11 being of the nature referred to in Schedule III [Table: Sl. No. 8]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row2b",
+          "row": "2(b)",
+          "label": "House rent allowance under section 11 being of the nature referred to in Schedule III [Table: Sl. No. 11]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row2c",
+          "row": "2(c)",
+          "label": "Other special allowances under section 11 being of the nature referred to in Schedule III [Table: Sl. No. 12 and 13]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row2d",
+          "row": "2(d)",
+          "label": "Amount of any other exemption under section 11",
+          "kind": "NONE",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row2d.section",
+          "row": "2(d)",
+          "label": "section …",
+          "kind": "AMOUNT",
+          "page": 2276,
+          "repeating": true
+        },
+        {
+          "path": "partC.annexureI.row2e",
+          "row": "2(e)",
+          "label": "Total amount of any other exemption under section 11",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row2f",
+          "row": "2(f)",
+          "label": "Total amount of exemption claimed under section 11 [2(a)+2(b)+2(c)+2(e)]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row3",
+          "row": "3",
+          "label": "Total amount of salary received from current employer [1(d)-2(f)]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row4",
+          "row": "4",
+          "label": "Deductions under section 19(1)",
+          "kind": "NONE",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row4a",
+          "row": "4(a)",
+          "label": "Tax on employment under section 19(1) [Table: Sl. No.1]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row4b",
+          "row": "4(b)",
+          "label": "Standard deduction under section 19(1) [Table: Sl. No.2]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row4c",
+          "row": "4(c)",
+          "label": "Gratuity under section 19(1) [Table: Sl. No.3,4,5,6]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row4d",
+          "row": "4(d)",
+          "label": "Commuted value of pension under section 19(1) [Table: Sl. No. 7,8,9]",
+          "kind": "AMOUNT",
+          "page": 2276
+        },
+        {
+          "path": "partC.annexureI.row4e",
+          "row": "4(e)",
+          "label": "Compensation as received by workmen under section 19(1) [Table Sl. No. 10,11]",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row4f",
+          "row": "4(f)",
+          "label": "Amount received on voluntary retirement or termination of service under section 19(1) [Table Sl. No. 12]",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row4g",
+          "row": "4(g)",
+          "label": "Cash equivalent of leave salary encashment under section 19(1) [Table: Sl. No. 13,14]",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row5",
+          "row": "5",
+          "label": "Total amount of deductions under section 19(1) [4(a)+4(b)+4(c) +4(d)+4(e)+ 4(f) +4(g)]",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row6",
+          "row": "6",
+          "label": "Income chargeable under the head \"Salaries\" [3+1(e)-5]",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row7",
+          "row": "7",
+          "label": "Any other income reported by the employee as per section 392(4)",
+          "kind": "NONE",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row7a",
+          "row": "7(a)",
+          "label": "Amount chargeable under any head of income other than “Salaries” as per section 392(4)(a)(iv)",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row7b",
+          "row": "7(b)",
+          "label": "Any loss from house property reported by employee under section 392(4)(a)(iii)",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row8",
+          "row": "8",
+          "label": "Total amount of other income reported by the employee [7(a)-7(b)]",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row9",
+          "row": "9",
+          "label": "Gross total income (6+8)",
+          "kind": "AMOUNT",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row10",
+          "row": "10",
+          "label": "Deductions under Chapter VIII of the Act",
+          "kind": "NONE",
+          "page": 2277
+        },
+        {
+          "path": "partC.annexureI.row10a",
+          "row": "10(a)",
+          "label": "Deduction in respect of life insurance premia, contributions to provident fund, certain pension funds, notified pension schemes etc. under section 123",
+          "kind": "AMOUNT",
+          "page": 2277,
+          "columns": [
+            "Gross Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10b",
+          "row": "10(b)",
+          "label": "Deductions in respect of amount paid/deposited to notified pension scheme under section 124(3)",
+          "kind": "AMOUNT",
+          "page": 2277,
+          "columns": [
+            "Gross Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10c",
+          "row": "10(c)",
+          "label": "Deduction in respect of contribution by Employer to pension scheme under section 124(1)(a)",
+          "kind": "AMOUNT",
+          "page": 2277,
+          "columns": [
+            "Gross Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10d",
+          "row": "10(d)",
+          "label": "Deduction in respect of health insurance premia under section 126",
+          "kind": "AMOUNT",
+          "page": 2277,
+          "columns": [
+            "Gross Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10e",
+          "row": "10(e)",
+          "label": "Deduction in respect of interest on loan taken for higher education under section 129",
+          "kind": "AMOUNT",
+          "page": 2277,
+          "columns": [
+            "Gross Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10f",
+          "row": "10(f)",
+          "label": "Deduction in respect of contribution by the employee to Agnipath Scheme under section 125 (1)",
+          "kind": "AMOUNT",
+          "page": 2277,
+          "columns": [
+            "Gross Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10g",
+          "row": "10(g)",
+          "label": "Deduction in respect of contribution by the Central Government to Agnipath Scheme under section 125 (2)",
+          "kind": "AMOUNT",
+          "page": 2277,
+          "columns": [
+            "Gross Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10h",
+          "row": "10(h)",
+          "label": "Total Deduction in respect of donations to certain funds, charitable institutions, etc. under section 133",
+          "kind": "AMOUNT",
+          "page": 2278,
+          "columns": [
+            "Gross Amount",
+            "Qualifying Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10i",
+          "row": "10(i)",
+          "label": "Deduction in respect of interest on deposits in savings account under section 153",
+          "kind": "AMOUNT",
+          "page": 2278,
+          "columns": [
+            "Gross Amount",
+            "Qualifying Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row10j",
+          "row": "10(j)",
+          "label": "Amounts deductible under any other provisions of Chapter VIII of the Act",
+          "kind": "NONE",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row10j.section",
+          "row": "10(j)",
+          "label": "section …",
+          "kind": "AMOUNT",
+          "page": 2278,
+          "columns": [
+            "Gross Amount",
+            "Qualifying Amount",
+            "Deductible Amount"
+          ],
+          "repeating": true
+        },
+        {
+          "path": "partC.annexureI.row10k",
+          "row": "10(k)",
+          "label": "Total of amount deductible under any other provision(s) of Chapter VIII of the Act",
+          "kind": "AMOUNT",
+          "page": 2278,
+          "columns": [
+            "Gross Amount",
+            "Qualifying Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row11",
+          "row": "11",
+          "label": "Aggregate of deductible amount under Chapter VIII of the Act [10(a) + 10(b) + 10(c) + 10(d) + 10(e) + 10(f) + 10(g) + 10(h) + 10(i) + 10(k)]",
+          "kind": "AMOUNT",
+          "page": 2278,
+          "columns": [
+            "Gross Amount",
+            "Qualifying Amount",
+            "Deductible Amount"
+          ]
+        },
+        {
+          "path": "partC.annexureI.row12",
+          "row": "12",
+          "label": "Total taxable income (9-11)",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row13",
+          "row": "13",
+          "label": "Tax on total income",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row14",
+          "row": "14",
+          "label": "Rebate under section 156, if applicable",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row15",
+          "row": "15",
+          "label": "Surcharge, wherever applicable",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row16",
+          "row": "16",
+          "label": "Health and education cess @ 4%",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row17",
+          "row": "17",
+          "label": "Tax payable (13+15+16-14)",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row18",
+          "row": "18",
+          "label": "Relief under section 157 (attach details)",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row19",
+          "row": "19",
+          "label": "Tax deducted at source as per Form No. 122 submitted under provisions of section 392(4)",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row20",
+          "row": "20",
+          "label": "Tax collected at source as per Form No. 122 submitted under provisions of section 392(4)",
+          "kind": "AMOUNT",
+          "page": 2278
+        },
+        {
+          "path": "partC.annexureI.row21",
+          "row": "21",
+          "label": "Net tax payable (17-18-19-20)",
+          "kind": "AMOUNT",
+          "page": 2278
+        }
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026, G.S.R. 198(E), Appendix III, Form No. 130, pp.2274 – 2278",
+        "accessedOn": "2026-11-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ]
+}
