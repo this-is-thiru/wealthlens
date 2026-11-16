@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
 import com.thiru.wealthlens.taxplanning.documents.ingest.FieldLocation;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.parser.LabelMatch.Found;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -29,9 +31,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * Reads a Form No. 130 at layer L1 ({@code DR 06} G5.1; W-126b): its parts by their headings and every line by its printed
- * label, from the year's layout in the pack (W-126a), with the text printed in the line's value cells kept verbatim and no
- * value read from it yet (L2 is W-127). Every failure is a reading with its reason, never an exception ({@code DR 07} X2.5).
+ * Reads a Form No. 130 ({@code DR 06} G5.1): at L1 its parts by their headings and every line by its printed label, from the
+ * year's layout in the pack (W-126a, W-126b); at L2 each line's value cells by its kind (W-127a). Every failure is a reading
+ * with its reason, never an exception ({@code DR 07} X2.5).
  */
 @Component
 @RequiredArgsConstructor
@@ -39,6 +41,8 @@ public class Form130Parser implements DocumentParser {
 
     /** {@code DR 06} G5.1, L1: a label matched exactly. */
     static final double LABEL_CONFIDENCE = 0.95;
+    /** {@code DR 06} G5.1, L2: a cell read under a matched label — the middle of its 0.85 – 0.95 (D-732 C3a). */
+    static final double READ_CONFIDENCE = 0.90;
 
     private final TaxCalculator taxCalculator;
 
@@ -49,12 +53,12 @@ public class Form130Parser implements DocumentParser {
 
     @Override
     public String id() {
-        return "form-130-l1";
+        return "form-130";
     }
 
     @Override
     public String version() {
-        return "1";
+        return "2";
     }
 
     /** @throws IllegalArgumentException where no pack ships for {@code year} — the upload refuses such a year first */
@@ -167,8 +171,50 @@ public class Form130Parser implements DocumentParser {
             boolean heading = "NONE".equals(line.kind());
             Optional<String> text = heading || at.values().isEmpty() ? Optional.empty()
                     : Optional.of(at.values().stream().map(Word::text).collect(Collectors.joining(" ")));
-            fields.add(new ExtractedField(line.path(), text, Optional.empty(), LABEL_CONFIDENCE, Optional.of(place(at)),
-                    Optional.empty()));
+            fields.addAll(read(line, text, place(at)));
+        }
+
+        /** L2: the line's value text read by its kind (W-127a); a cell not read keeps its text and is named. */
+        private List<ExtractedField> read(PrintedLine line, Optional<String> text, FieldLocation place) {
+            if (text.isEmpty()) {
+                return List.of(located(line.path(), text, Optional.empty(), LABEL_CONFIDENCE, place));
+            }
+            String printed = text.get();
+            Optional<List<ExtractedValue>> values = switch (line.kind()) {
+                case "AMOUNT" -> CellReading.amounts(printed, Math.max(1, line.columns().size()));
+                case "YES_NO" -> CellReading.yesNo(printed).map(List::of);
+                default -> Optional.of(List.of(new ExtractedValue.TextRead(printed)));
+            };
+            if (values.isEmpty()) {
+                notes.add("Not read: " + line.path() + " (" + printed + ")");
+                missing = true;
+                return List.of(located(line.path(), text, Optional.empty(), LABEL_CONFIDENCE, place));
+            }
+            if (values.get().size() == 1) {
+                return List.of(located(line.path(), text, Optional.of(values.get().get(0)), READ_CONFIDENCE, place));
+            }
+            String[] cells = printed.trim().split("\\s+");
+            List<ExtractedField> columns = new ArrayList<>();
+            for (int at = 0; at < cells.length; at++) {
+                columns.add(located(line.path() + "." + key(line.columns().get(at)), Optional.of(cells[at]),
+                        Optional.of(values.get().get(at)), READ_CONFIDENCE, place));
+            }
+            return columns;
+        }
+
+        private static ExtractedField located(String path, Optional<String> text, Optional<ExtractedValue> value,
+                double confidence, FieldLocation place) {
+            return new ExtractedField(path, text, value, confidence, Optional.of(place), Optional.empty());
+        }
+
+        /** A column's printed heading as a path word: "Gross Amount" is {@code grossAmount}. */
+        private static String key(String heading) {
+            String[] words = heading.trim().split("\\s+");
+            StringBuilder key = new StringBuilder(words[0].toLowerCase(Locale.ROOT));
+            for (int at = 1; at < words.length; at++) {
+                key.append(Character.toUpperCase(words[at].charAt(0))).append(words[at].substring(1).toLowerCase(Locale.ROOT));
+            }
+            return key.toString();
         }
 
         private void claim(Found found) {

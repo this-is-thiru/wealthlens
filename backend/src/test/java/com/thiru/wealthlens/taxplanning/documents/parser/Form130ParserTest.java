@@ -6,10 +6,13 @@ import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -18,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** Form No. 130 read by L1: every line found by its printed label, its value cells kept verbatim (W-126b). */
+/** Form No. 130 read by L1 and L2: every line found by its printed label (W-126b), its value cells read by kind (W-127a). */
 class Form130ParserTest {
 
     private static final TaxCalculator CALCULATOR = new TaxCalculator(ShippedRulePacks.compile("rulepacks",
@@ -53,20 +56,57 @@ class Form130ParserTest {
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
 
-        // Then
+        // Then — one field a line, 10(a)'s two printed columns two fields
         assertThat(reading.parserNotes()).isEmpty();
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
         Map<String, ExtractedField> fields = byPath(reading);
-        assertThat(fields).hasSize((int) linesOf(""));
-        VALUES.forEach((path, value) -> assertThat(fields.get(path).rawText()).as(path).contains(value));
+        assertThat(fields).hasSize((int) linesOf("") + 1);
+        VALUES.entrySet().stream().filter(entry -> !entry.getKey().endsWith("row10a"))
+                .forEach(entry -> assertThat(fields.get(entry.getKey()).rawText()).as(entry.getKey()).contains(entry.getValue()));
         assertThat(fields.get("partC.annexureI.row1").rawText()).isEmpty();
-        assertThat(fields.get("partC.annexureI.row4c").rawText()).isEmpty();
+        assertThat(fields.get("partC.annexureI.row4c").interpretedValue()).isEmpty();
+        assertThat(fields.get("partC.annexureI.row4c").confidence()).isEqualTo(0.95);
         assertThat(fields.get("partA.employer.name").rawText()).isEmpty();
-        assertThat(fields.values()).allSatisfy(field -> {
-            assertThat(field.confidence()).isEqualTo(0.95);
-            assertThat(field.interpretedValue()).isEmpty();
-            assertThat(field.location()).hasValueSatisfying(place -> assertThat(place.width()).isPositive());
-        });
+        assertThat(fields.values()).allSatisfy(field -> assertThat(field.location())
+                .hasValueSatisfying(place -> assertThat(place.width()).isPositive()));
+    }
+
+    @Test
+    void read_whenCellsHoldAmountsFlagsAndWords_readsEachByItsKind() throws Exception {
+        // Given
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+
+        // When
+        Map<String, ExtractedField> fields = byPath(PARSER.read(new DocumentContent(pdf), YEAR));
+
+        // Then — L2 at 0.90: "12,00,000.00" is ₹12,00,000; 10(a) prints 1,50,000.00 under each heading; row A "No"
+        assertThat(fields.get("partC.annexureI.row1a").interpretedValue())
+                .contains(new ExtractedValue.MoneyRead(Money.of("1200000")));
+        assertThat(fields.get("partC.annexureI.row1a").confidence()).isEqualTo(0.90);
+        assertThat(fields.get("partC.annexureI.row10a.grossAmount").interpretedValue())
+                .contains(new ExtractedValue.MoneyRead(Money.of("150000")));
+        assertThat(fields.get("partC.annexureI.row10a.deductibleAmount").rawText()).contains("1,50,000.00");
+        assertThat(fields).doesNotContainKey("partC.annexureI.row10a");
+        assertThat(fields.get("partC.annexureI.rowA").interpretedValue()).contains(new ExtractedValue.FlagRead(false));
+        assertThat(fields.get("partA.employer.tan").interpretedValue()).contains(new ExtractedValue.TextRead("MUMA12345B"));
+    }
+
+    @Test
+    void read_whenACellIsNotNumbersOnly_keepsItsTextUnreadAndNamesIt() throws Exception {
+        // Given
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.put("partC.annexureI.row4a", "Rs. 2,500");
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, values, Map.of(), Set.of());
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then — D-NOSILENT: not read is not zero
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        assertThat(reading.parserNotes()).containsExactly("Not read: partC.annexureI.row4a (Rs. 2,500)");
+        ExtractedField field = byPath(reading).get("partC.annexureI.row4a");
+        assertThat(field.rawText()).contains("Rs. 2,500");
+        assertThat(field.interpretedValue()).isEmpty();
     }
 
     @Test
@@ -117,7 +157,7 @@ class Form130ParserTest {
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
         assertThat(reading.parserNotes()).containsExactly(
                 "Not found: partC.annexureI.row4c (Gratuity under section 19(1) [Table: Sl. No.3,4,5,6])");
-        assertThat(reading.extractedFields()).hasSize((int) linesOf("") - 1);
+        assertThat(reading.extractedFields()).hasSize((int) linesOf("") - 1 + 1); // 4(c) missing, 10(a) two columns
     }
 
     @Test
