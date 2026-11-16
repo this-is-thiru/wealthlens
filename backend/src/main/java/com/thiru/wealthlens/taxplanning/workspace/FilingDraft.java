@@ -1,11 +1,14 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -21,7 +24,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @NoArgsConstructor
 @Document("tax_filing_drafts")
 @CompoundIndex(name = "tax_draft_workspace_idx", def = "{'workspace_id': 1, 'status': 1}")
-public class FilingDraft implements AuditableEntity {
+public class FilingDraft implements AuditableEntity, CreatedWithId {
 
     @MongoId
     private String id;
@@ -73,5 +76,15 @@ public class FilingDraft implements AuditableEntity {
             actedOnAt = atUtc;
         }
         archivedAt = next == DraftStatus.ARCHIVED ? atUtc : null;
+    }
+
+    /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
+    @Transient
+    @JsonIgnore
+    private boolean newlyCreated;
+
+    @Override
+    public boolean isNew() {
+        return newlyCreated || id == null;
     }
 }

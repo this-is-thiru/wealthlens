@@ -1,10 +1,13 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @Data
 @NoArgsConstructor
 @Document("tax_lenders")
-public class Lender implements AuditableEntity, ProfileScoped {
+public class Lender implements AuditableEntity, CreatedWithId, ProfileScoped {
 
     @MongoId
     private String id;
@@ -45,4 +48,14 @@ public class Lender implements AuditableEntity, ProfileScoped {
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
+
+    /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
+    @Transient
+    @JsonIgnore
+    private boolean newlyCreated;
+
+    @Override
+    public boolean isNew() {
+        return newlyCreated || id == null;
+    }
 }

@@ -1,9 +1,12 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -14,7 +17,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @NoArgsConstructor
 @Document("tax_year_workspaces")
 @CompoundIndex(name = "tax_workspace_year_idx", def = "{'profile_id': 1, 'tax_year': 1}", unique = true)
-public class TaxYearWorkspace implements AuditableEntity {
+public class TaxYearWorkspace implements AuditableEntity, CreatedWithId {
 
     @MongoId
     private String id;
@@ -30,4 +33,14 @@ public class TaxYearWorkspace implements AuditableEntity {
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
+
+    /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
+    @Transient
+    @JsonIgnore
+    private boolean newlyCreated;
+
+    @Override
+    public boolean isNew() {
+        return newlyCreated || id == null;
+    }
 }

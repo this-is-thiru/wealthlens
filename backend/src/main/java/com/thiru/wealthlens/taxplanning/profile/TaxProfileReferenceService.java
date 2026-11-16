@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
+import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.protection.IdentifierDigest;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
@@ -135,16 +136,17 @@ public class TaxProfileReferenceService {
         return bankAccountRepository.findByProfileId(profileId);
     }
 
-    private <T extends ProfileScoped> T create(String email, String profileId, ProfileReferenceRequest<T> request, T blank,
+    private <T extends ProfileScoped & CreatedWithId> T create(String email, String profileId, ProfileReferenceRequest<T> request, T blank,
             MongoRepository<T, String> repository) {
         taxProfileService.owned(email, profileId);
         T record = request.applyTo(blank);
         record.setId(UUID.randomUUID().toString());
+        record.setNewlyCreated(true);
         record.setProfileId(profileId);
         return save(record, repository);
     }
 
-    private <T extends ProfileScoped> T replace(String email, String profileId, String id, ProfileReferenceRequest<T> request,
+    private <T extends ProfileScoped & CreatedWithId> T replace(String email, String profileId, String id, ProfileReferenceRequest<T> request,
             MongoRepository<T, String> repository) {
         taxProfileService.owned(email, profileId);
         T stored = repository.findById(id)

@@ -54,6 +54,7 @@ public class DraftService {
     private TaxYearWorkspace create(String profileId, int taxYearStart) {
         TaxYearWorkspace workspace = new TaxYearWorkspace();
         workspace.setId(UUID.randomUUID().toString());
+        workspace.setNewlyCreated(true);
         workspace.setProfileId(profileId);
         workspace.setTaxYearStart(taxYearStart);
         return workspaceRepository.save(workspace);
@@ -100,6 +101,7 @@ public class DraftService {
         TaxYearWorkspace workspace = workspace(email, profileId, taxYearStart);
         FilingDraft draft = new FilingDraft();
         draft.setId(UUID.randomUUID().toString());
+        draft.setNewlyCreated(true);
         draft.setWorkspaceId(workspace.getId());
         draft.setProfileId(profileId);
         draft.setTaxYearStart(taxYearStart);
@@ -228,6 +230,7 @@ public class DraftService {
                 .orElseGet(() -> {
                     RegimeElectionHistory created = new RegimeElectionHistory();
                     created.setId(UUID.randomUUID().toString());
+        created.setNewlyCreated(true);
                     created.setProfileId(draft.getProfileId());
                     created.setRegimeCode(regimeCode);
                     return created;
@@ -288,6 +291,7 @@ public class DraftService {
     private static DraftRevision revision(FilingDraft draft, int number, String changedBy, boolean reopened) {
         DraftRevision revision = new DraftRevision();
         revision.setId(UUID.randomUUID().toString());
+        revision.setNewlyCreated(true);
         revision.setDraftId(draft.getId());
         revision.setRevisionNumber(number);
         revision.setChangedBy(changedBy);

@@ -27,6 +27,7 @@ public class TaxProfileService {
     public TaxpayerProfile create(String email, TaxpayerProfileRequest request) {
         TaxpayerProfile profile = request.applyTo(new TaxpayerProfile());
         profile.setId(UUID.randomUUID().toString());
+        profile.setNewlyCreated(true);
         profile.setEmail(email);
         return save(profile);
     }

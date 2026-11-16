@@ -91,6 +91,7 @@ public class DraftComputationService {
                         ? Stream.concat(NOT_INCLUDED.stream(), BAND_NOT_INCLUDED.stream()).toList() : NOT_INCLUDED);
         DraftComputation stored = new DraftComputation();
         stored.setId(UUID.randomUUID().toString());
+        stored.setNewlyCreated(true);
         stored.setReceipt(tax.receipt());
         stored.setEmail(email);
         stored.setDraftId(draftId);

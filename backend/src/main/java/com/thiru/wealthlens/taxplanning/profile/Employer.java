@@ -1,11 +1,14 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
 import com.thiru.wealthlens.taxplanning.enums.EmployerType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -20,7 +23,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @NoArgsConstructor
 @Document("tax_employers")
 @CompoundIndex(name = "tax_employer_tan_idx", def = "{'profile_id': 1, 'tan_digest': 1}", unique = true)
-public class Employer implements AuditableEntity, ProfileScoped {
+public class Employer implements AuditableEntity, CreatedWithId, ProfileScoped {
 
     @MongoId
     private String id;
@@ -51,4 +54,14 @@ public class Employer implements AuditableEntity, ProfileScoped {
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
+
+    /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
+    @Transient
+    @JsonIgnore
+    private boolean newlyCreated;
+
+    @Override
+    public boolean isNew() {
+        return newlyCreated || id == null;
+    }
 }
