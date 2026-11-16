@@ -628,7 +628,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(panel.at("/rows/0/evidenced/amountInRupees").decimalValue()).isEqualByComparingTo("320000");
         assertThat(panel.at("/rows/0/gap/amountInRupees").decimalValue()).isEqualByComparingTo("160000");
         assertThat(panel.at("/rows/0/says").toString()).contains("6 months not yet receipted", "not all on file");
-        assertThat(panel.get("notIncluded").toString()).contains("W-119b1");
+        assertThat(panel.get("notIncluded").toString()).contains("landlords together").doesNotContain("W-119b1");
         assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isEqualTo(stored);
         assertThat(computed().get("inputsFingerprint").asString()).isEqualTo(fingerprint);
     }

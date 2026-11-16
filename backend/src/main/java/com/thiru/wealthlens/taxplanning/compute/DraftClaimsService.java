@@ -35,7 +35,7 @@ public class DraftClaimsService {
             "No Form 16 is compared yet: each claim says what its absence from Form 16 would mean (W-118 C4a)",
             "A claim's worth is measured only where the computation allows it; one not made is priced by completeness (F33)",
             "A donation is priced with the donations entry; the reported-donation entry says when the institution's"
-                    + " report is needed, and is listed as not claimed, without a worth (W-117e)",
+                    + " report is needed, and is listed as not claimed, without a worth (W-117e, D-716)",
             "Claims overlap: each worth is measured with every other claim as it stands, so worths need not add up");
 
     private final DraftService draftService;

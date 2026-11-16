@@ -42,8 +42,7 @@ public class DraftClaimIntegrityService {
     private static final List<String> NOT_INCLUDED = List.of(
             "Rent is taken as equal each month: a tenancy's rent is cut in proportion to its receipted months (W-119c C3a)",
             "A gap can be the effect of another claim's missing evidence: less rent can move a limit elsewhere",
-            "The landlord's particulars are said for the draft's landlords together: a tenancy does not say which is its own",
-            "Health payments, donations and loan interest are not evidenced yet (W-119b1)");
+            "The landlord's particulars are said for the draft's landlords together: a tenancy does not say which is its own");
 
     /** The kinds of line a claim is (W-119c): the engine's {@code StepKind} names, as {@code ComputedTax} gives them. */
     private static final Set<String> CLAIM_KINDS = Set.of("EXEMPTION", "DEDUCTION");

@@ -38,7 +38,7 @@ class ForbiddenWordingTest {
     private static final Path ACTS = CONTENT.resolve("acts");
 
     /** The draft reads that state fixed texts beside the engine's (each class's {@code NOT_INCLUDED}). */
-    private static final List<Class<?>> READS = List.of(DraftComputationService.class, DraftClaimsService.class,
+    static final List<Class<?>> READS = List.of(DraftComputationService.class, DraftClaimsService.class,
             DraftClaimIntegrityService.class, DraftCompletenessService.class, DraftCalendarService.class,
             DraftForecastService.class);
 
@@ -95,7 +95,7 @@ class ForbiddenWordingTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<String> notIncluded(Class<?> read) {
+    static List<String> notIncluded(Class<?> read) {
         try {
             Field field = read.getDeclaredField("NOT_INCLUDED");
             field.setAccessible(true);
