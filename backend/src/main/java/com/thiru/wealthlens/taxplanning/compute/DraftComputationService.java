@@ -112,12 +112,16 @@ public class DraftComputationService {
         if (answered.containsAll(EnumSet.allOf(OnboardingStep.class))) {
             return Optional.empty();
         }
-        String says = taxCalculator.computationSentences(inputs.taxYear()).get(COARSE);
+        return Optional.of(new Band(tax.bill(), taxCalculator.billWithRoomsFilled(inputs,
+                DraftOnboardingService.openFamilies(answered)), coarseSentence(inputs.taxYear())));
+    }
+
+    private String coarseSentence(TaxYearId year) {
+        String says = taxCalculator.computationSentences(year).get(COARSE);
         if (says == null) {
             throw new IllegalStateException("The year's content has no computation." + COARSE);
         }
-        return Optional.of(new Band(tax.bill(), taxCalculator.billWithRoomsFilled(inputs,
-                DraftOnboardingService.openFamilies(answered)), says));
+        return says;
     }
 
     private static Set<String> rulesRead(ComputedTax tax) {
@@ -125,12 +129,16 @@ public class DraftComputationService {
                 .collect(Collectors.toSet());
     }
 
-    /** Every regime priced on the draft; the draft is unchanged and nothing is stored. */
+    /** Every regime priced on the draft, labelled coarse while a step is open; the draft is unchanged and nothing is stored. */
     @Transactional(readOnly = true)
-    public RegimeComparison compare(String email, String draftId) {
-        int year = draftService.ownedDraft(email, draftId).draft().getTaxYearStart();
-        RegimeCode regime = taxCalculator.defaultRegime(TaxYearId.of(year));
-        return taxCalculator.compareRegimes(assembler.assemble(email, draftId, regime, LocalDate.now(clock)).inputs());
+    public DraftRegimeComparison compare(String email, String draftId) {
+        DraftService.OwnedDraft owned = draftService.ownedDraft(email, draftId);
+        TaxYearId year = TaxYearId.of(owned.draft().getTaxYearStart());
+        RegimeComparison comparison = taxCalculator.compareRegimes(
+                assembler.assemble(email, draftId, taxCalculator.defaultRegime(year), LocalDate.now(clock)).inputs());
+        boolean coarse = !owned.inputs().onboarding().answered().containsAll(EnumSet.allOf(OnboardingStep.class));
+        return new DraftRegimeComparison(comparison.chosen(), comparison.mode(), comparison.priced(), coarse,
+                coarse ? Optional.of(coarseSentence(year)) : Optional.empty());
     }
 
     /**

@@ -96,13 +96,50 @@ class ComputationReportServiceTest {
         }
     }
 
+    /** A stored view of {@code tax} as one stored before W-122b reads: it says neither coarse nor final. */
+    private static DraftComputationView view(ComputedTax tax) {
+        return new DraftComputationView(tax, "draft", 1, false, Optional.empty(), Optional.empty(), List.of());
+    }
+
+    private static DraftComputationView coarse(ComputedTax tax, boolean coarse) {
+        Optional<Band> band = coarse ? Optional.of(new Band(Money.of("163800"), Money.of("88920"), "coarse"))
+                : Optional.empty();
+        return new DraftComputationView(tax, "draft", 1, false, Optional.of(coarse), band, List.of());
+    }
+
+    @Test
+    void model_whenTheStoredViewWasCoarse_notesItWithItsBand() throws IOException {
+        // Given — W-122b's persona's band, 88,920 to 1,63,800
+        ComputedTax tax = salaried();
+
+        // When
+        ComputationReport report = SERVICE.model(coarse(tax, true), pinnedNow(tax, TaxYearId.of(2026)));
+        String pdf = text(SERVICE.render(report));
+
+        // Then
+        assertThat(report.coarseNote()).hasValueSatisfying(note -> assertThat(note)
+                .startsWith("This figure was coarse when it was computed")
+                .contains("between ₹88,920 and ₹1,63,800"));
+        assertThat(pdf).contains(squeezed("between ₹88,920 and ₹1,63,800"));
+    }
+
+    @Test
+    void model_whenTheStoredViewWasNotCoarseOrSaidNothing_hasNoCoarseNote() {
+        // Given
+        ComputedTax tax = salaried();
+
+        // When / Then
+        assertThat(SERVICE.model(coarse(tax, false), pinnedNow(tax, TaxYearId.of(2026))).coarseNote()).isEmpty();
+        assertThat(SERVICE.model(view(tax), pinnedNow(tax, TaxYearId.of(2026))).coarseNote()).isEmpty();
+    }
+
     @Test
     void render_whenAComputationIsReported_printsEveryLineItsRuleAndFigureAndTheDisclaimerOnce() throws IOException {
         // Given
         ComputedTax tax = salaried();
 
         // When
-        String pdf = text(SERVICE.render(SERVICE.model(tax, pinnedNow(tax, TaxYearId.of(2026)))));
+        String pdf = text(SERVICE.render(SERVICE.model(view(tax), pinnedNow(tax, TaxYearId.of(2026)))));
 
         // Then
         assertThat(tax.trace()).hasSizeGreaterThan(5);
@@ -122,7 +159,7 @@ class ComputationReportServiceTest {
         ComputedTax tax = salaried();
 
         // When
-        ComputationReport report = SERVICE.model(tax, pinnedNow(tax, TaxYearId.of(2026)));
+        ComputationReport report = SERVICE.model(view(tax), pinnedNow(tax, TaxYearId.of(2026)));
 
         // Then — every line once; within a section, ascending; a section holds one kind
         assertThat(report.sections().stream().flatMap(section -> section.lines().stream())
@@ -168,7 +205,7 @@ class ComputationReportServiceTest {
     @Test
     void model_whenALineReadsAnUnverifiedRuleAsItStillIs_marksThatLineOnly() throws IOException {
         // When
-        ComputationReport report = SERVICE.model(interestCharged(lawAndExec2025()), pinnedFromLock());
+        ComputationReport report = SERVICE.model(view(interestCharged(lawAndExec2025())), pinnedFromLock());
 
         // Then
         assertThat(lineOf(report, "INT-CALCULATION").mark()).contains("Not verified");
@@ -183,8 +220,8 @@ class ComputationReportServiceTest {
         altered.put("INT-CALCULATION", "sha256:another-text");
 
         // When
-        ComputationReport changed = SERVICE.model(interestCharged(lawAndExec2025()), altered);
-        ComputationReport unpinned = SERVICE.model(interestCharged(lawAndExec2025()), Map.of());
+        ComputationReport changed = SERVICE.model(view(interestCharged(lawAndExec2025())), altered);
+        ComputationReport unpinned = SERVICE.model(view(interestCharged(lawAndExec2025())), Map.of());
 
         // Then
         assertThat(lineOf(changed, "INT-CALCULATION").mark()).hasValueSatisfying(mark -> assertThat(mark)
@@ -201,7 +238,7 @@ class ComputationReportServiceTest {
         List<String> earlier = lawAndExec2025().stream().map(pin -> pin.replace(law, "2025-26.law.1")).toList();
 
         // When
-        ComputationReport report = SERVICE.model(interestCharged(earlier), pinnedFromLock());
+        ComputationReport report = SERVICE.model(view(interestCharged(earlier)), pinnedFromLock());
 
         // Then
         assertThat(report.packNote()).hasValueSatisfying(note -> assertThat(note)

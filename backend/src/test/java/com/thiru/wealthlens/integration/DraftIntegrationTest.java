@@ -705,6 +705,32 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void compareRegimes_whenAStepIsOpenAndThenAllAreAnswered_isCoarseAndThenNot() throws Exception {
+        // Given — an employment and a due date, no onboarding step answered
+        renting();
+
+        // When
+        JsonNode open = JsonMapper.builder().build().readTree(
+                call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compare-regimes", null, null).getBody());
+        save("""
+                [{"op": "add", "path": "/onboarding/answered/-", "value": "PAY"},
+                 {"op": "add", "path": "/onboarding/answered/-", "value": "PAY_STRUCTURE_AND_RENT"},
+                 {"op": "add", "path": "/onboarding/answered/-", "value": "EMPLOYER_FUNDS"},
+                 {"op": "add", "path": "/onboarding/answered/-", "value": "INVESTMENTS_AND_INSURANCE"},
+                 {"op": "add", "path": "/onboarding/answered/-", "value": "OTHER_INCOME_AND_PROPERTY"}]""", "\"rev-1\"");
+        JsonNode answered = JsonMapper.builder().build().readTree(
+                call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compare-regimes", null, null).getBody());
+
+        // Then — the engine's fields as before, the label beside them
+        assertThat(open.get("chosen").asString()).isNotBlank();
+        assertThat(open.get("priced").size()).isPositive();
+        assertThat(open.get("coarse").asBoolean()).isTrue();
+        assertThat(open.get("says").asString()).startsWith("This is a coarse figure");
+        assertThat(answered.get("coarse").asBoolean()).isFalse();
+        assertThat(answered.path("says").isNull() || answered.path("says").isMissingNode()).isTrue();
+    }
+
+    @Test
     void firstFigure_whenNoDueDateIsGiven_expected400AndCreatesNoDraft() {
         // Given
         long drafts = mongoTemplate.count(new Query(), FilingDraft.class);

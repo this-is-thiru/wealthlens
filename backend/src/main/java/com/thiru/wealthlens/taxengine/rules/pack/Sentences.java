@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * @param claims what is said of a claim made, filling nothing (W-121 C3a)
  * @param report the computation report's headings, notes and disclaimer (W-123a, PRD F10), filling {@code {act}},
  *     {@code {financeAct}}, {@code {rules}}, {@code {taxYear}}, {@code {receipt}}, {@code {computedUnder}} or
- *     {@code {current}}
+ *     {@code {current}}, and a coarse figure's band {@code {lower}} and {@code {upper}} (W-122b1, D-723)
  * @param computation what a computation says of itself, filling nothing: that it is coarse (W-122b, D-720)
  */
 public record Sentences(Map<String, String> evidence, Map<String, String> claims, Map<String, String> report,
@@ -26,7 +26,7 @@ public record Sentences(Map<String, String> evidence, Map<String, String> claims
     private static final Pattern CODE = Pattern.compile("[A-Z][A-Z_]{1,63}");
 
     private static final Set<String> REPORT_PLACEHOLDERS = Set.of("{act}", "{financeAct}", "{rules}", "{taxYear}",
-            "{receipt}", "{computedUnder}", "{current}");
+            "{receipt}", "{computedUnder}", "{current}", "{lower}", "{upper}");
 
     public Sentences {
         if (evidence == null || claims == null || report == null || computation == null) {

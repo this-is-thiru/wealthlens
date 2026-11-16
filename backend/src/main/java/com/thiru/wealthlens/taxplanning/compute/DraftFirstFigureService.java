@@ -42,7 +42,7 @@ public class DraftFirstFigureService {
         requireComplete(request);
         DraftView created = draftService.createDraft(email, profileId, taxYearStart, request.label());
         DraftView answered = draftService.patch(email, created.id(), created.revision(), stepOne(request));
-        RegimeComparison regimes = computationService.compare(email, created.id());
+        DraftRegimeComparison regimes = computationService.compare(email, created.id());
         List<DraftComputationView> figures = Stream.concat(Stream.of(regimes.chosen()),
                         regimes.priced().stream().map(RegimeComparison.Priced::regime))
                 .distinct()

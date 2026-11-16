@@ -10,11 +10,14 @@ import java.util.Optional;
  *
  * @param header who, when and what in total
  * @param packNote where the rule data has moved on since the computation, the sentence saying so (W-123a C2a)
+ * @param coarseNote where the stored computation was coarse, the sentence saying so with its band (W-122b1 C1a); none for
+ *     one stored before W-122b, which said neither
  * @param columns the line table's headings
  * @param sections the lines grouped by kind, each kind in the order it first appears, lines in sequence order
  * @param disclaimer the one disclaimer, filled with the year's instruments (C3a)
  */
-public record ComputationReport(Header header, Optional<String> packNote, Columns columns, List<Section> sections,
+public record ComputationReport(Header header, Optional<String> packNote, Optional<String> coarseNote, Columns columns,
+        List<Section> sections,
         String disclaimer) {
 
     public ComputationReport {

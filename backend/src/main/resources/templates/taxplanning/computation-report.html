@@ -25,6 +25,7 @@
         <tr><td th:text="${report.header.finalAmountLabel}"></td><td class="figure" th:text="${report.header.finalAmount}"></td></tr>
     </table>
     <div class="note" th:if="${report.packNote.isPresent()}" th:text="${report.packNote.get()}"></div>
+    <div class="note" th:if="${report.coarseNote.isPresent()}" th:text="${report.coarseNote.get()}"></div>
     <th:block th:each="section : ${report.sections}">
         <h2 th:text="${section.heading}"></h2>
         <table>

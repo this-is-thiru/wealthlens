@@ -714,6 +714,7 @@
     "LENDER_CERTIFICATE_NOT_HELD": "The lender's certificate of interest would evidence it; ask your lender for it."
   },
   "report": {
+    "COARSE_BAND": "This figure was coarse when it was computed: not every step of the setup had been answered. The bill lay between {lower} and {upper}; income not yet entered was outside that.",
     "TITLE": "Your tax computation",
     "RECEIPT": "Receipt {receipt}",
     "TAX_YEAR": "Tax year {taxYear}",

@@ -49,16 +49,17 @@ public class ComputationReportService {
      *     account's or is held for erasure
      */
     public byte[] report(String email, String receipt) {
-        ComputedTax tax = computationService.byReceipt(email, receipt).tax();
+        DraftComputationView view = computationService.byReceipt(email, receipt);
         // byReceipt has found it; a computation stored before W-138 kept no checksums, so none is pinned
         Map<String, String> pinned = repository.findByReceiptAndEmail(receipt, email)
                 .orElseThrow(() -> new IllegalStateException("Receipt " + receipt + " was read and is now gone"))
                 .getRuleChecksums();
-        return render(model(tax, pinned == null ? Map.of() : pinned));
+        return render(model(view, pinned == null ? Map.of() : pinned));
     }
 
-    /** The report of {@code tax}, whose rules were read at {@code pinned}; separate so it is tested on the engine alone. */
-    ComputationReport model(ComputedTax tax, Map<String, String> pinned) {
+    /** The report of {@code view}, whose rules were read at {@code pinned}; separate so it is tested on the engine alone. */
+    ComputationReport model(DraftComputationView view, Map<String, String> pinned) {
+        ComputedTax tax = view.tax();
         TaxYearId year = yearOf(tax.taxYear());
         Map<String, String> words = taxCalculator.reportSentences(year);
         Set<String> rules = tax.trace().stream().map(ComputedTax.Step::rule).collect(Collectors.toSet());
@@ -71,7 +72,7 @@ public class ComputationReportService {
         List<ComputationReport.Section> sections = byKind.entrySet().stream()
                 .map(kind -> new ComputationReport.Section(word(words, "KIND_" + kind.getKey()), kind.getValue()))
                 .toList();
-        return new ComputationReport(header(tax, words), packNote(tax, year, words),
+        return new ComputationReport(header(tax, words), packNote(tax, year, words), coarseNote(view, words),
                 new ComputationReport.Columns(word(words, "COLUMN_STEP"), word(words, "COLUMN_RULE"),
                         word(words, "COLUMN_FIGURE")),
                 sections, disclaimer(tax, year, words));
@@ -83,6 +84,15 @@ public class ComputationReportService {
                 word(words, "TAX_YEAR").replace("{taxYear}", tax.taxYear()),
                 word(words, "TOTAL_INCOME"), tax.totalIncome().inIndianNotation(),
                 word(words, "FINAL_AMOUNT"), tax.finalAmount().inIndianNotation());
+    }
+
+    /** Only a view that said it was coarse is reported as coarse; one that said nothing says nothing here (W-122b1 C1a). */
+    private static Optional<String> coarseNote(DraftComputationView view, Map<String, String> words) {
+        if (!view.coarse().orElse(false)) {
+            return Optional.empty();
+        }
+        return view.band().map(band -> word(words, "COARSE_BAND").replace("{lower}", band.lower().inIndianNotation())
+                .replace("{upper}", band.upper().inIndianNotation()));
     }
 
     private Optional<String> packNote(ComputedTax tax, TaxYearId year, Map<String, String> words) {

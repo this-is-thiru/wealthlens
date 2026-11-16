@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxplanning.compute.controller;
 
 import com.thiru.wealthlens.taxengine.api.ItrFormChoice;
-import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsView;
 import com.thiru.wealthlens.taxplanning.compute.CapitalGainsViewService;
 import com.thiru.wealthlens.taxplanning.compute.ComputationListing;
@@ -27,6 +26,7 @@ import com.thiru.wealthlens.taxplanning.compute.DraftOnboarding;
 import com.thiru.wealthlens.taxplanning.compute.DraftOnboardingService;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisation;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisationRequest;
+import com.thiru.wealthlens.taxplanning.compute.DraftRegimeComparison;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +74,7 @@ public class DraftComputationController {
     }
 
     @PostMapping("/drafts/{draftId}/compare-regimes")
-    public RegimeComparison compare(@PathVariable String email, @PathVariable String draftId) {
+    public DraftRegimeComparison compare(@PathVariable String email, @PathVariable String draftId) {
         return service.compare(email, draftId);
     }
 
