@@ -15,11 +15,13 @@ import java.util.regex.Pattern;
  * @param report the computation report's headings, notes and disclaimer (W-123a, PRD F10), filling {@code {act}},
  *     {@code {financeAct}}, {@code {rules}}, {@code {taxYear}}, {@code {receipt}}, {@code {computedUnder}} or
  *     {@code {current}}
+ * @param computation what a computation says of itself, filling nothing: that it is coarse (W-122b, D-720)
  */
-public record Sentences(Map<String, String> evidence, Map<String, String> claims, Map<String, String> report) {
+public record Sentences(Map<String, String> evidence, Map<String, String> claims, Map<String, String> report,
+        Map<String, String> computation) {
 
     /** No sentences. */
-    public static final Sentences NONE = new Sentences(Map.of(), Map.of(), Map.of());
+    public static final Sentences NONE = new Sentences(Map.of(), Map.of(), Map.of(), Map.of());
 
     private static final Pattern CODE = Pattern.compile("[A-Z][A-Z_]{1,63}");
 
@@ -27,12 +29,14 @@ public record Sentences(Map<String, String> evidence, Map<String, String> claims
             "{receipt}", "{computedUnder}", "{current}");
 
     public Sentences {
-        if (evidence == null || claims == null || report == null) {
-            throw new IllegalArgumentException("Sentences need evidence, claims and report (empty for none)");
+        if (evidence == null || claims == null || report == null || computation == null) {
+            throw new IllegalArgumentException("Sentences need evidence, claims, report and computation (empty for none)");
         }
         require("evidence", evidence, Set.of("{amount}", "{months}"));
         require("claims", claims, Set.of());
         require("report", report, REPORT_PLACEHOLDERS);
+        require("computation", computation, Set.of());
+        computation = Map.copyOf(computation);
         evidence = Map.copyOf(evidence);
         claims = Map.copyOf(claims);
         report = Map.copyOf(report);

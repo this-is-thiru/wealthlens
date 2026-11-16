@@ -224,6 +224,7 @@ public final class RulePackCompiler {
             content.set("evidence", words(explanations.sentences().evidence(), Function.identity()));
             content.set("claims", words(explanations.sentences().claims(), Function.identity()));
             content.set("report", words(explanations.sentences().report(), Function.identity()));
+            content.set("computation", words(explanations.sentences().computation(), Function.identity()));
             content.set("terms", object().<ObjectNode>set("regime", regimeTerms(timeline, taxYear, explanations))
                     .<ObjectNode>set("head", words(explanations.headTerms(), HeadCode::name))
                     .<ObjectNode>set("capitalGainsPart", words(explanations.partTerms(), CapitalGainsPart::value))

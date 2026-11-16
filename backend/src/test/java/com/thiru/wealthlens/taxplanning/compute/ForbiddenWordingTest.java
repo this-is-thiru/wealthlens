@@ -52,6 +52,7 @@ class ForbiddenWordingTest {
         }
         READS.forEach(read -> notIncluded(read).forEach(text -> sentences.add(read.getSimpleName() + ": " + text)));
         DraftOnboardingService.NOT_MEASURED.values().forEach(text -> sentences.add("DraftOnboardingService: " + text));
+        DraftComputationService.BAND_NOT_INCLUDED.forEach(text -> sentences.add("DraftComputationService: " + text));
 
         // When
         List<String> judging = sentences.stream().filter(sentence -> FORBIDDEN.matcher(sentence).find()).toList();

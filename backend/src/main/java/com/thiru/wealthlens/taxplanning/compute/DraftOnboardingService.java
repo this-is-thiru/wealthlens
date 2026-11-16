@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxplanning.compute;
 
+import com.thiru.wealthlens.taxengine.api.RoomFamily;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
@@ -8,6 +9,7 @@ import com.thiru.wealthlens.taxplanning.workspace.OnboardingStep;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,6 +63,21 @@ public class DraftOnboardingService {
                         ? new DraftOnboarding.Step(step, true, List.of(), Optional.empty())
                         : open(step, inputs))
                 .toList();
+    }
+
+    /**
+     * The room families the open steps would enter, as {@link #open} prices them: the rent room with pay structure and
+     * rent, the Chapter VIII rooms with investments and insurance (W-122a C3a; W-122b C3a, D-720).
+     */
+    static Set<RoomFamily> openFamilies(Set<OnboardingStep> answered) {
+        Set<RoomFamily> open = EnumSet.noneOf(RoomFamily.class);
+        if (!answered.contains(OnboardingStep.PAY_STRUCTURE_AND_RENT)) {
+            open.add(RoomFamily.RENT);
+        }
+        if (!answered.contains(OnboardingStep.INVESTMENTS_AND_INSURANCE)) {
+            open.add(RoomFamily.DEDUCTIONS);
+        }
+        return open;
     }
 
     static Optional<OnboardingStep> next(List<DraftOnboarding.Step> steps) {

@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.optimise.ClaimPricing;
 import com.thiru.wealthlens.taxengine.optimise.DeductionRoomPricing;
 import com.thiru.wealthlens.taxengine.optimise.RentRoomPricing;
+import com.thiru.wealthlens.taxengine.optimise.RoomFilling;
 import com.thiru.wealthlens.taxengine.optimise.SalaryOptimiser;
 import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
 import com.thiru.wealthlens.taxengine.pipeline.AskedDeclarations;
@@ -311,6 +312,18 @@ public class TaxCalculator {
     }
 
     /**
+     * The bill with every room of {@code families} filled in one run (W-122b C3a, D-720): the lower end of a coarse
+     * figure's band, the rooms counted together so an overlap is counted once. With nothing to fill, the bill as the
+     * inputs stand.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Money billWithRoomsFilled(EngineInputs inputs, Set<RoomFamily> families) {
+        RulePack pack = shipped(inputs.taxYear());
+        return RoomFilling.billWithRoomsFilled(REGISTRY, pack, spec(pack, inputs.regime()), inputs, families);
+    }
+
+    /**
      * How each claim of the year is made, by rule id as the pack holds them (W-118): every claim, made or not.
      *
      * @throws IllegalArgumentException where no pack ships for the year
@@ -441,6 +454,15 @@ public class TaxCalculator {
         }
         return Optional.of(rulePacks.load(year).layers().values().stream().filter(ref -> ref.layer().affectsComputation())
                 .map(Object::toString).sorted().toList());
+    }
+
+    /**
+     * What a computation says of itself, by code (W-122b, D-720).
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public Map<String, String> computationSentences(TaxYearId year) {
+        return shipped(year).explanations().sentences().computation();
     }
 
     /**

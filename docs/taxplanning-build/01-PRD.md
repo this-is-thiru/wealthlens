@@ -215,7 +215,7 @@ Design: `20-product-gaps.md` F30
 | F33.2 | Items that **increase** tax are shown alongside those that reduce it |
 | F33.3 | Ranked, top five surfaced |
 
-#### F34 — Progressive onboarding — ◐ `W-122a` – `W-122c` (the steps answered and what each open one is worth, D-710; band and label ○ `W-122b`, first figure ○ `W-122c`)
+#### F34 — Progressive onboarding — ◐ `W-122a` – `W-122c` (the steps answered and what each open one is worth, D-710; band and label on every computation, D-720; the label on the report and the regime comparison ○ `W-122b1`; first figure ○ `W-122c`)
 | # | Acceptance criterion |
 |---|---|
 | F34.1 | A valid computation exists after step 1 |

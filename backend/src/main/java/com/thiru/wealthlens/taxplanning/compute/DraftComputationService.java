@@ -7,19 +7,23 @@ import com.thiru.wealthlens.taxengine.api.ItrFormChoice;
 import com.thiru.wealthlens.taxengine.api.Optimisation;
 import com.thiru.wealthlens.taxengine.api.RegimeComparison;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
+import com.thiru.wealthlens.taxplanning.workspace.DraftInputs;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
+import com.thiru.wealthlens.taxplanning.workspace.OnboardingStep;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +48,8 @@ public class DraftComputationService {
      * a dividend without its received date (W-112a relieves only dated ones), and what no draft can state (interest on an
      * excess refund, W-112b; an Assessing Officer's order; the fees for a revised return or a report).
      */
+    private static final String COARSE = "COARSE";
+
     static final List<String> NOT_INCLUDED = List.of(
             "Relief for salary received in arrears or in advance",
             "Relief from interest for deferring advance tax on a dividend entered without the date it was received",
@@ -52,6 +59,12 @@ public class DraftComputationService {
             "A house-reinvestment exemption by deposit in the capital gains account scheme",
             "A house-reinvestment exemption charged back in a later year when the new house is sold or another is bought",
             "Capital gains are read from the portfolio as it stands now, not pinned to this draft");
+
+    /** Stated beside {@link #NOT_INCLUDED} while a figure is coarse (W-122b C3a, C4a; D-720). */
+    static final List<String> BAND_NOT_INCLUDED = List.of(
+            "Income not yet entered is outside the band: it would raise the tax above it (W-324)",
+            "The band narrows as steps are answered in order; entering income while pay structure, rent or investments are"
+                    + " still open can widen it");
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
@@ -71,8 +84,11 @@ public class DraftComputationService {
         }
         EngineInputsAssembler.Assembled assembled = assembler.assemble(email, draftId, new RegimeCode(regimeCode), LocalDate.now(clock));
         ComputedTax tax = taxCalculator.compute(assembled.inputs());
+        Set<OnboardingStep> answered = DraftInputs.of(assembled.draft()).onboarding().answered();
+        Optional<Band> band = band(assembled.inputs(), tax, answered);
         DraftComputationView view = new DraftComputationView(tax, draftId, assembled.draft().getCurrentRevision(),
-                assembled.capitalGainsIncluded(), NOT_INCLUDED);
+                assembled.capitalGainsIncluded(), Optional.of(band.isPresent()), band, band.isPresent()
+                        ? Stream.concat(NOT_INCLUDED.stream(), BAND_NOT_INCLUDED.stream()).toList() : NOT_INCLUDED);
         DraftComputation stored = new DraftComputation();
         stored.setId(UUID.randomUUID().toString());
         stored.setReceipt(tax.receipt());
@@ -86,6 +102,22 @@ public class DraftComputationService {
         repository.save(stored);
         draftService.clearStaleness(draftId);
         return view;
+    }
+
+    /**
+     * The band while any step is open, empty once all five are answered (W-122b C3a, C5a); separate from
+     * {@link #compute} so it is tested on the engine alone.
+     */
+    Optional<Band> band(EngineInputs inputs, ComputedTax tax, Set<OnboardingStep> answered) {
+        if (answered.containsAll(EnumSet.allOf(OnboardingStep.class))) {
+            return Optional.empty();
+        }
+        String says = taxCalculator.computationSentences(inputs.taxYear()).get(COARSE);
+        if (says == null) {
+            throw new IllegalStateException("The year's content has no computation." + COARSE);
+        }
+        return Optional.of(new Band(tax.bill(), taxCalculator.billWithRoomsFilled(inputs,
+                DraftOnboardingService.openFamilies(answered)), says));
     }
 
     private static Set<String> rulesRead(ComputedTax tax) {

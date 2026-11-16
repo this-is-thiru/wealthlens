@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -78,33 +79,44 @@ public final class DeductionRoomPricing {
     }
 
     /**
+     * A room and what fills it: the change to the entered facts that pays the room in, applied to whatever facts it is
+     * given, so the band can fill several rooms in one run with the definition pricing uses (W-122b C3a, D-720).
+     */
+    record Priced(DeductionRoom room, UnaryOperator<EnteredFacts> fill) {
+    }
+
+    /**
      * Schedule XV's room, then the assessee's health cover and the parents', then own NPS: each where it has room.
      *
      * @throws IllegalStateException where a set holds more than one row and the run chose none, or no contributor can
      *     carry the room — a pack that changed under this
      */
     public static List<DeductionRoom> price(NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs) {
+        return priced(registry, pack, regime, inputs).stream().map(Priced::room).toList();
+    }
+
+    /** Each room with its fill, in {@link #price}'s order. */
+    static List<Priced> priced(NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs) {
         Pricing pricing = new Pricing(registry, pack, regime, inputs, PipelineRunner.run(registry, pack, regime, inputs));
-        List<DeductionRoom> rooms = new ArrayList<>();
+        List<Priced> rooms = new ArrayList<>();
         scheduleXv(pricing).ifPresent(rooms::add);
         Money healthCeiling = HEALTH.stream().flatMap(set -> pack.ruleSet(set).members().stream())
                 .map(id -> ceiling(pack, id, inputs)).reduce(Money.ZERO, Money::max);
         Set<RuleId> healthRows = pack.membersOf(HEALTH);
-        byFilling(pricing, healthRows, pricing.with(inputs.entered().withHealthPayments(plus(inputs.entered().healthPayments(),
-                new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), healthCeiling, false, 1)))))
-                .ifPresent(rooms::add);
+        UnaryOperator<EnteredFacts> self = facts -> facts.withHealthPayments(plus(facts.healthPayments(),
+                new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), healthCeiling, false, 1)));
+        byFilling(pricing, healthRows, self).ifPresent(rooms::add);
         List<Integer> parents = parents(inputs.family());
         if (!parents.isEmpty()) {
-            byFilling(pricing, healthRows, pricing.with(inputs.entered().withHealthPayments(plus(
-                    inputs.entered().healthPayments(),
-                    new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, false, parents, healthCeiling, false, 1)))))
-                    .ifPresent(rooms::add);
+            UnaryOperator<EnteredFacts> forParents = facts -> facts.withHealthPayments(plus(facts.healthPayments(),
+                    new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, false, parents, healthCeiling, false, 1)));
+            byFilling(pricing, healthRows, forParents).ifPresent(rooms::add);
         }
         ownPension(pricing).ifPresent(rooms::add);
         return List.copyOf(rooms);
     }
 
-    private static Optional<DeductionRoom> scheduleXv(Pricing pricing) {
+    private static Optional<Priced> scheduleXv(Pricing pricing) {
         RulePack pack = pricing.pack();
         EngineInputs inputs = pricing.inputs();
         List<RuleId> members = pack.ruleSet(RuleSetIds.RS_DED_SCHEDULE_XV).members();
@@ -118,14 +130,18 @@ public final class DeductionRoomPricing {
         if (!room.isGreaterThan(Money.ZERO)) {
             return Optional.empty();
         }
-        List<QualifyingPayment> payments = new ArrayList<>(inputs.entered().qualifyingPayments());
-        payments.add(new QualifyingPayment(carrier(pack.components(), inputs.taxYear(), cap, row.id()), room));
-        PipelineRunner.Result filled = pricing.run(pricing.with(inputs.entered().withQualifyingPayments(payments)));
+        QualifyingPayment paid = new QualifyingPayment(carrier(pack.components(), inputs.taxYear(), cap, row.id()), room);
+        UnaryOperator<EnteredFacts> fill = facts -> {
+            List<QualifyingPayment> payments = new ArrayList<>(facts.qualifyingPayments());
+            payments.add(paid);
+            return facts.withQualifyingPayments(payments);
+        };
+        PipelineRunner.Result filled = pricing.run(pricing.with(fill.apply(inputs.entered())));
         Money saved = bill(pricing.base()).minus(bill(filled)).floorAtZero();
-        return Optional.of(new DeductionRoom(row.id().value(), allowed, room, saved));
+        return Optional.of(new Priced(new DeductionRoom(row.id().value(), allowed, room, saved), fill));
     }
 
-    private static Optional<DeductionRoom> ownPension(Pricing pricing) {
+    private static Optional<Priced> ownPension(Pricing pricing) {
         RulePack pack = pricing.pack();
         EngineInputs inputs = pricing.inputs();
         List<Employment> employments = inputs.entered().employments();
@@ -144,23 +160,26 @@ public final class DeductionRoomPricing {
                         && pack.components().get(code).kind() == ComponentKind.EMPLOYEE_CONTRIBUTION)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(row.id() + " has no contributor paid out of pay"));
-        Employment first = employments.getFirst();
-        List<SalaryComponent> pay = new ArrayList<>(first.components());
-        pay.add(new SalaryComponent(contribution, room));
-        List<Employment> withPay = new ArrayList<>(employments);
-        withPay.set(0, new Employment(pay, first.termsIncludeDearnessAllowance(), first.employerKind(),
-                first.dearnessAllowanceCountsForRetirement(), first.companyEmployer()));
-        PipelineRunner.Result filled = pricing.run(pricing.with(inputs.entered().withEmployments(withPay)));
-        return Optional.of(new DeductionRoom(row.id().value(), allowed, room,
-                bill(pricing.base()).minus(bill(filled)).floorAtZero()));
+        UnaryOperator<EnteredFacts> fill = facts -> {
+            Employment first = facts.employments().getFirst();
+            List<SalaryComponent> pay = new ArrayList<>(first.components());
+            pay.add(new SalaryComponent(contribution, room));
+            List<Employment> withPay = new ArrayList<>(facts.employments());
+            withPay.set(0, new Employment(pay, first.termsIncludeDearnessAllowance(), first.employerKind(),
+                    first.dearnessAllowanceCountsForRetirement(), first.companyEmployer()));
+            return facts.withEmployments(withPay);
+        };
+        PipelineRunner.Result filled = pricing.run(pricing.with(fill.apply(inputs.entered())));
+        return Optional.of(new Priced(new DeductionRoom(row.id().value(), allowed, room,
+                bill(pricing.base()).minus(bill(filled)).floorAtZero()), fill));
     }
 
     /**
      * The rows among {@code rows} whose deduction lines rose from the inputs as they stand to {@code filled}: what they
      * counted before, by how much they rose, and the fall in the bill.
      */
-    private static Optional<DeductionRoom> byFilling(Pricing pricing, Set<RuleId> rows, EngineInputs filled) {
-        PipelineRunner.Result run = pricing.run(filled);
+    private static Optional<Priced> byFilling(Pricing pricing, Set<RuleId> rows, UnaryOperator<EnteredFacts> fill) {
+        PipelineRunner.Result run = pricing.run(pricing.with(fill.apply(pricing.inputs().entered())));
         Map<RuleId, Money> before = deducted(pricing.base(), rows);
         Map<RuleId, Money> after = deducted(run, rows);
         List<RuleId> rose = after.keySet().stream()
@@ -171,8 +190,8 @@ public final class DeductionRoomPricing {
         }
         Money counted = rose.stream().map(row -> before.getOrDefault(row, Money.ZERO)).reduce(Money.ZERO, Money::plus);
         Money room = rose.stream().map(after::get).reduce(Money.ZERO, Money::plus).minus(counted);
-        return Optional.of(new DeductionRoom(rose.stream().map(RuleId::value).collect(Collectors.joining(" + ")), counted,
-                room, bill(pricing.base()).minus(bill(run)).floorAtZero()));
+        return Optional.of(new Priced(new DeductionRoom(rose.stream().map(RuleId::value).collect(Collectors.joining(" + ")),
+                counted, room, bill(pricing.base()).minus(bill(run)).floorAtZero()), fill));
     }
 
     private static Map<RuleId, Money> deducted(PipelineRunner.Result run, Set<RuleId> rows) {

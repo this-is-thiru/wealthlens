@@ -38,7 +38,8 @@ public final class ExplanationJson {
                 terms(root, path, "sttState", Function.identity())));
         return PackJson.construct(path, () -> new Explanations(PackJson.optionalText(root, "otherLimits", path), byRule,
                 reasons, terms, headroom(root, path), PackJson.construct(path, () -> new Sentences(sentences(root, path, "evidence"),
-                        sentences(root, path, "claims"), sentences(root, path, "report")))));
+                        sentences(root, path, "claims"), sentences(root, path, "report"),
+                        sentences(root, path, "computation")))));
     }
 
     /**

@@ -44,6 +44,7 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * The first tax figure over HTTP: a stored draft, through the assembler and the shipped pipeline (W-103, W-104, W-107, W-109;
@@ -257,8 +258,13 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("89330");
         assertThat(view.get("capitalGainsIncluded").asBoolean()).isTrue();
         assertThat(view.get("revision").asInt()).isEqualTo(1);
-        assertThat(view.get("notIncluded").size()).isEqualTo(8);
+        assertThat(view.get("notIncluded").size()).isEqualTo(10);
         assertThat(view.at("/tax/trace").size()).isPositive();
+        // no onboarding step is answered, so the figure is coarse and its band's upper end is the bill (W-122b)
+        assertThat(view.get("coarse").asBoolean()).isTrue();
+        assertThat(view.at("/band/upper/amountInRupees").decimalValue()).isEqualByComparingTo("87750");
+        assertThat(view.at("/band/lower/amountInRupees").decimalValue())
+                .isLessThanOrEqualTo(view.at("/band/upper/amountInRupees").decimalValue());
     }
 
     @Test
@@ -354,6 +360,27 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         assertThat(call(HttpMethod.POST, OWNER, "/drafts/" + draft(false, "0") + "/compute", "{\"regime\": \"NO_SUCH\"}", null)
                 .getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void byReceipt_whenStoredBeforeTheBand_saysNeitherCoarseNorFinal() {
+        // Given — a view as stored before W-122b: no coarse, no band
+        String receipt = compute(draft(false, "0")).at("/tax/receipt").asString();
+        DraftComputation stored = mongoTemplate.findOne(new Query(Criteria.where("receipt").is(receipt)), DraftComputation.class);
+        ObjectNode old = (ObjectNode) JSON.readTree(stored.getResultJson());
+        old.remove("coarse");
+        old.remove("band");
+        stored.setResultJson(JSON.writeValueAsString(old));
+        mongoTemplate.save(stored);
+
+        // When
+        ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/computations/" + receipt, null, null);
+
+        // Then — absent reads as not stated, never as false
+        assertThat(read.getStatusCode()).as(read.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(read.getBody());
+        assertThat(view.path("coarse").isNull() || view.path("coarse").isMissingNode()).as(read.getBody()).isTrue();
+        assertThat(view.path("band").isNull() || view.path("band").isMissingNode()).as(read.getBody()).isTrue();
     }
 
     @Test

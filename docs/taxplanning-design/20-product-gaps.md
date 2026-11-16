@@ -220,6 +220,12 @@ Step 5  Other income and property             → the remaining heads
 > **Erratum (W-122, 2026-11-15):** step 1 cannot take "gross CTC + city" as written — the engine takes pay by component and nothing splits a cost to company, and a city decides nothing until a home is rented; step 1 enters the year's gross pay as one fully taxable pay component, nothing assumed, and the city moves to step 2 with the rent. The band is measured: the tax as the draft stands down to one run with every measured item filled to its room, income not yet entered stated as outside it (owner, W-122 C2a, C3a; D-701).
 > Verified by: `backend/src/main/java/com/thiru/wealthlens/taxengine/input/SalaryComponent.java` (`code`, `annualAmount` — a component, no cost-to-company input); `grep -rliE 'coarse|confidenceBand|onboarding' backend/src/main/java` returns nothing.
 
+> **Erratum (W-122b, 2026-11-16, D-720):** "the band narrows" holds on F34's order, not always. Answering a step removes
+> its rooms from the lower end's run, so the lower end only rises; but entering income raises the upper end and the
+> marginal rate a room saves at, so entering income while step 2 or step 4 is open can widen the band. Every computation
+> view says so while it is coarse (owner, W-122b C4a). The band is on the bill, `tax.netpayable` (C2a).
+> Verified by: `DraftBandTest.band_whenTheStepsAreAnsweredInOrder_narrowsToTheBillAndThenIsNotCoarse`.
+
 `RECOMMENDATION`: **every step must produce a valid computation**, with its own trace and an explicit
 confidence band. `D-NOSILENT` applies to the product as well as the engine — a coarse estimate
 labelled coarse is honest; a coarse estimate presented as final is not.

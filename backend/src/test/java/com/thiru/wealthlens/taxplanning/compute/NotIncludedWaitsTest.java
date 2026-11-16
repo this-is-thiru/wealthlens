@@ -34,6 +34,7 @@ class NotIncludedWaitsTest {
         ForbiddenWordingTest.READS.forEach(read -> ForbiddenWordingTest.notIncluded(read)
                 .forEach(text -> texts.add(read.getSimpleName() + ": " + text)));
         DraftOnboardingService.NOT_MEASURED.values().forEach(text -> texts.add("DraftOnboardingService: " + text));
+        DraftComputationService.BAND_NOT_INCLUDED.forEach(text -> texts.add("DraftComputationService: " + text));
 
         // When
         List<String> stale = texts.stream().filter(text -> waitsOnAFinishedItem(text, board)).toList();

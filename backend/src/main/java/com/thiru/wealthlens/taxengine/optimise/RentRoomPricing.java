@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.UnaryOperator;
 
 /**
  * What rent is worth where the draft does not yet reflect all it could earn (W-115, D-670 C1a, C3a, C4a): house rent
@@ -77,6 +78,18 @@ public final class RentRoomPricing {
      *     still bound at the filling rent
      */
     public static Optional<RentRoom> price(NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs) {
+        return priced(registry, pack, regime, inputs).map(Priced::room);
+    }
+
+    /**
+     * The rent room and what fills it: the homes, and for rent paid the declaration, the measuring run used, set on
+     * whatever facts it is given (W-122b C3a, D-720).
+     */
+    record Priced(RentRoom room, UnaryOperator<EnteredFacts> fill) {
+    }
+
+    /** The rent room with its fill; empty where {@link #price} is. */
+    static Optional<Priced> priced(NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs) {
         PipelineRunner.Result base = PipelineRunner.run(registry, pack, regime, inputs);
         Money fillingRent = money(base, NodeIds.GTI).floorAtZero().plus(payEntered(inputs.entered().employments()));
         if (!fillingRent.isGreaterThan(Money.ZERO)) {
@@ -87,7 +100,7 @@ public final class RentRoomPricing {
                 : rentPaid(registry, pack, regime, inputs, base, fillingRent);
     }
 
-    private static Optional<RentRoom> houseRentAllowance(NodeRegistry registry, RulePack pack, RegimeSpec regime,
+    private static Optional<Priced> houseRentAllowance(NodeRegistry registry, RulePack pack, RegimeSpec regime,
             EngineInputs inputs, PipelineRunner.Result base, Money fillingRent) {
         RuleRow row = only(pack, RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE);
         LeastOf cap = leastOf(row, inputs);
@@ -128,12 +141,13 @@ public final class RentRoomPricing {
                 rentNeeded = rentNeeded.plus(exempt).plus(threshold.apply(CapContext.of(SALARY, salary)).value());
             }
         }
-        return Optional.of(new RentRoom(row.id().value(), best.location(), counted, room,
+        List<Tenancy> homes = best.tenancies();
+        return Optional.of(new Priced(new RentRoom(row.id().value(), best.location(), counted, room,
                 belowFillingRent(rentNeeded, fillingRent, row.id()), billBefore.minus(DeductionRoomPricing.bill(best.run()))
-                        .floorAtZero()));
+                        .floorAtZero()), facts -> facts.withTenancies(homes)));
     }
 
-    private static Optional<RentRoom> rentPaid(NodeRegistry registry, RulePack pack, RegimeSpec regime,
+    private static Optional<Priced> rentPaid(NodeRegistry registry, RulePack pack, RegimeSpec regime,
             EngineInputs inputs, PipelineRunner.Result base, Money fillingRent) {
         RuleRow row = only(pack, RuleSetIds.RS_DED_RENT_PAID);
         EnteredFacts entered = inputs.entered();
@@ -143,8 +157,8 @@ public final class RentRoomPricing {
                 : raised(entered.tenancies(), fillingRent);
         RentDeclaration declaration = entered.rentDeclaration()
                 .orElseGet(() -> new RentDeclaration(monthsOccupied(homes, inputs.taxYear()), false, false));
-        PipelineRunner.Result filled = run(registry, pack, regime, inputs,
-                entered.withTenancies(homes).withRentDeclaration(Optional.of(declaration)));
+        UnaryOperator<EnteredFacts> fill = facts -> facts.withTenancies(homes).withRentDeclaration(Optional.of(declaration));
+        PipelineRunner.Result filled = run(registry, pack, regime, inputs, fill.apply(entered));
         Money counted = deducted(base, row);
         Money allowed = deducted(filled, row);
         Money room = allowed.minus(counted);
@@ -154,9 +168,9 @@ public final class RentRoomPricing {
         Money totalIncomeBefore = money(filled, NodeIds.TOTALINCOME).plus(allowed);
         Money threshold = rentLimb(leastOf(row, inputs), row.id()).threshold()
                 .apply(CapContext.of(TOTAL_INCOME, totalIncomeBefore)).value();
-        return Optional.of(new RentRoom(row.id().value(), Optional.empty(), counted, room,
+        return Optional.of(new Priced(new RentRoom(row.id().value(), Optional.empty(), counted, room,
                 belowFillingRent(allowed.plus(threshold), fillingRent, row.id()),
-                DeductionRoomPricing.bill(base).minus(DeductionRoomPricing.bill(filled)).floorAtZero()));
+                DeductionRoomPricing.bill(base).minus(DeductionRoomPricing.bill(filled)).floorAtZero()), fill));
     }
 
     /** ANY_OTHER_PLACE first, so a tie reports the location that claims least; then one place from each band. */
