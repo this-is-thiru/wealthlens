@@ -1657,13 +1657,13 @@ if that is not enough for the item in hand.
 | Item | Produces | Spec |
 |---|---|---|
 | W-124 | `IngestedDocument`, `ParseAttempt`, `ExtractedField`, `DocumentConfirmation` | `DR 05` M4 **Done (D-727):** values only (C1a) in `taxplanning.documents.ingest`: `DocumentType` (the form, no year, C2a), `IngestedDocument` (no storage reference), `ParseAttempt` + `ParserRun` + `ParseOutcome`, `ExtractedField` + `FieldLocation`, `ExtractedValue` (`MoneyRead`, `FlagRead`, `TextRead`, C3a), `DocumentConfirmation`; `mappedTo` a `ComponentCode` only |
-| W-125 | `DocumentParser` SPI | `DR 07` X2.5 |
+| W-125 | `DocumentParser` SPI | `DR 07` X2.5 **Done (D-728):** `taxplanning.documents.parser` — `DocumentParser` (`reads()` one form, no year, C1a; `read(DocumentContent) → DocumentReading`, C2a), `DocumentContent`, `DocumentReading`, `DocumentParsers` (the one place a parse runs: hash checked, parser by form, timed in UTC, attempt built; two parsers for one form refused at start), `DocumentParsersConfig` |
 | W-126 | `Form130Parser` L1 structural | `DR 06` G5.1 |
 | W-127 | L2 anchored numeric + L3 checksum-driven | `DR 06` G5.1 |
 | W-128 | `G5.2` validation identities | `DR 06` G5.2 |
 | W-129 | multi-employer assembly | `DR 06` G5.3 |
 | W-130 | `ReconciliationReport` | `DR 05` M4.2 |
-| W-131 | upload / parse / confirm endpoints + async job | TS T8 **Also (D-449 C1a):** the async job is `DR 19` E8's `ParseDocument`, on W-137's `TaxJob` and `TaxJobRunner` **Also (D-727 C1a):** the stored form of W-124's values — `tax_documents` (unique `{sha256}`), `tax_parse_attempts`, `tax_document_confirmations` (`02-TECH-SPEC.md:331` – `:333`), their indexes, encryption of the read text and values, erasure with the profile and the account, the 8-year retention (`DR 14` O5), the bytes' storage (O6) and the runbook entry |
+| W-131 | upload / parse / confirm endpoints + async job | TS T8 **Also (D-449 C1a):** the async job is `DR 19` E8's `ParseDocument`, on W-137's `TaxJob` and `TaxJobRunner` **Also (D-727 C1a):** the stored form of W-124's values — `tax_documents` (unique `{sha256}`), `tax_parse_attempts`, `tax_document_confirmations` (`02-TECH-SPEC.md:331` – `:333`), their indexes, encryption of the read text and values, erasure with the profile and the account, the 8-year retention (`DR 14` O5), the bytes' storage (O6) and the runbook entry **Also (D-728 C3a):** the parse's wall-clock and CPU budget and its isolation (`DR 14` O6), a timeout stored as a `FAILED` attempt with its reason (O9) |
 | W-132 | **T8 tests** | `DR 08` T8-1 … T8-6 |
 | W-133 | Excel import (**F28**) | `DR 19` E9.1 |
 
