@@ -204,6 +204,14 @@ pre-filled data, and if not, have you asked the institution why".
 > fund or institution; the named funds of (1)(a), the Drought Relief Fund and the bodies of (1)(b)(iii)–(vi) are not
 > conditioned on a donee's report. Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(6)).
 
+> **Erratum (W-120, 2026-11-16, D-718):** how F25 evaluates this table. The four r.205(2) rows are documents: each is an
+> evidence item of the claim catalogue naming who provides it (`from`) and what the product keeps that answers it
+> (`recordedAs`), read per draft by `GET …/drafts/{draftId}/document-checklist`; Sl. 3 (the lender's name, address and
+> PAN) was in no catalogue entry and is now an item of `HP-OWN-RESIDENCE-INTEREST-CAP`. The other rows are conditions,
+> not documents, applied in the computation and proven by T12-5 – T12-8 (D-709); the checklist does not repeat them.
+> r.205 is unamended to 12-11-2026 (egazette scan, D-718); the 1962 Rules' r.26C(2) Sl. 2 – 4 read as enacted
+> (egazette 2016/169418 p.6). Verified by: `DraftDocumentChecklistServiceTest`, `DraftIntegrationTest`.
+
 ### C3.3 Third-party match — the check that actually matters
 
 `INFERENCE (from C1)`: because income is reported in full, the highest-value checks compare the draft

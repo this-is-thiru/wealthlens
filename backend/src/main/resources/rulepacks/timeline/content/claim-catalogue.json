@@ -63,11 +63,15 @@
       "evidence": [
         {
           "name": "Rent receipts",
-          "closedBy": "A receipt for each month you paid rent."
+          "closedBy": "A receipt for each month you paid rent.",
+          "from": "LANDLORD",
+          "recordedAs": "RENT_RECEIPTS"
         },
         {
           "name": "Your landlord's particulars",
-          "closedBy": "Their name, address and PAN, where your rent is above that figure."
+          "closedBy": "Their name, address and PAN, where your rent is above that figure.",
+          "from": "LANDLORD",
+          "recordedAs": "LANDLORD_PARTICULARS"
         }
       ],
       "mistakes": [
@@ -129,7 +133,9 @@
       "evidence": [
         {
           "name": "The institution's certificate",
-          "closedBy": "The certificate it issues once it has reported the donation."
+          "closedBy": "The certificate it issues once it has reported the donation.",
+          "from": "INSTITUTION",
+          "recordedAs": "NOT_RECORDED"
         }
       ],
       "mistakes": [
@@ -200,7 +206,9 @@
       "evidence": [
         {
           "name": "Payment receipts and statements",
-          "closedBy": "A receipt or statement for each payment, dated in the tax year."
+          "closedBy": "A receipt or statement for each payment, dated in the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "QUALIFYING_PAYMENT"
         }
       ],
       "mistakes": [
@@ -268,7 +276,9 @@
       "evidence": [
         {
           "name": "Pension scheme statement",
-          "closedBy": "A statement of what you paid into your own account in the tax year."
+          "closedBy": "A statement of what you paid into your own account in the tax year.",
+          "from": "YOU",
+          "recordedAs": "QUALIFYING_PAYMENT"
         }
       ],
       "mistakes": [
@@ -363,7 +373,9 @@
       "evidence": [
         {
           "name": "Insurer's certificate",
-          "closedBy": "A certificate for each premium, showing the period it covers."
+          "closedBy": "A certificate for each premium, showing the period it covers.",
+          "from": "INSTITUTION",
+          "recordedAs": "HEALTH_PAYMENT"
         }
       ],
       "mistakes": [
@@ -372,7 +384,7 @@
       ]
     },
     {
-      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.22 (pp.47 – 48) read in full: no condition about the employer; the higher limit needs \"a certificate from the person to whom interest is payable\" (s.22(2)(a)(ii), (4)). A loss under \"Income from house property\" is one of the five particulars s.392(4)(a) (p.397, C1) lets a person give the employer \"at his option\" — here a true basis. steps[2]: the higher limit's conditions, s.22(2)(a)(i) – (ii); the limits by placeholder from conditionsMet, anyOtherCase and aggregate (s.22(2), (5)). mistakes[0]: Sch. XV para 3(a)(iii) takes principal repaid. covers: the own-residence rules (C1a). provision1961: s.24(b) and its provisos, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.147. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.22 (pp.47 – 48) read in full: no condition about the employer; the higher limit needs \"a certificate from the person to whom interest is payable\" (s.22(2)(a)(ii), (4)). A loss under \"Income from house property\" is one of the five particulars s.392(4)(a) (p.397, C1) lets a person give the employer \"at his option\" — here a true basis. steps[2]: the higher limit's conditions, s.22(2)(a)(i) – (ii); the limits by placeholder from conditionsMet, anyOtherCase and aggregate (s.22(2), (5)). mistakes[0]: Sch. XV para 3(a)(iii) takes principal repaid. covers: the own-residence rules (C1a). provision1961: s.24(b) and its provisos, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.147. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md. evidence[1]: Income-tax Rules, 2026 r.205(2) Table Sl. 3, Gazette CG-DL-E-20032026-271092 p.1687 — \"Name, address and Permanent Account Number of the lender\"; for TY 2025-26 the 1962 Rules r.26C(2) Sl. 3, egazette 2016/169418 p.6, as enacted (W-120 C3a, D-718).",
       "rule": "HP-OWN-RESIDENCE-INTEREST-CAP",
       "covers": [
         "HP-OWN-RESIDENCE",
@@ -439,7 +451,15 @@
       "evidence": [
         {
           "name": "Lender's certificate of interest",
-          "closedBy": "The certificate for the year, from the person the interest is payable to."
+          "closedBy": "The certificate for the year, from the person the interest is payable to.",
+          "from": "LENDER",
+          "recordedAs": "LENDER_CERTIFICATE"
+        },
+        {
+          "name": "Your lender's particulars",
+          "closedBy": "Their name, address and PAN.",
+          "from": "LENDER",
+          "recordedAs": "LENDER_PARTICULARS"
         }
       ],
       "mistakes": [
@@ -518,7 +538,9 @@
       "evidence": [
         {
           "name": "Travel tickets",
-          "closedBy": "A ticket for each journey and each person travelling."
+          "closedBy": "A ticket for each journey and each person travelling.",
+          "from": "YOU",
+          "recordedAs": "JOURNEY_EXPENDITURE"
         }
       ],
       "mistakes": [
@@ -572,7 +594,9 @@
       "evidence": [
         {
           "name": "Receipt for tax paid yourself",
-          "closedBy": "The State's receipt for each payment you made yourself."
+          "closedBy": "The State's receipt for each payment you made yourself.",
+          "from": "YOU",
+          "recordedAs": "NOT_RECORDED"
         }
       ],
       "mistakes": [
@@ -631,7 +655,9 @@
       "evidence": [
         {
           "name": "Interest statement",
-          "closedBy": "Each bank's or the Post Office's statement of savings interest for the tax year."
+          "closedBy": "Each bank's or the Post Office's statement of savings interest for the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "NOT_RECORDED"
         }
       ],
       "mistakes": [
@@ -691,7 +717,9 @@
       "evidence": [
         {
           "name": "Interest statement",
-          "closedBy": "Each bank's or the Post Office's statement of deposit interest for the tax year."
+          "closedBy": "Each bank's or the Post Office's statement of deposit interest for the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "NOT_RECORDED"
         }
       ],
       "mistakes": [
@@ -749,7 +777,9 @@
       "evidence": [
         {
           "name": "Disability certificate",
-          "closedBy": "A copy furnished with your return, current for the tax year."
+          "closedBy": "A copy furnished with your return, current for the tax year.",
+          "from": "YOU",
+          "recordedAs": "NOT_RECORDED"
         }
       ],
       "mistakes": [
@@ -817,11 +847,15 @@
       "evidence": [
         {
           "name": "Dependant's disability certificate",
-          "closedBy": "A copy furnished with your return, current for the tax year."
+          "closedBy": "A copy furnished with your return, current for the tax year.",
+          "from": "YOU",
+          "recordedAs": "NOT_RECORDED"
         },
         {
           "name": "Bills or scheme receipts",
-          "closedBy": "The bills or receipts for what you spent or paid in the tax year."
+          "closedBy": "The bills or receipts for what you spent or paid in the tax year.",
+          "from": "YOU",
+          "recordedAs": "DEPENDANT_SUPPORT"
         }
       ],
       "mistakes": [
@@ -884,7 +918,9 @@
       "evidence": [
         {
           "name": "Employer's contribution",
-          "closedBy": "Your payslips or pension scheme statement showing the employer's contribution for the tax year."
+          "closedBy": "Your payslips or pension scheme statement showing the employer's contribution for the tax year.",
+          "from": "EMPLOYER",
+          "recordedAs": "NOT_RECORDED"
         }
       ],
       "mistakes": [
@@ -955,7 +991,9 @@
       "evidence": [
         {
           "name": "Donation receipt",
-          "closedBy": "The receipt for each donation made in the tax year."
+          "closedBy": "The receipt for each donation made in the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "DONATION"
         }
       ],
       "mistakes": [

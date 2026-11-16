@@ -47,7 +47,7 @@ class ContentPerturbationTest {
      * change nothing.
      */
     private static final Set<String> CLAIM_CODES = Set.of("section", "channel", "chapterViiiPart", "ifMissingFromForm16",
-            "actor", "by", "whom", "presence", "covers", "notYetCatalogued", "because");
+            "actor", "by", "whom", "from", "recordedAs", "presence", "covers", "notYetCatalogued", "because");
 
     private static final String CONTENT_FILE = "content/explanations.json";
 

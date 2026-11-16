@@ -705,7 +705,13 @@
     "PURPOSE_LOAN_INTEREST": "The lender's certificate of interest for the {amount} not yet evidenced would evidence it.",
     "DEPENDANT_SUPPORT": "Bills or the scheme's receipts for the {amount} not yet evidenced would evidence it.",
     "SPECIFIED_DISEASE_TREATMENT": "Bills for the {amount} of treatment not yet evidenced would evidence it.",
-    "AGNIVEER_SUBSCRIPTION": "The fund's statement of your own subscription for the {amount} not yet evidenced would evidence it."
+    "AGNIVEER_SUBSCRIPTION": "The fund's statement of your own subscription for the {amount} not yet evidenced would evidence it.",
+    "NOT_RECORDED": "WealthLens keeps no record of this document; check that you hold it.",
+    "LANDLORD_NOT_ASKED": "Not needed this year: your rent is not above the figure at which these particulars are asked.",
+    "LENDER_ON_FILE": "Your lender's name, address and PAN are on file.",
+    "LENDER_NOT_ON_FILE": "Add your lender's name, address and PAN to your profile.",
+    "LENDER_CERTIFICATE_HELD": "You have said you hold the lender's certificate.",
+    "LENDER_CERTIFICATE_NOT_HELD": "The lender's certificate of interest would evidence it; ask your lender for it."
   },
   "report": {
     "TITLE": "Your tax computation",

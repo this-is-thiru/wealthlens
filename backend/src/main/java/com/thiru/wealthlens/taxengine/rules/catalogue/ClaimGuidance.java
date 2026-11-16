@@ -2,6 +2,8 @@ package com.thiru.wealthlens.taxengine.rules.catalogue;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -32,9 +34,20 @@ public record ClaimGuidance(Optional<String> appliesTo, List<ClaimStep> steps, L
         if (mistakes.stream().anyMatch(mistake -> mistake == null || mistake.isBlank())) {
             throw new IllegalArgumentException("A common mistake cannot be blank");
         }
+        requireProvidersAsked(askWhom, evidence);
         steps = List.copyOf(steps);
         askWhom = List.copyOf(askWhom);
         evidence = List.copyOf(evidence);
         mistakes = List.copyOf(mistakes);
+    }
+
+    /** A document comes from the person or from someone the claim asks (W-120 C2a), so whom to ask is never missing. */
+    private static void requireProvidersAsked(List<ClaimRequest> askWhom, List<ClaimEvidence> evidence) {
+        Set<ClaimActor> asked = askWhom.stream().map(ClaimRequest::whom).collect(Collectors.toSet());
+        evidence.stream().filter(item -> item.from() != ClaimActor.YOU && !asked.contains(item.from())).findFirst()
+                .ifPresent(item -> {
+                    throw new IllegalArgumentException("Evidence \"" + item.name() + "\" comes from " + item.from()
+                            + ", whom the claim does not ask; add them to askWhom or name YOU");
+                });
     }
 }

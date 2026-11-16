@@ -16,6 +16,8 @@ import com.thiru.wealthlens.taxplanning.compute.DraftCompleteness;
 import com.thiru.wealthlens.taxplanning.compute.DraftCompletenessService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationView;
+import com.thiru.wealthlens.taxplanning.compute.DraftDocumentChecklist;
+import com.thiru.wealthlens.taxplanning.compute.DraftDocumentChecklistService;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecast;
 import com.thiru.wealthlens.taxplanning.compute.DraftForecastService;
 import com.thiru.wealthlens.taxplanning.compute.DraftOnboarding;
@@ -51,6 +53,7 @@ public class DraftComputationController {
     private final DraftCompletenessService completenessService;
     private final DraftClaimsService claimsService;
     private final DraftClaimIntegrityService claimIntegrityService;
+    private final DraftDocumentChecklistService documentChecklistService;
     private final DraftOnboardingService onboardingService;
     private final ComputationReportService reportService;
 
@@ -93,6 +96,11 @@ public class DraftComputationController {
     @GetMapping("/drafts/{draftId}/claim-integrity")
     public DraftClaimIntegrity claimIntegrity(@PathVariable String email, @PathVariable String draftId) {
         return claimIntegrityService.claimIntegrity(email, draftId);
+    }
+
+    @GetMapping("/drafts/{draftId}/document-checklist")
+    public DraftDocumentChecklist documentChecklist(@PathVariable String email, @PathVariable String draftId) {
+        return documentChecklistService.checklist(email, draftId);
     }
 
     @PostMapping("/drafts/{draftId}/itr-form")

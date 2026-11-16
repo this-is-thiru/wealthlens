@@ -532,6 +532,32 @@ class ClaimCatalogueTest {
     }
 
     @Test
+    void of_whenEvidenceComesFromSomeoneTheClaimDoesNotAsk_isRefused() {
+        // Given — house rent asks the landlord and the employer, never a lender
+        Timeline timeline = edited(entries ->
+                ((ObjectNode) entries.path(HOUSE_RENT_ENTRY).path("evidence").path(0)).put("from", "LENDER"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("Rent receipts")
+                .hasMessageContaining("comes from LENDER, whom the claim does not ask");
+    }
+
+    @Test
+    void of_whenEvidenceNamesARecordThatDoesNotExist_isRefused() {
+        // Given
+        Timeline timeline = edited(entries ->
+                ((ObjectNode) entries.path(HOUSE_RENT_ENTRY).path("evidence").path(0)).put("recordedAs", "RECEIPT_BOX"));
+
+        // When / Then
+        assertThatThrownBy(() -> ClaimCatalogue.of(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("recordedAs")
+                .hasMessageContaining("RECEIPT_BOX");
+    }
+
+    @Test
     void of_whenEvidenceNamesNothingThatClosesIt_isRefusedByI25() {
         // Given
         Timeline timeline = edited(entries ->
@@ -631,7 +657,7 @@ class ClaimCatalogueTest {
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("whom to ask");
         assertThatThrownBy(() -> new ClaimRequest(ClaimActor.LENDER, " "))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("what for");
-        assertThatThrownBy(() -> new ClaimEvidence(" ", "A receipt."))
+        assertThatThrownBy(() -> new ClaimEvidence(" ", "A receipt.", ClaimActor.YOU, EvidenceRecord.NOT_RECORDED))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs a name");
         assertThatThrownBy(() -> new ClaimBasis(null, act))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("both Acts");

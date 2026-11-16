@@ -6,8 +6,6 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
-import com.thiru.wealthlens.taxplanning.profile.Landlord;
-import com.thiru.wealthlens.taxplanning.profile.LandlordRepository;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import com.thiru.wealthlens.taxplanning.workspace.EvidenceHeld;
 import java.time.Clock;
@@ -50,7 +48,7 @@ public class DraftClaimIntegrityService {
     private final DraftService draftService;
     private final EngineInputsAssembler assembler;
     private final TaxCalculator taxCalculator;
-    private final LandlordRepository landlords;
+    private final ParticularsOnFile particularsOnFile;
     private final Clock clock;
 
     /**
@@ -64,7 +62,7 @@ public class DraftClaimIntegrityService {
                 DraftForecastService.regimeOf(owned.draft(), taxCalculator), today);
         EngineInputs inputs = assembled.inputs();
         return new DraftClaimIntegrity(today, inputs.regime().value(), assembled.draft().getCurrentRevision(),
-                rows(inputs, owned.inputs().evidence(), landlordsOnFile(owned.inputs().thirdParties().landlordIds())),
+                rows(inputs, owned.inputs().evidence(), particularsOnFile.landlords(owned.inputs().thirdParties().landlordIds())),
                 Stream.concat(DraftComputationService.NOT_INCLUDED.stream(), NOT_INCLUDED.stream()).toList());
     }
 
@@ -138,17 +136,6 @@ public class DraftClaimIntegrityService {
         }
     }
 
-    /** Every landlord the draft names has a name, address and PAN on file; none named is none on file. */
-    private boolean landlordsOnFile(List<String> landlordIds) {
-        List<Landlord> named = landlords.findAllById(landlordIds);
-        return !landlordIds.isEmpty() && named.size() == landlordIds.size() && named.stream().allMatch(landlord ->
-                isGiven(landlord.getName()) && isGiven(landlord.getAddress()) && isGiven(landlord.getPan()));
-    }
-
-    private static boolean isGiven(String value) {
-        return value != null && !value.isBlank();
-    }
-
     private Map<String, Money> byRule(EngineInputs inputs, EnteredFacts entered) {
         return byRule(taxCalculator.compute(with(inputs, entered)));
     }
@@ -173,7 +160,7 @@ public class DraftClaimIntegrityService {
 
     private static Optional<String> limitedBy(ComputedTax computed, String rule) {
         return computed.trace().stream().filter(step -> step.rule().equals(rule))
-                .map(ComputedTax.Step::limitedBy).filter(DraftClaimIntegrityService::isGiven).findFirst();
+                .map(ComputedTax.Step::limitedBy).filter(limit -> limit != null && !limit.isBlank()).findFirst();
     }
 
     private static EngineInputs with(EngineInputs inputs, EnteredFacts entered) {

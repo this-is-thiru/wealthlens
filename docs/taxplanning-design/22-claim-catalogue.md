@@ -356,6 +356,12 @@ because *"ask your bank"* is not actionable and *"ask your bank for an interest 
 FY 2026-27 showing savings and time-deposit interest separately"* is. The separation matters:
 `DED-80TTA-001` covers savings only, `DED-80TTB-001` covers both.
 
+> **Erratum (W-120, 2026-11-16, D-718):** the eleven-value `Counterparty` above is not built. The catalogue's five
+> `ClaimActor` values stand (`YOU`, `EMPLOYER`, `INSTITUTION`, `LENDER`, `LANDLORD`; W-117a), each `askFor` naming the
+> exact artefact. Each evidence item names `from`, one of them: `YOU` or an actor the entry asks, which the compiler
+> refuses otherwise. A medical authority, an insurer or a bank is named in the text, not by a value.
+> Verified by: `ClaimCatalogueTest.of_whenEvidenceComesFromSomeoneTheClaimDoesNotAsk_isRefused`.
+
 ---
 
 ## C8 — Effects and tests

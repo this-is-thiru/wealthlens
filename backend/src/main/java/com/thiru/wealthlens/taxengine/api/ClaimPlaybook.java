@@ -66,7 +66,11 @@ public record ClaimPlaybook(String rule, List<String> covers, String plainName, 
     public record Request(String whom, String askFor) {
     }
 
-    public record Evidence(String name, String closedBy) {
+    /**
+     * @param from who provides it, as {@link Request#whom} names one
+     * @param recordedAs what the product keeps that says whether it is held (W-120)
+     */
+    public record Evidence(String name, String closedBy, String from, String recordedAs) {
     }
 
     /** The compiled claim, each {@code {{RULE-ID.field}}} replaced by the year's figure in rupees. */
@@ -84,7 +88,8 @@ public record ClaimPlaybook(String rule, List<String> covers, String plainName, 
                                 .map(request -> new Request(request.whom().name(), filled.apply(request.askFor())))
                                 .toList(),
                         entry.guidance().evidence().stream()
-                                .map(item -> new Evidence(filled.apply(item.name()), filled.apply(item.closedBy())))
+                                .map(item -> new Evidence(filled.apply(item.name()), filled.apply(item.closedBy()),
+                                        item.from().name(), item.recordedAs().name()))
                                 .toList(),
                         entry.guidance().mistakes().stream().map(filled).toList()));
     }

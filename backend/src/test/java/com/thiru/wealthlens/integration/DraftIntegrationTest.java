@@ -634,6 +634,52 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void documentChecklist_whenSixMonthsAreReceipted_namesWhatIsMissingAndWhomToAskAndStoresNothing() {
+        // Given — basic 16,00,000, HRA 4,80,000, rent 9,60,000 in Mumbai (above r.205(2) Sl. 1's 1,00,000, so the
+        // landlord's particulars are asked), six of twelve months receipted, no landlord linked; computed once
+        renting();
+        save("""
+                [{"op": "add", "path": "/entered/employments/0/components/-",
+                  "value": {"code": {"value": "HRA"}, "annualAmount": {"amountInRupees": 480000}}},
+                 {"op": "add", "path": "/evidence", "value": {"receiptedMonths": [6]}}]""", "\"rev-1\"");
+        status("{\"status\": \"READY\"}");
+        status("{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}");
+        String fingerprint = computed().get("inputsFingerprint").asString();
+        long stored = mongoTemplate.count(new Query(), DraftComputation.class);
+
+        // When
+        ResponseEntity<String> response =
+                call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/document-checklist", null, null);
+
+        // Then — 12 − 6 = 6 months outstanding; the landlord is asked for their particulars
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode checklist = JsonMapper.builder().build().readTree(response.getBody());
+        JsonNode rent = null;
+        for (JsonNode claim : checklist.get("claims")) {
+            if (claim.get("rule").asString().equals("SAL-HOUSE-RENT-ALLOWANCE")) {
+                rent = claim.get("documents");
+            }
+        }
+        assertThat(rent).as(response.getBody()).isNotNull();
+        assertThat(rent.at("/0/name").asString()).isEqualTo("Rent receipts");
+        assertThat(rent.at("/0/state").asString()).isEqualTo("NOT_HELD");
+        assertThat(rent.at("/0/outstanding/months").asLong()).isEqualTo(6L);
+        assertThat(rent.at("/1/name").asString()).isEqualTo("Your landlord's particulars");
+        assertThat(rent.at("/1/state").asString()).isEqualTo("NOT_HELD");
+        assertThat(rent.at("/1/from").asString()).isEqualTo("LANDLORD");
+        assertThat(checklist.get("notIncluded").toString()).contains("not yet catalogued");
+        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isEqualTo(stored);
+        assertThat(computed().get("inputsFingerprint").asString()).isEqualTo(fingerprint);
+    }
+
+    @Test
+    void documentChecklist_whenAnotherAccountAsks_expected400() {
+        // When / Then
+        assertThat(call(HttpMethod.GET, OTHER, "/drafts/" + draftId + "/document-checklist", null, null).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void claimIntegrity_whenAnotherAccountAsks_expected400() {
         // When / Then
         assertThat(call(HttpMethod.GET, OTHER, "/drafts/" + draftId + "/claim-integrity", null, null).getStatusCode())

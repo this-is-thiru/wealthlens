@@ -40,7 +40,7 @@ class ForbiddenWordingTest {
     /** The draft reads that state fixed texts beside the engine's (each class's {@code NOT_INCLUDED}). */
     static final List<Class<?>> READS = List.of(DraftComputationService.class, DraftClaimsService.class,
             DraftClaimIntegrityService.class, DraftCompletenessService.class, DraftCalendarService.class,
-            DraftForecastService.class);
+            DraftForecastService.class, DraftDocumentChecklistService.class);
 
     @Test
     void t12_14_whenEverySentenceTheProductCanSayIsRead_noneJudgesAClaimsRisk() throws IOException {

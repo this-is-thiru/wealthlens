@@ -143,7 +143,10 @@ public record ClaimCatalogue(List<ClaimCatalogueEntry> entries, List<RuleId> not
                         () -> new ClaimEvidence(
                                 PackJson.text(element.node(), "name", element.path()),
                                 // An absent closedBy reaches the evidence as blank, so I25 refuses it by name
-                                PackJson.optionalText(element.node(), "closedBy", element.path()).orElse("")))),
+                                PackJson.optionalText(element.node(), "closedBy", element.path()).orElse(""),
+                                PackJson.enumValue(element.node(), "from", element.path(), ClaimActor.class),
+                                PackJson.enumValue(element.node(), "recordedAs", element.path(),
+                                        EvidenceRecord.class)))),
                 PackJson.arrayOrEmpty(node, "mistakes", path, ClaimCatalogue::mistake)));
     }
 
