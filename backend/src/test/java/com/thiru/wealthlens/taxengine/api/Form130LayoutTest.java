@@ -342,8 +342,11 @@ class Form130LayoutTest {
                 .filter(line -> line.fact().isPresent()).collect(Collectors.toMap(CertificateLayout.PrintedLine::path,
                         line -> line.fact().orElseThrow()));
 
-        // Then — W-128c: row A, the standard deduction, tax, rebate, surcharge and cess in each annexure (pp.2276 – 2280)
+        // Then — W-128c: row A, the standard deduction, tax, rebate, surcharge and cess in each annexure (pp.2276 – 2280);
+        // W-129: Part A's TAN and period (p.2274), Annexure-I's salary from other employers (row 1(e))
         assertThat(facts).isEqualTo(Map.ofEntries(
+                Map.entry("partA.employer.tan", "EMPLOYER_TAN"), Map.entry("partA.employer.period", "EMPLOYMENT_PERIOD"),
+                Map.entry("partC.annexureI.row1e", "SALARY_FROM_OTHER_EMPLOYERS"),
                 Map.entry("partC.annexureI.rowA", "REGIME_OPT_OUT"), Map.entry("partC.annexureI.row4b", "STANDARD_DEDUCTION"),
                 Map.entry("partC.annexureI.row13", "TAX_ON_TOTAL_INCOME"), Map.entry("partC.annexureI.row14", "REBATE"),
                 Map.entry("partC.annexureI.row15", "SURCHARGE"), Map.entry("partC.annexureI.row16", "CESS"),

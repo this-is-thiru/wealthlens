@@ -554,6 +554,9 @@ assemble(documents for one taxYear):
         mode = MIXED  →  verdict CANNOT_COMPARE                      # M4.2
 ```
 
+> **Erratum (W-129, 2026-11-17):** three lines of G5.3 are wrong or cannot be built as written — (1) "check Σ row 4(b) <= one year's standard deduction # SAL-STDDED-003" cites the cap at the salary; one year's standard deduction is SAL-STDDED-001/002 (`01-rulebook.md:540` – `:541`), and the check is built against the ceiling of the regime row A states; (2) "check Σ row 2(b) is consistent with one year of HRA # SAL-HRA-003" cannot be tested by a sum: SAL-HRA-003 is the relevant period of occupation, and Form No. 130 prints neither the rent nor each period's salary — not built; (3) "assert no two (tan, period) ranges overlap" would refuse lawful concurrent employment — an overlap is an ATTENTION notice, and one TAN twice is a revised certificate (`13-edge-cases.md` B9-75, W-131) (D-754 C2a – C4a).
+> Verified by: `01-rulebook.md:540` – `:542`, `:564`; `EmployerAssemblyTest`.
+
 `INFERENCE`: `mode = PER_EMPLOYER` is where the money is. Two employers each granting a full standard
 deduction and a full HRA exemption produces a genuine shortfall the user will owe at filing, and it is
 detectable by summation alone. This is the highest-value single check in the whole product for the

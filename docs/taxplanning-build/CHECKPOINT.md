@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-128c DONE (D-753); W-128 complete. Next by board order: W-129 (multi-employer assembly, DR 06 G5.3)
+Item            : W-129 DONE (D-754). Next by board order: W-130 (ReconciliationReport, DR 05 M4.2)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-753; W-126e1 – W-126e3b, W-126e5, W-128a – c pushed
-Board           : W-128c D; W-129 ·
-Next step       : check the pipeline for the W-128c push; then plan W-129 (read DR 06 G5.3, DOC-F130-MULTI-001, -ANNEX-001; grep fixtures first); stop for approval
+Done today      : session 104: D-740 – D-754; W-126e*, W-128a – c, W-129 pushed
+Board           : W-129 D; W-130 ·
+Next step       : check the pipeline for the W-129 push; then plan W-130 (read DR 05 M4.2 and its reasons table; grep fixtures first); stop for approval
 Owner actions   : runbook §0.8 before the one deploy
-Last verify     : targeted 509/0 with validate on W-128c
+Last verify     : targeted 517/0 with validate on W-129
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-128c: check a certificate's standard deduction and cess against the year's law
+Last item commit: taxplanning W-129: assemble a year's certificates from several employers
 Updated         : 2026-11-17, session 104
 ```
 
