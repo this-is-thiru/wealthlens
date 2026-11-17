@@ -5,7 +5,11 @@ package com.thiru.wealthlens.taxplanning.documents.ingest;
  * parser and a new constant; which year a parser reads is the parser's to declare (W-125; D-727 C2a).
  */
 public enum DocumentType {
-    /** Form No. 16, the employer's certificate of tax deducted from salary. */
+    /**
+     * Form No. 16 under the Income-tax Rules, 1962, the employer's certificate of tax deducted from salary (TY 2025-26 and
+     * earlier). The Income-tax Rules, 2026 give the number to a donation certificate, so a form number is read with its year
+     * (D-741).
+     */
     FORM_16,
     /** Form No. 130, the employer's certificate under the Income-tax Rules, 2026. */
     FORM_130,

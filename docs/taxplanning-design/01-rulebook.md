@@ -1501,6 +1501,9 @@ deduction **up**; only a house-property loss and other TDS can push it **down**.
 ingestion for TY 2026-27. For TY 2025-26 the document is **Form 16** under Rules 1962 — **NEEDS
 VERIFICATION**; its Part B Annexure structure was not opened.
 
+> **Erratum (W-126e1, 2026-11-17):** TY 2025-26's Form 16 is no longer unverified — its whole structure is read from the Gazette: Form No. 16 as substituted by G.S.R. 379(E) (22-05-2023, egazette 2023/245989 pp.28 – 33) and amended by G.S.R. 639(E) (15-10-2024, 2024/257917 p.6), no other amendment to 31-03-2026 (D-742); the 1962 form governs TY 2025-26 by the 2025 Act s.536(2)(b), (c) (D-741). Its Part A holds the quarterly, BIN and CIN tables; Part B (Annexure-I) rows A, 1 – 21; Annexure II rows A, 1 – 17.
+> Verified by: `docs/taxplanning-build/sources/2026-11-17-form-16.md`; `backend/src/main/resources/rulepacks/timeline/forms/certificates/FORM_16.json`; `Form16LayoutTest`.
+
 | Rule ID | Part | Contents |
 |---|---|---|
 | `DOC-F130-A-001` | **Part A** | Certificate No.; last updated on; employer/specified-bank name, address, **PAN**, **TAN**, email, contact; **tax year**; **period with the employer (from/to)**; employee name, address, **PAN** |

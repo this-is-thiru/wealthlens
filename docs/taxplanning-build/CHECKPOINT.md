@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-126c2b DONE (D-739); W-126c complete. Next by board order: W-126e
+Item            : W-126e1 DONE (D-743). Next by board order: W-126e2 (Form 16 parser on one shared reader)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 103: W-126c1 (D-736), W-126c2a (D-738), W-126c2b (D-739); splits D-735, D-737
-Board           : W-126c2b D; W-126e ·; W-128 ·
-Next step       : check the pipeline for the W-126c2b push; then plan W-126e (Form 16 for TY 2025-26 — its Part B annexure must first be read from the Gazette, R21 NEEDS VERIFICATION; stop for approval)
-Owner actions   : runbook §0.8 before the one deploy; open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710)
-Last verify     : targeted 267/0 with validate on W-126c2b
+Done today      : session 104: W-126e split (D-740); D-741 savings; D-742 window; W-126e1 (D-743)
+Board           : W-126e1 D; W-126e2 ·; W-126e3 ·
+Next step       : check the pipeline for the W-126e1 push; then plan W-126e2 (probe first: fold U+2010 in LabelMatch.normal; shared reader for FORM_130/FORM_16; C4a drift probe on the owner's own Form 16); stop for approval
+Owner actions   : runbook §0.8 before the one deploy; your own TY 2025-26 Form 16 path for W-126e2's local drift probe (C4a)
+Last verify     : targeted 407/0 with validate on W-126e1
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-126c2b: read Form No. 130 Part B's tables
-Updated         : 2026-11-17, session 103
+Last item commit: taxplanning W-126e1: add Form 16's layout to the 2025-26 pack
+Updated         : 2026-11-17, session 104
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
