@@ -99,7 +99,9 @@ final class CertificateReading {
             ParseOutcome outcome = missing || !unmapped.isEmpty() ? ParseOutcome.PARTIAL : ParseOutcome.SUCCESS;
             Inference.Filled filled = Inference.fill(fields, layout.sums());
             notes.addAll(filled.notes());
-            return new DocumentReading(outcome, filled.fields(), unmapped, notes);
+            Contradictions.Checked checked = Contradictions.check(filled.fields(), layout.sums(), layout.tables());
+            notes.addAll(checked.notes());
+            return new DocumentReading(checked.notes().isEmpty() ? outcome : ParseOutcome.PARTIAL, checked.fields(), unmapped, notes);
         }
 
         /** A top part in printed order: its lines, then its tables. */

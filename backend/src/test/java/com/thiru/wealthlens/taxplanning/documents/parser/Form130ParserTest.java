@@ -410,4 +410,29 @@ class Form130ParserTest {
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
         assertThat(reading.parserNotes()).containsExactly("No Form No. 130 layout is in force in 2025-26");
     }
+
+    @Test
+    void read_whenAPrintedSumAndATablesTotalDisagree_namesBothAndIsPartial() throws Exception {
+        // Given — 12 printed 3,60,000 where 9 − 11 = 5,00,000 − 1,50,000 = 3,50,000; the summary's tax deducted
+        // 10,000 + 5,000 = 15,000 under a Total of 16,000 (W-128a, D-750)
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.put("partC.annexureI.row9", "5,00,000.00");
+        values.put("partC.annexureI.row11", "1,50,000.00 1,50,000.00 1,50,000.00");
+        values.put("partC.annexureI.row12", "3,60,000.00");
+        values.put("partB.summary.row1.quarter", "Q1");
+        values.put("partB.summary.row1.taxDeducted", "10,000.00");
+        values.put("partB.summary.row2.quarter", "Q2");
+        values.put("partB.summary.row2.taxDeducted", "5,000.00");
+        values.put("partB.summary.total.taxDeducted", "16,000.00");
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, values, Map.of(), Set.of())), YEAR);
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        assertThat(reading.parserNotes()).contains(
+                "Contradiction: partC.annexureI.row12 printed ₹3,60,000, the sum printed for it gives ₹3,50,000",
+                "Contradiction: partB.summary.total.taxDeducted printed ₹16,000, its rows add to ₹15,000");
+        assertThat(byPath(reading).get("partC.annexureI.row12").confidence()).isEqualTo(0.50);
+    }
 }

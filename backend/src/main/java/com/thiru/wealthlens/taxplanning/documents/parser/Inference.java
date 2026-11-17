@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 /**
  * L3 ({@code DR 06} G5.1; W-127b): where one of a printed sum's cells is unknown and every other is read, that cell is what the
  * sum makes it — and nowhere else. A cell is unknown when nothing is printed in it or its line was not found; a cell printing
- * text L2 could not read keeps that text (D-734 C2a). A sum whose cells are all read and disagree is left for W-128.
+ * text L2 could not read keeps that text (D-734 C2a). A sum whose cells are all read and disagree is a contradiction, checked by {@link Contradictions} (W-128a).
  */
 final class Inference {
 

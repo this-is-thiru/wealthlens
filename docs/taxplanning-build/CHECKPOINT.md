@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-126e5 DONE (D-749). Next by board order: W-128 (G5.2 validation identities, Form No. 130)
+Item            : W-128a DONE (D-751). Next by board order: W-128b (Part B ≈ row 21; Part A period in the tax year)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-749; W-126e1 – W-126e3b, W-126e5 pushed; scope D-748 (TY 2026-27 on only)
-Board           : W-126e4 K; W-126e5 D; W-128 ·
-Next step       : check the pipeline for the W-126e5 push; then plan W-128 (read DR 06 G5.2 first; W-126c noted G5.2 "Part B ≈ 21 + 19 + 20" double counts); stop for approval
+Done today      : session 104: D-740 – D-751; W-126e1 – W-126e3b, W-126e5, W-128a pushed
+Board           : W-128a D; W-128b ·; W-128c ·
+Next step       : check the pipeline for the W-128a push; then plan W-128b (probe: date reading of Part A item 8; Part B total vs row 21 within ₹10; erratum on 06-algorithms.md:509); stop for approval
 Owner actions   : runbook §0.8 before the one deploy
-Last verify     : targeted 462/0 with validate on W-126e5
+Last verify     : targeted 129/0 with validate on W-128a
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-126e5: remove Form 16's layout and parser
+Last item commit: taxplanning W-128a: check a certificate's printed sums and table totals
 Updated         : 2026-11-17, session 104
 ```
 
