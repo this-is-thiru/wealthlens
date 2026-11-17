@@ -61,6 +61,11 @@ class ControllerAdviserTest {
             return "upload";
         }
 
+        @GetMapping("/too-large")
+        String tooLarge() {
+            throw new org.springframework.web.multipart.MaxUploadSizeExceededException(22_020_096L);
+        }
+
         @PostMapping(value = "/body", consumes = MediaType.APPLICATION_JSON_VALUE)
         String body(@RequestBody String body) {
             return "body";
@@ -217,5 +222,11 @@ class ControllerAdviserTest {
     @Test
     void handleUnreadableBody_whenAnObjectIsSentForAList_answers400NamingTheShape() throws Exception {
         expectBodyRefusal("/dates", "{}", "The request body must be a JSON array");
+    }
+
+    @Test
+    void handleUploadTooLarge_whenAFileIsPastTheMultipartLimit_answers400NamingTheLimit() throws Exception {
+        // 21 MB = 21 × 1,048,576 = 22,020,096 bytes
+        expectRefusal("/too-large", "The file is larger than the 22020096 bytes an upload may be");
     }
 }

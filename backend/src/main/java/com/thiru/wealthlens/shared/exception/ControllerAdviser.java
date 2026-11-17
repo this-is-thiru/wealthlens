@@ -19,6 +19,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.core.JacksonException;
@@ -80,6 +81,14 @@ public class ControllerAdviser {
     public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(Exception ex, HttpServletRequest request) {
         log(ex);
         return buildErrorResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), ex.getMessage(), request);
+    }
+
+    /** A file past {@code spring.servlet.multipart.max-file-size}: the caller's to fix, so 400, not a 500 (W-131d1). */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleUploadTooLarge(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        log(ex);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), "The file is larger than the " + ex.getMaxUploadSize()
+                + " bytes an upload may be", request);
     }
 
     @ExceptionHandler(BadCredentialsException.class)

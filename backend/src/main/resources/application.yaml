@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: wealthlens
+  # W-131d1: above app.tax.documents.max-bytes (20 MB), so a file just past it gets DocumentBytes' own refusal; larger is a 400
+  servlet:
+    multipart:
+      max-file-size: 21MB
+      max-request-size: 22MB
 
   mongodb:
     uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@wealthlens-dev.gmhwxe2.mongodb.net/?retryWrites=true&w=majority
@@ -71,7 +76,7 @@ app:
         - part: insurance
           description: "Your insurance policies, if you recorded any"
         - part: tax-planning
-          description: "Your tax planning: each taxpayer profile (name, PAN, date of birth, and disability or date of death where given), salary details, tax computations and drafts, a record of each time a profile was read, and your requests to erase a profile"
+          description: "Your tax planning: each taxpayer profile (name, PAN, date of birth, and disability or date of death where given), salary details, tax computations and drafts, a record of each time a profile was read, your requests to erase a profile, and the salary certificates you upload (Form No. 130), what was read from them and what you confirmed"
         - part: privacy-records
           description: "Your privacy requests: grievances and their answers, notices to you of a personal data breach, a log of the requests made with your account, and the record of this notice and your consent"
       # r.3(b)(ii)
@@ -124,6 +129,8 @@ app:
       orphan-after: P1D
       # W-131c: O6's wall-clock budget for one parse; past it the attempt is FAILED (owner adopted, D-764 C3a)
       parse-budget: PT30S
+      # W-131d1: the documents endpoints answer 503 until the owner turns this on, after W-131e (scan) and W-131f (isolation)
+      enabled: false
   mongodb:
     transactions-enabled: true
   portfolio:

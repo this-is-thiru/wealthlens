@@ -12,7 +12,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param maxPages O6's "50 pages"
  * @param orphanAfter how old stored bytes no document names must be before they are deleted, so an upload in flight is never taken
  * @param parseBudget how long one parse may run before it is a failed attempt (O6's wall-clock budget; W-131c, D-764 C3a)
+ * @param enabled whether the documents endpoints answer at all: off until a scan and isolation exist (W-131d1, D-765 C2a)
  */
 @ConfigurationProperties(prefix = "app.tax.documents")
-public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, Duration parseBudget) {
+public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, Duration parseBudget, boolean enabled) {
 }

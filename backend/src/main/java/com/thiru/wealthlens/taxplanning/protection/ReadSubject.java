@@ -6,5 +6,7 @@ public enum ReadSubject {
     FAMILY_MEMBERS,
     DRAFT,
     DRAFT_REVISION,
-    COMPUTATION
+    COMPUTATION,
+    /** What was read from an uploaded certificate (W-131d1). */
+    DOCUMENT
 }

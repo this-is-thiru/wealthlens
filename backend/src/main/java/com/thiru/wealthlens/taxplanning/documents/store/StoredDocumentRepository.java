@@ -7,6 +7,9 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface StoredDocumentRepository extends MongoRepository<StoredDocument, String> {
 
+    /** The document a profile holds with these bytes, if any ({@code DR 05} M7). */
+    java.util.Optional<StoredDocument> findByProfileIdAndSha256(String profileId, String sha256);
+
     /** Every document a profile holds. */
     List<StoredDocument> findByProfileId(String profileId);
 

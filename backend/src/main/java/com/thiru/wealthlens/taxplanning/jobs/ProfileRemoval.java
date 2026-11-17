@@ -6,6 +6,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.DocumentRemoval;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import com.thiru.wealthlens.taxplanning.profile.BankAccount;
 import com.thiru.wealthlens.taxplanning.profile.Employer;
 import com.thiru.wealthlens.taxplanning.profile.FamilyMember;
@@ -49,6 +50,7 @@ public class ProfileRemoval {
     private final DraftRemoval draftRemoval;
     private final AccessRecordRepository accessRecords;
     private final DocumentRemoval documentRemoval;
+    private final StoredDocumentRepository documents;
     private final MongoTemplate mongoTemplate;
 
     public void remove(TaxpayerProfile profile) {
@@ -60,6 +62,7 @@ public class ProfileRemoval {
                     .forEach(readSubjects::add);
             draftRemoval.remove(draft);
         }
+        documents.findByProfileId(profile.getId()).forEach(document -> readSubjects.add(document.getId()));
         accessRecords.deleteBySubjectIdIn(readSubjects);
         documentRemoval.removeUnder(profile.getId());
         PROFILE_SCOPED.forEach(scoped -> mongoTemplate.remove(query(where("profile_id").is(profile.getId())), scoped));

@@ -34,7 +34,7 @@ class DocumentBytesTest {
     private GridFsTemplate bucket;
 
     private DocumentBytes bytes(long maxBytes, int maxPages) {
-        return new DocumentBytes(bucket, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), java.time.Duration.ofSeconds(30)));
+        return new DocumentBytes(bucket, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), java.time.Duration.ofSeconds(30), true));
     }
 
     @Test

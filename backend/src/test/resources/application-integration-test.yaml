@@ -61,7 +61,7 @@ app:
         - part: insurance
           description: "Your insurance policies, if you recorded any"
         - part: tax-planning
-          description: "Your tax planning: each taxpayer profile (name, PAN, date of birth, and disability or date of death where given), salary details, tax computations and drafts, a record of each time a profile was read, and your requests to erase a profile"
+          description: "Your tax planning: each taxpayer profile (name, PAN, date of birth, and disability or date of death where given), salary details, tax computations and drafts, a record of each time a profile was read, your requests to erase a profile, and the salary certificates you upload (Form No. 130), what was read from them and what you confirmed"
         - part: privacy-records
           description: "Your privacy requests: grievances and their answers, notices to you of a personal data breach, a log of the requests made with your account, and the record of this notice and your consent"
       # r.3(b)(ii)
@@ -74,6 +74,9 @@ app:
     data-key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
     digest-key: HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=
   tax:
+    # W-131d1: the documents flow is tested switched on; the profile yamls ship it off
+    documents:
+      enabled: true
     jobs:
       enabled: false
       gazette-watch-cron: "0 0 5 * * *"

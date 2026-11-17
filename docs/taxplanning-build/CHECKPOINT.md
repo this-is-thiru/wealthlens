@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131c DONE (D-764). Next: W-131d (endpoints, EMPLOYEE_PAN, confirm, reconciliation read, flag, notice)
+Item            : W-131d1 DONE (D-766). Next: W-131d2 (GET /drafts/{draftId}/reconciliation)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-764 pushed
-Board           : W-131c D; W-131d – f ·
-Next step       : check the pipeline; plan W-131d (expect a split: endpoints + flag + notice vs PAN fact + reconciliation read)
-Owner actions   : runbook §0.8, §1.n; W-131g, W-333 yes/no
-Last verify     : W-131c targeted verify 76/0
+Done today      : session 104: D-740 – D-766 pushed
+Board           : W-131d1 D; W-131d2 ·; W-131e, W-131f ·
+Next step       : check the pipeline; plan W-131d2
+Owner actions   : runbook §0.8, §1.n, §1.p; W-131g, W-333 yes/no
+Last verify     : W-131d1 targeted verify 316/0
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-131c: read each stored document once per parser version within a time budget
+Last item commit: taxplanning W-131d1: upload, read and confirm a certificate behind a switch
 Updated         : 2026-11-17, session 104
 ```
 
