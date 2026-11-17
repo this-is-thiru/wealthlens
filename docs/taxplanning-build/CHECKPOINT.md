@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-126e3a DONE (D-746). Next by board order: W-126e3b (Form 16 Part A box reader)
+Item            : W-126e3b DONE (D-747); W-126e3 complete. Next by board order: W-126e4 (form identity on a real Form 16)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-746; W-126e1, W-126e2, W-126e3a pushed
-Board           : W-126e3a D; W-126e3b ·; W-126e4 ·
-Next step       : check the pipeline for the W-126e3a push; then plan W-126e3b (reproduce the missing "31-Mar-2026" first; probe untitled start, one-row end, captions); stop for approval
-Owner actions   : runbook §0.8 before the one deploy; own Form 16 path for W-126e4
-Last verify     : targeted 467/0 with validate on W-126e3a; pipeline 44102654167 success on c9afc780
+Done today      : session 104: D-740 – D-747; W-126e1, W-126e2, W-126e3a, W-126e3b pushed
+Board           : W-126e3b D; W-126e4 ·; W-128 ·
+Next step       : check the pipeline for the W-126e3b push; W-126e4 needs the owner's own TY 2025-26 Form 16 path (local, uncommitted drift probe) — ask first; then plan it
+Owner actions   : own Form 16 path for W-126e4; runbook §0.8 before the one deploy
+Last verify     : targeted 476/0 with validate on W-126e3b
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-126e3a: let a certificate table be a row of headed boxes
+Last item commit: taxplanning W-126e3b: read Form 16's Part A boxes
 Updated         : 2026-11-17, session 104
 ```
 

@@ -40,10 +40,11 @@ final class TableFixture {
                     .append("</b></td></tr>");
         }
         headings(table, html);
-        for (int row = 1; values.containsKey(table.path() + ".row" + row + "." + table.columns().get(0).key()); row++) {
+        for (int row = 1; printsRow(table, values, row); row++) {
             html.append("<tr>");
             for (PrintedColumn column : table.columns()) {
-                cell(column, 1, values.getOrDefault(table.path() + ".row" + row + "." + column.key(), ""), html);
+                cell(column, 1, column.captions().isEmpty() ? values.getOrDefault(table.path() + ".row" + row + "." + column.key(), "")
+                        : captioned(column, table.path() + ".row" + row + "." + column.key(), values), html);
             }
             html.append("</tr>");
         }
@@ -78,6 +79,18 @@ final class TableFixture {
                     .forEach(column -> html.append("<td>").append(column.heading()).append("</td>"));
             html.append("</tr>");
         }
+    }
+
+    /** A row is printed when any of its cells, or any caption of a cell, has a value (W-126e3b, D-747 C3a). */
+    private static boolean printsRow(PrintedTable table, Map<String, String> values, int row) {
+        String prefix = table.path() + ".row" + row + ".";
+        return values.keySet().stream().anyMatch(key -> key.startsWith(prefix));
+    }
+
+    /** Each caption the column prints, then its value, a line each, as Form 16's "CIT (TDS)" box prints them. */
+    private static String captioned(PrintedColumn column, String path, Map<String, String> values) {
+        return column.captions().stream().map(caption -> caption + " " + values.getOrDefault(CertificateLayout.cellPath(path,
+                Optional.of(caption)), "")).collect(java.util.stream.Collectors.joining("<br/>"));
     }
 
     private static void cell(PrintedColumn column, int span, String value, StringBuilder html) {

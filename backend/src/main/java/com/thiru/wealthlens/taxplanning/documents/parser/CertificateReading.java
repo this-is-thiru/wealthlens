@@ -111,12 +111,14 @@ final class CertificateReading {
             }
             List<PrintedTable> tables = layout.tables().stream().filter(table -> table.path().startsWith(top.path() + ".")).toList();
             if (!tables.isEmpty() && entered(top)) {
-                tables.forEach(table -> read(table, top));
+                for (int at = 0; at < tables.size(); at++) {
+                    read(tables.get(at), at + 1 < tables.size() ? Optional.of(tables.get(at + 1)) : Optional.empty(), top);
+                }
             }
         }
 
-        private void read(PrintedTable table, PartHeading top) {
-            TableReading.Reading reading = TableReading.read(words, cursor, table, claimed);
+        private void read(PrintedTable table, Optional<PrintedTable> next, PartHeading top) {
+            TableReading.Reading reading = TableReading.read(words, cursor, table, next, claimed);
             fields.addAll(reading.fields());
             notes.addAll(reading.notes());
             missing |= !reading.complete();

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxplanning.documents.parser;
 
+import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedColumn;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedTable;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
@@ -19,7 +20,8 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * One table of a certificate read from its printed words (W-126c2b, D-737): its title, then each column heading by its own
- * words ({@link HeadingMatch}), then each row up to the Total row. A column reaches halfway to its neighbours' headings, so
+ * words ({@link HeadingMatch}), then each row up to the Total row. An untitled table starts at its first heading, and a
+ * table with no Total row is one row ending where the next table starts, as Form 16's Part A boxes are (W-126e3b, D-747). A column reaches halfway to its neighbours' headings, so
  * an amount set to the right of a wide cell is still under its heading (owner, in build); a value reaching under another
  * column's heading is not placed. A row starts with a value in the first column; an empty cell is no field (C4a).
  */
@@ -39,7 +41,8 @@ final class TableReading {
     /**
      * What was read of one table.
      *
-     * @param found whether its title is printed; a table not printed is noted and leaves the reading complete (C3a)
+     * @param found whether its title, or an untitled table's first heading, is printed; a table not printed is noted and
+     *     leaves the reading complete (C3a)
      * @param complete whether every heading and the Total row were found and every value placed and read
      * @param end the index after the table's last word, or the start where it is not printed
      */
@@ -52,7 +55,7 @@ final class TableReading {
     }
 
     /** A column's reach on the page: from halfway to the heading before to halfway to the one after. */
-    private record Column(String key, String kind, float headingLeft, float headingRight, float from, float to) {
+    private record Column(String key, String kind, List<String> captions, float headingLeft, float headingRight, float from, float to) {
 
         boolean holds(Word word) {
             float centre = (word.left() + word.right()) / 2;
@@ -64,25 +67,27 @@ final class TableReading {
         }
     }
 
-    static Reading read(List<Word> words, int from, PrintedTable table, Set<Word> claimed) {
-        return new TableReading(words, table, claimed).read(from);
+    /** @param next the table printed after this one, where a one-row table's row ends */
+    static Reading read(List<Word> words, int from, PrintedTable table, Optional<PrintedTable> next, Set<Word> claimed) {
+        return new TableReading(words, table, claimed).read(from, next);
     }
 
-    private Reading read(int from) {
-        if (table.title().isEmpty() || table.totalLabel().isEmpty()) {
-            // An untitled or one-row table (Form 16's Part A boxes) is read from W-126e3b on (D-745 C2a); until then it says so
-            return new Reading(false, List.of(), List.of(table.path() + " is not read yet"), false, from);
-        }
-        OptionalInt headerFrom = title(from);
+    private Reading read(int from, Optional<PrintedTable> next) {
+        boolean untitled = table.title().isEmpty();
+        OptionalInt headerFrom = untitled ? start(table, from) : title(from);
         if (headerFrom.isEmpty()) {
-            return new Reading(false, List.of(), List.of(table.title().get(0) + " is not in this certificate"), true, from);
+            String name = untitled ? table.columns().get(0).heading() : table.title().get(0);
+            return new Reading(false, List.of(), List.of(name + " is not in this certificate"), true, from);
         }
         int to = headerFrom.getAsInt();
-        int lastTitleLine = words.get(to - 1).line();
+        int lastTitleLine = untitled ? words.get(to).line() - 1 : words.get(to - 1).line();
         while (to < words.size() && words.get(to).line() <= lastTitleLine + HEADER_LINES) {
             to++;
         }
         List<Column> columns = columns(headerFrom.getAsInt(), to);
+        if (table.totalLabel().isEmpty()) {
+            return oneRow(headerFrom.getAsInt(), next, columns);
+        }
         int rowsFrom = endOfLine(lastClaimed(headerFrom.getAsInt(), to));
         Optional<List<Word>> total = total(rowsFrom, columns);
         if (total.isEmpty()) {
@@ -92,6 +97,29 @@ final class TableReading {
         rows(rowsFrom, words.indexOf(total.get().get(0)), columns);
         int end = totalRow(total.get(), columns);
         return new Reading(true, fields, notes, complete, end);
+    }
+
+    /** Where an untitled table starts: its first column's heading, the first word of it. */
+    private OptionalInt start(PrintedTable printed, int from) {
+        return HeadingMatch.find(words, from, words.size(), printed.title().isEmpty() ? printed.columns().get(0).heading()
+                : printed.title().get(0), claimed).map(found -> OptionalInt.of(words.indexOf(found.get(0)))).orElse(OptionalInt.empty());
+    }
+
+    /**
+     * A table of one row, such as a row of Form 16's Part A boxes: every word between its first heading and the next table
+     * that no heading claims, each under its column; the row ends where the next table starts.
+     */
+    private Reading oneRow(int from, Optional<PrintedTable> next, List<Column> columns) {
+        OptionalInt end = next.map(after -> start(after, from)).orElse(OptionalInt.empty());
+        if (end.isEmpty()) {
+            missing("Not found: where " + table.path() + "'s row ends (" + next.map(PrintedTable::path).orElse("no table follows") + ")");
+            return new Reading(true, fields, notes, false, from);
+        }
+        Map<String, List<Word>> cells = new LinkedHashMap<>();
+        place(words.subList(from, end.getAsInt()).stream().filter(word -> !claimed.contains(word)).toList(), columns,
+                table.path() + ".row1", cells);
+        emit(table.path() + ".row1", cells, columns);
+        return new Reading(true, fields, notes, complete, end.getAsInt());
     }
 
     /** The title's lines, in order; the index after the last, or none where a line is not printed. */
@@ -131,7 +159,7 @@ final class TableReading {
         float right = right(headings.get(at));
         float from = at == 0 ? Float.NEGATIVE_INFINITY : (right(headings.get(at - 1)) + left) / 2;
         float to = at == headings.size() - 1 ? Float.POSITIVE_INFINITY : (right + left(headings.get(at + 1))) / 2;
-        return new Column(column.key(), column.kind(), left, right, from, to);
+        return new Column(column.key(), column.kind(), column.captions(), left, right, from, to);
     }
 
     private static float left(List<Word> words) {
@@ -225,7 +253,7 @@ final class TableReading {
             if (!spanned.isEmpty()) {
                 Column first = spanned.get(0);
                 Column last = spanned.get(spanned.size() - 1);
-                cells.add(new Column(first.key(), first.kind(), first.headingLeft(), last.headingRight(), first.from(), last.to()));
+                cells.add(new Column(first.key(), first.kind(), List.of(), first.headingLeft(), last.headingRight(), first.from(), last.to()));
             }
         }
         int end = endOfLine(total);
@@ -255,22 +283,56 @@ final class TableReading {
     private void emit(String row, Map<String, List<Word>> cells, List<Column> columns) {
         for (Column column : columns) {
             List<Word> cell = cells.getOrDefault(column.key(), List.of());
-            if (!cell.isEmpty()) {
-                String path = row + "." + column.key();
-                String text = cell.stream().map(Word::text).collect(Collectors.joining(" "));
-                Optional<ExtractedValue> value = switch (column.kind()) {
-                    case "AMOUNT" -> CellReading.amounts(text, 1).map(values -> values.get(0));
-                    case "YES_NO" -> CellReading.yesNo(text);
-                    default -> Optional.of(new ExtractedValue.TextRead(text));
-                };
-                if (value.isEmpty()) {
-                    missing("Not read: " + path + " (" + text + ")");
-                }
-                fields.add(new ExtractedField(path, Optional.of(text), value,
-                        value.isPresent() ? CertificateReading.READ_CONFIDENCE : CertificateReading.LABEL_CONFIDENCE, Optional.of(place(cell)),
-                        Optional.empty()));
+            if (!cell.isEmpty() && !column.captions().isEmpty()) {
+                captioned(row + "." + column.key(), cell, column.captions()).forEach((path, words) -> emit(path, words, column.kind()));
+            } else if (!cell.isEmpty()) {
+                emit(row + "." + column.key(), cell, column.kind());
             }
         }
+    }
+
+    private void emit(String path, List<Word> cell, String kind) {
+        String text = cell.stream().map(Word::text).collect(Collectors.joining(" "));
+        Optional<ExtractedValue> value = switch (kind) {
+            case "AMOUNT" -> CellReading.amounts(text, 1).map(values -> values.get(0));
+            case "YES_NO" -> CellReading.yesNo(text);
+            default -> Optional.of(new ExtractedValue.TextRead(text));
+        };
+        if (value.isEmpty()) {
+            missing("Not read: " + path + " (" + text + ")");
+        }
+        fields.add(new ExtractedField(path, Optional.of(text), value,
+                value.isPresent() ? CertificateReading.READ_CONFIDENCE : CertificateReading.LABEL_CONFIDENCE, Optional.of(place(cell)),
+                Optional.empty()));
+    }
+
+    /**
+     * A cell whose column prints captions (Form 16's "CIT (TDS)": Address, City, Pin Code): each caption's words claimed, the
+     * words after it its value, by the caption's path; words before the first caption are not placed.
+     */
+    private Map<String, List<Word>> captioned(String path, List<Word> cell, List<String> captions) {
+        Map<String, List<Word>> values = new LinkedHashMap<>();
+        Optional<String> current = Optional.empty();
+        for (int at = 0; at < cell.size(); at++) {
+            Optional<String> caption = captionAt(cell, at, captions);
+            if (caption.isPresent()) {
+                current = caption;
+                at += caption.get().split("\\s+").length - 1;
+            } else if (current.isEmpty()) {
+                missing("Not placed: " + path + " (" + cell.get(at).text() + ")");
+            } else {
+                values.computeIfAbsent(CertificateLayout.cellPath(path, current), key -> new ArrayList<>()).add(cell.get(at));
+            }
+        }
+        return values;
+    }
+
+    private static Optional<String> captionAt(List<Word> cell, int at, List<String> captions) {
+        return captions.stream().filter(caption -> {
+            String[] tokens = caption.split("\\s+");
+            return at + tokens.length <= cell.size() && IntStream.range(0, tokens.length)
+                    .allMatch(i -> cell.get(at + i).text().equals(tokens[i]));
+        }).findFirst();
     }
 
     private static FieldLocation place(List<Word> cell) {

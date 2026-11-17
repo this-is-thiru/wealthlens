@@ -13,7 +13,6 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -51,10 +50,6 @@ class Form16ParserTest {
             "partB.annexureII.row8j", "Amount deductible under any other provision(s) of Chapter VI-A",
             "partB.annexureII.row8k", "Total of amount deductible under any other provision(s) of Chapter VI-A");
 
-    /** Part A's four rows of boxes, in the layout since W-126e3a and read from W-126e3b on (D-745 C2a). */
-    private static final List<String> BOXES_NOT_READ = List.of("partA.certificate is not read yet", "partA.parties is not read yet",
-            "partA.identifiers is not read yet", "partA.period is not read yet");
-
     private static Map<String, ExtractedField> byPath(DocumentReading reading) {
         return reading.extractedFields().stream().collect(Collectors.toMap(ExtractedField::fieldPath, Function.identity()));
     }
@@ -68,15 +63,10 @@ class Form16ParserTest {
         // When
         DocumentReading reading = read(VALUES, Set.of());
 
-        // Then — L2 at 0.90: "12,00,000.00" is ₹12,00,000; Part A's summary row and its Total under their headings. The rows
-        // of boxes are not read yet, so only their printed headings are left over and the reading is PARTIAL (D-745 C2a)
-        assertThat(reading.parserNotes()).containsExactlyElementsOf(BOXES_NOT_READ);
-        List<String> boxHeadings = LAYOUT.tables().stream().filter(table -> table.title().isEmpty()).flatMap(table -> table.columns().stream())
-                .flatMap(column -> java.util.stream.Stream.concat(java.util.stream.Stream.of(column.heading()), column.group().stream()))
-                .toList();
-        assertThat(reading.unmappedText()).isNotEmpty().allSatisfy(line -> assertThat(line.split("\\s+"))
-                .allSatisfy(word -> assertThat(boxHeadings).anySatisfy(heading -> assertThat(heading).contains(word))));
-        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        // Then — L2 at 0.90: "12,00,000.00" is ₹12,00,000; Part A's summary row and its Total under their headings
+        assertThat(reading.parserNotes()).isEmpty();
+        assertThat(reading.unmappedText()).isEmpty();
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
         Map<String, ExtractedField> fields = byPath(reading);
         assertThat(fields.get("partB.annexureI.row1a").interpretedValue())
                 .contains(new ExtractedValue.MoneyRead(Money.of("1200000")));
@@ -113,7 +103,7 @@ class Form16ParserTest {
         DocumentReading reading = read(values, Set.of());
 
         // Then
-        assertThat(reading.parserNotes()).containsExactlyElementsOf(BOXES_NOT_READ);
+        assertThat(reading.parserNotes()).isEmpty();
         Map<String, ExtractedField> fields = byPath(reading);
         assertThat(fields.get("partA.bookAdjustment.total.taxDeposited").interpretedValue())
                 .contains(new ExtractedValue.MoneyRead(Money.of("5000")));
@@ -137,8 +127,8 @@ class Form16ParserTest {
         // Then
         assertThat(byPath(reading).get("partB.annexureI.row21").interpretedValue())
                 .contains(new ExtractedValue.MoneyRead(Money.of("95000")));
-        assertThat(reading.parserNotes()).containsSubsequence(BOXES_NOT_READ).endsWith(
-                "Inferred partB.annexureI.row21 from the sum printed for partB.annexureI.row21").hasSize(5);
+        assertThat(reading.parserNotes()).containsExactly(
+                "Inferred partB.annexureI.row21 from the sum printed for partB.annexureI.row21");
     }
 
     @Test
@@ -166,11 +156,10 @@ class Form16ParserTest {
         assertThat(fields.get("partB.annexureII.row7").interpretedValue())
                 .contains(new ExtractedValue.MoneyRead(Money.of("590000")));
         assertThat(fields.get("partB.annexureII.row17").interpretedValue()).isEmpty();
-        assertThat(reading.parserNotes()).containsExactly("partA.certificate is not read yet", "partA.parties is not read yet",
-                "partA.identifiers is not read yet", "partA.period is not read yet", "PART B (Annexure-I) is not in this certificate",
+        assertThat(reading.parserNotes()).containsExactly("PART B (Annexure-I) is not in this certificate",
                 "Inferred partB.annexureII.row4 from the sum printed for partB.annexureII.row4",
                 "Inferred partB.annexureII.row7 from the sum printed for partB.annexureII.row7");
-        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
     }
 
     @Test
@@ -204,5 +193,41 @@ class Form16ParserTest {
         // Then
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
         assertThat(reading.parserNotes()).containsExactly("No Form 16 layout is in force in 2026-27");
+    }
+
+    /** Part A's boxes as an issuer fills them (p.28): every box, an address over two lines, CIT (TDS) by its captions. */
+    private static final Map<String, String> BOXES = Map.ofEntries(
+            Map.entry("partA.certificate.row1.certificateNo", "QWERTYU"),
+            Map.entry("partA.certificate.row1.lastUpdatedOn", "01-Jun-2026"),
+            Map.entry("partA.parties.row1.employer", "ACME LTD<br/>1 MG ROAD, BENGALURU"),
+            Map.entry("partA.parties.row1.employee", "ASHA RAO<br/>2 PARK ST, KOLKATA"),
+            Map.entry("partA.identifiers.row1.deductorPan", "AAACA1234B"),
+            Map.entry("partA.identifiers.row1.deductorTan", "BLRA12345C"),
+            Map.entry("partA.identifiers.row1.employeePan", "ABCPR1234D"),
+            Map.entry("partA.identifiers.row1.employeeReference", "E-77"),
+            Map.entry("partA.period.row1.citTds.address", "5th Floor, BMTC Building"),
+            Map.entry("partA.period.row1.citTds.city", "BENGALURU"),
+            Map.entry("partA.period.row1.citTds.pinCode", "560095"),
+            Map.entry("partA.period.row1.assessmentYear", "2026-27"),
+            Map.entry("partA.period.row1.from", "01-Apr-2025"),
+            Map.entry("partA.period.row1.to", "31-Mar-2026"));
+
+    @Test
+    void read_whenPartAsBoxesAreFilled_readsEachBoxUnderItsHeadingAndCitTdsByItsCaptions() throws Exception {
+        // Given
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.putAll(BOXES);
+
+        // When
+        DocumentReading reading = read(values, Set.of());
+
+        // Then — each box's printed text, the two-line addresses joined with a space
+        assertThat(reading.parserNotes()).isEmpty();
+        assertThat(reading.unmappedText()).isEmpty();
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        Map<String, ExtractedField> fields = byPath(reading);
+        BOXES.forEach((path, printed) -> assertThat(fields.get(path).interpretedValue()).as(path)
+                .contains(new ExtractedValue.TextRead(printed.replace("<br/>", " "))));
+        assertThat(fields).doesNotContainKey("partA.period.row1.citTds");
     }
 }
