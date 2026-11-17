@@ -106,7 +106,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 ### `taxplanning.documents` — planned (the former `taxdocs` module, removed by D-048)
 
 `ingest/` `IngestedDocument` `ParseAttempt` `ExtractedField` `DocumentConfirmation` (○ `W-124`) ·
-`parser/` `DocumentParser` `Form130Parser` `Form16Parser` (○ `W-125`–`W-127`) · `reconcile/`
+`parser/` `DocumentParser` `CertificateReading` `Form130Parser` `Form16Parser` (✅ `W-125`–`W-127`, `W-126e2`) · `reconcile/`
 `ReconciliationReport` `ReconciliationLine` (○ `W-130`).
 
 ### `taxplanning` (new code) — planned
@@ -612,3 +612,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-11-14 | T3 `api`: `TaxCalculator.regimeElection` → `RegimeElectionDue(regime, by, vehicle, form, defaultBill, bill)` — each opt-out regime's deadline resolved from its `ElectionProtocol` (`DueDateUnder` s.263(1) / s.139(1) → `FilingFacts.dueDate`, any other refused; `WithTheReturn`, `NoDeadline` → none) and its route; calendar kind `REGIME_ELECTION` | `W-114b`, D-667 |
 | 2026-11-14 | T3 `api`: `priceDeductionRoom` also prices the s.126 limbs by filling — a premium as large as the largest health ceiling covering the assessee, then every living parent; room = the rise in the rows that rose, saving = the fall in the bill; `EnteredFacts.withHealthPayments` | `W-114c`, D-668 |
 | 2026-11-14 | T2 `chapterviii`: own NPS claimed under s.124(3) first (`PensionDeduction.ownClaim`, up to the row's ceiling less a minor's deposit), only the rest reaching Schedule XV; `ScheduleXvDeduction.lines` returns nothing. T3: `priceDeductionRoom` prices own NPS by its room | `W-114d`, D-669 |
+| 2026-11-17 | `taxplanning.documents.parser`: the reading shared by every certificate parser (`CertificateReading`); `Form16Parser` reads TY 2025-26's Form 16 from its pack layout; a table's Total label may be several words | `W-126e2`, D-744 |

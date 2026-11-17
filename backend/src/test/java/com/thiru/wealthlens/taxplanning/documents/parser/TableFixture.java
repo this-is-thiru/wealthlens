@@ -9,19 +9,28 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Part B as the Gazette lays it out (pp.2274 – 2275, W-126c2b): each table's title over all its columns, a group heading
- * over its columns with the others spanning both header rows, a row per printed row number, then the Total row with its
- * merged cells. Amounts are set to the right of their cells, as issuers set them; the rest are centred.
+ * A certificate's tables as the Gazette lays them out (Form No. 130 Part B, pp.2274 – 2275, W-126c2b; Form 16 Part A,
+ * pp.28 – 29, W-126e2), under the heading of the part that holds them: each table's title over all its columns, a group
+ * heading over its columns with the others spanning both header rows, a row per printed row number, then the Total row
+ * with its merged cells. Amounts are set to the right of their cells, as issuers set them; the rest are centred.
  */
-final class PartBFixture {
+final class TableFixture {
 
-    private PartBFixture() {
+    private TableFixture() {
     }
 
     static String html(CertificateLayout layout, Map<String, String> values, Set<String> omitted) {
-        StringBuilder html = new StringBuilder("<p class=\"h\">PART B</p>");
+        String part = part(layout);
+        StringBuilder html = new StringBuilder("<p class=\"h\">").append(layout.parts().stream()
+                .filter(heading -> heading.path().equals(part)).findFirst().orElseThrow().heading()).append("</p>");
         layout.tables().stream().filter(table -> !omitted.contains(table.path())).forEach(table -> table(table, values, omitted, html));
         return html.toString();
+    }
+
+    /** The top part holding the layout's tables: the first segment of the first table's path. */
+    static String part(CertificateLayout layout) {
+        String table = layout.tables().get(0).path();
+        return table.substring(0, table.indexOf('.'));
     }
 
     private static void table(PrintedTable table, Map<String, String> values, Set<String> omitted, StringBuilder html) {

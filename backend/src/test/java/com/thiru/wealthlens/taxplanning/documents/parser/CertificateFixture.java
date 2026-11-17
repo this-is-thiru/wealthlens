@@ -15,19 +15,20 @@ import org.openpdf.text.DocumentException;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 /**
- * Form No. 130 certificates for the parser's tests, rendered from HTML laid out as the Gazette lays the form out (W-126b,
- * D-729 C4a): a row number column, a label column and a value column, Part A's groups as full-width rows. The labels come
- * from the year's layout (W-126a, tested against the Gazette there); the values and any departures are the test's own.
+ * Certificates for the parsers' tests, rendered from HTML laid out as the Gazette lays a form out (W-126b, D-729 C4a): a row
+ * number column, a label column and a value column, a part's groups as full-width rows, its tables under its own heading.
+ * The labels come from the year's layout (W-126a, W-126e1, tested against the Gazette there); the values and any
+ * departures are the test's own. Form No. 130 and Form 16 share it (W-126e2).
  */
-final class Form130Fixture {
+final class CertificateFixture {
 
-    private Form130Fixture() {
+    private CertificateFixture() {
     }
 
     /**
-     * @param values the printed value of a line or of a Part B cell, by path; a line or cell not named prints empty
+     * @param values the printed value of a line or of a table's cell, by path; a line or cell not named prints empty
      * @param labels a label printed differently from the layout's, by path ({@code <br/>} for a line break)
-     * @param omitted lines, parts, Part B's tables and their Total rows (by path) the certificate does not print
+     * @param omitted lines, parts, tables and their Total rows (by path) the certificate does not print
      */
     static byte[] certificate(CertificateLayout layout, Map<String, String> values, Map<String, String> labels,
             Set<String> omitted) throws DocumentException {
@@ -35,9 +36,10 @@ final class Form130Fixture {
                 + " table { width: 100%; border-collapse: collapse; } td { vertical-align: top; padding: 2pt; }"
                 + " td.n { width: 8%; } td.l { width: 57%; } td.v { width: 35%; text-align: right; }"
                 + " p.h { text-align: center; font-weight: bold; }"
-                + " table.b td { border: 0.5pt solid black; text-align: center; } table.b td.a { text-align: right; }</style></head><body><p class=\"h\">FORM NO. 130</p>");
+                + " table.b td { border: 0.5pt solid black; text-align: center; } table.b td.a { text-align: right; }</style></head><body><p class=\"h\">"
+                + layout.code().value().replace("FORM_", "FORM NO. ") + "</p>");
         String top = "";
-        boolean partBPrinted = omitted.contains("partB");
+        boolean tablesPrinted = omitted.contains(TableFixture.part(layout));
         for (PrintedLine line : layout.lines()) {
             String part = topPart(layout, line.path());
             if (line.repeating() || omitted.contains(line.path()) || omitted.contains(part)) {
@@ -45,9 +47,9 @@ final class Form130Fixture {
             }
             if (!part.equals(top)) {
                 html.append(top.isEmpty() ? "" : "</table>");
-                if (!partBPrinted && !part.startsWith("partA")) {
-                    html.append(PartBFixture.html(layout, values, omitted));
-                    partBPrinted = true;
+                if (!tablesPrinted && !part.startsWith("partA")) {
+                    html.append(TableFixture.html(layout, values, omitted));
+                    tablesPrinted = true;
                 }
                 html.append("<p class=\"h\">").append(heading(layout, part)).append("</p><table>");
                 top = part;
@@ -55,7 +57,7 @@ final class Form130Fixture {
             group(layout, line, html);
             html.append(row(line, values.getOrDefault(line.path(), ""), labels.getOrDefault(line.path(), line.label())));
         }
-        html.append("</table>").append(partBPrinted ? "" : PartBFixture.html(layout, values, omitted)).append("</body></html>");
+        html.append("</table>").append(tablesPrinted ? "" : TableFixture.html(layout, values, omitted)).append("</body></html>");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ITextRenderer renderer = new ITextRenderer();
         renderer.setDocumentFromString(html.toString());
@@ -70,7 +72,7 @@ final class Form130Fixture {
      * not the reader's own.
      */
     static byte[] withPassword(String name) throws IOException {
-        try (InputStream in = Form130Fixture.class.getResourceAsStream("/taxplanning/documents/" + name)) {
+        try (InputStream in = CertificateFixture.class.getResourceAsStream("/taxplanning/documents/" + name)) {
             return in.readAllBytes();
         }
     }

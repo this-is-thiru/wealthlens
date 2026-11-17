@@ -133,4 +133,57 @@ class TableReadingTest {
         assertThat(reading.complete()).isFalse();
         assertThat(reading.notes()).containsExactly("Heading not found: partB.challan (BSR Code)");
     }
+
+    private static final PrintedTable RUPEES = new PrintedTable("partA.challan", List.of("II. Challan"), TABLE.columns(),
+            "Total ( Rs.)", List.of(List.of("taxDeposited"), List.of("bsrCode")), 29);
+
+    @Test
+    void read_whenTheTotalLabelIsSeveralWords_readsTheTotalRow() {
+        // Given — Form 16's "Total ( Rs.)" (p.29) on one line, its amount in the tax column
+        TableReading.Reading reading = TableReading.read(table(word(2, "1", 70, 75), word(3, "Total", 58, 80), word(3, "(", 82, 85),
+                word(3, "Rs.)", 87, 100), word(3, "10,000.00", 205, 246)), 0, RUPEES, Collections.newSetFromMap(new IdentityHashMap<>()));
+
+        // Then
+        assertThat(reading.complete()).isTrue();
+        assertThat(reading.notes()).isEmpty();
+        assertThat(byPath(reading).get("partA.challan.total.taxDeposited").rawText()).contains("10,000.00");
+    }
+
+    @Test
+    void read_whenTheTotalLabelWrapsInItsCell_readsTheTotalRowAndClaimsTheWrappedWords() {
+        // Given — "Total (" on one line and "Rs.)" below it, still in the first column; the amount on the first line
+        List<Word> words = table(word(2, "1", 70, 75), word(3, "Total", 58, 80), word(3, "(", 82, 85),
+                word(3, "10,000.00", 205, 246), word(4, "Rs.)", 58, 71));
+        java.util.Set<Word> claimed = Collections.newSetFromMap(new IdentityHashMap<>());
+
+        // When
+        TableReading.Reading reading = TableReading.read(words, 0, RUPEES, claimed);
+
+        // Then
+        assertThat(reading.notes()).isEmpty();
+        assertThat(byPath(reading).get("partA.challan.total.taxDeposited").rawText()).contains("10,000.00");
+        assertThat(claimed).contains(words.get(words.size() - 1));
+        assertThat(reading.end()).isEqualTo(words.size());
+    }
+
+    @Test
+    void read_whenOnlyPartOfASeveralWordTotalLabelIsPrinted_saysTheTotalIsNotFound() {
+        // Given — "Total" alone where the layout prints "Total ( Rs.)"
+        TableReading.Reading reading = TableReading.read(table(word(2, "1", 70, 75), word(3, "Total", 58, 80)), 0, RUPEES,
+                Collections.newSetFromMap(new IdentityHashMap<>()));
+
+        // Then
+        assertThat(reading.complete()).isFalse();
+        assertThat(reading.notes()).containsExactly("Not found: partA.challan.total (Total ( Rs.))");
+    }
+
+    @Test
+    void read_whenALineStartsWithTotalButGoesOnDifferently_isNotTheTotalRow() {
+        // Given — "Total ( Paise)" in the first column where the layout prints "Total ( Rs.)"
+        TableReading.Reading reading = TableReading.read(table(word(2, "1", 70, 75), word(3, "Total", 58, 80), word(3, "(", 82, 85),
+                word(3, "Paise)", 87, 105)), 0, RUPEES, Collections.newSetFromMap(new IdentityHashMap<>()));
+
+        // Then
+        assertThat(reading.notes()).containsExactly("Not found: partA.challan.total (Total ( Rs.))");
+    }
 }

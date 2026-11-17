@@ -164,8 +164,11 @@ final class LabelMatch {
         return Optional.of(new Found(label, values, end));
     }
 
-    /** Quotes alike, so a curly and a straight quote match. */
+    /** U+2010, the hyphen the Gazette's text layer prints in "Chapter VI-A" where issuers print an ASCII one (W-126e2). */
+    private static final char HYPHEN = (char) 0x2010;
+
+    /** Quotes alike, so a curly and a straight quote match; hyphens alike, so the Gazette's and an issuer's match. */
     static String normal(String text) {
-        return text.replace('“', '"').replace('”', '"').replace('‘', '\'').replace('’', '\'');
+        return text.replace('“', '"').replace('”', '"').replace('‘', '\'').replace('’', '\'').replace(HYPHEN, '-');
     }
 }

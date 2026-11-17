@@ -51,7 +51,7 @@ class Form130ParserTest {
     @Test
     void read_whenAWholeCertificate_findsEveryLineWithItsPrintedValue() throws Exception {
         // Given
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -74,7 +74,7 @@ class Form130ParserTest {
     @Test
     void read_whenCellsHoldAmountsFlagsAndWords_readsEachByItsKind() throws Exception {
         // Given
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
 
         // When
         Map<String, ExtractedField> fields = byPath(PARSER.read(new DocumentContent(pdf), YEAR));
@@ -99,7 +99,7 @@ class Form130ParserTest {
         values.put("partC.annexureI.row2f", "0.00");
 
         // When
-        DocumentReading reading = PARSER.read(new DocumentContent(Form130Fixture.certificate(LAYOUT, values, Map.of(), Set.of())),
+        DocumentReading reading = PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, values, Map.of(), Set.of())),
                 YEAR);
 
         // Then
@@ -116,7 +116,7 @@ class Form130ParserTest {
         // Given
         Map<String, String> values = new HashMap<>(VALUES);
         values.put("partC.annexureI.row4a", "Rs. 2,500");
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, values, Map.of(), Set.of());
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, values, Map.of(), Set.of());
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -132,7 +132,7 @@ class Form130ParserTest {
     @Test
     void read_whenOnlyPartAIsIssued_findsPartAAndSaysPartCIsAbsent() throws Exception {
         // Given — Part C Note 1: the last employer may issue Part C alone
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI", "partC.annexureII"));
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI", "partC.annexureII"));
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -160,7 +160,7 @@ class Form130ParserTest {
                 "partC.annexureII.row8a", "1,50,000.00 1,50,000.00");
         Map<String, String> labels = Map.of("partC.annexureII.row6",
                 "Interest Income under the head “Other Sources” paid by the speci-<br/>fied bank");
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, values, labels, Set.of("partC.annexureI"));
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, values, labels, Set.of("partC.annexureI"));
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -210,7 +210,7 @@ class Form130ParserTest {
         Map<String, String> values = new HashMap<>(VALUES);
         values.putAll(PART_B);
         values.putAll(changes);
-        return PARSER.read(new DocumentContent(Form130Fixture.certificate(LAYOUT, values, Map.of(), omitted)), YEAR);
+        return PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, values, Map.of(), omitted)), YEAR);
     }
 
     @Test
@@ -286,7 +286,7 @@ class Form130ParserTest {
     @Test
     void read_whenEachAnnexurePrintsItsSubHeading_claimsItAsAHeadingLine() throws Exception {
         // Given — p.2276 and p.2279 print "In relation to …" under each annexure's heading, and Annexure-I "Particulars"
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -311,7 +311,7 @@ class Form130ParserTest {
                         + " 392(4)(a)(iv)");
 
         // When
-        DocumentReading reading = PARSER.read(new DocumentContent(Form130Fixture.certificate(LAYOUT, VALUES, labels,
+        DocumentReading reading = PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, VALUES, labels,
                 Set.of())), YEAR);
 
         // Then
@@ -325,7 +325,7 @@ class Form130ParserTest {
     @Test
     void read_whenARowIsNotPrinted_isPartialNamingIt() throws Exception {
         // Given
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI.row4c"));
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI.row4c"));
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -340,7 +340,7 @@ class Form130ParserTest {
     @Test
     void read_whenTheCertificateIsNotAForm130_fails() throws Exception {
         // Given — no PART A heading
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partA"));
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partA"));
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -354,7 +354,7 @@ class Form130ParserTest {
     @ValueSource(strings = {"password-rc4.pdf", "password-aes.pdf"})
     void read_whenThePdfNeedsAPassword_failsSayingSo(String name) throws Exception {
         // Given
-        byte[] pdf = Form130Fixture.withPassword(name);
+        byte[] pdf = CertificateFixture.withPassword(name);
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -368,7 +368,7 @@ class Form130ParserTest {
     void read_whenThePdfIsProtectedOnlyAgainstEditing_readsIt() throws Exception {
         // Given — a whole certificate printing 12,00,000.00 in row 1(a), AES-encrypted with an owner password and no user
         // password by pypdf 6.14.0: it opens without one, as an issuer's protected copy may
-        byte[] pdf = Form130Fixture.withPassword("owner-only.pdf");
+        byte[] pdf = CertificateFixture.withPassword("owner-only.pdf");
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -381,7 +381,7 @@ class Form130ParserTest {
     @Test
     void read_whenThePageIsAnImageOnly_failsForWantOfText() throws Exception {
         // When
-        DocumentReading reading = PARSER.read(new DocumentContent(Form130Fixture.scanned()), YEAR);
+        DocumentReading reading = PARSER.read(new DocumentContent(CertificateFixture.scanned()), YEAR);
 
         // Then — DR 13 row 72
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.FAILED);
@@ -401,7 +401,7 @@ class Form130ParserTest {
     @Test
     void read_whenTheYearPrescribesNoForm130_failsSayingSo() throws Exception {
         // Given
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+        byte[] pdf = CertificateFixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
 
         // When — TY 2025-26's pack has no FORM_130 (W-126a)
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), TaxYearId.of(2025));

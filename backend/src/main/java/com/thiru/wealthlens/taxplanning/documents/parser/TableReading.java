@@ -80,13 +80,13 @@ final class TableReading {
         }
         List<Column> columns = columns(headerFrom.getAsInt(), to);
         int rowsFrom = endOfLine(lastClaimed(headerFrom.getAsInt(), to));
-        OptionalInt total = total(rowsFrom, columns);
+        Optional<List<Word>> total = total(rowsFrom, columns);
         if (total.isEmpty()) {
             notes.add("Not found: " + table.path() + ".total (" + table.totalLabel() + ")");
             return new Reading(true, fields, notes, false, rowsFrom);
         }
-        rows(rowsFrom, total.getAsInt(), columns);
-        int end = totalRow(total.getAsInt(), columns);
+        rows(rowsFrom, words.indexOf(total.get().get(0)), columns);
+        int end = totalRow(total.get(), columns);
         return new Reading(true, fields, notes, complete, end);
     }
 
@@ -157,17 +157,42 @@ final class TableReading {
         return end;
     }
 
-    /** The Total label: the first word of a line, in the first column, printing the label. */
-    private OptionalInt total(int from, List<Column> columns) {
+    /**
+     * The Total label's words in order: the first starting a line in the first column, the rest after it in that column,
+     * on its line or the next, as a label wraps in a narrow cell ("Total ( Rs.)", Form 16 p.29).
+     */
+    private Optional<List<Word>> total(int from, List<Column> columns) {
+        String[] label = table.totalLabel().trim().split("\\s+");
         for (int at = from; at < words.size(); at++) {
             Word word = words.get(at);
             boolean startsLine = at == 0 || words.get(at - 1).line() != word.line();
-            boolean inFirstColumn = columns.isEmpty() || columns.get(0).holds(word);
-            if (startsLine && inFirstColumn && !claimed.contains(word) && word.text().equals(table.totalLabel())) {
-                return OptionalInt.of(at);
+            if (startsLine && inFirstColumn(word, columns) && !claimed.contains(word) && word.text().equals(label[0])) {
+                Optional<List<Word>> printed = labelFrom(at, label, columns);
+                if (printed.isPresent()) {
+                    return printed;
+                }
             }
         }
-        return OptionalInt.empty();
+        return Optional.empty();
+    }
+
+    private Optional<List<Word>> labelFrom(int at, String[] label, List<Column> columns) {
+        List<Word> printed = new ArrayList<>(List.of(words.get(at)));
+        int lastLine = words.get(at).line() + 1;
+        for (int next = at + 1; next < words.size() && printed.size() < label.length && words.get(next).line() <= lastLine; next++) {
+            Word word = words.get(next);
+            if (inFirstColumn(word, columns)) {
+                if (!word.text().equals(label[printed.size()])) {
+                    return Optional.empty();
+                }
+                printed.add(word);
+            }
+        }
+        return printed.size() == label.length ? Optional.of(printed) : Optional.empty();
+    }
+
+    private static boolean inFirstColumn(Word word, List<Column> columns) {
+        return columns.isEmpty() || columns.get(0).holds(word);
     }
 
     /** The rows between the header and the Total row; a line with no first-column value continues the row above. */
@@ -186,9 +211,10 @@ final class TableReading {
         emit(table.path() + ".row" + row, cells, columns);
     }
 
-    /** The Total row: each declared cell reaches over the columns it spans. */
-    private int totalRow(int total, List<Column> columns) {
-        claimed.add(words.get(total));
+    /** The Total row: each declared cell reaches over the columns it spans; the row ends after its label's last word. */
+    private int totalRow(List<Word> label, List<Column> columns) {
+        claimed.addAll(label);
+        int total = words.indexOf(label.get(0));
         List<Column> cells = new ArrayList<>();
         for (List<String> keys : table.totalCells()) {
             List<Column> spanned = columns.stream().filter(column -> keys.contains(column.key())).toList();
@@ -200,9 +226,10 @@ final class TableReading {
         }
         int end = endOfLine(total);
         Map<String, List<Word>> printed = new LinkedHashMap<>();
-        place(words.subList(total + 1, end), cells, table.path() + ".total", printed);
+        place(words.subList(total + 1, end).stream().filter(word -> !label.contains(word)).toList(), cells, table.path() + ".total",
+                printed);
         emit(table.path() + ".total", printed, cells);
-        return end;
+        return Math.max(end, words.indexOf(label.get(label.size() - 1)) + 1);
     }
 
     /** Each word to the column whose reach holds its centre, unless it reaches under another column's heading. */
@@ -236,7 +263,7 @@ final class TableReading {
                     missing("Not read: " + path + " (" + text + ")");
                 }
                 fields.add(new ExtractedField(path, Optional.of(text), value,
-                        value.isPresent() ? Form130Parser.READ_CONFIDENCE : Form130Parser.LABEL_CONFIDENCE, Optional.of(place(cell)),
+                        value.isPresent() ? CertificateReading.READ_CONFIDENCE : CertificateReading.LABEL_CONFIDENCE, Optional.of(place(cell)),
                         Optional.empty()));
             }
         }
