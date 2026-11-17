@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.json;
 
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateAgreement;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateCell;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateComparison;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificatePart;
@@ -9,10 +10,12 @@ import com.thiru.wealthlens.taxengine.rules.filing.CertificateSpec;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateTable;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateTerm;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateValueKind;
+import com.thiru.wealthlens.taxengine.rules.filing.ComparedTotal;
 import com.thiru.wealthlens.taxengine.rules.filing.TableColumn;
 import com.thiru.wealthlens.taxengine.rules.filing.TableTotal;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateFact;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,7 +30,8 @@ import tools.jackson.databind.JsonNode;
 public final class CertificateJson {
 
     private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "identities", "tables", "agreements",
-            "provenance");
+            "comparisons", "provenance");
+    private static final Set<String> COMPARISON_KEYS = Set.of("printed", "node", "total", "reason");
     private static final Set<String> AGREEMENT_KEYS = Set.of("printed", "near", "tolerance", "basis");
     private static final Set<String> IDENTITY_KEYS = Set.of("target", "terms", "page");
     private static final Set<String> TARGET_KEYS = Set.of("line", "column");
@@ -64,6 +68,7 @@ public final class CertificateJson {
                 PackJson.arrayOrEmpty(node, "identities", where, e -> identity(e.node(), e.path())),
                 PackJson.arrayOrEmpty(node, "tables", where, e -> table(e.node(), e.path())),
                 PackJson.arrayOrEmpty(node, "agreements", where, e -> agreement(e.node(), e.path())),
+                PackJson.arrayOrEmpty(node, "comparisons", where, e -> comparison(e.node(), e.path())),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
@@ -79,6 +84,13 @@ public final class CertificateJson {
         requireOnly(node, AGREEMENT_KEYS, path);
         return PackJson.construct(path, () -> new CertificateAgreement(PackJson.text(node, "printed", path), PackJson.text(node, "near", path),
                 PackJson.money(node, "tolerance", path), PackJson.text(node, "basis", path)));
+    }
+
+    private static CertificateComparison comparison(JsonNode node, String path) {
+        requireOnly(node, COMPARISON_KEYS, path);
+        return PackJson.construct(path, () -> new CertificateComparison(PackJson.text(node, "printed", path),
+                PackJson.optionalText(node, "node", path).map(NodeId::new),
+                PackJson.optionalText(node, "total", path).map(ComparedTotal::valueOf), PackJson.optionalText(node, "reason", path)));
     }
 
     private static CertificateTable table(JsonNode node, String path) {

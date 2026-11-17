@@ -562,6 +562,9 @@ expected and explainable**, and a reconciliation that flags them all as errors i
 `CANNOT_COMPARE` is a first-class verdict: with a multi-employer year and only Part A/B blocks from
 one employer, the comparison is genuinely not available, and saying so beats inventing a total.
 
+> **Erratum (W-130a, 2026-11-17):** M4.2 names the four verdicts but no rule between them, and T8-2 (MINOR, though tax is owed at filing) and T8-1 (MATERIAL) cannot both follow from a rupee threshold — the verdict is decided by the reason: each reason carries a class, EXPECTED (the user's own declarations or choices, the Part B tax split, rounding to ₹10, capital gains) or EMPLOYER_ERROR (a previous salary undeclared, the standard deduction granted twice); `MATCHED` when every line is within ₹10, `MINOR_DIFFERENCE` when every difference has an EXPECTED reason, `MATERIAL_DIFFERENCE` when any has an EMPLOYER_ERROR reason or none, `CANNOT_COMPARE` for a mixed year (D-755 C2a, adopted by the owner).
+> Verified by: `08-golden-tests.md:821` – `:900` (T8-1 – T8-4); `ReconciliationTest`.
+
 ---
 
 ## M5 — Computation, trace and scenarios

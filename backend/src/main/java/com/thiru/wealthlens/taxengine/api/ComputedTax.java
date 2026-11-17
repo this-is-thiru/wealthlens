@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.api;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.rules.filing.ComparedTotal;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
@@ -34,6 +35,17 @@ public record ComputedTax(String computationId, String receipt, String taxYear, 
 
     public ComputedTax {
         notices = notices == null ? List.of() : List.copyOf(notices);
+    }
+
+    /**
+     * One of the totals a certificate is compared with, by its name in the layout (W-130a): {@code BILL}.
+     *
+     * @throws IllegalArgumentException for a name the layout's closed list does not hold
+     */
+    public Money total(String name) {
+        return switch (ComparedTotal.valueOf(name)) {
+            case BILL -> bill;
+        };
     }
 
     /**

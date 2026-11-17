@@ -107,7 +107,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 
 `ingest/` `IngestedDocument` `ParseAttempt` `ExtractedField` `DocumentConfirmation` (○ `W-124`) ·
 `parser/` `DocumentParser` `CertificateReading` `Form130Parser` (✅ `W-125`–`W-127`, `W-126e2`) · `reconcile/`
-`ReconciliationReport` `ReconciliationLine` (○ `W-130`).
+`ReconciliationReport` `ReconciliationLine` `Reconciliation` (✅ `W-130a`; ○ `W-130b`, `W-130c`) · `assembly/` `EmployerAssembly` (✅ `W-129`).
 
 ### `taxplanning` (new code) — planned
 
@@ -614,3 +614,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-11-14 | T2 `chapterviii`: own NPS claimed under s.124(3) first (`PensionDeduction.ownClaim`, up to the row's ceiling less a minor's deposit), only the rest reaching Schedule XV; `ScheduleXvDeduction.lines` returns nothing. T3: `priceDeductionRoom` prices own NPS by its room | `W-114d`, D-669 |
 | 2026-11-17 | `taxplanning.documents.parser`: the reading shared by every certificate parser (`CertificateReading`); `Form16Parser` reads TY 2025-26's Form 16 from its pack layout; a table's Total label may be several words | `W-126e2`, D-744 |
 | 2026-11-17 | `taxplanning.documents.parser`: `Form16Parser` and Form 16's layout removed — documents are read for TY 2026-27 on only (D-748); `CertificateReading` and the table features stay | `W-126e5`, D-749 |
+| 2026-11-17 | `taxplanning.documents`: `assembly/` (W-129) and `reconcile/` (W-130a) built — a year's certificates assembled, and one employer's confirmed certificate reconciled with a computation | `W-129`, `W-130a`; D-754, D-756 |

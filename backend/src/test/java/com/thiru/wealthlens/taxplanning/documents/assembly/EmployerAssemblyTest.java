@@ -38,7 +38,7 @@ class EmployerAssemblyTest {
             List.of(line("a.tan", "TEXT", "EMPLOYER_TAN"), line("a.period", "PERIOD", "EMPLOYMENT_PERIOD"),
                     line("c.rowA", "YES_NO", "REGIME_OPT_OUT"), line("c.row1e", "AMOUNT", "SALARY_FROM_OTHER_EMPLOYERS"),
                     line("c.row4b", "AMOUNT", "STANDARD_DEDUCTION")),
-            List.of(), List.of(), List.of(), "test");
+            List.of(), List.of(), List.of(), List.of(), "test");
 
     /** A certificate: its TAN and period, and Part C where {@code partC} holds 1(e) and 4(b) (empty: no Part C). */
     private static ParseAttempt certificate(String document, String tan, String from, String to, Optional<String[]> partC) {

@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.api;
 
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateAgreement;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateCell;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateComparison;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificatePart;
@@ -11,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.TableColumn;
 import com.thiru.wealthlens.taxengine.rules.filing.TableTotal;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateFact;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.List;
 import java.util.Locale;
@@ -23,10 +25,12 @@ import java.util.Optional;
  * @param title the form's title as printed
  * @param tables the tables whose rows the issuer writes, each found by its title and column headings (W-126c2a)
  * @param agreements the amounts that should be near each other though no printed sum says so (W-128b)
+ * @param comparisons the amounts the engine's computation also produces (W-130a)
  * @param source where the layout was read: the Gazette and its pages
  */
 public record CertificateLayout(CertificateCode code, String title, List<PartHeading> parts, List<PrintedLine> lines,
-        List<PrintedSum> sums, List<PrintedTable> tables, List<PrintedAgreement> agreements, String source) {
+        List<PrintedSum> sums, List<PrintedTable> tables, List<PrintedAgreement> agreements, List<PrintedComparison> comparisons,
+        String source) {
 
     public CertificateLayout {
         parts = List.copyOf(parts);
@@ -34,13 +38,14 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
         sums = List.copyOf(sums);
         tables = List.copyOf(tables);
         agreements = List.copyOf(agreements);
+        comparisons = List.copyOf(comparisons);
     }
 
     static CertificateLayout of(CertificateSpec spec) {
         return new CertificateLayout(spec.code(), spec.title(), spec.parts().stream().map(PartHeading::of).toList(),
                 spec.fields().stream().map(PrintedLine::of).toList(), spec.identities().stream().map(PrintedSum::of).toList(),
                 spec.tables().stream().map(PrintedTable::of).toList(), spec.agreements().stream().map(PrintedAgreement::of).toList(),
-                spec.provenance().sourceDescription());
+                spec.comparisons().stream().map(PrintedComparison::of).toList(), spec.provenance().sourceDescription());
     }
 
     /**
@@ -65,6 +70,19 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
 
         static PrintedAgreement of(CertificateAgreement agreement) {
             return new PrintedAgreement(agreement.printed(), agreement.near(), agreement.tolerance(), agreement.basis());
+        }
+    }
+
+    /**
+     * An amount the engine's computation also produces (W-130a): a node's output, or one of its totals ({@code BILL}).
+     *
+     * @param reason the reconciliation reason that explains the pairing, where one does
+     */
+    public record PrintedComparison(String printed, Optional<String> node, Optional<String> total, Optional<String> reason) {
+
+        static PrintedComparison of(CertificateComparison comparison) {
+            return new PrintedComparison(comparison.printed(), comparison.node().map(NodeId::value), comparison.total().map(Enum::name),
+                    comparison.reason());
         }
     }
 

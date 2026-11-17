@@ -35,7 +35,7 @@ class ContradictionsTest {
 
     private static CertificateLayout layout(List<PrintedSum> sums, List<PrintedTable> tables, List<PrintedAgreement> agreements,
             List<CertificateLayout.PrintedLine> lines) {
-        return new CertificateLayout(new CertificateCode("SYN_1"), "T", List.of(), lines, sums, tables, agreements, "test");
+        return new CertificateLayout(new CertificateCode("SYN_1"), "T", List.of(), lines, sums, tables, agreements, List.of(), "test");
     }
 
     /** Row 12 = 9 − 11, as Form No. 130 prints it. */

@@ -354,4 +354,21 @@ class Form130LayoutTest {
                 Map.entry("partC.annexureII.row11", "TAX_ON_TOTAL_INCOME"), Map.entry("partC.annexureII.row12", "REBATE"),
                 Map.entry("partC.annexureII.row13", "SURCHARGE"), Map.entry("partC.annexureII.row14", "CESS")));
     }
+
+    @Test
+    void certificate_whenTaxYear2026_27_pairsTheRowsTheComputationAlsoProduces() {
+        // When
+        List<String> comparisons = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().comparisons().stream()
+                .map(comparison -> comparison.printed() + " = " + comparison.node().orElseGet(() -> "total " + comparison.total().orElseThrow())
+                        + comparison.reason().map(reason -> " (" + reason + ")").orElse("")).toList();
+
+        // Then — W-130a: total income, surcharge and cess by their nodes; row 17 and Part B's tax deducted against the bill
+        assertThat(comparisons).containsExactly("partC.annexureI.row12 = round.totalincome", "partC.annexureI.row15 = tax.surcharge",
+                "partC.annexureI.row16 = tax.cess", "partC.annexureI.row17 = total BILL",
+                "partB.summary.total.taxDeducted = total BILL (TAXSUM)");
+        assertThat(CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().comparisons().stream()
+                .flatMap(comparison -> comparison.node().stream()))
+                .allSatisfy(node -> assertThat(com.thiru.wealthlens.taxengine.rules.generated.NodeIds.class.getFields())
+                        .anySatisfy(field -> assertThat(field.get(null).toString()).isEqualTo(node)));
+    }
 }

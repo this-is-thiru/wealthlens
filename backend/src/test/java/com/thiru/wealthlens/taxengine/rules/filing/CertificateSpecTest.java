@@ -25,14 +25,14 @@ class CertificateSpecTest {
     @Test
     void newSpec_whenTheTitleIsBlank_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), SOURCE))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), List.of(), SOURCE))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
     @Test
     void newSpec_whenTheProvenanceIsMissing_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), null))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), List.of(), null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
@@ -301,7 +301,7 @@ class CertificateSpecTest {
         CertificateTable table = new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID), ONE_CELL, 1);
         java.util.function.Function<String, CertificateSpec> naming = path -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
                 List.of(PART_A), List.of(NAME, amount, twoCells), List.of(), List.of(table),
-                List.of(new CertificateAgreement("partA.summary.total.paid", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")),
+                List.of(new CertificateAgreement("partA.summary.total.paid", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), List.of(),
                 SOURCE);
 
         // When / Then
@@ -322,7 +322,7 @@ class CertificateSpecTest {
                 Optional.of(new TableTotal("Total", List.of(List.of("code")))), 1);
         java.util.function.Function<String, CertificateSpec> naming = path -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
                 List.of(PART_A), List.of(NAME, amount), List.of(), List.of(oneRow, textTotal),
-                List.of(new CertificateAgreement("partA.tax", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), SOURCE);
+                List.of(new CertificateAgreement("partA.tax", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), List.of(), SOURCE);
 
         // When / Then
         assertThatThrownBy(() -> naming.apply("partA.boxes.total.paid"))
@@ -341,9 +341,32 @@ class CertificateSpecTest {
 
         // When / Then
         assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(first, second), List.of(),
-                List.of(), List.of(), SOURCE)).hasMessage("SYN_1 names fact CESS twice in part partA");
+                List.of(), List.of(), List.of(), SOURCE)).hasMessage("SYN_1 names fact CESS twice in part partA");
         assertThatThrownBy(() -> new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1,
                 null)).hasMessage("partA.tax names its fact or none");
         assertThatThrownBy(() -> new CertificateFact("cess")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void newComparison_whenItNamesBothANodeAndATotalOrNeither_refuses() {
+        // When / Then — W-130a: a node's output or one of the computation's totals, exactly one
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", Optional.of(new com.thiru.wealthlens.taxengine.rules.id.NodeId("tax.cess")),
+                Optional.of(ComparedTotal.BILL), Optional.empty())).hasMessage("c.row17 is compared with a node or a total, exactly one");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", Optional.empty(), Optional.empty(), Optional.empty()))
+                .hasMessage("c.row17 is compared with a node or a total, exactly one");
+        assertThatThrownBy(() -> new CertificateComparison(" ", Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.empty()))
+                .hasMessage("A comparison names its amount, a node or a total, and its reason or none");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.of(" ")))
+                .hasMessage("A comparison names its amount, a node or a total, and its reason or none");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", null, Optional.of(ComparedTotal.BILL), Optional.empty()))
+                .hasMessage("A comparison names its amount, a node or a total, and its reason or none");
+    }
+
+    @Test
+    void newSpec_whenAComparisonNamesSomethingNotAnAmountItPrints_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(),
+                List.of(), List.of(new CertificateComparison("partA.name", Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.empty())),
+                SOURCE)).hasMessage("SYN_1's comparison names partA.name, which is not an amount it prints");
     }
 }
