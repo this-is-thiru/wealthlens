@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.CertificateValueKind;
 import com.thiru.wealthlens.taxengine.rules.filing.TableColumn;
 import com.thiru.wealthlens.taxengine.rules.filing.TableTotal;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateFact;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,7 +33,7 @@ public final class CertificateJson {
     private static final Set<String> TARGET_KEYS = Set.of("line", "column");
     private static final Set<String> TERM_KEYS = Set.of("line", "column", "sign");
     private static final Set<String> PART_KEYS = Set.of("path", "heading");
-    private static final Set<String> FIELD_KEYS = Set.of("path", "row", "label", "kind", "columns", "repeating", "page");
+    private static final Set<String> FIELD_KEYS = Set.of("path", "row", "label", "kind", "columns", "repeating", "page", "fact");
     private static final Set<String> TABLE_KEYS = Set.of("path", "title", "columns", "total", "page");
     private static final Set<String> COLUMN_KEYS = Set.of("heading", "key", "kind", "group", "captions");
     private static final Set<String> TOTAL_KEYS = Set.of("label", "cells");
@@ -124,7 +125,8 @@ public final class CertificateJson {
                 PackJson.optionalText(node, "row", path), PackJson.text(node, "label", path),
                 PackJson.enumValue(node, "kind", path, CertificateValueKind.class),
                 PackJson.arrayOrEmpty(node, "columns", path, e -> e.node().asString()),
-                node.has("repeating") && PackJson.bool(node, "repeating", path), PackJson.integer(node, "page", path)));
+                node.has("repeating") && PackJson.bool(node, "repeating", path), PackJson.integer(node, "page", path),
+                PackJson.optionalText(node, "fact", path).map(CertificateFact::new)));
     }
 
     /** A key outside {@code known} is refused; a key starting with an underscore is a note and passes. */

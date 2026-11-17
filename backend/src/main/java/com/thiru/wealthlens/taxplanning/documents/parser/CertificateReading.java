@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PartHeading;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedLine;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedTable;
+import com.thiru.wealthlens.taxengine.api.SalaryCertificateLaw;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
@@ -45,9 +46,11 @@ final class CertificateReading {
 
     /**
      * @param layout the year's layout of the form, if the year prescribes it
+     * @param law the year's law the figures are checked against (W-128c), present with the layout
      * @param form the form's name as a reason names it, e.g. "Form No. 130"
      */
-    static DocumentReading read(DocumentContent content, TaxYearId year, Optional<CertificateLayout> layout, String form) {
+    static DocumentReading read(DocumentContent content, TaxYearId year, Optional<CertificateLayout> layout,
+            Optional<SalaryCertificateLaw> law, String form) {
         if (layout.isEmpty()) {
             return failed("No " + form + " layout is in force in " + year.label());
         }
@@ -62,7 +65,7 @@ final class CertificateReading {
         try {
             List<Word> words = PrintedText.of(reader).words();
             return words.isEmpty() ? failed("The PDF has no text layer: a scanned page is not read yet")
-                    : new Matching(layout.get(), words, form, year).read();
+                    : new Matching(layout.get(), words, form, year, law.orElseThrow()).read();
         } catch (IOException e) {
             return failed("The PDF's text could not be read: " + e.getMessage());
         } finally {
@@ -82,6 +85,7 @@ final class CertificateReading {
         private final List<Word> words;
         private final String form;
         private final TaxYearId year;
+        private final SalaryCertificateLaw law;
         private final Set<Word> claimed = Collections.newSetFromMap(new IdentityHashMap<>());
         private final Map<String, Boolean> partsFound = new HashMap<>();
         private final Map<String, int[]> spans = new HashMap<>();
@@ -100,7 +104,7 @@ final class CertificateReading {
             ParseOutcome outcome = missing || !unmapped.isEmpty() ? ParseOutcome.PARTIAL : ParseOutcome.SUCCESS;
             Inference.Filled filled = Inference.fill(fields, layout.sums());
             notes.addAll(filled.notes());
-            Contradictions.Checked checked = Contradictions.check(filled.fields(), layout.sums(), layout.tables(), layout.agreements(), year);
+            Contradictions.Checked checked = Contradictions.check(filled.fields(), layout, law, year);
             notes.addAll(checked.contradictions());
             notes.addAll(checked.differences());
             return new DocumentReading(checked.contradictions().isEmpty() ? outcome : ParseOutcome.PARTIAL, checked.fields(), unmapped,

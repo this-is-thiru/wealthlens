@@ -1,9 +1,12 @@
 package com.thiru.wealthlens.taxplanning.documents.parser;
 
+import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedAgreement;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedSum;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedTable;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.SumCell;
+import com.thiru.wealthlens.taxengine.api.SalaryCertificateLaw;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
@@ -33,16 +36,19 @@ final class Contradictions {
     record Checked(List<ExtractedField> fields, List<String> contradictions, List<String> differences) {
     }
 
-    static Checked check(List<ExtractedField> fields, List<PrintedSum> sums, List<PrintedTable> tables,
-            List<PrintedAgreement> agreements, TaxYearId year) {
+    static Checked check(List<ExtractedField> fields, CertificateLayout layout, SalaryCertificateLaw law, TaxYearId year) {
         Map<String, ExtractedField> byPath = new LinkedHashMap<>();
         fields.forEach(field -> byPath.put(field.fieldPath(), field));
         List<String> notes = new ArrayList<>();
-        sums.forEach(sum -> checkSum(sum, byPath, notes));
-        tables.forEach(table -> table.totalCells().forEach(cell -> checkTotal(table, cell.get(0), byPath, notes)));
+        layout.sums().forEach(sum -> checkSum(sum, byPath, notes));
+        layout.tables().forEach(table -> table.totalCells().forEach(cell -> checkTotal(table, cell.get(0), byPath, notes)));
         List.copyOf(byPath.values()).forEach(field -> checkPeriod(field, year, byPath, notes));
         List<String> differences = new ArrayList<>();
-        agreements.forEach(agreement -> checkAgreement(agreement, byPath, differences));
+        layout.agreements().forEach(agreement -> checkAgreement(agreement, byPath, differences));
+        factsByPart(layout).values().forEach(facts -> {
+            checkStandardDeduction(facts, law, byPath, notes);
+            checkCess(facts, law, byPath, notes);
+        });
         return new Checked(List.copyOf(byPath.values()), notes, differences);
     }
 
@@ -116,6 +122,78 @@ final class Contradictions {
     }
 
     private static final java.time.format.DateTimeFormatter DAY = java.time.format.DateTimeFormatter.ofPattern("dd/MM/uuuu");
+
+    /** Each part's lines that state a fact, by fact (W-128c): a part names each fact once ({@code CertificateSpec}). */
+    private static Map<String, Map<String, String>> factsByPart(CertificateLayout layout) {
+        Map<String, Map<String, String>> byPart = new LinkedHashMap<>();
+        layout.lines().stream().filter(line -> line.fact().isPresent()).forEach(line -> byPart
+                .computeIfAbsent(line.path().substring(0, line.path().lastIndexOf('.')), part -> new LinkedHashMap<>())
+                .put(line.fact().orElseThrow(), line.path()));
+        return byPart;
+    }
+
+    /**
+     * The standard deduction against row A's regime (G5.2; W-128c C3a): above that regime's ceiling, or another regime's
+     * ceiling where it is not this one's, is a contradiction; below the ceiling may be a salary under it ("whichever is less").
+     */
+    private static void checkStandardDeduction(Map<String, String> facts, SalaryCertificateLaw law, Map<String, ExtractedField> byPath,
+            List<String> notes) {
+        String optOutPath = facts.get("REGIME_OPT_OUT");
+        String deductionPath = facts.get("STANDARD_DEDUCTION");
+        Optional<Boolean> optsOut = flag(byPath.get(optOutPath));
+        Optional<Money> deduction = amount(byPath.get(deductionPath));
+        if (optsOut.isEmpty() || deduction.isEmpty()) {
+            return;
+        }
+        Map<RegimeCode, Money> ceilings = law.standardDeductionCeilings();
+        List<RegimeCode> regimes = ceilings.keySet().stream().filter(regime -> regime.equals(law.defaultRegime()) != optsOut.get())
+                .sorted(java.util.Comparator.comparing(RegimeCode::value)).toList();
+        Optional<Money> ceiling = regimes.stream().map(ceilings::get).max(Money::compareTo);
+        if (ceiling.isEmpty()) {
+            return;
+        }
+        String row = optOutPath + "'s " + (optsOut.get() ? "Yes leaves" : "No keeps");
+        String named = regimes.stream().map(RegimeCode::value).collect(java.util.stream.Collectors.joining(", "));
+        Optional<RegimeCode> other = ceilings.entrySet().stream().filter(entry -> !regimes.contains(entry.getKey())
+                && entry.getValue().compareTo(deduction.get()) == 0).map(Map.Entry::getKey).findFirst();
+        if (deduction.get().isGreaterThan(ceiling.get())) {
+            notes.add("Contradiction: " + deductionPath + " printed " + deduction.get().inIndianNotation() + ", above the "
+                    + ceiling.get().inIndianNotation() + " standard deduction of " + named + " that " + row);
+        } else if (other.isPresent() && deduction.get().compareTo(ceiling.get()) != 0) {
+            notes.add("Contradiction: " + deductionPath + " printed " + deduction.get().inIndianNotation() + ", the standard deduction of "
+                    + other.get().value() + ", but " + row + " " + named + " (" + ceiling.get().inIndianNotation() + ")");
+        } else {
+            return;
+        }
+        lower(byPath, optOutPath);
+        lower(byPath, deductionPath);
+    }
+
+    /** The cess against its rate × (tax + surcharge − rebate), within ₹10 (G5.2; W-128c C4a); an unprinted term is nothing. */
+    private static void checkCess(Map<String, String> facts, SalaryCertificateLaw law, Map<String, ExtractedField> byPath,
+            List<String> notes) {
+        List<String> terms = Stream.of("TAX_ON_TOTAL_INCOME", "SURCHARGE", "REBATE").map(facts::get).toList();
+        String cessPath = facts.get("CESS");
+        Optional<Money> cess = amount(byPath.get(cessPath));
+        Optional<Money> tax = amount(byPath.get(terms.get(0)));
+        if (terms.contains(null) || cess.isEmpty() || tax.isEmpty()
+                || terms.stream().anyMatch(path -> byPath.containsKey(path) && amount(byPath.get(path)).isEmpty())) {
+            return;
+        }
+        Money base = tax.get().plus(amount(byPath.get(terms.get(1))).orElse(Money.ZERO)).minus(amount(byPath.get(terms.get(2))).orElse(Money.ZERO));
+        Money gives = law.cessRate().of(base);
+        if (Money.max(cess.get(), gives).minus(Money.min(cess.get(), gives)).isGreaterThan(Money.TEN)) {
+            notes.add("Contradiction: " + cessPath + " printed " + cess.get().inIndianNotation() + ", " + law.cessRate().asPercentLabel()
+                    + " of " + terms.get(0) + " + " + terms.get(1) + " − " + terms.get(2) + " gives " + gives.inIndianNotation());
+            lower(byPath, cessPath);
+            terms.stream().filter(byPath::containsKey).forEach(path -> lower(byPath, path));
+        }
+    }
+
+    private static Optional<Boolean> flag(ExtractedField field) {
+        return Optional.ofNullable(field).flatMap(ExtractedField::interpretedValue).filter(ExtractedValue.FlagRead.class::isInstance)
+                .map(value -> ((ExtractedValue.FlagRead) value).value());
+    }
 
     private static void lower(Map<String, ExtractedField> byPath, String path) {
         ExtractedField field = byPath.get(path);

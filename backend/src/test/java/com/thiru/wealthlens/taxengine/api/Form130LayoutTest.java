@@ -334,4 +334,21 @@ class Form130LayoutTest {
                 .containsExactly("partB.summary.total.taxDeducted ≈ partC.annexureI.row21 ± 10.00",
                         "partB.summary.total.taxDeducted ≈ partC.annexureII.row17 ± 10.00");
     }
+
+    @Test
+    void certificate_whenTaxYear2026_27_namesTheLinesItsLawChecksFindByFact() {
+        // When
+        Map<String, String> facts = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().lines().stream()
+                .filter(line -> line.fact().isPresent()).collect(Collectors.toMap(CertificateLayout.PrintedLine::path,
+                        line -> line.fact().orElseThrow()));
+
+        // Then — W-128c: row A, the standard deduction, tax, rebate, surcharge and cess in each annexure (pp.2276 – 2280)
+        assertThat(facts).isEqualTo(Map.ofEntries(
+                Map.entry("partC.annexureI.rowA", "REGIME_OPT_OUT"), Map.entry("partC.annexureI.row4b", "STANDARD_DEDUCTION"),
+                Map.entry("partC.annexureI.row13", "TAX_ON_TOTAL_INCOME"), Map.entry("partC.annexureI.row14", "REBATE"),
+                Map.entry("partC.annexureI.row15", "SURCHARGE"), Map.entry("partC.annexureI.row16", "CESS"),
+                Map.entry("partC.annexureII.rowA", "REGIME_OPT_OUT"), Map.entry("partC.annexureII.row3b", "STANDARD_DEDUCTION"),
+                Map.entry("partC.annexureII.row11", "TAX_ON_TOTAL_INCOME"), Map.entry("partC.annexureII.row12", "REBATE"),
+                Map.entry("partC.annexureII.row13", "SURCHARGE"), Map.entry("partC.annexureII.row14", "CESS")));
+    }
 }

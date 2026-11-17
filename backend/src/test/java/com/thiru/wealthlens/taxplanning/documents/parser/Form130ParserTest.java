@@ -150,7 +150,7 @@ class Form130ParserTest {
         // as the Gazette prints it; rows 4 and 7 blank
         Map<String, String> values = Map.of(
                 "partA.employer.tan", "MUMA12345B",
-                "partC.annexureII.rowA", "No",
+                "partC.annexureII.rowA", "Yes",
                 "partC.annexureII.row1a", "6,00,000.00",
                 "partC.annexureII.row2", "6,00,000.00",
                 "partC.annexureII.row3a", "2,400.00",
@@ -176,7 +176,7 @@ class Form130ParserTest {
         assertThat(fields.get("partC.annexureII.row6").interpretedValue()).contains(new ExtractedValue.MoneyRead(Money.of("12000")));
         assertThat(fields.get("partC.annexureII.row8a.grossAmount").interpretedValue())
                 .contains(new ExtractedValue.MoneyRead(Money.of("150000")));
-        assertThat(fields.get("partC.annexureII.rowA").interpretedValue()).contains(new ExtractedValue.FlagRead(false));
+        assertThat(fields.get("partC.annexureII.rowA").interpretedValue()).contains(new ExtractedValue.FlagRead(true)); // an old-regime pensioner (W-128c C5a)
         assertThat(reading.parserNotes()).containsExactlyInAnyOrder("PART C (Annexure-I) is not in this certificate",
                 "Inferred partC.annexureII.row4 from the sum printed for partC.annexureII.row4",
                 "Inferred partC.annexureII.row7 from the sum printed for partC.annexureII.row7");
@@ -459,5 +459,27 @@ class Form130ParserTest {
                         + " (DR 06 G5.2, corrected by D-750 C3a: the employer's own deduction against the net tax payable)");
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
         assertThat(byPath(reading).get("partC.annexureI.row21").confidence()).isEqualTo(0.90);
+    }
+
+    @Test
+    void read_whenTheStandardDeductionAndCessDisagreeWithTheLaw_contradictsBoth() throws Exception {
+        // Given — W-128c: row A "No" keeps the new regime (₹75,000) but 4(b) prints ₹50,000; cess 4% of
+        // (1,00,000 + 0 − 0) = 4,000, printed 5,000
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.put("partC.annexureI.row4b", "50,000.00");
+        values.put("partC.annexureI.row13", "1,00,000.00");
+        values.put("partC.annexureI.row14", "0.00");
+        values.put("partC.annexureI.row15", "0.00");
+        values.put("partC.annexureI.row16", "5,000.00");
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, values, Map.of(), Set.of())), YEAR);
+
+        // Then
+        assertThat(reading.parserNotes()).contains("Contradiction: partC.annexureI.row4b printed ₹50,000, the standard deduction of"
+                        + " FIRST_SCHEDULE_RATES, but partC.annexureI.rowA's No keeps NEW_TAX_REGIME (₹75,000)",
+                "Contradiction: partC.annexureI.row16 printed ₹5,000, 4% of partC.annexureI.row13 + partC.annexureI.row15"
+                        + " − partC.annexureI.row14 gives ₹4,000");
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
     }
 }

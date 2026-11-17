@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateFact;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import java.net.URI;
@@ -19,7 +20,7 @@ class CertificateSpecTest {
             LocalDate.of(2026, 11, 16), VerificationLevel.UNVERIFIED, "nothing");
     private static final CertificatePart PART_A = new CertificatePart("partA", "PART A");
     private static final CertificateField NAME = new CertificateField("partA.name", Optional.of("1"), "Name",
-            CertificateValueKind.TEXT, List.of(), false, 1);
+            CertificateValueKind.TEXT, List.of(), false, 1, Optional.empty());
 
     @Test
     void newSpec_whenTheTitleIsBlank_refuses() {
@@ -54,7 +55,7 @@ class CertificateSpecTest {
     void newField_whenTheLabelIsBlank_refuses() {
         // When / Then
         assertThatThrownBy(() -> new CertificateField("partA.name", Optional.empty(), " ", CertificateValueKind.TEXT,
-                List.of(), false, 1))
+                List.of(), false, 1, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("partA.name needs its row (or none), label, kind and columns");
     }
@@ -63,7 +64,7 @@ class CertificateSpecTest {
     void newField_whenTheRowIsNullRatherThanEmpty_refuses() {
         // When / Then
         assertThatThrownBy(() -> new CertificateField("partA.name", null, "Name", CertificateValueKind.TEXT, List.of(),
-                false, 1))
+                false, 1, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("partA.name needs its row (or none), label, kind and columns");
     }
@@ -71,7 +72,7 @@ class CertificateSpecTest {
     @Test
     void newField_whenTheKindIsMissing_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateField("partA.name", Optional.empty(), "Name", null, List.of(), false, 1))
+        assertThatThrownBy(() -> new CertificateField("partA.name", Optional.empty(), "Name", null, List.of(), false, 1, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("partA.name needs its row (or none), label, kind and columns");
     }
@@ -80,7 +81,7 @@ class CertificateSpecTest {
     void newField_whenTheColumnsAreNull_refuses() {
         // When / Then
         assertThatThrownBy(() -> new CertificateField("partA.name", Optional.empty(), "Name", CertificateValueKind.TEXT, null,
-                false, 1))
+                false, 1, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("partA.name needs its row (or none), label, kind and columns");
     }
@@ -89,7 +90,7 @@ class CertificateSpecTest {
     void newField_whenThePathIsMissing_refuses() {
         // When / Then
         assertThatThrownBy(() -> new CertificateField(null, Optional.empty(), "Name", CertificateValueKind.TEXT, List.of(),
-                false, 1))
+                false, 1, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("A certificate field's path is dot-separated words: null");
     }
@@ -263,7 +264,7 @@ class CertificateSpecTest {
     void newField_whenAHeadingLineRepeats_refuses() {
         // When / Then
         assertThatThrownBy(() -> new CertificateField("partA.group", Optional.empty(), "Group", CertificateValueKind.NONE,
-                List.of(), true, 1))
+                List.of(), true, 1, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("partA.group is a heading line; it has no columns and does not repeat");
     }
@@ -294,9 +295,9 @@ class CertificateSpecTest {
     @Test
     void newSpec_whenAnAgreementNamesSomethingNotAnAmountItPrints_refusesAndAcceptsALineAndATotal() {
         // Given — an AMOUNT line, a TEXT line, a two-column line, and a table whose Total is over an AMOUNT column
-        CertificateField amount = new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1);
+        CertificateField amount = new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1, Optional.empty());
         CertificateField twoCells = new CertificateField("partA.ded", Optional.of("3"), "Deduction", CertificateValueKind.AMOUNT,
-                List.of("Gross", "Net"), false, 1);
+                List.of("Gross", "Net"), false, 1, Optional.empty());
         CertificateTable table = new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID), ONE_CELL, 1);
         java.util.function.Function<String, CertificateSpec> naming = path -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
                 List.of(PART_A), List.of(NAME, amount, twoCells), List.of(), List.of(table),
@@ -314,7 +315,7 @@ class CertificateSpecTest {
     @Test
     void newSpec_whenAnAgreementNamesATotalTheTableDoesNotPrintAsAnAmount_refuses() {
         // Given — a one-row table with no Total, and a table whose Total cell is over a TEXT column
-        CertificateField amount = new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1);
+        CertificateField amount = new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1, Optional.empty());
         TableColumn code = new TableColumn("Code", "code", CertificateValueKind.TEXT, Optional.empty(), List.of());
         CertificateTable oneRow = new CertificateTable("partA.boxes", List.of(), List.of(PAID), Optional.empty(), 1);
         CertificateTable textTotal = new CertificateTable("partA.codes", List.of("Codes"), List.of(code),
@@ -328,5 +329,21 @@ class CertificateSpecTest {
                 .hasMessage("SYN_1's agreement names partA.boxes.total.paid, which is not an amount it prints");
         assertThatThrownBy(() -> naming.apply("partA.codes.total.code"))
                 .hasMessage("SYN_1's agreement names partA.codes.total.code, which is not an amount it prints");
+    }
+
+    @Test
+    void newSpec_whenAPartNamesAFactTwice_refuses() {
+        // Given — W-128c: a check finds a fact's line in its part, so the part names it once
+        CertificateField first = new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1,
+                Optional.of(new CertificateFact("CESS")));
+        CertificateField second = new CertificateField("partA.more", Optional.of("3"), "More", CertificateValueKind.AMOUNT, List.of(), false,
+                1, Optional.of(new CertificateFact("CESS")));
+
+        // When / Then
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(first, second), List.of(),
+                List.of(), List.of(), SOURCE)).hasMessage("SYN_1 names fact CESS twice in part partA");
+        assertThatThrownBy(() -> new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1,
+                null)).hasMessage("partA.tax names its fact or none");
+        assertThatThrownBy(() -> new CertificateFact("cess")).isInstanceOf(IllegalArgumentException.class);
     }
 }

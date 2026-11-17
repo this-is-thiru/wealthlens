@@ -30,6 +30,9 @@ import com.thiru.wealthlens.taxengine.result.ComputationId;
 import com.thiru.wealthlens.taxengine.result.ComputationProjector;
 import com.thiru.wealthlens.taxengine.result.ComputationReceipt;
 import com.thiru.wealthlens.taxengine.result.TaxComputation;
+import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
+import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
+import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.ReturnFacts;
@@ -46,8 +49,10 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.ReturnKind;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.regime.DeadlineSpec;
@@ -57,9 +62,11 @@ import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.VehicleRoute;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +84,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class TaxCalculator {
+
+    /** The rules a salary certificate's standard deduction and cess are checked against (W-128c). */
+    private static final RuleSetId STANDARD_DEDUCTION = new RuleSetId("RS-SAL-STANDARD-DEDUCTION");
+    private static final RuleSetId HEALTH_EDUCATION_CESS = new RuleSetId("RS-RATE-HEALTH-EDUCATION-CESS");
 
     private static final NodeRegistry REGISTRY = NodeRegistry.of(ShippedNodes.all());
 
@@ -434,6 +445,33 @@ public class TaxCalculator {
     public RegimeCode defaultRegime(TaxYearId year) {
         return shipped(year).regimes().values().stream().filter(RegimeSpec::isDefault).map(RegimeSpec::code)
                 .findFirst().orElseThrow(() -> new IllegalStateException("The pack for " + year.label() + " has no default"));
+    }
+
+    /**
+     * The year's law a salary certificate is checked against (W-128c): the default regime, each regime's standard deduction
+     * ceiling — the fixed limb of the rule that applies in it — and the cess rate.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     * @throws IllegalStateException where the pack states either in a shape this reading does not know
+     */
+    public SalaryCertificateLaw salaryCertificateLaw(TaxYearId year) {
+        RulePack pack = shipped(year);
+        Map<RegimeCode, Money> ceilings = new LinkedHashMap<>();
+        for (RegimeCode regime : pack.regimes().keySet()) {
+            versionsInForce(pack, STANDARD_DEDUCTION, year).filter(version -> version.regimes().appliesIn(regime))
+                    .flatMap(version -> version.cap().stream()).filter(LeastOf.class::isInstance)
+                    .flatMap(cap -> ((LeastOf) cap).limbs().stream()).map(LeastOf.Limb::shape).filter(Fixed.class::isInstance)
+                    .map(shape -> ((Fixed) shape).amount()).findFirst().ifPresent(amount -> ceilings.put(regime, amount));
+        }
+        Rate cess = versionsInForce(pack, HEALTH_EDUCATION_CESS, year).flatMap(version -> version.cap().stream())
+                .filter(PercentOfBase.class::isInstance).map(cap -> ((PercentOfBase) cap).percent()).findFirst()
+                .orElseThrow(() -> new IllegalStateException("The pack for " + year.label() + " states no cess rate"));
+        return new SalaryCertificateLaw(defaultRegime(year), ceilings, cess);
+    }
+
+    private static Stream<RuleVersion> versionsInForce(RulePack pack, RuleSetId set, TaxYearId year) {
+        return pack.membersOf(List.of(set)).stream().map(pack::rule).flatMap(row -> row.versions().stream())
+                .filter(version -> version.validity().contains(year.startsOn()));
     }
 
     /**

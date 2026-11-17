@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.CertificateTable;
 import com.thiru.wealthlens.taxengine.rules.filing.TableColumn;
 import com.thiru.wealthlens.taxengine.rules.filing.TableTotal;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
+import com.thiru.wealthlens.taxengine.rules.id.CertificateFact;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.List;
 import java.util.Locale;
@@ -151,10 +152,11 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
     /**
      * One line, by its printed label.
      *
-     * @param kind {@code AMOUNT}, {@code YES_NO}, {@code TEXT}, or {@code NONE} for a heading line with no value
+     * @param kind {@code AMOUNT}, {@code YES_NO}, {@code PERIOD}, {@code TEXT}, or {@code NONE} for a heading line with no value
+     * @param fact what the line states, where a check needs to find it, e.g. {@code STANDARD_DEDUCTION} (W-128c)
      */
     public record PrintedLine(String path, Optional<String> row, String label, String kind, List<String> columns,
-            boolean repeating, int page) {
+            boolean repeating, int page, Optional<String> fact) {
 
         public PrintedLine {
             columns = List.copyOf(columns);
@@ -162,7 +164,7 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
 
         static PrintedLine of(CertificateField field) {
             return new PrintedLine(field.path(), field.row(), field.label(), field.kind().name(), field.columns(),
-                    field.repeating(), field.page());
+                    field.repeating(), field.page(), field.fact().map(CertificateFact::value));
         }
     }
 }

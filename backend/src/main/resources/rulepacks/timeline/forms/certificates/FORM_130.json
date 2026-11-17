@@ -1,6 +1,6 @@
 {
   "id": "FORM_130",
-  "_note": "Income-tax Rules, 2026, Appendix III, Form No. 130 (Gazette 271092 pp.2274 – 2280), prescribed by r.215(1) Table Sl. No. 1. Part A, Part B (W-126c2a, D-737), Part C (Annexure-I) and Part C (Annexure-II) (W-126c1, D-735). Each annexure's sub-heading (\"In relation to …\") and Annexure-I's \"Particulars\" are heading lines with no row number (D-735 C3a). Each label is the printed words with the typesetter's line breaks joined and without the row number, which the form prints in its own column; what the form prints in the value column (\"(refer Note 1)\", \"(dd/mm/yyyy)\", \"(Yes/No)\") is not part of a label. Printed wording kept as printed: row 2 \"Allowances to the exempt under section 11\"; row 6 straight quotes, row 7(a) curly ones. Read by eye against the page images (W-126a C3a). No amendment to 12-11-2026 touches the form (sources/2026-11-16-form-130.md). The sums the form prints (identities, W-127b) are each a target and signed terms as printed in brackets: 2(f), 3, 5, 6, 8, 9, 11 (the Deductible Amount column, row 11 being the \"Aggregate of deductible amount\"; 10(j) is the heading 10(k) totals), 12, 17, 21; 1(d) prints only \"Total\" and row 3 fixes it. Annexure-II (pp.2279 – 2280) as printed: row 5 \"[(2-4]\" (its sum 5 = 2 − 4), row 6 curly quotes, row 9 \"Act[8(a)\" with no space, 8(f) \"section 153(2)(b)\", 8(g) \"Amount deductible under any other provision(s)\"; its sums 4, 5, 7, 9 (Deductible Amount; 8(g) is the heading 8(h) totals), 10, 15, 17; row 2 prints no sum and row 5 fixes it. Part B (pp.2274 – 2275) is three tables whose rows the issuer writes, so they are tables, not lines (D-737 C2a): the summary, item I (book adjustment, BIN) and item II (challan, CIN); a column key names its cells, since \"paid/credited\" cannot be a path word; the summary's Total row merges the Amount paid/credited and Rate cells; the rate is TEXT (C4a). Note 3 prints \"item II of Part A\" where Part B is meant. Item 8 is read as a PERIOD, \"dd/mm/yyyy to dd/mm/yyyy\" as printed (W-128b). The agreements are the design's validation, not printed law: Part B's tax deducted near the net tax payable of Annexure-I row 21, or Annexure-II row 17 for a specified bank (D-750 C3a, C5a).",
+  "_note": "Income-tax Rules, 2026, Appendix III, Form No. 130 (Gazette 271092 pp.2274 – 2280), prescribed by r.215(1) Table Sl. No. 1. Part A, Part B (W-126c2a, D-737), Part C (Annexure-I) and Part C (Annexure-II) (W-126c1, D-735). Each annexure's sub-heading (\"In relation to …\") and Annexure-I's \"Particulars\" are heading lines with no row number (D-735 C3a). Each label is the printed words with the typesetter's line breaks joined and without the row number, which the form prints in its own column; what the form prints in the value column (\"(refer Note 1)\", \"(dd/mm/yyyy)\", \"(Yes/No)\") is not part of a label. Printed wording kept as printed: row 2 \"Allowances to the exempt under section 11\"; row 6 straight quotes, row 7(a) curly ones. Read by eye against the page images (W-126a C3a). No amendment to 12-11-2026 touches the form (sources/2026-11-16-form-130.md). The sums the form prints (identities, W-127b) are each a target and signed terms as printed in brackets: 2(f), 3, 5, 6, 8, 9, 11 (the Deductible Amount column, row 11 being the \"Aggregate of deductible amount\"; 10(j) is the heading 10(k) totals), 12, 17, 21; 1(d) prints only \"Total\" and row 3 fixes it. Annexure-II (pp.2279 – 2280) as printed: row 5 \"[(2-4]\" (its sum 5 = 2 − 4), row 6 curly quotes, row 9 \"Act[8(a)\" with no space, 8(f) \"section 153(2)(b)\", 8(g) \"Amount deductible under any other provision(s)\"; its sums 4, 5, 7, 9 (Deductible Amount; 8(g) is the heading 8(h) totals), 10, 15, 17; row 2 prints no sum and row 5 fixes it. Part B (pp.2274 – 2275) is three tables whose rows the issuer writes, so they are tables, not lines (D-737 C2a): the summary, item I (book adjustment, BIN) and item II (challan, CIN); a column key names its cells, since \"paid/credited\" cannot be a path word; the summary's Total row merges the Amount paid/credited and Rate cells; the rate is TEXT (C4a). Note 3 prints \"item II of Part A\" where Part B is meant. Item 8 is read as a PERIOD, \"dd/mm/yyyy to dd/mm/yyyy\" as printed (W-128b). The agreements are the design's validation, not printed law: Part B's tax deducted near the net tax payable of Annexure-I row 21, or Annexure-II row 17 for a specified bank (D-750 C3a, C5a). Twelve lines carry a fact (row A, the standard deduction, tax, rebate, surcharge, cess in each annexure) so the checks against the year's law find them by meaning, not path (W-128c, D-750).",
   "versions": [
     {
       "validity": {
@@ -145,7 +145,8 @@
           "row": "A",
           "label": "Whether opting out of taxation under section 202(1)?",
           "kind": "YES_NO",
-          "page": 2276
+          "page": 2276,
+          "fact": "REGIME_OPT_OUT"
         },
         {
           "path": "partC.annexureI.row1",
@@ -272,7 +273,8 @@
           "row": "4(b)",
           "label": "Standard deduction under section 19(1) [Table: Sl. No.2]",
           "kind": "AMOUNT",
-          "page": 2276
+          "page": 2276,
+          "fact": "STANDARD_DEDUCTION"
         },
         {
           "path": "partC.annexureI.row4c",
@@ -522,28 +524,32 @@
           "row": "13",
           "label": "Tax on total income",
           "kind": "AMOUNT",
-          "page": 2278
+          "page": 2278,
+          "fact": "TAX_ON_TOTAL_INCOME"
         },
         {
           "path": "partC.annexureI.row14",
           "row": "14",
           "label": "Rebate under section 156, if applicable",
           "kind": "AMOUNT",
-          "page": 2278
+          "page": 2278,
+          "fact": "REBATE"
         },
         {
           "path": "partC.annexureI.row15",
           "row": "15",
           "label": "Surcharge, wherever applicable",
           "kind": "AMOUNT",
-          "page": 2278
+          "page": 2278,
+          "fact": "SURCHARGE"
         },
         {
           "path": "partC.annexureI.row16",
           "row": "16",
           "label": "Health and education cess @ 4%",
           "kind": "AMOUNT",
-          "page": 2278
+          "page": 2278,
+          "fact": "CESS"
         },
         {
           "path": "partC.annexureI.row17",
@@ -591,7 +597,8 @@
           "row": "A",
           "label": "Whether opting out of taxation under section 202(1)?",
           "kind": "YES_NO",
-          "page": 2279
+          "page": 2279,
+          "fact": "REGIME_OPT_OUT"
         },
         {
           "path": "partC.annexureII.row1",
@@ -633,7 +640,8 @@
           "row": "3(b)",
           "label": "Standard deduction under section 19 [Table: Sl. No.2]",
           "kind": "AMOUNT",
-          "page": 2279
+          "page": 2279,
+          "fact": "STANDARD_DEDUCTION"
         },
         {
           "path": "partC.annexureII.row4",
@@ -794,28 +802,32 @@
           "row": "11",
           "label": "Tax on total income",
           "kind": "AMOUNT",
-          "page": 2280
+          "page": 2280,
+          "fact": "TAX_ON_TOTAL_INCOME"
         },
         {
           "path": "partC.annexureII.row12",
           "row": "12",
           "label": "Rebate under section 156, if applicable",
           "kind": "AMOUNT",
-          "page": 2280
+          "page": 2280,
+          "fact": "REBATE"
         },
         {
           "path": "partC.annexureII.row13",
           "row": "13",
           "label": "Surcharge, wherever applicable",
           "kind": "AMOUNT",
-          "page": 2280
+          "page": 2280,
+          "fact": "SURCHARGE"
         },
         {
           "path": "partC.annexureII.row14",
           "row": "14",
           "label": "Health and education cess @ 4%",
           "kind": "AMOUNT",
-          "page": 2280
+          "page": 2280,
+          "fact": "CESS"
         },
         {
           "path": "partC.annexureII.row15",

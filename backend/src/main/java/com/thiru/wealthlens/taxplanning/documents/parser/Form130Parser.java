@@ -1,9 +1,11 @@
 package com.thiru.wealthlens.taxplanning.documents.parser;
 
+import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +37,7 @@ public class Form130Parser implements DocumentParser {
     /** @throws IllegalArgumentException where no pack ships for {@code year} — the upload refuses such a year first */
     @Override
     public DocumentReading read(DocumentContent content, TaxYearId year) {
-        return CertificateReading.read(content, year, taxCalculator.certificate(year, new CertificateCode(reads().name())),
-                "Form No. 130");
+        Optional<CertificateLayout> layout = taxCalculator.certificate(year, new CertificateCode(reads().name()));
+        return CertificateReading.read(content, year, layout, layout.map(found -> taxCalculator.salaryCertificateLaw(year)), "Form No. 130");
     }
 }

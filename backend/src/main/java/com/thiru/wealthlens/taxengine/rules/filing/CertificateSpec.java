@@ -51,6 +51,21 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
             requireCellsPrinted(code, identity, fields);
         }
         requireAgreementsPrinted(code, agreements, fields, tables);
+        requireFactsOncePerPart(code, fields, partPaths);
+    }
+
+    /** A fact names one line of its part, so a check finds it there without doubt (W-128c). */
+    private static void requireFactsOncePerPart(CertificateCode code, List<CertificateField> fields, Set<String> partPaths) {
+        Set<String> seen = new HashSet<>();
+        for (CertificateField field : fields) {
+            if (field.fact().isPresent()) {
+                String part = partPaths.stream().filter(path -> field.path().startsWith(path + "."))
+                        .max(java.util.Comparator.comparingInt(String::length)).orElseThrow();
+                if (!seen.add(part + " " + field.fact().get())) {
+                    throw new IllegalArgumentException(code + " names fact " + field.fact().get() + " twice in part " + part);
+                }
+            }
+        }
     }
 
     private static void requireAgreementsPrinted(CertificateCode code, List<CertificateAgreement> agreements, List<CertificateField> fields,

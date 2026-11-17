@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.filing;
 
+import com.thiru.wealthlens.taxengine.rules.id.CertificateFact;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,9 +13,10 @@ import java.util.Optional;
  * @param columns the printed headings of a line with several value cells; empty for one cell
  * @param repeating whether the form leaves room for as many such lines as the issuer needs ("section …")
  * @param page the Gazette page the line is printed on
+ * @param fact what the line states, where a check needs to find it (W-128c); none for most lines
  */
 public record CertificateField(String path, Optional<String> row, String label, CertificateValueKind kind,
-        List<String> columns, boolean repeating, int page) {
+        List<String> columns, boolean repeating, int page, Optional<CertificateFact> fact) {
 
     public CertificateField {
         if (path == null || !CertificatePart.PATH.matcher(path).matches()) {
@@ -23,12 +25,20 @@ public record CertificateField(String path, Optional<String> row, String label, 
         if (row == null || label == null || label.isBlank() || kind == null || columns == null) {
             throw new IllegalArgumentException(path + " needs its row (or none), label, kind and columns");
         }
-        if (kind == CertificateValueKind.NONE && (!columns.isEmpty() || repeating)) {
-            throw new IllegalArgumentException(path + " is a heading line; it has no columns and does not repeat");
-        }
+        requireShape(path, kind, columns, repeating, fact);
         if (page < 1) {
             throw new IllegalArgumentException(path + " is printed on a page from 1");
         }
         columns = List.copyOf(columns);
+    }
+
+    private static void requireShape(String path, CertificateValueKind kind, List<String> columns, boolean repeating,
+            Optional<CertificateFact> fact) {
+        if (kind == CertificateValueKind.NONE && (!columns.isEmpty() || repeating)) {
+            throw new IllegalArgumentException(path + " is a heading line; it has no columns and does not repeat");
+        }
+        if (fact == null) {
+            throw new IllegalArgumentException(path + " names its fact or none");
+        }
     }
 }
