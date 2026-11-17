@@ -69,6 +69,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-090e | PARKED | ITR-UN, the updated return (r.165) | When updated returns (s.263(6)) are computed, else waived at the deploy gate (D-516) | The engine computes original and belated returns only; no form is offered for an updated return. Carries DR 21's T21-8 (updated return → ITR-UN) as its first test (W-094, D-656) |
 | W-307 | PARKED | Bound the schedule resolver cache and give it a TTL (CE-3) | Before a second app instance or a multi-year backfill, else waived at the deploy gate (D-622) | Correct as deployed: one instance, and the cache is evicted on every card write |
 | W-308 | PARKED | `UserChargeService.record` under concurrent pricing of one transaction (CE-4) | When a recompute route runs beside live trades, else waived at the deploy gate (D-622) | Row says not reachable by a current caller |
+| W-126e4 | PARKED | Telling a Form 16 from a Form No. 130 on upload (D-744) | If TY 2025-26 documents return to scope (D-748), else waived at the deploy gate | Out of scope: documents are read for TY 2026-27 on, where only Form No. 130 is prescribed (D-748) |
 
 ## Noted
 
