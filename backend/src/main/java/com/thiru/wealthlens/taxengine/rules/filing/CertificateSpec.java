@@ -12,14 +12,11 @@ import java.util.stream.Stream;
  * D-729 C1a). Law as data: a form amended later is a new version of its file, not new code.
  *
  * @param title the form's title as printed
- * @param identities the sums the form prints (W-127b)
  * @param tables the tables whose rows the issuer writes (W-126c2a)
- * @param agreements the amounts that should be near each other though no printed sum says so (W-128b)
- * @param comparisons the amounts the engine's computation also produces (W-130a)
+ * @param checks what its figures must agree with (W-332)
  */
 public record CertificateSpec(CertificateCode code, String title, List<CertificatePart> parts, List<CertificateField> fields,
-        List<CertificateIdentity> identities, List<CertificateTable> tables, List<CertificateAgreement> agreements,
-        List<CertificateComparison> comparisons, Provenance provenance) {
+        List<CertificateTable> tables, CertificateChecks checks, Provenance provenance) {
 
     public CertificateSpec {
         if (code == null || title == null || title.isBlank() || provenance == null) {
@@ -27,10 +24,7 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
         }
         parts = List.copyOf(parts);
         fields = List.copyOf(fields);
-        identities = List.copyOf(identities);
         tables = List.copyOf(tables);
-        agreements = List.copyOf(agreements);
-        comparisons = List.copyOf(comparisons);
         Set<String> partPaths = new HashSet<>();
         for (CertificatePart part : parts) {
             if (!partPaths.add(part.path())) {
@@ -49,11 +43,11 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
         for (CertificateTable table : tables) {
             requireInAPart(code, table.path(), partPaths, fieldPaths, "table");
         }
-        for (CertificateIdentity identity : identities) {
+        for (CertificateIdentity identity : checks.identities()) {
             requireCellsPrinted(code, identity, fields);
         }
-        requireAgreementsPrinted(code, agreements, fields, tables);
-        requireComparisonsPrinted(code, comparisons, fields, tables);
+        requireAgreementsPrinted(code, checks.agreements(), fields, tables);
+        requireComparisonsPrinted(code, checks.comparisons(), fields, tables);
         requireFactsOncePerPart(code, fields, partPaths);
     }
 

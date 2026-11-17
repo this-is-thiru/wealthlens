@@ -33,10 +33,10 @@ class ReconciliationTest {
     private static final CertificateLayout LAYOUT = new CertificateLayout(new CertificateCode("FORM_130"), "T", List.of(),
             List.of(new CertificateLayout.PrintedLine("c.rowA", Optional.empty(), "A", "YES_NO", List.of(), false, 1,
                     Optional.of("REGIME_OPT_OUT"))),
-            List.of(), List.of(), List.of(),
+            List.of(), new CertificateLayout.PrintedChecks(List.of(), List.of(),
             List.of(new CertificateLayout.PrintedComparison("c.row12", Optional.of("round.totalincome"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
                     new CertificateLayout.PrintedComparison("c.row17", Optional.empty(), Optional.of("BILL"), Optional.empty(), Optional.empty(), Optional.empty()),
-                    new CertificateLayout.PrintedComparison("b.total.taxDeducted", Optional.empty(), Optional.of("BILL"), Optional.of("TAXSUM"), Optional.empty(), Optional.empty())),
+                    new CertificateLayout.PrintedComparison("b.total.taxDeducted", Optional.empty(), Optional.of("BILL"), Optional.of("TAXSUM"), Optional.empty(), Optional.empty()))),
             "test");
 
     private static DocumentConfirmation confirmed(boolean optsOut, String row12, String row17, String partB) {
@@ -136,13 +136,13 @@ class ReconciliationTest {
 
     /** Row 11 (Deductible Amount) first, as the form prints it, then row 12, row 17 and Part B (W-130b). */
     private static final CertificateLayout CLAIMS = new CertificateLayout(new CertificateCode("FORM_130"), "T", List.of(), LAYOUT.lines(),
-            List.of(), List.of(), List.of(),
+            List.of(), new CertificateLayout.PrintedChecks(List.of(), List.of(),
             List.of(new CertificateLayout.PrintedComparison("c.row11.deductibleAmount", Optional.empty(), Optional.of("CHAPTER_VIII"),
                     Optional.empty(), Optional.of("DECLARED_NOT_PROVEN"), Optional.of("ENTITLED_NOT_DECLARED"))).stream()
                     .collect(java.util.stream.Collectors.collectingAndThen(java.util.stream.Collectors.toList(), claim -> {
-                        claim.addAll(LAYOUT.comparisons());
+                        claim.addAll(LAYOUT.checks().comparisons());
                         return claim;
-                    })),
+                    }))),
             "test");
 
     private static ComputedTax withClaims(String totalIncome, String bill, String chapterEight) {
@@ -208,11 +208,10 @@ class ReconciliationTest {
                     new CertificateLayout.PrintedLine("c.rowA", Optional.empty(), "A", "YES_NO", List.of(), false, 1, Optional.of("REGIME_OPT_OUT")),
                     new CertificateLayout.PrintedLine("c.row1e", Optional.empty(), "1(e)", "AMOUNT", List.of(), false, 1,
                             Optional.of("SALARY_FROM_OTHER_EMPLOYERS"))),
-            List.of(),
             List.of(new CertificateLayout.PrintedTable("b", List.of("Summary"),
                     List.of(new CertificateLayout.PrintedColumn("Tax deducted", "taxDeducted", "AMOUNT", Optional.empty(), List.of())),
                     Optional.of("Total"), List.of(List.of("taxDeducted")), 1)),
-            List.of(), LAYOUT.comparisons(), "test");
+            new CertificateLayout.PrintedChecks(List.of(), List.of(), LAYOUT.checks().comparisons()), "test");
 
     /** One employer's certificate: its period and Part B; Part C's rows where {@code partC} holds row 12, row 17 and 1(e). */
     private static DocumentConfirmation employer(String attempt, String from, String to, String partB, Optional<String[]> partC) {
@@ -295,10 +294,10 @@ class ReconciliationTest {
 
     /** Row 8 first, as printed, then row 11 and the W-130a lines (W-130d). */
     private static final CertificateLayout OTHERS = new CertificateLayout(new CertificateCode("FORM_130"), "T", List.of(), LAYOUT.lines(),
-            List.of(), List.of(), List.of(),
+            List.of(), new CertificateLayout.PrintedChecks(List.of(), List.of(),
             java.util.stream.Stream.concat(java.util.stream.Stream.of(new CertificateLayout.PrintedComparison("c.row8", Optional.empty(),
                     Optional.of("OTHER_HEADS"), Optional.empty(), Optional.of("OTHER_INCOME_REPORTED"), Optional.of("OTHER_INCOME_NOT_REPORTED"))),
-                    CLAIMS.comparisons().stream()).toList(),
+                    CLAIMS.checks().comparisons().stream()).toList()),
             "test");
 
     private static ComputedTax withHeads(String totalIncome, String bill, String chapterEight, String otherHeads) {

@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.api;
 
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateAgreement;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateCell;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateChecks;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateComparison;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
@@ -24,28 +25,42 @@ import java.util.Optional;
  *
  * @param title the form's title as printed
  * @param tables the tables whose rows the issuer writes, each found by its title and column headings (W-126c2a)
- * @param agreements the amounts that should be near each other though no printed sum says so (W-128b)
- * @param comparisons the amounts the engine's computation also produces (W-130a)
+ * @param checks what its figures must agree with (W-332)
  * @param source where the layout was read: the Gazette and its pages
  */
 public record CertificateLayout(CertificateCode code, String title, List<PartHeading> parts, List<PrintedLine> lines,
-        List<PrintedSum> sums, List<PrintedTable> tables, List<PrintedAgreement> agreements, List<PrintedComparison> comparisons,
-        String source) {
+        List<PrintedTable> tables, PrintedChecks checks, String source) {
 
     public CertificateLayout {
         parts = List.copyOf(parts);
         lines = List.copyOf(lines);
-        sums = List.copyOf(sums);
         tables = List.copyOf(tables);
-        agreements = List.copyOf(agreements);
-        comparisons = List.copyOf(comparisons);
     }
 
     static CertificateLayout of(CertificateSpec spec) {
+        CertificateChecks checks = spec.checks();
         return new CertificateLayout(spec.code(), spec.title(), spec.parts().stream().map(PartHeading::of).toList(),
-                spec.fields().stream().map(PrintedLine::of).toList(), spec.identities().stream().map(PrintedSum::of).toList(),
-                spec.tables().stream().map(PrintedTable::of).toList(), spec.agreements().stream().map(PrintedAgreement::of).toList(),
-                spec.comparisons().stream().map(PrintedComparison::of).toList(), spec.provenance().sourceDescription());
+                spec.fields().stream().map(PrintedLine::of).toList(), spec.tables().stream().map(PrintedTable::of).toList(),
+                new PrintedChecks(checks.identities().stream().map(PrintedSum::of).toList(),
+                        checks.agreements().stream().map(PrintedAgreement::of).toList(),
+                        checks.comparisons().stream().map(PrintedComparison::of).toList()),
+                spec.provenance().sourceDescription());
+    }
+
+    /**
+     * What a reading's figures must agree with, as a parser outside the engine reads it (W-332).
+     *
+     * @param sums the sums the form prints (W-127b)
+     * @param agreements the amounts that should be near each other though no printed sum says so (W-128b)
+     * @param comparisons the amounts the engine's computation also produces (W-130a)
+     */
+    public record PrintedChecks(List<PrintedSum> sums, List<PrintedAgreement> agreements, List<PrintedComparison> comparisons) {
+
+        public PrintedChecks {
+            sums = List.copyOf(sums);
+            agreements = List.copyOf(agreements);
+            comparisons = List.copyOf(comparisons);
+        }
     }
 
     /**

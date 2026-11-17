@@ -19,20 +19,21 @@ class CertificateSpecTest {
     private static final Provenance SOURCE = new Provenance(URI.create("https://example.invalid/w-126a"), "Synthetic",
             LocalDate.of(2026, 11, 16), VerificationLevel.UNVERIFIED, "nothing");
     private static final CertificatePart PART_A = new CertificatePart("partA", "PART A");
+    private static final CertificateChecks NO_CHECKS = new CertificateChecks(List.of(), List.of(), List.of());
     private static final CertificateField NAME = new CertificateField("partA.name", Optional.of("1"), "Name",
             CertificateValueKind.TEXT, List.of(), false, 1, Optional.empty());
 
     @Test
     void newSpec_whenTheTitleIsBlank_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), List.of(), SOURCE))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), NO_CHECKS, SOURCE))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
     @Test
     void newSpec_whenTheProvenanceIsMissing_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), List.of(), null))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), NO_CHECKS, null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
@@ -300,12 +301,12 @@ class CertificateSpecTest {
                 List.of("Gross", "Net"), false, 1, Optional.empty());
         CertificateTable table = new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID), ONE_CELL, 1);
         java.util.function.Function<String, CertificateSpec> naming = path -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
-                List.of(PART_A), List.of(NAME, amount, twoCells), List.of(), List.of(table),
-                List.of(new CertificateAgreement("partA.summary.total.paid", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), List.of(),
+                List.of(PART_A), List.of(NAME, amount, twoCells), List.of(table), new CertificateChecks(List.of(),
+                List.of(new CertificateAgreement("partA.summary.total.paid", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), List.of()),
                 SOURCE);
 
         // When / Then
-        assertThat(naming.apply("partA.tax").agreements()).hasSize(1);
+        assertThat(naming.apply("partA.tax").checks().agreements()).hasSize(1);
         assertThatThrownBy(() -> naming.apply("partA.name")).hasMessage("SYN_1's agreement names partA.name, which is not an amount it prints");
         assertThatThrownBy(() -> naming.apply("partA.ded")).hasMessage("SYN_1's agreement names partA.ded, which is not an amount it prints");
         assertThatThrownBy(() -> naming.apply("partA.missing"))
@@ -321,8 +322,8 @@ class CertificateSpecTest {
         CertificateTable textTotal = new CertificateTable("partA.codes", List.of("Codes"), List.of(code),
                 Optional.of(new TableTotal("Total", List.of(List.of("code")))), 1);
         java.util.function.Function<String, CertificateSpec> naming = path -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
-                List.of(PART_A), List.of(NAME, amount), List.of(), List.of(oneRow, textTotal),
-                List.of(new CertificateAgreement("partA.tax", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), List.of(), SOURCE);
+                List.of(PART_A), List.of(NAME, amount), List.of(oneRow, textTotal), new CertificateChecks(List.of(),
+                List.of(new CertificateAgreement("partA.tax", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), List.of()), SOURCE);
 
         // When / Then
         assertThatThrownBy(() -> naming.apply("partA.boxes.total.paid"))
@@ -341,7 +342,7 @@ class CertificateSpecTest {
 
         // When / Then
         assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(first, second), List.of(),
-                List.of(), List.of(), List.of(), SOURCE)).hasMessage("SYN_1 names fact CESS twice in part partA");
+                NO_CHECKS, SOURCE)).hasMessage("SYN_1 names fact CESS twice in part partA");
         assertThatThrownBy(() -> new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1,
                 null)).hasMessage("partA.tax names its fact or none");
         assertThatThrownBy(() -> new CertificateFact("cess")).isInstanceOf(IllegalArgumentException.class);
@@ -381,12 +382,12 @@ class CertificateSpecTest {
         CertificateField row11 = new CertificateField("partA.row11", Optional.of("11"), "Aggregate", CertificateValueKind.AMOUNT,
                 List.of("Gross Amount", "Deductible Amount"), false, 1, Optional.empty());
         java.util.function.Function<String, CertificateSpec> naming = column -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
-                List.of(PART_A), List.of(NAME, row11), List.of(), List.of(), List.of(), List.of(new CertificateComparison("partA.row11",
-                        Optional.of(column), Optional.empty(), Optional.of(ComparedTotal.CHAPTER_VIII), Optional.empty(), Optional.empty(),
-                        Optional.empty())), SOURCE);
+                List.of(PART_A), List.of(NAME, row11), List.of(), new CertificateChecks(List.of(), List.of(),
+                        List.of(new CertificateComparison("partA.row11", Optional.of(column), Optional.empty(),
+                                Optional.of(ComparedTotal.CHAPTER_VIII), Optional.empty(), Optional.empty(), Optional.empty()))), SOURCE);
 
         // When / Then
-        assertThat(naming.apply("Deductible Amount").comparisons()).hasSize(1);
+        assertThat(naming.apply("Deductible Amount").checks().comparisons()).hasSize(1);
         assertThatThrownBy(() -> naming.apply("Qualifying Amount"))
                 .hasMessage("SYN_1's comparison names partA.row11 [Qualifying Amount], a cell it does not print");
     }
@@ -394,8 +395,8 @@ class CertificateSpecTest {
     @Test
     void newSpec_whenAComparisonNamesSomethingNotAnAmountItPrints_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(),
-                List.of(), List.of(new CertificateComparison("partA.name", Optional.empty(), Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.empty(), Optional.empty(), Optional.empty())),
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(),
+                new CertificateChecks(List.of(), List.of(), List.of(new CertificateComparison("partA.name", Optional.empty(), Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.empty(), Optional.empty(), Optional.empty()))),
                 SOURCE)).hasMessage("SYN_1's comparison names partA.name, which is not an amount it prints");
     }
 }

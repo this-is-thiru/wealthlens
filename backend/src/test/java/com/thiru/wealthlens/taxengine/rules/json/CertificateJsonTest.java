@@ -157,7 +157,7 @@ class CertificateJsonTest {
                 + " {\"line\": \"partA.split\", \"column\": \"Deductible Amount\", \"sign\": -1}], \"page\": 2}");
 
         // Then
-        var sum = spec.identities().get(0);
+        var sum = spec.checks().identities().get(0);
         assertThat(sum.target().line()).isEqualTo("partA.total");
         assertThat(sum.terms()).extracting(term -> term.sign()).containsExactly(1, -1);
         assertThat(sum.terms().get(1).cell().column()).contains("Deductible Amount");
@@ -394,7 +394,7 @@ class CertificateJsonTest {
         var spec = CertificateJson.certificate(MAPPER.readTree(json), PATH);
 
         // Then
-        assertThat(spec.agreements()).singleElement().satisfies(read -> {
+        assertThat(spec.checks().agreements()).singleElement().satisfies(read -> {
             assertThat(read.printed()).isEqualTo("partA.summary.total.paid");
             assertThat(read.tolerance()).isEqualTo(com.thiru.wealthlens.taxengine.rules.money.Money.TEN);
             assertThat(read.basis()).isEqualTo("DR 06 G5.2");

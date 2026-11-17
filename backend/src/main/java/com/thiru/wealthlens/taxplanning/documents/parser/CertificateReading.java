@@ -102,7 +102,7 @@ final class CertificateReading {
             layout.parts().stream().filter(this::isTop).forEach(this::readPart);
             List<String> unmapped = unmapped();
             ParseOutcome outcome = missing || !unmapped.isEmpty() ? ParseOutcome.PARTIAL : ParseOutcome.SUCCESS;
-            Inference.Filled filled = Inference.fill(fields, layout.sums());
+            Inference.Filled filled = Inference.fill(fields, layout.checks().sums());
             notes.addAll(filled.notes());
             Contradictions.Checked checked = Contradictions.check(filled.fields(), layout, law, year);
             notes.addAll(checked.contradictions());

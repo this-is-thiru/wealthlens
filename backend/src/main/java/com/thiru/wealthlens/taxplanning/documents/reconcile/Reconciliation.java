@@ -50,7 +50,7 @@ public final class Reconciliation {
                 !computed.capitalGainsBuckets().isEmpty(), employerErrors(confirmed, assembly, layout));
         List<ReconciliationLine> lines = new ArrayList<>();
         List<ReconciliationReason> above = new ArrayList<>();
-        for (PrintedComparison comparison : layout.comparisons()) {
+        for (PrintedComparison comparison : layout.checks().comparisons()) {
             boolean summed = confirmed.size() > 1 && isTableTotal(comparison, layout);
             Optional<Money> printed = summed ? summed(confirmed, comparison.printed())
                     : partC.flatMap(values -> amount(values.get(comparison.printed())));

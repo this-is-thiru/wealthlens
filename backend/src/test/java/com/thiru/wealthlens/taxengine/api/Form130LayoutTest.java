@@ -246,7 +246,7 @@ class Form130LayoutTest {
     }
 
     private static List<String> sumsOf(CertificateLayout layout, String rows) {
-        return layout.sums().stream().filter(sum -> sum.target().path().startsWith(rows))
+        return layout.checks().sums().stream().filter(sum -> sum.target().path().startsWith(rows))
                 .map(sum -> rowOf(rows, sum.target().path()) + " =" + sum.terms().stream()
                         .map(term -> " " + (term.sign() > 0 ? "+" : "-") + rowOf(rows, term.path())).collect(Collectors.joining())
                         + " (p." + sum.page() + ")").toList();
@@ -330,7 +330,7 @@ class Form130LayoutTest {
         // Annexure-II's row 17, each within ₹10 (DR 06 G5.2, D-750 C3a, C4a, C5a)
         assertThat(layout.lines()).filteredOn(line -> line.path().equals("partA.employer.period")).singleElement()
                 .satisfies(line -> assertThat(line.kind()).isEqualTo("PERIOD"));
-        assertThat(layout.agreements()).extracting(agreement -> agreement.printed() + " ≈ " + agreement.near() + " ± " + agreement.tolerance())
+        assertThat(layout.checks().agreements()).extracting(agreement -> agreement.printed() + " ≈ " + agreement.near() + " ± " + agreement.tolerance())
                 .containsExactly("partB.summary.total.taxDeducted ≈ partC.annexureI.row21 ± 10.00",
                         "partB.summary.total.taxDeducted ≈ partC.annexureII.row17 ± 10.00");
     }
@@ -358,7 +358,7 @@ class Form130LayoutTest {
     @Test
     void certificate_whenTaxYear2026_27_pairsTheRowsTheComputationAlsoProduces() {
         // When
-        List<String> comparisons = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().comparisons().stream()
+        List<String> comparisons = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().checks().comparisons().stream()
                 .map(comparison -> comparison.printed() + " = " + comparison.node().orElseGet(() -> "total " + comparison.total().orElseThrow())
                         + comparison.reason().map(reason -> " (" + reason + ")").orElse("")).toList();
 
@@ -368,7 +368,7 @@ class Form130LayoutTest {
                 "partC.annexureI.row12 = round.totalincome", "partC.annexureI.row15 = tax.surcharge",
                 "partC.annexureI.row16 = tax.cess", "partC.annexureI.row17 = total BILL",
                 "partB.summary.total.taxDeducted = total BILL (TAXSUM)");
-        assertThat(CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().comparisons().stream()
+        assertThat(CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().checks().comparisons().stream()
                 .flatMap(comparison -> comparison.node().stream()))
                 .allSatisfy(node -> assertThat(com.thiru.wealthlens.taxengine.rules.generated.NodeIds.class.getFields())
                         .anySatisfy(field -> assertThat(field.get(null).toString()).isEqualTo(node)));

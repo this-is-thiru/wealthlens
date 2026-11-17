@@ -40,11 +40,11 @@ final class Contradictions {
         Map<String, ExtractedField> byPath = new LinkedHashMap<>();
         fields.forEach(field -> byPath.put(field.fieldPath(), field));
         List<String> notes = new ArrayList<>();
-        layout.sums().forEach(sum -> checkSum(sum, byPath, notes));
+        layout.checks().sums().forEach(sum -> checkSum(sum, byPath, notes));
         layout.tables().forEach(table -> table.totalCells().forEach(cell -> checkTotal(table, cell.get(0), byPath, notes)));
         List.copyOf(byPath.values()).forEach(field -> checkPeriod(field, year, byPath, notes));
         List<String> differences = new ArrayList<>();
-        layout.agreements().forEach(agreement -> checkAgreement(agreement, byPath, differences));
+        layout.checks().agreements().forEach(agreement -> checkAgreement(agreement, byPath, differences));
         factsByPart(layout).values().forEach(facts -> {
             checkStandardDeduction(facts, law, byPath, notes);
             checkCess(facts, law, byPath, notes);

@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-130d DONE (D-759); W-130 complete. Next by board order: W-131 (upload / parse / confirm endpoints + async job)
-Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-759; W-126e*, W-128a – c, W-129, W-130a – d pushed
-Board           : W-130d D; W-131 ·; W-332 ·
-Next step       : check the pipeline for the W-130d push; then plan W-131 (large: storage, encryption, erasure, retention, async job, endpoints, runbook entry — expect a split); stop for approval
-Owner actions   : runbook §0.8 before the one deploy
-Last verify     : targeted 799/0 with validate on W-130d
+Item            : W-332 DONE (D-760). Next: W-131 (EXPLAINED, plans/W-131.md) — awaiting owner C1 – C5
+Stage           : committed and pushed; W-131 at stage 2 stop
+Done today      : session 104: D-740 – D-760 pushed
+Board           : W-332 D; W-131 E
+Next step       : on W-131 approval: place W-131a – f (D-761), plan W-131a; W-333 (ComputedTax 18 components) awaits owner yes/no
+Owner actions   : W-131 C1 – C5; W-333 yes/no; runbook §0.8
+Last verify     : W-332 targeted 269/0 with validate; relock no change
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-130d: explain a reconciliation's other-income differences
+Last item commit: taxplanning W-332: group a certificate's checks into one type
 Updated         : 2026-11-17, session 104
 ```
 

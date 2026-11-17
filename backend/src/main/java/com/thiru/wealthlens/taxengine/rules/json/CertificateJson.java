@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.json;
 
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateAgreement;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateCell;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateChecks;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateComparison;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
@@ -65,10 +66,10 @@ public final class CertificateJson {
         return PackJson.construct(where, () -> new CertificateSpec(code, PackJson.text(node, "title", where),
                 PackJson.array(node, "parts", where, e -> part(e.node(), e.path())),
                 PackJson.array(node, "fields", where, e -> field(e.node(), e.path())),
-                PackJson.arrayOrEmpty(node, "identities", where, e -> identity(e.node(), e.path())),
                 PackJson.arrayOrEmpty(node, "tables", where, e -> table(e.node(), e.path())),
-                PackJson.arrayOrEmpty(node, "agreements", where, e -> agreement(e.node(), e.path())),
-                PackJson.arrayOrEmpty(node, "comparisons", where, e -> comparison(e.node(), e.path())),
+                new CertificateChecks(PackJson.arrayOrEmpty(node, "identities", where, e -> identity(e.node(), e.path())),
+                        PackJson.arrayOrEmpty(node, "agreements", where, e -> agreement(e.node(), e.path())),
+                        PackJson.arrayOrEmpty(node, "comparisons", where, e -> comparison(e.node(), e.path()))),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
