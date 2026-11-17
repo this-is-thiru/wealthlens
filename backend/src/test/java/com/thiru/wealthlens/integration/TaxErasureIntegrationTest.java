@@ -12,6 +12,8 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.IngestedDocument;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
+import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
+import com.thiru.wealthlens.taxplanning.documents.store.DocumentBytes;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
@@ -31,6 +33,7 @@ import com.thiru.wealthlens.taxplanning.workspace.DraftStatus;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
+import com.thiru.wealthlens.testsupport.TestPdfs;
 import io.restassured.RestAssured;
 import java.net.URI;
 import java.time.Instant;
@@ -75,6 +78,9 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
             return new TaxJobsIntegrationTest.SettableClock();
         }
     }
+
+    @Autowired
+    private DocumentBytes documentBytes;
 
     @Autowired
     private TaxJobsIntegrationTest.SettableClock clock;
@@ -182,6 +188,7 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(StoredParseAttempt.of(new ParseAttempt(attemptId, documentId, new ParserRun("FORM_130", "1",
                 LocalDateTime.parse("2026-06-15T09:01:00"), LocalDateTime.parse("2026-06-15T09:02:00")), ParseOutcome.SUCCESS,
                 List.of(), List.of(), List.of())));
+        documentBytes.store(documentId, new DocumentContent(TestPdfs.pages(1)));
         mongoTemplate.save(StoredConfirmation.of(new DocumentConfirmation(attemptId, OWNER, LocalDateTime.parse("2026-06-15T09:05:00"),
                 Map.of(), Set.of())));
     }
@@ -201,6 +208,7 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
                 .mapToLong(type -> mongoTemplate.count(query(where("profile_id").is(profileId)), type)).sum();
         String draftId = "draft-of-" + profileId;
         return scoped + mongoTemplate.count(query(where("profile_id").is(profileId)), StoredDocument.class)
+                + mongoTemplate.getCollection("tax_document_bytes.files").countDocuments(new org.bson.Document("filename", "document-of-" + profileId))
                 + mongoTemplate.count(query(where("_id").is("attempt-of-" + profileId)), StoredParseAttempt.class)
                 + mongoTemplate.count(query(where("_id").is("attempt-of-" + profileId)), StoredConfirmation.class)
                 + mongoTemplate.count(query(where("_id").is(profileId)), TaxpayerProfile.class)
@@ -262,20 +270,20 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
     @Test
     void retentionPurge_whenTheHoldHasPassed_erasesEverythingUnderTheProfileAndNothingElse() {
         // Given — every collection holds one record under each profile, plus reads: 7 scoped + 1 draft + 1 profile + 1 revision
-        // + 1 computation + 3 access records + 1 document, 1 attempt and 1 confirmation (W-131a) = 17
+        // + 1 computation + 3 access records + 1 document, 1 attempt and 1 confirmation (W-131a) + its stored bytes (W-131b) = 18
         String held = createdProfile("ABCDE1234F");
         String kept = createdProfile("PQRSX5678K");
         everythingUnder(held);
         everythingUnder(kept);
         erase(held);
-        assertThat(storedUnder(held)).isEqualTo(17);
+        assertThat(storedUnder(held)).isEqualTo(18);
 
         // When — one second before the hold ends
         clock.set("2027-11-07T09:59:59Z");
         runner.run(retentionPurge);
 
         // Then
-        assertThat(storedUnder(held)).isEqualTo(17);
+        assertThat(storedUnder(held)).isEqualTo(18);
 
         // When — the hold's end
         clock.set("2027-11-07T10:00:00Z");
@@ -283,13 +291,13 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(storedUnder(held)).isZero();
-        assertThat(storedUnder(kept)).isEqualTo(17);
+        assertThat(storedUnder(kept)).isEqualTo(18);
 
         // When — run again
         runner.run(retentionPurge);
 
         // Then — nothing more changes
-        assertThat(storedUnder(kept)).isEqualTo(17);
+        assertThat(storedUnder(kept)).isEqualTo(18);
     }
 
     @Test

@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131a DONE (D-762). Next: W-131b (the bytes in GridFS, encrypted; O6 limits)
+Item            : W-131b DONE (D-763). Next: W-131c (the ParseDocument job)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-762 pushed
-Board           : W-131 —; W-131a D; W-131b – f ·
-Next step       : check the pipeline for the W-131a push; plan W-131b; stop for approval
-Owner actions   : runbook §0.8 and §1.n; W-333 yes/no
-Last verify     : W-131a targeted verify 80/0 incl. 5 integration classes
+Done today      : session 104: D-740 – D-763 pushed
+Board           : W-131a D; W-131b D; W-131c – f ·
+Next step       : check the pipeline for the W-131b push; plan W-131c (held profiles skipped; idempotent on (documentId, parserVersion); wall-clock budget)
+Owner actions   : runbook §0.8, §1.n; W-131g, W-333 yes/no
+Last verify     : W-131b targeted verify 119/0 incl. 4 integration classes
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-131a: store documents, parse attempts and confirmations
+Last item commit: taxplanning W-131b: store a document's bytes encrypted within O6's limits
 Updated         : 2026-11-17, session 104
 ```
 

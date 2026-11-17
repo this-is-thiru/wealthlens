@@ -2,7 +2,7 @@ package com.thiru.wealthlens.shared.exception;
 
 /**
  * A request that is well formed and permitted, but refused because the capability behind it is
- * administratively switched off.
+ * administratively switched off, or a store it needs cannot be reached (W-131b, {@code DR 14} O9).
  *
  * <p>Distinct from {@link BadRequestException} on purpose. The caller did nothing wrong and does not
  * need to change anything — an operator does — so answering 400 would send them looking for a fault

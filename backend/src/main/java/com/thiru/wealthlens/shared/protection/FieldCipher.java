@@ -52,6 +52,30 @@ public class FieldCipher {
         return seal(nonceOf(plain), plain);
     }
 
+    /**
+     * A file's bytes sealed as {@link #encrypt} seals text, without passing through text: the key id, then the nonce and the
+     * ciphertext (W-131b, D-762 C1a). A fresh nonce each time.
+     */
+    public byte[] encryptBytes(byte[] plain) {
+        byte[] nonce = new byte[NONCE_BYTES];
+        random.nextBytes(nonce);
+        byte[] sealed = run(Cipher.ENCRYPT_MODE, nonce, plain);
+        byte[] keyId = KEY_ID.getBytes(StandardCharsets.US_ASCII);
+        return ByteBuffer.allocate(keyId.length + NONCE_BYTES + sealed.length).put(keyId).put(nonce).put(sealed).array();
+    }
+
+    /**
+     * @throws IllegalStateException if {@code stored} is not this key's, or was altered
+     */
+    public byte[] decryptBytes(byte[] stored) {
+        byte[] keyId = KEY_ID.getBytes(StandardCharsets.US_ASCII);
+        if (stored.length < keyId.length + NONCE_BYTES || !Arrays.equals(stored, 0, keyId.length, keyId, 0, keyId.length)) {
+            throw new IllegalStateException("A stored file is not encrypted under a known key");
+        }
+        byte[] nonce = Arrays.copyOfRange(stored, keyId.length, keyId.length + NONCE_BYTES);
+        return run(Cipher.DECRYPT_MODE, nonce, Arrays.copyOfRange(stored, keyId.length + NONCE_BYTES, stored.length));
+    }
+
     private String seal(byte[] nonce, String plain) {
         byte[] sealed = run(Cipher.ENCRYPT_MODE, nonce, plain.getBytes(StandardCharsets.UTF_8));
         return KEY_ID + Base64.getEncoder().encodeToString(ByteBuffer.allocate(NONCE_BYTES + sealed.length).put(nonce).put(sealed).array());

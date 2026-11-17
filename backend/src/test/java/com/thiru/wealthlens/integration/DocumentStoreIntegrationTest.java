@@ -13,12 +13,17 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.IngestedDocument;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
+import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
+import com.thiru.wealthlens.taxplanning.documents.store.DocumentBytes;
+import com.thiru.wealthlens.taxplanning.documents.store.DocumentRemoval;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmationRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttemptRepository;
+import com.thiru.wealthlens.testsupport.TestPdfs;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,9 +31,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /** W-131a (D-761): the stored form of a document, its attempts and confirmations — encrypted where it says what the form holds. */
 class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
@@ -43,6 +51,15 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private StoredConfirmationRepository confirmations;
+
+    @Autowired
+    private DocumentBytes documentBytes;
+
+    @Autowired
+    private DocumentRemoval documentRemoval;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private static IngestedDocument document(String id, String profileId) {
         return new IngestedDocument(id, profileId, TaxYearId.of(2026), DocumentType.FORM_130, BYTES,
@@ -105,5 +122,52 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(documents.count()).isEqualTo(2);
+    }
+
+    @Test
+    void store_whenAPdfIsStored_readsBackEqualAndKeepsNoPlainByteInMongo() {
+        // Given
+        byte[] pdf = TestPdfs.pages(2);
+
+        // When
+        int pages = documentBytes.store("document-1", new DocumentContent(pdf));
+
+        // Then
+        assertThat(pages).isEqualTo(2);
+        assertThat(documentBytes.read("document-1").bytes()).isEqualTo(pdf);
+        Document chunk = mongoTemplate.getCollection("tax_document_bytes.chunks").find().first();
+        byte[] stored = chunk.get("data", Binary.class).getData();
+        assertThat(new String(stored, StandardCharsets.ISO_8859_1)).doesNotContain("%PDF-");
+    }
+
+    @Test
+    void removeUnder_whenTheTransactionRollsBack_keepsTheDocumentAndItsBytes() {
+        // Given
+        documents.save(StoredDocument.of(document("document-1", "profile-1")));
+        documentBytes.store("document-1", new DocumentContent(TestPdfs.pages(1)));
+
+        // When — the erasure's transaction fails after the removal ran
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            documentRemoval.removeUnder("profile-1");
+            status.setRollbackOnly();
+        });
+
+        // Then
+        assertThat(documents.findById("document-1")).isPresent();
+        assertThat(documentBytes.read("document-1").bytes()).startsWith("%PDF-".getBytes(StandardCharsets.US_ASCII));
+    }
+
+    @Test
+    void removeUnder_whenTheTransactionCommits_removesTheBytesToo() {
+        // Given
+        documents.save(StoredDocument.of(document("document-1", "profile-1")));
+        documentBytes.store("document-1", new DocumentContent(TestPdfs.pages(1)));
+
+        // When
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> documentRemoval.removeUnder("profile-1"));
+
+        // Then
+        assertThat(documents.findById("document-1")).isEmpty();
+        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isZero();
     }
 }

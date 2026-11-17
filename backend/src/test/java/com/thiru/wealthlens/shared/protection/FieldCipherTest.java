@@ -101,4 +101,41 @@ class FieldCipherTest {
         assertThat(cipher.encryptSearchable("a@b.in")).isEqualTo(stored);
         assertThat(cipher.decrypt(stored)).isEqualTo("a@b.in");
     }
+
+    @Test
+    void decryptBytes_whenEncryptedUnderTheSameKey_isTheBytes() {
+        // Given — the start of a PDF
+        byte[] pdf = "%PDF-1.4 certificate".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+
+        // When
+        byte[] stored = cipher(KEY).encryptBytes(pdf);
+
+        // Then
+        assertThat(new String(stored, java.nio.charset.StandardCharsets.ISO_8859_1)).startsWith("k1:").doesNotContain("%PDF-");
+        assertThat(cipher(KEY).decryptBytes(stored)).isEqualTo(pdf);
+    }
+
+    @Test
+    void encryptBytes_whenOneContentIsEncryptedTwice_storesTwoDifferentForms() {
+        // When / Then
+        assertThat(cipher(KEY).encryptBytes(new byte[] {1, 2, 3})).isNotEqualTo(cipher(KEY).encryptBytes(new byte[] {1, 2, 3}));
+    }
+
+    @Test
+    void decryptBytes_whenOneByteWasAltered_refuses() {
+        // Given
+        byte[] stored = cipher(KEY).encryptBytes(new byte[] {1, 2, 3});
+        stored[stored.length - 1] ^= 1;
+
+        // When / Then
+        assertThatThrownBy(() -> cipher(KEY).decryptBytes(stored)).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("could not be decrypted");
+    }
+
+    @Test
+    void decryptBytes_whenTheBytesWereStoredInTheClear_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> cipher(KEY).decryptBytes("%PDF-1.4".getBytes(java.nio.charset.StandardCharsets.US_ASCII)))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("not encrypted under a known key");
+    }
 }

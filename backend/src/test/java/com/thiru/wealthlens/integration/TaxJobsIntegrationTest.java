@@ -13,6 +13,8 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.IngestedDocument;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
+import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
+import com.thiru.wealthlens.taxplanning.documents.store.DocumentBytes;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
@@ -32,6 +34,7 @@ import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatus;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
+import com.thiru.wealthlens.testsupport.TestPdfs;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -112,6 +115,9 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private TaxCalculator taxCalculator;
+
+    @Autowired
+    private DocumentBytes documentBytes;
 
     @BeforeEach
     void theDayOfTheHandFigures() {
@@ -303,10 +309,34 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
                 List.of(), List.of(), List.of())));
         mongoTemplate.save(StoredConfirmation.of(new DocumentConfirmation("attempt-of-" + id, "owner@example.com",
                 LocalDateTime.parse("2026-06-15T09:05:00"), Map.of(), Set.of())));
+        documentBytes.store(id, new DocumentContent(TestPdfs.pages(1)));
+    }
+
+    @Test
+    void retentionPurge_whenStoredBytesNameNoDocument_deletesThemOnceADayOld() {
+        // Given — bytes stored now (the machine's clock) under an id no document holds, and a document's own bytes
+        documentBytes.store("orphan", new DocumentContent(TestPdfs.pages(1)));
+        documentOf("b-2026", 2026);
+
+        // When — the job's clock a day before the upload: the orphan is younger than P1D on that clock
+        clock.set(java.time.Instant.now().minus(java.time.Duration.ofDays(1)).toString());
+        runner.run(retentionPurge);
+
+        // Then
+        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments(new Document("filename", "orphan"))).isOne();
+
+        // When — two days after the upload
+        clock.set(java.time.Instant.now().plus(java.time.Duration.ofDays(2)).toString());
+        runner.run(retentionPurge);
+
+        // Then — the orphan is gone; the document's bytes stay
+        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments(new Document("filename", "orphan"))).isZero();
+        assertThat(storedWithItsReading("b-2026")).isEqualTo(4);
     }
 
     private long storedWithItsReading(String documentId) {
-        return mongoTemplate.count(query(where("_id").is(documentId)), StoredDocument.class)
+        return mongoTemplate.getCollection("tax_document_bytes.files").countDocuments(new Document("filename", documentId))
+                + mongoTemplate.count(query(where("_id").is(documentId)), StoredDocument.class)
                 + mongoTemplate.count(query(where("_id").is("attempt-of-" + documentId)), StoredParseAttempt.class)
                 + mongoTemplate.count(query(where("_id").is("attempt-of-" + documentId)), StoredConfirmation.class);
     }
@@ -322,7 +352,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         runner.run(retentionPurge);
 
         // Then
-        assertThat(storedWithItsReading("a-2025")).isEqualTo(3);
+        assertThat(storedWithItsReading("a-2025")).isEqualTo(4);
 
         // When — the day after
         clock.set("2034-04-01T00:30:00Z");
@@ -330,7 +360,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
         // Then — 2026-27's run to 31-3-2035, so it stays
         assertThat(storedWithItsReading("a-2025")).isZero();
-        assertThat(storedWithItsReading("b-2026")).isEqualTo(3);
+        assertThat(storedWithItsReading("b-2026")).isEqualTo(4);
         assertThat(failures.findAll()).isEmpty();
     }
 
@@ -343,7 +373,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         runner.run(retentionPurge);
 
         // Then
-        assertThat(storedWithItsReading("c-2019")).isEqualTo(3);
+        assertThat(storedWithItsReading("c-2019")).isEqualTo(4);
         assertThat(failures.findAll()).singleElement().satisfies(failure -> {
             assertThat(failure.getJob()).isEqualTo("retention-purge");
             assertThat(failure.getSubject()).isEqualTo("documents of tax year 2019-20");

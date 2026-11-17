@@ -114,6 +114,12 @@ app:
       purge-archived-after: P12M
       # W-239: DR 14 O5 — a landlord or lender is kept to the end of the tax year it last supports, plus this
       third-party-after: P2Y
+    documents:
+      # W-131b: DR 14 O6 — "20 MB per file, 50 pages" (MB read as 2^20 bytes)
+      max-bytes: 20971520
+      max-pages: 50
+      # W-131b: stored bytes no document names are deleted once this old, so an upload in flight is never taken
+      orphan-after: P1D
   mongodb:
     transactions-enabled: true
   portfolio:
