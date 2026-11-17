@@ -7,6 +7,15 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
+import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentConfirmation;
+import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
+import com.thiru.wealthlens.taxplanning.documents.ingest.IngestedDocument;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
 import com.thiru.wealthlens.taxplanning.jobs.AutoArchive;
 import com.thiru.wealthlens.taxplanning.jobs.JobContext;
 import com.thiru.wealthlens.taxplanning.jobs.JobFailure;
@@ -283,6 +292,61 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(failures.findAll()).singleElement().satisfies(failure -> {
             assertThat(failure.getJob()).isEqualTo("retention-purge");
             assertThat(failure.getSubject()).isEqualTo("tax year 2019-20");
+        });
+    }
+
+    private void documentOf(String id, int taxYear) {
+        mongoTemplate.save(StoredDocument.of(new IngestedDocument(id, "profile-1", TaxYearId.of(taxYear), DocumentType.FORM_130,
+                id.substring(0, 1).repeat(64), LocalDateTime.parse("2026-06-15T09:00:00"), 2)));
+        mongoTemplate.save(StoredParseAttempt.of(new ParseAttempt("attempt-of-" + id, id, new ParserRun("FORM_130", "1",
+                LocalDateTime.parse("2026-06-15T09:01:00"), LocalDateTime.parse("2026-06-15T09:02:00")), ParseOutcome.SUCCESS,
+                List.of(), List.of(), List.of())));
+        mongoTemplate.save(StoredConfirmation.of(new DocumentConfirmation("attempt-of-" + id, "owner@example.com",
+                LocalDateTime.parse("2026-06-15T09:05:00"), Map.of(), Set.of())));
+    }
+
+    private long storedWithItsReading(String documentId) {
+        return mongoTemplate.count(query(where("_id").is(documentId)), StoredDocument.class)
+                + mongoTemplate.count(query(where("_id").is("attempt-of-" + documentId)), StoredParseAttempt.class)
+                + mongoTemplate.count(query(where("_id").is("attempt-of-" + documentId)), StoredConfirmation.class);
+    }
+
+    @Test
+    void retentionPurge_whenADocumentsYearHasRunOut_deletesItWithItsAttemptsAndConfirmations() {
+        // Given — a certificate for tax year 2025-26 (D-761 C5a: its eight succeeding years end 31-3-2034) and one for 2026-27
+        documentOf("a-2025", 2025);
+        documentOf("b-2026", 2026);
+
+        // When — 31-3-2034, the last day of 2033-34
+        clock.set("2034-03-31T12:00:00Z");
+        runner.run(retentionPurge);
+
+        // Then
+        assertThat(storedWithItsReading("a-2025")).isEqualTo(3);
+
+        // When — the day after
+        clock.set("2034-04-01T00:30:00Z");
+        runner.run(retentionPurge);
+
+        // Then — 2026-27's run to 31-3-2035, so it stays
+        assertThat(storedWithItsReading("a-2025")).isZero();
+        assertThat(storedWithItsReading("b-2026")).isEqualTo(3);
+        assertThat(failures.findAll()).isEmpty();
+    }
+
+    @Test
+    void retentionPurge_whenNoPackCoversADocumentsYear_keepsItAndRecordsWhy() {
+        // Given — the application ships 2025-26 and 2026-27 only
+        documentOf("c-2019", 2019);
+
+        // When
+        runner.run(retentionPurge);
+
+        // Then
+        assertThat(storedWithItsReading("c-2019")).isEqualTo(3);
+        assertThat(failures.findAll()).singleElement().satisfies(failure -> {
+            assertThat(failure.getJob()).isEqualTo("retention-purge");
+            assertThat(failure.getSubject()).isEqualTo("documents of tax year 2019-20");
         });
     }
 

@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-332 DONE (D-760). Next: W-131 (EXPLAINED, plans/W-131.md) — awaiting owner C1 – C5
-Stage           : committed and pushed; W-131 at stage 2 stop
-Done today      : session 104: D-740 – D-760 pushed
-Board           : W-332 D; W-131 E
-Next step       : on W-131 approval: place W-131a – f (D-761), plan W-131a; W-333 (ComputedTax 18 components) awaits owner yes/no
-Owner actions   : W-131 C1 – C5; W-333 yes/no; runbook §0.8
-Last verify     : W-332 targeted 269/0 with validate; relock no change
+Item            : W-131a DONE (D-762). Next: W-131b (the bytes in GridFS, encrypted; O6 limits)
+Stage           : committed and pushed; nothing in progress
+Done today      : session 104: D-740 – D-762 pushed
+Board           : W-131 —; W-131a D; W-131b – f ·
+Next step       : check the pipeline for the W-131a push; plan W-131b; stop for approval
+Owner actions   : runbook §0.8 and §1.n; W-333 yes/no
+Last verify     : W-131a targeted verify 80/0 incl. 5 integration classes
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-332: group a certificate's checks into one type
+Last item commit: taxplanning W-131a: store documents, parse attempts and confirmations
 Updated         : 2026-11-17, session 104
 ```
 

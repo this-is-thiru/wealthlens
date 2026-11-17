@@ -5,6 +5,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
+import com.thiru.wealthlens.taxplanning.documents.store.DocumentRemoval;
 import com.thiru.wealthlens.taxplanning.profile.BankAccount;
 import com.thiru.wealthlens.taxplanning.profile.Employer;
 import com.thiru.wealthlens.taxplanning.profile.FamilyMember;
@@ -29,7 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Erases a profile and everything stored under it, in one transaction (W-235 C1a, C4a): its drafts with their revisions and
  * computations, the people and accounts it refers to (third parties' data included), its workspaces, its regime election
- * history, and the access records naming it, one of its drafts or one of its receipts. Nothing is kept: no law binds WealthLens to
+ * history, the access records naming it, one of its drafts or one of its receipts, and its documents with what was read from
+ * them (W-131a). Nothing is kept: no law binds WealthLens to
  * keep a filed computation ({@code sources/2026-11-07-data-protection.md}).
  */
 @Service
@@ -46,6 +48,7 @@ public class ProfileRemoval {
     private final DraftComputationRepository computations;
     private final DraftRemoval draftRemoval;
     private final AccessRecordRepository accessRecords;
+    private final DocumentRemoval documentRemoval;
     private final MongoTemplate mongoTemplate;
 
     public void remove(TaxpayerProfile profile) {
@@ -58,6 +61,7 @@ public class ProfileRemoval {
             draftRemoval.remove(draft);
         }
         accessRecords.deleteBySubjectIdIn(readSubjects);
+        documentRemoval.removeUnder(profile.getId());
         PROFILE_SCOPED.forEach(scoped -> mongoTemplate.remove(query(where("profile_id").is(profile.getId())), scoped));
         profiles.delete(profile);
     }

@@ -4,7 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
+import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentConfirmation;
+import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
+import com.thiru.wealthlens.taxplanning.documents.ingest.IngestedDocument;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
 import com.thiru.wealthlens.taxplanning.jobs.AutoArchive;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
@@ -27,6 +37,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -156,9 +167,23 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
         computation.setReceipt("receipt-of-" + profileId);
         computation.setResultJson("{\"revision\": 1, \"capitalGainsIncluded\": false}");
         mongoTemplate.save(computation);
+        documentUnder(profileId);
         read(ReadSubject.PROFILE, profileId);
         read(ReadSubject.DRAFT, draft.getId());
         read(ReadSubject.COMPUTATION, computation.getReceipt());
+    }
+
+    /** A document with one attempt and its confirmation (W-131a); the same bytes under each profile, which the key allows. */
+    private void documentUnder(String profileId) {
+        String documentId = "document-of-" + profileId;
+        String attemptId = "attempt-of-" + profileId;
+        mongoTemplate.save(StoredDocument.of(new IngestedDocument(documentId, profileId, TaxYearId.of(2025), DocumentType.FORM_130,
+                "b".repeat(64), LocalDateTime.parse("2026-06-15T09:00:00"), 2)));
+        mongoTemplate.save(StoredParseAttempt.of(new ParseAttempt(attemptId, documentId, new ParserRun("FORM_130", "1",
+                LocalDateTime.parse("2026-06-15T09:01:00"), LocalDateTime.parse("2026-06-15T09:02:00")), ParseOutcome.SUCCESS,
+                List.of(), List.of(), List.of())));
+        mongoTemplate.save(StoredConfirmation.of(new DocumentConfirmation(attemptId, OWNER, LocalDateTime.parse("2026-06-15T09:05:00"),
+                Map.of(), Set.of())));
     }
 
     private void read(ReadSubject subject, String subjectId) {
@@ -175,7 +200,10 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
                 TaxYearWorkspace.class, RegimeElectionHistory.class, FilingDraft.class).stream()
                 .mapToLong(type -> mongoTemplate.count(query(where("profile_id").is(profileId)), type)).sum();
         String draftId = "draft-of-" + profileId;
-        return scoped + mongoTemplate.count(query(where("_id").is(profileId)), TaxpayerProfile.class)
+        return scoped + mongoTemplate.count(query(where("profile_id").is(profileId)), StoredDocument.class)
+                + mongoTemplate.count(query(where("_id").is("attempt-of-" + profileId)), StoredParseAttempt.class)
+                + mongoTemplate.count(query(where("_id").is("attempt-of-" + profileId)), StoredConfirmation.class)
+                + mongoTemplate.count(query(where("_id").is(profileId)), TaxpayerProfile.class)
                 + mongoTemplate.count(query(where("draft_id").is(draftId)), DraftRevision.class)
                 + mongoTemplate.count(query(where("draft_id").is(draftId)), DraftComputation.class)
                 + mongoTemplate.count(query(where("subject_id").in(profileId, draftId, "receipt-of-" + profileId)),
@@ -234,20 +262,20 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
     @Test
     void retentionPurge_whenTheHoldHasPassed_erasesEverythingUnderTheProfileAndNothingElse() {
         // Given — every collection holds one record under each profile, plus reads: 7 scoped + 1 draft + 1 profile + 1 revision
-        // + 1 computation + 3 access records = 14
+        // + 1 computation + 3 access records + 1 document, 1 attempt and 1 confirmation (W-131a) = 17
         String held = createdProfile("ABCDE1234F");
         String kept = createdProfile("PQRSX5678K");
         everythingUnder(held);
         everythingUnder(kept);
         erase(held);
-        assertThat(storedUnder(held)).isEqualTo(14);
+        assertThat(storedUnder(held)).isEqualTo(17);
 
         // When — one second before the hold ends
         clock.set("2027-11-07T09:59:59Z");
         runner.run(retentionPurge);
 
         // Then
-        assertThat(storedUnder(held)).isEqualTo(14);
+        assertThat(storedUnder(held)).isEqualTo(17);
 
         // When — the hold's end
         clock.set("2027-11-07T10:00:00Z");
@@ -255,13 +283,13 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(storedUnder(held)).isZero();
-        assertThat(storedUnder(kept)).isEqualTo(14);
+        assertThat(storedUnder(kept)).isEqualTo(17);
 
         // When — run again
         runner.run(retentionPurge);
 
         // Then — nothing more changes
-        assertThat(storedUnder(kept)).isEqualTo(14);
+        assertThat(storedUnder(kept)).isEqualTo(17);
     }
 
     @Test

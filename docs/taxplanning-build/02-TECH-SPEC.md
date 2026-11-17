@@ -328,7 +328,7 @@ All `snake_case`; `@MongoId`; entities implement `AuditableEntity`. **Every one 
 | `tax_computations` | `computation_id` | `{draft_id, computed_at desc}`; `{profile_id, tax_year, inputs_fingerprint, law_version, exec_version}` |
 | `tax_filing_positions` | `filing_position_id` | `{computation_id, as_of desc}` |
 | `tax_projections` | `{draft_id, projection_type}` | unique |
-| `tax_documents` | `document_id` | unique `{sha256}`; `{profile_id, tax_year}` |
+| `tax_documents` | `document_id` | unique `{profile_id, sha256}`; `{profile_id, tax_year}` — **corrected by W-131a (D-761 C2a):** was unique `{sha256}`, which would refuse a second account a file it never stored and tell it someone else held it; M7's idempotence is one person's re-upload |
 | `tax_parse_attempts` | `attempt_id` | `{document_id, started_at desc}` |
 | `tax_document_confirmations` | `attempt_id` | unique |
 | `tax_lta_block_state` | `{profile_id, block_start_year}` | unique |

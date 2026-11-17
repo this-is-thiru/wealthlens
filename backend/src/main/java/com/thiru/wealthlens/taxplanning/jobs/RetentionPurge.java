@@ -25,7 +25,8 @@ import org.springframework.stereotype.Component;
  * and kept. Any other archived draft is kept for {@link RetentionPeriods#purgeArchivedAfter()} after it was archived. A profile
  * held for erasure is erased whole once {@link PrivacySettings#erasureHold()} has passed since the request (W-235); its erasure
  * record is completed first, so a run cut off in between leaves the profile held, and the next run erases it (W-237f). Last,
- * landlords and lenders past their own retention are deleted, after the drafts they may support ({@link ThirdPartyRetention}).
+ * documents past the same span as filed drafts are deleted ({@link DocumentRetention}, W-131a), then landlords and lenders past
+ * their own retention, after the drafts they may support ({@link ThirdPartyRetention}).
  */
 @Component
 @Log4j2
@@ -41,6 +42,7 @@ public class RetentionPurge implements TaxJob {
     private final ProfileErasureRepository profileErasures;
     private final PrivacySettings privacy;
     private final ThirdPartyRetention thirdParties;
+    private final DocumentRetention documentRetention;
 
     @Override
     public String name() {
@@ -75,6 +77,9 @@ public class RetentionPurge implements TaxJob {
                     && !removeAll(year.getValue(), context)) {
                 return;
             }
+        }
+        if (!documentRetention.purge(name(), context)) {
+            return;
         }
         thirdParties.purge(name(), context);
     }

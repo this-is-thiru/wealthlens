@@ -816,6 +816,14 @@ The dump is the fallback; restoring it whole would also undo later sign-ins' `la
 
 Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Encryption at rest is built (W-134, D-447; W-232 merged into it): §0.5 before the first deploy carrying it.**
 
+
+### 1.n W-131a (D-761) — the document collections · owner · **first deploy carrying W-131a, then after the first `retention-purge`**
+
+Automatic at startup (`DocumentIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `StoredDocument`, `StoredParseAttempt` and `StoredConfirmation`; a failure stops startup. The collections (`tax_documents`, `tax_parse_attempts`, `tax_document_confirmations`) are new and nothing writes to them until W-131d's endpoint exists with `app.tax.documents.enabled` on (D-761 C3a), so there is nothing to check first, and a second start changes nothing.
+
+**After the first `retention-purge`** (read-only): run §1.y's failures query. Expected: no failure whose subject begins `documents of tax year`. One means a stored document of a year no shipped pack covers; it is **kept**, and stays until the owner decides (ship that year's pack, or a D-row), as for drafts.
+
+**Way back:** drop the three collections while they are empty. Once documents are stored, profile erasure and retention delete them with their attempts and confirmations (`DocumentRemoval`); a document deleted that should not have been is restored from the database backup.
 ## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
 
 **Why.** The owner's fresh start (2026-10-27): the charge engine's data is cleared where it exists and seeded new in
