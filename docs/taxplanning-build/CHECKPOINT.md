@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131b DONE (D-763). Next: W-131c (the ParseDocument job)
+Item            : W-131c DONE (D-764). Next: W-131d (endpoints, EMPLOYEE_PAN, confirm, reconciliation read, flag, notice)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-763 pushed
-Board           : W-131a D; W-131b D; W-131c – f ·
-Next step       : check the pipeline for the W-131b push; plan W-131c (held profiles skipped; idempotent on (documentId, parserVersion); wall-clock budget)
+Done today      : session 104: D-740 – D-764 pushed
+Board           : W-131c D; W-131d – f ·
+Next step       : check the pipeline; plan W-131d (expect a split: endpoints + flag + notice vs PAN fact + reconciliation read)
 Owner actions   : runbook §0.8, §1.n; W-131g, W-333 yes/no
-Last verify     : W-131b targeted verify 119/0 incl. 4 integration classes
+Last verify     : W-131c targeted verify 76/0
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-131b: store a document's bytes encrypted within O6's limits
+Last item commit: taxplanning W-131c: read each stored document once per parser version within a time budget
 Updated         : 2026-11-17, session 104
 ```
 

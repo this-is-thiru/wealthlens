@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxplanning.documents.store;
 
+import java.time.Duration;
 import java.time.Period;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -10,7 +11,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param maxBytes O6's "20 MB per file", as bytes
  * @param maxPages O6's "50 pages"
  * @param orphanAfter how old stored bytes no document names must be before they are deleted, so an upload in flight is never taken
+ * @param parseBudget how long one parse may run before it is a failed attempt (O6's wall-clock budget; W-131c, D-764 C3a)
  */
 @ConfigurationProperties(prefix = "app.tax.documents")
-public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter) {
+public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, Duration parseBudget) {
 }

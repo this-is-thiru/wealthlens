@@ -494,7 +494,7 @@ public interface TaxJob {
 
 | Job | Trigger | Singleton | Notes |
 |---|---|---|---|
-| `ParseDocument` | on upload | no | idempotent on `(documentId, parserVersion)`; a new attempt row per run (`M4`) |
+| `ParseDocument` | on upload | no — **corrected by W-131c (D-764 C1a): yes** | idempotent on `(documentId, parserVersion)`; a new attempt row per run (`M4`). Built as one job, `parse-documents`, under the runner's lease: every minute, and right after an upload (W-131d); a document is due while every attempt failed and none was by the current version |
 | `GeneratePdf` | on `ComputationCompleted` | no | idempotent on `computationId`; cached by receipt |
 | `StalenessSweep` | on pack upgrade at startup | **yes** | scans `ACTED_ON`/`READY` drafts; **flags**, never recomputes (`13` R-8, `18` V9) |
 | `GazetteWatch` | daily | **yes** | checks the gazette index; **opens a ticket**. Never writes a pack |

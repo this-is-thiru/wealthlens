@@ -26,6 +26,7 @@ public class TaxJobSchedule {
     private final AccountErasure accountErasure;
     private final LogErasure logErasure;
     private final StalenessSweep stalenessSweep;
+    private final ParseDocuments parseDocuments;
 
     private final GazetteWatch gazetteWatch;
 
@@ -45,6 +46,12 @@ public class TaxJobSchedule {
     @Scheduled(cron = "${app.tax.jobs.retention-purge-cron}")
     public void retentionPurge() {
         runner.run(retentionPurge);
+    }
+
+    /** Every minute: an upload's own run may be skipped while another holds the lease (W-131c, D-764 C1a). */
+    @Scheduled(cron = "${app.tax.jobs.parse-documents-cron}")
+    public void parseDocuments() {
+        runner.run(parseDocuments);
     }
 
     @Scheduled(cron = "${app.tax.jobs.account-erasure-cron}")

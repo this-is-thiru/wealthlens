@@ -82,6 +82,8 @@ app:
       enabled: true
       auto-archive-cron: "0 0 3 * * SUN"
       retention-purge-cron: "0 0 4 1 * *"
+      # W-131c: stored documents are read within a minute of upload, even when the upload's own run was skipped
+      parse-documents-cron: "0 * * * * *"
       # W-237d: daily, so an account is erased within a day of its hold ending
       account-erasure-cron: "0 30 4 * * *"
       # W-237e: daily, so a log or privacy record is erased within a day of its year ending
@@ -114,6 +116,8 @@ app:
       max-pages: 50
       # W-131b: stored bytes no document names are deleted once this old, so an upload in flight is never taken
       orphan-after: P1D
+      # W-131c: O6's wall-clock budget for one parse; past it the attempt is FAILED (owner adopted, D-764 C3a)
+      parse-budget: PT30S
   portfolio:
     idempotency:
       # How long a trade with NO client-supplied idempotencyKey stays de-duplicable, in seconds.
