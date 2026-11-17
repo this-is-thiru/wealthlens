@@ -182,6 +182,107 @@ class Form130ParserTest {
                 "Inferred partC.annexureII.row7 from the sum printed for partC.annexureII.row7");
     }
 
+    /** Part B's cells as an issuer fills them: two quarters (the second's rate left blank), one book adjustment, two challans. */
+    private static final Map<String, String> PART_B = Map.ofEntries(
+            Map.entry("partB.summary.row1.quarter", "Q1"), Map.entry("partB.summary.row1.receiptNumbers", "QVBNMAAA"),
+            Map.entry("partB.summary.row1.amountPaid", "3,00,000.00"), Map.entry("partB.summary.row1.rate", "10.00"),
+            Map.entry("partB.summary.row1.taxDeducted", "30,000.00"), Map.entry("partB.summary.row1.taxDeposited", "30,000.00"),
+            Map.entry("partB.summary.row2.quarter", "Q2"), Map.entry("partB.summary.row2.receiptNumbers", "QVBNMBBB"),
+            Map.entry("partB.summary.row2.amountPaid", "3,00,000.00"),
+            Map.entry("partB.summary.row2.taxDeducted", "30,000.00"), Map.entry("partB.summary.row2.taxDeposited", "30,000.00"),
+            Map.entry("partB.summary.total.amountPaid", "6,00,000.00"), Map.entry("partB.summary.total.taxDeducted", "60,000.00"),
+            Map.entry("partB.summary.total.taxDeposited", "60,000.00"),
+            Map.entry("partB.bookAdjustment.row1.serialNumber", "1"), Map.entry("partB.bookAdjustment.row1.taxDeposited", "30,000.00"),
+            Map.entry("partB.bookAdjustment.row1.form137ReceiptNumber", "1234567"),
+            Map.entry("partB.bookAdjustment.row1.ddoSerialNumber", "00012"),
+            Map.entry("partB.bookAdjustment.row1.transferVoucherDate", "07/07/2026"),
+            Map.entry("partB.bookAdjustment.row1.matchingStatus", "F"),
+            Map.entry("partB.bookAdjustment.total.taxDeposited", "30,000.00"),
+            Map.entry("partB.challan.row1.serialNumber", "1"), Map.entry("partB.challan.row1.taxDeposited", "30,000.00"),
+            Map.entry("partB.challan.row1.bsrCode", "0510308"), Map.entry("partB.challan.row1.depositDate", "07/07/2026"),
+            Map.entry("partB.challan.row1.challanSerialNumber", "00042"), Map.entry("partB.challan.row1.matchingStatus", "F"),
+            Map.entry("partB.challan.row2.serialNumber", "2"), Map.entry("partB.challan.row2.taxDeposited", "30,000.00"),
+            Map.entry("partB.challan.row2.bsrCode", "0510308"), Map.entry("partB.challan.row2.depositDate", "07/10/2026"),
+            Map.entry("partB.challan.row2.challanSerialNumber", "00043"), Map.entry("partB.challan.row2.matchingStatus", "F"),
+            Map.entry("partB.challan.total.taxDeposited", "60,000.00"));
+
+    private static DocumentReading readWithPartB(Map<String, String> changes, Set<String> omitted) throws Exception {
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.putAll(PART_B);
+        values.putAll(changes);
+        return PARSER.read(new DocumentContent(Form130Fixture.certificate(LAYOUT, values, Map.of(), omitted)), YEAR);
+    }
+
+    @Test
+    void read_whenPartBIsFilled_readsEachTablesRowsAndTotalsUnderTheirHeadings() throws Exception {
+        // When
+        DocumentReading reading = readWithPartB(Map.of(), Set.of());
+
+        // Then — 3,00,000 + 3,00,000 = 6,00,000 paid and 30,000 + 30,000 = 60,000 deducted, as the Total row prints; the
+        // merged "Amount paid/credited" and "Rate" total cell is read as the amount paid; Q2's blank rate is no field (C4a)
+        assertThat(reading.parserNotes()).isEmpty();
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        Map<String, ExtractedField> fields = byPath(reading);
+        assertThat(fields.get("partB.summary.row1.amountPaid").interpretedValue())
+                .contains(new ExtractedValue.MoneyRead(Money.of("300000")));
+        assertThat(fields.get("partB.summary.row1.amountPaid").confidence()).isEqualTo(0.90);
+        assertThat(fields.get("partB.summary.row1.rate").interpretedValue()).contains(new ExtractedValue.TextRead("10.00"));
+        assertThat(fields).doesNotContainKey("partB.summary.row2.rate");
+        assertThat(fields.get("partB.summary.row2.quarter").rawText()).contains("Q2");
+        assertThat(fields.get("partB.summary.total.amountPaid").interpretedValue())
+                .contains(new ExtractedValue.MoneyRead(Money.of("600000")));
+        assertThat(fields.get("partB.summary.total.taxDeducted").interpretedValue())
+                .contains(new ExtractedValue.MoneyRead(Money.of("60000")));
+        assertThat(fields.get("partB.bookAdjustment.row1.transferVoucherDate").rawText()).contains("07/07/2026");
+        assertThat(fields.get("partB.challan.row2.challanSerialNumber").rawText()).contains("00043");
+        assertThat(fields.get("partB.challan.total.taxDeposited").interpretedValue())
+                .contains(new ExtractedValue.MoneyRead(Money.of("60000")));
+        assertThat(fields.keySet().stream().filter(path -> path.startsWith("partB."))).hasSize(PART_B.size());
+    }
+
+    @Test
+    void read_whenItemIIsNotPrinted_saysSoAndSucceeds() throws Exception {
+        // When — Notes 3, 4: a deductor fills item I or item II
+        DocumentReading reading = readWithPartB(Map.of(), Set.of("partB.bookAdjustment"));
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        assertThat(reading.parserNotes()).containsExactly("I. Details of tax deducted and deposited in the central government"
+                + " account through book adjustment is not in this certificate");
+        assertThat(byPath(reading)).containsKey("partB.challan.row1.taxDeposited");
+    }
+
+    @Test
+    void read_whenPartBIsNotPrinted_saysSoAndSucceeds() throws Exception {
+        // When
+        DocumentReading reading = readWithPartB(Map.of(), Set.of("partB"));
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        assertThat(reading.parserNotes()).containsExactly("PART B is not in this certificate");
+    }
+
+    @Test
+    void read_whenATablesTotalRowIsMissing_isPartialNamingIt() throws Exception {
+        // When
+        DocumentReading reading = readWithPartB(Map.of(), Set.of("partB.challan.total"));
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        assertThat(reading.parserNotes()).containsExactly("Not found: partB.challan.total (Total)");
+    }
+
+    @Test
+    void read_whenAPartBAmountIsNotNumbersOnly_keepsItUnreadAndNamesIt() throws Exception {
+        // When
+        DocumentReading reading = readWithPartB(Map.of("partB.challan.row1.taxDeposited", "Rs. 30,000"), Set.of());
+
+        // Then
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        assertThat(reading.parserNotes()).containsExactly("Not read: partB.challan.row1.taxDeposited (Rs. 30,000)");
+        assertThat(byPath(reading).get("partB.challan.row1.taxDeposited").interpretedValue()).isEmpty();
+    }
+
     @Test
     void read_whenEachAnnexurePrintsItsSubHeading_claimsItAsAHeadingLine() throws Exception {
         // Given — p.2276 and p.2279 print "In relation to …" under each annexure's heading, and Annexure-I "Particulars"

@@ -5,6 +5,7 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PartHeading;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedLine;
+import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedTable;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -31,8 +32,9 @@ import org.springframework.stereotype.Component;
 
 /**
  * Reads a Form No. 130 ({@code DR 06} G5.1): at L1 its parts by their headings and every line by its printed label, from the
- * year's layout in the pack (W-126a, W-126b); at L2 each line's value cells by its kind (W-127a); at L3 a cell the form's
- * printed sums determine (W-127b). Every failure is a reading with its reason, never an exception ({@code DR 07} X2.5).
+ * year's layout in the pack (W-126a, W-126b), and Part B's tables by their titles and column headings (W-126c2b); at L2
+ * each value cell by its kind (W-127a); at L3 a cell the form's printed sums determine (W-127b). Every failure is a reading
+ * with its reason, never an exception ({@code DR 07} X2.5).
  */
 @Component
 @RequiredArgsConstructor
@@ -57,7 +59,7 @@ public class Form130Parser implements DocumentParser {
 
     @Override
     public String version() {
-        return "3";
+        return "4";
     }
 
     /** @throws IllegalArgumentException where no pack ships for {@code year} — the upload refuses such a year first */
@@ -109,16 +111,36 @@ public class Form130Parser implements DocumentParser {
             if (!enter(first)) {
                 return failed("Not a Form No. 130: no " + first.heading());
             }
-            for (PrintedLine line : layout.lines()) {
-                if (!line.repeating() && partsOf(line.path()).allMatch(this::entered)) {
-                    match(line);
-                }
-            }
+            layout.parts().stream().filter(this::isTop).forEach(this::readPart);
             List<String> unmapped = unmapped();
             ParseOutcome outcome = missing || !unmapped.isEmpty() ? ParseOutcome.PARTIAL : ParseOutcome.SUCCESS;
             Inference.Filled filled = Inference.fill(fields, layout.sums());
             notes.addAll(filled.notes());
             return new DocumentReading(outcome, filled.fields(), unmapped, notes);
+        }
+
+        /** A top part in printed order: its lines, then its tables. */
+        private void readPart(PartHeading top) {
+            for (PrintedLine line : layout.lines()) {
+                if (line.path().startsWith(top.path() + ".") && !line.repeating() && partsOf(line.path()).allMatch(this::entered)) {
+                    match(line);
+                }
+            }
+            List<PrintedTable> tables = layout.tables().stream().filter(table -> table.path().startsWith(top.path() + ".")).toList();
+            if (!tables.isEmpty() && entered(top)) {
+                tables.forEach(table -> read(table, top));
+            }
+        }
+
+        private void read(PrintedTable table, PartHeading top) {
+            TableReading.Reading reading = TableReading.read(words, cursor, table, claimed);
+            fields.addAll(reading.fields());
+            notes.addAll(reading.notes());
+            missing |= !reading.complete();
+            if (reading.found()) {
+                cursor = reading.end();
+                spans.get(top.path())[1] = Math.max(spans.get(top.path())[1], reading.end());
+            }
         }
 
         /** The parts a line sits in, outermost first. */
@@ -228,7 +250,7 @@ public class Form130Parser implements DocumentParser {
 
         /**
          * Text inside a printed part that no heading, label or value claims, line by line (L4) — but not the column
-         * headings the layout itself names, nor anything between parts, such as Part B (W-126c).
+         * headings the layout itself names, nor anything between parts, such as a declaration or its notes.
          */
         private List<String> unmapped() {
             Set<String> columnWords = layout.lines().stream().flatMap(line -> line.columns().stream())

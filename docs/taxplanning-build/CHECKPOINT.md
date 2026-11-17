@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-126c2a DONE (D-738). Next by board order: W-126c2b
+Item            : W-126c2b DONE (D-739); W-126c complete. Next by board order: W-126e
 Stage           : committed and pushed; nothing in progress
-Done today      : session 103: W-126c split (D-735), W-126c1 (D-736); W-126c2 split (D-737), W-126c2a (D-738)
-Board           : W-126c2a D; W-126c2b ·; W-126e ·
-Next step       : check the pipeline for the W-126c2a push; then plan W-126c2b (the table reader: heading spans by own words, value centre under a heading; probe the reader first; stop for approval)
+Done today      : session 103: W-126c1 (D-736), W-126c2a (D-738), W-126c2b (D-739); splits D-735, D-737
+Board           : W-126c2b D; W-126e ·; W-128 ·
+Next step       : check the pipeline for the W-126c2b push; then plan W-126e (Form 16 for TY 2025-26 — its Part B annexure must first be read from the Gazette, R21 NEEDS VERIFICATION; stop for approval)
 Owner actions   : runbook §0.8 before the one deploy; open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710)
-Last verify     : targeted 230/0 with validate on W-126c2a
+Last verify     : targeted 267/0 with validate on W-126c2b
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-126c2a: add Form No. 130 Part B's tables to the layout
+Last item commit: taxplanning W-126c2b: read Form No. 130 Part B's tables
 Updated         : 2026-11-17, session 103
 ```
 

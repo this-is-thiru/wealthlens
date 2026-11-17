@@ -142,7 +142,7 @@ final class LabelMatch {
     }
 
     /** {@code printed} and {@code next} as one word of {@code token}, kept or rid of a break's hyphen; null if neither is. */
-    private static String joined(String printed, String next, String token) {
+    static String joined(String printed, String next, String token) {
         if (token.startsWith(printed + next)) {
             return printed + next;
         }

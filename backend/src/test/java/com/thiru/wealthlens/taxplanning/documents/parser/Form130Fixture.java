@@ -25,31 +25,37 @@ final class Form130Fixture {
     }
 
     /**
-     * @param values the printed value of a line, by path; a line not named prints an empty cell
+     * @param values the printed value of a line or of a Part B cell, by path; a line or cell not named prints empty
      * @param labels a label printed differently from the layout's, by path ({@code <br/>} for a line break)
-     * @param omitted lines and parts (by path) the certificate does not print
+     * @param omitted lines, parts, Part B's tables and their Total rows (by path) the certificate does not print
      */
     static byte[] certificate(CertificateLayout layout, Map<String, String> values, Map<String, String> labels,
             Set<String> omitted) throws DocumentException {
         StringBuilder html = new StringBuilder("<html><head><style>body { font-family: serif; font-size: 10pt; }"
                 + " table { width: 100%; border-collapse: collapse; } td { vertical-align: top; padding: 2pt; }"
                 + " td.n { width: 8%; } td.l { width: 57%; } td.v { width: 35%; text-align: right; }"
-                + " p.h { text-align: center; font-weight: bold; }</style></head><body><p class=\"h\">FORM NO. 130</p>");
+                + " p.h { text-align: center; font-weight: bold; }"
+                + " table.b td { border: 0.5pt solid black; text-align: center; } table.b td.a { text-align: right; }</style></head><body><p class=\"h\">FORM NO. 130</p>");
         String top = "";
+        boolean partBPrinted = omitted.contains("partB");
         for (PrintedLine line : layout.lines()) {
             String part = topPart(layout, line.path());
             if (line.repeating() || omitted.contains(line.path()) || omitted.contains(part)) {
                 continue;
             }
             if (!part.equals(top)) {
-                html.append(top.isEmpty() ? "" : "</table>").append(isFirstPartC(part, top) ? partB() : "")
-                        .append("<p class=\"h\">").append(heading(layout, part)).append("</p><table>");
+                html.append(top.isEmpty() ? "" : "</table>");
+                if (!partBPrinted && !part.startsWith("partA")) {
+                    html.append(PartBFixture.html(layout, values, omitted));
+                    partBPrinted = true;
+                }
+                html.append("<p class=\"h\">").append(heading(layout, part)).append("</p><table>");
                 top = part;
             }
             group(layout, line, html);
             html.append(row(line, values.getOrDefault(line.path(), ""), labels.getOrDefault(line.path(), line.label())));
         }
-        html.append("</table></body></html>");
+        html.append("</table>").append(partBPrinted ? "" : PartBFixture.html(layout, values, omitted)).append("</body></html>");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ITextRenderer renderer = new ITextRenderer();
         renderer.setDocumentFromString(html.toString());
@@ -78,17 +84,6 @@ final class Form130Fixture {
         document.add(Image.getInstance(new BufferedImage(200, 100, BufferedImage.TYPE_INT_RGB), null));
         document.close();
         return out.toByteArray();
-    }
-
-    /** Part B is printed before whichever annexure of Part C comes first. */
-    private static boolean isFirstPartC(String part, String previous) {
-        return part.startsWith("partC.") && !previous.startsWith("partC.");
-    }
-
-    /** Part B as a certificate prints it between Part A and Part C; no line of it is in the layout yet (W-126c2). */
-    private static String partB() {
-        return "<p class=\"h\">PART B</p><table><tr><td>Quarter (s)</td><td>Amount paid/credited</td></tr>"
-                + "<tr><td>Q1</td><td>3,00,000.00</td></tr></table>";
     }
 
     private static void group(CertificateLayout layout, PrintedLine line, StringBuilder html) {

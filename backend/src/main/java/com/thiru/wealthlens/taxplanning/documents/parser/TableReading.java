@@ -1,0 +1,257 @@
+package com.thiru.wealthlens.taxplanning.documents.parser;
+
+import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedColumn;
+import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedTable;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
+import com.thiru.wealthlens.taxplanning.documents.ingest.FieldLocation;
+import com.thiru.wealthlens.taxplanning.documents.parser.PrintedText.Word;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * One table of a certificate read from its printed words (W-126c2b, D-737): its title, then each column heading by its own
+ * words ({@link HeadingMatch}), then each row up to the Total row. A column reaches halfway to its neighbours' headings, so
+ * an amount set to the right of a wide cell is still under its heading (owner, in build); a value reaching under another
+ * column's heading is not placed. A row starts with a value in the first column; an empty cell is no field (C4a).
+ */
+@RequiredArgsConstructor
+final class TableReading {
+
+    /** How many lines below its title a table's headings may print: a grouped header takes six in Part B. */
+    private static final int HEADER_LINES = 8;
+
+    private final List<Word> words;
+    private final PrintedTable table;
+    private final Set<Word> claimed;
+    private final List<ExtractedField> fields = new ArrayList<>();
+    private final List<String> notes = new ArrayList<>();
+    private boolean complete = true;
+
+    /**
+     * What was read of one table.
+     *
+     * @param found whether its title is printed; a table not printed is noted and leaves the reading complete (C3a)
+     * @param complete whether every heading and the Total row were found and every value placed and read
+     * @param end the index after the table's last word, or the start where it is not printed
+     */
+    record Reading(boolean found, List<ExtractedField> fields, List<String> notes, boolean complete, int end) {
+
+        Reading {
+            fields = List.copyOf(fields);
+            notes = List.copyOf(notes);
+        }
+    }
+
+    /** A column's reach on the page: from halfway to the heading before to halfway to the one after. */
+    private record Column(String key, String kind, float headingLeft, float headingRight, float from, float to) {
+
+        boolean holds(Word word) {
+            float centre = (word.left() + word.right()) / 2;
+            return centre >= from && centre < to;
+        }
+
+        boolean isUnderHeading(Word word) {
+            return word.right() > headingLeft && word.left() < headingRight;
+        }
+    }
+
+    static Reading read(List<Word> words, int from, PrintedTable table, Set<Word> claimed) {
+        return new TableReading(words, table, claimed).read(from);
+    }
+
+    private Reading read(int from) {
+        OptionalInt headerFrom = title(from);
+        if (headerFrom.isEmpty()) {
+            return new Reading(false, List.of(), List.of(table.title().get(0) + " is not in this certificate"), true, from);
+        }
+        int to = headerFrom.getAsInt();
+        int lastTitleLine = words.get(to - 1).line();
+        while (to < words.size() && words.get(to).line() <= lastTitleLine + HEADER_LINES) {
+            to++;
+        }
+        List<Column> columns = columns(headerFrom.getAsInt(), to);
+        int rowsFrom = endOfLine(lastClaimed(headerFrom.getAsInt(), to));
+        OptionalInt total = total(rowsFrom, columns);
+        if (total.isEmpty()) {
+            notes.add("Not found: " + table.path() + ".total (" + table.totalLabel() + ")");
+            return new Reading(true, fields, notes, false, rowsFrom);
+        }
+        rows(rowsFrom, total.getAsInt(), columns);
+        int end = totalRow(total.getAsInt(), columns);
+        return new Reading(true, fields, notes, complete, end);
+    }
+
+    /** The title's lines, in order; the index after the last, or none where a line is not printed. */
+    private OptionalInt title(int from) {
+        int at = from;
+        for (String line : table.title()) {
+            Optional<List<Word>> printed = HeadingMatch.find(words, at, words.size(), line, claimed);
+            if (printed.isEmpty()) {
+                return OptionalInt.empty();
+            }
+            claimed.addAll(printed.get());
+            at = words.indexOf(printed.get().get(printed.get().size() - 1)) + 1;
+        }
+        return OptionalInt.of(at);
+    }
+
+    /** Each column found by its heading, then each group heading; a heading not printed is named and its column dropped. */
+    private List<Column> columns(int from, int to) {
+        List<PrintedColumn> printed = new ArrayList<>();
+        List<List<Word>> headings = new ArrayList<>();
+        for (PrintedColumn column : table.columns()) {
+            Optional<List<Word>> heading = HeadingMatch.find(words, from, to, column.heading(), claimed);
+            heading.ifPresentOrElse(found -> {
+                claimed.addAll(found);
+                printed.add(column);
+                headings.add(found);
+            }, () -> missing("Heading not found: " + table.path() + " (" + column.heading() + ")"));
+        }
+        table.columns().stream().map(PrintedColumn::group).flatMap(Optional::stream).distinct()
+                .forEach(group -> HeadingMatch.find(words, from, to, group, claimed).ifPresentOrElse(claimed::addAll,
+                        () -> missing("Heading not found: " + table.path() + " (" + group + ")")));
+        return IntStream.range(0, printed.size()).mapToObj(at -> column(printed.get(at), headings, at)).toList();
+    }
+
+    private static Column column(PrintedColumn column, List<List<Word>> headings, int at) {
+        float left = left(headings.get(at));
+        float right = right(headings.get(at));
+        float from = at == 0 ? Float.NEGATIVE_INFINITY : (right(headings.get(at - 1)) + left) / 2;
+        float to = at == headings.size() - 1 ? Float.POSITIVE_INFINITY : (right + left(headings.get(at + 1))) / 2;
+        return new Column(column.key(), column.kind(), left, right, from, to);
+    }
+
+    private static float left(List<Word> words) {
+        return (float) words.stream().mapToDouble(Word::left).min().orElseThrow();
+    }
+
+    private static float right(List<Word> words) {
+        return (float) words.stream().mapToDouble(Word::right).max().orElseThrow();
+    }
+
+    /** The last claimed word between {@code from} and {@code to}: the end of the header. */
+    private int lastClaimed(int from, int to) {
+        int last = from - 1;
+        for (int at = from; at < to; at++) {
+            if (claimed.contains(words.get(at))) {
+                last = at;
+            }
+        }
+        return last;
+    }
+
+    private int endOfLine(int at) {
+        int end = at + 1;
+        while (end < words.size() && words.get(end).line() == words.get(at).line()) {
+            end++;
+        }
+        return end;
+    }
+
+    /** The Total label: the first word of a line, in the first column, printing the label. */
+    private OptionalInt total(int from, List<Column> columns) {
+        for (int at = from; at < words.size(); at++) {
+            Word word = words.get(at);
+            boolean startsLine = at == 0 || words.get(at - 1).line() != word.line();
+            boolean inFirstColumn = columns.isEmpty() || columns.get(0).holds(word);
+            if (startsLine && inFirstColumn && !claimed.contains(word) && word.text().equals(table.totalLabel())) {
+                return OptionalInt.of(at);
+            }
+        }
+        return OptionalInt.empty();
+    }
+
+    /** The rows between the header and the Total row; a line with no first-column value continues the row above. */
+    private void rows(int from, int to, List<Column> columns) {
+        Map<String, List<Word>> cells = new LinkedHashMap<>();
+        int row = 0;
+        for (int at = from; at < to; at = endOfLine(at)) {
+            List<Word> line = words.subList(at, Math.min(endOfLine(at), to));
+            if (row == 0 || !columns.isEmpty() && line.stream().anyMatch(columns.get(0)::holds)) {
+                emit(table.path() + ".row" + row, cells, columns);
+                cells.clear();
+                row++;
+            }
+            place(line, columns, table.path() + ".row" + row, cells);
+        }
+        emit(table.path() + ".row" + row, cells, columns);
+    }
+
+    /** The Total row: each declared cell reaches over the columns it spans. */
+    private int totalRow(int total, List<Column> columns) {
+        claimed.add(words.get(total));
+        List<Column> cells = new ArrayList<>();
+        for (List<String> keys : table.totalCells()) {
+            List<Column> spanned = columns.stream().filter(column -> keys.contains(column.key())).toList();
+            if (!spanned.isEmpty()) {
+                Column first = spanned.get(0);
+                Column last = spanned.get(spanned.size() - 1);
+                cells.add(new Column(first.key(), first.kind(), first.headingLeft(), last.headingRight(), first.from(), last.to()));
+            }
+        }
+        int end = endOfLine(total);
+        Map<String, List<Word>> printed = new LinkedHashMap<>();
+        place(words.subList(total + 1, end), cells, table.path() + ".total", printed);
+        emit(table.path() + ".total", printed, cells);
+        return end;
+    }
+
+    /** Each word to the column whose reach holds its centre, unless it reaches under another column's heading. */
+    private void place(List<Word> line, List<Column> columns, String row, Map<String, List<Word>> cells) {
+        for (Word word : line) {
+            claimed.add(word);
+            Optional<Column> column = columns.stream().filter(candidate -> candidate.holds(word)).findFirst();
+            boolean spills = column.isPresent()
+                    && columns.stream().anyMatch(other -> other != column.get() && other.isUnderHeading(word));
+            if (column.isEmpty() || spills) {
+                missing("Not placed: " + row + " (" + word.text() + ")");
+            } else {
+                cells.computeIfAbsent(column.get().key(), key -> new ArrayList<>()).add(word);
+            }
+        }
+    }
+
+    /** One field per printed cell, read by its column's kind (L2); a cell not read keeps its text and is named. */
+    private void emit(String row, Map<String, List<Word>> cells, List<Column> columns) {
+        for (Column column : columns) {
+            List<Word> cell = cells.getOrDefault(column.key(), List.of());
+            if (!cell.isEmpty()) {
+                String path = row + "." + column.key();
+                String text = cell.stream().map(Word::text).collect(Collectors.joining(" "));
+                Optional<ExtractedValue> value = switch (column.kind()) {
+                    case "AMOUNT" -> CellReading.amounts(text, 1).map(values -> values.get(0));
+                    case "YES_NO" -> CellReading.yesNo(text);
+                    default -> Optional.of(new ExtractedValue.TextRead(text));
+                };
+                if (value.isEmpty()) {
+                    missing("Not read: " + path + " (" + text + ")");
+                }
+                fields.add(new ExtractedField(path, Optional.of(text), value,
+                        value.isPresent() ? Form130Parser.READ_CONFIDENCE : Form130Parser.LABEL_CONFIDENCE, Optional.of(place(cell)),
+                        Optional.empty()));
+            }
+        }
+    }
+
+    private static FieldLocation place(List<Word> cell) {
+        Word first = cell.get(0);
+        List<Word> onPage = cell.stream().filter(word -> word.page() == first.page()).toList();
+        float top = (float) onPage.stream().mapToDouble(Word::top).min().orElseThrow();
+        float bottom = (float) onPage.stream().mapToDouble(Word::bottom).max().orElseThrow();
+        return new FieldLocation(first.page(), left(onPage), top, right(onPage) - left(onPage), bottom - top);
+    }
+
+    private void missing(String note) {
+        notes.add(note);
+        complete = false;
+    }
+}
