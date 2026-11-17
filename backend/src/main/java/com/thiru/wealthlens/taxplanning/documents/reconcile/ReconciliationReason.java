@@ -19,7 +19,11 @@ public enum ReconciliationReason {
     /** A claim declared to the employer but not proven, so not in the computation: more tax at filing (W-130b). */
     DECLARED_NOT_PROVEN(Kind.EXPECTED, "TDS-SAL-12BB-001"),
     /** A deduction the user is entitled to but never declared to the employer: a refund due (W-130b). */
-    ENTITLED_NOT_DECLARED(Kind.EXPECTED, "TDS-SAL-12B-001");
+    ENTITLED_NOT_DECLARED(Kind.EXPECTED, "TDS-SAL-12B-001"),
+    /** Each employer granted a year's standard deduction (W-129's notice; W-130c). */
+    STANDARD_DEDUCTION_TWICE(Kind.EMPLOYER_ERROR, "SAL-STDDED-001"),
+    /** An employer taxed its salary without the earlier employer's: row 1(e) nil (W-129; T8-1, W-130c). */
+    PREVIOUS_SALARY_UNDECLARED(Kind.EMPLOYER_ERROR, "TDS-SAL-12B-001");
 
     /** Whether a reason keeps a difference minor or makes it material. */
     public enum Kind {
