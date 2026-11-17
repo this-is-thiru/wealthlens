@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.filing;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
@@ -23,14 +24,14 @@ class CertificateSpecTest {
     @Test
     void newSpec_whenTheTitleIsBlank_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), SOURCE))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), List.of(), SOURCE))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
     @Test
     void newSpec_whenTheProvenanceIsMissing_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), null))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(), null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
@@ -148,6 +149,91 @@ class CertificateSpecTest {
         assertThatThrownBy(() -> new CertificateIdentity(null, List.of(), 1))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("A printed sum needs its target, at least one term and its page");
+    }
+
+    @Test
+    void newTotal_whenACellSpansNoColumn_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new TableTotal("Total", List.of(List.of())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A total row needs its printed label and at least one cell, each spanning a column");
+    }
+
+    @Test
+    void newColumn_whenTheGroupIsNullRatherThanEmpty_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new TableColumn("Sl. No.", "serial", CertificateValueKind.TEXT, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Column serial needs its printed heading, its kind and its group or none");
+    }
+
+    @Test
+    void newTable_whenItHasNoColumn_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of("Summary"), List.of(),
+                new TableTotal("Total", List.of(List.of("paid"))), 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("partA.summary needs its printed title, its columns, its total row and its page");
+    }
+
+    private static final TableTotal ONE_CELL = new TableTotal("Total", List.of(List.of("paid")));
+    private static final TableColumn PAID = new TableColumn("Amount paid", "paid", CertificateValueKind.AMOUNT, Optional.empty());
+
+    @Test
+    void newColumn_whenAPartIsMissingOrBlank_refuses() {
+        // When / Then — the key first, then the heading, the kind and the group
+        assertThatThrownBy(() -> new TableColumn("Amount paid", null, CertificateValueKind.AMOUNT, Optional.empty()))
+                .hasMessage("A table column's key is one word in camel case: null");
+        assertThatThrownBy(() -> new TableColumn(null, "paid", CertificateValueKind.AMOUNT, Optional.empty()))
+                .hasMessage("Column paid needs its printed heading, its kind and its group or none");
+        assertThatThrownBy(() -> new TableColumn(" ", "paid", CertificateValueKind.AMOUNT, Optional.empty()))
+                .hasMessage("Column paid needs its printed heading, its kind and its group or none");
+        assertThatThrownBy(() -> new TableColumn("Amount paid", "paid", null, Optional.empty()))
+                .hasMessage("Column paid needs its printed heading, its kind and its group or none");
+        assertThatThrownBy(() -> new TableColumn("Amount paid", "paid", CertificateValueKind.AMOUNT, Optional.of(" ")))
+                .hasMessage("Column paid needs its printed heading, its kind and its group or none");
+    }
+
+    @Test
+    void newTotal_whenALabelOrCellIsMissing_refuses() {
+        // When / Then
+        String message = "A total row needs its printed label and at least one cell, each spanning a column";
+        assertThatThrownBy(() -> new TableTotal(null, List.of(List.of("paid")))).hasMessage(message);
+        assertThatThrownBy(() -> new TableTotal(" ", List.of(List.of("paid")))).hasMessage(message);
+        assertThatThrownBy(() -> new TableTotal("Total", null)).hasMessage(message);
+        assertThatThrownBy(() -> new TableTotal("Total", List.of())).hasMessage(message);
+        assertThatThrownBy(() -> new TableTotal("Total", java.util.Arrays.asList((List<String>) null))).hasMessage(message);
+    }
+
+    @Test
+    void newTable_whenAPartIsMissingOrBlank_refuses() {
+        // When / Then
+        String message = "partA.summary needs its printed title, its columns, its total row and its page";
+        assertThatThrownBy(() -> new CertificateTable("PartA.summary", List.of("Summary"), List.of(PAID), ONE_CELL, 1))
+                .hasMessage("A certificate table's path is dot-separated words: PartA.summary");
+        assertThatThrownBy(() -> new CertificateTable(null, List.of("Summary"), List.of(PAID), ONE_CELL, 1))
+                .hasMessage("A certificate table's path is dot-separated words: null");
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", null, List.of(PAID), ONE_CELL, 1)).hasMessage(message);
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of(), List.of(PAID), ONE_CELL, 1)).hasMessage(message);
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of(" "), List.of(PAID), ONE_CELL, 1)).hasMessage(message);
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", java.util.Arrays.asList((String) null), List.of(PAID), ONE_CELL, 1))
+                .hasMessage(message);
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of("Summary"), null, ONE_CELL, 1)).hasMessage(message);
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID), null, 1)).hasMessage(message);
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID), ONE_CELL, 0)).hasMessage(message);
+    }
+
+    @Test
+    void newTable_whenAGroupClosesTheTable_acceptsItAndRefusesItAlone() {
+        // Given
+        TableColumn code = new TableColumn("Code", "code", CertificateValueKind.TEXT, Optional.of("CIN"));
+        TableColumn date = new TableColumn("Date", "date", CertificateValueKind.TEXT, Optional.of("CIN"));
+
+        // When / Then — a group ending the table is checked at the end too
+        assertThat(new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID, code, date), ONE_CELL, 1).columns())
+                .hasSize(3);
+        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID, code), ONE_CELL, 1))
+                .hasMessage("partA.summary's group CIN is printed over one column; a heading is enough");
     }
 
     @Test

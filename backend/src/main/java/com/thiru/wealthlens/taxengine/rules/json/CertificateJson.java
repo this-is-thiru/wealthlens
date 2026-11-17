@@ -5,8 +5,11 @@ import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificatePart;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateSpec;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateTable;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateTerm;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateValueKind;
+import com.thiru.wealthlens.taxengine.rules.filing.TableColumn;
+import com.thiru.wealthlens.taxengine.rules.filing.TableTotal;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
@@ -21,12 +24,16 @@ import tools.jackson.databind.JsonNode;
  */
 public final class CertificateJson {
 
-    private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "identities", "provenance");
+    private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "identities", "tables", "provenance");
     private static final Set<String> IDENTITY_KEYS = Set.of("target", "terms", "page");
     private static final Set<String> TARGET_KEYS = Set.of("line", "column");
     private static final Set<String> TERM_KEYS = Set.of("line", "column", "sign");
     private static final Set<String> PART_KEYS = Set.of("path", "heading");
     private static final Set<String> FIELD_KEYS = Set.of("path", "row", "label", "kind", "columns", "repeating", "page");
+    private static final Set<String> TABLE_KEYS = Set.of("path", "title", "columns", "total", "page");
+    private static final Set<String> COLUMN_KEYS = Set.of("heading", "key", "kind", "group");
+    private static final Set<String> TOTAL_KEYS = Set.of("label", "cells");
+    private static final Set<String> TOTAL_CELL_KEYS = Set.of("columns");
 
     private CertificateJson() {
     }
@@ -51,6 +58,7 @@ public final class CertificateJson {
                 PackJson.array(node, "parts", where, e -> part(e.node(), e.path())),
                 PackJson.array(node, "fields", where, e -> field(e.node(), e.path())),
                 PackJson.arrayOrEmpty(node, "identities", where, e -> identity(e.node(), e.path())),
+                PackJson.arrayOrEmpty(node, "tables", where, e -> table(e.node(), e.path())),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
@@ -60,6 +68,30 @@ public final class CertificateJson {
                 PackJson.array(node, "terms", path, e -> PackJson.construct(e.path(), () -> new CertificateTerm(
                         cell(e.node(), e.path(), TERM_KEYS), PackJson.integer(e.node(), "sign", e.path())))),
                 PackJson.integer(node, "page", path)));
+    }
+
+    private static CertificateTable table(JsonNode node, String path) {
+        requireOnly(node, TABLE_KEYS, path);
+        return PackJson.construct(path, () -> new CertificateTable(PackJson.text(node, "path", path),
+                PackJson.array(node, "title", path, e -> e.node().asString()),
+                PackJson.array(node, "columns", path, e -> column(e.node(), e.path())),
+                total(PackJson.object(node, "total", path), path + ".total"), PackJson.integer(node, "page", path)));
+    }
+
+    private static TableColumn column(JsonNode node, String path) {
+        requireOnly(node, COLUMN_KEYS, path);
+        return PackJson.construct(path, () -> new TableColumn(PackJson.text(node, "heading", path), PackJson.text(node, "key", path),
+                PackJson.enumValue(node, "kind", path, CertificateValueKind.class), PackJson.optionalText(node, "group", path)));
+    }
+
+    /** A total cell is an object naming the columns it spans, so a merged cell reads as one. */
+    private static TableTotal total(JsonNode node, String path) {
+        requireOnly(node, TOTAL_KEYS, path);
+        return PackJson.construct(path, () -> new TableTotal(PackJson.text(node, "label", path),
+                PackJson.array(node, "cells", path, e -> {
+                    requireOnly(e.node(), TOTAL_CELL_KEYS, e.path());
+                    return PackJson.array(e.node(), "columns", e.path(), c -> c.node().asString());
+                })));
     }
 
     private static CertificateCell cell(JsonNode node, String path, Set<String> known) {

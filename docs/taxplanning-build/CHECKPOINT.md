@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-126c1 DONE (D-736). Next by board order: W-126c2
+Item            : W-126c2a DONE (D-738). Next by board order: W-126c2b
 Stage           : committed and pushed; nothing in progress
-Done today      : session 103: W-126c planned and split (D-735); W-126c1 done (D-736)
-Board           : W-126c —; W-126c1 D; W-126c2 ·; W-126e ·
-Next step       : check the pipeline for the W-126c1 push; then plan W-126c2 (Part B tables — probe first; source note has the labels; stop for approval)
+Done today      : session 103: W-126c split (D-735), W-126c1 (D-736); W-126c2 split (D-737), W-126c2a (D-738)
+Board           : W-126c2a D; W-126c2b ·; W-126e ·
+Next step       : check the pipeline for the W-126c2a push; then plan W-126c2b (the table reader: heading spans by own words, value centre under a heading; probe the reader first; stop for approval)
 Owner actions   : runbook §0.8 before the one deploy; open: ClaimCatalogueEntry 8 components; W-122a's two findings (D-710)
-Last verify     : targeted 209/0 with validate on W-126c1
+Last verify     : targeted 230/0 with validate on W-126c2a
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-126c1: add Form No. 130 Annexure-II to the layout
+Last item commit: taxplanning W-126c2a: add Form No. 130 Part B's tables to the layout
 Updated         : 2026-11-17, session 103
 ```
 

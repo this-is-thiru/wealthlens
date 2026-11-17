@@ -5,6 +5,8 @@ import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificatePart;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateSpec;
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateTable;
+import com.thiru.wealthlens.taxengine.rules.filing.TableColumn;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import java.util.List;
 import java.util.Locale;
@@ -15,21 +17,23 @@ import java.util.Optional;
  * lines by label, each with its row number, value kind, columns and Gazette page.
  *
  * @param title the form's title as printed
+ * @param tables the tables whose rows the issuer writes, each found by its title and column headings (W-126c2a)
  * @param source where the layout was read: the Gazette and its pages
  */
 public record CertificateLayout(CertificateCode code, String title, List<PartHeading> parts, List<PrintedLine> lines,
-        List<PrintedSum> sums, String source) {
+        List<PrintedSum> sums, List<PrintedTable> tables, String source) {
 
     public CertificateLayout {
         parts = List.copyOf(parts);
         lines = List.copyOf(lines);
         sums = List.copyOf(sums);
+        tables = List.copyOf(tables);
     }
 
     static CertificateLayout of(CertificateSpec spec) {
         return new CertificateLayout(spec.code(), spec.title(), spec.parts().stream().map(PartHeading::of).toList(),
                 spec.fields().stream().map(PrintedLine::of).toList(), spec.identities().stream().map(PrintedSum::of).toList(),
-                spec.provenance().sourceDescription());
+                spec.tables().stream().map(PrintedTable::of).toList(), spec.provenance().sourceDescription());
     }
 
     /**
@@ -75,6 +79,42 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
 
         static SumCell of(CertificateCell cell, int sign) {
             return new SumCell(cell.line(), cellPath(cell.line(), cell.column()), sign);
+        }
+    }
+
+    /**
+     * A table, by the lines printed over it and its column headings; its rows carry no label (W-126c2a).
+     *
+     * @param totalLabel the label of the row that prints the totals, e.g. "Total"
+     * @param totalCells that row's cells in printed order, each the keys of the columns it spans
+     * @param page the Gazette page the table starts on
+     */
+    public record PrintedTable(String path, List<String> title, List<PrintedColumn> columns, String totalLabel,
+            List<List<String>> totalCells, int page) {
+
+        public PrintedTable {
+            title = List.copyOf(title);
+            columns = List.copyOf(columns);
+            totalCells = totalCells.stream().map(List::copyOf).toList();
+        }
+
+        static PrintedTable of(CertificateTable table) {
+            return new PrintedTable(table.path(), table.title(), table.columns().stream().map(PrintedColumn::of).toList(),
+                    table.total().label(), table.total().cells(), table.page());
+        }
+    }
+
+    /**
+     * One column of a table.
+     *
+     * @param key names the column's cells in a reading
+     * @param kind {@code AMOUNT}, {@code YES_NO} or {@code TEXT}
+     * @param group the heading printed over this column and its neighbours, where there is one
+     */
+    public record PrintedColumn(String heading, String key, String kind, Optional<String> group) {
+
+        static PrintedColumn of(TableColumn column) {
+            return new PrintedColumn(column.heading(), column.key(), column.kind().name(), column.group());
         }
     }
 

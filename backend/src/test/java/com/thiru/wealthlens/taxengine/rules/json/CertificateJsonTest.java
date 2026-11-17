@@ -220,6 +220,132 @@ class CertificateJsonTest {
                 .isInstanceOf(PackValidationException.class).hasMessageContaining("unknown property sign");
     }
 
+    private static final String COLUMNS = "[{\"heading\": \"Sl. No.\", \"key\": \"serial\", \"kind\": \"TEXT\"},"
+            + " {\"heading\": \"Amount paid\", \"key\": \"paid\", \"kind\": \"AMOUNT\"},"
+            + " {\"heading\": \"Rate\", \"key\": \"rate\", \"kind\": \"TEXT\"},"
+            + " {\"heading\": \"Code\", \"key\": \"code\", \"kind\": \"TEXT\", \"group\": \"Number (CIN)\"},"
+            + " {\"heading\": \"Date\", \"key\": \"date\", \"kind\": \"TEXT\", \"group\": \"Number (CIN)\"}]";
+
+    private static String table(String path, String columns, String cells) {
+        return "{\"path\": \"" + path + "\", \"title\": [\"I. Details\", \"(The deductor)\"], \"columns\": " + columns
+                + ", \"total\": {\"label\": \"Total\", \"cells\": " + cells + "}, \"page\": 3}";
+    }
+
+    private static CertificateSpec withTables(String... tables) {
+        String json = certificate("SYN_1", NAME).replace(", \"provenance\"", ", \"tables\": [" + String.join(",", tables) + "], \"provenance\"");
+        return CertificateJson.certificate(MAPPER.readTree(json), PATH);
+    }
+
+    private static final String CELLS = "[{\"columns\": [\"paid\", \"rate\"]}, {\"columns\": [\"code\"]}]";
+
+    @Test
+    void certificate_whenATableIsPrinted_readsItsTitleColumnsAndTotal() {
+        // When
+        var table = withTables(table("partA.summary", COLUMNS, CELLS)).tables().get(0);
+
+        // Then
+        assertThat(table.path()).isEqualTo("partA.summary");
+        assertThat(table.title()).containsExactly("I. Details", "(The deductor)");
+        assertThat(table.columns()).extracting(column -> column.key()).containsExactly("serial", "paid", "rate", "code", "date");
+        assertThat(table.columns().get(1).kind()).isEqualTo(CertificateValueKind.AMOUNT);
+        assertThat(table.columns().get(0).group()).isEmpty();
+        assertThat(table.columns().get(3).group()).contains("Number (CIN)");
+        assertThat(table.total().label()).isEqualTo("Total");
+        assertThat(table.total().cells()).containsExactly(java.util.List.of("paid", "rate"), java.util.List.of("code"));
+        assertThat(table.page()).isEqualTo(3);
+    }
+
+    @Test
+    void certificate_whenATableNamesAColumnKeyTwice_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS.replace("\"key\": \"rate\"", "\"key\": \"paid\""),
+                "[{\"columns\": [\"code\"]}]")))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("names a column key twice");
+    }
+
+    @Test
+    void certificate_whenATotalNamesAColumnTheTableLacks_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS, "[{\"columns\": [\"tax\"]}]")))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("names column tax, which it lacks or names twice");
+    }
+
+    @Test
+    void certificate_whenATotalNamesAColumnInTwoCells_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS, "[{\"columns\": [\"paid\"]}, {\"columns\": [\"paid\"]}]")))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("names column paid, which it lacks or names twice");
+    }
+
+    @Test
+    void certificate_whenATotalMergesColumnsThatAreNotSideBySide_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS, "[{\"columns\": [\"paid\", \"code\"]}]")))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("columns that are not side by side");
+    }
+
+    @Test
+    void certificate_whenAGroupIsPrintedOverOneColumn_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS.replace(", \"group\": \"Number (CIN)\"}]", "}]"), CELLS)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("is printed over one column");
+    }
+
+    @Test
+    void certificate_whenAGroupsColumnsAreApart_refuses() {
+        // Given — the group printed over "Sl. No." and "Amount paid", and again over "Code" and "Date", with "Rate" between
+        String apart = COLUMNS.replace("\"key\": \"serial\", \"kind\": \"TEXT\"}",
+                "\"key\": \"serial\", \"kind\": \"TEXT\", \"group\": \"Number (CIN)\"}").replace("\"key\": \"paid\", \"kind\": \"AMOUNT\"}",
+                "\"key\": \"paid\", \"kind\": \"AMOUNT\", \"group\": \"Number (CIN)\"}");
+
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", apart, CELLS)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("is printed over columns apart");
+    }
+
+    @Test
+    void certificate_whenAColumnHoldsNoValue_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS.replace("\"kind\": \"AMOUNT\"", "\"kind\": \"NONE\""), CELLS)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("NONE is a heading line's kind");
+    }
+
+    @Test
+    void certificate_whenAColumnKeyIsNotOneCamelCaseWord_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS.replace("\"key\": \"date\"", "\"key\": \"paid/credited\""),
+                CELLS)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("key is one word in camel case: paid/credited");
+    }
+
+    @Test
+    void certificate_whenATableIsInNoDeclaredPart_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partB.summary", COLUMNS, CELLS)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("table partB.summary is in no declared part");
+    }
+
+    @Test
+    void certificate_whenATableSharesALinesPath_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.name", COLUMNS, CELLS)))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("declares table partA.name twice");
+    }
+
+    @Test
+    void certificate_whenATableHasNoTitle_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS, CELLS).replace("[\"I. Details\", \"(The deductor)\"]", "[]")))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("needs its printed title");
+    }
+
+    @Test
+    void certificate_whenATotalCellIsMisspelt_refusesNamingIt() {
+        // When / Then
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS, "[{\"colums\": [\"paid\"], \"columns\": [\"paid\"]}]")))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("unknown property colums");
+    }
+
     @Test
     void certificate_whenTheCodeIsLowerCase_refuses() {
         // When / Then

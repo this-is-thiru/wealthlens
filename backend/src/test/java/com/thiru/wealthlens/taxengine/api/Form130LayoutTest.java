@@ -181,7 +181,7 @@ class Form130LayoutTest {
         assertThat(layout.source()).contains("CG-DL-E-20032026-271092").contains("Form No. 130");
         assertThat(layout.parts()).extracting(CertificateLayout.PartHeading::heading).containsExactly("PART A",
                 "Details of the employer/specified bank", "Details of the employee/ specified senior citizen",
-                "PART C (Annexure-I)", "PART C (Annexure-II)");
+                "PART B", "PART C (Annexure-I)", "PART C (Annexure-II)");
     }
 
     @Test
@@ -255,6 +255,56 @@ class Form130LayoutTest {
     private static String rowOf(String rows, String path) {
         assertThat(path).startsWith(rows);
         return path.substring(rows.length());
+    }
+
+    /** Part B, pp.2274 – 2275: each table's title lines, then each column as "heading → key kind [group]", then its total. */
+    private static final Map<String, List<String>> PART_B = Map.of(
+            "partB.summary", List.of(
+                    "Summary of amount paid/credited and tax deducted at source thereon in respect of the employee",
+                    "Quarter (s) → quarter TEXT",
+                    "Receipt Numbers of original quarterly statements of TDS under section 397(3)(b) → receiptNumbers TEXT",
+                    "Amount paid/credited → amountPaid AMOUNT",
+                    "Rate of deduction of tax → rate TEXT",
+                    "Amount of tax deducted → taxDeducted AMOUNT",
+                    "Amount of tax deposited/ adjusted → taxDeposited AMOUNT",
+                    "Total: [receiptNumbers] [amountPaid, rate] [taxDeducted] [taxDeposited] (p.2274)"),
+            "partB.bookAdjustment", List.of(
+                    "I. Details of tax deducted and deposited in the central government account through book adjustment",
+                    "(The deductor to provide payment wise details of tax deducted and deposited)",
+                    "Sl. No. → serialNumber TEXT",
+                    "Tax deposited (refer Note 5) → taxDeposited AMOUNT",
+                    "Receipt numbers of Form No. 137 → form137ReceiptNumber TEXT [Book Identification Number (BIN)]",
+                    "DDO serial number in Form No. 137 → ddoSerialNumber TEXT [Book Identification Number (BIN)]",
+                    "Date of Transfer voucher (dd/mm/yyyy) → transferVoucherDate TEXT [Book Identification Number (BIN)]",
+                    "Status of Matching with Form No. 137 → matchingStatus TEXT [Book Identification Number (BIN)]",
+                    "Total: [taxDeposited] [form137ReceiptNumber] [ddoSerialNumber] [transferVoucherDate] [matchingStatus] (p.2274)"),
+            "partB.challan", List.of(
+                    "II. Details of tax deducted and deposited in the central government account through challan",
+                    "(The deductor to provide payment wise details of tax deducted and deposited)",
+                    "Sl. No. → serialNumber TEXT",
+                    "Tax deposited (refer Note 5) → taxDeposited AMOUNT",
+                    "BSR Code of the Bank Branch → bsrCode TEXT [Challan Identification Number (CIN)]",
+                    "Date on which tax deposited (dd/mm/yyyy) → depositDate TEXT [Challan Identification Number (CIN)]",
+                    "Challan Serial Number → challanSerialNumber TEXT [Challan Identification Number (CIN)]",
+                    "Status of matching with TIN 2.0 → matchingStatus TEXT [Challan Identification Number (CIN)]",
+                    "Total: [taxDeposited] [bsrCode] [depositDate] [challanSerialNumber] [matchingStatus] (p.2275)"));
+
+    @Test
+    void certificate_whenTaxYear2026_27_holdsPartBsTablesAsPrinted() {
+        // When
+        CertificateLayout layout = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow();
+
+        // Then — in printed order: the summary, then item I (book adjustment), then item II (challan)
+        assertThat(layout.tables()).extracting(CertificateLayout.PrintedTable::path)
+                .containsExactly("partB.summary", "partB.bookAdjustment", "partB.challan");
+        assertThat(layout.tables().stream().collect(Collectors.toMap(CertificateLayout.PrintedTable::path, table -> {
+            List<String> printed = new java.util.ArrayList<>(table.title());
+            table.columns().forEach(column -> printed.add(column.heading() + " → " + column.key() + " " + column.kind()
+                    + column.group().map(group -> " [" + group + "]").orElse("")));
+            printed.add(table.totalLabel() + ": " + table.totalCells().stream().map(cell -> cell.toString())
+                    .collect(Collectors.joining(" ")) + " (p." + table.page() + ")");
+            return printed;
+        }))).isEqualTo(PART_B);
     }
 
     @Test

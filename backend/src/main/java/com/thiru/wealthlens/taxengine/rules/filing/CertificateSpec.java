@@ -13,9 +13,10 @@ import java.util.stream.Stream;
  *
  * @param title the form's title as printed
  * @param identities the sums the form prints (W-127b)
+ * @param tables the tables whose rows the issuer writes (W-126c2a)
  */
 public record CertificateSpec(CertificateCode code, String title, List<CertificatePart> parts, List<CertificateField> fields,
-        List<CertificateIdentity> identities, Provenance provenance) {
+        List<CertificateIdentity> identities, List<CertificateTable> tables, Provenance provenance) {
 
     public CertificateSpec {
         if (code == null || title == null || title.isBlank() || provenance == null) {
@@ -24,6 +25,7 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
         parts = List.copyOf(parts);
         fields = List.copyOf(fields);
         identities = List.copyOf(identities);
+        tables = List.copyOf(tables);
         Set<String> partPaths = new HashSet<>();
         for (CertificatePart part : parts) {
             if (!partPaths.add(part.path())) {
@@ -39,8 +41,21 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
                 throw new IllegalArgumentException(code + "'s field " + field.path() + " is in no declared part");
             }
         }
+        for (CertificateTable table : tables) {
+            requireInAPart(code, table.path(), partPaths, fieldPaths, "table");
+        }
         for (CertificateIdentity identity : identities) {
             requireCellsPrinted(code, identity, fields);
+        }
+    }
+
+    /** A table sits in a declared part, and no line or other table shares its path. */
+    private static void requireInAPart(CertificateCode code, String path, Set<String> partPaths, Set<String> taken, String what) {
+        if (!taken.add(path)) {
+            throw new IllegalArgumentException(code + " declares " + what + " " + path + " twice");
+        }
+        if (partPaths.stream().noneMatch(part -> path.startsWith(part + "."))) {
+            throw new IllegalArgumentException(code + "'s " + what + " " + path + " is in no declared part");
         }
     }
 
