@@ -49,7 +49,7 @@ public final class Reconciliation {
         Context context = new Context(partC.map(values -> regimeDiffers(values, layout, computed, law)).orElse(false),
                 !computed.capitalGainsBuckets().isEmpty(), employerErrors(confirmed, assembly, layout));
         List<ReconciliationLine> lines = new ArrayList<>();
-        Optional<ReconciliationReason> claim = Optional.empty();
+        List<ReconciliationReason> above = new ArrayList<>();
         for (PrintedComparison comparison : layout.comparisons()) {
             boolean summed = confirmed.size() > 1 && isTableTotal(comparison, layout);
             Optional<Money> printed = summed ? summed(confirmed, comparison.printed())
@@ -58,9 +58,9 @@ public final class Reconciliation {
             if (printed.isPresent() && produced.isPresent()) {
                 Money difference = printed.get().minus(produced.get());
                 Optional<ReconciliationReason> own = claimReason(comparison, difference);
-                claim = claim.or(() -> own);
                 lines.add(new ReconciliationLine(comparison.printed(), printed.get(), produced.get(), difference,
-                        reasons(comparison, difference, own, claim, summed, context)));
+                        reasons(comparison, difference, own, above, summed, context)));
+                own.filter(reason -> !above.contains(reason)).ifPresent(above::add);
             }
         }
         return new ReconciliationReport(computed.computationId(), documents, lines, verdict(lines));
@@ -152,8 +152,9 @@ public final class Reconciliation {
 
     /**
      * A claim's own reason, by which way the certificate differs (W-130b C2a): above the computation a claim declared but not
-     * proven, below it one never declared. A later line's difference with no reason of its own is that claim's consequence
-     * (C3a), so the comparisons are listed in the form's printed order.
+     * proven, below it one never declared; other income reported or not (W-130d). A later line's difference with no reason of
+     * its own is the consequence of every such reason above it (W-130b C3a, W-130d C3a), so the comparisons are listed in the
+     * form's printed order.
      */
     private static Optional<ReconciliationReason> claimReason(PrintedComparison comparison, Money difference) {
         if (!isBeyondRounding(difference)) {
@@ -164,7 +165,7 @@ public final class Reconciliation {
 
     /** A summed Total short of the bill takes the employers' errors (W-130c C3a); otherwise W-130a/b's reasons. */
     private static List<ReconciliationReason> reasons(PrintedComparison comparison, Money difference, Optional<ReconciliationReason> own,
-            Optional<ReconciliationReason> claim, boolean summed, Context context) {
+            List<ReconciliationReason> above, boolean summed, Context context) {
         if (summed && isBeyondRounding(difference) && !context.employerErrors().isEmpty()) {
             return context.employerErrors();
         }
@@ -183,7 +184,7 @@ public final class Reconciliation {
         if (context.capitalGains()) {
             return List.of(ReconciliationReason.CAPITAL_GAINS);
         }
-        return claim.stream().toList();
+        return above;
     }
 
     private static boolean isBeyondRounding(Money difference) {

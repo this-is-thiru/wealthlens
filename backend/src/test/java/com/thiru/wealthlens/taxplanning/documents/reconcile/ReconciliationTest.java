@@ -50,7 +50,7 @@ class ReconciliationTest {
         List<ComputedTax.Step> trace = List.of(new ComputedTax.Step(1, "round.totalincome", "RATE-ROUND-TOTAL-INCOME", "ROUNDING", null,
                 Optional.of(Money.of(totalIncome)), Optional.of(Money.of(totalIncome)), ""));
         return new ComputedTax("comp-1", "r", "2026-27", regime, Money.of(totalIncome), Money.of(bill), Money.ZERO, null, List.of(),
-                List.of(), Money.of(bill), "fp", List.of(), trace, buckets, List.of(), Money.ZERO);
+                List.of(), Money.of(bill), "fp", List.of(), trace, buckets, List.of(), Money.ZERO, Money.ZERO);
     }
 
     private static ReconciliationReport reconcile(DocumentConfirmation confirmation, ComputedTax computed) {
@@ -149,7 +149,7 @@ class ReconciliationTest {
         ComputedTax plain = computed("NEW_TAX_REGIME", totalIncome, bill, List.of());
         return new ComputedTax(plain.computationId(), plain.receipt(), plain.taxYear(), plain.regime(), plain.totalIncome(), plain.bill(),
                 plain.credits(), null, List.of(), List.of(), plain.finalAmount(), "fp", List.of(), plain.trace(), List.of(), List.of(),
-                Money.of(chapterEight));
+                Money.of(chapterEight), Money.ZERO);
     }
 
     private static DocumentConfirmation withRow11(DocumentConfirmation confirmation, String row11) {
@@ -291,5 +291,72 @@ class ReconciliationTest {
         // Then
         assertThat(report.verdict()).isEqualTo(Verdict.MATERIAL_DIFFERENCE);
         assertThat(report.lines().get(2).reasons()).containsExactly(ReconciliationReason.PREVIOUS_SALARY_UNDECLARED);
+    }
+
+    /** Row 8 first, as printed, then row 11 and the W-130a lines (W-130d). */
+    private static final CertificateLayout OTHERS = new CertificateLayout(new CertificateCode("FORM_130"), "T", List.of(), LAYOUT.lines(),
+            List.of(), List.of(), List.of(),
+            java.util.stream.Stream.concat(java.util.stream.Stream.of(new CertificateLayout.PrintedComparison("c.row8", Optional.empty(),
+                    Optional.of("OTHER_HEADS"), Optional.empty(), Optional.of("OTHER_INCOME_REPORTED"), Optional.of("OTHER_INCOME_NOT_REPORTED"))),
+                    CLAIMS.comparisons().stream()).toList(),
+            "test");
+
+    private static ComputedTax withHeads(String totalIncome, String bill, String chapterEight, String otherHeads) {
+        ComputedTax plain = withClaims(totalIncome, bill, chapterEight);
+        return new ComputedTax(plain.computationId(), plain.receipt(), plain.taxYear(), plain.regime(), plain.totalIncome(), plain.bill(),
+                plain.credits(), null, List.of(), List.of(), plain.finalAmount(), "fp", List.of(), plain.trace(), List.of(), List.of(),
+                plain.chapterEight(), Money.of(otherHeads));
+    }
+
+    private static DocumentConfirmation withRow8(DocumentConfirmation confirmation, String row8) {
+        Map<String, ExtractedValue> accepted = new HashMap<>(confirmation.acceptedFields());
+        accepted.put("c.row8", new ExtractedValue.MoneyRead(Money.of(row8)));
+        return new DocumentConfirmation(confirmation.attemptId(), confirmation.confirmedBy(), confirmation.confirmedAt(), accepted, Set.of());
+    }
+
+    @Test
+    void reconcile_whenTheEmployeeReportedMoreOtherIncome_isMinorAndTheLinesItMovesSaySo() {
+        // Given — row 8 60,000 against the computation's 10,000: ₹50,000 more reported, so row 12 10,50,000 is ₹50,000 above
+        // 10,00,000 (TDS-SAL-REDUCE-001: it could only raise TDS)
+        DocumentConfirmation certificate = withRow8(withRow11(confirmed(false, "1050000", "100000", "100000"), "60000"), "60000");
+
+        // When
+        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, OTHERS,
+                withHeads("1000000", "100000", "60000", "10000"), LAW);
+
+        // Then
+        assertThat(report.verdict()).isEqualTo(Verdict.MINOR_DIFFERENCE);
+        assertThat(report.lines().get(0).reasons()).containsExactly(ReconciliationReason.OTHER_INCOME_REPORTED);
+        assertThat(report.lines().get(2).reasons()).containsExactly(ReconciliationReason.OTHER_INCOME_REPORTED);
+    }
+
+    @Test
+    void reconcile_whenTheEmployeeDidNotReportOtherIncome_isMinor() {
+        // Given — row 8 nil against ₹40,000 of interest, so row 12 9,60,000 is ₹40,000 below 10,00,000
+        DocumentConfirmation certificate = withRow8(withRow11(confirmed(false, "960000", "100000", "100000"), "60000"), "0");
+
+        // When
+        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, OTHERS,
+                withHeads("1000000", "100000", "60000", "40000"), LAW);
+
+        // Then
+        assertThat(report.verdict()).isEqualTo(Verdict.MINOR_DIFFERENCE);
+        assertThat(report.lines().get(0).reasons()).containsExactly(ReconciliationReason.OTHER_INCOME_NOT_REPORTED);
+    }
+
+    @Test
+    void reconcile_whenOtherIncomeAndAClaimBothDiffer_aLaterLineNamesBoth() {
+        // Given — row 8 +50,000 (60,000 against 10,000) and row 11 +90,000 (1,50,000 against 60,000): row 12 10,00,000 −
+        // 50,000 + … printed 9,60,000 against 10,00,000, ₹40,000 apart, moved by both (W-130d C3a)
+        DocumentConfirmation certificate = withRow8(withRow11(confirmed(false, "960000", "100000", "100000"), "150000"), "60000");
+
+        // When
+        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, OTHERS,
+                withHeads("1000000", "100000", "60000", "10000"), LAW);
+
+        // Then
+        assertThat(report.verdict()).isEqualTo(Verdict.MINOR_DIFFERENCE);
+        assertThat(report.lines().get(2).reasons()).containsExactly(ReconciliationReason.OTHER_INCOME_REPORTED,
+                ReconciliationReason.DECLARED_NOT_PROVEN);
     }
 }

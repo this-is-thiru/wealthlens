@@ -188,7 +188,7 @@ class ComputationReportServiceTest {
                         Optional.of(Money.of("10000")), "Rounded."));
         return new ComputedTax("id", "WL-2025-26-TEST", "2025-26", "FIRST_SCHEDULE_RATES", Money.of("900000"),
                 Money.of("8800"), Money.ZERO, new ComputedTax.AdvanceTax(false, Money.ZERO, List.of(), Optional.empty()),
-                List.of(), List.of(), Money.of("10000"), "fingerprint", lawAndExec, trace, List.of(), List.of(), Money.ZERO);
+                List.of(), List.of(), Money.of("10000"), "fingerprint", lawAndExec, trace, List.of(), List.of(), Money.ZERO, Money.ZERO);
     }
 
     /** The year's law and exec pins as a computation made today stores them (W-138). */

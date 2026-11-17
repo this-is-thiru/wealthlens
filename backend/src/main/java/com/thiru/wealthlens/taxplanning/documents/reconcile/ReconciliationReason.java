@@ -23,7 +23,11 @@ public enum ReconciliationReason {
     /** Each employer granted a year's standard deduction (W-129's notice; W-130c). */
     STANDARD_DEDUCTION_TWICE(Kind.EMPLOYER_ERROR, "SAL-STDDED-001"),
     /** An employer taxed its salary without the earlier employer's: row 1(e) nil (W-129; T8-1, W-130c). */
-    PREVIOUS_SALARY_UNDECLARED(Kind.EMPLOYER_ERROR, "TDS-SAL-12B-001");
+    PREVIOUS_SALARY_UNDECLARED(Kind.EMPLOYER_ERROR, "TDS-SAL-12B-001"),
+    /** The employee reported more other-head income to the employer than the computation holds: it could only raise TDS (W-130d). */
+    OTHER_INCOME_REPORTED(Kind.EXPECTED, "TDS-SAL-REDUCE-001"),
+    /** The employee did not report other-head income the computation holds, as is their option: tax payable at filing (W-130d). */
+    OTHER_INCOME_NOT_REPORTED(Kind.EXPECTED, "TDS-SAL-12B-001");
 
     /** Whether a reason keeps a difference minor or makes it material. */
     public enum Kind {

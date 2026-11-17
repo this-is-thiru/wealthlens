@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-130c DONE (D-758). Next by board order: W-130d (other-head income reason, TDS-SAL-REDUCE-001)
+Item            : W-130d DONE (D-759); W-130 complete. Next by board order: W-131 (upload / parse / confirm endpoints + async job)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-758; W-126e*, W-128a – c, W-129, W-130a – c pushed
-Board           : W-130c D; W-130d ·; W-131 ·; W-332 ·
-Next step       : check the pipeline for the W-130c push; then plan W-130d; stop for approval
+Done today      : session 104: D-740 – D-759; W-126e*, W-128a – c, W-129, W-130a – d pushed
+Board           : W-130d D; W-131 ·; W-332 ·
+Next step       : check the pipeline for the W-130d push; then plan W-131 (large: storage, encryption, erasure, retention, async job, endpoints, runbook entry — expect a split); stop for approval
 Owner actions   : runbook §0.8 before the one deploy
-Last verify     : targeted 547/0 with validate on W-130c
+Last verify     : targeted 799/0 with validate on W-130d
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-130c: reconcile a year across several employers
+Last item commit: taxplanning W-130d: explain a reconciliation's other-income differences
 Updated         : 2026-11-17, session 104
 ```
 

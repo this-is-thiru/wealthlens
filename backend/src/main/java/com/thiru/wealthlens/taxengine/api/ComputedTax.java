@@ -29,10 +29,12 @@ import java.util.Optional;
  * @param notices what the engine asks of the person, each on the step it is about (W-119c follow-up): a request, never
  *     a figure; none where a computation stored before it was read back
  * @param chapterEight the Chapter VIII deductions allowed in all, after s.122(2)'s cap: what a certificate's row 11 is compared with (W-130b)
+ * @param otherHeads the house-property head (a loss negative) and the other-sources head, before set-off: what an employee
+ *     reports to the employer as row 8, other-head income less a house-property loss (W-130d)
  */
 public record ComputedTax(String computationId, String receipt, String taxYear, String regime, Money totalIncome, Money bill,
         Money credits, AdvanceTax advanceTax, List<Owed> interestAndFees, List<Owed> interestOnRefund, Money finalAmount, String inputsFingerprint, List<String> lawAndExec, List<Step> trace,
-        List<Bucket> capitalGainsBuckets, List<Notice> notices, Money chapterEight) {
+        List<Bucket> capitalGainsBuckets, List<Notice> notices, Money chapterEight, Money otherHeads) {
 
     public ComputedTax {
         notices = notices == null ? List.of() : List.copyOf(notices);
@@ -47,6 +49,7 @@ public record ComputedTax(String computationId, String receipt, String taxYear, 
         return switch (ComparedTotal.valueOf(name)) {
             case BILL -> bill;
             case CHAPTER_VIII -> chapterEight;
+            case OTHER_HEADS -> otherHeads;
         };
     }
 

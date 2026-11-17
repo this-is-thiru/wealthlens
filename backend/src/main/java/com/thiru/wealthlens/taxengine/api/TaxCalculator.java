@@ -111,7 +111,9 @@ public class TaxCalculator {
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
                 computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation, pack),
                 buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)), notices(run),
-                ((MoneyValue) run.valueOf(NodeIds.CHAPTERVIII)).amount());
+                ((MoneyValue) run.valueOf(NodeIds.CHAPTERVIII)).amount(),
+                ((HousePropertyHead) run.valueOf(NodeIds.HOUSEPROPERTY_INCOME)).total()
+                        .plus(((OtherSourcesHead) run.valueOf(NodeIds.OTHERSOURCES_INCOME)).asMoney()));
     }
 
     private static List<ComputedTax.Notice> notices(PipelineRunner.Result run) {
