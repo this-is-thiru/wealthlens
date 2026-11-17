@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Form No. 130's layout as the shipped TY 2026-27 pack holds it (W-126a), against the labels recorded from the Gazette in
- * {@code docs/taxplanning-build/sources/2026-11-16-form-130.md} — Income-tax Rules, 2026, Appendix III, pp.2274 – 2278.
+ * {@code docs/taxplanning-build/sources/2026-11-16-form-130.md} — Income-tax Rules, 2026, Appendix III, pp.2274 – 2280.
  */
 class Form130LayoutTest {
 
@@ -93,6 +93,44 @@ class Form130LayoutTest {
             List.of("20", "Tax collected at source as per Form No. 122 submitted under provisions of section 392(4)"),
             List.of("21", "Net tax payable (17-18-19-20)"));
 
+    /** Part C (Annexure-II), pp.2279 – 2280: each row by its printed number, the words of its label, misprints kept. */
+    private static final List<List<String>> ANNEXURE_II = List.of(
+            List.of("A", "Whether opting out of taxation under section 202(1)?"),
+            List.of("1", "Gross Salary"),
+            List.of("1(a)", "Pension as per provisions contained in section 16"),
+            List.of("2", "Total amount of salary received"),
+            List.of("3", "Deductions under section 19"),
+            List.of("3(a)", "Tax on employment under section 19 [Table: Sl. No.1]"),
+            List.of("3(b)", "Standard deduction under section 19 [Table: Sl. No.2]"),
+            List.of("4", "Total amount of deductions under section 19 [3(a)+3(b)]"),
+            List.of("5", "Income chargeable under the head \"Salaries\" [(2-4]"),
+            List.of("6", "Interest Income under the head “Other Sources” paid by the specified bank"),
+            List.of("7", "Gross total income (5+6)"),
+            List.of("8", "Deductions under Chapter VIII of the Act"),
+            List.of("8(a)", "Deduction in respect of life insurance premia, contributions to provident fund, certain pension funds, notified pension schemes etc. under section 123"),
+            List.of("8(b)", "Deductions in respect of amount paid/deposited to notified pension scheme under section 124(3)"),
+            List.of("8(c)", "Deduction in respect of health insurance premia under section 126"),
+            List.of("8(d)", "Deduction in respect of interest on loan taken for higher education under section 129"),
+            List.of("8(e)", "Total Deduction in respect of donations to certain funds, charitable institutions, etc. under section 133"),
+            List.of("8(f)", "Deduction in respect of interest on deposits in savings account under section 153(2)(b)"),
+            List.of("8(g)", "Amount deductible under any other provision(s) of Chapter VIII of the Act"),
+            List.of("8(h)", "Total of amount deductible under any other provision(s) of Chapter VIII of the Act"),
+            List.of("9", "Aggregate of deductible amount under Chapter VIII of the Act[8(a) + 8(b) + 8(c) + 8(d) + 8(e) + 8(f) + 8(h)]"),
+            List.of("10", "Total taxable income (7-9)"),
+            List.of("11", "Tax on total income"),
+            List.of("12", "Rebate under section 156, if applicable"),
+            List.of("13", "Surcharge, wherever applicable"),
+            List.of("14", "Health and education cess @ 4%"),
+            List.of("15", "Tax payable (11+13+14-12)"),
+            List.of("16", "Relief under section 157 (attach details)"),
+            List.of("17", "Net tax payable (15-16)"));
+
+    /** The lines each annexure prints above its rows, with no row number: p.2276 and p.2279. */
+    private static final Map<String, String> ANNEXURE_HEADINGS = Map.of(
+            "partC.annexureI.inRelationTo", "In relation to employees for tax deduction under section 392",
+            "partC.annexureI.particulars", "Particulars",
+            "partC.annexureII.inRelationTo", "In relation to specified senior citizen for tax deduction under 393(1) [Table: Sl. No. 8(iii)]");
+
     @Test
     void certificate_whenTaxYear2026_27_holdsPartAsItemsByTheirPrintedLabels() {
         // When
@@ -106,13 +144,32 @@ class Form130LayoutTest {
 
     @Test
     void certificate_whenTaxYear2026_27_holdsAnnexureIsRowsInPrintedOrder() {
-        // When
-        CertificateLayout layout = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow();
+        // When / Then — the repeating "section …" lines carry their parent's row number and are left out here
+        assertThat(rowsOf("partC.annexureI.")).containsExactlyElementsOf(ANNEXURE_I);
+    }
 
-        // Then — the repeating "section …" lines carry their parent's row number and are left out here
-        List<List<String>> rows = layout.lines().stream().filter(line -> line.path().startsWith("partC.annexureI."))
-                .filter(line -> !line.repeating()).map(line -> List.of(line.row().orElseThrow(), line.label())).toList();
-        assertThat(rows).containsExactlyElementsOf(ANNEXURE_I);
+    @Test
+    void certificate_whenTaxYear2026_27_holdsAnnexureIIsRowsInPrintedOrder() {
+        // When / Then
+        assertThat(rowsOf("partC.annexureII.")).containsExactlyElementsOf(ANNEXURE_II);
+    }
+
+    private static List<List<String>> rowsOf(String part) {
+        return CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().lines().stream()
+                .filter(line -> line.path().startsWith(part) && line.row().isPresent() && !line.repeating())
+                .map(line -> List.of(line.row().orElseThrow(), line.label())).toList();
+    }
+
+    @Test
+    void certificate_whenTaxYear2026_27_holdsTheHeadingLinesEachAnnexurePrintsAboveItsRows() {
+        // When
+        List<CertificateLayout.PrintedLine> headings = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow()
+                .lines().stream().filter(line -> line.path().startsWith("partC.") && line.row().isEmpty()).toList();
+
+        // Then
+        assertThat(headings.stream().collect(Collectors.toMap(CertificateLayout.PrintedLine::path,
+                CertificateLayout.PrintedLine::label))).isEqualTo(ANNEXURE_HEADINGS);
+        assertThat(headings).allSatisfy(line -> assertThat(line.kind()).isEqualTo("NONE"));
     }
 
     @Test
@@ -124,7 +181,7 @@ class Form130LayoutTest {
         assertThat(layout.source()).contains("CG-DL-E-20032026-271092").contains("Form No. 130");
         assertThat(layout.parts()).extracting(CertificateLayout.PartHeading::heading).containsExactly("PART A",
                 "Details of the employer/specified bank", "Details of the employee/ specified senior citizen",
-                "PART C (Annexure-I)");
+                "PART C (Annexure-I)", "PART C (Annexure-II)");
     }
 
     @Test
@@ -141,6 +198,15 @@ class Form130LayoutTest {
         assertThat(byPath.get("partC.annexureI.row2d.section").repeating()).isTrue();
         assertThat(byPath.get("partC.annexureI.rowA").kind()).isEqualTo("YES_NO");
         assertThat(byPath.get("partC.annexureI.row1").kind()).isEqualTo("NONE");
+        // pp.2279 – 2280: two cells for 8(a) – (d), three from 8(e) to 9; 8(g)'s "section …" lines repeat
+        assertThat(byPath.get("partC.annexureII.row8d").columns()).containsExactly("Gross Amount", "Deductible Amount");
+        assertThat(byPath.get("partC.annexureII.row8e").columns())
+                .containsExactly("Gross Amount", "Qualifying Amount", "Deductible Amount");
+        assertThat(byPath.get("partC.annexureII.row9").columns())
+                .containsExactly("Gross Amount", "Qualifying Amount", "Deductible Amount");
+        assertThat(byPath.get("partC.annexureII.row8g.section").repeating()).isTrue();
+        assertThat(byPath.get("partC.annexureII.rowA").kind()).isEqualTo("YES_NO");
+        assertThat(byPath.get("partC.annexureII.row8g").kind()).isEqualTo("NONE");
     }
 
     /** The sums pp.2276 – 2278 print, as "target = ±term …", each cell by its line's row id ("Deductible" its column). */
@@ -158,20 +224,37 @@ class Form130LayoutTest {
             "17 = +13 +15 +16 -14 (p.2278)",
             "21 = +17 -18 -19 -20 (p.2278)");
 
+    /** The sums pp.2279 – 2280 print; row 5's "[(2-4]" is 2 − 4. */
+    private static final List<String> SUMS_II = List.of(
+            "4 = +3a +3b (p.2279)",
+            "5 = +2 -4 (p.2279)",
+            "7 = +5 +6 (p.2279)",
+            "9.deductibleAmount = +8a.deductibleAmount +8b.deductibleAmount +8c.deductibleAmount +8d.deductibleAmount"
+                    + " +8e.deductibleAmount +8f.deductibleAmount +8h.deductibleAmount (p.2280)",
+            "10 = +7 -9.deductibleAmount (p.2280)",
+            "15 = +11 +13 +14 -12 (p.2280)",
+            "17 = +15 -16 (p.2280)");
+
     @Test
     void certificate_whenTaxYear2026_27_holdsTheSumsTheFormPrints() {
         // When
         CertificateLayout layout = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow();
 
         // Then
-        List<String> sums = layout.sums().stream().map(sum -> rowOf(sum.target().path()) + " ="
-                + sum.terms().stream().map(term -> " " + (term.sign() > 0 ? "+" : "-") + rowOf(term.path())).collect(Collectors.joining())
-                + " (p." + sum.page() + ")").toList();
-        assertThat(sums).containsExactlyElementsOf(SUMS);
+        assertThat(sumsOf(layout, "partC.annexureI.row")).containsExactlyElementsOf(SUMS);
+        assertThat(sumsOf(layout, "partC.annexureII.row")).containsExactlyElementsOf(SUMS_II);
     }
 
-    private static String rowOf(String path) {
-        return path.substring("partC.annexureI.row".length());
+    private static List<String> sumsOf(CertificateLayout layout, String rows) {
+        return layout.sums().stream().filter(sum -> sum.target().path().startsWith(rows))
+                .map(sum -> rowOf(rows, sum.target().path()) + " =" + sum.terms().stream()
+                        .map(term -> " " + (term.sign() > 0 ? "+" : "-") + rowOf(rows, term.path())).collect(Collectors.joining())
+                        + " (p." + sum.page() + ")").toList();
+    }
+
+    private static String rowOf(String rows, String path) {
+        assertThat(path).startsWith(rows);
+        return path.substring(rows.length());
     }
 
     @Test

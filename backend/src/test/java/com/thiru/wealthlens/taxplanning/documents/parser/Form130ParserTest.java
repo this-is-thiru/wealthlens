@@ -132,7 +132,7 @@ class Form130ParserTest {
     @Test
     void read_whenOnlyPartAIsIssued_findsPartAAndSaysPartCIsAbsent() throws Exception {
         // Given — Part C Note 1: the last employer may issue Part C alone
-        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI"));
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of("partC.annexureI", "partC.annexureII"));
 
         // When
         DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
@@ -140,7 +140,63 @@ class Form130ParserTest {
         // Then
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
         assertThat(reading.extractedFields()).hasSize((int) linesOf("partA."));
-        assertThat(reading.parserNotes()).containsExactly("PART C (Annexure-I) is not in this certificate");
+        assertThat(reading.parserNotes()).containsExactly("PART C (Annexure-I) is not in this certificate",
+                "PART C (Annexure-II) is not in this certificate");
+    }
+
+    @Test
+    void read_whenASpecifiedBankIssuesAnnexureII_readsItsRowsAndInfersWhatItsSumsFix() throws Exception {
+        // Given — a specified senior citizen's certificate: Part A and Annexure-II (its Note 1); row 6 broken across lines
+        // as the Gazette prints it; rows 4 and 7 blank
+        Map<String, String> values = Map.of(
+                "partA.employer.tan", "MUMA12345B",
+                "partC.annexureII.rowA", "No",
+                "partC.annexureII.row1a", "6,00,000.00",
+                "partC.annexureII.row2", "6,00,000.00",
+                "partC.annexureII.row3a", "2,400.00",
+                "partC.annexureII.row3b", "50,000.00",
+                "partC.annexureII.row5", "5,47,600.00",
+                "partC.annexureII.row6", "12,000.00",
+                "partC.annexureII.row8a", "1,50,000.00 1,50,000.00");
+        Map<String, String> labels = Map.of("partC.annexureII.row6",
+                "Interest Income under the head “Other Sources” paid by the speci-<br/>fied bank");
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, values, labels, Set.of("partC.annexureI"));
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then — 4 = 3(a) + 3(b) = 2,400 + 50,000 = 52,400; then 7 = 5 + 6 = 5,47,600 + 12,000 = 5,59,600
+        // (5 = 2 − 4 = 6,00,000 − 52,400 = 5,47,600 agrees with the printed row 5)
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        Map<String, ExtractedField> fields = byPath(reading);
+        assertThat(fields).hasSize((int) (linesOf("partA.") + linesOf("partC.annexureII.")) + 1);
+        assertThat(fields.get("partC.annexureII.row4").interpretedValue()).contains(new ExtractedValue.MoneyRead(Money.of("52400")));
+        assertThat(fields.get("partC.annexureII.row4").confidence()).isEqualTo(0.80);
+        assertThat(fields.get("partC.annexureII.row7").interpretedValue()).contains(new ExtractedValue.MoneyRead(Money.of("559600")));
+        assertThat(fields.get("partC.annexureII.row6").interpretedValue()).contains(new ExtractedValue.MoneyRead(Money.of("12000")));
+        assertThat(fields.get("partC.annexureII.row8a.grossAmount").interpretedValue())
+                .contains(new ExtractedValue.MoneyRead(Money.of("150000")));
+        assertThat(fields.get("partC.annexureII.rowA").interpretedValue()).contains(new ExtractedValue.FlagRead(false));
+        assertThat(reading.parserNotes()).containsExactlyInAnyOrder("PART C (Annexure-I) is not in this certificate",
+                "Inferred partC.annexureII.row4 from the sum printed for partC.annexureII.row4",
+                "Inferred partC.annexureII.row7 from the sum printed for partC.annexureII.row7");
+    }
+
+    @Test
+    void read_whenEachAnnexurePrintsItsSubHeading_claimsItAsAHeadingLine() throws Exception {
+        // Given — p.2276 and p.2279 print "In relation to …" under each annexure's heading, and Annexure-I "Particulars"
+        byte[] pdf = Form130Fixture.certificate(LAYOUT, VALUES, Map.of(), Set.of());
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(pdf), YEAR);
+
+        // Then — nothing left unclaimed inside either annexure
+        assertThat(reading.unmappedText()).isEmpty();
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.SUCCESS);
+        Map<String, ExtractedField> fields = byPath(reading);
+        assertThat(fields.get("partC.annexureI.inRelationTo").rawText()).isEmpty();
+        assertThat(fields.get("partC.annexureI.inRelationTo").confidence()).isEqualTo(0.95);
+        assertThat(fields).containsKeys("partC.annexureI.particulars", "partC.annexureII.inRelationTo");
     }
 
     @Test

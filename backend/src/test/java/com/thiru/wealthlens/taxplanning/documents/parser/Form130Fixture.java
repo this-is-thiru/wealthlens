@@ -42,7 +42,7 @@ final class Form130Fixture {
                 continue;
             }
             if (!part.equals(top)) {
-                html.append(top.isEmpty() ? "" : "</table>").append(part.equals("partC.annexureI") ? partB() : "")
+                html.append(top.isEmpty() ? "" : "</table>").append(isFirstPartC(part, top) ? partB() : "")
                         .append("<p class=\"h\">").append(heading(layout, part)).append("</p><table>");
                 top = part;
             }
@@ -80,7 +80,12 @@ final class Form130Fixture {
         return out.toByteArray();
     }
 
-    /** Part B as a certificate prints it between Part A and Part C; no line of it is in W-126b's layout. */
+    /** Part B is printed before whichever annexure of Part C comes first. */
+    private static boolean isFirstPartC(String part, String previous) {
+        return part.startsWith("partC.") && !previous.startsWith("partC.");
+    }
+
+    /** Part B as a certificate prints it between Part A and Part C; no line of it is in the layout yet (W-126c2). */
     private static String partB() {
         return "<p class=\"h\">PART B</p><table><tr><td>Quarter (s)</td><td>Amount paid/credited</td></tr>"
                 + "<tr><td>Q1</td><td>3,00,000.00</td></tr></table>";
