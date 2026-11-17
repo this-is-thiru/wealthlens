@@ -301,7 +301,7 @@ class Form130LayoutTest {
             List<String> printed = new java.util.ArrayList<>(table.title());
             table.columns().forEach(column -> printed.add(column.heading() + " → " + column.key() + " " + column.kind()
                     + column.group().map(group -> " [" + group + "]").orElse("")));
-            printed.add(table.totalLabel() + ": " + table.totalCells().stream().map(cell -> cell.toString())
+            printed.add(table.totalLabel().orElseThrow() + ": " + table.totalCells().stream().map(cell -> cell.toString())
                     .collect(Collectors.joining(" ")) + " (p." + table.page() + ")");
             return printed;
         }))).isEqualTo(PART_B);

@@ -25,10 +25,10 @@ import org.junit.jupiter.api.Test;
 class TableReadingTest {
 
     private static final PrintedTable TABLE = new PrintedTable("partB.challan", List.of("II. Challan"),
-            List.of(new PrintedColumn("Sl. No.", "serialNumber", "TEXT", Optional.empty()),
-                    new PrintedColumn("Tax deposited", "taxDeposited", "AMOUNT", Optional.empty()),
-                    new PrintedColumn("BSR Code", "bsrCode", "TEXT", Optional.empty())),
-            "Total", List.of(List.of("taxDeposited"), List.of("bsrCode")), 1);
+            List.of(new PrintedColumn("Sl. No.", "serialNumber", "TEXT", Optional.empty(), List.of()),
+                    new PrintedColumn("Tax deposited", "taxDeposited", "AMOUNT", Optional.empty(), List.of()),
+                    new PrintedColumn("BSR Code", "bsrCode", "TEXT", Optional.empty(), List.of())),
+            Optional.of("Total"), List.of(List.of("taxDeposited"), List.of("bsrCode")), 1);
 
     private static Word word(int line, String text, float left, float right) {
         return new Word(1, line, text, left, right, line * 12f, line * 12f + 10);
@@ -135,7 +135,7 @@ class TableReadingTest {
     }
 
     private static final PrintedTable RUPEES = new PrintedTable("partA.challan", List.of("II. Challan"), TABLE.columns(),
-            "Total ( Rs.)", List.of(List.of("taxDeposited"), List.of("bsrCode")), 29);
+            Optional.of("Total ( Rs.)"), List.of(List.of("taxDeposited"), List.of("bsrCode")), 29);
 
     @Test
     void read_whenTheTotalLabelIsSeveralWords_readsTheTotalRow() {
@@ -185,5 +185,20 @@ class TableReadingTest {
 
         // Then
         assertThat(reading.notes()).containsExactly("Not found: partA.challan.total (Total ( Rs.))");
+    }
+
+    @Test
+    void read_whenTheTableHasNoTitleOrNoTotal_saysItIsNotReadYet() {
+        // Given — a row of Form 16's Part A boxes, read from W-126e3b on (D-745)
+        PrintedTable boxes = new PrintedTable("partA.certificate", List.of(), TABLE.columns(), Optional.empty(), List.of(), 28);
+
+        // When
+        TableReading.Reading reading = TableReading.read(table(), 0, boxes, Collections.newSetFromMap(new IdentityHashMap<>()));
+
+        // Then
+        assertThat(reading.found()).isFalse();
+        assertThat(reading.complete()).isFalse();
+        assertThat(reading.notes()).containsExactly("partA.certificate is not read yet");
+        assertThat(reading.end()).isZero();
     }
 }

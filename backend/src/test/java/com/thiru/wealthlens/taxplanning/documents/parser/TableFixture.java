@@ -34,8 +34,11 @@ final class TableFixture {
     }
 
     private static void table(PrintedTable table, Map<String, String> values, Set<String> omitted, StringBuilder html) {
-        html.append("<table class=\"b\"><tr><td colspan=\"").append(table.columns().size()).append("\"><b>")
-                .append(String.join("<br/>", table.title())).append("</b></td></tr>");
+        html.append("<table class=\"b\">");
+        if (!table.title().isEmpty()) {
+            html.append("<tr><td colspan=\"").append(table.columns().size()).append("\"><b>").append(String.join("<br/>", table.title()))
+                    .append("</b></td></tr>");
+        }
         headings(table, html);
         for (int row = 1; values.containsKey(table.path() + ".row" + row + "." + table.columns().get(0).key()); row++) {
             html.append("<tr>");
@@ -44,8 +47,8 @@ final class TableFixture {
             }
             html.append("</tr>");
         }
-        if (!omitted.contains(table.path() + ".total")) {
-            html.append("<tr><td>").append(table.totalLabel()).append("</td>");
+        if (table.totalLabel().isPresent() && !omitted.contains(table.path() + ".total")) {
+            html.append("<tr><td>").append(table.totalLabel().get()).append("</td>");
             for (List<String> cell : table.totalCells()) {
                 PrintedColumn first = table.columns().stream().filter(column -> column.key().equals(cell.get(0))).findFirst().orElseThrow();
                 cell(first, cell.size(), values.getOrDefault(table.path() + ".total." + cell.get(0), ""), html);

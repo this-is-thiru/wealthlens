@@ -250,8 +250,8 @@ class CertificateJsonTest {
         assertThat(table.columns().get(1).kind()).isEqualTo(CertificateValueKind.AMOUNT);
         assertThat(table.columns().get(0).group()).isEmpty();
         assertThat(table.columns().get(3).group()).contains("Number (CIN)");
-        assertThat(table.total().label()).isEqualTo("Total");
-        assertThat(table.total().cells()).containsExactly(java.util.List.of("paid", "rate"), java.util.List.of("code"));
+        assertThat(table.total().orElseThrow().label()).isEqualTo("Total");
+        assertThat(table.total().orElseThrow().cells()).containsExactly(java.util.List.of("paid", "rate"), java.util.List.of("code"));
         assertThat(table.page()).isEqualTo(3);
     }
 
@@ -333,10 +333,38 @@ class CertificateJsonTest {
     }
 
     @Test
-    void certificate_whenATableHasNoTitle_refuses() {
+    void certificate_whenATableHasABlankTitleLine_refuses() {
         // When / Then
-        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS, CELLS).replace("[\"I. Details\", \"(The deductor)\"]", "[]")))
-                .isInstanceOf(PackValidationException.class).hasMessageContaining("needs its printed title");
+        assertThatThrownBy(() -> withTables(table("partA.summary", COLUMNS, CELLS).replace("\"(The deductor)\"", "\" \"")))
+                .isInstanceOf(PackValidationException.class).hasMessageContaining("needs its printed title or none");
+    }
+
+    @Test
+    void certificate_whenATableHasNoTitleTotalOrCaptions_readsItAsAOneRowTableFoundByItsHeadings() {
+        // Given — a row of Form 16's Part A boxes (W-126e3a, D-745 C1a)
+        String boxes = "{\"path\": \"partA.certificate\", \"columns\": [{\"heading\": \"Certificate No.\", \"key\": \"certificateNo\","
+                + " \"kind\": \"TEXT\"}], \"page\": 28}";
+
+        // When
+        var table = withTables(boxes).tables().get(0);
+
+        // Then
+        assertThat(table.title()).isEmpty();
+        assertThat(table.total()).isEmpty();
+        assertThat(table.columns().get(0).captions()).isEmpty();
+    }
+
+    @Test
+    void certificate_whenAColumnPrintsCaptions_readsThemInOrder() {
+        // Given
+        String columns = "[{\"heading\": \"CIT (TDS)\", \"key\": \"citTds\", \"kind\": \"TEXT\","
+                + " \"captions\": [\"Address\", \"City\", \"Pin Code\"]}]";
+
+        // When
+        var table = withTables("{\"path\": \"partA.period\", \"columns\": " + columns + ", \"page\": 28}").tables().get(0);
+
+        // Then
+        assertThat(table.columns().get(0).captions()).containsExactly("Address", "City", "Pin Code");
     }
 
     @Test

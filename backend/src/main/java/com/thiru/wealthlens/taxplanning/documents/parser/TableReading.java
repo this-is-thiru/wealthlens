@@ -69,6 +69,10 @@ final class TableReading {
     }
 
     private Reading read(int from) {
+        if (table.title().isEmpty() || table.totalLabel().isEmpty()) {
+            // An untitled or one-row table (Form 16's Part A boxes) is read from W-126e3b on (D-745 C2a); until then it says so
+            return new Reading(false, List.of(), List.of(table.path() + " is not read yet"), false, from);
+        }
         OptionalInt headerFrom = title(from);
         if (headerFrom.isEmpty()) {
             return new Reading(false, List.of(), List.of(table.title().get(0) + " is not in this certificate"), true, from);
@@ -82,7 +86,7 @@ final class TableReading {
         int rowsFrom = endOfLine(lastClaimed(headerFrom.getAsInt(), to));
         Optional<List<Word>> total = total(rowsFrom, columns);
         if (total.isEmpty()) {
-            notes.add("Not found: " + table.path() + ".total (" + table.totalLabel() + ")");
+            notes.add("Not found: " + table.path() + ".total (" + table.totalLabel().orElseThrow() + ")");
             return new Reading(true, fields, notes, false, rowsFrom);
         }
         rows(rowsFrom, words.indexOf(total.get().get(0)), columns);
@@ -162,7 +166,7 @@ final class TableReading {
      * on its line or the next, as a label wraps in a narrow cell ("Total ( Rs.)", Form 16 p.29).
      */
     private Optional<List<Word>> total(int from, List<Column> columns) {
-        String[] label = table.totalLabel().trim().split("\\s+");
+        String[] label = table.totalLabel().orElseThrow().trim().split("\\s+");
         for (int at = from; at < words.size(); at++) {
             Word word = words.get(at);
             boolean startsLine = at == 0 || words.get(at - 1).line() != word.line();

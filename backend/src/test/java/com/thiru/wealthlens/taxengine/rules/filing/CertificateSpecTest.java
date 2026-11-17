@@ -162,7 +162,7 @@ class CertificateSpecTest {
     @Test
     void newColumn_whenTheGroupIsNullRatherThanEmpty_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new TableColumn("Sl. No.", "serial", CertificateValueKind.TEXT, null))
+        assertThatThrownBy(() -> new TableColumn("Sl. No.", "serial", CertificateValueKind.TEXT, null, List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Column serial needs its printed heading, its kind and its group or none");
     }
@@ -171,26 +171,26 @@ class CertificateSpecTest {
     void newTable_whenItHasNoColumn_refuses() {
         // When / Then
         assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of("Summary"), List.of(),
-                new TableTotal("Total", List.of(List.of("paid"))), 1))
+                Optional.of(new TableTotal("Total", List.of(List.of("paid")))), 1))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("partA.summary needs its printed title, its columns, its total row and its page");
+                .hasMessage("partA.summary needs its printed title or none, its columns, its total row or none and its page");
     }
 
-    private static final TableTotal ONE_CELL = new TableTotal("Total", List.of(List.of("paid")));
-    private static final TableColumn PAID = new TableColumn("Amount paid", "paid", CertificateValueKind.AMOUNT, Optional.empty());
+    private static final Optional<TableTotal> ONE_CELL = Optional.of(new TableTotal("Total", List.of(List.of("paid"))));
+    private static final TableColumn PAID = new TableColumn("Amount paid", "paid", CertificateValueKind.AMOUNT, Optional.empty(), List.of());
 
     @Test
     void newColumn_whenAPartIsMissingOrBlank_refuses() {
         // When / Then — the key first, then the heading, the kind and the group
-        assertThatThrownBy(() -> new TableColumn("Amount paid", null, CertificateValueKind.AMOUNT, Optional.empty()))
+        assertThatThrownBy(() -> new TableColumn("Amount paid", null, CertificateValueKind.AMOUNT, Optional.empty(), List.of()))
                 .hasMessage("A table column's key is one word in camel case: null");
-        assertThatThrownBy(() -> new TableColumn(null, "paid", CertificateValueKind.AMOUNT, Optional.empty()))
+        assertThatThrownBy(() -> new TableColumn(null, "paid", CertificateValueKind.AMOUNT, Optional.empty(), List.of()))
                 .hasMessage("Column paid needs its printed heading, its kind and its group or none");
-        assertThatThrownBy(() -> new TableColumn(" ", "paid", CertificateValueKind.AMOUNT, Optional.empty()))
+        assertThatThrownBy(() -> new TableColumn(" ", "paid", CertificateValueKind.AMOUNT, Optional.empty(), List.of()))
                 .hasMessage("Column paid needs its printed heading, its kind and its group or none");
-        assertThatThrownBy(() -> new TableColumn("Amount paid", "paid", null, Optional.empty()))
+        assertThatThrownBy(() -> new TableColumn("Amount paid", "paid", null, Optional.empty(), List.of()))
                 .hasMessage("Column paid needs its printed heading, its kind and its group or none");
-        assertThatThrownBy(() -> new TableColumn("Amount paid", "paid", CertificateValueKind.AMOUNT, Optional.of(" ")))
+        assertThatThrownBy(() -> new TableColumn("Amount paid", "paid", CertificateValueKind.AMOUNT, Optional.of(" "), List.of()))
                 .hasMessage("Column paid needs its printed heading, its kind and its group or none");
     }
 
@@ -208,13 +208,12 @@ class CertificateSpecTest {
     @Test
     void newTable_whenAPartIsMissingOrBlank_refuses() {
         // When / Then
-        String message = "partA.summary needs its printed title, its columns, its total row and its page";
+        String message = "partA.summary needs its printed title or none, its columns, its total row or none and its page";
         assertThatThrownBy(() -> new CertificateTable("PartA.summary", List.of("Summary"), List.of(PAID), ONE_CELL, 1))
                 .hasMessage("A certificate table's path is dot-separated words: PartA.summary");
         assertThatThrownBy(() -> new CertificateTable(null, List.of("Summary"), List.of(PAID), ONE_CELL, 1))
                 .hasMessage("A certificate table's path is dot-separated words: null");
         assertThatThrownBy(() -> new CertificateTable("partA.summary", null, List.of(PAID), ONE_CELL, 1)).hasMessage(message);
-        assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of(), List.of(PAID), ONE_CELL, 1)).hasMessage(message);
         assertThatThrownBy(() -> new CertificateTable("partA.summary", List.of(" "), List.of(PAID), ONE_CELL, 1)).hasMessage(message);
         assertThatThrownBy(() -> new CertificateTable("partA.summary", java.util.Arrays.asList((String) null), List.of(PAID), ONE_CELL, 1))
                 .hasMessage(message);
@@ -224,10 +223,34 @@ class CertificateSpecTest {
     }
 
     @Test
+    void newTable_whenItHasNoTitleAndNoTotal_isAOneRowTableFoundByItsHeadings() {
+        // When — a row of Form 16's Part A boxes (p.28; W-126e3a, D-745 C1a)
+        CertificateTable boxes = new CertificateTable("partA.certificate", List.of(), List.of(PAID), Optional.empty(), 28);
+
+        // Then
+        assertThat(boxes.title()).isEmpty();
+        assertThat(boxes.total()).isEmpty();
+    }
+
+    @Test
+    void newColumn_whenACaptionIsBlankNullOrPrintedTwice_refuses() {
+        // When / Then
+        String message = "Column cit's captions are printed words, each once: ";
+        assertThatThrownBy(() -> new TableColumn("CIT (TDS)", "cit", CertificateValueKind.TEXT, Optional.empty(), null))
+                .hasMessage(message + "null");
+        assertThatThrownBy(() -> new TableColumn("CIT (TDS)", "cit", CertificateValueKind.TEXT, Optional.empty(), List.of(" ")))
+                .hasMessage(message + "[ ]");
+        assertThatThrownBy(() -> new TableColumn("CIT (TDS)", "cit", CertificateValueKind.TEXT, Optional.empty(),
+                java.util.Arrays.asList((String) null))).hasMessage(message + "[null]");
+        assertThatThrownBy(() -> new TableColumn("CIT (TDS)", "cit", CertificateValueKind.TEXT, Optional.empty(), List.of("City", "City")))
+                .hasMessage(message + "[City, City]");
+    }
+
+    @Test
     void newTable_whenAGroupClosesTheTable_acceptsItAndRefusesItAlone() {
         // Given
-        TableColumn code = new TableColumn("Code", "code", CertificateValueKind.TEXT, Optional.of("CIN"));
-        TableColumn date = new TableColumn("Date", "date", CertificateValueKind.TEXT, Optional.of("CIN"));
+        TableColumn code = new TableColumn("Code", "code", CertificateValueKind.TEXT, Optional.of("CIN"), List.of());
+        TableColumn date = new TableColumn("Date", "date", CertificateValueKind.TEXT, Optional.of("CIN"), List.of());
 
         // When / Then — a group ending the table is checked at the end too
         assertThat(new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID, code, date), ONE_CELL, 1).columns())

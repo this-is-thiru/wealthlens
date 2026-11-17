@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-126e2 DONE (D-744). Next by board order: W-126e3 (Form 16 Part A header grid)
+Item            : W-126e3a DONE (D-746). Next by board order: W-126e3b (Form 16 Part A box reader)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-744; W-126e1 1a305925; W-126e2
-Board           : W-126e2 D; W-126e3 ·; W-126e4 ·
-Next step       : check the pipeline for the W-126e2 push; then plan W-126e3 (probe HeadingMatch on the Part A grid first); stop for approval
-Owner actions   : runbook §0.8 before the one deploy; own TY 2025-26 Form 16 path for W-126e4's drift probe
-Last verify     : targeted 134/0 with validate on W-126e2; pipeline 44100599148 success on 1a305925
+Done today      : session 104: D-740 – D-746; W-126e1, W-126e2, W-126e3a pushed
+Board           : W-126e3a D; W-126e3b ·; W-126e4 ·
+Next step       : check the pipeline for the W-126e3a push; then plan W-126e3b (reproduce the missing "31-Mar-2026" first; probe untitled start, one-row end, captions); stop for approval
+Owner actions   : runbook §0.8 before the one deploy; own Form 16 path for W-126e4
+Last verify     : targeted 467/0 with validate on W-126e3a; pipeline 44102654167 success on c9afc780
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-126e2: read Form 16 with the reader Form No. 130 uses
+Last item commit: taxplanning W-126e3a: let a certificate table be a row of headed boxes
 Updated         : 2026-11-17, session 104
 ```
 

@@ -31,7 +31,7 @@ public final class CertificateJson {
     private static final Set<String> PART_KEYS = Set.of("path", "heading");
     private static final Set<String> FIELD_KEYS = Set.of("path", "row", "label", "kind", "columns", "repeating", "page");
     private static final Set<String> TABLE_KEYS = Set.of("path", "title", "columns", "total", "page");
-    private static final Set<String> COLUMN_KEYS = Set.of("heading", "key", "kind", "group");
+    private static final Set<String> COLUMN_KEYS = Set.of("heading", "key", "kind", "group", "captions");
     private static final Set<String> TOTAL_KEYS = Set.of("label", "cells");
     private static final Set<String> TOTAL_CELL_KEYS = Set.of("columns");
 
@@ -73,15 +73,17 @@ public final class CertificateJson {
     private static CertificateTable table(JsonNode node, String path) {
         requireOnly(node, TABLE_KEYS, path);
         return PackJson.construct(path, () -> new CertificateTable(PackJson.text(node, "path", path),
-                PackJson.array(node, "title", path, e -> e.node().asString()),
+                PackJson.arrayOrEmpty(node, "title", path, e -> e.node().asString()),
                 PackJson.array(node, "columns", path, e -> column(e.node(), e.path())),
-                total(PackJson.object(node, "total", path), path + ".total"), PackJson.integer(node, "page", path)));
+                PackJson.optionalObject(node, "total", path).map(total -> total(total, path + ".total")),
+                PackJson.integer(node, "page", path)));
     }
 
     private static TableColumn column(JsonNode node, String path) {
         requireOnly(node, COLUMN_KEYS, path);
         return PackJson.construct(path, () -> new TableColumn(PackJson.text(node, "heading", path), PackJson.text(node, "key", path),
-                PackJson.enumValue(node, "kind", path, CertificateValueKind.class), PackJson.optionalText(node, "group", path)));
+                PackJson.enumValue(node, "kind", path, CertificateValueKind.class), PackJson.optionalText(node, "group", path),
+                PackJson.arrayOrEmpty(node, "captions", path, e -> e.node().asString())));
     }
 
     /** A total cell is an object naming the columns it spans, so a merged cell reads as one. */

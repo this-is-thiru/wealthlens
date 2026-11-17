@@ -245,8 +245,31 @@ class Form16LayoutTest {
         return path.substring(rows.length());
     }
 
-    /** Part A, pp.28 – 29: each table's title lines, then each column as "heading → key kind [group]", then its total. */
+    /**
+     * Part A, pp.28 – 29: each table's title lines, then each column as "heading → key kind [group]" with any captions, then
+     * its total or "one row" — the four rows of boxes (p.28) have no title and no total (W-126e3a, D-745).
+     */
     private static final Map<String, List<String>> PART_A_TABLES = Map.of(
+            "partA.certificate", List.of(
+                    "Certificate No. → certificateNo TEXT",
+                    "Last updated on → lastUpdatedOn TEXT",
+                    "one row (p.28)"),
+            "partA.parties", List.of(
+                    "Name and address of the Employer/Specified Bank → employer TEXT",
+                    "Name and address of the Employee/ Specified senior citizen → employee TEXT",
+                    "one row (p.28)"),
+            "partA.identifiers", List.of(
+                    "PAN of the Deductor → deductorPan TEXT",
+                    "TAN of the Deductor → deductorTan TEXT",
+                    "PAN of the Employee/specified senior citizen → employeePan TEXT",
+                    "Employee Reference No./ Pension Payment order No. provided by the Employer (If available) → employeeReference TEXT",
+                    "one row (p.28)"),
+            "partA.period", List.of(
+                    "CIT (TDS) → citTds TEXT captions [Address, City, Pin Code]",
+                    "Assessment Year → assessmentYear TEXT",
+                    "From → from TEXT [Period with the Employer]",
+                    "To → to TEXT [Period with the Employer]",
+                    "one row (p.28)"),
             "partA.summary", List.of(
                     "Summary of amount paid/credited and tax deducted at source thereon in respect of the employee",
                     "Quarter(s) → quarter TEXT",
@@ -281,15 +304,17 @@ class Form16LayoutTest {
         // When
         CertificateLayout layout = CALCULATOR.certificate(TaxYearId.of(2025), FORM_16).orElseThrow();
 
-        // Then — in printed order: the summary, then item I (book adjustment), then item II (challan)
+        // Then — in printed order: the four rows of boxes, the summary, then item I (book adjustment), then item II (challan)
         assertThat(layout.tables()).extracting(CertificateLayout.PrintedTable::path)
-                .containsExactly("partA.summary", "partA.bookAdjustment", "partA.challan");
+                .containsExactly("partA.certificate", "partA.parties", "partA.identifiers", "partA.period", "partA.summary",
+                        "partA.bookAdjustment", "partA.challan");
         assertThat(layout.tables().stream().collect(Collectors.toMap(CertificateLayout.PrintedTable::path, table -> {
             List<String> printed = new ArrayList<>(table.title());
             table.columns().forEach(column -> printed.add(column.heading() + " → " + column.key() + " " + column.kind()
-                    + column.group().map(group -> " [" + group + "]").orElse("")));
-            printed.add(table.totalLabel() + ": " + table.totalCells().stream().map(cell -> cell.toString())
-                    .collect(Collectors.joining(" ")) + " (p." + table.page() + ")");
+                    + column.group().map(group -> " [" + group + "]").orElse("")
+                    + (column.captions().isEmpty() ? "" : " captions " + column.captions())));
+            printed.add(table.totalLabel().map(label -> label + ": " + table.totalCells().stream().map(cell -> cell.toString())
+                    .collect(Collectors.joining(" "))).orElse("one row") + " (p." + table.page() + ")");
             return printed;
         }))).isEqualTo(PART_A_TABLES);
     }

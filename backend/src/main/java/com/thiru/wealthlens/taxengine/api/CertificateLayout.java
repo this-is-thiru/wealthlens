@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.CertificatePart;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateSpec;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateTable;
 import com.thiru.wealthlens.taxengine.rules.filing.TableColumn;
+import com.thiru.wealthlens.taxengine.rules.filing.TableTotal;
 import com.thiru.wealthlens.taxengine.rules.id.CertificateCode;
 import java.util.List;
 import java.util.Locale;
@@ -85,11 +86,12 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
     /**
      * A table, by the lines printed over it and its column headings; its rows carry no label (W-126c2a).
      *
-     * @param totalLabel the label of the row that prints the totals, e.g. "Total"
-     * @param totalCells that row's cells in printed order, each the keys of the columns it spans
+     * @param title the lines printed over it; none where the table is found by its first heading (W-126e3a)
+     * @param totalLabel the label of the row that prints the totals, e.g. "Total"; none for a table of one row
+     * @param totalCells that row's cells in printed order, each the keys of the columns it spans; none without the row
      * @param page the Gazette page the table starts on
      */
-    public record PrintedTable(String path, List<String> title, List<PrintedColumn> columns, String totalLabel,
+    public record PrintedTable(String path, List<String> title, List<PrintedColumn> columns, Optional<String> totalLabel,
             List<List<String>> totalCells, int page) {
 
         public PrintedTable {
@@ -100,7 +102,7 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
 
         static PrintedTable of(CertificateTable table) {
             return new PrintedTable(table.path(), table.title(), table.columns().stream().map(PrintedColumn::of).toList(),
-                    table.total().label(), table.total().cells(), table.page());
+                    table.total().map(TableTotal::label), table.total().map(TableTotal::cells).orElse(List.of()), table.page());
         }
     }
 
@@ -110,11 +112,16 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
      * @param key names the column's cells in a reading
      * @param kind {@code AMOUNT}, {@code YES_NO} or {@code TEXT}
      * @param group the heading printed over this column and its neighbours, where there is one
+     * @param captions the words printed inside the column's cell before each value, in order (W-126e3a)
      */
-    public record PrintedColumn(String heading, String key, String kind, Optional<String> group) {
+    public record PrintedColumn(String heading, String key, String kind, Optional<String> group, List<String> captions) {
+
+        public PrintedColumn {
+            captions = List.copyOf(captions);
+        }
 
         static PrintedColumn of(TableColumn column) {
-            return new PrintedColumn(column.heading(), column.key(), column.kind().name(), column.group());
+            return new PrintedColumn(column.heading(), column.key(), column.kind().name(), column.group(), column.captions());
         }
     }
 

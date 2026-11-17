@@ -1,6 +1,6 @@
 {
   "id": "FORM_16",
-  "_note": "Income-tax Rules, 1962, Appendix II, Form No. 16 [rule 31(1)(a)], as substituted by the Income-tax (Fifth Amendment) Rules, 2023 (G.S.R. 379(E), 22-05-2023, Gazette 245989 pp.28 – 33, w.e.f. 1-7-2023) and amended by the Income-tax (Eighth Amendment) Rules, 2024 (G.S.R. 639(E), 15-10-2024, Gazette 257917 p.6: Part B (Annexure-I) rows 19 – 21). No other amendment to 31-03-2026 (D-742). It governs the certificate for TY 2025-26, the last tax year under the 1961 Act (2025 Act s.536(2)(b), (c); D-741); the version starts on 639(E)'s publication, the only text a shipped year reads. Rules 2026 use \"Form No. 16\" for a donation certificate, so this code names the 1962 form only. Part A's header boxes are W-126e3's; Part A holds its three tables here (D-740). Each label is the printed words with line breaks joined and without the row number; \"[YES/NO]\" and \"Rs. ...\" are value cells, not labels. Printed wording kept as printed, confirmed by eye on the page images (W-126e1): row 6 \"[(3+1(e)-5]\", row 7 \"under as per\", Annexure II row 5 \"[(2-4]\", the U+2010 hyphen the text layer carries in \"Chapter VI‐A\" of rows 10(m), 10(n), 8(j), 8(k). Annexure II row 17 prints \"Net tax payable (16-17)\", a sum naming itself, so it declares none (D-740 C5a). Part B (Annexure-I)'s heading is printed \"[PART B (Annexure-I)\", the bracket opening the substituted text; Annexure II's heading is printed without \"Part B\" (Note 5(iii) calls it Part B (Annexure-II)).",
+  "_note": "Income-tax Rules, 1962, Appendix II, Form No. 16 [rule 31(1)(a)], as substituted by the Income-tax (Fifth Amendment) Rules, 2023 (G.S.R. 379(E), 22-05-2023, Gazette 245989 pp.28 – 33, w.e.f. 1-7-2023) and amended by the Income-tax (Eighth Amendment) Rules, 2024 (G.S.R. 639(E), 15-10-2024, Gazette 257917 p.6: Part B (Annexure-I) rows 19 – 21). No other amendment to 31-03-2026 (D-742). It governs the certificate for TY 2025-26, the last tax year under the 1961 Act (2025 Act s.536(2)(b), (c); D-741); the version starts on 639(E)'s publication, the only text a shipped year reads. Rules 2026 use \"Form No. 16\" for a donation certificate, so this code names the 1962 form only. Part A's boxes (p.28) are four tables with no title and no total, each one row found by its headings (W-126e3a, D-745); \"CIT (TDS)\" prints the captions Address, City and Pin Code inside its box. Then Part A's three tables. Each label is the printed words with line breaks joined and without the row number; \"[YES/NO]\" and \"Rs. ...\" are value cells, not labels. Printed wording kept as printed, confirmed by eye on the page images (W-126e1): row 6 \"[(3+1(e)-5]\", row 7 \"under as per\", Annexure II row 5 \"[(2-4]\", the U+2010 hyphen the text layer carries in \"Chapter VI‐A\" of rows 10(m), 10(n), 8(j), 8(k). Annexure II row 17 prints \"Net tax payable (16-17)\", a sum naming itself, so it declares none (D-740 C5a). Part B (Annexure-I)'s heading is printed \"[PART B (Annexure-I)\", the bracket opening the substituted text; Annexure II's heading is printed without \"Part B\" (Note 5(iii) calls it Part B (Annexure-II)).",
   "versions": [
     {
       "validity": {
@@ -1178,6 +1178,97 @@
         }
       ],
       "tables": [
+        {
+          "path": "partA.certificate",
+          "columns": [
+            {
+              "heading": "Certificate No.",
+              "key": "certificateNo",
+              "kind": "TEXT"
+            },
+            {
+              "heading": "Last updated on",
+              "key": "lastUpdatedOn",
+              "kind": "TEXT"
+            }
+          ],
+          "page": 28
+        },
+        {
+          "path": "partA.parties",
+          "columns": [
+            {
+              "heading": "Name and address of the Employer/Specified Bank",
+              "key": "employer",
+              "kind": "TEXT"
+            },
+            {
+              "heading": "Name and address of the Employee/ Specified senior citizen",
+              "key": "employee",
+              "kind": "TEXT"
+            }
+          ],
+          "page": 28
+        },
+        {
+          "path": "partA.identifiers",
+          "columns": [
+            {
+              "heading": "PAN of the Deductor",
+              "key": "deductorPan",
+              "kind": "TEXT"
+            },
+            {
+              "heading": "TAN of the Deductor",
+              "key": "deductorTan",
+              "kind": "TEXT"
+            },
+            {
+              "heading": "PAN of the Employee/specified senior citizen",
+              "key": "employeePan",
+              "kind": "TEXT"
+            },
+            {
+              "heading": "Employee Reference No./ Pension Payment order No. provided by the Employer (If available)",
+              "key": "employeeReference",
+              "kind": "TEXT"
+            }
+          ],
+          "page": 28
+        },
+        {
+          "path": "partA.period",
+          "columns": [
+            {
+              "heading": "CIT (TDS)",
+              "key": "citTds",
+              "kind": "TEXT",
+              "captions": [
+                "Address",
+                "City",
+                "Pin Code"
+              ]
+            },
+            {
+              "heading": "Assessment Year",
+              "key": "assessmentYear",
+              "kind": "TEXT"
+            },
+            {
+              "heading": "From",
+              "key": "from",
+              "kind": "TEXT",
+              "group": "Period with the Employer"
+            },
+            {
+              "heading": "To",
+              "key": "to",
+              "kind": "TEXT",
+              "group": "Period with the Employer"
+            }
+          ],
+          "page": 28
+        },
         {
           "path": "partA.summary",
           "title": [

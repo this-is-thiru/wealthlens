@@ -11,26 +11,28 @@ import java.util.Set;
  * never by a label. Law as data, versioned with its form.
  *
  * @param path dot-separated, under its part's path, e.g. {@code partB.summary}
- * @param title the lines printed over the table, in order
+ * @param title the lines printed over the table, in order; none where the table is found by its first heading, as Form 16's
+ *     Part A boxes are (W-126e3a, D-745 C1a)
  * @param columns in printed order
- * @param total the row that prints the totals
+ * @param total the row that prints the totals; none for a table of one row, such as a row of Part A's boxes
  * @param page the Gazette page the table starts on
  */
-public record CertificateTable(String path, List<String> title, List<TableColumn> columns, TableTotal total, int page) {
+public record CertificateTable(String path, List<String> title, List<TableColumn> columns, Optional<TableTotal> total,
+        int page) {
 
     public CertificateTable {
         if (path == null || !CertificatePart.PATH.matcher(path).matches()) {
             throw new IllegalArgumentException("A certificate table's path is dot-separated words: " + path);
         }
-        if (title == null || title.isEmpty() || title.stream().anyMatch(line -> line == null || line.isBlank())
+        if (title == null || title.stream().anyMatch(line -> line == null || line.isBlank())
                 || columns == null || columns.isEmpty() || total == null || page < 1) {
-            throw new IllegalArgumentException(path + " needs its printed title, its columns, its total row and its page");
+            throw new IllegalArgumentException(path + " needs its printed title or none, its columns, its total row or none and its page");
         }
         title = List.copyOf(title);
         columns = List.copyOf(columns);
         List<String> keys = keys(path, columns);
         requireGroupsSpanNeighbours(path, columns);
-        requireTotalCellsFit(path, keys, total);
+        total.ifPresent(row -> requireTotalCellsFit(path, keys, row));
     }
 
     private static List<String> keys(String path, List<TableColumn> columns) {
