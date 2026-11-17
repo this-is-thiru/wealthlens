@@ -350,23 +350,52 @@ class CertificateSpecTest {
     @Test
     void newComparison_whenItNamesBothANodeAndATotalOrNeither_refuses() {
         // When / Then — W-130a: a node's output or one of the computation's totals, exactly one
-        assertThatThrownBy(() -> new CertificateComparison("c.row17", Optional.of(new com.thiru.wealthlens.taxengine.rules.id.NodeId("tax.cess")),
-                Optional.of(ComparedTotal.BILL), Optional.empty())).hasMessage("c.row17 is compared with a node or a total, exactly one");
-        assertThatThrownBy(() -> new CertificateComparison("c.row17", Optional.empty(), Optional.empty(), Optional.empty()))
+        Optional<ComparedTotal> bill = Optional.of(ComparedTotal.BILL);
+        Optional<String> none = Optional.empty();
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", none, Optional.of(new com.thiru.wealthlens.taxengine.rules.id.NodeId("tax.cess")),
+                bill, none, none, none)).hasMessage("c.row17 is compared with a node or a total, exactly one");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", none, Optional.empty(), Optional.empty(), none, none, none))
                 .hasMessage("c.row17 is compared with a node or a total, exactly one");
-        assertThatThrownBy(() -> new CertificateComparison(" ", Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.empty()))
-                .hasMessage("A comparison names its amount, a node or a total, and its reason or none");
-        assertThatThrownBy(() -> new CertificateComparison("c.row17", Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.of(" ")))
-                .hasMessage("A comparison names its amount, a node or a total, and its reason or none");
-        assertThatThrownBy(() -> new CertificateComparison("c.row17", null, Optional.of(ComparedTotal.BILL), Optional.empty()))
-                .hasMessage("A comparison names its amount, a node or a total, and its reason or none");
+        assertThatThrownBy(() -> new CertificateComparison(" ", none, Optional.empty(), bill, none, none, none))
+                .hasMessage("A comparison names its amount, a node or a total, and its reasons or none");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", none, null, bill, none, none, none))
+                .hasMessage("A comparison names its amount, a node or a total, and its reasons or none");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", null, Optional.empty(), bill, none, none, none))
+                .hasMessage("A comparison names its amount, a node or a total, and its reasons or none");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", none, Optional.empty(), bill, none, null, none))
+                .hasMessage("A comparison names its amount, a node or a total, and its reasons or none");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", none, Optional.empty(), bill, none, none, null))
+                .hasMessage("A comparison names its amount, a node or a total, and its reasons or none");
+        // W-130b: no blank column or reason
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", none, Optional.empty(), bill, Optional.of(" "), none, none))
+                .hasMessage("c.row17's comparison names no blank column or reason");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", Optional.of(" "), Optional.empty(), bill, none, none, none))
+                .hasMessage("c.row17's comparison names no blank column or reason");
+        assertThatThrownBy(() -> new CertificateComparison("c.row17", none, Optional.empty(), bill, none, Optional.of(" "), none))
+                .hasMessage("c.row17's comparison names no blank column or reason");
+    }
+
+    @Test
+    void newSpec_whenAComparisonNamesAColumnTheLineDoesNotPrint_refuses() {
+        // Given — W-130b: row 11's Deductible Amount is a column of a three-column AMOUNT line
+        CertificateField row11 = new CertificateField("partA.row11", Optional.of("11"), "Aggregate", CertificateValueKind.AMOUNT,
+                List.of("Gross Amount", "Deductible Amount"), false, 1, Optional.empty());
+        java.util.function.Function<String, CertificateSpec> naming = column -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
+                List.of(PART_A), List.of(NAME, row11), List.of(), List.of(), List.of(), List.of(new CertificateComparison("partA.row11",
+                        Optional.of(column), Optional.empty(), Optional.of(ComparedTotal.CHAPTER_VIII), Optional.empty(), Optional.empty(),
+                        Optional.empty())), SOURCE);
+
+        // When / Then
+        assertThat(naming.apply("Deductible Amount").comparisons()).hasSize(1);
+        assertThatThrownBy(() -> naming.apply("Qualifying Amount"))
+                .hasMessage("SYN_1's comparison names partA.row11 [Qualifying Amount], a cell it does not print");
     }
 
     @Test
     void newSpec_whenAComparisonNamesSomethingNotAnAmountItPrints_refuses() {
         // When / Then
         assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(),
-                List.of(), List.of(new CertificateComparison("partA.name", Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.empty())),
+                List.of(), List.of(new CertificateComparison("partA.name", Optional.empty(), Optional.empty(), Optional.of(ComparedTotal.BILL), Optional.empty(), Optional.empty(), Optional.empty())),
                 SOURCE)).hasMessage("SYN_1's comparison names partA.name, which is not an amount it prints");
     }
 }

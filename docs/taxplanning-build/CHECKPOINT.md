@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-130a DONE (D-756). Next by board order: W-130b (claim reasons, T8-2/T8-3)
+Item            : W-130b DONE (D-757). Next by board order: W-130c (multi-employer reasons, T8-1)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-756; W-126e*, W-128a – c, W-129, W-130a pushed; W-332 placed
-Board           : W-130a D; W-130b ·; W-130c ·; W-332 ·
-Next step       : check the pipeline for the W-130a push; then plan W-130b (read DR 22 claim facts and how a computation exposes proven claims per section; grep fixtures first); stop for approval
+Done today      : session 104: D-740 – D-757; W-126e*, W-128a – c, W-129, W-130a, W-130b pushed
+Board           : W-130b D; W-130c ·; W-130d ·; W-332 ·
+Next step       : check the pipeline for the W-130b push; then plan W-130c (W-129 assembly into the report; T8-1); stop for approval
 Owner actions   : runbook §0.8 before the one deploy
-Last verify     : targeted 527/0 with validate on W-130a
+Last verify     : targeted 545/0 with validate on W-130b
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-130a: reconcile one employer's certificate with the computation
+Last item commit: taxplanning W-130b: explain a reconciliation's claim differences
 Updated         : 2026-11-17, session 104
 ```
 

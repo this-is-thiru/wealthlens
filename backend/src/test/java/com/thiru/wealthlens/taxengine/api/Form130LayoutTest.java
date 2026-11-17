@@ -363,7 +363,8 @@ class Form130LayoutTest {
                         + comparison.reason().map(reason -> " (" + reason + ")").orElse("")).toList();
 
         // Then — W-130a: total income, surcharge and cess by their nodes; row 17 and Part B's tax deducted against the bill
-        assertThat(comparisons).containsExactly("partC.annexureI.row12 = round.totalincome", "partC.annexureI.row15 = tax.surcharge",
+        assertThat(comparisons).containsExactly("partC.annexureI.row11.deductibleAmount = total CHAPTER_VIII",
+                "partC.annexureI.row12 = round.totalincome", "partC.annexureI.row15 = tax.surcharge",
                 "partC.annexureI.row16 = tax.cess", "partC.annexureI.row17 = total BILL",
                 "partB.summary.total.taxDeducted = total BILL (TAXSUM)");
         assertThat(CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow().comparisons().stream()

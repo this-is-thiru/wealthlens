@@ -110,7 +110,8 @@ public class TaxCalculator {
                 owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), true),
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
                 computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation, pack),
-                buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)), notices(run));
+                buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)), notices(run),
+                ((MoneyValue) run.valueOf(NodeIds.CHAPTERVIII)).amount());
     }
 
     private static List<ComputedTax.Notice> notices(PipelineRunner.Result run) {

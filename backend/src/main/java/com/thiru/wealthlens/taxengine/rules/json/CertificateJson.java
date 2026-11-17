@@ -31,7 +31,7 @@ public final class CertificateJson {
 
     private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "identities", "tables", "agreements",
             "comparisons", "provenance");
-    private static final Set<String> COMPARISON_KEYS = Set.of("printed", "node", "total", "reason");
+    private static final Set<String> COMPARISON_KEYS = Set.of("printed", "column", "node", "total", "reason", "whenHigher", "whenLower");
     private static final Set<String> AGREEMENT_KEYS = Set.of("printed", "near", "tolerance", "basis");
     private static final Set<String> IDENTITY_KEYS = Set.of("target", "terms", "page");
     private static final Set<String> TARGET_KEYS = Set.of("line", "column");
@@ -89,8 +89,9 @@ public final class CertificateJson {
     private static CertificateComparison comparison(JsonNode node, String path) {
         requireOnly(node, COMPARISON_KEYS, path);
         return PackJson.construct(path, () -> new CertificateComparison(PackJson.text(node, "printed", path),
-                PackJson.optionalText(node, "node", path).map(NodeId::new),
-                PackJson.optionalText(node, "total", path).map(ComparedTotal::valueOf), PackJson.optionalText(node, "reason", path)));
+                PackJson.optionalText(node, "column", path), PackJson.optionalText(node, "node", path).map(NodeId::new),
+                PackJson.optionalText(node, "total", path).map(ComparedTotal::valueOf), PackJson.optionalText(node, "reason", path),
+                PackJson.optionalText(node, "whenHigher", path), PackJson.optionalText(node, "whenLower", path)));
     }
 
     private static CertificateTable table(JsonNode node, String path) {

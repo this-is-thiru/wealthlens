@@ -15,7 +15,11 @@ public enum ReconciliationReason {
     /** A difference of ₹10 or less: rounding to the nearest ₹10. */
     ROUNDING(Kind.EXPECTED, "RATE-ROUND-002"),
     /** The computation carries capital gains, which Form No. 130 cannot. */
-    CAPITAL_GAINS(Kind.EXPECTED, "D3");
+    CAPITAL_GAINS(Kind.EXPECTED, "D3"),
+    /** A claim declared to the employer but not proven, so not in the computation: more tax at filing (W-130b). */
+    DECLARED_NOT_PROVEN(Kind.EXPECTED, "TDS-SAL-12BB-001"),
+    /** A deduction the user is entitled to but never declared to the employer: a refund due (W-130b). */
+    ENTITLED_NOT_DECLARED(Kind.EXPECTED, "TDS-SAL-12B-001");
 
     /** Whether a reason keeps a difference minor or makes it material. */
     public enum Kind {

@@ -35,9 +35,9 @@ class ReconciliationTest {
             List.of(new CertificateLayout.PrintedLine("c.rowA", Optional.empty(), "A", "YES_NO", List.of(), false, 1,
                     Optional.of("REGIME_OPT_OUT"))),
             List.of(), List.of(), List.of(),
-            List.of(new CertificateLayout.PrintedComparison("c.row12", Optional.of("round.totalincome"), Optional.empty(), Optional.empty()),
-                    new CertificateLayout.PrintedComparison("c.row17", Optional.empty(), Optional.of("BILL"), Optional.empty()),
-                    new CertificateLayout.PrintedComparison("b.total.taxDeducted", Optional.empty(), Optional.of("BILL"), Optional.of("TAXSUM"))),
+            List.of(new CertificateLayout.PrintedComparison("c.row12", Optional.of("round.totalincome"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
+                    new CertificateLayout.PrintedComparison("c.row17", Optional.empty(), Optional.of("BILL"), Optional.empty(), Optional.empty(), Optional.empty()),
+                    new CertificateLayout.PrintedComparison("b.total.taxDeducted", Optional.empty(), Optional.of("BILL"), Optional.of("TAXSUM"), Optional.empty(), Optional.empty())),
             "test");
 
     private static DocumentConfirmation confirmed(boolean optsOut, String row12, String row17, String partB) {
@@ -51,7 +51,7 @@ class ReconciliationTest {
         List<ComputedTax.Step> trace = List.of(new ComputedTax.Step(1, "round.totalincome", "RATE-ROUND-TOTAL-INCOME", "ROUNDING", null,
                 Optional.of(Money.of(totalIncome)), Optional.of(Money.of(totalIncome)), ""));
         return new ComputedTax("comp-1", "r", "2026-27", regime, Money.of(totalIncome), Money.of(bill), Money.ZERO, null, List.of(),
-                List.of(), Money.of(bill), "fp", List.of(), trace, buckets, List.of());
+                List.of(), Money.of(bill), "fp", List.of(), trace, buckets, List.of(), Money.ZERO);
     }
 
     private static ReconciliationReport reconcile(DocumentConfirmation confirmation, ComputedTax computed) {
@@ -141,5 +141,72 @@ class ReconciliationTest {
         DocumentConfirmation one = confirmed(false, "2025000", "214500", "214500");
         assertThatThrownBy(() -> Reconciliation.reconcile(List.of(one, one), ONE, LAYOUT,
                 computed("NEW_TAX_REGIME", "2025000", "214500", List.of()), LAW)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    /** Row 11 (Deductible Amount) first, as the form prints it, then row 12, row 17 and Part B (W-130b). */
+    private static final CertificateLayout CLAIMS = new CertificateLayout(new CertificateCode("FORM_130"), "T", List.of(), LAYOUT.lines(),
+            List.of(), List.of(), List.of(),
+            List.of(new CertificateLayout.PrintedComparison("c.row11.deductibleAmount", Optional.empty(), Optional.of("CHAPTER_VIII"),
+                    Optional.empty(), Optional.of("DECLARED_NOT_PROVEN"), Optional.of("ENTITLED_NOT_DECLARED"))).stream()
+                    .collect(java.util.stream.Collectors.collectingAndThen(java.util.stream.Collectors.toList(), claim -> {
+                        claim.addAll(LAYOUT.comparisons());
+                        return claim;
+                    })),
+            "test");
+
+    private static ComputedTax withClaims(String totalIncome, String bill, String chapterEight) {
+        ComputedTax plain = computed("NEW_TAX_REGIME", totalIncome, bill, List.of());
+        return new ComputedTax(plain.computationId(), plain.receipt(), plain.taxYear(), plain.regime(), plain.totalIncome(), plain.bill(),
+                plain.credits(), null, List.of(), List.of(), plain.finalAmount(), "fp", List.of(), plain.trace(), List.of(), List.of(),
+                Money.of(chapterEight));
+    }
+
+    private static DocumentConfirmation withRow11(DocumentConfirmation confirmation, String row11) {
+        Map<String, ExtractedValue> accepted = new HashMap<>(confirmation.acceptedFields());
+        accepted.put("c.row11.deductibleAmount", new ExtractedValue.MoneyRead(Money.of(row11)));
+        return new DocumentConfirmation(confirmation.attemptId(), confirmation.confirmedBy(), confirmation.confirmedAt(), accepted, Set.of());
+    }
+
+    @Test
+    void reconcile_whenAClaimWasDeclaredButNotProven_isMinorAndEveryLineItMovesSaysSo() {
+        // Given — T8-2: row 11 1,50,000 declared, 60,000 proven, ₹90,000 apart; so the employer's total income 10,00,000 is
+        // ₹90,000 below the computation's 10,90,000, and its tax 82,000 and Part B 82,000 fall short of the bill 1,00,000
+        DocumentConfirmation certificate = withRow11(confirmed(false, "1000000", "82000", "82000"), "150000");
+
+        // When
+        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, CLAIMS, withClaims("1090000", "100000", "60000"), LAW);
+
+        // Then — D-755 C2a: an expected reason, carried to the lines it moves (W-130b C3a)
+        assertThat(report.verdict()).isEqualTo(Verdict.MINOR_DIFFERENCE);
+        assertThat(report.lines().get(0).difference()).isEqualTo(Money.of("90000"));
+        assertThat(report.lines()).allSatisfy(line -> assertThat(line.reason()).contains(ReconciliationReason.DECLARED_NOT_PROVEN));
+    }
+
+    @Test
+    void reconcile_whenADeductionWasNeverDeclared_isMinorWithARefundDue() {
+        // Given — T8-3: ₹25,000 of health insurance never told to the employer; row 11 prints 0 against 25,000, and the
+        // employer's total income 10,00,000 is ₹25,000 above the computation's 9,75,000
+        DocumentConfirmation certificate = withRow11(confirmed(false, "1000000", "100000", "100000"), "0");
+
+        // When
+        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, CLAIMS, withClaims("975000", "92500", "25000"), LAW);
+
+        // Then
+        assertThat(report.verdict()).isEqualTo(Verdict.MINOR_DIFFERENCE);
+        assertThat(report.lines().get(0).reason()).contains(ReconciliationReason.ENTITLED_NOT_DECLARED);
+        assertThat(report.lines().get(1).reason()).contains(ReconciliationReason.ENTITLED_NOT_DECLARED);
+    }
+
+    @Test
+    void reconcile_whenTheClaimsAgreeButALaterLineDiffers_leavesItUnexplained() {
+        // Given — row 11 equal (60,000 both), but row 12 10,00,000 against 10,50,000 for no claim reason
+        DocumentConfirmation certificate = withRow11(confirmed(false, "1000000", "100000", "100000"), "60000");
+
+        // When
+        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, CLAIMS, withClaims("1050000", "100000", "60000"), LAW);
+
+        // Then — nothing above it explains row 12
+        assertThat(report.verdict()).isEqualTo(Verdict.MATERIAL_DIFFERENCE);
+        assertThat(report.lines().get(1).reason()).isEmpty();
     }
 }

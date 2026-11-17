@@ -82,7 +82,13 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
     private static void requireComparisonsPrinted(CertificateCode code, List<CertificateComparison> comparisons, List<CertificateField> fields,
             List<CertificateTable> tables) {
         for (CertificateComparison comparison : comparisons) {
-            requireAmount(code, "comparison", comparison.printed(), fields, tables);
+            if (comparison.column().isEmpty()) {
+                requireAmount(code, "comparison", comparison.printed(), fields, tables);
+            } else if (fields.stream().noneMatch(field -> field.path().equals(comparison.printed())
+                    && field.kind() == CertificateValueKind.AMOUNT && field.columns().contains(comparison.column().get()))) {
+                throw new IllegalArgumentException(code + "'s comparison names " + comparison.printed() + " [" + comparison.column().get()
+                        + "], a cell it does not print");
+            }
         }
     }
 

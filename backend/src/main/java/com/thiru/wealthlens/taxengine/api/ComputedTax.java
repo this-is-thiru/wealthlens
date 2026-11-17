@@ -28,10 +28,11 @@ import java.util.Optional;
  * @param capitalGainsBuckets what was decided for each bucket (D-410)
  * @param notices what the engine asks of the person, each on the step it is about (W-119c follow-up): a request, never
  *     a figure; none where a computation stored before it was read back
+ * @param chapterEight the Chapter VIII deductions allowed in all, after s.122(2)'s cap: what a certificate's row 11 is compared with (W-130b)
  */
 public record ComputedTax(String computationId, String receipt, String taxYear, String regime, Money totalIncome, Money bill,
         Money credits, AdvanceTax advanceTax, List<Owed> interestAndFees, List<Owed> interestOnRefund, Money finalAmount, String inputsFingerprint, List<String> lawAndExec, List<Step> trace,
-        List<Bucket> capitalGainsBuckets, List<Notice> notices) {
+        List<Bucket> capitalGainsBuckets, List<Notice> notices, Money chapterEight) {
 
     public ComputedTax {
         notices = notices == null ? List.of() : List.copyOf(notices);
@@ -45,6 +46,7 @@ public record ComputedTax(String computationId, String receipt, String taxYear, 
     public Money total(String name) {
         return switch (ComparedTotal.valueOf(name)) {
             case BILL -> bill;
+            case CHAPTER_VIII -> chapterEight;
         };
     }
 

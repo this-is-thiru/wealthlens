@@ -45,13 +45,20 @@ public final class Reconciliation {
         Map<String, ExtractedValue> accepted = confirmed.get(0).acceptedFields();
         boolean regimeDiffers = regimeDiffers(accepted, layout, computed, law);
         List<ReconciliationLine> lines = new ArrayList<>();
+        Optional<ReconciliationReason> claim = Optional.empty();
         for (PrintedComparison comparison : layout.comparisons()) {
             Optional<Money> printed = amount(accepted.get(comparison.printed()));
             Optional<Money> produced = produced(comparison, computed);
             if (printed.isPresent() && produced.isPresent()) {
                 Money difference = printed.get().minus(produced.get());
-                lines.add(new ReconciliationLine(comparison.printed(), printed.get(), produced.get(), difference,
-                        reason(comparison, difference, regimeDiffers, !computed.capitalGainsBuckets().isEmpty())));
+                Optional<ReconciliationReason> own = claimReason(comparison, difference);
+                claim = claim.or(() -> own);
+                Optional<ReconciliationReason> reason = own.or(() -> reason(comparison, difference, regimeDiffers,
+                        !computed.capitalGainsBuckets().isEmpty()));
+                if (reason.isEmpty() && isBeyondRounding(difference)) {
+                    reason = claim;
+                }
+                lines.add(new ReconciliationLine(comparison.printed(), printed.get(), produced.get(), difference, reason));
             }
         }
         return new ReconciliationReport(computed.computationId(), documents, lines, verdict(lines));
@@ -65,6 +72,22 @@ public final class Reconciliation {
         String node = comparison.node().orElseThrow();
         return computed.trace().stream().filter(step -> step.node().equals(node) && step.out().isPresent())
                 .reduce((first, second) -> second).flatMap(ComputedTax.Step::out);
+    }
+
+    /**
+     * A claim's own reason, by which way the certificate differs (W-130b C2a): above the computation a claim declared but not
+     * proven, below it one never declared. A later line's difference with no reason of its own is that claim's consequence
+     * (C3a), so the comparisons are listed in the form's printed order.
+     */
+    private static Optional<ReconciliationReason> claimReason(PrintedComparison comparison, Money difference) {
+        if (!isBeyondRounding(difference)) {
+            return Optional.empty();
+        }
+        return (difference.isGreaterThan(Money.ZERO) ? comparison.whenHigher() : comparison.whenLower()).map(ReconciliationReason::valueOf);
+    }
+
+    private static boolean isBeyondRounding(Money difference) {
+        return Money.max(difference, Money.ZERO.minus(difference)).isGreaterThan(ROUNDING);
     }
 
     /** Row A against the computation's regime: "No" keeps the year's default, "Yes" leaves it. */

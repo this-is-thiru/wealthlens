@@ -76,13 +76,17 @@ public record CertificateLayout(CertificateCode code, String title, List<PartHea
     /**
      * An amount the engine's computation also produces (W-130a): a node's output, or one of its totals ({@code BILL}).
      *
+     * @param printed the amount's path in a reading: the line's, or the line and its column ({@link #cellPath})
      * @param reason the reconciliation reason that explains the pairing, where one does
+     * @param whenHigher the reason a certificate figure above the computation's has (W-130b)
+     * @param whenLower the reason a certificate figure below the computation's has (W-130b)
      */
-    public record PrintedComparison(String printed, Optional<String> node, Optional<String> total, Optional<String> reason) {
+    public record PrintedComparison(String printed, Optional<String> node, Optional<String> total, Optional<String> reason,
+            Optional<String> whenHigher, Optional<String> whenLower) {
 
         static PrintedComparison of(CertificateComparison comparison) {
-            return new PrintedComparison(comparison.printed(), comparison.node().map(NodeId::value), comparison.total().map(Enum::name),
-                    comparison.reason());
+            return new PrintedComparison(cellPath(comparison.printed(), comparison.column()), comparison.node().map(NodeId::value),
+                    comparison.total().map(Enum::name), comparison.reason(), comparison.whenHigher(), comparison.whenLower());
         }
     }
 
