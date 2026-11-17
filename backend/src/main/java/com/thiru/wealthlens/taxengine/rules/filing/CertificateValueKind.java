@@ -8,6 +8,8 @@ public enum CertificateValueKind {
     YES_NO,
     /** Words, numbers that are not amounts, or dates as printed. */
     TEXT,
+    /** Two dates as the form prints them, "dd/mm/yyyy to dd/mm/yyyy", such as Form No. 130's period with the employer (W-128b). */
+    PERIOD,
     /** A heading line that groups the lines under it and holds no value of its own. */
     NONE
 }

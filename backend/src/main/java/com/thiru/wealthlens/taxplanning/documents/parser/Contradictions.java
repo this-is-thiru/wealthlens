@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.taxplanning.documents.parser;
 
+import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedAgreement;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedSum;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedTable;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.SumCell;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
@@ -27,17 +29,52 @@ final class Contradictions {
     private Contradictions() {
     }
 
-    /** The fields, contradicted cells lowered, and a note for each contradiction. */
-    record Checked(List<ExtractedField> fields, List<String> notes) {
+    /** The fields, contradicted cells lowered; a note for each contradiction, and one for each difference shown. */
+    record Checked(List<ExtractedField> fields, List<String> contradictions, List<String> differences) {
     }
 
-    static Checked check(List<ExtractedField> fields, List<PrintedSum> sums, List<PrintedTable> tables) {
+    static Checked check(List<ExtractedField> fields, List<PrintedSum> sums, List<PrintedTable> tables,
+            List<PrintedAgreement> agreements, TaxYearId year) {
         Map<String, ExtractedField> byPath = new LinkedHashMap<>();
         fields.forEach(field -> byPath.put(field.fieldPath(), field));
         List<String> notes = new ArrayList<>();
         sums.forEach(sum -> checkSum(sum, byPath, notes));
         tables.forEach(table -> table.totalCells().forEach(cell -> checkTotal(table, cell.get(0), byPath, notes)));
-        return new Checked(List.copyOf(byPath.values()), notes);
+        List.copyOf(byPath.values()).forEach(field -> checkPeriod(field, year, byPath, notes));
+        List<String> differences = new ArrayList<>();
+        agreements.forEach(agreement -> checkAgreement(agreement, byPath, differences));
+        return new Checked(List.copyOf(byPath.values()), notes, differences);
+    }
+
+    /** A period inside the tax year being read, its first day not after its last (W-128b C2a). */
+    private static void checkPeriod(ExtractedField field, TaxYearId year, Map<String, ExtractedField> byPath, List<String> notes) {
+        if (field.interpretedValue().orElse(null) instanceof ExtractedValue.PeriodRead period) {
+            String printed = period.from().format(DAY) + " to " + period.to().format(DAY);
+            if (period.from().isAfter(period.to())) {
+                notes.add("Contradiction: " + field.fieldPath() + " printed " + printed + ", its first day after its last");
+                lower(byPath, field.fieldPath());
+            } else if (!year.contains(period.from()) || !year.contains(period.to())) {
+                notes.add("Contradiction: " + field.fieldPath() + " printed " + printed + ", outside tax year " + year.label());
+                lower(byPath, field.fieldPath());
+            }
+        }
+    }
+
+    /**
+     * Two amounts that should be near each other (W-128b): beyond the tolerance the difference is shown and both are kept as
+     * read, since an employer may deduct more or less than the year's tax (C4a).
+     */
+    private static void checkAgreement(PrintedAgreement agreement, Map<String, ExtractedField> byPath, List<String> differences) {
+        Optional<Money> printed = amount(byPath.get(agreement.printed()));
+        Optional<Money> near = amount(byPath.get(agreement.near()));
+        if (printed.isEmpty() || near.isEmpty()) {
+            return;
+        }
+        Money apart = Money.max(printed.get(), near.get()).minus(Money.min(printed.get(), near.get()));
+        if (apart.isGreaterThan(agreement.tolerance())) {
+            differences.add("Differs: " + agreement.printed() + " " + printed.get().inIndianNotation() + " and " + agreement.near() + " "
+                    + near.get().inIndianNotation() + " are " + apart.inIndianNotation() + " apart (" + agreement.basis() + ")");
+        }
     }
 
     /** Exactly (D-750 C4a), and only when every cell is read: an inferred cell agrees by construction. */
@@ -77,6 +114,8 @@ final class Contradictions {
             rows.forEach(path -> lower(byPath, path));
         }
     }
+
+    private static final java.time.format.DateTimeFormatter DAY = java.time.format.DateTimeFormatter.ofPattern("dd/MM/uuuu");
 
     private static void lower(Map<String, ExtractedField> byPath, String path) {
         ExtractedField field = byPath.get(path);

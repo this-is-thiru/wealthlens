@@ -380,4 +380,26 @@ class CertificateJsonTest {
         assertThatThrownBy(() -> CertificateJson.certificate(MAPPER.readTree(certificate("form_130", NAME)), PATH))
                 .isInstanceOf(PackValidationException.class).hasMessageContaining("CertificateCode");
     }
+
+    @Test
+    void certificate_whenAgreementsArePrinted_readsThemAndRefusesAnUnknownKey() {
+        // Given — a table whose Total is over the AMOUNT column "paid", agreeing with itself is refused, so two Totals
+        String twoTables = table("partA.summary", COLUMNS, CELLS) + "," + table("partA.other", COLUMNS, CELLS);
+        String agreement = "{\"printed\": \"partA.summary.total.paid\", \"near\": \"partA.other.total.paid\", \"tolerance\": \"10\","
+                + " \"basis\": \"DR 06 G5.2\"}";
+        String json = certificate("SYN_1", NAME).replace(", \"provenance\"", ", \"tables\": [" + twoTables + "], \"agreements\": ["
+                + agreement + "], \"provenance\"");
+
+        // When
+        var spec = CertificateJson.certificate(MAPPER.readTree(json), PATH);
+
+        // Then
+        assertThat(spec.agreements()).singleElement().satisfies(read -> {
+            assertThat(read.printed()).isEqualTo("partA.summary.total.paid");
+            assertThat(read.tolerance()).isEqualTo(com.thiru.wealthlens.taxengine.rules.money.Money.TEN);
+            assertThat(read.basis()).isEqualTo("DR 06 G5.2");
+        });
+        assertThatThrownBy(() -> CertificateJson.certificate(MAPPER.readTree(json.replace("\"basis\"", "\"basys\"")), PATH))
+                .isInstanceOf(PackValidationException.class);
+    }
 }

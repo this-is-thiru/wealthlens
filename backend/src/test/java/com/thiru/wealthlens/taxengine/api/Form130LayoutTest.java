@@ -320,4 +320,18 @@ class Form130LayoutTest {
         // When / Then — the Income-tax Rules, 2026 govern TY 2026-27 on (YR-ACT-004); TY 2025-26's is Form 16 (W-126e)
         assertThat(CALCULATOR.certificate(TaxYearId.of(2025), FORM_130)).isEmpty();
     }
+
+    @Test
+    void certificate_whenTaxYear2026_27_readsThePeriodAsDatesAndKeepsPartBNearTheNetTaxPayable() {
+        // When
+        CertificateLayout layout = CALCULATOR.certificate(TaxYearId.of(2026), FORM_130).orElseThrow();
+
+        // Then — W-128b: item 8 prints "(dd/mm/yyyy) to (dd/mm/yyyy)"; Part B's tax deducted against row 21 and against
+        // Annexure-II's row 17, each within ₹10 (DR 06 G5.2, D-750 C3a, C4a, C5a)
+        assertThat(layout.lines()).filteredOn(line -> line.path().equals("partA.employer.period")).singleElement()
+                .satisfies(line -> assertThat(line.kind()).isEqualTo("PERIOD"));
+        assertThat(layout.agreements()).extracting(agreement -> agreement.printed() + " ≈ " + agreement.near() + " ± " + agreement.tolerance())
+                .containsExactly("partB.summary.total.taxDeducted ≈ partC.annexureI.row21 ± 10.00",
+                        "partB.summary.total.taxDeducted ≈ partC.annexureII.row17 ± 10.00");
+    }
 }

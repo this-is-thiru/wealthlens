@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-128a DONE (D-751). Next by board order: W-128b (Part B ≈ row 21; Part A period in the tax year)
+Item            : W-128b DONE (D-752). Next by board order: W-128c (row 4(b) vs standard deduction and row A; row 16 vs cess)
 Stage           : committed and pushed; nothing in progress
-Done today      : session 104: D-740 – D-751; W-126e1 – W-126e3b, W-126e5, W-128a pushed
-Board           : W-128a D; W-128b ·; W-128c ·
-Next step       : check the pipeline for the W-128a push; then plan W-128b (probe: date reading of Part A item 8; Part B total vs row 21 within ₹10; erratum on 06-algorithms.md:509); stop for approval
+Done today      : session 104: D-740 – D-752; W-126e1 – W-126e3b, W-126e5, W-128a, W-128b pushed
+Board           : W-128b D; W-128c ·; W-129 ·
+Next step       : check the pipeline for the W-128b push; then plan W-128c (grep TaxCalculator for a standard-deduction / cess accessor first; grep fixtures for 4(b)/16 values the new checks reach); stop for approval
 Owner actions   : runbook §0.8 before the one deploy
-Last verify     : targeted 129/0 with validate on W-128a
+Last verify     : targeted 498/0 with validate on W-128b
 Files touched   : CHECKPOINT.md only, if anything
-Last item commit: taxplanning W-128a: check a certificate's printed sums and table totals
+Last item commit: taxplanning W-128b: check a certificate across its parts
 Updated         : 2026-11-17, session 104
 ```
 

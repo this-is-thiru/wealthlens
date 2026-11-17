@@ -24,14 +24,14 @@ class CertificateSpecTest {
     @Test
     void newSpec_whenTheTitleIsBlank_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), List.of(), SOURCE))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), " ", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), SOURCE))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
     @Test
     void newSpec_whenTheProvenanceIsMissing_refuses() {
         // When / Then
-        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(), null))
+        assertThatThrownBy(() -> new CertificateSpec(new CertificateCode("SYN_1"), "T", List.of(PART_A), List.of(NAME), List.of(), List.of(), List.of(), null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A certificate needs its code, title and provenance");
     }
 
@@ -266,5 +266,67 @@ class CertificateSpecTest {
                 List.of(), true, 1))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("partA.group is a heading line; it has no columns and does not repeat");
+    }
+
+    @Test
+    void newAgreement_whenAPartIsMissingTheSameOrNegative_refuses() {
+        // When / Then
+        assertThatThrownBy(() -> new CertificateAgreement(" ", "c.row21", com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2"))
+                .hasMessage("An agreement names two amounts, its tolerance and its basis");
+        assertThatThrownBy(() -> new CertificateAgreement(null, "c.row21", com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2"))
+                .hasMessage("An agreement names two amounts, its tolerance and its basis");
+        assertThatThrownBy(() -> new CertificateAgreement("b.total", null, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2"))
+                .hasMessage("An agreement names two amounts, its tolerance and its basis");
+        assertThatThrownBy(() -> new CertificateAgreement("b.total", " ", com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2"))
+                .hasMessage("An agreement names two amounts, its tolerance and its basis");
+        assertThatThrownBy(() -> new CertificateAgreement("b.total", "c.row21", com.thiru.wealthlens.taxengine.rules.money.Money.TEN, null))
+                .hasMessage("An agreement names two amounts, its tolerance and its basis");
+        assertThatThrownBy(() -> new CertificateAgreement("b.total", "c.row21", null, "G5.2"))
+                .hasMessage("An agreement names two amounts, its tolerance and its basis");
+        assertThatThrownBy(() -> new CertificateAgreement("b.total", "c.row21", com.thiru.wealthlens.taxengine.rules.money.Money.TEN, " "))
+                .hasMessage("An agreement names two amounts, its tolerance and its basis");
+        assertThatThrownBy(() -> new CertificateAgreement("c.row21", "c.row21", com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2"))
+                .hasMessage("An agreement compares two amounts, not c.row21 with itself");
+        assertThatThrownBy(() -> new CertificateAgreement("b.total", "c.row21", com.thiru.wealthlens.taxengine.rules.money.Money.of("-1"), "G5.2"))
+                .hasMessage("An agreement's tolerance is not negative: -1.00");
+    }
+
+    @Test
+    void newSpec_whenAnAgreementNamesSomethingNotAnAmountItPrints_refusesAndAcceptsALineAndATotal() {
+        // Given — an AMOUNT line, a TEXT line, a two-column line, and a table whose Total is over an AMOUNT column
+        CertificateField amount = new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1);
+        CertificateField twoCells = new CertificateField("partA.ded", Optional.of("3"), "Deduction", CertificateValueKind.AMOUNT,
+                List.of("Gross", "Net"), false, 1);
+        CertificateTable table = new CertificateTable("partA.summary", List.of("Summary"), List.of(PAID), ONE_CELL, 1);
+        java.util.function.Function<String, CertificateSpec> naming = path -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
+                List.of(PART_A), List.of(NAME, amount, twoCells), List.of(), List.of(table),
+                List.of(new CertificateAgreement("partA.summary.total.paid", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")),
+                SOURCE);
+
+        // When / Then
+        assertThat(naming.apply("partA.tax").agreements()).hasSize(1);
+        assertThatThrownBy(() -> naming.apply("partA.name")).hasMessage("SYN_1's agreement names partA.name, which is not an amount it prints");
+        assertThatThrownBy(() -> naming.apply("partA.ded")).hasMessage("SYN_1's agreement names partA.ded, which is not an amount it prints");
+        assertThatThrownBy(() -> naming.apply("partA.missing"))
+                .hasMessage("SYN_1's agreement names partA.missing, which is not an amount it prints");
+    }
+
+    @Test
+    void newSpec_whenAnAgreementNamesATotalTheTableDoesNotPrintAsAnAmount_refuses() {
+        // Given — a one-row table with no Total, and a table whose Total cell is over a TEXT column
+        CertificateField amount = new CertificateField("partA.tax", Optional.of("2"), "Tax", CertificateValueKind.AMOUNT, List.of(), false, 1);
+        TableColumn code = new TableColumn("Code", "code", CertificateValueKind.TEXT, Optional.empty(), List.of());
+        CertificateTable oneRow = new CertificateTable("partA.boxes", List.of(), List.of(PAID), Optional.empty(), 1);
+        CertificateTable textTotal = new CertificateTable("partA.codes", List.of("Codes"), List.of(code),
+                Optional.of(new TableTotal("Total", List.of(List.of("code")))), 1);
+        java.util.function.Function<String, CertificateSpec> naming = path -> new CertificateSpec(new CertificateCode("SYN_1"), "T",
+                List.of(PART_A), List.of(NAME, amount), List.of(), List.of(oneRow, textTotal),
+                List.of(new CertificateAgreement("partA.tax", path, com.thiru.wealthlens.taxengine.rules.money.Money.TEN, "G5.2")), SOURCE);
+
+        // When / Then
+        assertThatThrownBy(() -> naming.apply("partA.boxes.total.paid"))
+                .hasMessage("SYN_1's agreement names partA.boxes.total.paid, which is not an amount it prints");
+        assertThatThrownBy(() -> naming.apply("partA.codes.total.code"))
+                .hasMessage("SYN_1's agreement names partA.codes.total.code, which is not an amount it prints");
     }
 }

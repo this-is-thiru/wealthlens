@@ -55,4 +55,20 @@ class CellReadingTest {
         // When / Then
         assertThat(CellReading.yesNo("Y")).isEmpty();
     }
+
+    @Test
+    void period_whenPrintedAsTheFormPrescribes_readsBothDates() {
+        // When / Then — "(dd/mm/yyyy) to (dd/mm/yyyy)", Form No. 130 Part A item 8 (W-128b)
+        assertThat(CellReading.period("01/04/2026 to 31/03/2027")).contains(new ExtractedValue.PeriodRead(
+                java.time.LocalDate.of(2026, 4, 1), java.time.LocalDate.of(2027, 3, 31)));
+        assertThat(CellReading.period(" 15/07/2026  TO  31/03/2027 ")).contains(new ExtractedValue.PeriodRead(
+                java.time.LocalDate.of(2026, 7, 15), java.time.LocalDate.of(2027, 3, 31)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"01-Apr-2026 to 31-Mar-2027", "01/04/2026", "31/02/2027 to 31/03/2027", "1/4/2026 to 31/03/2027", ""})
+    void period_whenNotTwoDatesAsPrescribed_readsNothing(String printed) {
+        // When / Then — another format, one date, a day that does not exist, unpadded digits, nothing
+        assertThat(CellReading.period(printed)).isEmpty();
+    }
 }

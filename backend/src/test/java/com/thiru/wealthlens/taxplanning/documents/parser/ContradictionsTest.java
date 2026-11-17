@@ -2,10 +2,12 @@ package com.thiru.wealthlens.taxplanning.documents.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedAgreement;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedColumn;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedSum;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedTable;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.SumCell;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
@@ -18,6 +20,8 @@ import org.junit.jupiter.api.Test;
 
 /** A certificate checked against its own arithmetic ({@code DR 06} G5.2; W-128a, D-750): printed sums and tables' totals. */
 class ContradictionsTest {
+
+    private static final TaxYearId YEAR = TaxYearId.of(2026);
 
     /** Row 12 = 9 − 11, as Form No. 130 prints it. */
     private static final PrintedSum ROW_12 = new PrintedSum(new SumCell("c.row12", "c.row12", 1),
@@ -49,10 +53,10 @@ class ContradictionsTest {
         List<ExtractedField> fields = List.of(amount("c.row9", "500000"), amount("c.row11", "150000"), amount("c.row12", "350000"));
 
         // When
-        Contradictions.Checked checked = Contradictions.check(fields, List.of(ROW_12), List.of());
+        Contradictions.Checked checked = Contradictions.check(fields, List.of(ROW_12), List.of(), List.of(), YEAR);
 
         // Then
-        assertThat(checked.notes()).isEmpty();
+        assertThat(checked.contradictions()).isEmpty();
         assertThat(checked.fields()).allSatisfy(field -> assertThat(field.confidence()).isEqualTo(0.90));
     }
 
@@ -63,10 +67,10 @@ class ContradictionsTest {
                 amount("c.row13", "1000"));
 
         // When
-        Contradictions.Checked checked = Contradictions.check(fields, List.of(ROW_12), List.of());
+        Contradictions.Checked checked = Contradictions.check(fields, List.of(ROW_12), List.of(), List.of(), YEAR);
 
         // Then — D-750 C2a: 0.50 on the sum's three cells, row 13 untouched
-        assertThat(checked.notes()).containsExactly(
+        assertThat(checked.contradictions()).containsExactly(
                 "Contradiction: c.row12 printed ₹3,60,000, the sum printed for it gives ₹3,50,000");
         Map<String, ExtractedField> fields2 = byPath(checked);
         assertThat(List.of("c.row9", "c.row11", "c.row12")).allSatisfy(path -> assertThat(fields2.get(path).confidence()).isEqualTo(0.50));
@@ -79,7 +83,7 @@ class ContradictionsTest {
         List<ExtractedField> fields = List.of(amount("c.row9", "500000"), unread("c.row11", "1,50,0OO"), amount("c.row12", "360000"));
 
         // When / Then
-        assertThat(Contradictions.check(fields, List.of(ROW_12), List.of()).notes()).isEmpty();
+        assertThat(Contradictions.check(fields, List.of(ROW_12), List.of(), List.of(), YEAR).contradictions()).isEmpty();
     }
 
     @Test
@@ -89,10 +93,10 @@ class ContradictionsTest {
                 amount("b.summary.total.taxDeducted", "16000"));
 
         // When
-        Contradictions.Checked checked = Contradictions.check(fields, List.of(), List.of(SUMMARY));
+        Contradictions.Checked checked = Contradictions.check(fields, List.of(), List.of(SUMMARY), List.of(), YEAR);
 
         // Then
-        assertThat(checked.notes()).containsExactly(
+        assertThat(checked.contradictions()).containsExactly(
                 "Contradiction: b.summary.total.taxDeducted printed ₹16,000, its rows add to ₹15,000");
         assertThat(checked.fields()).allSatisfy(field -> assertThat(field.confidence()).isEqualTo(0.50));
     }
@@ -104,8 +108,8 @@ class ContradictionsTest {
         List<ExtractedField> short2 = List.of(amount("b.summary.row1.taxDeducted", "10000"), amount("b.summary.total.taxDeducted", "12000"));
 
         // When / Then
-        assertThat(Contradictions.check(agrees, List.of(), List.of(SUMMARY)).notes()).isEmpty();
-        assertThat(Contradictions.check(short2, List.of(), List.of(SUMMARY)).notes()).containsExactly(
+        assertThat(Contradictions.check(agrees, List.of(), List.of(SUMMARY), List.of(), YEAR).contradictions()).isEmpty();
+        assertThat(Contradictions.check(short2, List.of(), List.of(SUMMARY), List.of(), YEAR).contradictions()).containsExactly(
                 "Contradiction: b.summary.total.taxDeducted printed ₹12,000, its rows add to ₹10,000");
     }
 
@@ -116,7 +120,7 @@ class ContradictionsTest {
                 amount("b.summary.total.taxDeducted", "12000"));
 
         // When / Then
-        assertThat(Contradictions.check(fields, List.of(), List.of(SUMMARY)).notes()).isEmpty();
+        assertThat(Contradictions.check(fields, List.of(), List.of(SUMMARY), List.of(), YEAR).contradictions()).isEmpty();
     }
 
     @Test
@@ -126,7 +130,7 @@ class ContradictionsTest {
                 amount("b.summary.total.amountPaid", "400000"));
 
         // When / Then
-        assertThat(Contradictions.check(fields, List.of(), List.of(SUMMARY)).notes()).containsExactly(
+        assertThat(Contradictions.check(fields, List.of(), List.of(SUMMARY), List.of(), YEAR).contradictions()).containsExactly(
                 "Contradiction: b.summary.total.amountPaid printed ₹4,00,000, its rows add to ₹5,00,000");
     }
 
@@ -136,6 +140,68 @@ class ContradictionsTest {
         List<ExtractedField> fields = List.of(amount("b.summary.row1.quarter", "1"), amount("b.summary.total.quarter", "9"));
 
         // When / Then
-        assertThat(Contradictions.check(fields, List.of(), List.of(SUMMARY)).notes()).isEmpty();
+        assertThat(Contradictions.check(fields, List.of(), List.of(SUMMARY), List.of(), YEAR).contradictions()).isEmpty();
+    }
+
+    private static ExtractedField period(String from, String to) {
+        return new ExtractedField("a.period", Optional.of(from + " to " + to), Optional.of(new ExtractedValue.PeriodRead(
+                java.time.LocalDate.parse(from), java.time.LocalDate.parse(to))), 0.90, Optional.empty(), Optional.empty());
+    }
+
+    @Test
+    void check_whenThePeriodIsInsideTheTaxYear_saysNothing() {
+        // When / Then — a part year, 15-07-2026 to 31-03-2027, inside TY 2026-27
+        assertThat(Contradictions.check(List.of(period("2026-07-15", "2027-03-31")), List.of(), List.of(), List.of(), YEAR)
+                .contradictions()).isEmpty();
+    }
+
+    @Test
+    void check_whenThePeriodIsOutsideTheTaxYearOrReversed_isAContradiction() {
+        // When
+        Contradictions.Checked outside = Contradictions.check(List.of(period("2025-04-01", "2026-03-31")), List.of(), List.of(),
+                List.of(), YEAR);
+        Contradictions.Checked reversed = Contradictions.check(List.of(period("2027-03-31", "2026-04-01")), List.of(), List.of(),
+                List.of(), YEAR);
+
+        // Then — D-750 C2a
+        assertThat(outside.contradictions()).containsExactly(
+                "Contradiction: a.period printed 01/04/2025 to 31/03/2026, outside tax year 2026-27");
+        assertThat(outside.fields().get(0).confidence()).isEqualTo(0.50);
+        assertThat(Contradictions.check(List.of(period("2026-04-01", "2027-04-30")), List.of(), List.of(), List.of(), YEAR).contradictions())
+                .containsExactly("Contradiction: a.period printed 01/04/2026 to 30/04/2027, outside tax year 2026-27");
+        assertThat(reversed.contradictions()).containsExactly(
+                "Contradiction: a.period printed 31/03/2027 to 01/04/2026, its first day after its last");
+    }
+
+    private static final PrintedAgreement PART_B = new PrintedAgreement("b.total.tax", "c.row21", Money.of("10"), "DR 06 G5.2");
+
+    @Test
+    void check_whenTwoAgreeingAmountsAreWithinTheTolerance_saysNothing() {
+        // When / Then — 1,20,000 against 1,20,010: ₹10 apart, at the tolerance
+        assertThat(Contradictions.check(List.of(amount("b.total.tax", "120000"), amount("c.row21", "120010")), List.of(), List.of(),
+                List.of(PART_B), YEAR).differences()).isEmpty();
+    }
+
+    @Test
+    void check_whenTwoAgreeingAmountsDifferBeyondTheTolerance_showsTheDifferenceAndTrustsBoth() {
+        // Given — 1,20,000 against 1,20,010.01: ₹10.01 apart; 1,00,000 against 1,20,000: ₹20,000
+        Contradictions.Checked justOver = Contradictions.check(List.of(amount("b.total.tax", "120000"), amount("c.row21", "120010.01")),
+                List.of(), List.of(), List.of(PART_B), YEAR);
+        Contradictions.Checked short3 = Contradictions.check(List.of(amount("b.total.tax", "100000"), amount("c.row21", "120000")),
+                List.of(), List.of(), List.of(PART_B), YEAR);
+
+        // Then — D-750 C4a: a difference shown, not a contradiction; confidences kept (W-128b C4a)
+        assertThat(justOver.differences()).hasSize(1);
+        assertThat(short3.differences()).containsExactly(
+                "Differs: b.total.tax ₹1,00,000 and c.row21 ₹1,20,000 are ₹20,000 apart (DR 06 G5.2)");
+        assertThat(short3.contradictions()).isEmpty();
+        assertThat(short3.fields()).allSatisfy(field -> assertThat(field.confidence()).isEqualTo(0.90));
+    }
+
+    @Test
+    void check_whenOneOfTwoAgreeingAmountsIsNotRead_saysNothing() {
+        // When / Then
+        assertThat(Contradictions.check(List.of(amount("b.total.tax", "100000"), unread("c.row21", "1,2O,000")), List.of(), List.of(),
+                List.of(PART_B), YEAR).differences()).isEmpty();
     }
 }

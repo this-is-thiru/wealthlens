@@ -62,7 +62,7 @@ final class CertificateReading {
         try {
             List<Word> words = PrintedText.of(reader).words();
             return words.isEmpty() ? failed("The PDF has no text layer: a scanned page is not read yet")
-                    : new Matching(layout.get(), words, form).read();
+                    : new Matching(layout.get(), words, form, year).read();
         } catch (IOException e) {
             return failed("The PDF's text could not be read: " + e.getMessage());
         } finally {
@@ -81,6 +81,7 @@ final class CertificateReading {
         private final CertificateLayout layout;
         private final List<Word> words;
         private final String form;
+        private final TaxYearId year;
         private final Set<Word> claimed = Collections.newSetFromMap(new IdentityHashMap<>());
         private final Map<String, Boolean> partsFound = new HashMap<>();
         private final Map<String, int[]> spans = new HashMap<>();
@@ -99,9 +100,11 @@ final class CertificateReading {
             ParseOutcome outcome = missing || !unmapped.isEmpty() ? ParseOutcome.PARTIAL : ParseOutcome.SUCCESS;
             Inference.Filled filled = Inference.fill(fields, layout.sums());
             notes.addAll(filled.notes());
-            Contradictions.Checked checked = Contradictions.check(filled.fields(), layout.sums(), layout.tables());
-            notes.addAll(checked.notes());
-            return new DocumentReading(checked.notes().isEmpty() ? outcome : ParseOutcome.PARTIAL, checked.fields(), unmapped, notes);
+            Contradictions.Checked checked = Contradictions.check(filled.fields(), layout.sums(), layout.tables(), layout.agreements(), year);
+            notes.addAll(checked.contradictions());
+            notes.addAll(checked.differences());
+            return new DocumentReading(checked.contradictions().isEmpty() ? outcome : ParseOutcome.PARTIAL, checked.fields(), unmapped,
+                    notes);
         }
 
         /** A top part in printed order: its lines, then its tables. */
@@ -193,6 +196,7 @@ final class CertificateReading {
             Optional<List<ExtractedValue>> values = switch (line.kind()) {
                 case "AMOUNT" -> CellReading.amounts(printed, Math.max(1, line.columns().size()));
                 case "YES_NO" -> CellReading.yesNo(printed).map(List::of);
+                case "PERIOD" -> CellReading.period(printed).map(List::of);
                 default -> Optional.of(List.of(new ExtractedValue.TextRead(printed)));
             };
             if (values.isEmpty()) {

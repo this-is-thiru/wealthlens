@@ -209,6 +209,8 @@ class Form130ParserTest {
     private static DocumentReading readWithPartB(Map<String, String> changes, Set<String> omitted) throws Exception {
         Map<String, String> values = new HashMap<>(VALUES);
         values.putAll(PART_B);
+        // Row 21 equal to the ₹60,000 Part B deducts, so the certificate agrees with itself (W-128b, owner in build)
+        values.put("partC.annexureI.row21", "60,000.00");
         values.putAll(changes);
         return PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, values, Map.of(), omitted)), YEAR);
     }
@@ -434,5 +436,28 @@ class Form130ParserTest {
                 "Contradiction: partC.annexureI.row12 printed ₹3,60,000, the sum printed for it gives ₹3,50,000",
                 "Contradiction: partB.summary.total.taxDeducted printed ₹16,000, its rows add to ₹15,000");
         assertThat(byPath(reading).get("partC.annexureI.row12").confidence()).isEqualTo(0.50);
+    }
+
+    @Test
+    void read_whenThePeriodIsLastYearsAndPartBFallsShortOfRow21_contradictsThePeriodAndShowsTheDifference() throws Exception {
+        // Given — W-128b: a period from TY 2025-26 on a TY 2026-27 certificate; Part B's tax deducted 1,00,000 against
+        // row 21's net tax payable 1,20,000, ₹20,000 apart
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.put("partA.employer.period", "01/04/2025 to 31/03/2026");
+        values.put("partB.summary.row1.quarter", "Q1");
+        values.put("partB.summary.row1.taxDeducted", "1,00,000.00");
+        values.put("partB.summary.total.taxDeducted", "1,00,000.00");
+        values.put("partC.annexureI.row21", "1,20,000.00");
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, values, Map.of(), Set.of())), YEAR);
+
+        // Then
+        assertThat(reading.parserNotes()).contains(
+                "Contradiction: partA.employer.period printed 01/04/2025 to 31/03/2026, outside tax year 2026-27",
+                "Differs: partB.summary.total.taxDeducted ₹1,00,000 and partC.annexureI.row21 ₹1,20,000 are ₹20,000 apart"
+                        + " (DR 06 G5.2, corrected by D-750 C3a: the employer's own deduction against the net tax payable)");
+        assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+        assertThat(byPath(reading).get("partC.annexureI.row21").confidence()).isEqualTo(0.90);
     }
 }

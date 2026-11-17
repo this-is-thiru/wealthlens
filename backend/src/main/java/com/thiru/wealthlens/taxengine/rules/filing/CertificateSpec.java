@@ -14,9 +14,11 @@ import java.util.stream.Stream;
  * @param title the form's title as printed
  * @param identities the sums the form prints (W-127b)
  * @param tables the tables whose rows the issuer writes (W-126c2a)
+ * @param agreements the amounts that should be near each other though no printed sum says so (W-128b)
  */
 public record CertificateSpec(CertificateCode code, String title, List<CertificatePart> parts, List<CertificateField> fields,
-        List<CertificateIdentity> identities, List<CertificateTable> tables, Provenance provenance) {
+        List<CertificateIdentity> identities, List<CertificateTable> tables, List<CertificateAgreement> agreements,
+        Provenance provenance) {
 
     public CertificateSpec {
         if (code == null || title == null || title.isBlank() || provenance == null) {
@@ -26,6 +28,7 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
         fields = List.copyOf(fields);
         identities = List.copyOf(identities);
         tables = List.copyOf(tables);
+        agreements = List.copyOf(agreements);
         Set<String> partPaths = new HashSet<>();
         for (CertificatePart part : parts) {
             if (!partPaths.add(part.path())) {
@@ -46,6 +49,27 @@ public record CertificateSpec(CertificateCode code, String title, List<Certifica
         }
         for (CertificateIdentity identity : identities) {
             requireCellsPrinted(code, identity, fields);
+        }
+        requireAgreementsPrinted(code, agreements, fields, tables);
+    }
+
+    private static void requireAgreementsPrinted(CertificateCode code, List<CertificateAgreement> agreements, List<CertificateField> fields,
+            List<CertificateTable> tables) {
+        for (CertificateAgreement agreement : agreements) {
+            requireAmount(code, agreement.printed(), fields, tables);
+            requireAmount(code, agreement.near(), fields, tables);
+        }
+    }
+
+    /** An agreement's amount is a declared AMOUNT line of one cell, or a table's Total cell over an AMOUNT column. */
+    private static void requireAmount(CertificateCode code, String path, List<CertificateField> fields, List<CertificateTable> tables) {
+        boolean line = fields.stream().anyMatch(field -> field.path().equals(path) && field.kind() == CertificateValueKind.AMOUNT
+                && field.columns().isEmpty());
+        boolean total = tables.stream().anyMatch(table -> table.total().isPresent() && table.total().get().cells().stream()
+                .map(cell -> cell.get(0)).anyMatch(key -> path.equals(table.path() + ".total." + key) && table.columns().stream()
+                        .anyMatch(column -> column.key().equals(key) && column.kind() == CertificateValueKind.AMOUNT)));
+        if (!line && !total) {
+            throw new IllegalArgumentException(code + "'s agreement names " + path + ", which is not an amount it prints");
         }
     }
 

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.filing.CertificateAgreement;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateCell;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateField;
 import com.thiru.wealthlens.taxengine.rules.filing.CertificateIdentity;
@@ -24,7 +25,9 @@ import tools.jackson.databind.JsonNode;
  */
 public final class CertificateJson {
 
-    private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "identities", "tables", "provenance");
+    private static final Set<String> CERTIFICATE_KEYS = Set.of("id", "title", "parts", "fields", "identities", "tables", "agreements",
+            "provenance");
+    private static final Set<String> AGREEMENT_KEYS = Set.of("printed", "near", "tolerance", "basis");
     private static final Set<String> IDENTITY_KEYS = Set.of("target", "terms", "page");
     private static final Set<String> TARGET_KEYS = Set.of("line", "column");
     private static final Set<String> TERM_KEYS = Set.of("line", "column", "sign");
@@ -59,6 +62,7 @@ public final class CertificateJson {
                 PackJson.array(node, "fields", where, e -> field(e.node(), e.path())),
                 PackJson.arrayOrEmpty(node, "identities", where, e -> identity(e.node(), e.path())),
                 PackJson.arrayOrEmpty(node, "tables", where, e -> table(e.node(), e.path())),
+                PackJson.arrayOrEmpty(node, "agreements", where, e -> agreement(e.node(), e.path())),
                 ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
@@ -68,6 +72,12 @@ public final class CertificateJson {
                 PackJson.array(node, "terms", path, e -> PackJson.construct(e.path(), () -> new CertificateTerm(
                         cell(e.node(), e.path(), TERM_KEYS), PackJson.integer(e.node(), "sign", e.path())))),
                 PackJson.integer(node, "page", path)));
+    }
+
+    private static CertificateAgreement agreement(JsonNode node, String path) {
+        requireOnly(node, AGREEMENT_KEYS, path);
+        return PackJson.construct(path, () -> new CertificateAgreement(PackJson.text(node, "printed", path), PackJson.text(node, "near", path),
+                PackJson.money(node, "tolerance", path), PackJson.text(node, "basis", path)));
     }
 
     private static CertificateTable table(JsonNode node, String path) {

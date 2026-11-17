@@ -518,6 +518,9 @@ validate(extracted):
                   and surface the contradiction to the user — never pick a side silently
 ```
 
+> **Erratum (W-128b, 2026-11-17):** "Part B total tax deducted ≈ row 21 + row 19 + row 20" counts rows 19 and 20 twice — row 21 is printed "Net tax payable (17-18-19-20)" and rows 19 – 20 are tax others deducted or collected, reported on Form No. 122 — so Part B's total tax deducted ≈ **row 21** (Annexure-II: row 17 "Net tax payable (15-16)"), within ₹10, for one employer issuing both parts; several employers are G5.3 (W-129). A difference is shown, not treated as a contradiction: an employer may deduct more or less than the year's tax (D-750 C3a, W-128b C4a).
+> Verified by: `backend/src/main/resources/rulepacks/timeline/forms/certificates/FORM_130.json` (rows 19 – 21, Annexure-II row 17, `agreements`); `Form130ParserTest.read_whenThePeriodIsLastYearsAndPartBFallsShortOfRow21_contradictsThePeriodAndShowsTheDifference`.
+
 `INFERENCE`: the `row 4(b)` check is the single most valuable one. The standard deduction is a
 **two-valued** field (`SAL-STDDED-001` vs `-002`) that independently discloses the regime, so it
 cross-checks row A. If they disagree, one of the two was misread, and the user can be asked a precise
