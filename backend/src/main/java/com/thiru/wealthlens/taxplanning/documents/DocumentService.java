@@ -82,8 +82,10 @@ public class DocumentService {
         String documentId = UUID.randomUUID().toString();
         int pages = bytes.store(documentId, content);
         IngestedDocument document = new IngestedDocument(documentId, profileId, year, type, content.sha256(), now(), pages);
+        StoredDocument toStore = StoredDocument.of(document);
+        toStore.setScanned(settings.scan().enabled());
         try {
-            documents.save(StoredDocument.of(document));
+            documents.save(toStore);
         } catch (DuplicateKeyException sameBytesAtOnce) {
             return DocumentView.of(documents.findByProfileIdAndSha256(profileId, content.sha256()).orElseThrow().toRecord(), false);
         }

@@ -21,8 +21,10 @@ public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, 
     /**
      * ClamAV's {@code clamd}, run beside the application on the same host ({@code DR 14} O6; W-131e C1a).
      *
+     * @param enabled whether uploads are scanned at all: off in staging and prod until a scanner is affordable, the owner's
+     *     decision against O6 (W-131h C1a); the other checks run either way
      * @param timeout how long clamd may take to accept the connection, and then to answer each read
      */
-    public record Scan(String host, int port, Duration timeout) {
+    public record Scan(boolean enabled, String host, int port, Duration timeout) {
     }
 }

@@ -128,7 +128,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(first.getBody()).contains("\"pages\":2", "\"newlyStored\":true", "\"taxYear\":\"2026-27\"");
         assertThat(again.getBody()).contains("\"newlyStored\":false", "\"documentId\":\"" + storedDocumentId() + "\"");
-        assertThat(mongoTemplate.findAll(StoredDocument.class)).hasSize(1);
+        assertThat(mongoTemplate.findAll(StoredDocument.class)).singleElement().satisfies(document -> assertThat(document.isScanned()).isTrue());
         assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isOne();
     }
 

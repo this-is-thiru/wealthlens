@@ -122,6 +122,8 @@ app:
       enabled: false
       # W-131e: ClamAV's clamd beside the app (DR 14 O6, "Scan before storage"); 3310 is clamd's port (ClamAV Docker docs)
       scan:
+        # W-131h: off until a scanner is affordable (owner, D-769): uploads are stored unscanned and recorded so; runbook §1.m turns it on
+        enabled: false
         host: ${CLAMD_HOST:localhost}
         port: 3310
         # W-131e: connect, then each read; the slowest 20 MiB scan seen was 1.33 s (CI run 44328189271); owner adopted PT60S

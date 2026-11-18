@@ -40,7 +40,7 @@ class DocumentBytesTest {
 
     private DocumentBytes bytes(long maxBytes, int maxPages) {
         return new DocumentBytes(bucket, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), Duration.ofSeconds(30), true,
-                new DocumentSettings.Scan("localhost", 3310, Duration.ofSeconds(60))), scan);
+                new DocumentSettings.Scan(true, "localhost", 3310, Duration.ofSeconds(60))), scan);
     }
 
     @Test

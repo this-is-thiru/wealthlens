@@ -53,6 +53,13 @@ public class StoredDocument implements AuditableEntity, CreatedWithId {
     @Field("page_count")
     private int pageCount;
 
+    /**
+     * Whether the malware scan ran on these bytes before they were stored (W-131h C3a). False while the scan is switched off, so a
+     * rescan once it is on knows which documents were never scanned; a document stored before W-131h reads false too.
+     */
+    @Field("scanned")
+    private boolean scanned;
+
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
 

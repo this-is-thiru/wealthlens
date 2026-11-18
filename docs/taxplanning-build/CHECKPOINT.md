@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131e DONE (D-768), committed and pushed with this checkpoint; next by board order W-131f (isolation), not planned
+Item            : W-131h DONE (D-769), committed and pushed with this checkpoint; next by board order W-131f (isolation), not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: C5 probe on CI run 44328189271 (branch deleted); W-131e built, reviewed ("commit and push"), closed; WL-A-2 republished
-Board           : W-131e D; W-131f ·; W-132 ·
-Next step       : 1) gh run list — confirm the W-131e commit green; 2) plan W-131f (parse isolation, DR 14 O6) on the §2 template; stop for approval
-Open to owner   : EC2 host memory (runbook §1.m step 1); aws/runbook-daily.sh needs --network wealthlens -e CLAMD_HOST=clamd (proposal); rescan on signature update, freshclam staleness alert (proposals, unplaced); W-131g, W-333 yes/no
-Owner actions   : runbook §0.8 before the one deploy; §1.n, §1.p; §1.m before the documents switch; switch stays OFF until W-131f
+Done session 106: W-131e (8587649d, D-768); W-131h (D-769): scan off in staging and prod; W-131i (rescan) placed; WL-A-2 republished
+Board           : W-131e D; W-131f ·; W-131h D; W-131i ·
+Next step       : 1) gh run list — confirm 8587649d and the W-131h commit green; 2) plan W-131f (parse isolation, DR 14 O6) on the §2 template; stop for approval
+Open to owner   : W-131g, W-333 yes/no; freshclam staleness alert (proposal, unplaced, moot while the scan is off)
+Owner actions   : runbook §0.8 before the one deploy; §1.n, §1.p; §1.m only when the scan is turned on; documents switch OFF until W-131f
 Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures (stdout gets cut)
-Last verify     : W-131e targeted 96/0 (11 classes, 7 integration) + validate 0; red first; two deliberate breaks caught
-Last item commit: taxplanning W-131e: scan every upload with ClamAV before it is stored — an unscanned file reached the PDF reader and GridFS
+Last verify     : W-131h targeted 67/0 (9 classes) + validate 0; red first; two deliberate breaks caught
+Last item commit: taxplanning W-131h: let uploads be stored without a malware scan in staging and prod — the owner defers the scanner on traffic and budget
 Files touched   : none
 Updated         : 2026-11-18, session 106
 ```
