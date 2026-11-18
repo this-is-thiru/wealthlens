@@ -1,7 +1,7 @@
 {
   "ruleId": "INT-DEFERMENT",
   "ruleSet": "RS-INT-DEFERMENT",
-  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack, regime references renamed (NEW_TAX_REGIME -> SYN_DEFAULT, SYN_FLAT; FIRST_SCHEDULE_RATES -> SYN_CLASSIC); not law, never shipped. Original note: Interest for deferring advance tax, at each date on the shortfall from the share of the tax due on the returned income; none at June or September if 12 % or 36 % was paid. 2025 s.425(1) Table states 3 %; 1961 s.234C(1)(a)(i) states 'one per cent. per month for a period of three months', the same 3 %. The s.425(4) / s.234C carve-out for capital gains and dividends is not modelled (W-112a): a notice says so. Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
+  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack, regime references renamed (NEW_TAX_REGIME -> SYN_DEFAULT, SYN_FLAT; FIRST_SCHEDULE_RATES -> SYN_CLASSIC); not law, never shipped. Original note: Interest for deferring advance tax, at each date on the shortfall from the share of the tax due on the returned income; none at June or September if 12 % or 36 % was paid. 2025 s.425(1) Table states 3 %; 1961 s.234C(1)(a)(i) states 'one per cent. per month for a period of three months', the same 3 %. The s.425(4) / s.234C first-proviso relief is computed (W-112a, D-660): relievedIncomes and relievedIfPaidBy as the sections name them (2025 s.2(49)(n) is winnings, Gazette 265620 p.13); only capital gains and dividends with a received date can reach a computation. Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -51,10 +51,18 @@
           }
         ],
         "relievedIncomes": [
-          { "income": "CAPITAL_GAINS" },
-          { "income": "WINNINGS" },
-          { "income": "FIRST_TIME_BUSINESS_INCOME" },
-          { "income": "DIVIDEND" }
+          {
+            "income": "CAPITAL_GAINS"
+          },
+          {
+            "income": "WINNINGS"
+          },
+          {
+            "income": "FIRST_TIME_BUSINESS_INCOME"
+          },
+          {
+            "income": "DIVIDEND"
+          }
         ],
         "relievedIfPaidBy": "03-31"
       },
@@ -122,10 +130,18 @@
           }
         ],
         "relievedIncomes": [
-          { "income": "CAPITAL_GAINS" },
-          { "income": "WINNINGS" },
-          { "income": "FIRST_TIME_BUSINESS_INCOME" },
-          { "income": "DIVIDEND" }
+          {
+            "income": "CAPITAL_GAINS"
+          },
+          {
+            "income": "WINNINGS"
+          },
+          {
+            "income": "FIRST_TIME_BUSINESS_INCOME"
+          },
+          {
+            "income": "DIVIDEND"
+          }
         ],
         "relievedIfPaidBy": "03-31"
       },

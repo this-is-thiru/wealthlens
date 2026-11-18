@@ -956,6 +956,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-INT-REFUND",
+      "_note": "Interest added to a refund (2025 s.437; 1961 s.244A; W-112b, D-663).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-INT-ADVANCE-SHORTFALL",
       "_note": "Interest for advance tax below 90 % of the assessed tax (2025 s.424; 1961 s.234B; W-112, D-446).",
       "selection": "EXACTLY_ONE",

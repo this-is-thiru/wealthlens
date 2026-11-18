@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-133b DONE (D-776), W-133 complete; committed and pushed with this checkpoint (+ api-collection); next by board order W-126d, not planned
+Item            : W-259 DONE (D-777), committed and pushed with this checkpoint; next by board order W-258 (agricultural income in the rates), not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: W-131e/h/f/j, D-772, W-132, W-333, W-133a, W-133b (D-768 – D-776)
-Board           : W-133 D; W-126d · next
-Next step       : 1) gh run list — confirm the last commits green; 2) plan W-126d; stop for approval
+Done session 106: W-131e/h/f/j, D-772, W-132, W-333, W-133a/b, W-259 (D-768 – D-777)
+Board           : W-259 D; W-258 · next (waiting: W-126d, W-131i, W-299, W-294, W-113a, W-324, W-146a)
+Next step       : 1) gh run list — confirm the last commits green; 2) plan W-258 (Gazette first: agricultural income's partial integration, the Act's provision); stop for approval
 Open to owner   : runner token in git history (aws/ removed); host chmod 666 docker.sock
 Owner actions   : runbook §0.8; §1.n, §1.p; §1.k, §1.l; §1.m only when the scan is on
-Env notes       : integration tests need OrbStack + DOCKER_HOST; never cd inside a $ command; read surefire XML; after a main-only change rm -rf backend/target/test-classes
-Last verify     : W-133b targeted 173/0 (10 classes) + validate 0; three breaks caught
-Last item commit: taxplanning W-133b: apply a reviewed salary workbook as one employment, recorded on its revision — a preview could not reach the draft
+Env notes       : integration tests need OrbStack + DOCKER_HOST; never cd inside a $ command; tool .txt files are not compiled (W-333 broke the relock spike)
+Last verify     : W-259 targeted 95/0 (7 classes) + validate; break caught
+Last item commit: taxplanning W-259: keep the synthetic pack's hand-written rows and locks on regeneration — a rerun of the generator deleted them
 Files touched   : none
 Updated         : 2026-11-18, session 106
 ```

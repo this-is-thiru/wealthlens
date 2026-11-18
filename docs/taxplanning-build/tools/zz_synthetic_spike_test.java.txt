@@ -69,9 +69,9 @@ class ZzSyntheticSpikeTest {
             for (RegimeCode code : pack.regimes().keySet()) {
                 try {
                     var tax = calculator.compute(inputs(year, code, "1000000"));
-                    out.append(y).append(' ').append(code.value()).append(" TI ").append(tax.totalIncome())
-                            .append(" bill ").append(tax.bill()).append(" final ").append(tax.finalAmount()).append('\n');
-                    tax.trace().forEach(s -> out.append("    ").append(s).append('\n'));
+                    out.append(y).append(' ').append(code.value()).append(" TI ").append(tax.figures().totalIncome())
+                            .append(" bill ").append(tax.figures().bill()).append(" final ").append(tax.figures().finalAmount()).append('\n');
+                    tax.workings().trace().forEach(s -> out.append("    ").append(s).append('\n'));
                 } catch (RuntimeException e) {
                     out.append(y).append(' ').append(code.value()).append(" FAILED ").append(e).append('\n');
                 }

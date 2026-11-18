@@ -1,5 +1,9 @@
 """W-146: writes the synthetic pack's timeline to backend/src/test/resources/rulepacks-synthetic (D-463, D-464, D-466).
 
+It owns, and rewrites whole, OWNED below: law/rules, law/regimes, law/disallowances, law/condition-sets, exec/components,
+exec/pipelines, law/rule-sets.json and shipped-years.json. It keeps exec/funds, exec/declarations, forms/ and the three locks,
+which are not its (W-259, D-777). SyntheticPackGeneratorTest runs it and fails if a committed file is lost or its own law differs.
+
 Usage from the repo root: python3 -I docs/taxplanning-build/tools/w146_synthetic_pack.py .
 then write the locks: copy zz_synthetic_spike_test.java.txt to
 backend/src/test/java/com/thiru/wealthlens/taxengine/rules/timeline/ZzSyntheticSpikeTest.java, delete
@@ -92,7 +96,16 @@ def copied(path):
     return node
 
 
-shutil.rmtree(ROOT, ignore_errors=True)
+# W-259 C1a: only what this script writes is removed and written again. exec/funds (W-238e), exec/declarations (W-090a1),
+# forms/ (W-090c) are hand-written and the three locks are written by the relock spike; a regeneration keeps them.
+OWNED = ["timeline/law/rules", "timeline/law/regimes", "timeline/law/disallowances", "timeline/law/condition-sets",
+         "timeline/exec/components", "timeline/exec/pipelines", "timeline/law/rule-sets.json", "shipped-years.json"]
+for owned in OWNED:
+    path = os.path.join(ROOT, owned)
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    elif os.path.exists(path):
+        os.remove(path)
 
 # The synthetic year's own law: rate tables (DR 10 E8; a flat rate is a one-band ladder, D-463 C3a)
 rule("SYN-RATE-DEFAULT", "RS-RATE-SLAB",
