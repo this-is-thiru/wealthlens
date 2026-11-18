@@ -5,6 +5,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
+import com.thiru.wealthlens.testsupport.FakeClamd;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.restassured.RestAssured;
@@ -72,6 +73,9 @@ public abstract class AbstractIntegrationTest {
         mongoDBContainer.start();
     }
 
+    /** The malware scanner every upload passes through (W-131e); shared and left running, as the Mongo container is. */
+    protected static final FakeClamd CLAMD = FakeClamd.start();
+
     @AfterAll
     static void tearDownContainer() {
         // Container is shared across all test classes in the same JVM.
@@ -83,6 +87,8 @@ public abstract class AbstractIntegrationTest {
     static void mongoProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
         registry.add("app.mongodb.transactions-enabled", () -> "true");
+        registry.add("app.tax.documents.scan.host", () -> "localhost");
+        registry.add("app.tax.documents.scan.port", CLAMD::port);
     }
 
     @LocalServerPort

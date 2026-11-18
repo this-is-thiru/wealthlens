@@ -15,6 +15,6 @@ public class DocumentBytesConfig {
 
     @Bean
     public DocumentBytes documentBytes(MongoDatabaseFactory factory, MongoConverter converter, FieldCipher cipher, DocumentSettings settings) {
-        return new DocumentBytes(new GridFsTemplate(factory, converter, BUCKET), cipher, settings);
+        return new DocumentBytes(new GridFsTemplate(factory, converter, BUCKET), cipher, settings, new MalwareScan(settings.scan()));
     }
 }

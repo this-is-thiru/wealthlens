@@ -27,20 +27,22 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 /**
  * A document's bytes, kept in their own GridFS bucket under the document's id, sealed with the personal-data key, so nothing
  * stored is readable without the application ({@code DR 14} O6; W-131b, D-762). What is refused is refused before anything is
- * written: not a PDF, too large, locked by a password, or too long. A store that cannot be reached is a 503 (O9).
+ * written: too large, failing the malware scan, not a PDF, locked by a password, or too long. The scan comes before the PDF is
+ * opened, so the PDF library never reads an unscanned file (W-131e C3a). A store or a scanner that cannot be reached is a 503 (O9).
  *
  * @param bucket the {@code tax_document_bytes} bucket
  */
-public record DocumentBytes(GridFsTemplate bucket, FieldCipher cipher, DocumentSettings settings) {
+public record DocumentBytes(GridFsTemplate bucket, FieldCipher cipher, DocumentSettings settings, MalwareScan scan) {
 
     private static final byte[] PDF_START = "%PDF-".getBytes(StandardCharsets.US_ASCII);
 
-    /** Checks the bytes against O6's limits, then stores them sealed; returns the number of pages. */
+    /** Checks the bytes against O6's limits and scans them, then stores them sealed; returns the number of pages. */
     public int store(String documentId, DocumentContent content) {
         byte[] plain = content.bytes();
         if (plain.length > settings.maxBytes()) {
             throw new IllegalArgumentException("A document is at most " + settings.maxBytes() + " bytes");
         }
+        scan.requireClean(plain);
         if (plain.length < PDF_START.length || !Arrays.equals(plain, 0, PDF_START.length, PDF_START, 0, PDF_START.length)) {
             throw new IllegalArgumentException("Only a PDF can be uploaded");
         }

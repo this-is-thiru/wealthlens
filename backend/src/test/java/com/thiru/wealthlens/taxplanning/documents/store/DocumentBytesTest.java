@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Period;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,8 +35,12 @@ class DocumentBytesTest {
     @Mock
     private GridFsTemplate bucket;
 
+    @Mock
+    private MalwareScan scan;
+
     private DocumentBytes bytes(long maxBytes, int maxPages) {
-        return new DocumentBytes(bucket, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), java.time.Duration.ofSeconds(30), true));
+        return new DocumentBytes(bucket, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), Duration.ofSeconds(30), true,
+                new DocumentSettings.Scan("localhost", 3310, Duration.ofSeconds(60))), scan);
     }
 
     @Test
@@ -45,6 +51,18 @@ class DocumentBytesTest {
         // When / Then
         assertThatThrownBy(() -> bytes(1000, 50).store("document-1", content)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Only a PDF can be uploaded");
+        verifyNoInteractions(bucket);
+    }
+
+    @Test
+    void store_whenTheScanRefuses_refusesBeforeCheckingItIsAPdfAndWritesNothing() {
+        // Given — bytes that are not a PDF, so a scan placed after the PDF checks would never be reached
+        byte[] file = "PK zip".getBytes(StandardCharsets.US_ASCII);
+        doThrow(new IllegalArgumentException("This file failed the malware scan and was not stored")).when(scan).requireClean(file);
+
+        // When / Then
+        assertThatThrownBy(() -> bytes(1000, 50).store("document-1", new DocumentContent(file))).isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("This file failed the malware scan and was not stored");
         verifyNoInteractions(bucket);
     }
 
@@ -69,6 +87,7 @@ class DocumentBytesTest {
 
         // Then
         assertThat(pages).isEqualTo(2);
+        verify(scan).requireClean(file);
         org.mockito.ArgumentCaptor<InputStream> written = org.mockito.ArgumentCaptor.forClass(InputStream.class);
         verify(bucket).store(written.capture(), eq("document-1"));
         byte[] stored = written.getValue().readAllBytes();

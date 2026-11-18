@@ -13,7 +13,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param orphanAfter how old stored bytes no document names must be before they are deleted, so an upload in flight is never taken
  * @param parseBudget how long one parse may run before it is a failed attempt (O6's wall-clock budget; W-131c, D-764 C3a)
  * @param enabled whether the documents endpoints answer at all: off until a scan and isolation exist (W-131d1, D-765 C2a)
+ * @param scan where the malware scanner listens (W-131e)
  */
 @ConfigurationProperties(prefix = "app.tax.documents")
-public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, Duration parseBudget, boolean enabled) {
+public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, Duration parseBudget, boolean enabled, Scan scan) {
+
+    /**
+     * ClamAV's {@code clamd}, run beside the application on the same host ({@code DR 14} O6; W-131e C1a).
+     *
+     * @param timeout how long clamd may take to accept the connection, and then to answer each read
+     */
+    public record Scan(String host, int port, Duration timeout) {
+    }
 }

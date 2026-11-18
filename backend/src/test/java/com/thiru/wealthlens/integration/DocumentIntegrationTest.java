@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxplanning.jobs.ParseDocuments;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.testsupport.FakeClamd;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import io.restassured.RestAssured;
 import java.net.URI;
@@ -143,6 +144,43 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         assertThat(noParser.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(noParser.getBody()).contains("No parser reads FORM_122 yet");
         assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
+    }
+
+    @Test
+    void upload_whenTheScanFindsMalware_refusesAndStoresNothing() {
+        // Given — a Form No. 130 carrying the fake scanner's marker after its end, which PDF readers ignore
+        byte[] pdf = TestPdfs.pages(1);
+        byte[] infected = java.util.Arrays.copyOf(pdf, pdf.length + FakeClamd.MALWARE_MARKER.length);
+        System.arraycopy(FakeClamd.MALWARE_MARKER, 0, infected, pdf.length, FakeClamd.MALWARE_MARKER.length);
+
+        // When
+        ResponseEntity<String> response = upload(OWNER, profileId, 2026, "FORM_130", infected);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("This file failed the malware scan and was not stored");
+        assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
+        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isZero();
+    }
+
+    @Test
+    void upload_whenTheScannerClosesWithoutAnswering_isUnavailableAndStoresNothing() {
+        // Given
+        CLAMD.answerWith(stream -> Optional.empty());
+
+        // When
+        ResponseEntity<String> response;
+        try {
+            response = upload(OWNER, profileId, 2026, "FORM_130", TestPdfs.pages(1));
+        } finally {
+            CLAMD.answerAsClamd();
+        }
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(response.getBody()).contains("The malware scan could not be completed; nothing was stored");
+        assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
+        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isZero();
     }
 
     @Test
