@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131f DONE (D-770), committed and pushed with this checkpoint; next by board order W-131j (the app as non-root), not planned
+Item            : W-131j DONE (D-771), committed and pushed with this checkpoint; next by board order W-132 (T8 tests), not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: W-131e (D-768), W-131h (D-769), W-131f (D-770) pushed; probes 44328189271, 44334020550, 44338803065 (branches deleted); W-131i, W-131j placed
-Board           : W-131e D; W-131f D; W-131h D; W-131i · (waits for the scan); W-131j ·; W-132 ·
-Next step       : 1) gh run list — confirm the three item commits green; 2) plan W-131j on the §2 template; stop for approval
-Open to owner   : W-131g, W-333 yes/no
-Owner actions   : runbook §0.8; §1.n (documents switch: W-131e/f done, scan off by D-769), §1.p; §1.l (confirm log line, ~200 MB per concurrent read); §1.m only when the scan is on
-Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures (stdout gets cut); -DskipTests still compiles tests (use -Dmaven.test.skip=true on a probe branch)
-Last verify     : W-131f targeted 152/0 (16 classes) + validate 0; four deliberate breaks caught
-Last item commit: taxplanning W-131f: read every uploaded PDF in a child process as nobody with no secrets — a hostile PDF was parsed inside the application
+Done session 106: W-131e (D-768), W-131h (D-769), W-131f (D-770), W-131j (D-771) pushed; five CI probes, branches deleted; W-131i placed (waits for the scan)
+Board           : W-131e/f/h/j D; W-131i ·; W-132 ·; W-133 ·
+Next step       : 1) gh run list — confirm the four item commits green; 2) plan W-132 on the §2 template; stop for approval
+Open to owner   : aws/runbook-daily.sh line 11 runner token in plain text + line 3 chmod 666 docker.sock (flagged); W-131g, W-333 yes/no
+Owner actions   : runbook §0.8; §1.n (documents switch), §1.p; §1.k, §1.l; §1.m only when the scan is on
+Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures; -DskipTests still compiles tests; Linux-only tests via a throwaway CI branch
+Last verify     : W-131j targeted 89/0 + validate 0; Linux run 44341679586 passed, break caught
+Last item commit: taxplanning W-131j: run the application as wealthlens, not root, and make it non-dumpable — the app ran as root in its container
 Files touched   : none
 Updated         : 2026-11-18, session 106
 ```

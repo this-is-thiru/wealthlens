@@ -21,8 +21,9 @@ import tools.jackson.databind.json.JsonMapper;
  * untrusted bytes to iText. The application waits for its reply within a budget, kills it whatever happens, and trusts nothing
  * from it but a size-capped reply that parses strictly. The child runs with a heap cap ({@code -Xmx}), a CPU cap
  * ({@code ulimit -t}), every Java socket sent to a dead SOCKS proxy and no host name resolvable. It starts with an empty
- * environment and, where the application runs as root, as {@code nobody}: it holds none of the application's secrets and cannot
- * read the application's process, so code that takes it over has nothing to send but the uploader's own PDF.
+ * environment and, where the application runs as root, as {@code nobody}; otherwise as the application's own user, the application
+ * having made itself non-dumpable ({@link ProcessProtection}, W-131j). Either way it holds none of the application's secrets and
+ * cannot read the application's process, so code that takes it over has nothing to send but the uploader's own PDF.
  *
  * <p>The network is cut inside the JVM, not by the operating system: Docker's default profile refuses a network namespace
  * ({@code unshare -rn}: "Operation not permitted", CI run 44334020550), so native code in the child could still reach the network.
@@ -79,6 +80,11 @@ public record IsolatedPdfRead(DocumentSettings.Isolation isolation, Duration par
             command.add(main.getName());
         }
         return command;
+    }
+
+    /** Whether the child runs as {@code nobody}: only where the application itself runs as root (W-131j moved it off root). */
+    public boolean handsToNobody() {
+        return launch.getFirst().equals("/bin/su");
     }
 
     /** The page count, or why there is none, within the upload's budget. */
