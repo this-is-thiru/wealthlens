@@ -96,11 +96,11 @@ public class DraftController {
         return draftService.inputsAt(email, draftId, number);
     }
 
-    private static ResponseEntity<DraftConflictException.DraftConflict> conflict(DraftConflictException.DraftConflict conflict) {
+    static ResponseEntity<DraftConflictException.DraftConflict> conflict(DraftConflictException.DraftConflict conflict) {
         return ResponseEntity.status(HttpStatus.CONFLICT).eTag(tag(conflict.current())).body(conflict);
     }
 
-    private static ResponseEntity<DraftView> tagged(DraftView view) {
+    static ResponseEntity<DraftView> tagged(DraftView view) {
         return ResponseEntity.ok().eTag(tag(view)).body(view);
     }
 
@@ -108,7 +108,7 @@ public class DraftController {
         return "\"rev-" + view.revision() + "\"";
     }
 
-    private static int revisionIn(String ifMatch) {
+    static int revisionIn(String ifMatch) {
         Matcher match = ifMatch == null ? REVISION.matcher("") : REVISION.matcher(ifMatch);
         if (!match.matches()) {
             throw new BadRequestException("A save needs an If-Match header holding the revision it was made against");

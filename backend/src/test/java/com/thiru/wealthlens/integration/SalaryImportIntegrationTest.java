@@ -107,6 +107,86 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
         assertThat(mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision()).isEqualTo(revisionBefore);
     }
 
+    private ResponseEntity<String> apply(String caller, String ifMatch, byte[] workbook, String decisions) {
+        MultiValueMap<String, Object> form = new LinkedMultiValueMap<>();
+        form.add("file", new ByteArrayResource(workbook) {
+            @Override
+            public String getFilename() {
+                return "ctc.xlsx";
+            }
+        });
+        HttpHeaders part = new HttpHeaders();
+        part.setContentType(MediaType.APPLICATION_JSON);
+        form.add("decisions", new HttpEntity<>(decisions, part));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(generateToken(caller));
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setIfMatch(ifMatch);
+        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + "/drafts/" + draftId
+                + "/salary-import/apply"), HttpMethod.POST, new HttpEntity<>(form, headers), String.class);
+    }
+
+    private static final String DECISIONS = """
+            {"mappings": [{"row": 3, "code": "CONVEYANCE_ALLOWANCE"}], "leftOut": [],
+             "employment": {"termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
+                            "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}}""";
+
+    private String currentTag() {
+        return "\"rev-" + mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision() + "\"";
+    }
+
+    @Test
+    void apply_whenTheReturnedRowIsMapped_addsOneEmploymentAndTheRevisionNamesTheWorkbook() throws IOException {
+        // Given
+        byte[] workbook = workbook();
+        int before = mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision();
+
+        // When
+        ResponseEntity<String> applied = apply(OWNER, currentTag(), workbook, DECISIONS);
+
+        // Then — BASIC 6,00,000 matched, row 3 mapped to the conveyance allowance at 19,200, one revision on
+        assertThat(applied.getStatusCode()).as(applied.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(applied.getBody()).contains("\"BASIC\"", "\"CONVEYANCE_ALLOWANCE\"", "\"revision\":" + (before + 1));
+        ResponseEntity<String> revisions = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions", null, MediaType.APPLICATION_JSON);
+        assertThat(revisions.getBody()).contains("\"rowsApplied\":[2,3]", "\"rowsMapped\":[3]", "\"workbookSha256\":\"");
+    }
+
+    @Test
+    void apply_whenTheSameWorkbookIsAppliedAgain_refusesNamingTheRevision() throws IOException {
+        // Given
+        byte[] workbook = workbook();
+        apply(OWNER, currentTag(), workbook, DECISIONS);
+        int importedAt = mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision();
+
+        // When
+        ResponseEntity<String> again = apply(OWNER, currentTag(), workbook, DECISIONS);
+
+        // Then
+        assertThat(again.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(again.getBody()).contains("This workbook was already imported into the draft at revision " + importedAt);
+    }
+
+    @Test
+    void apply_whenIfMatchIsStale_isAConflict() throws IOException {
+        // When
+        ResponseEntity<String> stale = apply(OWNER, "\"rev-99\"", workbook(), DECISIONS);
+
+        // Then
+        assertThat(stale.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void apply_whenAnEmploymentFactIsMissing_refusesThroughTheDraftsOwnCheck() throws IOException {
+        // Given — no employerKind
+        String noKind = DECISIONS.replace("\"employerKind\": \"OTHER\",", "");
+
+        // When
+        ResponseEntity<String> refused = apply(OWNER, currentTag(), workbook(), noKind);
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
     @Test
     void preview_whenTheDraftIsAnotherAccounts_refuses() throws IOException {
         // When / Then

@@ -147,6 +147,23 @@ public class DraftService {
      * @throws BadRequestException if the result would not bind
      */
     public DraftView patch(String email, String draftId, int expectedRevision, JsonNode patch) {
+        return save(email, draftId, expectedRevision, patch, Optional.empty());
+    }
+
+    /**
+     * As {@link #patch}, the revision recording that the change is a salary workbook's (W-133b C5a).
+     *
+     * @throws BadRequestException if the draft already has a revision importing the same workbook, naming it (C6a)
+     */
+    public DraftView importInto(String email, String draftId, int expectedRevision, JsonNode patch, WorkbookImport imported) {
+        owned(email, draftId);
+        revisionRepository.findFirstByDraftIdAndImportedFromWorkbookSha256(draftId, imported.getWorkbookSha256()).ifPresent(earlier -> {
+            throw new BadRequestException("This workbook was already imported into the draft at revision " + earlier.getRevisionNumber());
+        });
+        return save(email, draftId, expectedRevision, patch, Optional.of(imported));
+    }
+
+    private DraftView save(String email, String draftId, int expectedRevision, JsonNode patch, Optional<WorkbookImport> imported) {
         FilingDraft draft = owned(email, draftId);
         if (!draft.getStatus().isEditable()) {
             throw new DraftConflictException("A draft that is " + draft.getStatus() + " cannot be edited", DraftView.of(draft),
@@ -167,6 +184,7 @@ public class DraftService {
         boolean reopened = draft.getStatus() == DraftStatus.READY;
         DraftRevision revision = revision(draft, expectedRevision + 1, email, reopened);
         revision.setChangeSetJson(DraftInputsMapper.text(patch));
+        imported.ifPresent(revision::setImportedFrom);
         revisionRepository.insert(revision);
         draft.setInputsJson(DraftInputsMapper.text(inputs));
         draft.setCurrentRevision(expectedRevision + 1);

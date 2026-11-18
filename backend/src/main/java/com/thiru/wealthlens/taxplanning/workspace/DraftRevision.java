@@ -50,6 +50,10 @@ public class DraftRevision implements AuditableEntity, CreatedWithId {
     @Field("reopened")
     private boolean reopened;
 
+    /** Where the change came from, if a salary workbook (W-133b); none for every other save, and for every save before W-133b. */
+    @Field("imported_from")
+    private WorkbookImport importedFrom;
+
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
 

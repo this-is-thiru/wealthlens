@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.core.retry.RetryTemplate;
+import org.springframework.core.retry.Retryable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -48,8 +49,17 @@ public class DraftSaveRetry {
      *                                not finished
      */
     public DraftView patch(String email, String draftId, int expectedRevision, JsonNode patch) {
+        return retried(email, draftId, () -> draftService.patch(email, draftId, expectedRevision, patch));
+    }
+
+    /** {@link DraftService#importInto}, run again as {@link #patch} is (W-133b). */
+    public DraftView importInto(String email, String draftId, int expectedRevision, JsonNode patch, WorkbookImport imported) {
+        return retried(email, draftId, () -> draftService.importInto(email, draftId, expectedRevision, patch, imported));
+    }
+
+    private DraftView retried(String email, String draftId, Retryable<DraftView> save) {
         try {
-            return retryTemplate.execute(() -> draftService.patch(email, draftId, expectedRevision, patch));
+            return retryTemplate.execute(save);
         } catch (RetryException stopped) {
             Throwable last = stopped.getCause();
             if (last instanceof DataIntegrityViolationException) {
