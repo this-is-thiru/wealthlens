@@ -181,6 +181,10 @@ public final class RuleIds {
     public static final RuleId PERQ_SPECIFIED_SECURITY = new RuleId("PERQ-SPECIFIED-SECURITY");
     public static final RuleId PERQ_TELEPHONE = new RuleId("PERQ-TELEPHONE");
     public static final RuleId PERQ_UTILITY = new RuleId("PERQ-UTILITY");
+    public static final RuleId RATE_AGRICULTURAL_FIRST_SCHEDULE = new RuleId("RATE-AGRICULTURAL-FIRST-SCHEDULE");
+    public static final RuleId RATE_AGRICULTURAL_FIRST_SCHEDULE_AGE_60TO79 = new RuleId("RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-60TO79");
+    public static final RuleId RATE_AGRICULTURAL_FIRST_SCHEDULE_AGE_80 = new RuleId("RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-80");
+    public static final RuleId RATE_AGRICULTURAL_NEW_TAX_REGIME = new RuleId("RATE-AGRICULTURAL-NEW-TAX-REGIME");
     public static final RuleId RATE_CG_COST_INFLATION_INDEX = new RuleId("RATE-CG-COST-INFLATION-INDEX");
     public static final RuleId RATE_CG_LONG_LISTED_EQUITY = new RuleId("RATE-CG-LONG-LISTED-EQUITY");
     public static final RuleId RATE_CG_LONG_OTHER = new RuleId("RATE-CG-LONG-OTHER");

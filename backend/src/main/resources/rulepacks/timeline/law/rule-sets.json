@@ -698,6 +698,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-RATE-AGRICULTURAL",
+      "_note": "The maximum amount not chargeable to income-tax, for net agricultural income in the rates (FA 2026 s.2(2), s.3(2); W-258): at most one per regime and person, the ladder's own age rows mirrored, each holding only when the declared net agricultural income exceeds the limit. None, and the slab tax is the ladder's on the income alone",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-RATE-SUR",
       "_note": "The surcharge ladder on total income: one per regime",
       "selection": "EXACTLY_ONE",

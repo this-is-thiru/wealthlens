@@ -505,6 +505,12 @@ public final class ReasonCodes {
     /** The unused basic exemption taken from a part. (W-327e2, D-692) */
     public static final ReasonCode CG_SHORTFALL_TAKEN_FROM_PART = new ReasonCode("CG_SHORTFALL_TAKEN_FROM_PART");
 
+    /** Slab rates found on the income with the net agricultural income added. (W-258, D-778) */
+    public static final ReasonCode TAX_ON_AGGREGATE_INCOME = new ReasonCode("TAX_ON_AGGREGATE_INCOME");
+
+    /** The tax on the net agricultural income raised by the maximum amount not chargeable, taken off. (W-258, D-778) */
+    public static final ReasonCode AGRICULTURAL_INCOME_REBATE = new ReasonCode("AGRICULTURAL_INCOME_REBATE");
+
     /** Each code, with the facts its reason carries. */
     public static final Map<ReasonCode, Set<String>> FACTS = Map.ofEntries(
             Map.entry(REGIME_DISALLOWS, Set.of("regime")),
@@ -671,7 +677,9 @@ public final class ReasonCodes {
             Map.entry(SURCHARGE_LIMITED_PART, Set.of("dividends", "special")),
             Map.entry(TAX_AT_SLAB_RATES_ON_REST, Set.of("income", "special")),
             Map.entry(CG_TAXED_AT_SPECIAL_RATE, Set.of("part")),
-            Map.entry(CG_SHORTFALL_TAKEN_FROM_PART, Set.of("part", "taken", "shortfall")));
+            Map.entry(CG_SHORTFALL_TAKEN_FROM_PART, Set.of("part", "taken", "shortfall")),
+            Map.entry(TAX_ON_AGGREGATE_INCOME, Set.of("income", "agricultural")),
+            Map.entry(AGRICULTURAL_INCOME_REBATE, Set.of("agricultural", "maximum")));
 
     private ReasonCodes() {
     }

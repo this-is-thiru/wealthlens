@@ -35,6 +35,7 @@ import com.thiru.wealthlens.taxengine.rules.reason.ReasonCodes;
 import com.thiru.wealthlens.taxengine.rules.reason.ReasonFact;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -56,6 +57,9 @@ import java.util.Set;
  * the rest leaves unused first reduces the parts, in {@code RATE-CG-SHORTFALL-ORDER}'s order (s.196(2), s.197(2),
  * s.198(3)). The figures are not rounded: rounding happens in exactly two places, neither of them a band
  * ({@code RATE-ROUND-003}).
+ *
+ * <p>Net agricultural income the person declares lifts the rate the rest is charged at, where a
+ * {@code RS-RATE-AGRICULTURAL} row holds ({@link AgriculturalIntegration}; FA 2026 s.2(2), s.3(2); W-258).
  */
 public final class TaxByBasisNode implements ComputationNode {
 
@@ -78,7 +82,7 @@ public final class TaxByBasisNode implements ComputationNode {
     @Override
     public Set<RuleSetId> ruleSets() {
         return Set.of(RuleSetIds.RS_RATE_CG_SPECIAL, RuleSetIds.RS_RATE_SLAB, RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER,
-                DeclaredCapitalGainsParts.PARTS);
+                DeclaredCapitalGainsParts.PARTS, RuleSetIds.RS_RATE_AGRICULTURAL);
     }
 
     @Override
@@ -95,27 +99,49 @@ public final class TaxByBasisNode implements ComputationNode {
             throw new IllegalStateException("Rate table " + row.id() + " for regime " + ctx.regime().code()
                     + " is " + shape.map(cap -> "a " + cap.shapeName()).orElse("not a ladder") + ", not a slab ladder");
         }
-        if (gains.isEmpty()) {
-            TaxByBasis value = TaxByBasis.atSlabRatesOnly(ladder.apply(CapContext.of(ladder.base(), totalIncome)).value());
-            return NodeResult.of(value, TraceLine.of(
-                    1, produces(), row.id(), StepKind.TAX, MoneyValue.of(totalIncome), value, version.provenance()));
-        }
         Money atSpecialRates = gains.values().stream().reduce(Money.ZERO, Money::plus);
         Money atSlab = totalIncome.minus(atSpecialRates).floorAtZero();
-        TaxByBasis value = TaxByBasis.atSlabRatesOnly(ladder.apply(CapContext.of(ladder.base(), atSlab)).value());
+        Optional<AgriculturalIntegration> integration = AgriculturalIntegration.of(ctx, ladder, atSlab);
+        TaxByBasis value = TaxByBasis.atSlabRatesOnly(integration.map(AgriculturalIntegration::tax)
+                .orElseGet(() -> ladder.apply(CapContext.of(ladder.base(), atSlab)).value()));
         List<TraceLine> lines = new ArrayList<>();
-        lines.add(TraceLine.of(1, produces(), row.id(), StepKind.TAX, MoneyValue.of(atSlab), value, version.provenance())
-                .withLimitedBy("total income " + totalIncome + " less the capital gains at special rates "
-                        + atSpecialRates)
-                .withReason(new Reason(ReasonCodes.TAX_AT_SLAB_RATES_ON_REST, Map.of(
-                        "income", new ReasonFact.MoneyFact(totalIncome), "special", new ReasonFact.MoneyFact(atSpecialRates)))));
-        Map<CapitalGainsPart, Money> charged = shiftShortfall(ctx, gains, nilBandCeiling(ladder).minus(atSlab), lines);
+        lines.add(slabLine(row.id(), version, totalIncome, atSpecialRates, integration, value));
+        integration.ifPresent(applied -> lines.add(applied.rebateLine(lines.size() + 1)));
+        List<TraceAnnotation> annotations = AgriculturalIntegration.unanswered(ctx)
+                .map(notice -> List.of(new TraceAnnotation(1, List.of(notice)))).orElse(List.of());
+        Map<CapitalGainsPart, Money> charged = gains.isEmpty() ? gains
+                : shiftShortfall(ctx, gains, nilBandCeiling(ladder).minus(atSlab), lines);
         for (Map.Entry<CapitalGainsPart, Money> part : charged.entrySet()) {
             RuleId rate = specialRate(ctx, part.getKey()).orElseThrow().id();
             value = value.plusSpecialRate(new SpecialRateId(rate.value().replace('-', '_')),
                     taxOnPart(ctx, rate, heads, part.getKey(), part.getValue(), lines));
         }
-        return new NodeResult(value, lines);
+        return new NodeResult(value, lines, annotations);
+    }
+
+    /**
+     * The slab ladder's line: on the aggregate income where net agricultural income lifts the rate (W-258), else on
+     * total income less the special-rate gains, saying so where there are any.
+     */
+    private TraceLine slabLine(RuleId row, RuleVersion version, Money totalIncome, Money atSpecialRates,
+            Optional<AgriculturalIntegration> integration, TaxByBasis value) {
+        String lessSpecial = "total income " + totalIncome + " less the capital gains at special rates " + atSpecialRates;
+        boolean special = atSpecialRates.isGreaterThan(Money.ZERO);
+        if (integration.isPresent()) {
+            AgriculturalIntegration applied = integration.get();
+            return TraceLine.of(1, produces(), row, StepKind.TAX, MoneyValue.of(applied.aggregateIncome()),
+                            MoneyValue.of(applied.aggregateTax()), version.provenance())
+                    .withLimitedBy("income at slab rates " + applied.income() + (special ? " (" + lessSpecial + ")" : "")
+                            + " plus net agricultural income " + applied.net())
+                    .withReason(applied.aggregateReason());
+        }
+        TraceLine line = TraceLine.of(1, produces(), row, StepKind.TAX,
+                MoneyValue.of(totalIncome.minus(atSpecialRates).floorAtZero()), value, version.provenance());
+        if (!special) {
+            return line;
+        }
+        return line.withLimitedBy(lessSpecial).withReason(new Reason(ReasonCodes.TAX_AT_SLAB_RATES_ON_REST, Map.of(
+                "income", new ReasonFact.MoneyFact(totalIncome), "special", new ReasonFact.MoneyFact(atSpecialRates))));
     }
 
     /**

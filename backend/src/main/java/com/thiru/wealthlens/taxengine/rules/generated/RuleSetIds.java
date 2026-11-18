@@ -130,6 +130,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_PERQ_SPECIFIED_DATE = new RuleSetId("RS-PERQ-SPECIFIED-DATE");
     public static final RuleSetId RS_PERQ_SPECIFIED_EMPLOYEE = new RuleSetId("RS-PERQ-SPECIFIED-EMPLOYEE");
     public static final RuleSetId RS_PERQ_SPECIFIED_SECURITY = new RuleSetId("RS-PERQ-SPECIFIED-SECURITY");
+    public static final RuleSetId RS_RATE_AGRICULTURAL = new RuleSetId("RS-RATE-AGRICULTURAL");
     public static final RuleSetId RS_RATE_CG_COST_INFLATION_INDEX = new RuleSetId("RS-RATE-CG-COST-INFLATION-INDEX");
     public static final RuleSetId RS_RATE_CG_SHORTFALL_ORDER = new RuleSetId("RS-RATE-CG-SHORTFALL-ORDER");
     public static final RuleSetId RS_RATE_CG_SPECIAL = new RuleSetId("RS-RATE-CG-SPECIAL");

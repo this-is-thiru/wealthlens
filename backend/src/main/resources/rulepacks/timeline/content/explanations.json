@@ -303,6 +303,14 @@
       "why": "Your other income leaves {shortfall} of the basic exemption unused, so {taken} of your {part} is not taxed."
     },
     {
+      "code": "TAX_ON_AGGREGATE_INCOME",
+      "why": "Your net agricultural income of {agricultural} is added to your income of {income} only to find the rate your income is taxed at."
+    },
+    {
+      "code": "AGRICULTURAL_INCOME_REBATE",
+      "why": "The tax on your net agricultural income of {agricultural}, with the {maximum} the law leaves untaxed added, is taken off, so the agricultural income itself is not taxed."
+    },
+    {
       "code": "CARRIED_LOSS_AGAINST_PART",
       "why": "The loss of {year} is set against your {part}."
     },
@@ -1330,6 +1338,22 @@
     {
       "rule": "PERQ-UTILITY",
       "what": "Gas, electricity or water your employer provides for your household is valued at {out} as a perquisite."
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE",
+      "what": "On {in}, your net agricultural income with the amount the law leaves untaxed, the tax of {out} is taken off, so that income sets only your rate."
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-60TO79",
+      "what": "On {in}, your net agricultural income with the amount the law leaves untaxed, the tax of {out} is taken off, so that income sets only your rate."
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-80",
+      "what": "On {in}, your net agricultural income with the amount the law leaves untaxed, the tax of {out} is taken off, so that income sets only your rate."
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-NEW-TAX-REGIME",
+      "what": "On {in}, your net agricultural income with the amount the law leaves untaxed, the tax of {out} is taken off, so that income sets only your rate."
     },
     {
       "rule": "RATE-CG-LONG-LISTED-EQUITY",

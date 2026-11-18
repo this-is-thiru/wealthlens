@@ -123,11 +123,12 @@ class ItrForms2025Test {
     }
 
     @Test
-    void declarations_whenRead_askTheFourteenQuestionsRule12BarsOn() {
-        // Then — the thirteen yes-or-no bars and (III)'s amount; r.164(3)(n)'s SPECIAL_CASE_INCOME is not this year's
+    void declarations_whenRead_askTheFourteenQuestionsRule12BarsOnAndTheRatesQuestion() {
+        // Then — the thirteen yes-or-no bars and (III)'s amount; r.164(3)(n)'s SPECIAL_CASE_INCOME is not this year's;
+        // NET_AGRICULTURAL_INCOME is the Finance Act's, read by the rates (W-258)
         assertThat(PACK.declarations().keySet().stream().map(Object::toString).sorted().toList())
                 .containsExactlyElementsOf(java.util.stream.Stream.concat(YES_NO_BARS.stream(),
-                        java.util.stream.Stream.of("AGRICULTURAL_INCOME")).sorted().toList());
+                        java.util.stream.Stream.of("AGRICULTURAL_INCOME", "NET_AGRICULTURAL_INCOME")).sorted().toList());
     }
 
     @Test

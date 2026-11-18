@@ -42,8 +42,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Every condition reading a declaration names a question of the year's catalogue, in its kind (W-090a1). The shipped
- * TY 2026-27 pack asks r.164's thirteen (W-090a2) and no rule reads one yet; each case adds a reading to {@code REBATE-NEW-TAX-REGIME}'s versions or a
- * condition set, and the catalogue as the case needs.
+ * TY 2026-27 pack asks r.164's thirteen (W-090a2) and the rates' net agricultural income, which the
+ * {@code RS-RATE-AGRICULTURAL} rows read (W-258); each case adds a reading to {@code REBATE-NEW-TAX-REGIME}'s versions or
+ * a condition set, and two synthetic questions to the shipped catalogue as the case needs.
  */
 class DeclarationReferencesTest {
 
@@ -51,8 +52,16 @@ class DeclarationReferencesTest {
     private static final RulePack PACK = ShippedRulePacks.compile("rulepacks", Set.of(TY_2026_27)).load(TY_2026_27);
     private static final DeclarationCode DIRECTOR = new DeclarationCode("SYNTHETIC_YES_NO");
     private static final DeclarationCode FARMING = new DeclarationCode("SYNTHETIC_AMOUNT");
-    private static final Map<DeclarationCode, DeclarationDefinition> CATALOGUE = Map.of(
-            DIRECTOR, definition(DIRECTOR, AnswerKind.YES_NO), FARMING, definition(FARMING, AnswerKind.AMOUNT));
+    private static final Map<DeclarationCode, DeclarationDefinition> CATALOGUE = withShipped(Map.of(
+            DIRECTOR, definition(DIRECTOR, AnswerKind.YES_NO), FARMING, definition(FARMING, AnswerKind.AMOUNT)));
+
+    /** The synthetic questions added to the shipped catalogue, whose rows the shipped rules read. */
+    private static Map<DeclarationCode, DeclarationDefinition> withShipped(
+            Map<DeclarationCode, DeclarationDefinition> synthetic) {
+        Map<DeclarationCode, DeclarationDefinition> catalogue = new LinkedHashMap<>(PACK.declarations());
+        catalogue.putAll(synthetic);
+        return catalogue;
+    }
 
     private static DeclarationDefinition definition(DeclarationCode code, AnswerKind kind) {
         return new DeclarationDefinition(code, "A synthetic question", kind, DateRange.fromOnwards(LocalDate.of(2026, 4, 1)),
@@ -88,7 +97,7 @@ class DeclarationReferencesTest {
     @Test
     void check_whenTheShippedPackIsChecked_findsNothing() {
         // Given / When / Then
-        assertThat(PACK.declarations()).hasSize(13);
+        assertThat(PACK.declarations()).hasSize(14);
         assertThat(problems(PACK)).isEmpty();
     }
 
@@ -105,7 +114,7 @@ class DeclarationReferencesTest {
     @Test
     void check_whenARuleReadsAQuestionTheYearDoesNotAsk_namesTheRuleAndTheQuestion() {
         // Given
-        RulePack unasked = readingInARule(new Not(new Declared(DIRECTOR)), Map.of());
+        RulePack unasked = readingInARule(new Not(new Declared(DIRECTOR)), PACK.declarations());
 
         // When / Then
         assertThat(problems(unasked)).containsExactly("rule REBATE-NEW-TAX-REGIME reads declaration SYNTHETIC_YES_NO,"
@@ -139,7 +148,7 @@ class DeclarationReferencesTest {
         ConditionSet set = new ConditionSet(id, "A synthetic set", List.of(new IsResident(), new Declared(DIRECTOR)),
                 RuleIds.REBATE_NEW_TAX_REGIME, definition(DIRECTOR, AnswerKind.YES_NO).provenance());
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
-                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(id, set), PACK.funds(), Map.of(), Map.of(), Explanations.none(), Map.of(), List.of());
+                PACK.components(), PACK.regimes(), PACK.disallowanceSets(), Map.of(id, set), PACK.funds(), PACK.declarations(), Map.of(), Explanations.none(), Map.of(), List.of());
 
         // When / Then
         assertThat(problems(pack)).containsExactly("condition set COND-SYNTHETIC reads declaration SYNTHETIC_YES_NO,"
@@ -157,7 +166,7 @@ class DeclarationReferencesTest {
                         List.of(new Not(new Declared(new DeclarationCode("SYNTHETIC_PAPER")))), source)), List.of(), source);
         RulePack pack = new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(),
                 PACK.components(), PACK.regimes(), PACK.disallowanceSets(), PACK.conditionSets(), PACK.funds(),
-                Map.of(), Map.of(form.code(), form), Explanations.none(), Map.of(), List.of());
+                PACK.declarations(), Map.of(form.code(), form), Explanations.none(), Map.of(), List.of());
 
         // When / Then
         assertThat(problems(pack)).containsExactly(

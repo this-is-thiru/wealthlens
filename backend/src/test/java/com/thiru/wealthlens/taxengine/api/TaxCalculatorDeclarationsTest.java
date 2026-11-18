@@ -23,7 +23,7 @@ class TaxCalculatorDeclarationsTest {
             new TaxCalculator(ShippedRulePacks.compile("rulepacks", Set.of(TY_2025_26, TY_2026_27)));
 
     @Test
-    void declarations_whenTy2026_listsR164sThirteenInCodeOrder() {
+    void declarations_whenTy2026_listsR164sThirteenAndTheRatesQuestionInCodeOrder() {
         // When
         List<DeclarationQuestion> questions = CALCULATOR.declarations(TY_2026_27);
 
@@ -31,25 +31,26 @@ class TaxCalculatorDeclarationsTest {
         assertThat(questions).extracting(DeclarationQuestion::code).containsExactly(
                 "AGRICULTURAL_INCOME", "ASSETS_OUTSIDE_INDIA", "CASH_WITHDRAWAL_TAX_DEDUCTED", "DIRECTOR_IN_COMPANY",
                 "DOUBLE_TAXATION_AGREEMENT_RELIEF", "INCOME_APPORTIONED_BETWEEN_SPOUSES", "INCOME_FROM_OUTSIDE_INDIA",
-                "SIGNING_AUTHORITY_OUTSIDE_INDIA", "SPECIAL_CASE_INCOME", "START_UP_SHARE_TAX_DEFERRED",
+                "NET_AGRICULTURAL_INCOME", "SIGNING_AUTHORITY_OUTSIDE_INDIA", "SPECIAL_CASE_INCOME", "START_UP_SHARE_TAX_DEFERRED",
                 "TDS_ASSESSABLE_IN_ANOTHERS_HANDS", "UNILATERAL_FOREIGN_TAX_DEDUCTION", "UNLISTED_EQUITY_HELD");
         assertThat(questions).filteredOn(question -> question.answerKind().equals("AMOUNT"))
-                .extracting(DeclarationQuestion::code).containsExactly("AGRICULTURAL_INCOME");
+                .extracting(DeclarationQuestion::code).containsExactly("AGRICULTURAL_INCOME", "NET_AGRICULTURAL_INCOME");
         DeclarationQuestion director = questions.get(3);
         assertThat(director.question()).isEqualTo("Were you a director in any company at any time during the tax year?");
         assertThat(director.source()).contains("r.164(3)(f)").contains("r.164(6)(f)");
     }
 
     @Test
-    void declarations_whenTy2025_listsRule12sFourteenInCodeOrder() {
+    void declarations_whenTy2025_listsRule12sFourteenAndTheRatesQuestionInCodeOrder() {
         // When — r.12(1)(a)'s proviso as in force for AY 2026-27 (W-090d, D-652)
         List<DeclarationQuestion> questions = CALCULATOR.declarations(TY_2025_26);
 
-        // Then — r.164(3)(n)'s SPECIAL_CASE_INCOME is not this year's; (V) and (VI) are
+        // Then — r.164(3)(n)'s SPECIAL_CASE_INCOME is not this year's; (V) and (VI) are; NET_AGRICULTURAL_INCOME is
+        // FA 2026 s.2(2)'s, not the rule's (W-258)
         assertThat(questions).extracting(DeclarationQuestion::code).containsExactly(
                 "AGRICULTURAL_INCOME", "ASSETS_OUTSIDE_INDIA", "CASH_WITHDRAWAL_TAX_DEDUCTED", "DIRECTOR_IN_COMPANY",
                 "DOUBLE_TAXATION_AGREEMENT_RELIEF", "INCOME_APPORTIONED_BETWEEN_SPOUSES", "INCOME_FROM_OUTSIDE_INDIA",
-                "INCOME_TAXABLE_UNDER_S115BBDA", "SIGNING_AUTHORITY_OUTSIDE_INDIA", "START_UP_SHARE_TAX_DEFERRED",
+                "INCOME_TAXABLE_UNDER_S115BBDA", "NET_AGRICULTURAL_INCOME", "SIGNING_AUTHORITY_OUTSIDE_INDIA", "START_UP_SHARE_TAX_DEFERRED",
                 "TDS_ASSESSABLE_IN_ANOTHERS_HANDS", "UNEXPLAINED_INCOME_S115BBE", "UNILATERAL_FOREIGN_TAX_DEDUCTION",
                 "UNLISTED_EQUITY_HELD");
         DeclarationQuestion director = questions.get(3);

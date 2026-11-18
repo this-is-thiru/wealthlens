@@ -3,20 +3,20 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.128",
-      "checksum": "sha256:9bac019978e6fddd29b6e4cc3dd4f89ac37e1a88b1c5a183c166c40e15bed1ea"
+      "version": "2025-26.law.129",
+      "checksum": "sha256:b4cc1bb851def28e534ae9d977d28b51dfa9eeb94ff385f8783785ae362d7df8"
     },
     "exec": {
-      "version": "2025-26.exec.34",
-      "checksum": "sha256:ca629e174dd5371b77b53b5bda85c2a8c62b787143a9e2fce5c5ed97d1092740"
+      "version": "2025-26.exec.35",
+      "checksum": "sha256:77316668f71072468496961f93100281f515239df216243f3ff1cf0e601032ba"
     },
     "forms": {
       "version": "2025-26.forms.8",
       "checksum": "sha256:04aee0ec2aa3c1ab389dd9a45c0342eb2d05dc35fc9c67cc5115132f993ed069"
     },
     "content": {
-      "version": "2025-26.content.29",
-      "checksum": "sha256:61dff9fa87f489c2ba40fe0ae8839f9ba4c253dc1daace2a1858215b1f00d110"
+      "version": "2025-26.content.30",
+      "checksum": "sha256:a6dbeac4b6078bdfd95b047d0c65a13f9bd6325423a357c49b1fbfbd65a2dfbe"
     }
   },
   "rules": {
@@ -183,6 +183,10 @@
     "PERQ-SPECIFIED-SECURITY": "sha256:46b265a6708b99fda1c87f2ba6a6e965a948a4a626523c381ef6d3f44c3f0827",
     "PERQ-TELEPHONE": "sha256:a90d850eb8cd89c2e4860c0081636af3a08554902fb4a9fe72f358a8e4c453fe",
     "PERQ-UTILITY": "sha256:a0371aa4403aa243ad923e03371ca60241074f439c960343adcaf885db751df0",
+    "RATE-AGRICULTURAL-FIRST-SCHEDULE": "sha256:584c1c2214cd9a8f05b1a0dddfa1410eab551ec07dc89fa029e10539760a6d68",
+    "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-60TO79": "sha256:2d16bc9ce8171e95204b4a782f01754f0f668a090cbefabf7f2d65dbba949490",
+    "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-80": "sha256:d79bed4615bd17d9c559482b82b2f4b8c867088230b5408b71a4ad78cd819c6a",
+    "RATE-AGRICULTURAL-NEW-TAX-REGIME": "sha256:90412b392cc1719ab36597493dc12f03d16e7492011926a9d5bb2b2886480a63",
     "RATE-CG-COST-INFLATION-INDEX": "sha256:5f26580343c8c2998eb2f7b047d5cb7293f52e722ac13b87c9cec899b1031017",
     "RATE-CG-LONG-LISTED-EQUITY": "sha256:e0142c535fb68f01d1cfa5f8f50ac928d6c642a0c21f2f525122b2520431f9f2",
     "RATE-CG-LONG-OTHER": "sha256:bfd27da539863e8a471dc9f06e71d5d86fec49fc31e7ea2b3565e1c71e615f15",

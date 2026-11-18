@@ -1,0 +1,65 @@
+{
+  "ruleId": "RATE-AGRICULTURAL-NEW-TAX-REGIME",
+  "ruleSet": "RS-RATE-AGRICULTURAL",
+  "_note": "The maximum amount not chargeable to income-tax for an \"assessee whose income is chargeable to tax under section 115BAC(1A)\" (TY 2025-26, \"Rs. 4,00,000\", p.2) or \"under section 202\" (TY 2026-27, \"₹ 400000\", p.10), read with the net agricultural income for the rates (partial integration; W-258, D-778). FA 2026 s.2(2)(a) (TY 2025-26) and s.3(2)(a) (TY 2026-27): where the person \"has … any net agricultural income exceeding five thousand rupees [₹ 5000], in addition to the total income, and the total income exceeds the maximum amount not chargeable to income-tax as specified in column C … the net agricultural income shall be taken into account, only for the purpose of charging income-tax in respect of the total income\"; (b) Z = X – Y, X the tax on the aggregate income (total income + net agricultural income) and Y the tax on \"the net agricultural income increased by a sum as specified in column C\", both at the ladder's rates. The cap is column C; the ₹5,000 is the DeclaredAmountAbove condition (exceeding, so ₹5,000 itself does not integrate). \"Total income\" in the test and in the aggregate is total income less the income charged at special rates, as ITR-2 Part B-TI rows 13 – 15 read it (owner's ruling W-258 C4a). RATE-SLAB-NEW-TAX-REGIME has no conditions, nor does this row beyond the declared amount. One version from 2025-04-01, open-ended like the slab rows; the two years' Tables state the same amount. Advance tax follows through tax.netpayable (s.3(14), pp.27 – 29).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Finance Act, 2026",
+        "reference": "s.2(2) Table Sl. No. 4",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Finance Act, 2026",
+        "reference": "s.3(2) Table Sl. No. 4",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "400000"
+      },
+      "conditions": [
+        {
+          "type": "DeclaredAmountAbove",
+          "code": "NET_AGRICULTURAL_INCOME",
+          "limit": "5000"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.2(2) and s.3(2)",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-31",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.2(2)(a) Table Sl. No. 4 and (b), pp.2 – 3; s.3(2)(a) Table Sl. No. 4 and (b), pp.9 – 10",
+        "accessedOn": "2026-11-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+    "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.2(2)(a) Table Sl. No. 4 and (b), pp.2 – 3; s.3(2)(a) Table Sl. No. 4 and (b), pp.9 – 10",
+    "accessedOn": "2026-11-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

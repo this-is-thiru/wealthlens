@@ -4,18 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-259 DONE (D-777), committed and pushed with this checkpoint; next by board order W-258 (agricultural income in the rates), not planned
+Item            : W-258 DONE (D-778), committed and pushed with this checkpoint; next by board order W-258a (ITR cells for agricultural income), not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: W-131e/h/f/j, D-772, W-132, W-333, W-133a/b, W-259 (D-768 – D-777)
-Board           : W-259 D; W-258 · next (waiting: W-126d, W-131i, W-299, W-294, W-113a, W-324, W-146a)
-Next step       : 1) gh run list — confirm the last commits green; 2) plan W-258 (Gazette first: agricultural income's partial integration, the Act's provision); stop for approval
+Done session 107: W-258 (D-778); W-258a placed
+Board           : W-258 D; W-258a ·; waiting: W-126d, W-131i, W-299, W-294, W-113a, W-324, W-146a
+Next step       : 1) gh run list — confirm the W-258 commit green; 2) plan W-258a (read ITR-2 B-TI 14/15, B-TTI 2a/2c, Schedule EI in Gazette 271435 first); stop for approval
 Open to owner   : runner token in git history (aws/ removed); host chmod 666 docker.sock
 Owner actions   : runbook §0.8; §1.n, §1.p; §1.k, §1.l; §1.m only when the scan is on
-Env notes       : integration tests need OrbStack + DOCKER_HOST; never cd inside a $ command; tool .txt files are not compiled (W-333 broke the relock spike)
-Last verify     : W-259 targeted 95/0 (7 classes) + validate; break caught
-Last item commit: taxplanning W-259: keep the synthetic pack's hand-written rows and locks on regeneration — a rerun of the generator deleted them
+Env notes       : -Dtest=Class skips @Nested classes — use quoted Class*; never cd inside a $ command; integration tests need OrbStack + DOCKER_HOST
+Last verify     : W-258 red 5/9 then green; break caught; targeted 1139/0 + 311/0; validate green
+Last item commit: taxplanning W-258: bring net agricultural income into the rates as rule data — a person with agricultural income was taxed as if they had none
 Files touched   : none
-Updated         : 2026-11-18, session 106
+Updated         : 2026-11-18, session 107
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

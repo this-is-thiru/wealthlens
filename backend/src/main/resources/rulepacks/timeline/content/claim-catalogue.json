@@ -1493,6 +1493,22 @@
       "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
     },
     {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-60TO79",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-80",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-NEW-TAX-REGIME",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
       "rule": "RATE-CG-COST-INFLATION-INDEX",
       "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
     },
@@ -1539,8 +1555,7 @@
     {
       "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
       "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
-    },
-    {
+    },    {
       "rule": "RATE-SLAB-NEW-TAX-REGIME",
       "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
     },

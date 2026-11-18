@@ -161,7 +161,7 @@ class ClaimCatalogueTest {
         assertThatCode(() -> ClaimCatalogue.of(bare).verify(bare)).doesNotThrowAnyException();
     }
 
-    /** W-117d's hand: every one of the timeline's rules is placed once — 38 catalogued, 38 not yet, 168 not a claim (W-117e moved three). */
+    /** W-117d's hand: every one of the timeline's rules is placed once — 38 catalogued, 38 not yet, 172 not a claim (W-117e moved three; W-258 added the four agricultural-rate rows). */
     @Test
     void of_whenTheShippedCatalogueIsRead_placesEveryRuleOnce() {
         // When
@@ -169,8 +169,8 @@ class ClaimCatalogueTest {
 
         // Then
         assertThat(catalogue.notYetCatalogued()).hasSize(38);
-        assertThat(catalogue.notAClaim()).hasSize(168);
-        assertThat(SHIPPED.rules()).hasSize(244);
+        assertThat(catalogue.notAClaim()).hasSize(172);
+        assertThat(SHIPPED.rules()).hasSize(248);
     }
 
     private static ObjectNode step(JsonNode entries, int entry, int index) {
