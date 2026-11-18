@@ -170,14 +170,15 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
             [{"op": "add", "path": "/filing/declarations", "value": %s}]""";
 
     @Test
-    void declarations_whenTy2026_listsTheThirteenQuestionsOfR164() {
+    void declarations_whenTy2026_listsR164sThirteenAndTheRatesQuestion() {
         // When
         ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/declarations/2026", null, null);
 
-        // Then
+        // Then — r.164's thirteen and FA 2026 s.3(2)'s net agricultural income (W-258)
         JsonNode questions = JsonMapper.builder().build().readTree(read.getBody());
         assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(questions).hasSize(13);
+        assertThat(questions).hasSize(14);
+        assertThat(questions.findValuesAsString("code")).contains("NET_AGRICULTURAL_INCOME");
         assertThat(questions.get(0).get("code").asString()).isEqualTo("AGRICULTURAL_INCOME");
         assertThat(questions.get(0).get("answerKind").asString()).isEqualTo("AMOUNT");
     }
