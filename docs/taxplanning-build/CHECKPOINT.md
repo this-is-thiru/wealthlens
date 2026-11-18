@@ -4,18 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-258a DONE (D-779), committed and pushed with this checkpoint; W-258's pipeline fix 92cc59b5
-Stage           : 6 (DONE); nothing in progress
-Done session 107: W-258 (D-778) c21198b2 + api cd928fc; fix 92cc59b5; W-258a (D-779)
-Board           : W-258 D; W-258a D; every open item waits: W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a
-Next step       : 1) gh run list — confirm the two new commits green (44363328276 at c21198b2 failed, fixed by 92cc59b5); 2) ask the owner which waiting item to unblock, or what to place next
-Open to owner   : the next item (all open rows wait); runner token in git history (aws/ removed); host chmod 666 docker.sock
-Owner actions   : runbook §0.8; §1.n, §1.p; §1.k, §1.l; §1.m only when the scan is on
-Env notes       : -Dtest=Class skips @Nested classes — use quoted Class*; run "expected to move" integration tests on OrbStack before commit; never cd inside a $ command
-Last verify     : W-258a targeted 1466/0; DraftIntegrationTest 40/0, DraftComputationIntegrationTest 63/0, CapitalGainsNodeTest 118/0; validate green
-Last item commit: taxplanning W-258a: fill ITR-2's tax split and aggregate income from the agricultural rows — 2a showed the tax after the rebate and 2c was left to the user
+Item            : W-334 docs committed and pushed with this checkpoint (runbook §6, D-780, D-781; WL-A-2 published; W-335 = WL-48); execution not started
+Stage           : W-334 R; next: plan W-334a (merge + tag) and W-334b (preflight) as checklist items, stop for approval
+Done session 107: W-258, W-258a, the W-258 fix 92cc59b5, all pushed at 9973913a (green); W-334 built, uncommitted
+Board           : W-334 R; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
+Next step       : owner (2026-11-19): deployment work as crisp, checklist-driven items, run interactively, no compromise. First: split W-334 into W-334a merge+tag, W-334b preflight (keys, tier, tools, fingerprint twice on prod), W-334c prod rehearsal on dev, W-334d staging, W-334e prod, W-334f dev fresh — each plan = numbered checklist with exact command, expected result, stop condition, way back; owner approves each; one item at a time; then commit W-334 docs
+Open to owner   : W-334 review; then §6's runs; runner token in git history (aws/ removed); host chmod 666 docker.sock
+Owner actions   : runbook §6 (the interim run); §0.8 and §1.r are inside it
+Env notes       : -Dtest=Class skips @Nested classes — use quoted Class*; integration tests need DOCKER_HOST=unix:///Users/pthirumalayadav/.orbstack/run/docker.sock; never cd inside a $ command
+Last verify     : W-334 doc tests 78/0 (+1 integration 1/0); validate green
+Last item commit: taxplanning W-334: write the interim run's ordered, gated sheets for dev, staging and prod — the app runs locally and three databases need the merged build once
 Files touched   : none
-Updated         : 2026-11-18, session 107
+Updated         : 2026-11-19, session 107
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
