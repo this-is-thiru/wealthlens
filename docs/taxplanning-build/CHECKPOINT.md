@@ -9,7 +9,7 @@ Stage           : 6 (DONE); nothing in progress
 Done session 106: W-131e (D-768), W-131h (D-769), W-131f (D-770), W-131j (D-771) pushed; five CI probes, branches deleted; W-131i placed (waits for the scan)
 Board           : W-131e/f/h/j D; W-131i ·; W-132 ·; W-133 ·
 Next step       : 1) gh run list — confirm the four item commits green; 2) plan W-132 on the §2 template; stop for approval
-Open to owner   : aws/runbook-daily.sh line 11 runner token in plain text + line 3 chmod 666 docker.sock (flagged); W-131g, W-333 yes/no
+Open to owner   : aws/ removed (owner, session 106; staged, not committed) — its runner token stays in git history: owner to confirm it is expired or revoke it; chmod 666 docker.sock was a host step, check the host; W-131g, W-333 yes/no
 Owner actions   : runbook §0.8; §1.n (documents switch), §1.p; §1.k, §1.l; §1.m only when the scan is on
 Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures; -DskipTests still compiles tests; Linux-only tests via a throwaway CI branch
 Last verify     : W-131j targeted 89/0 + validate 0; Linux run 44341679586 passed, break caught

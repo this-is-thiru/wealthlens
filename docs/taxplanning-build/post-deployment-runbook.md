@@ -519,8 +519,8 @@ one row to `privacy_processing_log`: `principal`, `subject_email` (the path's `{
 its last processing (`app.privacy.log-retention: P1Y`, env var `APP_PRIVACY_LOGRETENTION`; DPDP Rules, 2025 r.6(1)(e),
 r.8(3)): processing-log rows and `tax_access_log` reads by their time, grievances by `answered_at` (an unanswered one is
 kept), breach intimations by the latest of `posted_at`, `read_at`, `emailed_at`, erasure requests by `erased_at`. Breach
-notices stay. **Console logs are not this log:** they live only as long as the container (`aws/runbook-daily.sh` replaces
-it on each start) and are diagnostics (W-237e C5a).
+notices stay. **Console logs are not this log:** they live only as long as the container (each deploy's `docker rm -f wealthlens-container` replaces
+it) and are diagnostics (W-237e C5a).
 
 **First start (automatic):** `PrivacyIndexInitializer` creates the log's indexes. **Confirm** the log holds `Ensured the
 indexes of ProcessingRecord`; a failure stops startup. The collection is new: nothing to check first, nothing to seed.
@@ -833,7 +833,7 @@ Automatic at startup (`DocumentIndexInitializer`). **Confirm** the log holds `En
 
 ### 1.k W-131j (D-771) — the app runs as `wealthlens`, not root · owner · **first deploy carrying W-131j**
 
-The image now sets `USER wealthlens` (`Dockerfile`); `/app.jar` stays root-owned and read-only to it. The app writes nothing to disk but Tomcat's upload temp files in `/tmp`. At start, on Linux, it makes itself **non-dumpable** (`ProcessProtection`, `prctl(PR_SET_DUMPABLE, 0)`), so the PDF reader it starts as the same user cannot read its environment (the secrets), memory or maps (CI run 44340879615: denied with the call; read, secret visible, without it). If the call fails, **the app does not start**: `The process could not be made non-dumpable … the application does not start`. **Confirm** (read-only): `docker exec wealthlens-container id` shows `uid=…(wealthlens)`, and the start log holds `The process is non-dumpable` and `PDFs are read in a child process as this process's user`. The `docker run` in `aws/runbook-daily.sh` does not change. **Cost:** no core dumps of the app; `jcmd` is not in the JRE image anyway, so a thread dump is `docker kill -s QUIT wealthlens-container` into the log. A second start changes nothing. **Way back:** redeploy the previous image.
+The image now sets `USER wealthlens` (`Dockerfile`); `/app.jar` stays root-owned and read-only to it. The app writes nothing to disk but Tomcat's upload temp files in `/tmp`. At start, on Linux, it makes itself **non-dumpable** (`ProcessProtection`, `prctl(PR_SET_DUMPABLE, 0)`), so the PDF reader it starts as the same user cannot read its environment (the secrets), memory or maps (CI run 44340879615: denied with the call; read, secret visible, without it). If the call fails, **the app does not start**: `The process could not be made non-dumpable … the application does not start`. **Confirm** (read-only): `docker exec wealthlens-container id` shows `uid=…(wealthlens)`, and the start log holds `The process is non-dumpable` and `PDFs are read in a child process as this process's user`. The app's `docker run` (`docker run -d -p 8080:8080 --name wealthlens-container tperamasani/wealthlens`) does not change. **Cost:** no core dumps of the app; `jcmd` is not in the JRE image anyway, so a thread dump is `docker kill -s QUIT wealthlens-container` into the log. A second start changes nothing. **Way back:** redeploy the previous image.
 
 ### 1.l W-131f (D-770) — a PDF is read in a child process · owner · **first deploy carrying W-131f**
 
@@ -849,7 +849,7 @@ From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored 
 2. Once per host: `docker network create wealthlens` and `docker volume create clam_db`.
 3. `docker run -d --name clamd --restart unless-stopped --network wealthlens --mount source=clam_db,target=/var/lib/clamav clamav/clamav:1.5`. No port is published: only containers on `wealthlens` reach it, so a document's bytes never leave the host.
 4. **Check** (read-only): `docker inspect --format '{{.State.Health.Status}}' clamd` answers `healthy` (the image's own health check pings `clamd`). The first start loads the signatures; on CI it answered within 17 s (run 44328189271).
-5. Run the app on the same network, naming the scanner: add `--network wealthlens -e CLAMD_HOST=clamd` to its `docker run` (`aws/runbook-daily.sh:7`) and redeploy.
+5. Run the app on the same network, naming the scanner: add `--network wealthlens -e CLAMD_HOST=clamd` to its `docker run` (`docker run -d -p 8080:8080 --name wealthlens-container tperamasani/wealthlens`) and redeploy.
 6. **After**, on staging with the switch on (§1.n): `db.tax_documents.countDocuments()`, then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/tax/user/<email>/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
 
 **A second run** is safe: step 2 reports the network and volume exist, and step 3 reports the name in use — `docker start clamd` instead. `freshclam` inside the container updates the signatures once a day; nothing to run. **Way back:** turn the switch off first (§1.n), then `docker rm -f clamd` and `docker volume rm clam_db`; the scanner stores nothing of ours.
