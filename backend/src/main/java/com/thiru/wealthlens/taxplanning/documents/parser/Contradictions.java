@@ -26,6 +26,9 @@ import java.util.stream.Stream;
  */
 final class Contradictions {
 
+    /** {@code DR 08} T8-5: a regime contradiction is never settled silently; the user is asked one precise question (W-132 C3a). */
+    static final String WHICH_REGIME = "Which regime did your employer apply?";
+
     /** Below L3's 0.70 floor, so a contradicted cell is never trusted above an inferred one (D-750 C2a, adopted by the owner). */
     static final double CONTRADICTED_CONFIDENCE = 0.50;
 
@@ -158,10 +161,10 @@ final class Contradictions {
                 && entry.getValue().compareTo(deduction.get()) == 0).map(Map.Entry::getKey).findFirst();
         if (deduction.get().isGreaterThan(ceiling.get())) {
             notes.add("Contradiction: " + deductionPath + " printed " + deduction.get().inIndianNotation() + ", above the "
-                    + ceiling.get().inIndianNotation() + " standard deduction of " + named + " that " + row);
+                    + ceiling.get().inIndianNotation() + " standard deduction of " + named + " that " + row + ". " + WHICH_REGIME);
         } else if (other.isPresent() && deduction.get().compareTo(ceiling.get()) != 0) {
             notes.add("Contradiction: " + deductionPath + " printed " + deduction.get().inIndianNotation() + ", the standard deduction of "
-                    + other.get().value() + ", but " + row + " " + named + " (" + ceiling.get().inIndianNotation() + ")");
+                    + other.get().value() + ", but " + row + " " + named + " (" + ceiling.get().inIndianNotation() + "). " + WHICH_REGIME);
         } else {
             return;
         }

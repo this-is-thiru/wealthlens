@@ -189,6 +189,8 @@ class DraftReconciliationIntegrationTest extends AbstractIntegrationTest {
         assertThat(rupees(line.get("computedValue"))).isEqualByComparingTo("214500");
         assertThat(rupees(line.get("difference"))).isEqualByComparingTo("-214500");
         assertThat(texts(line.get("reasons"))).containsExactly("STANDARD_DEDUCTION_TWICE", "PREVIOUS_SALARY_UNDECLARED");
+        assertThat(texts(report.get("explanations"))).contains("Each employer granted a whole year's standard deduction, where"
+                + " the year allows one: too little tax was deducted");
         assertThat(texts(report.get("documentIds"))).containsExactlyInAnyOrder(first, second);
         assertThat(view.get("assembly").get("mode").asString()).isEqualTo("PER_EMPLOYER");
         assertThat(view.get("assembly").get("notices").toString()).contains("SAL-STDDED-001");

@@ -28,6 +28,10 @@ public final class Reconciliation {
     /** Rounding to the nearest ₹10 (RATE-ROUND-002; D-755 C5a). */
     private static final Money ROUNDING = Money.TEN;
 
+    /** Why a MIXED year is not compared ({@code DR 08} T8-6's explanation; {@code DOC-F130-ANNEX-001}; W-132 C2a). */
+    static final String MIXED_YEAR = "Some employers issued Part C and some did not, so the year cannot be compared with the computation:"
+            + " the last employer's Part C should carry every earlier salary in row 1(e)";
+
     private Reconciliation() {
     }
 
@@ -45,7 +49,7 @@ public final class Reconciliation {
         List<String> documents = certificates.stream().map(ConfirmedCertificate::documentId).toList();
         List<DocumentConfirmation> confirmed = certificates.stream().map(ConfirmedCertificate::confirmation).toList();
         if (assembly.mode() == AssemblyMode.MIXED) {
-            return new ReconciliationReport(computed.computationId(), documents, List.of(), Verdict.CANNOT_COMPARE);
+            return new ReconciliationReport(computed.computationId(), documents, List.of(), Verdict.CANNOT_COMPARE, List.of(MIXED_YEAR));
         }
         Optional<Map<String, ExtractedValue>> partC = yearPartC(confirmed, assembly, layout);
         Context context = new Context(partC.map(values -> regimeDiffers(values, layout, computed, law)).orElse(false),
@@ -65,7 +69,12 @@ public final class Reconciliation {
                 own.filter(reason -> !above.contains(reason)).ifPresent(above::add);
             }
         }
-        return new ReconciliationReport(computed.computationId(), documents, lines, verdict(lines));
+        return new ReconciliationReport(computed.computationId(), documents, lines, verdict(lines), explanations(lines));
+    }
+
+    /** Each reason's sentence once, in the order the lines first give it (W-132 C2a). */
+    private static List<String> explanations(List<ReconciliationLine> lines) {
+        return lines.stream().flatMap(line -> line.reasons().stream()).distinct().map(ReconciliationReason::sentence).toList();
     }
 
     /** The one Part C that covers the year: the only certificate's, or the consolidating employer's; none per employer. */

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131j DONE (D-771), committed and pushed with this checkpoint; next by board order W-132 (T8 tests), not planned
+Item            : W-132 DONE (D-773), committed and pushed with this checkpoint (+ api-collection); next by board order W-333, not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: W-131e (D-768), W-131h (D-769), W-131f (D-770), W-131j (D-771) pushed; five CI probes, branches deleted; W-131i placed (waits for the scan)
-Board           : W-131e/f/h/j D; W-131i ·; W-132 ·; W-133 ·
-Next step       : 1) gh run list — confirm the four item commits green; 2) plan W-132 on the §2 template; stop for approval
-Open to owner   : aws/ removed (owner, session 106; staged, not committed) — its runner token stays in git history: owner to confirm it is expired or revoke it; chmod 666 docker.sock was a host step, check the host; W-131g declined, W-333 placed after W-132 (D-772, uncommitted)
-Owner actions   : runbook §0.8; §1.n (documents switch), §1.p; §1.k, §1.l; §1.m only when the scan is on
-Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures; -DskipTests still compiles tests; Linux-only tests via a throwaway CI branch
-Last verify     : W-131j targeted 89/0 + validate 0; Linux run 44341679586 passed, break caught
-Last item commit: taxplanning W-131j: run the application as wealthlens, not root, and make it non-dumpable — the app ran as root in its container
+Done session 106: W-131e/h/f/j (D-768 – D-771), D-772, W-132 (D-773); aws/ removed
+Board           : W-132 D; W-333 · next; W-133 ·
+Next step       : 1) gh run list — confirm the last commits green; 2) plan W-333 (check first whether ComputedTax is serialized or stored as-is); stop for approval
+Open to owner   : runner token in git history (aws/ removed); host chmod 666 docker.sock
+Owner actions   : runbook §0.8; §1.n, §1.p; §1.k, §1.l; §1.m only when the scan is on
+Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML; Linux-only tests via a throwaway CI branch; an unused import makes Checkstyle stop a break run before its tests
+Last verify     : W-132 targeted 110/0 + golden 5/0 on the real engine + validate 0; breaks (a sentence, the question, the regime) caught
+Last item commit: taxplanning W-132: the T8 golden cases on the shipped layout and the engine, and each reason in words — a report gave codes the user could not read
 Files touched   : none
 Updated         : 2026-11-18, session 106
 ```

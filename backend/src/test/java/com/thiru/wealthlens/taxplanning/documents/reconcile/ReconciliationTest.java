@@ -138,6 +138,8 @@ class ReconciliationTest {
         // Then
         assertThat(report.verdict()).isEqualTo(Verdict.CANNOT_COMPARE);
         assertThat(report.lines()).isEmpty();
+        assertThat(report.explanations()).containsExactly("Some employers issued Part C and some did not, so the year cannot be compared"
+                + " with the computation: the last employer's Part C should carry every earlier salary in row 1(e)");
     }
 
     /** Row 11 (Deductible Amount) first, as the form prints it, then row 12, row 17 and Part B (W-130b). */

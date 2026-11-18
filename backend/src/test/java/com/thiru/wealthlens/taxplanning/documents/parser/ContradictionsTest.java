@@ -250,7 +250,7 @@ class ContradictionsTest {
 
         // Then — G5.2's "high-signal" check: one of the two was misread or the form is wrong
         assertThat(checked.contradictions()).containsExactly("Contradiction: c.row4b printed ₹50,000, the standard deduction of"
-                + " FIRST_SCHEDULE_RATES, but c.rowA's No keeps NEW_TAX_REGIME (₹75,000)");
+                + " FIRST_SCHEDULE_RATES, but c.rowA's No keeps NEW_TAX_REGIME (₹75,000). Which regime did your employer apply?");
         assertThat(checked.fields()).allSatisfy(field -> assertThat(field.confidence()).isEqualTo(0.50));
     }
 
@@ -258,10 +258,11 @@ class ContradictionsTest {
     void check_whenTheStandardDeductionIsAboveRowAsRegimesCeiling_isAContradiction() {
         // When / Then — ₹80,000 over the new regime's ₹75,000; ₹75,000 over the ₹50,000 a Yes leaves
         assertThat(againstTheLaw(flag("c.rowA", false), amount("c.row4b", "80000")).contradictions()).containsExactly(
-                "Contradiction: c.row4b printed ₹80,000, above the ₹75,000 standard deduction of NEW_TAX_REGIME that c.rowA's No keeps");
+                "Contradiction: c.row4b printed ₹80,000, above the ₹75,000 standard deduction of NEW_TAX_REGIME that c.rowA's No keeps."
+                        + " Which regime did your employer apply?");
         assertThat(againstTheLaw(flag("c.rowA", true), amount("c.row4b", "75000")).contradictions()).containsExactly(
                 "Contradiction: c.row4b printed ₹75,000, above the ₹50,000 standard deduction of FIRST_SCHEDULE_RATES that c.rowA's Yes"
-                        + " leaves");
+                        + " leaves. Which regime did your employer apply?");
     }
 
     @Test

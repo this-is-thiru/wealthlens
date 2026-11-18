@@ -480,9 +480,28 @@ class Form130ParserTest {
 
         // Then
         assertThat(reading.parserNotes()).contains("Contradiction: partC.annexureI.row4b printed ₹50,000, the standard deduction of"
-                        + " FIRST_SCHEDULE_RATES, but partC.annexureI.rowA's No keeps NEW_TAX_REGIME (₹75,000)",
+                        + " FIRST_SCHEDULE_RATES, but partC.annexureI.rowA's No keeps NEW_TAX_REGIME (₹75,000). Which regime did your employer apply?",
                 "Contradiction: partC.annexureI.row16 printed ₹5,000, 4% of partC.annexureI.row13 + partC.annexureI.row15"
                         + " − partC.annexureI.row14 gives ₹4,000");
         assertThat(reading.outcome()).isEqualTo(ParseOutcome.PARTIAL);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("T8-5 — regime mismatch (DR 08; W-132)")
+    void read_whenRowASaysTheOldRegimeBut4bPrintsTheNewRegimesDeduction_contradictsBothCellsAndAsksWhichRegime() throws Exception {
+        // Given — row A "Yes" leaves the new regime, whose old-regime standard deduction is ₹50,000, but 4(b) prints ₹75,000
+        Map<String, String> values = new HashMap<>(VALUES);
+        values.put("partC.annexureI.rowA", "Yes");
+        values.put("partC.annexureI.row4b", "75,000.00");
+
+        // When
+        DocumentReading reading = PARSER.read(new DocumentContent(CertificateFixture.certificate(LAYOUT, values, Map.of(), Set.of())), YEAR);
+
+        // Then — G5.2's check fails, both cells lowered, and the user asked one precise question
+        assertThat(reading.parserNotes()).contains("Contradiction: partC.annexureI.row4b printed ₹75,000, above the ₹50,000 standard"
+                + " deduction of FIRST_SCHEDULE_RATES that partC.annexureI.rowA's Yes leaves. Which regime did your employer apply?");
+        Map<String, ExtractedField> fields = byPath(reading);
+        assertThat(fields.get("partC.annexureI.rowA").confidence()).isEqualTo(0.50);
+        assertThat(fields.get("partC.annexureI.row4b").confidence()).isEqualTo(0.50);
     }
 }

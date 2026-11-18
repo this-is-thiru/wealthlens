@@ -854,6 +854,10 @@ SHORTFALL                                                     = 2,14,500
 ```
 **Expected: a `MATERIAL_DIFFERENCE` verdict of ₹2,14,500, attributed to "previous employer's salary
 not declared" (`TDS-SAL-12B-001`) and "standard deduction granted twice" (`SAL-STDDED-003`).**
+
+> **Erratum (W-132, 2026-11-18, D-773):** no pack has a `SAL-STDDED-003`. "Granted twice" rests on the year's one standard
+> deduction, `SAL-STDDED-001` (`law/rules/SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME.json`): reason `STANDARD_DEDUCTION_TWICE` cites it.
+> The report also says each reason in words (`ReconciliationGoldenTest`, T8-1).
 `INFERENCE`: each employer's own document is internally correct and passes every `G5.2` arithmetic
 check. The error is only visible across documents. This is the "Priya" persona's whole problem, and it
 is a ₹2.1 lakh surprise at filing.
@@ -879,6 +883,9 @@ Document row 10(d) s.126                                      =        0
 Computation                                                   =   25,000
 ```
 **Expected: `MINOR_DIFFERENCE`, reason "deduction not declared to the employer — refund due".**
+
+> **Erratum (W-132, 2026-11-18, D-773):** the comparison is on row 11's Deductible Amount, Chapter VIII's total, not on row 10(d)
+> alone (D-757: one line per total, not per section). The case reads row 11 printing 0 against the computation's 25,000.
 
 ### T8-4 — The Part B / Part C tax split
 
@@ -908,6 +915,12 @@ Two employers; only one issued Part C; that Part C's row 1(e) is zero.
 **Expected: verdict `CANNOT_COMPARE`, with an explanation that Part C from the last employer should
 have included the previous employer's salary (`DOC-F130-ANNEX-001`) and appears not to.** No total is
 invented.
+
+> **Erratum (W-132, 2026-11-18, D-773; owner's D-758 C1a):** one Part C beside other employers' Part A and B is the last employer
+> consolidating. Its figures are compared as one employer's, and Part B's totals are summed against the bill. With 1(e) nil the verdict
+> is **`MATERIAL_DIFFERENCE`**, reason `PREVIOUS_SALARY_UNDECLARED` (`TDS-SAL-12B-001`), with its sentence. Every figure is a
+> printed one, so no total is invented. `CANNOT_COMPARE` remains for a year where some employers issued Part C and some did not,
+> explained in words (`DOC-F130-ANNEX-001`).
 
 ---
 
@@ -959,6 +972,10 @@ invented.
 | T6 HP and other sources | T6-1..T6-7, T6-6ⓟ | T6-3 | T6-1..T6-7 | T6-3 |
 | T7 TDS projection | T7-4, T7-5 | T7-1..T7-3 | T7-4, T7-5 | T7-1..T7-3 |
 | T8 reconciliation | T8-5 | T8-1..T8-4, T8-6 | T8-5 | T8-1..T8-4, T8-6 |
+
+> **Erratum (W-132, 2026-11-18, D-773):** T8's TY 2025-26 cells do not run. Form No. 130 is in scope from TY 2026-27 only (D-748),
+> and TY 2025-26's pack has no `FORM_130` layout. TY 2026-27's cells run in `ReconciliationGoldenTest` (T8-1 – T8-4, T8-6) and
+> `Form130ParserTest` (T8-5), on the shipped layout.
 | T9 robustness | year- and regime-independent, run once per cell where applicable |
 
 > **Erratum (W-080, 2026-10-17, D-211):** T6's row — *"T6-6ⓟ"* is no longer provisional, and the 2026-27 NEW
