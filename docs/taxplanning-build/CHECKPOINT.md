@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : PAUSED after W-131d1 DONE (D-766). Next: plan W-131d2 (GET /drafts/{draftId}/reconciliation)
-Stage           : everything committed and pushed (backend 3e53006b, api-collection df22a61); nothing in progress
-Done session 104: D-740 – D-766 — W-126e*, W-128a – c, W-129, W-130a – d, W-332, W-131 split (a – f), W-131a, b, c, d split, d1
-Board           : W-131d1 D; W-131d2 ·; W-131e (scan) ·; W-131f (isolation) ·
-Next step       : 1) gh run list — confirm b9099006 / 3e53006b green (were in progress at pause); 2) "start next" = plan W-131d2: confirmed certificates of the draft's profile+year → EmployerAssembly.assemble → Reconciliation.reconcile with the draft's ComputedTax and SalaryCertificateLaw, behind app.tax.documents.enabled; api-collection; stop for approval
+Item            : W-131d2 DONE (D-767), W-131d complete. Next by board order: W-131e (the malware scan) — plan it
+Stage           : committed and pushed (see Last item commit); nothing in progress
+Done session 105: D-767 — W-131d2
+Board           : W-131d2 D; W-131e (scan) ·; W-131f (isolation) ·
+Next step       : check the pipeline for the W-131d2 push; "start next" = plan W-131e per 00-START-HERE §2; stop for approval
 Open to owner   : W-131g (prompt for a PDF password, O6) yes/no; W-333 (ComputedTax 18 components, past 7) yes/no — neither placed
-Owner actions   : runbook §0.8 before the one deploy; §1.n and §1.p on the deploy carrying W-131a – d1; documents switch stays OFF until W-131e + W-131f
+Owner actions   : runbook §0.8 before the one deploy; §1.n and §1.p on the deploy carrying W-131a – d2; documents switch stays OFF until W-131e + W-131f
 Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command
-Last verify     : W-131d1 targeted verify 316/0 incl. 9 integration classes
-Last item commit: taxplanning W-131d1: upload, read and confirm a certificate behind a switch (+ runbook D-row fix 3e53006b)
-Updated         : 2026-11-18, session 104 (paused for the night)
+Last verify     : W-131d2 targeted 64/0 (7 classes, 3 integration) + validate
+Last item commit: taxplanning W-131d2: reconcile a draft's confirmed certificates with its computation
+Updated         : 2026-11-18, session 105
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

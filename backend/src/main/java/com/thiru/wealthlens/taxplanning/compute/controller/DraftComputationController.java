@@ -26,6 +26,8 @@ import com.thiru.wealthlens.taxplanning.compute.DraftOnboarding;
 import com.thiru.wealthlens.taxplanning.compute.DraftOnboardingService;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisation;
 import com.thiru.wealthlens.taxplanning.compute.DraftOptimisationRequest;
+import com.thiru.wealthlens.taxplanning.compute.DraftReconciliation;
+import com.thiru.wealthlens.taxplanning.compute.DraftReconciliationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftRegimeComparison;
 import java.time.LocalDate;
 import java.util.List;
@@ -52,6 +54,7 @@ public class DraftComputationController {
     private final DraftComputationService service;
     private final CapitalGainsViewService capitalGainsViewService;
     private final DraftForecastService forecastService;
+    private final DraftReconciliationService reconciliationService;
     private final DraftCalendarService calendarService;
     private final DraftCompletenessService completenessService;
     private final DraftClaimsService claimsService;
@@ -81,6 +84,11 @@ public class DraftComputationController {
     @GetMapping("/drafts/{draftId}/forecast")
     public DraftForecast forecast(@PathVariable String email, @PathVariable String draftId) {
         return forecastService.forecast(email, draftId);
+    }
+
+    @GetMapping("/drafts/{draftId}/reconciliation")
+    public DraftReconciliation reconciliation(@PathVariable String email, @PathVariable String draftId) {
+        return reconciliationService.reconcile(email, draftId);
     }
 
     @GetMapping("/drafts/{draftId}/calendar")

@@ -436,6 +436,9 @@ Following the repo's conventions: lowercase-hyphenated paths, user-scoped under
 | `GET` | `/tax-planning/user/{email}/computations/{computationId}/report.pdf` | the PDF | D6 |
 | `GET`/`POST`/`DELETE` | `/tax-planning/user/{email}/scenarios...` | scenario CRUD | `F18` |
 
+> **Erratum (W-131d2, 2026-11-18):** the reconciliation row names `/tax-planning/user/{email}/context/{taxYear}/reconciliation`, a year's context that the build does not have — the reconciliation is a draft's, `GET /tax/user/{email}/drafts/{draftId}/reconciliation`, comparing the draft's profile-and-year confirmed certificates with a computation of that draft (D-765 C1a; W-131d2 C2a, C3a).
+> Verified by: `backend/src/main/java/com/thiru/wealthlens/taxplanning/compute/controller/DraftComputationController.java` (`@GetMapping("/drafts/{draftId}/reconciliation")`); `DraftReconciliationIntegrationTest`.
+
 **Endpoints that deliberately do not exist:** anything that writes a slab policy, an allowance limit
 or a perquisite policy (`D-IMMUTABLE`, O-16).
 

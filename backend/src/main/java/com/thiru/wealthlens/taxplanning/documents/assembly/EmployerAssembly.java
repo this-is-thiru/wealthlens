@@ -4,9 +4,8 @@ import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.SalaryCertificateLaw;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ConfirmedCertificate;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
-import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -17,10 +16,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * A year's Form No. 130s read together ({@code DR 06} G5.3; W-129, D-754). Each certificate is found by the facts its layout
- * names, never by path: Part A's TAN and period, Annexure-I's row A, 1(e) and 4(b). It reports how the certificates carry
- * Part C, a gap or an overlap between employers' periods, and what will be owed at filing: a previous salary the last
- * employer left out, or a standard deduction every employer granted.
+ * A year's Form No. 130s read together ({@code DR 06} G5.3; W-129, D-754), as the person confirmed them (W-131d2, D-765 C1a):
+ * a corrected row is what the form holds, so a value read and then corrected reaches no notice. Each certificate is found by
+ * the facts its layout names, never by path: Part A's TAN and period, Annexure-I's row A, 1(e) and 4(b). It reports how the
+ * certificates carry Part C, a gap or an overlap between employers' periods, and what will be owed at filing: a previous
+ * salary the last employer left out, or a standard deduction every employer granted.
  */
 public final class EmployerAssembly {
 
@@ -35,15 +35,15 @@ public final class EmployerAssembly {
     }
 
     /**
-     * @param attempts the latest reading of each certificate of one tax year
+     * @param certificates each certificate of one tax year, as confirmed
      * @param layout the year's Form No. 130 layout, whose lines carry the facts
      * @param law the year's law, for one year's standard deduction
      */
-    public static Assembly assemble(List<ParseAttempt> attempts, CertificateLayout layout, SalaryCertificateLaw law) {
+    public static Assembly assemble(List<ConfirmedCertificate> certificates, CertificateLayout layout, SalaryCertificateLaw law) {
         Map<String, String> paths = layout.lines().stream().filter(line -> line.fact().isPresent())
                 .collect(Collectors.toMap(line -> line.fact().orElseThrow(), CertificateLayout.PrintedLine::path, (first, second) -> first));
         String annexure = paths.get("SALARY_FROM_OTHER_EMPLOYERS").substring(0, paths.get("SALARY_FROM_OTHER_EMPLOYERS").lastIndexOf('.'));
-        List<Certificate> year = attempts.stream().map(attempt -> certificate(attempt, paths, annexure)).toList();
+        List<Certificate> year = certificates.stream().map(certificate -> certificate(certificate, paths, annexure)).toList();
         long partCs = year.stream().filter(Certificate::hasPartC).count();
         AssemblyMode mode = partCs == 1 && year.size() > 1 ? AssemblyMode.LAST_EMPLOYER_CONSOLIDATED
                 : partCs == year.size() ? AssemblyMode.PER_EMPLOYER : AssemblyMode.MIXED;
@@ -56,12 +56,11 @@ public final class EmployerAssembly {
         return new Assembly(mode, notices);
     }
 
-    private static Certificate certificate(ParseAttempt attempt, Map<String, String> paths, String annexure) {
-        Map<String, ExtractedField> byPath = attempt.extractedFields().stream()
-                .collect(Collectors.toMap(ExtractedField::fieldPath, field -> field));
+    private static Certificate certificate(ConfirmedCertificate confirmed, Map<String, String> paths, String annexure) {
+        Map<String, ExtractedValue> byPath = confirmed.confirmation().acceptedFields();
         java.util.function.Function<String, Optional<ExtractedValue>> value = fact -> Optional.ofNullable(paths.get(fact))
-                .map(byPath::get).flatMap(ExtractedField::interpretedValue);
-        return new Certificate(attempt.documentId(),
+                .map(byPath::get);
+        return new Certificate(confirmed.documentId(),
                 value.apply("EMPLOYER_TAN").filter(ExtractedValue.TextRead.class::isInstance).map(read -> ((ExtractedValue.TextRead) read).text()),
                 value.apply("EMPLOYMENT_PERIOD").filter(ExtractedValue.PeriodRead.class::isInstance).map(ExtractedValue.PeriodRead.class::cast),
                 byPath.keySet().stream().anyMatch(path -> path.startsWith(annexure + ".")),

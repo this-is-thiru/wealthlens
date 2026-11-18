@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxplanning.documents.assembly.Assembly;
 import com.thiru.wealthlens.taxplanning.documents.assembly.AssemblyMode;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ConfirmedCertificate;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentConfirmation;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
 import java.time.LocalDateTime;
@@ -46,6 +47,11 @@ class ReconciliationTest {
         return new DocumentConfirmation("attempt-d1", "user", LocalDateTime.of(2027, 6, 1, 10, 0), accepted, Set.of());
     }
 
+    /** Each confirmation as a certificate, its document named after its attempt. */
+    private static List<ConfirmedCertificate> certificates(List<DocumentConfirmation> confirmed) {
+        return confirmed.stream().map(confirmation -> new ConfirmedCertificate("document-of-" + confirmation.attemptId(), confirmation)).toList();
+    }
+
     private static ComputedTax computed(String regime, String totalIncome, String bill, List<ComputedTax.Bucket> buckets) {
         List<ComputedTax.Step> trace = List.of(new ComputedTax.Step(1, "round.totalincome", "RATE-ROUND-TOTAL-INCOME", "ROUNDING", null,
                 Optional.of(Money.of(totalIncome)), Optional.of(Money.of(totalIncome)), ""));
@@ -54,7 +60,7 @@ class ReconciliationTest {
     }
 
     private static ReconciliationReport reconcile(DocumentConfirmation confirmation, ComputedTax computed) {
-        return Reconciliation.reconcile(List.of(confirmation), ONE, LAYOUT, computed, LAW);
+        return Reconciliation.reconcile(certificates(List.of(confirmation)), ONE, LAYOUT, computed, LAW);
     }
 
     @Test
@@ -66,7 +72,7 @@ class ReconciliationTest {
         // Then
         assertThat(report.verdict()).isEqualTo(Verdict.MATCHED);
         assertThat(report.computationId()).isEqualTo("comp-1");
-        assertThat(report.documentIds()).containsExactly("attempt-d1");
+        assertThat(report.documentIds()).containsExactly("document-of-attempt-d1");
         assertThat(report.lines()).extracting(ReconciliationLine::printed).containsExactly("c.row12", "c.row17", "b.total.taxDeducted");
         assertThat(report.lines().get(2).reasons()).contains(ReconciliationReason.TAXSUM);
         assertThat(report.lines().get(2).difference()).isEqualTo(Money.ZERO);
@@ -126,7 +132,7 @@ class ReconciliationTest {
     @Test
     void reconcile_whenTheYearIsMixed_cannotCompare() {
         // When — W-129's MIXED: some employers issued Part C and some did not
-        ReconciliationReport report = Reconciliation.reconcile(List.of(confirmed(false, "2025000", "214500", "214500")),
+        ReconciliationReport report = Reconciliation.reconcile(certificates(List.of(confirmed(false, "2025000", "214500", "214500"))),
                 new Assembly(AssemblyMode.MIXED, List.of()), LAYOUT, computed("NEW_TAX_REGIME", "2025000", "214500", List.of()), LAW);
 
         // Then
@@ -165,7 +171,7 @@ class ReconciliationTest {
         DocumentConfirmation certificate = withRow11(confirmed(false, "1000000", "82000", "82000"), "150000");
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, CLAIMS, withClaims("1090000", "100000", "60000"), LAW);
+        ReconciliationReport report = Reconciliation.reconcile(certificates(List.of(certificate)), ONE, CLAIMS, withClaims("1090000", "100000", "60000"), LAW);
 
         // Then — D-755 C2a: an expected reason, carried to the lines it moves (W-130b C3a)
         assertThat(report.verdict()).isEqualTo(Verdict.MINOR_DIFFERENCE);
@@ -180,7 +186,7 @@ class ReconciliationTest {
         DocumentConfirmation certificate = withRow11(confirmed(false, "1000000", "100000", "100000"), "0");
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, CLAIMS, withClaims("975000", "92500", "25000"), LAW);
+        ReconciliationReport report = Reconciliation.reconcile(certificates(List.of(certificate)), ONE, CLAIMS, withClaims("975000", "92500", "25000"), LAW);
 
         // Then
         assertThat(report.verdict()).isEqualTo(Verdict.MINOR_DIFFERENCE);
@@ -194,7 +200,7 @@ class ReconciliationTest {
         DocumentConfirmation certificate = withRow11(confirmed(false, "1000000", "100000", "100000"), "60000");
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, CLAIMS, withClaims("1050000", "100000", "60000"), LAW);
+        ReconciliationReport report = Reconciliation.reconcile(certificates(List.of(certificate)), ONE, CLAIMS, withClaims("1050000", "100000", "60000"), LAW);
 
         // Then — nothing above it explains row 12
         assertThat(report.verdict()).isEqualTo(Verdict.MATERIAL_DIFFERENCE);
@@ -243,7 +249,7 @@ class ReconciliationTest {
                         List.of("a", "b"), List.of("SAL-STDDED-001", "SAL-STDDED-002"))));
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(year, assembly, YEAR, computed("NEW_TAX_REGIME", "2025000", "214500",
+        ReconciliationReport report = Reconciliation.reconcile(certificates(year), assembly, YEAR, computed("NEW_TAX_REGIME", "2025000", "214500",
                 List.of()), LAW);
 
         // Then — the year's 0 + 0 = 0 deducted against the bill 2,14,500: ₹2,14,500 short (DR 08 T8-1)
@@ -264,7 +270,7 @@ class ReconciliationTest {
                 employer("b", "2026-10-01", "2027-03-31", "114500", partC("2025000", "214500", "900000")));
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(year, new Assembly(AssemblyMode.LAST_EMPLOYER_CONSOLIDATED, List.of()), YEAR,
+        ReconciliationReport report = Reconciliation.reconcile(certificates(year), new Assembly(AssemblyMode.LAST_EMPLOYER_CONSOLIDATED, List.of()), YEAR,
                 computed("NEW_TAX_REGIME", "2025000", "214500", List.of()), LAW);
 
         // Then — B's rows as one employer's, Part B summed over both
@@ -284,7 +290,7 @@ class ReconciliationTest {
                         List.of("b"), List.of("TDS-SAL-12B-001"))));
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(year, assembly, YEAR, computed("NEW_TAX_REGIME", "2025000", "214500",
+        ReconciliationReport report = Reconciliation.reconcile(certificates(year), assembly, YEAR, computed("NEW_TAX_REGIME", "2025000", "214500",
                 List.of()), LAW);
 
         // Then
@@ -320,7 +326,7 @@ class ReconciliationTest {
         DocumentConfirmation certificate = withRow8(withRow11(confirmed(false, "1050000", "100000", "100000"), "60000"), "60000");
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, OTHERS,
+        ReconciliationReport report = Reconciliation.reconcile(certificates(List.of(certificate)), ONE, OTHERS,
                 withHeads("1000000", "100000", "60000", "10000"), LAW);
 
         // Then
@@ -335,7 +341,7 @@ class ReconciliationTest {
         DocumentConfirmation certificate = withRow8(withRow11(confirmed(false, "960000", "100000", "100000"), "60000"), "0");
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, OTHERS,
+        ReconciliationReport report = Reconciliation.reconcile(certificates(List.of(certificate)), ONE, OTHERS,
                 withHeads("1000000", "100000", "60000", "40000"), LAW);
 
         // Then
@@ -350,7 +356,7 @@ class ReconciliationTest {
         DocumentConfirmation certificate = withRow8(withRow11(confirmed(false, "960000", "100000", "100000"), "150000"), "60000");
 
         // When
-        ReconciliationReport report = Reconciliation.reconcile(List.of(certificate), ONE, OTHERS,
+        ReconciliationReport report = Reconciliation.reconcile(certificates(List.of(certificate)), ONE, OTHERS,
                 withHeads("1000000", "100000", "60000", "10000"), LAW);
 
         // Then

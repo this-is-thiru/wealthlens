@@ -62,6 +62,7 @@ class DocumentSwitchOffIntegrationTest extends AbstractIntegrationTest {
         assertThat(status(HttpMethod.POST, "/documents/d/confirm",
                 "{\"attemptId\": \"a\", \"accepted\": [], \"corrected\": {}, \"rejected\": []}", MediaType.APPLICATION_JSON))
                 .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(status(HttpMethod.GET, "/drafts/d/reconciliation", null, MediaType.APPLICATION_JSON)).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
     }
 }

@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.api.SalaryCertificateLaw;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxplanning.documents.assembly.Assembly;
 import com.thiru.wealthlens.taxplanning.documents.assembly.AssemblyMode;
+import com.thiru.wealthlens.taxplanning.documents.ingest.ConfirmedCertificate;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentConfirmation;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
 import java.util.ArrayList;
@@ -35,13 +36,14 @@ public final class Reconciliation {
     }
 
     /**
-     * @param confirmed the user's confirmations of the year's certificates
+     * @param certificates the year's certificates as the user confirmed them, the report naming their documents
      * @param assembly how those certificates fit together (W-129)
      * @param law the year's law, for the regime a "No" in row A keeps
      */
-    public static ReconciliationReport reconcile(List<DocumentConfirmation> confirmed, Assembly assembly, CertificateLayout layout,
+    public static ReconciliationReport reconcile(List<ConfirmedCertificate> certificates, Assembly assembly, CertificateLayout layout,
             ComputedTax computed, SalaryCertificateLaw law) {
-        List<String> documents = confirmed.stream().map(DocumentConfirmation::attemptId).toList();
+        List<String> documents = certificates.stream().map(ConfirmedCertificate::documentId).toList();
+        List<DocumentConfirmation> confirmed = certificates.stream().map(ConfirmedCertificate::confirmation).toList();
         if (assembly.mode() == AssemblyMode.MIXED) {
             return new ReconciliationReport(computed.computationId(), documents, List.of(), Verdict.CANNOT_COMPARE);
         }
