@@ -14,9 +14,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param parseBudget how long one parse may run before it is a failed attempt (O6's wall-clock budget; W-131c, D-764 C3a)
  * @param enabled whether the documents endpoints answer at all: off until a scan and isolation exist (W-131d1, D-765 C2a)
  * @param scan where the malware scanner listens (W-131e)
+ * @param isolation the limits of the child process that reads a PDF (W-131f)
  */
 @ConfigurationProperties(prefix = "app.tax.documents")
-public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, Duration parseBudget, boolean enabled, Scan scan) {
+public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, Duration parseBudget, boolean enabled, Scan scan,
+        Isolation isolation) {
 
     /**
      * ClamAV's {@code clamd}, run beside the application on the same host ({@code DR 14} O6; W-131e C1a).
@@ -26,5 +28,17 @@ public record DocumentSettings(long maxBytes, int maxPages, Period orphanAfter, 
      * @param timeout how long clamd may take to accept the connection, and then to answer each read
      */
     public record Scan(boolean enabled, String host, int port, Duration timeout) {
+    }
+
+    /**
+     * The child process that reads an uploaded PDF ({@code DR 14} O6, "Parsing isolation"; W-131f C4). Its wall clock in the parse
+     * job is {@link DocumentSettings#parseBudget()}.
+     *
+     * @param heapMebibytes the child's {@code -Xmx}
+     * @param cpuSeconds the child's {@code ulimit -t}
+     * @param uploadReadBudget the wall clock for the page count read at upload
+     * @param maxReplyBytes the most the application reads back from the child
+     */
+    public record Isolation(int heapMebibytes, int cpuSeconds, Duration uploadReadBudget, int maxReplyBytes) {
     }
 }

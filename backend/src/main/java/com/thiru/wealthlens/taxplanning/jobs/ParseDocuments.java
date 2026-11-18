@@ -34,8 +34,8 @@ import org.springframework.stereotype.Component;
  * parser version: a document is due while every attempt at it failed and none was by the current version, so a later parser
  * retries a failure ({@code DR 14} O9) and never re-reads what an earlier one read. A profile held for erasure is not read
  * (W-235). Each parse runs in a thread of its own within {@link DocumentSettings#parseBudget()}; past it, or if the parser
- * throws, the attempt is {@code FAILED} with the reason and the document is kept. An overrunning thread is abandoned, not
- * stopped — that is W-131f's isolation.
+ * throws, the attempt is {@code FAILED} with the reason and the document is kept. The PDF itself is read in a child process
+ * killed at the same budget (W-131f), so an overrun leaves nothing reading it.
  */
 @Component
 @Log4j2

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 public class Form130Parser implements DocumentParser {
 
     private final TaxCalculator taxCalculator;
+    private final IsolatedPdfRead reader;
 
     @Override
     public DocumentType reads() {
@@ -38,6 +39,7 @@ public class Form130Parser implements DocumentParser {
     @Override
     public DocumentReading read(DocumentContent content, TaxYearId year) {
         Optional<CertificateLayout> layout = taxCalculator.certificate(year, new CertificateCode(reads().name()));
-        return CertificateReading.read(content, year, layout, layout.map(found -> taxCalculator.salaryCertificateLaw(year)), "Form No. 130");
+        return CertificateReading.read(content, year, layout, layout.map(found -> taxCalculator.salaryCertificateLaw(year)), "Form No. 130",
+                reader);
     }
 }

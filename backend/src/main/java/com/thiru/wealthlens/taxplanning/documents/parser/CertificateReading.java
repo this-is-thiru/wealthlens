@@ -1,7 +1,5 @@
 package com.thiru.wealthlens.taxplanning.documents.parser;
 
-import com.itextpdf.text.exceptions.BadPasswordException;
-import com.itextpdf.text.pdf.PdfReader;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PartHeading;
 import com.thiru.wealthlens.taxengine.api.CertificateLayout.PrintedLine;
@@ -14,7 +12,6 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.FieldLocation;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.parser.LabelMatch.Found;
 import com.thiru.wealthlens.taxplanning.documents.parser.PrintedText.Word;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,29 +45,22 @@ final class CertificateReading {
      * @param layout the year's layout of the form, if the year prescribes it
      * @param law the year's law the figures are checked against (W-128c), present with the layout
      * @param form the form's name as a reason names it, e.g. "Form No. 130"
+     * @param reader reads the PDF in a child process (W-131f); nothing here opens it
      */
     static DocumentReading read(DocumentContent content, TaxYearId year, Optional<CertificateLayout> layout,
-            Optional<SalaryCertificateLaw> law, String form) {
+            Optional<SalaryCertificateLaw> law, String form, IsolatedPdfRead reader) {
         if (layout.isEmpty()) {
             return failed("No " + form + " layout is in force in " + year.label());
         }
-        PdfReader reader;
-        try {
-            reader = new PdfReader(content.bytes());
-        } catch (BadPasswordException e) {
+        PdfText text = reader.words(content);
+        if (text.outcome() == PdfText.Outcome.PASSWORD) {
             return failed("The PDF is protected by a password: upload it without one (a password is never kept)");
-        } catch (IOException e) {
-            return failed("Not a PDF this parser can read: " + e.getMessage());
         }
-        try {
-            List<Word> words = PrintedText.of(reader).words();
-            return words.isEmpty() ? failed("The PDF has no text layer: a scanned page is not read yet")
-                    : new Matching(layout.get(), words, form, year, law.orElseThrow()).read();
-        } catch (IOException e) {
-            return failed("The PDF's text could not be read: " + e.getMessage());
-        } finally {
-            reader.close();
+        if (text.outcome() == PdfText.Outcome.UNREADABLE) {
+            return failed("Not a PDF this parser can read: " + text.reason());
         }
+        return text.words().isEmpty() ? failed("The PDF has no text layer: a scanned page is not read yet")
+                : new Matching(layout.get(), text.words(), form, year, law.orElseThrow()).read();
     }
 
     private static DocumentReading failed(String reason) {

@@ -11,7 +11,9 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedField;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ExtractedValue;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
+import com.thiru.wealthlens.taxplanning.documents.store.DocumentSettings;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +30,8 @@ class Form130ParserTest {
             Set.of(TaxYearId.of(2025), TaxYearId.of(2026))));
     private static final TaxYearId YEAR = TaxYearId.of(2026);
     private static final CertificateLayout LAYOUT = CALCULATOR.certificate(YEAR, new CertificateCode("FORM_130")).orElseThrow();
-    private static final Form130Parser PARSER = new Form130Parser(CALCULATOR);
+    private static final Form130Parser PARSER = new Form130Parser(CALCULATOR,
+            IsolatedPdfRead.of(new DocumentSettings.Isolation(256, 30, Duration.ofSeconds(10), 16_777_216), Duration.ofSeconds(30)));
     private static final Map<String, String> VALUES = Map.of(
             "partA.certificateNo", "QWERTY1",
             "partA.employer.tan", "MUMA12345B",

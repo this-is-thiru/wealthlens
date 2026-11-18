@@ -14,6 +14,7 @@ import com.thiru.wealthlens.shared.exception.ServiceUnavailableException;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.shared.protection.PersonalDataKeys;
 import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
+import com.thiru.wealthlens.taxplanning.documents.parser.IsolatedPdfRead;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,7 @@ class DocumentBytesTest {
 
     private static final String KEY = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
     private static final FieldCipher CIPHER = new FieldCipher(new PersonalDataKeys(KEY, KEY));
+    private static final DocumentSettings.Isolation ISOLATION = new DocumentSettings.Isolation(256, 30, Duration.ofSeconds(10), 16_777_216);
 
     @Mock
     private GridFsTemplate bucket;
@@ -40,7 +42,8 @@ class DocumentBytesTest {
 
     private DocumentBytes bytes(long maxBytes, int maxPages) {
         return new DocumentBytes(bucket, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), Duration.ofSeconds(30), true,
-                new DocumentSettings.Scan(true, "localhost", 3310, Duration.ofSeconds(60))), scan);
+                new DocumentSettings.Scan(true, "localhost", 3310, Duration.ofSeconds(60)), ISOLATION), scan,
+                IsolatedPdfRead.of(ISOLATION, Duration.ofSeconds(30)));
     }
 
     @Test

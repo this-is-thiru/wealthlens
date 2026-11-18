@@ -120,6 +120,13 @@ app:
       parse-budget: PT30S
       # W-131d1: the documents endpoints answer 503 until the owner turns this on, after W-131e (scan) and W-131f (isolation)
       enabled: false
+      # W-131f: the child process that reads a PDF (DR 14 O6). CI run 44334020550: 0.63 - 0.85 s a read, peak 130 - 177 MB at -Xmx256m
+      isolation:
+        heap-mebibytes: 256
+        cpu-seconds: 30
+        upload-read-budget: PT10S
+        # 50 pages of 40 lines gave a 1,681,581-byte reply in that run
+        max-reply-bytes: 16777216
       # W-131e: ClamAV's clamd beside the app (DR 14 O6, "Scan before storage"); 3310 is clamd's port (ClamAV Docker docs)
       scan:
         # W-131h: off until a scanner is affordable (owner, D-769): uploads are stored unscanned and recorded so; runbook §1.m turns it on

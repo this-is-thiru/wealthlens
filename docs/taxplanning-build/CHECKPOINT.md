@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131h DONE (D-769), committed and pushed with this checkpoint; next by board order W-131f (isolation), not planned
+Item            : W-131f DONE (D-770), committed and pushed with this checkpoint; next by board order W-131j (the app as non-root), not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: W-131e (8587649d, D-768); W-131h (D-769): scan off in staging and prod; W-131i (rescan) placed; WL-A-2 republished
-Board           : W-131e D; W-131f ·; W-131h D; W-131i ·
-Next step       : 1) gh run list — confirm 8587649d and the W-131h commit green; 2) plan W-131f (parse isolation, DR 14 O6) on the §2 template; stop for approval
-Open to owner   : W-131g, W-333 yes/no; freshclam staleness alert (proposal, unplaced, moot while the scan is off)
-Owner actions   : runbook §0.8 before the one deploy; §1.n, §1.p; §1.m only when the scan is turned on; documents switch OFF until W-131f
-Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures (stdout gets cut)
-Last verify     : W-131h targeted 67/0 (9 classes) + validate 0; red first; two deliberate breaks caught
-Last item commit: taxplanning W-131h: let uploads be stored without a malware scan in staging and prod — the owner defers the scanner on traffic and budget
+Done session 106: W-131e (D-768), W-131h (D-769), W-131f (D-770) pushed; probes 44328189271, 44334020550, 44338803065 (branches deleted); W-131i, W-131j placed
+Board           : W-131e D; W-131f D; W-131h D; W-131i · (waits for the scan); W-131j ·; W-132 ·
+Next step       : 1) gh run list — confirm the three item commits green; 2) plan W-131j on the §2 template; stop for approval
+Open to owner   : W-131g, W-333 yes/no
+Owner actions   : runbook §0.8; §1.n (documents switch: W-131e/f done, scan off by D-769), §1.p; §1.l (confirm log line, ~200 MB per concurrent read); §1.m only when the scan is on
+Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures (stdout gets cut); -DskipTests still compiles tests (use -Dmaven.test.skip=true on a probe branch)
+Last verify     : W-131f targeted 152/0 (16 classes) + validate 0; four deliberate breaks caught
+Last item commit: taxplanning W-131f: read every uploaded PDF in a child process as nobody with no secrets — a hostile PDF was parsed inside the application
 Files touched   : none
 Updated         : 2026-11-18, session 106
 ```
