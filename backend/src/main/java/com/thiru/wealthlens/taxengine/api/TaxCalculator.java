@@ -444,6 +444,19 @@ public class TaxCalculator {
     }
 
     /**
+     * The components a pay line may carry in the year: those under the head Salaries, live in it, by name (W-133a). The head is
+     * the declared partition a pay line must sit in (D-090), so a component offered here is one an employment accepts.
+     *
+     * @throws IllegalArgumentException where no pack ships for the year
+     */
+    public List<PayLineComponent> payLineComponents(TaxYearId year) {
+        return shipped(year).components().values().stream()
+                .filter(component -> component.head().filter(HeadCode.SALARIES::equals).isPresent() && component.lifecycle().isLiveIn(year))
+                .map(component -> new PayLineComponent(component.code().value(), component.displayName()))
+                .sorted(java.util.Comparator.comparing(PayLineComponent::displayName)).toList();
+    }
+
+    /**
      * The regime the year's pack calls its default.
      *
      * @throws IllegalArgumentException where no pack ships for the year

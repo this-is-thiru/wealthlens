@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-333 DONE (D-774), committed and pushed with this checkpoint; next by board order W-133, not planned
+Item            : W-133a DONE (D-775), committed and pushed with this checkpoint (+ api-collection); next by board order W-133b (apply the preview), not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: W-131e/h/f/j (D-768 – D-771), D-772, W-132 (D-773), W-333 (D-774); aws/ removed
-Board           : W-333 D; W-133 · next
-Next step       : 1) gh run list — confirm the last commits green; 2) plan W-133; stop for approval
+Done session 106: W-131e/h/f/j, D-772, W-132, W-333, W-133 split + W-133a (D-768 – D-775)
+Board           : W-133 —; W-133a D; W-133b · next
+Next step       : 1) gh run list — confirm the last commits green; 2) plan W-133b (C6a: revision records file SHA-256 + rows; the four employment facts asked; If-Match); stop for approval
 Open to owner   : runner token in git history (aws/ removed); host chmod 666 docker.sock
 Owner actions   : runbook §0.8; §1.n, §1.p; §1.k, §1.l; §1.m only when the scan is on
-Env notes       : integration tests need OrbStack + DOCKER_HOST; never cd inside a $ command; read surefire XML; after a main-only change rm -rf backend/target/test-classes (incremental test-compile skips stale tests)
-Last verify     : W-333 targeted 191/0 (13 classes) + validate 0; break caught
-Last item commit: taxplanning W-333: group ComputedTax's 18 components into four records — one result type was 18 wide where seven is the limit
+Env notes       : integration tests need OrbStack + DOCKER_HOST; never cd inside a $ command; read surefire XML; after a main-only change rm -rf backend/target/test-classes
+Last verify     : W-133a targeted 151/0 (14 classes) + validate 0; three breaks caught
+Last item commit: taxplanning W-133a: preview a salary workbook against a draft, read in the isolated child — a CTC sheet had to be typed in component by component
 Files touched   : none
 Updated         : 2026-11-18, session 106
 ```

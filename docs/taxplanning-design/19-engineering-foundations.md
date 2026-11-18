@@ -550,6 +550,10 @@ public final class SalaryStructureImporter {
 }
 ```
 
+> **Erratum (W-133, 2026-11-18, D-775):** E9's "verified present" no longer holds for the reader. `ExcelParser` is portfolio's
+> (`portfolio/service/parser/model/`) and is tied to its quarterly upload. F28 reads with `SalaryStructureWorkbook` in a child process
+> (`taxplanning/isolation/IsolatedChild`). Its sketch's columns are kept: "Component", "Annual Amount", optional "Monthly Amount".
+
 `RECOMMENDATION`: promote this to **`F28`, MVP tier**, sized at one week. It reuses tested
 infrastructure, it removes the biggest friction in onboarding, and it de-risks F11 by giving users a
 path that does not depend on PDF parsing working.

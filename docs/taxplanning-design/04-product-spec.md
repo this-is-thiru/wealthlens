@@ -111,6 +111,12 @@ makes it useful here. Effort is person-weeks.
 | F28.3 | An unmapped label is **never guessed and never dropped** — the same discipline as `18-temporal-versioning.md` V6's `DraftUpcaster` |
 | F28.4 | Imported values land as `EntryProvenance.source = IMPORTED`, reviewable before use |
 
+> **Erratum (W-133, 2026-11-18, D-775):** F28.1 — `shared/util/parser/` holds only writers (`ExcelSheet`, `ExcelColumn`). The one reader,
+> portfolio's `ExcelParser` / `AssetRequestParserImpl`, reads a sheet by quarter and logs every row at INFO, which would put salary
+> figures in the log (O1.1). F28 has its own small reader, `SalaryStructureWorkbook`, run in W-131f's child process (W-133a C2a, C3a).
+> F28.4 — `EntryProvenance` was never built (`EnteredFacts`' Javadoc). Values are reviewed in a preview before anything is written
+> (W-133a), and the draft revision that applies an import records it (W-133b, C6a).
+
 RICE: R 0.8 · I 2 · C 0.9 · **E 1** → **1.44**. Design: `19-engineering-foundations.md` E9.1.
 
 ### F40 — Claim playbooks
