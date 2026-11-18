@@ -63,12 +63,12 @@ public class DraftCalendarService {
         ComputedTax base = taxCalculator.compute(at(inputs, measuredAsOf, filing));
         Money baseOwed = owed(base);
         List<DraftCalendar.Entry> entries = new ArrayList<>();
-        for (ComputedTax.AdvanceTax.Instalment instalment : base.advanceTax().instalments()) {
+        for (ComputedTax.AdvanceTax.Instalment instalment : base.dues().advanceTax().instalments()) {
             entries.add(new DraftCalendar.Entry(instalment.dueOn(), DraftCalendar.Kind.ADVANCE_TAX_INSTALMENT,
                     "ADV-INSTALMENTS", Optional.of(instalment.stillOwed()), Optional.of(instalment.paidByThen()),
                     Optional.empty(), costOfNotPaying(inputs, measuredAsOf, instalment.dueOn(), instalment.stillOwed(), baseOwed)));
         }
-        base.advanceTax().reliefPaidBy().ifPresent(paidBy -> entries.add(reliefEntry(inputs, measuredAsOf, base, paidBy)));
+        base.dues().advanceTax().reliefPaidBy().ifPresent(paidBy -> entries.add(reliefEntry(inputs, measuredAsOf, base, paidBy)));
         deductionEntries(inputs).forEach(entries::add);
         electionEntries(inputs).forEach(entries::add);
         entries.add(returnEntry(inputs, measuredAsOf, base));
@@ -101,7 +101,7 @@ public class DraftCalendarService {
 
     /** s.425(4): the advance tax still owed at the last instalment, paid by the relief's day. */
     private DraftCalendar.Entry reliefEntry(EngineInputs inputs, LocalDate measuredAsOf, ComputedTax base, LocalDate paidBy) {
-        Money stillOwed = base.advanceTax().instalments().stream()
+        Money stillOwed = base.dues().advanceTax().instalments().stream()
                 .max(Comparator.comparing(ComputedTax.AdvanceTax.Instalment::dueOn))
                 .map(ComputedTax.AdvanceTax.Instalment::stillOwed).orElse(Money.ZERO);
         return new DraftCalendar.Entry(paidBy, DraftCalendar.Kind.DEFERMENT_RELIEF_PAID_BY, "INT-DEFERMENT",
@@ -124,7 +124,7 @@ public class DraftCalendarService {
             LocalDate dayLate = due.plusDays(1);
             cost = owed(taxCalculator.compute(at(inputs, dayLate, furnishedOn(filing, dayLate)))).minus(onTime);
         }
-        Optional<Money> payable = Optional.of(base.finalAmount()).filter(amount -> amount.isGreaterThan(Money.ZERO));
+        Optional<Money> payable = Optional.of(base.figures().finalAmount()).filter(amount -> amount.isGreaterThan(Money.ZERO));
         return new DraftCalendar.Entry(due, DraftCalendar.Kind.RETURN_DUE, "INT-LATE-RETURN", payable, Optional.empty(),
                 filing.furnishedOn(), cost.floorAtZero());
     }
@@ -155,7 +155,7 @@ public class DraftCalendarService {
     }
 
     private static Money owed(ComputedTax tax) {
-        return tax.interestAndFees().stream().map(ComputedTax.Owed::amount).reduce(Money.ZERO, Money::plus);
+        return tax.dues().interestAndFees().stream().map(ComputedTax.Owed::amount).reduce(Money.ZERO, Money::plus);
     }
 
     private static LocalDate latest(LocalDate one, LocalDate other) {

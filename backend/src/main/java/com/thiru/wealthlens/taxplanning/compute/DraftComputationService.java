@@ -92,13 +92,13 @@ public class DraftComputationService {
         DraftComputation stored = new DraftComputation();
         stored.setId(UUID.randomUUID().toString());
         stored.setNewlyCreated(true);
-        stored.setReceipt(tax.receipt());
+        stored.setReceipt(tax.provenance().receipt());
         stored.setEmail(email);
         stored.setDraftId(draftId);
         stored.setRevision(view.revision());
         stored.setComputedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
         stored.setResultJson(MAPPER.writeValueAsString(view));
-        stored.setLawAndExec(tax.lawAndExec());
+        stored.setLawAndExec(tax.provenance().lawAndExec());
         stored.setRuleChecksums(taxCalculator.ruleChecksums(TaxYearId.of(assembled.draft().getTaxYearStart()), rulesRead(tax)));
         repository.save(stored);
         draftService.clearStaleness(draftId);
@@ -113,7 +113,7 @@ public class DraftComputationService {
         if (answered.containsAll(EnumSet.allOf(OnboardingStep.class))) {
             return Optional.empty();
         }
-        return Optional.of(new Band(tax.bill(), taxCalculator.billWithRoomsFilled(inputs,
+        return Optional.of(new Band(tax.figures().bill(), taxCalculator.billWithRoomsFilled(inputs,
                 DraftOnboardingService.openFamilies(answered)), coarseSentence(inputs.taxYear())));
     }
 
@@ -126,7 +126,7 @@ public class DraftComputationService {
     }
 
     private static Set<String> rulesRead(ComputedTax tax) {
-        return tax.trace().stream().map(ComputedTax.Step::rule).filter(rule -> rule != null && !rule.isBlank())
+        return tax.workings().trace().stream().map(ComputedTax.Step::rule).filter(rule -> rule != null && !rule.isBlank())
                 .collect(Collectors.toSet());
     }
 
@@ -203,8 +203,8 @@ public class DraftComputationService {
     private ComputationListing listing(String email, DraftComputation stored, FilingDraft draft) {
         ComputedTax tax = MAPPER.readValue(stored.getResultJson(), DraftComputationView.class).tax();
         taxAccessLog.record(email, ReadSubject.COMPUTATION, stored.getReceipt());
-        return new ComputationListing(stored.getReceipt(), tax.taxYear(), draft.getLabel(), stored.getRevision(),
-                tax.regime(), Optional.ofNullable(stored.getComputedAt()));
+        return new ComputationListing(stored.getReceipt(), tax.provenance().taxYear(), draft.getLabel(), stored.getRevision(),
+                tax.provenance().regime(), Optional.ofNullable(stored.getComputedAt()));
     }
 
     /**

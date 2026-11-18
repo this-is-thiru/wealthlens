@@ -29,9 +29,10 @@ class DraftForecastServiceTest {
 
     private static ComputedTax tax(String bill, List<ComputedTax.Owed> interest, String credits,
             List<ComputedTax.AdvanceTax.Instalment> instalments, String finalAmount) {
-        return new ComputedTax("id", "receipt", "2026-27", "NEW_TAX_REGIME", Money.of(bill), Money.of(bill), Money.of(credits),
-                new ComputedTax.AdvanceTax(!instalments.isEmpty(), Money.ZERO, instalments, Optional.empty()), interest, List.of(),
-                Money.of(finalAmount), "fingerprint", List.of(), List.of(), List.of(), List.of(), Money.ZERO, Money.ZERO);
+        return new ComputedTax(new ComputedTax.Provenance("id", "receipt", "2026-27", "NEW_TAX_REGIME", "fingerprint", List.of()),
+                new ComputedTax.Figures(Money.of(bill), Money.of(bill), Money.of(credits), Money.of(finalAmount), Money.ZERO, Money.ZERO),
+                new ComputedTax.Dues(new ComputedTax.AdvanceTax(!instalments.isEmpty(), Money.ZERO, instalments, Optional.empty()), interest, List.of()),
+                new ComputedTax.Workings(List.of(), List.of(), List.of()));
     }
 
     private static final List<ComputedTax.Owed> DEFERMENT = List.of(new ComputedTax.Owed("INT-DEFERMENT", "INTEREST", Money.of("228")));

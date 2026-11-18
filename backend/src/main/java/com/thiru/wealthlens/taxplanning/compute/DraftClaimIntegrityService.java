@@ -72,7 +72,7 @@ public class DraftClaimIntegrityService {
         ComputedTax standing = taxCalculator.compute(inputs);
         Map<String, Money> asItStands = byRule(standing);
         Set<String> asked = new TreeSet<>();
-        standing.notices().forEach(notice -> asked.addAll(notice.relatedRules()));
+        standing.workings().notices().forEach(notice -> asked.addAll(notice.relatedRules()));
         ComputedTax supported = taxCalculator.compute(with(inputs, facts.supported()));
         Map<String, Money> evidenced = byRule(supported);
         Map<String, Set<EvidenceKind>> bearsOn = new TreeMap<>();
@@ -146,7 +146,7 @@ public class DraftClaimIntegrityService {
      */
     private static Map<String, Money> byRule(ComputedTax computed) {
         Map<String, Money> byRule = new TreeMap<>();
-        for (ComputedTax.Step step : computed.trace()) {
+        for (ComputedTax.Step step : computed.workings().trace()) {
             if (CLAIM_KINDS.contains(step.kind())) {
                 step.out().ifPresent(out -> byRule.merge(step.rule(), out, Money::plus));
             }
@@ -159,7 +159,7 @@ public class DraftClaimIntegrityService {
     }
 
     private static Optional<String> limitedBy(ComputedTax computed, String rule) {
-        return computed.trace().stream().filter(step -> step.rule().equals(rule))
+        return computed.workings().trace().stream().filter(step -> step.rule().equals(rule))
                 .map(ComputedTax.Step::limitedBy).filter(limit -> limit != null && !limit.isBlank()).findFirst();
     }
 

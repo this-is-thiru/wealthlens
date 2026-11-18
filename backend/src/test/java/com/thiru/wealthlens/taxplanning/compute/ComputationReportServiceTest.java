@@ -72,7 +72,7 @@ class ComputationReportServiceTest {
 
     /** What the rules read then are pinned at: today's, as a computation made today stores them (W-138). */
     private static Map<String, String> pinnedNow(ComputedTax tax, TaxYearId year) {
-        return CALCULATOR.ruleChecksums(year, tax.trace().stream().map(ComputedTax.Step::rule).collect(Collectors.toSet()));
+        return CALCULATOR.ruleChecksums(year, tax.workings().trace().stream().map(ComputedTax.Step::rule).collect(Collectors.toSet()));
     }
 
     private static String text(byte[] pdf) throws IOException {
@@ -142,13 +142,13 @@ class ComputationReportServiceTest {
         String pdf = text(SERVICE.render(SERVICE.model(view(tax), pinnedNow(tax, TaxYearId.of(2026)))));
 
         // Then
-        assertThat(tax.trace()).hasSizeGreaterThan(5);
-        assertThat(tax.trace()).allSatisfy(step -> {
+        assertThat(tax.workings().trace()).hasSizeGreaterThan(5);
+        assertThat(tax.workings().trace()).allSatisfy(step -> {
             assertThat(pdf).contains(squeezed(step.explanation()));
             assertThat(pdf).contains(step.rule());
             step.out().ifPresent(out -> assertThat(pdf).contains(squeezed(out.inIndianNotation())));
         });
-        assertThat(pdf).contains(tax.receipt(), squeezed(tax.finalAmount().inIndianNotation()));
+        assertThat(pdf).contains(tax.provenance().receipt(), squeezed(tax.figures().finalAmount().inIndianNotation()));
         assertThat(pdf.split("nottaxadvice", -1)).hasSize(2);
         assertThat(pdf).contains(squeezed("Income-tax Act, 2025 (30 of 2025)"), squeezed("Finance Act, 2026 (4 of 2026)"));
     }
@@ -164,8 +164,8 @@ class ComputationReportServiceTest {
         // Then — every line once; within a section, ascending; a section holds one kind
         assertThat(report.sections().stream().flatMap(section -> section.lines().stream())
                 .map(ComputationReport.Line::sequence))
-                .containsExactlyInAnyOrderElementsOf(tax.trace().stream().map(ComputedTax.Step::sequence).toList());
-        Map<Integer, String> kindOf = tax.trace().stream()
+                .containsExactlyInAnyOrderElementsOf(tax.workings().trace().stream().map(ComputedTax.Step::sequence).toList());
+        Map<Integer, String> kindOf = tax.workings().trace().stream()
                 .collect(Collectors.toMap(ComputedTax.Step::sequence, ComputedTax.Step::kind));
         assertThat(report.sections()).allSatisfy(section -> {
             assertThat(section.lines()).extracting(ComputationReport.Line::sequence).isSorted();
@@ -186,9 +186,10 @@ class ComputationReportServiceTest {
                         Optional.of(Money.of("1200")), "Interest for paying late."),
                 new ComputedTax.Step(2, "round", "RATE-ROUND-PAYABLE", "ROUNDING", "", Optional.of(Money.of("10004")),
                         Optional.of(Money.of("10000")), "Rounded."));
-        return new ComputedTax("id", "WL-2025-26-TEST", "2025-26", "FIRST_SCHEDULE_RATES", Money.of("900000"),
-                Money.of("8800"), Money.ZERO, new ComputedTax.AdvanceTax(false, Money.ZERO, List.of(), Optional.empty()),
-                List.of(), List.of(), Money.of("10000"), "fingerprint", lawAndExec, trace, List.of(), List.of(), Money.ZERO, Money.ZERO);
+        return new ComputedTax(new ComputedTax.Provenance("id", "WL-2025-26-TEST", "2025-26", "FIRST_SCHEDULE_RATES", "fingerprint", lawAndExec),
+                new ComputedTax.Figures(Money.of("900000"), Money.of("8800"), Money.ZERO, Money.of("10000"), Money.ZERO, Money.ZERO),
+                new ComputedTax.Dues(new ComputedTax.AdvanceTax(false, Money.ZERO, List.of(), Optional.empty()), List.of(), List.of()),
+                new ComputedTax.Workings(trace, List.of(), List.of()));
     }
 
     /** The year's law and exec pins as a computation made today stores them (W-138). */

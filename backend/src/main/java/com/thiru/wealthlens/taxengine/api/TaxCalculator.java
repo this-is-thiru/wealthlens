@@ -103,17 +103,20 @@ public class TaxCalculator {
         PipelineRunner.Result run = PipelineRunner.run(REGISTRY, pack, spec(pack, inputs.regime()), inputs);
         ComputationId id = ComputationId.fresh();
         TaxComputation computation = ComputationProjector.project(run, inputs, id);
-        return new ComputedTax(id.value(), ComputationReceipt.of(id, inputs.taxYear()).value(), inputs.taxYear().label(),
-                inputs.regime().value(), computation.totalIncome(), computation.netPayableBeforeFilingEffects(),
-                ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(), advanceTax((AdvanceTaxPosition) run.valueOf(NodeIds.ADVANCE_TAX), (InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES)),
-                owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), false),
-                owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES), true),
-                ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
-                computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation, pack),
-                buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)), notices(run),
-                ((MoneyValue) run.valueOf(NodeIds.CHAPTERVIII)).amount(),
-                ((HousePropertyHead) run.valueOf(NodeIds.HOUSEPROPERTY_INCOME)).total()
-                        .plus(((OtherSourcesHead) run.valueOf(NodeIds.OTHERSOURCES_INCOME)).asMoney()));
+        InterestAndFees interestAndFees = (InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES);
+        return new ComputedTax(
+                new ComputedTax.Provenance(id.value(), ComputationReceipt.of(id, inputs.taxYear()).value(), inputs.taxYear().label(),
+                        inputs.regime().value(), computation.inputs().sha256(),
+                        computation.lawAndExec().values().stream().map(Object::toString).sorted().toList()),
+                new ComputedTax.Figures(computation.totalIncome(), computation.netPayableBeforeFilingEffects(),
+                        ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(), ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(),
+                        ((MoneyValue) run.valueOf(NodeIds.CHAPTERVIII)).amount(),
+                        ((HousePropertyHead) run.valueOf(NodeIds.HOUSEPROPERTY_INCOME)).total()
+                                .plus(((OtherSourcesHead) run.valueOf(NodeIds.OTHERSOURCES_INCOME)).asMoney())),
+                new ComputedTax.Dues(advanceTax((AdvanceTaxPosition) run.valueOf(NodeIds.ADVANCE_TAX), interestAndFees),
+                        owed(interestAndFees, false), owed(interestAndFees, true)),
+                new ComputedTax.Workings(steps(computation, pack), buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)),
+                        notices(run)));
     }
 
     private static List<ComputedTax.Notice> notices(PipelineRunner.Result run) {

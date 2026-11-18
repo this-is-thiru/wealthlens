@@ -61,21 +61,21 @@ public class DraftForecastService {
     /** The figures from a computation; separate from {@link #forecast} so the arithmetic is tested without a pipeline. */
     static DraftForecast forecastOf(ComputedTax tax, Optional<Money> byEmployer, LocalDate dueDate, LocalDate asOf,
             int revision, List<String> notIncluded) {
-        Money liability = tax.interestAndFees().stream().map(ComputedTax.Owed::amount).reduce(tax.bill(), Money::plus);
-        Money otherCredits = tax.credits().minus(byEmployer.orElse(Money.ZERO));
+        Money liability = tax.dues().interestAndFees().stream().map(ComputedTax.Owed::amount).reduce(tax.figures().bill(), Money::plus);
+        Money otherCredits = tax.figures().credits().minus(byEmployer.orElse(Money.ZERO));
         Money unrounded = liability.minus(byEmployer.orElse(Money.ZERO)).minus(otherCredits);
-        Money net = tax.finalAmount();
+        Money net = tax.figures().finalAmount();
         DraftForecast.Settlement settlement = net.isGreaterThan(Money.ZERO) ? DraftForecast.Settlement.PAYABLE_NOW
                 : net.isLessThan(Money.ZERO) ? DraftForecast.Settlement.REFUND_AFTER_FILING : DraftForecast.Settlement.NIL;
         Optional<LocalDate> payableBy = settlement == DraftForecast.Settlement.PAYABLE_NOW
                 ? Optional.of(nextInstalmentOwed(tax, asOf).orElse(dueDate))
                 : Optional.empty();
         return new DraftForecast(liability, byEmployer, otherCredits, net.minus(unrounded), net, settlement, payableBy,
-                tax.interestOnRefund(), tax.regime(), asOf, revision, notIncluded);
+                tax.dues().interestOnRefund(), tax.provenance().regime(), asOf, revision, notIncluded);
     }
 
     private static Optional<LocalDate> nextInstalmentOwed(ComputedTax tax, LocalDate asOf) {
-        return tax.advanceTax().instalments().stream()
+        return tax.dues().advanceTax().instalments().stream()
                 .filter(instalment -> !instalment.dueOn().isBefore(asOf))
                 .filter(instalment -> instalment.stillOwed().isGreaterThan(Money.ZERO))
                 .map(ComputedTax.AdvanceTax.Instalment::dueOn)

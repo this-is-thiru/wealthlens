@@ -55,8 +55,10 @@ class ReconciliationTest {
     private static ComputedTax computed(String regime, String totalIncome, String bill, List<ComputedTax.Bucket> buckets) {
         List<ComputedTax.Step> trace = List.of(new ComputedTax.Step(1, "round.totalincome", "RATE-ROUND-TOTAL-INCOME", "ROUNDING", null,
                 Optional.of(Money.of(totalIncome)), Optional.of(Money.of(totalIncome)), ""));
-        return new ComputedTax("comp-1", "r", "2026-27", regime, Money.of(totalIncome), Money.of(bill), Money.ZERO, null, List.of(),
-                List.of(), Money.of(bill), "fp", List.of(), trace, buckets, List.of(), Money.ZERO, Money.ZERO);
+        return new ComputedTax(new ComputedTax.Provenance("comp-1", "r", "2026-27", regime, "fp", List.of()),
+                new ComputedTax.Figures(Money.of(totalIncome), Money.of(bill), Money.ZERO, Money.of(bill), Money.ZERO, Money.ZERO),
+                new ComputedTax.Dues(null, List.of(), List.of()),
+                new ComputedTax.Workings(trace, buckets, List.of()));
     }
 
     private static ReconciliationReport reconcile(DocumentConfirmation confirmation, ComputedTax computed) {
@@ -155,9 +157,10 @@ class ReconciliationTest {
 
     private static ComputedTax withClaims(String totalIncome, String bill, String chapterEight) {
         ComputedTax plain = computed("NEW_TAX_REGIME", totalIncome, bill, List.of());
-        return new ComputedTax(plain.computationId(), plain.receipt(), plain.taxYear(), plain.regime(), plain.totalIncome(), plain.bill(),
-                plain.credits(), null, List.of(), List.of(), plain.finalAmount(), "fp", List.of(), plain.trace(), List.of(), List.of(),
-                Money.of(chapterEight), Money.ZERO);
+        return new ComputedTax(new ComputedTax.Provenance(plain.provenance().computationId(), plain.provenance().receipt(), plain.provenance().taxYear(), plain.provenance().regime(), "fp", List.of()),
+                new ComputedTax.Figures(plain.figures().totalIncome(), plain.figures().bill(), plain.figures().credits(), plain.figures().finalAmount(), Money.of(chapterEight), Money.ZERO),
+                new ComputedTax.Dues(null, List.of(), List.of()),
+                new ComputedTax.Workings(plain.workings().trace(), List.of(), List.of()));
     }
 
     private static DocumentConfirmation withRow11(DocumentConfirmation confirmation, String row11) {
@@ -310,9 +313,10 @@ class ReconciliationTest {
 
     private static ComputedTax withHeads(String totalIncome, String bill, String chapterEight, String otherHeads) {
         ComputedTax plain = withClaims(totalIncome, bill, chapterEight);
-        return new ComputedTax(plain.computationId(), plain.receipt(), plain.taxYear(), plain.regime(), plain.totalIncome(), plain.bill(),
-                plain.credits(), null, List.of(), List.of(), plain.finalAmount(), "fp", List.of(), plain.trace(), List.of(), List.of(),
-                plain.chapterEight(), Money.of(otherHeads));
+        return new ComputedTax(new ComputedTax.Provenance(plain.provenance().computationId(), plain.provenance().receipt(), plain.provenance().taxYear(), plain.provenance().regime(), "fp", List.of()),
+                new ComputedTax.Figures(plain.figures().totalIncome(), plain.figures().bill(), plain.figures().credits(), plain.figures().finalAmount(), plain.figures().chapterEight(), Money.of(otherHeads)),
+                new ComputedTax.Dues(null, List.of(), List.of()),
+                new ComputedTax.Workings(plain.workings().trace(), List.of(), List.of()));
     }
 
     private static DocumentConfirmation withRow8(DocumentConfirmation confirmation, String row8) {

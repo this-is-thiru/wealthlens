@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-132 DONE (D-773), committed and pushed with this checkpoint (+ api-collection); next by board order W-333, not planned
+Item            : W-333 DONE (D-774), committed and pushed with this checkpoint; next by board order W-133, not planned
 Stage           : 6 (DONE); nothing in progress
-Done session 106: W-131e/h/f/j (D-768 – D-771), D-772, W-132 (D-773); aws/ removed
-Board           : W-132 D; W-333 · next; W-133 ·
-Next step       : 1) gh run list — confirm the last commits green; 2) plan W-333 (check first whether ComputedTax is serialized or stored as-is); stop for approval
+Done session 106: W-131e/h/f/j (D-768 – D-771), D-772, W-132 (D-773), W-333 (D-774); aws/ removed
+Board           : W-333 D; W-133 · next
+Next step       : 1) gh run list — confirm the last commits green; 2) plan W-133; stop for approval
 Open to owner   : runner token in git history (aws/ removed); host chmod 666 docker.sock
 Owner actions   : runbook §0.8; §1.n, §1.p; §1.k, §1.l; §1.m only when the scan is on
-Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML; Linux-only tests via a throwaway CI branch; an unused import makes Checkstyle stop a break run before its tests
-Last verify     : W-132 targeted 110/0 + golden 5/0 on the real engine + validate 0; breaks (a sentence, the question, the regime) caught
-Last item commit: taxplanning W-132: the T8 golden cases on the shipped layout and the engine, and each reason in words — a report gave codes the user could not read
+Env notes       : integration tests need OrbStack + DOCKER_HOST; never cd inside a $ command; read surefire XML; after a main-only change rm -rf backend/target/test-classes (incremental test-compile skips stale tests)
+Last verify     : W-333 targeted 191/0 (13 classes) + validate 0; break caught
+Last item commit: taxplanning W-333: group ComputedTax's 18 components into four records — one result type was 18 wide where seven is the limit
 Files touched   : none
 Updated         : 2026-11-18, session 106
 ```

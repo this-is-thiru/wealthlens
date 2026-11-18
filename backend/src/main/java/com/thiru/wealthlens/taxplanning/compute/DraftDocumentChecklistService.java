@@ -84,7 +84,7 @@ public class DraftDocumentChecklistService {
     /** What the draft, its profile and the engine show, for reading each record the catalogue names. */
     Reading reading(EngineInputs inputs, EvidenceHeld held, OnFile onFile) {
         Set<String> asked = new TreeSet<>();
-        taxCalculator.compute(inputs).notices().forEach(notice -> asked.addAll(notice.relatedRules()));
+        taxCalculator.compute(inputs).workings().notices().forEach(notice -> asked.addAll(notice.relatedRules()));
         return new Reading(new EvidencedFacts(inputs.entered(), held, inputs.taxYear()), onFile, asked,
                 certificatesHeld(inputs), taxCalculator.evidenceSentences(inputs.taxYear()));
     }

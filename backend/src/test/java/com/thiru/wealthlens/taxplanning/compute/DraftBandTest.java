@@ -118,6 +118,6 @@ class DraftBandTest {
 
         // Then
         assertThat(band.lower()).isEqualTo(band.upper());
-        assertThat(band.upper()).isEqualTo(tax.bill());
+        assertThat(band.upper()).isEqualTo(tax.figures().bill());
     }
 }

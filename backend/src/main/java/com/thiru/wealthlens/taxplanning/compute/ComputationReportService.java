@@ -60,13 +60,13 @@ public class ComputationReportService {
     /** The report of {@code view}, whose rules were read at {@code pinned}; separate so it is tested on the engine alone. */
     ComputationReport model(DraftComputationView view, Map<String, String> pinned) {
         ComputedTax tax = view.tax();
-        TaxYearId year = yearOf(tax.taxYear());
+        TaxYearId year = yearOf(tax.provenance().taxYear());
         Map<String, String> words = taxCalculator.reportSentences(year);
-        Set<String> rules = tax.trace().stream().map(ComputedTax.Step::rule).collect(Collectors.toSet());
+        Set<String> rules = tax.workings().trace().stream().map(ComputedTax.Step::rule).collect(Collectors.toSet());
         LineMarks marks = new LineMarks(pinned, taxCalculator.ruleChecksums(year, rules),
                 taxCalculator.verificationLevels(year, rules), words);
         Map<String, List<ComputationReport.Line>> byKind = new LinkedHashMap<>();
-        tax.trace().forEach(step -> byKind.computeIfAbsent(step.kind(), kind -> new ArrayList<>())
+        tax.workings().trace().forEach(step -> byKind.computeIfAbsent(step.kind(), kind -> new ArrayList<>())
                 .add(new ComputationReport.Line(step.sequence(), step.explanation(), step.rule(),
                         step.out().map(Money::inIndianNotation).orElse(""), marks.of(step.rule()))));
         List<ComputationReport.Section> sections = byKind.entrySet().stream()
@@ -80,10 +80,10 @@ public class ComputationReportService {
 
     private static ComputationReport.Header header(ComputedTax tax, Map<String, String> words) {
         return new ComputationReport.Header(word(words, "TITLE"),
-                word(words, "RECEIPT").replace("{receipt}", tax.receipt()),
-                word(words, "TAX_YEAR").replace("{taxYear}", tax.taxYear()),
-                word(words, "TOTAL_INCOME"), tax.totalIncome().inIndianNotation(),
-                word(words, "FINAL_AMOUNT"), tax.finalAmount().inIndianNotation());
+                word(words, "RECEIPT").replace("{receipt}", tax.provenance().receipt()),
+                word(words, "TAX_YEAR").replace("{taxYear}", tax.provenance().taxYear()),
+                word(words, "TOTAL_INCOME"), tax.figures().totalIncome().inIndianNotation(),
+                word(words, "FINAL_AMOUNT"), tax.figures().finalAmount().inIndianNotation());
     }
 
     /** Only a view that said it was coarse is reported as coarse; one that said nothing says nothing here (W-122b1 C1a). */
@@ -98,11 +98,11 @@ public class ComputationReportService {
     private Optional<String> packNote(ComputedTax tax, TaxYearId year, Map<String, String> words) {
         List<String> current = taxCalculator.packVersions(year).orElseThrow(
                 () -> new IllegalArgumentException("No rule pack ships for " + year.label()));
-        if (current.equals(tax.lawAndExec())) {
+        if (current.equals(tax.provenance().lawAndExec())) {
             return Optional.empty();
         }
         return Optional.of(word(words, "PACK_UPDATED_SINCE")
-                .replace("{computedUnder}", String.join(", ", tax.lawAndExec()))
+                .replace("{computedUnder}", String.join(", ", tax.provenance().lawAndExec()))
                 .replace("{current}", String.join(", ", current)));
     }
 
@@ -110,7 +110,7 @@ public class ComputationReportService {
         InstrumentCitations instruments = taxCalculator.instrumentCitations(year);
         return word(words, "DISCLAIMER").replace("{act}", instruments.act())
                 .replace("{financeAct}", instruments.financeAct()).replace("{rules}", instruments.rules())
-                .replace("{taxYear}", tax.taxYear());
+                .replace("{taxYear}", tax.provenance().taxYear());
     }
 
     /** @throws IllegalStateException if the year's content lacks a sentence the report prints */

@@ -49,11 +49,11 @@ public final class Reconciliation {
         List<String> documents = certificates.stream().map(ConfirmedCertificate::documentId).toList();
         List<DocumentConfirmation> confirmed = certificates.stream().map(ConfirmedCertificate::confirmation).toList();
         if (assembly.mode() == AssemblyMode.MIXED) {
-            return new ReconciliationReport(computed.computationId(), documents, List.of(), Verdict.CANNOT_COMPARE, List.of(MIXED_YEAR));
+            return new ReconciliationReport(computed.provenance().computationId(), documents, List.of(), Verdict.CANNOT_COMPARE, List.of(MIXED_YEAR));
         }
         Optional<Map<String, ExtractedValue>> partC = yearPartC(confirmed, assembly, layout);
         Context context = new Context(partC.map(values -> regimeDiffers(values, layout, computed, law)).orElse(false),
-                !computed.capitalGainsBuckets().isEmpty(), employerErrors(confirmed, assembly, layout));
+                !computed.workings().capitalGainsBuckets().isEmpty(), employerErrors(confirmed, assembly, layout));
         List<ReconciliationLine> lines = new ArrayList<>();
         List<ReconciliationReason> above = new ArrayList<>();
         for (PrintedComparison comparison : layout.checks().comparisons()) {
@@ -69,7 +69,7 @@ public final class Reconciliation {
                 own.filter(reason -> !above.contains(reason)).ifPresent(above::add);
             }
         }
-        return new ReconciliationReport(computed.computationId(), documents, lines, verdict(lines), explanations(lines));
+        return new ReconciliationReport(computed.provenance().computationId(), documents, lines, verdict(lines), explanations(lines));
     }
 
     /** Each reason's sentence once, in the order the lines first give it (W-132 C2a). */
@@ -146,10 +146,10 @@ public final class Reconciliation {
     /** A node's last output in the trace, or a computation total; none where the computation did not reach the node. */
     private static Optional<Money> produced(PrintedComparison comparison, ComputedTax computed) {
         if (comparison.total().isPresent()) {
-            return Optional.of(computed.total(comparison.total().get()));
+            return Optional.of(computed.figures().total(comparison.total().get()));
         }
         String node = comparison.node().orElseThrow();
-        return computed.trace().stream().filter(step -> step.node().equals(node) && step.out().isPresent())
+        return computed.workings().trace().stream().filter(step -> step.node().equals(node) && step.out().isPresent())
                 .reduce((first, second) -> second).flatMap(ComputedTax.Step::out);
     }
 
@@ -157,7 +157,7 @@ public final class Reconciliation {
     private static boolean regimeDiffers(Map<String, ExtractedValue> accepted, CertificateLayout layout, ComputedTax computed,
             SalaryCertificateLaw law) {
         return factPath(layout, "REGIME_OPT_OUT").map(accepted::get).filter(ExtractedValue.FlagRead.class::isInstance)
-                .map(read -> ((ExtractedValue.FlagRead) read).value() == computed.regime().equals(law.defaultRegime().value()))
+                .map(read -> ((ExtractedValue.FlagRead) read).value() == computed.provenance().regime().equals(law.defaultRegime().value()))
                 .orElse(false);
     }
 

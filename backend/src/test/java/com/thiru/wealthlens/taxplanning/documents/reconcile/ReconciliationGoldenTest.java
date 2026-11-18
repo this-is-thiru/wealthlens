@@ -133,7 +133,7 @@ class ReconciliationGoldenTest {
         ReconciliationReport report = reconcile(year, PRIYA);
 
         // Then — 21,00,000 − 75,000 = 20,25,000; 2,00,000 + 25,000 × 0.25 = 2,06,250; cess 8,250; 2,14,500 owed, 0 deducted
-        assertThat(PRIYA.bill()).isEqualTo(Money.of("214500"));
+        assertThat(PRIYA.figures().bill()).isEqualTo(Money.of("214500"));
         assertThat(report.verdict()).isEqualTo(Verdict.MATERIAL_DIFFERENCE);
         ReconciliationLine deducted = line(report, partB());
         assertThat(deducted.difference()).isEqualTo(Money.of("-214500"));
@@ -150,8 +150,8 @@ class ReconciliationGoldenTest {
         // so its row 11 prints 1,50,000 and its row 12 12,00,000 − 50,000 − 1,50,000 = 10,00,000; row A Yes, as computed
         ComputedTax computed = underTheOldRegime("1200000", facts -> facts.withQualifyingPayments(List.of(
                 new QualifyingPayment(ComponentCodes.TUITION_FEES, Money.of("60000")))));
-        assertThat(computed.chapterEight()).isEqualTo(Money.of("60000"));
-        assertThat(computed.totalIncome()).isEqualTo(Money.of("1090000"));
+        assertThat(computed.figures().chapterEight()).isEqualTo(Money.of("60000"));
+        assertThat(computed.figures().totalIncome()).isEqualTo(Money.of("1090000"));
         Map<String, ExtractedValue> values = withPartC(partA("MUMA12345B", "2026-04-01", "2027-03-31", "100000"), true, "0", "50000");
         values.put(compared("CHAPTER_VIII"), money("150000"));
         values.put(byNode("round.totalincome"), money("1000000"));
@@ -176,8 +176,8 @@ class ReconciliationGoldenTest {
         // prints 0 and its row 12 10,50,000 − 50,000 = 10,00,000
         ComputedTax computed = underTheOldRegime("1050000", facts -> facts.withHealthPayments(List.of(
                 new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), Money.of("25000"), false, 1))));
-        assertThat(computed.chapterEight()).isEqualTo(Money.of("25000"));
-        assertThat(computed.totalIncome()).isEqualTo(Money.of("975000"));
+        assertThat(computed.figures().chapterEight()).isEqualTo(Money.of("25000"));
+        assertThat(computed.figures().totalIncome()).isEqualTo(Money.of("975000"));
         Map<String, ExtractedValue> values = withPartC(partA("MUMA12345B", "2026-04-01", "2027-03-31", "100000"), true, "0", "50000");
         values.put(compared("CHAPTER_VIII"), money("0"));
         values.put(byNode("round.totalincome"), money("1000000"));

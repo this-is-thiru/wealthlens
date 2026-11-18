@@ -82,7 +82,7 @@ public class DraftReconciliationService {
                 DraftForecastService.regimeOf(draft, taxCalculator), LocalDate.now(clock)).inputs());
         used.forEach(certificate -> accessLog.record(email, ReadSubject.DOCUMENT, certificate.documentId()));
         Assembly assembly = EmployerAssembly.assemble(used, layout, law);
-        return new DraftReconciliation(draftId, draft.getCurrentRevision(), computed.regime(), assembly,
+        return new DraftReconciliation(draftId, draft.getCurrentRevision(), computed.provenance().regime(), assembly,
                 Reconciliation.reconcile(used, assembly, layout, computed, law),
                 certificates.stream().map(StoredDocument::getId).filter(id -> !confirmed.containsKey(id)).toList());
     }

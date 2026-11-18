@@ -41,7 +41,7 @@ public class CapitalGainsViewService {
         RegimeCode regime = taxCalculator.defaultRegime(year);
         LocalDate readOn = year.startsOn().plusMonths(5);
         List<ComputedTax.Bucket> realised = taxCalculator.compute(assembler.forCapitalGains(profile, year, regime, readOn,
-                capitalGainsAdapter.inputFor(email, year))).capitalGainsBuckets();
+                capitalGainsAdapter.inputFor(email, year))).workings().capitalGainsBuckets();
         List<CapitalGainsView.HeldLot> held = heldAsOf
                 .map(date -> heldAssetsViewService.lots(email, profile, date).stream().map(CapitalGainsViewService::heldLot).toList())
                 .orElseGet(List::of);

@@ -114,9 +114,9 @@ class SyntheticPackTest {
         ComputedTax tax = CALCULATOR.compute(inputs);
 
         // Then — 20,00,000 − 72,520.55 = 19,27,479.45 → 19,27,480; 10 % × 14,27,480 = 1,42,748; cess 5,709.92
-        assertThat(tax.totalIncome()).isEqualTo(Money.of("1927480"));
-        assertThat(tax.bill()).isEqualTo(Money.of("148457.92"));
-        assertThat(tax.finalAmount()).isEqualTo(Money.of("148460"));
+        assertThat(tax.figures().totalIncome()).isEqualTo(Money.of("1927480"));
+        assertThat(tax.figures().bill()).isEqualTo(Money.of("148457.92"));
+        assertThat(tax.figures().finalAmount()).isEqualTo(Money.of("148460"));
         assertThat(standardDeduction(tax).rule()).isEqualTo("SYN-STANDARD-DEDUCTION");
         assertThat(standardDeduction(tax).limitedBy())
                 .contains("2099-04-01 to 2099-06-30").contains("2099-07-01 to 2100-03-31");
@@ -131,9 +131,9 @@ class SyntheticPackTest {
         ComputedTax tax = CALCULATOR.compute(inputs);
 
         // Then — 19,27,480; 20 % × 16,27,480 = 3,25,496; cess 13,019.84
-        assertThat(tax.totalIncome()).isEqualTo(Money.of("1927480"));
-        assertThat(tax.bill()).isEqualTo(Money.of("338515.84"));
-        assertThat(tax.finalAmount()).isEqualTo(Money.of("338520"));
+        assertThat(tax.figures().totalIncome()).isEqualTo(Money.of("1927480"));
+        assertThat(tax.figures().bill()).isEqualTo(Money.of("338515.84"));
+        assertThat(tax.figures().finalAmount()).isEqualTo(Money.of("338520"));
     }
 
     @Test
@@ -146,10 +146,10 @@ class SyntheticPackTest {
 
         // Then — 20,00,000 at 8 % = 1,60,000; cess 6,400; the 1 July row ExceptIn(SYN_FLAT) is not in the trace, its own
         // nil row is
-        assertThat(tax.totalIncome()).isEqualTo(Money.of("2000000"));
-        assertThat(tax.bill()).isEqualTo(Money.of("166400"));
-        assertThat(tax.finalAmount()).isEqualTo(Money.of("166400"));
-        assertThat(tax.trace()).extracting(ComputedTax.Step::rule).doesNotContain("SYN-STANDARD-DEDUCTION")
+        assertThat(tax.figures().totalIncome()).isEqualTo(Money.of("2000000"));
+        assertThat(tax.figures().bill()).isEqualTo(Money.of("166400"));
+        assertThat(tax.figures().finalAmount()).isEqualTo(Money.of("166400"));
+        assertThat(tax.workings().trace()).extracting(ComputedTax.Step::rule).doesNotContain("SYN-STANDARD-DEDUCTION")
                 .contains("SYN-STANDARD-DEDUCTION-FLAT");
     }
 
@@ -180,9 +180,9 @@ class SyntheticPackTest {
         ComputedTax tax = CALCULATOR.compute(inputs);
 
         // Then — 20,00,000 − 80,000 = 19,20,000; 10 % × 14,20,000 = 1,42,000; × 1.04
-        assertThat(tax.totalIncome()).isEqualTo(Money.of("1920000"));
-        assertThat(tax.bill()).isEqualTo(Money.of("147680"));
-        assertThat(tax.finalAmount()).isEqualTo(Money.of("147680"));
+        assertThat(tax.figures().totalIncome()).isEqualTo(Money.of("1920000"));
+        assertThat(tax.figures().bill()).isEqualTo(Money.of("147680"));
+        assertThat(tax.figures().finalAmount()).isEqualTo(Money.of("147680"));
     }
 
     @Test
@@ -200,7 +200,7 @@ class SyntheticPackTest {
     }
 
     private static ComputedTax.Step standardDeduction(ComputedTax tax) {
-        return tax.trace().stream().filter(step -> step.rule().startsWith("SYN-STANDARD-DEDUCTION")).findFirst()
+        return tax.workings().trace().stream().filter(step -> step.rule().startsWith("SYN-STANDARD-DEDUCTION")).findFirst()
                 .orElseThrow();
     }
 
