@@ -4,17 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-131d2 DONE (D-767), W-131d complete. Next by board order: W-131e (the malware scan) — plan it
-Stage           : committed and pushed (see Last item commit); nothing in progress
-Done session 105: D-767 — W-131d2
-Board           : W-131d2 D; W-131e (scan) ·; W-131f (isolation) ·
-Next step       : check the pipeline for the W-131d2 push; "start next" = plan W-131e per 00-START-HERE §2; stop for approval
-Open to owner   : W-131g (prompt for a PDF password, O6) yes/no; W-333 (ComputedTax 18 components, past 7) yes/no — neither placed
+Item            : PAUSED. W-131e planned and APPROVED C1a – C4a (plans/W-131e.md, board E); not built
+Stage           : nothing in progress; code at d7a5b146 (pushed); this pause commit holds the plan + board + checkpoint
+Done session 105: D-767 — W-131d2 (86035a1c + pointer d7a5b146, api 107fed2); W-131e planned + approved
+Board           : W-131d2 D; W-131e E (approved); W-131f (isolation) ·
+Next step       : 1) gh run list — confirm d7a5b146 green (run 44236362337: {"conclusion":"success","status":"completed"}); 2) ask the owner the three open points: C5 (local ClamAV probe — it was denied by the permission classifier, do not retry without a yes), EC2 host memory (≥ 3 GiB for ClamAV), scan timeout PT60S adopt or measure; 3) build W-131e per plan steps; stop for review
+Open to owner   : C5 / host memory / timeout (above); W-131g (PDF password prompt, O6) yes/no; W-333 (ComputedTax 18 components, past 7) yes/no — neither placed
 Owner actions   : runbook §0.8 before the one deploy; §1.n and §1.p on the deploy carrying W-131a – d2; documents switch stays OFF until W-131e + W-131f
-Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command
+Env notes       : integration tests need OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; never cd inside a $ command; read surefire XML for failures (stdout gets cut)
 Last verify     : W-131d2 targeted 64/0 (7 classes, 3 integration) + validate
 Last item commit: taxplanning W-131d2: reconcile a draft's confirmed certificates with its computation
-Updated         : 2026-11-18, session 105
+Files touched   : none beyond this pause commit
+Updated         : 2026-11-18, session 105 (paused; owner shutting down)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
