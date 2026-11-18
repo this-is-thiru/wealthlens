@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.Accrual;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsAccrual;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsBuckets;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromCapitalGainsParts;
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromDeclaration;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromItemFigure;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromNodes;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromOtherSourceAccrual;
@@ -16,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromTaxBasis;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.ManualEntry;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.SumOf;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -50,11 +52,12 @@ public final class ScheduleMapper {
      * @param rulesByKind each rule's figures in the trace, summed by step kind
      * @param setOff set-off row by row, each row's columns by name
      * @param accruals each kind of item's amounts with the day each arose, for the accrual tables (W-323)
+     * @param declaredAmounts each amount the person declared, by question; an unanswered question is absent (W-258a)
      */
     public record Figures(Map<NodeId, Money> nodes, Map<RuleId, Money> rules, ReturnFacts returned,
             Optional<Money> taxAtSlabRates, Map<String, Money> taxAtSpecialRates, Map<String, Money> otherSourcesByKind,
             Map<String, List<Map<String, Money>>> items, Map<RuleId, Map<String, Money>> rulesByKind,
-            Map<String, Map<String, Money>> setOff, Accruals accruals) {
+            Map<String, Map<String, Money>> setOff, Accruals accruals, Map<DeclarationCode, Money> declaredAmounts) {
         public Figures {
             if (returned == null || taxAtSlabRates == null || accruals == null) {
                 throw new IllegalArgumentException("Figures needs the return's facts, says whether slab tax was computed and"
@@ -67,6 +70,7 @@ public final class ScheduleMapper {
             items = Map.copyOf(items);
             rulesByKind = Map.copyOf(rulesByKind);
             setOff = Map.copyOf(setOff);
+            declaredAmounts = Map.copyOf(declaredAmounts);
         }
     }
 
@@ -163,21 +167,32 @@ public final class ScheduleMapper {
     private static Reading sourced(ScheduleCell cell, Map<CellCode, ScheduleCell> cells, Figures figures,
             Map<CellCode, Reading> read, Optional<Map<String, Money>> item) {
         return switch (cell.source()) {
+            case SumOf sum -> sumOf(sum, cells, figures, read, item);
+            case FromItemFigure figure -> fromItemFigure(figure, item);
+            case Accrual accrual -> fromAccrual(accrual, figures);
+            case ManualEntry manual -> Reading.unavailable(manual.guidance());
+            case FromNodes _, FromTaxBasis _, FromRules _, FromCapitalGainsParts _, FromCapitalGainsBuckets _, FromSetOff _,
+                    FromOtherSourceKinds _, FromDeclaration _ -> runFigure(cell.source(), figures);
+        };
+    }
+
+    /** A figure the run itself states, read by its source alone — no other cell, no item, no period. */
+    private static Reading runFigure(FieldSource source, Figures figures) {
+        return switch (source) {
             case FromNodes nodes -> fromNodes(nodes, figures);
             case FromTaxBasis basis -> fromTaxBasis(basis, figures);
             case FromRules rules -> fromRules(rules, figures);
             case FromCapitalGainsParts parts -> Reading.of(parts.parts().stream()
                     .map(part -> figures.returned().capitalGains().getOrDefault(part, Money.ZERO))
                     .reduce(Money.ZERO, Money::plus));
-            case SumOf sum -> sumOf(sum, cells, figures, read, item);
-            case FromItemFigure figure -> fromItemFigure(figure, item);
             case FromCapitalGainsBuckets buckets -> fromBuckets(buckets, figures);
             case FromSetOff setOff -> fromSetOff(setOff, figures);
             case FromOtherSourceKinds kinds -> Reading.of(kinds.kinds().stream()
                     .map(kind -> figures.otherSourcesByKind().getOrDefault(kind, Money.ZERO))
                     .reduce(Money.ZERO, Money::plus));
-            case Accrual accrual -> fromAccrual(accrual, figures);
-            case ManualEntry manual -> Reading.unavailable(manual.guidance());
+            case FromDeclaration declared -> fromDeclaration(declared, figures);
+            case SumOf _, FromItemFigure _, Accrual _, ManualEntry _ -> throw new IllegalStateException(
+                    "A " + source.getClass().getSimpleName() + " cell is read against other cells, an item or a period");
         };
     }
 
@@ -309,11 +324,19 @@ public final class ScheduleMapper {
                         ? figures.rulesByKind().getOrDefault(rule, Map.of()).get(source.kind().get())
                         : figures.rules().get(rule))
                 .filter(amount -> amount != null).toList();
+        if (applied.isEmpty() && source.noneApplied() == FromRules.NoneApplied.NIL) {
+            return Reading.of(Money.ZERO);
+        }
         if (applied.isEmpty()) {
             return Reading.unavailable("None of " + source.rules() + source.kind().map(kind -> " (" + kind + " lines)").orElse("")
                     + " applied in this run");
         }
         return Reading.of(applied.stream().reduce(Money.ZERO, Money::plus));
+    }
+
+    private static Reading fromDeclaration(FromDeclaration source, Figures figures) {
+        Money amount = figures.declaredAmounts().get(source.code());
+        return amount == null ? Reading.unavailable("The question " + source.code() + " is not answered") : Reading.of(amount);
     }
 
     private static Reading sumOf(SumOf sum, Map<CellCode, ScheduleCell> cells, Figures figures,

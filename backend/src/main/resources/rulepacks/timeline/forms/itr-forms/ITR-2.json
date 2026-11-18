@@ -958,6 +958,34 @@
           }
         },
         {
+          "code": "EI",
+          "displayName": "Schedule EI — Details of exempt income, item 2: agricultural income",
+          "fields": [
+            {
+              "path": "EI.2.i",
+              "cell": "AGRICULTURAL_RECEIPTS"
+            },
+            {
+              "path": "EI.2.ii",
+              "cell": "AGRICULTURAL_EXPENDITURE"
+            },
+            {
+              "path": "EI.2.iii",
+              "cell": "AGRICULTURAL_LOSS_BROUGHT_FORWARD"
+            },
+            {
+              "path": "EI.2.iv",
+              "cell": "NET_AGRICULTURAL_INCOME_FOR_RATE"
+            }
+          ],
+          "provenance": {
+            "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271435.pdf",
+            "sourceDescription": "Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, FORM ITR-2, Schedule EI item 2, p.62",
+            "accessedOn": "2026-11-18",
+            "verificationLevel": "SOURCE_CHECKED"
+          }
+        },
+        {
           "code": "PART-B-TI",
           "displayName": "Part B-TI — Computation of total income",
           "fields": [
@@ -1052,6 +1080,18 @@
             {
               "path": "B-TI.12",
               "cell": "TOTAL_INCOME"
+            },
+            {
+              "path": "B-TI.13",
+              "cell": "SPECIAL_RATE_INCOME_IN_TOTAL"
+            },
+            {
+              "path": "B-TI.14",
+              "cell": "NET_AGRICULTURAL_INCOME_FOR_RATE"
+            },
+            {
+              "path": "B-TI.15",
+              "cell": "AGGREGATE_INCOME"
             }
           ],
           "provenance": {

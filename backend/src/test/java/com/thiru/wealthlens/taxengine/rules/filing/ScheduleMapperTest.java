@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.FromTaxBasis;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.ManualEntry;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource.SumOf;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.FurnishingManner;
 import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
@@ -51,7 +52,8 @@ class ScheduleMapperTest {
     private static final ScheduleCell GROSS = new ScheduleCell(new CellCode("SYN_GROSS"), "Gross salary",
             new FromNodes(List.of(GROSS_NODE)), ScheduleCell.Sign.AS_COMPUTED);
     private static final ScheduleCell DEDUCTION = new ScheduleCell(new CellCode("SYN_DEDUCTION"), "Standard deduction",
-            new FromRules(List.of(NEW_DEDUCTION, OLD_DEDUCTION), Optional.empty()), ScheduleCell.Sign.AS_COMPUTED);
+            new FromRules(List.of(NEW_DEDUCTION, OLD_DEDUCTION), Optional.empty(), FromRules.NoneApplied.UNAVAILABLE),
+            ScheduleCell.Sign.AS_COMPUTED);
     private static final ScheduleCell NET = new ScheduleCell(new CellCode("SYN_NET"), "Net salary",
             new SumOf(List.of(new SumOf.Term(GROSS.code(), false), new SumOf.Term(DEDUCTION.code(), true))), ScheduleCell.Sign.AS_COMPUTED);
     private static final ScheduleCell GAIN = new ScheduleCell(new CellCode("SYN_GAIN"), "Long-term gains",
@@ -74,7 +76,8 @@ class ScheduleMapperTest {
                 Money.ZERO, HeadCode.OTHER_SOURCES, Money.ZERO, HeadCode.CAPITAL_GAINS, Money.of("150000")),
                 Map.of(LONG, Money.of("150000")), Set.of(), Map.of(), Map.of());
         return new ScheduleMapper.Figures(Map.of(GROSS_NODE, Money.of("1075000"), TRAVEL_NODE, Money.of("25000")), rules,
-                returned, Optional.of(Money.of("120000")), Map.of("RATE_CG_LONG_LISTED_EQUITY", Money.of("3125")), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS);
+                returned, Optional.of(Money.of("120000")), Map.of("RATE_CG_LONG_LISTED_EQUITY", Money.of("3125")), Map.of(),
+                Map.of(), Map.of(), Map.of(), NO_ACCRUALS, Map.of());
     }
 
     private static FilledCell cell(List<FilledCell> cells, ScheduleCell wanted) {
@@ -110,6 +113,38 @@ class ScheduleMapperTest {
     }
 
     @Test
+    void fill_whenNoRowOfACellThatReadsNoneAsNilApplied_readsNil() {
+        // Given — a cell whose rows not applying is itself the answer, as the rebate on agricultural income (W-258a C1a)
+        ScheduleCell rebate = new ScheduleCell(new CellCode("SYN_REBATE"), "Rebate", new FromRules(List.of(NEW_DEDUCTION),
+                Optional.of("RELIEF"), FromRules.NoneApplied.NIL), ScheduleCell.Sign.AS_COMPUTED);
+
+        // When
+        List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(rebate)), figures(Map.of()));
+
+        // Then
+        assertThat(cell(cells, rebate).amount()).contains(Money.ZERO);
+    }
+
+    @Test
+    void fill_whenACellReadsADeclaredAmount_givesItOrSaysTheQuestionIsUnanswered() {
+        // Given
+        DeclarationCode code = new DeclarationCode("SYN_AMOUNT");
+        ScheduleCell farming = new ScheduleCell(new CellCode("SYN_FARMING"), "Net agricultural income",
+                new FieldSource.FromDeclaration(code), ScheduleCell.Sign.AS_COMPUTED);
+        ScheduleMapper.Figures unanswered = figures(Map.of());
+        ScheduleMapper.Figures answered = new ScheduleMapper.Figures(unanswered.nodes(), unanswered.rules(),
+                unanswered.returned(), unanswered.taxAtSlabRates(), unanswered.taxAtSpecialRates(),
+                unanswered.otherSourcesByKind(), unanswered.items(), unanswered.rulesByKind(), unanswered.setOff(),
+                unanswered.accruals(), Map.of(code, Money.of("200000")));
+        ItrFormSpec form = form("SYN-1", "B1.i", List.of(farming));
+
+        // When / Then
+        assertThat(cell(ScheduleMapper.fill(form, answered), farming).amount()).contains(Money.of("200000"));
+        assertThat(cell(ScheduleMapper.fill(form, unanswered), farming).unavailableBecause())
+                .contains("The question SYN_AMOUNT is not answered");
+    }
+
+    @Test
     void fill_whenNoRuleOfACellApplied_saysSoAndSoDoesEverySumReadingIt() {
         // When — T21-15: neither deduction row is in the trace
         List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(DEDUCTION, NET)), figures(Map.of()));
@@ -137,7 +172,7 @@ class ScheduleMapperTest {
     void fill_whenANodeWasNotComputed_saysWhich() {
         // When
         List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of()),
-                new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(), Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS));
+                new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(), Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS, Map.of()));
 
         // Then
         assertThat(cell(cells, GROSS).unavailableBecause()).contains("The node salary.gross was not computed in this run");
@@ -203,7 +238,7 @@ class ScheduleMapperTest {
         ScheduleMapper.Figures run = new ScheduleMapper.Figures(Map.of(GROSS_NODE, Money.of("1075000")), Map.of(),
                 figures(Map.of()).returned(), Optional.empty(), Map.of(), Map.of(), Map.of("HOUSE_PROPERTY", List.of(
                         Map.of("annualValue", Money.of("522000"), "income", Money.of("365400")),
-                        Map.of("annualValue", Money.ZERO, "income", Money.of("-86666.67")))), Map.of(), Map.of(), NO_ACCRUALS);
+                        Map.of("annualValue", Money.ZERO, "income", Money.of("-86666.67")))), Map.of(), Map.of(), NO_ACCRUALS, Map.of());
 
         // When
         List<FilledCell> cells = ScheduleMapper.fill(form, run);
@@ -238,7 +273,7 @@ class ScheduleMapperTest {
                 List.of("SAVINGS_DEPOSIT_INTEREST", "DEPOSIT_INTEREST", "OTHER_INTEREST")), ScheduleCell.Sign.AS_COMPUTED);
         ScheduleMapper.Figures run = new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(),
                 Optional.empty(), Map.of(), Map.of("SAVINGS_DEPOSIT_INTEREST", Money.of("14000"), "DEPOSIT_INTEREST",
-                        Money.of("100000"), "DIVIDEND", Money.of("5000")), Map.of(), Map.of(), Map.of(), NO_ACCRUALS);
+                        Money.of("100000"), "DIVIDEND", Money.of("5000")), Map.of(), Map.of(), Map.of(), NO_ACCRUALS, Map.of());
 
         // When
         List<FilledCell> cells = ScheduleMapper.fill(form("SYN-1", "B1.i", List.of(interest)), run);
@@ -266,7 +301,7 @@ class ScheduleMapperTest {
         return new ScheduleMapper.Figures(Map.of(), Map.of(), figures(Map.of()).returned(), Optional.empty(), Map.of(),
                 Map.of(), Map.of(), Map.of(), Map.of(SHORT_LISTED.value(), Map.of("afterBroughtForward", Money.of(settled))),
                 new ScheduleMapper.Accruals(LocalDate.of(2025, 4, 1), Map.of(
-                        FieldSource.FromCapitalGainsBuckets.itemKindOf(SHORT_LISTED), gains, "DIVIDEND", dividends)));
+                        FieldSource.FromCapitalGainsBuckets.itemKindOf(SHORT_LISTED), gains, "DIVIDEND", dividends)), Map.of());
     }
 
     private static ScheduleMapper.Accrued on(String rupees, LocalDate day) {

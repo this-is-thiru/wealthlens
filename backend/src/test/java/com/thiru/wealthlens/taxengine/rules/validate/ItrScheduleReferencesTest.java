@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.ItrSchedule;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleField;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.FurnishingManner;
 import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
@@ -67,7 +68,9 @@ class ItrScheduleReferencesTest {
         // When — a node, a rule of the year, a declared part, a sum of placed cells, an entry by hand
         List<String> problems = problems(
                 cell("SYN_GROSS", new FieldSource.FromNodes(List.of(new NodeId("salary.gross")))),
-                cell("SYN_DEDUCTION", new FieldSource.FromRules(List.of(new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME")), Optional.empty())),
+                cell("SYN_DEDUCTION", new FieldSource.FromRules(List.of(new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME")),
+                        Optional.empty(), FieldSource.FromRules.NoneApplied.UNAVAILABLE)),
+                cell("SYN_FARMING", new FieldSource.FromDeclaration(new DeclarationCode("NET_AGRICULTURAL_INCOME"))),
                 cell("SYN_GAIN", new FieldSource.FromCapitalGainsParts(List.of(new CapitalGainsPart("LONG_TERM_LISTED_EQUITY")))),
                 cell("SYN_NET", new FieldSource.SumOf(List.of(new FieldSource.SumOf.Term(new CellCode("SYN_GROSS"), false)))),
                 cell("SYN_TAN", new FieldSource.ManualEntry("Enter it")));
@@ -80,7 +83,8 @@ class ItrScheduleReferencesTest {
     void check_whenACellReadsARuleOrPartTheYearLacksOrSumsAnUnplacedCell_namesEach() {
         // When
         List<String> problems = problems(
-                cell("SYN_RULE", new FieldSource.FromRules(List.of(new RuleId("SYN-NOT-A-RULE")), Optional.empty())),
+                cell("SYN_RULE", new FieldSource.FromRules(List.of(new RuleId("SYN-NOT-A-RULE")), Optional.empty(),
+                        FieldSource.FromRules.NoneApplied.UNAVAILABLE)),
                 cell("SYN_PART", new FieldSource.FromCapitalGainsParts(List.of(new CapitalGainsPart("SYN_NOT_A_PART")))),
                 cell("SYN_SUM", new FieldSource.SumOf(List.of(new FieldSource.SumOf.Term(new CellCode("SYN_ABSENT"), true)))));
 
@@ -91,6 +95,21 @@ class ItrScheduleReferencesTest {
                         + " CapitalGainsParts does not declare (I21)",
                 "form SYN-1 S SYN_SUM (SYN_SUM) sums cell SYN_ABSENT, which the form does not place (I21)");
     }
+    @Test
+    void check_whenACellReadsAQuestionTheYearDoesNotAskOrAsksYesOrNo_namesEach() {
+        // When — W-258a: a declared amount must be an amount question of the year's catalogue
+        List<String> problems = problems(
+                cell("SYN_UNASKED", new FieldSource.FromDeclaration(new DeclarationCode("SYN_NOT_ASKED"))),
+                cell("SYN_YES_NO", new FieldSource.FromDeclaration(new DeclarationCode("DIRECTOR_IN_COMPANY"))));
+
+        // Then
+        assertThat(problems).containsExactly(
+                "form SYN-1 S SYN_UNASKED (SYN_UNASKED) reads declaration SYN_NOT_ASKED, which is not in the year's"
+                        + " declaration catalogue (I21)",
+                "form SYN-1 S SYN_YES_NO (SYN_YES_NO) reads declaration DIRECTOR_IN_COMPANY as an amount, but the catalogue"
+                        + " asks it as YES_NO (I21)");
+    }
+
     @Test
     void check_whenAnItemFigureIsPlacedOutsideAGroup_refusesIt() {
         // When

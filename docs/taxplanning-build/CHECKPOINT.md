@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-258 DONE (D-778), committed and pushed with this checkpoint; next by board order W-258a (ITR cells for agricultural income), not planned
+Item            : W-258a DONE (D-779), committed and pushed with this checkpoint; W-258's pipeline fix 92cc59b5
 Stage           : 6 (DONE); nothing in progress
-Done session 107: W-258 (D-778); W-258a placed
-Board           : W-258 D; W-258a ·; waiting: W-126d, W-131i, W-299, W-294, W-113a, W-324, W-146a
-Next step       : 1) gh run list — confirm the W-258 commit green; 2) plan W-258a (read ITR-2 B-TI 14/15, B-TTI 2a/2c, Schedule EI in Gazette 271435 first); stop for approval
-Open to owner   : runner token in git history (aws/ removed); host chmod 666 docker.sock
+Done session 107: W-258 (D-778) c21198b2 + api cd928fc; fix 92cc59b5; W-258a (D-779)
+Board           : W-258 D; W-258a D; every open item waits: W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a
+Next step       : 1) gh run list — confirm the two new commits green (44363328276 at c21198b2 failed, fixed by 92cc59b5); 2) ask the owner which waiting item to unblock, or what to place next
+Open to owner   : the next item (all open rows wait); runner token in git history (aws/ removed); host chmod 666 docker.sock
 Owner actions   : runbook §0.8; §1.n, §1.p; §1.k, §1.l; §1.m only when the scan is on
-Env notes       : -Dtest=Class skips @Nested classes — use quoted Class*; never cd inside a $ command; integration tests need OrbStack + DOCKER_HOST
-Last verify     : W-258 red 5/9 then green; break caught; targeted 1139/0 + 311/0; validate green
-Last item commit: taxplanning W-258: bring net agricultural income into the rates as rule data — a person with agricultural income was taxed as if they had none
+Env notes       : -Dtest=Class skips @Nested classes — use quoted Class*; run "expected to move" integration tests on OrbStack before commit; never cd inside a $ command
+Last verify     : W-258a targeted 1466/0; DraftIntegrationTest 40/0, DraftComputationIntegrationTest 63/0, CapitalGainsNodeTest 118/0; validate green
+Last item commit: taxplanning W-258a: fill ITR-2's tax split and aggregate income from the agricultural rows — 2a showed the tax after the rebate and 2c was left to the user
 Files touched   : none
 Updated         : 2026-11-18, session 107
 ```

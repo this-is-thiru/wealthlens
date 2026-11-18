@@ -391,6 +391,50 @@ class ItrFormChoiceTest {
         return choice.cells().stream().filter(cell -> cell.cell().equals(code)).findFirst().orElseThrow();
     }
 
+    /** Anand in TY 2025-26 with a short-term listed gain of 1,00,000 (3,00,000 sold, 2,00,000 cost) and net agricultural income. */
+    private static ItrFormChoice anandWithAGainAndFarming(String netAgricultural) {
+        EngineInputs anand = inTy2025(Fixtures.anand());
+        EngineInputs selling = new EngineInputs(TY_2025_26, anand.regime(), TemporalContext.forTaxYear(TY_2025_26,
+                LocalDate.of(2025, 12, 1)), anand.entered(), anand.assessee(), anand.family(), anand.ledgers(),
+                anand.elections(), com.thiru.wealthlens.taxengine.test.CapitalGainsHarness.inputOf(
+                        listedEquitySold("300000", "200000", LocalDate.of(2025, 6, 1))), anand.filing());
+        Declaration farming = new Declaration.Amount(Money.of(netAgricultural));
+        return CALCULATOR.chooseForm(answered(selling, Map.of("AGRICULTURAL_INCOME", farming,
+                "NET_AGRICULTURAL_INCOME", farming)), ORIGINAL_2025);
+    }
+
+    @Test
+    void chooseForm_whenNetAgriculturalIncomeIsInTheRates_fillsTheFormsSplitByHand() {
+        // Given — new regime: total income 6,29,000 (as below) + the gain 1,00,000 = 7,29,000; slab income 6,29,000
+        // exceeds ₹4,00,000 (FA 2026 s.2(2) Table Sl. 4), net agricultural 2,00,000 exceeds ₹5,000.
+        // X = tax(6,29,000 + 2,00,000) = 20,000 + 10% of 29,000 = 22,900; Y = tax(2,00,000 + 4,00,000) = 10,000;
+        // the gain at 20% = 20,000; 2d = 22,900 + 20,000 − 10,000 = 32,900; B-TI 15 = 7,29,000 − 1,00,000 + 2,00,000
+        // When
+        ItrFormChoice choice = anandWithAGainAndFarming("200000");
+
+        // Then
+        assertThat(choice.form()).contains("ITR-2");
+        Map<String, String> expected = Map.ofEntries(Map.entry("B-TTI.2a", "22900"), Map.entry("B-TTI.2b", "20000"),
+                Map.entry("B-TTI.2c", "10000"), Map.entry("B-TTI.2d", "32900"), Map.entry("B-TI.12", "729000"),
+                Map.entry("B-TI.13", "100000"), Map.entry("B-TI.14", "200000"), Map.entry("B-TI.15", "829000"),
+                Map.entry("EI.2.iv", "200000"));
+        expected.forEach((path, rupees) -> assertThat(cellAt(choice, path).amount()).as(path).contains(Money.of(rupees)));
+        assertThat(cellAt(choice, "EI.2.i").unavailableBecause()).isPresent();
+    }
+
+    @Test
+    void chooseForm_whenNetAgriculturalIncomeIsNil_readsTheRebateAsNilAndTaxesTheIncomeAlone() {
+        // Given — as above with no agricultural income: 2a = tax(6,29,000) = 5% of 2,29,000 = 11,450;
+        // 2c nil (no row applied: no integration, not a missing figure); 2d = 11,450 + 20,000 = 31,450
+        // When
+        ItrFormChoice choice = anandWithAGainAndFarming("0");
+
+        // Then
+        Map<String, String> expected = Map.ofEntries(Map.entry("B-TTI.2a", "11450"), Map.entry("B-TTI.2c", "0"),
+                Map.entry("B-TTI.2d", "31450"), Map.entry("B-TI.14", "0"), Map.entry("B-TI.15", "629000"));
+        expected.forEach((path, rupees) -> assertThat(cellAt(choice, path).amount()).as(path).contains(Money.of(rupees)));
+    }
+
     @Test
     void chooseForm_whenAnandFilesTy2025_fillsItr1sCellsWithTheHandDerivedFigures() {
         // When — Anand: pension ₹6,00,000, interest ₹14,000 + ₹90,000, new regime, TY 2025-26

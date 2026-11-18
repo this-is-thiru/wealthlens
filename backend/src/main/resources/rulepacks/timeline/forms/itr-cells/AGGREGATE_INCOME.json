@@ -1,0 +1,13 @@
+{
+  "code": "AGGREGATE_INCOME",
+  "_note": "B-TI 15, \"Aggregate income (12-13+14)\". The form marks it \"applicable if (12-13) exceeds maximum amount not chargeable to tax\"; the cell shows the form's arithmetic in every case, while 2a is the engine's tax (W-258a C2a, a reading). Drafted by Claude, adopted by the owner's ruling W-258a (D-779).",
+  "label": "Aggregate income",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "TOTAL_INCOME",
+      "-SPECIAL_RATE_INCOME_IN_TOTAL",
+      "NET_AGRICULTURAL_INCOME_FOR_RATE"
+    ]
+  }
+}

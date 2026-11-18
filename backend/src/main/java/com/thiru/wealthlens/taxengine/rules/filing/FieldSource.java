@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.filing;
 
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import java.time.MonthDay;
@@ -54,13 +55,37 @@ public sealed interface FieldSource {
      *
      * @param rules the rows
      * @param kind the step kind of the lines read, such as {@code SET_OFF}; empty for every line
+     * @param noneApplied what the cell reads where none of the rows applied in the run
      */
-    record FromRules(List<RuleId> rules, Optional<String> kind) implements FieldSource {
+    record FromRules(List<RuleId> rules, Optional<String> kind, NoneApplied noneApplied) implements FieldSource {
+
+        /**
+         * What a cell reads where none of its rows applied. {@link #UNAVAILABLE} by default: the figure is then not
+         * computed. {@link #NIL} where a row not applying is itself the computed answer — the rebate on agricultural income
+         * is nil when no row of {@code RS-RATE-AGRICULTURAL} holds (W-258a C1a, D-779).
+         */
+        public enum NoneApplied { UNAVAILABLE, NIL }
+
         public FromRules {
-            if (rules == null || rules.isEmpty() || kind == null) {
-                throw new IllegalArgumentException("FromRules names at least one rule, and its kind or none");
+            if (rules == null || rules.isEmpty() || kind == null || noneApplied == null) {
+                throw new IllegalArgumentException("FromRules names at least one rule, its kind or none, and what it reads"
+                        + " where none applied");
             }
             rules = List.copyOf(rules);
+        }
+    }
+
+    /**
+     * An amount the person declared, such as net agricultural income (ITR-2 Part B-TI 14, Schedule EI 2(iv); W-258a C2a,
+     * D-779). A question left unanswered leaves the cell unavailable, never nil.
+     *
+     * @param code an amount question of the year's declaration catalogue (I21)
+     */
+    record FromDeclaration(DeclarationCode code) implements FieldSource {
+        public FromDeclaration {
+            if (code == null) {
+                throw new IllegalArgumentException("FromDeclaration names the question");
+            }
         }
     }
 

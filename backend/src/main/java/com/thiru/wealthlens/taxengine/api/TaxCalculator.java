@@ -163,7 +163,18 @@ public class TaxCalculator {
         Map<String, Money> otherSources = ((OtherSourcesHead) run.valueOf(NodeIds.OTHERSOURCES_INCOME)).grossByKind();
         return new ScheduleMapper.Figures(computedAmounts(run), tracedAmounts(run), returned,
                 byBasis.map(TaxByBasis::atSlabRates), special, otherSources, items(run), tracedAmountsByKind(run),
-                setOff(run), accruals(run, inputs));
+                setOff(run), accruals(run, inputs), declaredAmounts(inputs));
+    }
+
+    /** Each amount the person declared, by question, for the cells that show one (W-258a, D-779). */
+    private static Map<DeclarationCode, Money> declaredAmounts(EngineInputs inputs) {
+        Map<DeclarationCode, Money> amounts = new java.util.HashMap<>();
+        inputs.filing().declarations().forEach((code, answer) -> {
+            if (answer instanceof Declaration.Amount amount) {
+                amounts.put(code, amount.amount());
+            }
+        });
+        return amounts;
     }
 
     /**

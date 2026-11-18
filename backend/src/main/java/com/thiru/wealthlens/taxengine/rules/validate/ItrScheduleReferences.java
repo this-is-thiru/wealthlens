@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.validate;
 
+import com.thiru.wealthlens.taxengine.rules.declaration.AnswerKind;
+import com.thiru.wealthlens.taxengine.rules.declaration.DeclarationDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.filing.FieldSource;
 import com.thiru.wealthlens.taxengine.rules.filing.ItrFormSpec;
@@ -15,7 +17,7 @@ import java.util.Set;
 /**
  * I21 (DR 21 I8; W-092, D-654) — every cell a form's schedules place reads what the year's pack holds: each rule of a
  * {@code FromRules} is a rule of the year, each {@code FromCapitalGainsPart} a part the year declares, and each term of
- * a {@code SumOf} a cell the same form places. A cell reading what the year lacks would always show "unavailable", which
+ * a {@code SumOf} a cell the same form places, and each {@code FromDeclaration} an amount question of the year's catalogue. A cell reading what the year lacks would always show "unavailable", which
  * hides a misspelt code behind a true-looking reason. A {@code FromNodes} node is checked against the shipped nodes by
  * {@code ItrSchedulesTest}, since a pack holds no node registry.
  */
@@ -68,16 +70,13 @@ final class ItrScheduleReferences {
             case FieldSource.FromCapitalGainsBuckets buckets -> buckets.parts().stream().filter(part -> !declared.contains(part))
                     .forEach(part -> problems.add(reader + " (" + cell.code() + ") reads capital-gains part " + part
                             + ", which the year's CapitalGainsParts does not declare (I21)"));
-            case FieldSource.FromSetOff setOff -> {
-                // the rows and columns are the computation's, checked by the persona tests
-            }
-            case FieldSource.FromItemFigure figure -> {
-                // an item's figure names are the computation's, checked by the persona tests
-            }
-            case FieldSource.FromOtherSourceKinds kinds -> {
-                // the kinds are the computation's, checked by the persona tests
+            case FieldSource.FromSetOff _, FieldSource.FromItemFigure _, FieldSource.FromOtherSourceKinds _ -> {
+                // set-off rows and columns, an item's figure names and other-source kinds are the computation's,
+                // checked by the persona tests
             }
             case FieldSource.Accrual accrual -> checkAccrual(declared, reader + " (" + cell.code() + ")", accrual, problems);
+            case FieldSource.FromDeclaration question -> checkDeclaration(pack, reader + " (" + cell.code() + ")", question,
+                    problems);
             case FieldSource.ManualEntry manual -> {
                 // reads nothing
             }
@@ -94,6 +93,19 @@ final class ItrScheduleReferences {
         if (inYearOrder(accrual.period().to()) < inYearOrder(accrual.period().from())) {
             problems.add(reader + " runs from " + accrual.period().from() + " back to " + accrual.period().to()
                     + "; a period runs forward within the financial year (I21)");
+        }
+    }
+
+    /** A declared amount a cell reads is an amount question of the year's catalogue (W-258a). */
+    private static void checkDeclaration(RulePack pack, String reader, FieldSource.FromDeclaration question,
+            List<String> problems) {
+        DeclarationDefinition asked = pack.declarations().get(question.code());
+        if (asked == null) {
+            problems.add(reader + " reads declaration " + question.code() + ", which is not in the year's declaration"
+                    + " catalogue (I21)");
+        } else if (asked.answerKind() != AnswerKind.AMOUNT) {
+            problems.add(reader + " reads declaration " + question.code() + " as an amount, but the catalogue asks it as "
+                    + asked.answerKind() + " (I21)");
         }
     }
 

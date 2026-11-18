@@ -1,0 +1,9 @@
+{
+  "code": "AGRICULTURAL_RECEIPTS",
+  "_note": "Schedule EI 2, entered by the person: the engine holds only the net agricultural income they declare (W-258 C2a; W-258a C3a). Drafted by Claude, adopted by the owner's ruling W-258a (D-779).",
+  "label": "Gross agricultural receipts",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Enter your gross agricultural receipts, leaving out income to be excluded under rule 7A, 7B or 8 of the Income-tax Rules; the computation reads only the net agricultural income you declared"
+  }
+}

@@ -3,6 +3,8 @@ package com.thiru.wealthlens.taxengine.rules.json;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.rules.filing.FieldSource;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import org.junit.jupiter.api.Test;
@@ -55,5 +57,47 @@ class ItrFormJsonTest {
                         forms(form("SYN-1", "\"INDIVIDUAL\""), form("SYN-1", "\"HUF\"")), PATH))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("forms/itr-forms.json defines form SYN-1 twice");
+    }
+
+    private static JsonNode cell(String source) {
+        return MAPPER.readTree("{\"code\": \"SYN_CELL\", \"label\": \"Synthetic\", \"source\": " + source + "}");
+    }
+
+    @Test
+    void cell_whenFromRulesSaysNothingOfRowsNotApplying_readsThemAsUnavailable() {
+        // When
+        var cell = ItrFormJson.cell(cell("{\"type\": \"FromRules\", \"rules\": [\"OS-INTEREST\"]}"), PATH);
+
+        // Then — every cell placed before W-258a keeps its meaning
+        assertThat(cell.source()).isEqualTo(new FieldSource.FromRules(
+                java.util.List.of(new com.thiru.wealthlens.taxengine.rules.id.RuleId("OS-INTEREST")), java.util.Optional.empty(),
+                FieldSource.FromRules.NoneApplied.UNAVAILABLE));
+    }
+
+    @Test
+    void cell_whenFromRulesSaysRowsNotApplyingAreNil_readsItsWord() {
+        // When
+        var cell = ItrFormJson.cell(cell("{\"type\": \"FromRules\", \"rules\": [\"OS-INTEREST\"], \"kind\": \"RELIEF\","
+                + " \"noneApplied\": \"NIL\"}"), PATH);
+
+        // Then
+        assertThat(((FieldSource.FromRules) cell.source()).noneApplied()).isEqualTo(FieldSource.FromRules.NoneApplied.NIL);
+    }
+
+    @Test
+    void cell_whenNoneAppliedIsUnknown_refusesNamingTheCell() {
+        assertThatThrownBy(() -> ItrFormJson.cell(cell("{\"type\": \"FromRules\", \"rules\": [\"OS-INTEREST\"],"
+                        + " \"noneApplied\": \"ZERO\"}"), PATH))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("SYN_CELL");
+    }
+
+    @Test
+    void cell_whenItReadsADeclaration_namesTheQuestion() {
+        // When
+        var cell = ItrFormJson.cell(cell("{\"type\": \"FromDeclaration\", \"code\": \"NET_AGRICULTURAL_INCOME\"}"), PATH);
+
+        // Then
+        assertThat(cell.source()).isEqualTo(new FieldSource.FromDeclaration(new DeclarationCode("NET_AGRICULTURAL_INCOME")));
     }
 }

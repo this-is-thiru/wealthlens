@@ -43,10 +43,15 @@ class ScheduleModelTest {
     void sources_whenTheyNameNothing_areRefused() {
         assertThatThrownBy(() -> new FromNodes(null)).hasMessage("FromNodes names at least one node");
         assertThatThrownBy(() -> new FromNodes(List.of())).hasMessage("FromNodes names at least one node");
-        assertThatThrownBy(() -> new FromRules(null, Optional.empty())).hasMessage("FromRules names at least one rule, and its kind or none");
-        assertThatThrownBy(() -> new FromRules(List.of(), Optional.empty())).hasMessage("FromRules names at least one rule, and its kind or none");
-        assertThatThrownBy(() -> new FromRules(List.of(new com.thiru.wealthlens.taxengine.rules.id.RuleId("OS-INTEREST")), null))
-                .hasMessage("FromRules names at least one rule, and its kind or none");
+        String fromRules = "FromRules names at least one rule, its kind or none, and what it reads where none applied";
+        assertThatThrownBy(() -> new FromRules(null, Optional.empty(), FromRules.NoneApplied.UNAVAILABLE)).hasMessage(fromRules);
+        assertThatThrownBy(() -> new FromRules(List.of(), Optional.empty(), FromRules.NoneApplied.UNAVAILABLE))
+                .hasMessage(fromRules);
+        assertThatThrownBy(() -> new FromRules(List.of(new com.thiru.wealthlens.taxengine.rules.id.RuleId("OS-INTEREST")), null,
+                FromRules.NoneApplied.UNAVAILABLE)).hasMessage(fromRules);
+        assertThatThrownBy(() -> new FromRules(List.of(new com.thiru.wealthlens.taxengine.rules.id.RuleId("OS-INTEREST")),
+                Optional.empty(), null)).hasMessage(fromRules);
+        assertThatThrownBy(() -> new FieldSource.FromDeclaration(null)).hasMessage("FromDeclaration names the question");
         assertThatThrownBy(() -> new FromCapitalGainsParts(null)).hasMessage("FromCapitalGainsParts names at least one part");
         assertThatThrownBy(() -> new FromCapitalGainsParts(List.of()))
                 .hasMessage("FromCapitalGainsParts names at least one part");
@@ -114,11 +119,11 @@ class ScheduleModelTest {
 
     @Test
     void figuresVerdictsAndSelections_whenAPartIsMissing_areRefused() {
-        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), null, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS))
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), null, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS, Map.of()))
                 .hasMessage("Figures needs the return's facts, says whether slab tax was computed and carries the accruals, none where nothing arose");
-        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, null, Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS))
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, null, Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), NO_ACCRUALS, Map.of()))
                 .hasMessage("Figures needs the return's facts, says whether slab tax was computed and carries the accruals, none where nothing arose");
-        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), null))
+        assertThatThrownBy(() -> new ScheduleMapper.Figures(Map.of(), Map.of(), ReturnFacts.NONE, Optional.empty(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), null, Map.of()))
                 .hasMessage("Figures needs the return's facts, says whether slab tax was computed and carries the accruals, none where nothing arose");
         assertThatThrownBy(() -> new ScheduleMapper.Accruals(null, Map.of()))
                 .hasMessage("Accruals needs the year's first day and its amounts, an empty map for none");

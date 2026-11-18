@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.filing.ScheduleCell;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleField;
 import com.thiru.wealthlens.taxengine.rules.filing.ScheduleGroup;
 import com.thiru.wealthlens.taxengine.rules.id.CellCode;
+import com.thiru.wealthlens.taxengine.rules.id.DeclarationCode;
 import com.thiru.wealthlens.taxengine.rules.id.FurnishingManner;
 import com.thiru.wealthlens.taxengine.rules.id.ItrFormCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
@@ -69,7 +70,7 @@ public final class ItrFormJson {
     private static FieldSource source(JsonNode node, String path) {
         return switch (PackJson.tag(node, path, "FromNodes", "FromTaxBasis", "FromRules", "FromCapitalGainsParts", "SumOf",
                 "FromItemFigure", "FromOtherSourceKinds", "FromCapitalGainsBuckets", "FromSetOff", "FromCapitalGainsAccrual",
-                "FromOtherSourceAccrual", "ManualEntry")) {
+                "FromOtherSourceAccrual", "FromDeclaration", "ManualEntry")) {
             case "FromCapitalGainsAccrual", "FromOtherSourceAccrual" -> accrual(node, path);
             case "FromCapitalGainsBuckets" -> PackJson.construct(path, () -> new FieldSource.FromCapitalGainsBuckets(
                     PackJson.array(node, "parts", path, e -> new CapitalGainsPart(e.node().asString())),
@@ -87,7 +88,10 @@ public final class ItrFormJson {
                             PackJson.optionalText(node, "specialRate", path)));
             case "FromRules" -> PackJson.construct(path, () -> new FieldSource.FromRules(PackJson.array(node, "rules", path,
                     e -> PackJson.construct(e.path(), () -> new RuleId(e.node().asString()))),
-                    PackJson.optionalText(node, "kind", path)));
+                    PackJson.optionalText(node, "kind", path), PackJson.optionalText(node, "noneApplied", path)
+                            .map(FieldSource.FromRules.NoneApplied::valueOf).orElse(FieldSource.FromRules.NoneApplied.UNAVAILABLE)));
+            case "FromDeclaration" -> PackJson.construct(path,
+                    () -> new FieldSource.FromDeclaration(new DeclarationCode(PackJson.text(node, "code", path))));
             case "FromCapitalGainsParts" -> PackJson.construct(path, () -> new FieldSource.FromCapitalGainsParts(
                     PackJson.array(node, "parts", path, e -> new CapitalGainsPart(e.node().asString()))));
             case "SumOf" -> PackJson.construct(path, () -> new FieldSource.SumOf(PackJson.array(node, "cells", path,
