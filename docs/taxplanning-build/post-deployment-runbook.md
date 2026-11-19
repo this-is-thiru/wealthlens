@@ -1895,7 +1895,7 @@ owner runs it and the results go into the run log.
 - **6.0.1 Merge and tag.** PR #64 merged into `master` as a **merge commit** — never squash or rebase: the docs cite
   hundreds of commit hashes (D-780 C4a). Tag the merge `m1` and push the tag. Run every database below from that tag:
   `git worktree add ../wealthlens-m1 m1`. The merge also pushes the image to Docker Hub as `latest` (`cicd.yaml`); the
-  repository there is private (owner, D-780).
+  repository there is public (owner, D-784, replacing D-780's private).
 - **6.0.2 Keys, once per environment** (§0.5 step 1; D-780 C3a): `openssl rand -base64 32` twice per environment — dev,
   staging, prod each get their own `TAX_DATA_KEY` and `TAX_DIGEST_KEY`, never shared. Store each pair in the secret store
   **and** its backup, off the laptop, before the first start: a lost `TAX_DATA_KEY` is data no one can read again. One
@@ -2044,6 +2044,16 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-10-20 | prod `Cluster0` | W-088u8c checks | owner | `FY` rows **163** (W-086a's rewrite never ran here: prod predates `91359d35`); `temporary_transactions` absent |
 | 2026-10-27 | prod `Cluster0` | W-176 counts (one query) | owner | `charge_catalogue` 0 (with the old flag 0); `charge_schedules` 0, `charge_instruments` 0; `user_charges` 0, `charge_accounts` 0; `transactions` 817, `assets` 529; `trade_outcomes` 163 (engine-priced 0, with a term 163, with `deductible_*` 0); `profit_and_loss` 7 (with a charge side 0, without `version` 0); `holding_period_policies` 0 |
 | 2026-10-27 | staging `it-staging` | W-176 counts (one query) | owner | `charge_catalogue` 12 (with the old flag 12); `charge_schedules` 11, `charge_instruments` 2; `user_charges` 328, `charge_accounts` 1; `transactions` 1009, `assets` 649; `trade_outcomes` 201 (engine-priced 1, with a term 201, with `deductible_*` 1); `profit_and_loss` 12 (with a charge side 2, without `version` 0); `holding_period_policies` 11 |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 1, preconditions (read-only), 14:54 UTC | session, at the owner's request | `master` `ec85b188b4d3…`; no `m1` tag; PR #64 `OPEN 172dbc5a9fc6… MERGEABLE CLEAN`; run 44547500820 `172dbc5a9fc6… success` — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 2, the merge, 14:55 UTC | session, at the owner's request | refused by GitHub: `Pull Request is still a draft`; nothing changed (`origin/master` still `ec85b188…`) — **stop**: row 1 did not check `isDraft` |
+| 2026-11-19 | — (W-334a) | PR #64 marked ready for review (`gh pr ready 64`), 14:55 UTC | session, at the owner's word | `✓ … marked as "ready for review"`; no new pipeline run |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 1 again, with `isDraft`, 14:56 UTC | session, at the owner's request | `master` `ec85b188…`; no `m1` tag; `OPEN false 172dbc5a9fc6… MERGEABLE CLEAN`; run 44547500820 `success` — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 2, the merge, 14:56 UTC | session, at the owner's request | merged 14:56:48Z as `ed4707ac17fd…`; parents `ec85b188…` and `172dbc5a…`; empty diff against `172dbc5a` — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 3, the `master` pipeline, 15:03 UTC | session, at the owner's request | run 44549311322, `push`, `ed4707ac…`, `completed success` 15:02:52Z; `Image tags: ***/wealthlens:latest, ***/wealthlens:sha-ed4707ac17fd` (the Docker Hub user is masked as a secret) — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 4, tag `m1`, 15:05 UTC | session, at the owner's request | `refs/tags/m1` `f085c6179192…` (annotated), `refs/tags/m1^{}` `ed4707ac17fd…`; no workflow run for the tag — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 5, Docker Hub (read-only, anonymous API), 15:05 UTC | session | `tperamasani/wealthlens` `is_private: False`, `pull_count` 14873; tags `latest` 15:02:43Z and `sha-ed4707ac17fd` 15:02:45Z present — **stop**: public, D-780 says private |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 5, ruled | owner | "image public fine" (D-784): the image stays public — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 6, the `m1` worktree, 15:07 UTC | session, at the owner's request | `../wealthlens-m1` at `ed4707ac17fd…` (detached), status empty — **go**; W-334a's rows all logged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.

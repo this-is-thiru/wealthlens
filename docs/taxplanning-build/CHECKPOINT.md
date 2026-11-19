@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-336 DONE (D-783), committed and pushed; W-334a, W-334b planned (E), awaiting approval
-Stage           : W-336 D; next W-334a — first re-read row 1's values (PR head and pipeline run id moved with W-336's push)
+Item            : W-334a DONE (D-785): master = ed4707ac, tag m1 (f085c617), worktree ../wealthlens-m1; W-334b approved, next
+Stage           : W-334b P next — row 1 (tools) not run
 Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
 Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : check W-336's pipeline run (gh run list --branch review/taxplanning -L 1); update W-334a row 1's expected head and run id; get the owner's approval of W-334a and W-334b; run W-334a row by row
+Next step       : W-334b row 1: brew install mongosh && brew tap mongodb/brew && brew install mongodb-database-tools, then the five --version lines; one row at a time, owner's go per row
 Open to owner   : approve W-334a, W-334b; commit of these planning docs (needs the owner's word); runner token in git history (repo is PUBLIC); host chmod 666 docker.sock
 Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
 Env notes       : mongosh/mongodump not installed (W-334b row 1); -Dtest=Class skips @Nested — use quoted Class*; never cd inside a $ command
 Last verify     : W-336 targeted 73/0 (incl. TaxJobsIntegrationTest 21, endpoint 3, directory 5, shipped switch 3; red first: 3/3 and 404s; guard violation 1 fail, reverted); validate green
-Last item commit: taxplanning W-336: run the tax jobs on request and ship them off — on a local app the 03:00 – 05:00 crons never fire, so erasure and retention would silently not run
+Last item commit: taxplanning W-334a: log the merge of PR #64 as ed4707ac and the tag m1 — every database now runs the interim run from that one tested build
 Files touched   : none
 Updated         : 2026-11-19, session 108
 ```
