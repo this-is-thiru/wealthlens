@@ -79,7 +79,9 @@ app:
     digest-key: ${TAX_DIGEST_KEY}
   tax:
     jobs:
-      enabled: true
+      # W-336 (D-783): off while the app runs only on the owner's machine; the owner runs each job through
+      # POST /tax-planning/admin/jobs/{name}/run on runbook §5.2's cadence. The crons below are for a hosted app (D-781 B)
+      enabled: false
       auto-archive-cron: "0 0 3 * * SUN"
       retention-purge-cron: "0 0 4 1 * *"
       # W-131c: stored documents are read within a minute of upload, even when the upload's own run was skipped

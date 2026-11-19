@@ -12,7 +12,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * When the jobs run (D-449 C4a). {@code app.tax.jobs.enabled} is the switch: off, nothing is scheduled and stored drafts are left
- * as they are; tests run the jobs directly.
+ * as they are; tests run the jobs directly. Every shipped profile has it off while the app is local, and the owner runs a job
+ * through {@code TaxJobController} instead (W-336, D-783).
  */
 @Configuration
 @EnableScheduling

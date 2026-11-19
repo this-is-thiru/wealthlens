@@ -351,7 +351,7 @@ as the export rule above says, once step 4 is logged.
 
 ### 1.y W-137 (D-449) — the background jobs · owner · **first deploy carrying them, then after the first runs**
 
-Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. The jobs run only where `app.tax.jobs.enabled` is true (all three profile yamls): `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`). Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only. **W-138 (D-450):** `staleness-sweep` runs at every start under the same switch and logs `Job staleness-sweep flagged N draft(s)`; after a deploy that changes a pack (a new `law` or `exec` version in a lock), expect N to be the ready and filed drafts computed under the old one, and 0 on the next start. **W-257 (D-487):** a row a job writes carries the job's name as its actor (`audit_metadata.updatedBy`, or `createdBy` on a new row: `auto-archive`, `staleness-sweep`, `retention-purge`), stored like any actor (§0.7 gives the form to query); rows written before W-257 keep `unknown`. Information only — no step.
+Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. **From W-336 (D-783)** every shipped profile has `app.tax.jobs.enabled: false`: nothing is scheduled, and the owner runs each job through `POST /tax-planning/admin/jobs/{name}/run` (`SUPER_USER`) on §5.2's cadence. The crons — `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`) — apply only where the switch is turned on. Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only. **W-138 (D-450):** `staleness-sweep` runs at every start where the switch is on, and on request where it is off (after every start of a new build, §5.2); it logs `Job staleness-sweep flagged N draft(s)`; after a deploy that changes a pack (a new `law` or `exec` version in a lock), expect N to be the ready and filed drafts computed under the old one, and 0 on the next run. **W-257 (D-487):** a row a job writes carries the job's name as its actor (`audit_metadata.updatedBy`, or `createdBy` on a new row: `auto-archive`, `staleness-sweep`, `retention-purge`), stored like any actor (§0.7 gives the form to query); rows written before W-257 keep `unknown`. Information only — no step.
 
 **After the first run of each** (read-only):
 
@@ -376,7 +376,7 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
 
 Expected after: the counts fall by the number of `deleted landlord|lender` log lines, and `undated` equals the third-party refusals. A second run deletes nothing more. **Way back:** restore the two collections from the backup taken before the deploy — deleting them is the point, so only if a record was deleted in error.
 
-**Way back:** set `app.tax.jobs.enabled=false` and restart; nothing is scheduled, and stored drafts stay as they are. A draft the purge deleted is gone: restore it from the database backup.
+**Way back:** stop running the job (nothing is scheduled while `app.tax.jobs.enabled` is false, the shipped value from W-336); stored drafts stay as they are. A draft the purge deleted is gone: restore it from the database backup.
 
 ### 1.z W-235 — erasure on request · owner · **first deploy carrying it, then after the first purge that erases**
 
@@ -434,8 +434,10 @@ holds `Ensured the indexes of GazetteLead`.
 
    Expect the cursor back with `updatedBy` your login.
 4. **Turn it on:** set `app.tax.gazette-watch.enabled=true` for the environment (`APP_TAX_GAZETTEWATCH_ENABLED=true`)
-   and restart; `app.tax.jobs.enabled` must be true too. It runs at 05:00 daily, server time
-   (`app.tax.jobs.gazette-watch-cron`), reading at most 400 numbers and stopping after 20 missing in a row.
+   and restart. With the jobs off (every shipped profile from W-336) run it on request, on §5.2's cadence:
+   `curl -s -X POST "$BASE/tax-planning/admin/jobs/gazette-watch/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
+   → `{"job": "gazette-watch", "ran": true}`; where `app.tax.jobs.enabled` is true it also runs at 05:00 daily, server time
+   (`app.tax.jobs.gazette-watch-cron`). Each run reads at most 400 numbers and stops after 20 missing in a row.
 5. **After the first run** (read-only): the log holds `Job gazette-watch stopped at <year>/<number>`, one
    `Gazette lead <url> …` WARN line per lead, and no `Job gazette-watch refused`; then
 
@@ -483,8 +485,8 @@ writing to the user from the privacy contact; the stored answer is not edited.
 A user's `POST /privacy/erasure/user/{email}` holds the whole account at once (`privacy_erasure_requests`: `requested_at`)
 and answers `202` with `erasedFrom`, one year later (`app.privacy.erasure-hold: P1Y`, DPDP Rules, 2025 r.8(3)), and the
 privacy contact. From then the account cannot sign in, its tokens are refused, the email cannot be registered again, AMC
-billing skips its charge accounts, and each of its tax profiles is held as §1.z holds one. The daily `account-erasure`
-job (`app.tax.jobs.account-erasure-cron`, 04:30; one of §1.y's jobs, same lease and failure records) erases every
+billing skips its charge accounts, and each of its tax profiles is held as §1.z holds one. The `account-erasure`
+job (run on request on §5.2's cadence, W-336; 04:30 daily where the jobs are on; one of §1.y's jobs, same lease and failure records) erases every
 module's data for each account past its year — portfolio, trades, P&L, charges, charge accounts, corporate-action
 watermarks, insurance, tax profiles and everything under them, the older salary profiles and computations, the person's
 access-log entries, grievances and breach intimations, their email in each breach notice's `affected` — the login last,
@@ -521,8 +523,8 @@ profiles. **Backups:** an Atlas snapshot keeps erased data until it expires; whe
 Every request made by a named person — a signed-in user, or a login attempt for an email, failed ones included — writes
 one row to `privacy_processing_log`: `principal`, `subject_email` (the path's `{email}`, else the principal), `method`,
 `route` (the matched pattern, never the path's values, the query or the body), `status`, `remote_address`, `recorded_at`
-(UTC). A request with no named person (no token, no login) is not recorded. The daily `log-retention` job
-(`app.tax.jobs.log-retention-cron`, 04:45; one of §1.y's jobs, same lease and failure records) erases what is a year past
+(UTC). A request with no named person (no token, no login) is not recorded. The `log-retention` job
+(run on request on §5.2's cadence, W-336; 04:45 daily where the jobs are on; one of §1.y's jobs, same lease and failure records) erases what is a year past
 its last processing (`app.privacy.log-retention: P1Y`, env var `APP_PRIVACY_LOGRETENTION`; DPDP Rules, 2025 r.6(1)(e),
 r.8(3)): processing-log rows and `tax_access_log` reads by their time, grievances by `answered_at` (an unanswered one is
 kept), breach intimations by the latest of `posted_at`, `read_at`, `emailed_at`, erasure requests by `erased_at`. Breach
@@ -564,8 +566,8 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
 ```
 
 Expected: `overdue` 0 on every database (more means the job did not run or failed: §1.y's failure check; the next run
-completes it). A second run changes nothing: each step deletes by date. **Way back:** set `app.tax.jobs.enabled=false`
-(stops every job) and restart; erased rows are gone — restore from the database backup. **Backups:** an Atlas snapshot
+completes it). A second run changes nothing: each step deletes by date. **Way back:** stop running it (nothing is scheduled while
+`app.tax.jobs.enabled` is false, W-336); erased rows are gone — restore from the database backup. **Backups:** an Atlas snapshot
 keeps erased rows until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.s W-237f — erased data in the backups, and a restore · owner · **before the duties commence (about May 2027); on every restore**
@@ -681,7 +683,7 @@ fails** (`StoredActorEncryptionIntegrationTest`). Hence the first start with the
    read from its own claims, not from the database (`AuthFilter`). Right before switching the build, sign in on the
    previous build as your `SUPER_USER` account and keep the token: it lasts 30 minutes. If it runs out first, deploy the
    previous build again, sign in, and switch back. **Start the new build with `APP_TAX_JOBS_ENABLED=false`**
-   (`app.tax.jobs.enabled`), so no job reads a plain row before step 4.
+   (`app.tax.jobs.enabled`; the shipped value from W-336, set anyway), so no job reads a plain row before step 4.
 2. **Backup first** (the copy is personal data in plain text: delete it as the header says):
    `mongodump --uri "<uri>" --db <db> --out <dir>` — the whole database, since the step writes to nearly every collection.
 3. **Check before** (read-only):
@@ -722,9 +724,11 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
    hand as §0.2 describes for a duplicate `{email, financial_year}`, delete the other, and run step 4 again.
 6. **Check after:** step 3 again — `0` everywhere, `identifiers` and `actors` empty, `loginsToRekey` 0. Then sign in on
    the new build: it works.
-7. **Turn the tax jobs back on:** restart without `APP_TAX_JOBS_ENABLED=false`. The start completes and the log shows
-   `Job staleness-sweep flagged <n> draft(s)`; a stack trace naming `A stored field is not encrypted` means step 6 was
-   not `0` — stop the jobs again and repeat step 4.
+7. **Run the start-time sweep.** Where the jobs are off (every shipped profile from W-336), on request:
+   `curl -s -X POST "$BASE/tax-planning/admin/jobs/staleness-sweep/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
+   → `ran: true`, and the log shows `Job staleness-sweep flagged <n> draft(s)`. Where they are on, a restart without
+   `APP_TAX_JOBS_ENABLED=false` runs it. A stack trace naming `A stored field is not encrypted` means step 6 was
+   not `0` — repeat step 4.
 
 A second run is safe: it finds nothing and changes nothing. Each update is conditioned on the plain value it read, so
 a row that changed during a run is left for the next run, and a run that failed part-way is completed by the next; a
@@ -736,7 +740,7 @@ the login's `_id`.
 ### 1.q W-249 (D-480) — erasure once the purpose has lapsed · owner · **first deploy carrying it, then after the first run**
 
 An account not signed in to for `app.privacy.purpose-lapse: P3Y` (the owner's ruling, D-480; not a figure from the law)
-is erased by the daily `account-erasure` job (§1.u, same job and holders), at once and with no hold, and recorded in
+is erased by the `account-erasure` job (§1.u, same job and holders; run on §5.2's cadence), at once and with no hold, and recorded in
 `privacy_erasure_requests` with `cause: "PURPOSE_LAPSED"`, `requested_at` the lapse moment, `erased_at` the run. Each
 sign-in and each registration stores `user_details.last_signed_in_at`. An account without it (every account registered
 before W-249) gets the first run's time: **nothing can lapse earlier than three years after the first run on a
@@ -832,9 +836,9 @@ Automatic at startup (`DocumentIndexInitializer`). **Confirm** the log holds `En
 
 **From W-131b (D-763):** a document's bytes are kept in GridFS bucket `tax_document_bytes` (`tax_document_bytes.files`, `.chunks`), sealed with the personal-data key (`TAX_DATA_KEY`); GridFS creates its own indexes on first write. **Confirm** the three profile yamls hold `app.tax.documents.max-bytes: 20971520`, `max-pages: 50` and `orphan-after: P1D` (startup fails without them). After each `retention-purge`, a log line `deleted the bytes of N document(s) no longer stored` is expected only after a removal or upload was cut off part-way; it changes nothing on a second run.
 
-**From W-131c (D-764):** the `parse-documents` job reads each stored document with its form's parser. **Confirm** the three profile yamls hold `app.tax.jobs.parse-documents-cron: "0 * * * * *"` and `app.tax.documents.parse-budget: PT30S` (startup fails without them where `app.tax.jobs.enabled` is true). It runs every minute where the jobs are on, and finds nothing until W-131d stores a document. Expected in the log after an upload: `recorded a SUCCESS|PARTIAL|FAILED attempt at document …`. A line `overran its budget` means a parse thread was abandoned (W-131f isolates it); a `refused document …` failure row means a document has no stored bytes. Nothing to run; a second run reads nothing already read by the same parser version.
+**From W-131c (D-764):** the `parse-documents` job reads each stored document with its form's parser. **Confirm** the three profile yamls hold `app.tax.jobs.parse-documents-cron: "0 * * * * *"` and `app.tax.documents.parse-budget: PT30S` (startup fails without them where `app.tax.jobs.enabled` is true). It runs every minute where the jobs are on, and finds nothing until W-131d stores a document. With the jobs off (every shipped profile from W-336) it runs only on request, and an upload starts no run of its own (`ParseRequests` needs the schedule): run `parse-documents` after an upload, or decide when documents are turned on whether an upload starts its own run (W-336 C5a). Expected in the log after an upload: `recorded a SUCCESS|PARTIAL|FAILED attempt at document …`. A line `overran its budget` means a parse thread was abandoned (W-131f isolates it); a `refused document …` failure row means a document has no stored bytes. Nothing to run; a second run reads nothing already read by the same parser version.
 
-**From W-131d1 (D-766):** the endpoints `POST /tax/user/{email}/documents`, `GET …/documents/{id}/parse` and `POST …/documents/{id}/confirm` ship **off**: the three profile yamls hold `app.tax.documents.enabled: false`, and each answers 503 "Uploading documents is switched off". **Confirm** the yamls hold it, and `spring.servlet.multipart.max-file-size: 21MB` / `max-request-size: 22MB` in `application.yaml`. **Turning it on** is the owner's, only after W-131f (isolation) is done. W-131e's scan ships off in staging and prod by the owner's decision (W-131h, D-769), so §1.m is needed only once the scan is turned on: set `enabled: true` in the profile's yaml and redeploy; then `POST` a known Form No. 130 to a test profile, `GET …/parse` within a minute (where `app.tax.jobs.enabled` is true), and check the access log holds the read (`tax_access_log`, subject `DOCUMENT`). Off again is the same yaml change. The notice's `tax-planning` part now names uploaded certificates, so the deploy carrying W-131d1 publishes a new notice version (§1.p): any client registering must send it.
+**From W-131d1 (D-766):** the endpoints `POST /tax/user/{email}/documents`, `GET …/documents/{id}/parse` and `POST …/documents/{id}/confirm` ship **off**: the three profile yamls hold `app.tax.documents.enabled: false`, and each answers 503 "Uploading documents is switched off". **Confirm** the yamls hold it, and `spring.servlet.multipart.max-file-size: 21MB` / `max-request-size: 22MB` in `application.yaml`. **Turning it on** is the owner's, only after W-131f (isolation) is done. W-131e's scan ships off in staging and prod by the owner's decision (W-131h, D-769), so §1.m is needed only once the scan is turned on: set `enabled: true` in the profile's yaml and redeploy; then `POST` a known Form No. 130 to a test profile, `GET …/parse` within a minute (where `app.tax.jobs.enabled` is true; where it is off, after running `parse-documents`, W-336), and check the access log holds the read (`tax_access_log`, subject `DOCUMENT`). Off again is the same yaml change. The notice's `tax-planning` part now names uploaded certificates, so the deploy carrying W-131d1 publishes a new notice version (§1.p): any client registering must send it.
 
 **Way back:** drop the three collections and the bucket's two while they are empty. Once documents are stored, profile erasure and retention delete them with their attempts and confirmations (`DocumentRemoval`); a document deleted that should not have been is restored from the database backup.
 
@@ -1792,6 +1796,7 @@ curl -sS -X POST "$BASE/charge-accounts/user/$USER_EMAIL" -H "Authorization: Bea
 | **AMC cycle** | `POST /charges/amc/impose` | quarterly / annually, per account frequency | No maintenance charge is billed. Idempotent per account and period: running it twice bills once |
 | **Rate verification** | `GET /charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
 | **Drift check** | `GET /charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
+| **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/tax-planning/admin/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.data'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
 | **Publishing a rate change** | `POST /charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. Rehearsal: `staging-runbook.md` §7 |
 
 ### 5.3 History before the engine is not priced
@@ -1899,12 +1904,22 @@ owner runs it and the results go into the run log.
 - **6.0.3 Starting the app.** From the `m1` worktree, with `MONGO_USER`, `MONGO_PASSWORD` (the cluster's),
   `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` set (§0.1.1):
   dev `./mvnw spring-boot:run -pl backend`; staging and prod add `-Dspring-boot.run.profiles=staging` / `prod`.
-  Where a sheet says **jobs off**, also `APP_TAX_JOBS_ENABLED=false` (§1.r step 1). §1.k and §1.m are the Docker image's
+  **Every start in this run is jobs off** (6.0.8): also `APP_TAX_JOBS_ENABLED=false` (§1.r step 1). §1.k and §1.m are the Docker image's
   and the scanner's: a local run has neither, so neither is checked here.
 - **6.0.4 The previous build**, for §1.r's token: `git worktree add ../wealthlens-m0 ec85b188` (master before the merge),
   started the same way. On it a login's `_id` is the plain email and its role is `roles`
   (`auth/entity/UserDetail.java` at `ec85b188`).
 
+- **6.0.8 No scheduled job runs during this run** (owner, 2026-11-19; D-782), on any database, from the first start in
+  6.1 to the sign-off of 6.4. The app's only scheduler is `TaxJobSchedule`: six cron jobs (`auto-archive`,
+  `retention-purge`, `parse-documents` every minute, `account-erasure`, `log-retention`, `gazette-watch`;
+  `application.yaml:92 – 104`) and the start-time `staleness-sweep`, all created only when `app.tax.jobs.enabled` is true
+  (`TaxJobSchedule.java:18 – 20`). The previous build `ec85b188` has no scheduled job (`git grep @Scheduled ec85b188`: none).
+  - **Every start:** `APP_TAX_JOBS_ENABLED=false` — nothing is scheduled at all. `m1` ships it false (W-336, D-783); set it anyway.
+  - **§1.r step 7** runs `staleness-sweep` on request (W-336), so no start in this run has the jobs on.
+  - **Check, before each start:** `env | grep '^APP_TAX_JOBS_'` shows `APP_TAX_JOBS_ENABLED=false`.
+  - **Deferred:** the checks that wait for a job's first run (§1.y, §1.q, §1.t, §1.u, §1.z) wait for the owner's first
+    run of each on request (§5.2's cadence), after 6.4's sign-off; each is a run-log line.
 - **6.0.5 The gate on every row** (owner, 2026-11-19: "strict executions, verifications … one by one with check lists").
   For each numbered row, in order, and for nothing else:
   1. run the row's read-only check **before** and paste the result;
@@ -1977,7 +1992,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 8 | §1.o | check | No account that chose its own role, or the correction as §1.o says |
 | 9 | §1.r step 1 | run | Token on the previous build (6.0.4); start `m1` **jobs off** |
 | 10 | §1 (1.1 – 1.7), §1.x, §1.y, §1.n, §1.l | check | Start log; `NO RATE CARDS` absent only if cards exist (they are cleared next) |
-| 11 | §1.r steps 2 – 7 | run | Backup, check, encrypt, check; restart with jobs on |
+| 11 | §1.r steps 2 – 7 | run | Backup, check, encrypt, check; step 7's `staleness-sweep` on request (6.0.8) |
 | 12 | §1A | run | Clears configuration 12 / 11 / 2 and per-user `user_charges` 328, `charge_accounts` 1, P&L charge side 2 (2026-10-27 counts) |
 | 13 | §1B | run | Seed, drift, unverified, one simulate |
 | 14 | §2.1 | skip | Staging has no rebuild rows (run log 2026-10-20) |
@@ -2008,7 +2023,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 ### 6.4 dev (`wealthlens-dev`), fresh · owner · **after 6.1's wipe**
 
 Empty, so nothing is cleared or corrected: §0.2, §0.3, §0.5, §0.8, §1.o, §1.r, §1A and §2 have nothing to act on.
-1. §0.1 with dev's own keys; start `m1` (jobs on); §1's checks, §1.x, §1.y, §1.n, §1.l — every `Ensured the indexes of`
+1. §0.1 with dev's own keys; start `m1` jobs off (6.0.8); §1's checks, §1.x, §1.y, §1.n, §1.l — every `Ensured the indexes of`
    line present; `NO RATE CARDS` expected.
 2. A `SUPER_USER`: `GET /privacy/rights` for the `version`; `POST /auth/register` with it (§1.p); then §0.1.3's update
    with the stored email form (§0.7); sign in again.

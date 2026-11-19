@@ -4,18 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334 docs committed and pushed with this checkpoint (runbook §6, D-780, D-781; WL-A-2 published; W-335 = WL-48); execution not started
-Stage           : W-334 R; next: plan W-334a (merge + tag) and W-334b (preflight) as checklist items, stop for approval
-Done session 107: W-258, W-258a, the W-258 fix 92cc59b5, all pushed at 9973913a (green); W-334 built, uncommitted
-Board           : W-334 R; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : owner (2026-11-19): deployment work as crisp, checklist-driven items, run interactively, no compromise. First: split W-334 into W-334a merge+tag, W-334b preflight (keys, tier, tools, fingerprint twice on prod), W-334c prod rehearsal on dev, W-334d staging, W-334e prod, W-334f dev fresh — each plan = numbered checklist with exact command, expected result, stop condition, way back; owner approves each; one item at a time; then commit W-334 docs
-Open to owner   : W-334 review; then §6's runs; runner token in git history (aws/ removed); host chmod 666 docker.sock
-Owner actions   : runbook §6 (the interim run); §0.8 and §1.r are inside it
-Env notes       : -Dtest=Class skips @Nested classes — use quoted Class*; integration tests need DOCKER_HOST=unix:///Users/pthirumalayadav/.orbstack/run/docker.sock; never cd inside a $ command
-Last verify     : W-334 doc tests 78/0 (+1 integration 1/0); validate green
-Last item commit: taxplanning W-334: write the interim run's ordered, gated sheets for dev, staging and prod — the app runs locally and three databases need the merged build once
+Item            : W-336 DONE (D-783), committed and pushed; W-334a, W-334b planned (E), awaiting approval
+Stage           : W-336 D; next W-334a — first re-read row 1's values (PR head and pipeline run id moved with W-336's push)
+Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
+Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
+Next step       : check W-336's pipeline run (gh run list --branch review/taxplanning -L 1); update W-334a row 1's expected head and run id; get the owner's approval of W-334a and W-334b; run W-334a row by row
+Open to owner   : approve W-334a, W-334b; commit of these planning docs (needs the owner's word); runner token in git history (repo is PUBLIC); host chmod 666 docker.sock
+Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
+Env notes       : mongosh/mongodump not installed (W-334b row 1); -Dtest=Class skips @Nested — use quoted Class*; never cd inside a $ command
+Last verify     : W-336 targeted 73/0 (incl. TaxJobsIntegrationTest 21, endpoint 3, directory 5, shipped switch 3; red first: 3/3 and 404s; guard violation 1 fail, reverted); validate green
+Last item commit: taxplanning W-336: run the tax jobs on request and ship them off — on a local app the 03:00 – 05:00 crons never fire, so erasure and retention would silently not run
 Files touched   : none
-Updated         : 2026-11-19, session 107
+Updated         : 2026-11-19, session 108
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
