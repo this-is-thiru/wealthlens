@@ -4,11 +4,11 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-338 DONE (D-789), pushed; next W-334a1 (PR #65, merge, tag m1.1) — to plan; W-334c2 blocked until m1.1
-Stage           : W-334a1 · — plan it (W-334a's rows with the new head and run); then rehearsal restarts at W-334c1 row 3 (dev wiped + restored)
+Item            : W-334a1 planned (E), awaiting approval — new PR (not #65: Dependabot's), merge, tag m1.1, worktree ../wealthlens-m1.1
+Stage           : W-334a1 P — fix pushed; rows 1 – 3 again with the new head and its PR #66 run
 Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
 Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : check the pipeline for the W-338 push; open PR #65 review/taxplanning → master; plan W-334a1 with full blocks; stop for approval
+Next step       : owner approves W-334a1; run rows 1 – 7 (session runs them at the owner's request); then W-334c1 row 3 again (wipe dev, restore archive) and W-334c2 on m1.1
 Open to owner   : approve W-334a, W-334b; commit of these planning docs (needs the owner's word); runner token in git history (repo is PUBLIC); host chmod 666 docker.sock
 Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
 Env notes       : database tools: prefix GODEBUG=netdns=cgo (router DNS times out for Go's resolver); passwords via read -s only; -Dtest=Class skips @Nested; never cd inside a $ command

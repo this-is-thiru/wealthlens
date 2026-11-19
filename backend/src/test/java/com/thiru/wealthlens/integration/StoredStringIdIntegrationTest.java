@@ -13,6 +13,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import org.bson.Document;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.query.Update;
 
 /**
@@ -39,5 +40,34 @@ class StoredStringIdIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(modified).isEqualTo(1);
         assertThat(mongoTemplate.getCollection(collection).find(new Document("_id", ID)).first().getInteger("w338_probe")).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {TransactionEntity.class, AssetEntity.class, TradeOutcomeEntity.class, ProfitAndLossEntity.class,
+            CorporateActionEntity.class, LastlyPerformedCorporateAction.class})
+    void findById_whenTheEntitysIdIsAStringShapedLikeAnObjectId_findsTheRow(Class<?> entity) {
+        // Given
+        mongoTemplate.getCollection(mongoTemplate.getCollectionName(entity)).insertOne(new Document("_id", ID));
+
+        // When
+        Object found = mongoTemplate.findById(ID, entity);
+
+        // Then
+        assertThat(found).isNotNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {TradeOutcomeEntity.class, TransactionEntity.class, AssetEntity.class})
+    void bulkUpdateOne_whenTheEntitysIdIsAStringShapedLikeAnObjectId_findsTheRow(Class<?> entity) {
+        // Given
+        String collection = mongoTemplate.getCollectionName(entity);
+        mongoTemplate.getCollection(collection).insertOne(new Document("_id", ID));
+
+        // When
+        int modified = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, entity)
+                .updateOne(query(where("id").is(ID)), Update.update("w338_probe", 1)).execute().getModifiedCount();
+
+        // Then
+        assertThat(modified).isEqualTo(1);
     }
 }
