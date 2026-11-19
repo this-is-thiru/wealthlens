@@ -7,6 +7,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.entity.helper.StoredId;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
@@ -66,7 +67,7 @@ public class ProfitAndLossSplitReshape {
             }
             if (!dryRun && !update.getUpdateObject().isEmpty()) {
                 update.set("audit_metadata.updatedBy", cipher.encryptSearchable(auditor)).set("audit_metadata.updatedAt", TLocalDateTime.now());
-                mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(pnl.get("_id"))), update, COLLECTION);
+                mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(StoredId.of(pnl))), update, COLLECTION);
             }
         }
         log.info("P&L split reshape by {} (dry run {}): {} sides placed, {} left", auditor, dryRun, placed.size(),

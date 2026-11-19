@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.mongodb.client.result.UpdateResult;
 import java.util.stream.Stream;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,7 +50,7 @@ class StoredFieldEncryptionTest {
         ArgumentCaptor<Query> condition = ArgumentCaptor.forClass(Query.class);
         verify(mongoTemplate).updateFirst(condition.capture(), any(UpdateDefinition.class), eq("privacy_grievances"));
         assertThat(condition.getValue().getQueryObject())
-                .isEqualTo(new Document("_id", "g1").append("text", "Wrong address shown"));
+                .isEqualTo(new Document("_id", new BsonString("g1")).append("text", "Wrong address shown"));
         assertThat(report.collections().getFirst())
                 .isEqualTo(new StoredFieldEncryptionReport.CollectionCount("privacy_grievances", 1, 0, 0));
     }

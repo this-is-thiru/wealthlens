@@ -231,7 +231,8 @@ the new build refuses to read, and `tax_employers`' unique index `tax_employer_t
     "tax_regime_election_history"].map(c => ({ c, dropped: db.getCollection(c).drop() }))
    ```
 
-   A second run returns `dropped: false` for each and changes nothing.
+   A second run changes nothing. On MongoDB 8 `drop()` answers `true` even for a collection that is not there (seen on
+   8.0.4, W-334c1's test), so the count after (step 5's §1.x lines, or step 2 again) is the proof, not the flag.
 5. **After the deploy** (read-only): §1.x's `Ensured the indexes of` lines; then create one profile and check
    `db.tax_profiles.find({}, { pan: 1, pan_digest: 1 })` shows `pan` beginning `k1:` and a 64-character `pan_digest`.
    `tax_access_log` gains a row for each read of a profile, family, draft or computation: never cleared, it is the
@@ -326,7 +327,8 @@ two salary collections — so this runs **before** the deploy and before §1.r.
     "allowance_limits", "tax_year_registry"].map(c => ({ c, dropped: db.getCollection(c).drop() }))
    ```
 
-   A second run returns `dropped: false` for each and changes nothing, as §0.5's drop does.
+   A second run changes nothing, as §0.5's drop does; `drop()` answers `true` on MongoDB 8 even for an absent collection,
+   so step 4's count is the proof.
 4. **Count after**: step 1's query again — `present` is `[]` and every count 0 on every database.
 
 **Way back.** Deploy the previous build, then `mongoimport` each step-2 file into its collection. Delete the step-2 files
@@ -581,20 +583,21 @@ after each erasure (§1.t), so a snapshot older than that could hold a person no
 **When erased data leaves the backups:** at `erased_at` plus the longest retention below. Data is erased a year after the
 request (§1.z, §1.u), so a snapshot taken during the hold holds it until that snapshot expires.
 
-**The owner's record (W-237f facts 1 – 4, C4a)** — filled in by the owner, not yet given:
+**The owner's record (W-237f facts 1 – 4, C4a)** — filled in by the owner (tier and backup 2026-11-19, W-334b row 2; the rest not yet given; dev is M0 free with no Cloud Backup too):
 
 | | prod `Cluster0` | staging `it-staging` |
 |---|---|---|
-| Atlas tier; Cloud Backup on? | *not given* | *not given* |
-| Snapshot schedule; retention of each kind; point-in-time window | *not given* | *not given* |
-| Longest retention ≤ P1Y? (the check) | *not given* | *not given* |
-| Snapshots or exports kept outside Atlas | *not given* | *not given* |
+| Atlas tier; Cloud Backup on? | M0 free; no Cloud Backup (2026-11-19) | M0 free; no Cloud Backup (2026-11-19) |
+| Snapshot schedule; retention of each kind; point-in-time window | none: no Cloud Backup | none: no Cloud Backup |
+| Longest retention ≤ P1Y? (the check) | no snapshot is kept in Atlas | no snapshot is kept in Atlas |
+| Snapshots or exports kept outside Atlas | none (owner, 2026-11-19) | none (owner, 2026-11-19) |
 | EC2 volume snapshotted (EBS, AMI)? | *not given* | — |
 | Processor terms accepted (Atlas, AWS): document and date (Act s.8(2), r.6(1)(f)) | *not given* | *not given* |
 
 **The check (owner, read-only, safe to repeat):** read each cluster's backup policy in Atlas, enter every retention
 figure above, and confirm none exceeds one year. A longer one is shortened in Atlas before the duties commence. If a
-tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here.
+tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here. **2026-11-19:** every
+cluster is M0 free with no Cloud Backup; the re-plan is folded into W-337, the move off MongoDB (D-786 C5a).
 
 **On every restore.** A restore puts the database back to the snapshot's moment, and every erasure since is lost from the
 data. The records of those erasures are exported first and put back after, and then one call applies them again. It
@@ -713,7 +716,8 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
       loginsToRekey: d.user_details.countDocuments({ email: { $exists: false } }) }; }) }])
 ```
 
-4. **Dry run**, then the real run, with step 1's token:
+4. **Dry run**, then the real run, with step 1's token. **Needs `m1.1` (W-338, D-789):** on `m1` the real run matched no row whose
+   `_id` is a string of 24 hex digits — every portfolio row on prod — and reported `encryptedRows` 0 without an error:
    `curl -X POST -H "Authorization: Bearer <token>" "<host>/privacy/stored-fields/encrypt"` (a dry run by default),
    then the same URL ending `?dryRun=false`. Expected: the dry run's `plainRows` per collection equal step 3's counts
    (`user_details` equals `loginsToRekey`) and `encryptedRows` 0; the real run's `encryptedRows` equal `plainRows` and
@@ -810,7 +814,11 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
       aboveUser: d.user_details.find({ roles: { $ne: "USER" } }, { roles: 1 }).toArray() }; }) }])
 ```
 
-Expected: `aboveUser` lists only your own account. **Only if it lists another account**, in that database, after
+Expected: `aboveUser` lists only your own account. **Roles are a comma list** (`UserDetailsImpl.java:24` splits on `,`;
+old rows hold e.g. `USER,TEST_USER`, `ADMIN,USER,TEST_USER`), and only `SUPER_USER` gates anything (every `hasRole` /
+`hasAnyRole` names it; `ADMIN` and `TEST_USER` gate nothing), so the check that matters is that only your account's list holds
+`SUPER_USER`: `d.user_details.countDocuments({ roles: /(^|,)SUPER_USER(,|$)/ })` is 1 (W-334c1 row 9, D-788: prod's copy had
+11 accounts above `USER`, one with `SUPER_USER`, left as they are). **Only if another account holds `SUPER_USER`**, in that database, after
 `mongodump --db <database> --collection user_details` and keeping this output (the old roles):
 
 ```js
@@ -1266,6 +1274,9 @@ fields back; no code reads them.
 
 ### 2.6 W-160d3 (D-369) — move the P&L's stored short / long pair into its split · `SUPER_USER` · **every database · once · outstanding**
 
+**Needs `m1.1` (W-338, D-789):** on `m1` the rewrite matched no `profit_and_loss` year whose `_id` is a string of 24 hex digits
+(prod's are), and wrote nothing.
+
 **Why.** Since W-160d2 the P&L reads realised figures only from `gains_by_asset_and_segment`, its split by asset type
 and segment. Documents written before W-160d1 hold them in the short / long pair (`short_term_capital_gains`,
 `long_term_capital_gains`) and V2's duplicate `gains_by_classification`. Until this runs, those years show no
@@ -1343,6 +1354,9 @@ it.
 **Retired after use:** W-171 / WL-37, once this is logged for every database. There is no code to remove.
 
 ### 2.8 W-172 (D-373) — add the V2 sales' profit, brokerage and misc to the P&L · `SUPER_USER` · **every database · once · outstanding**
+
+**Needs `m1.1` (W-338, D-789):** on `m1` the backfill matched no `profit_and_loss` year whose `_id` is a string of 24 hex digits
+(prod's are), and added nothing.
 
 **Why.** Before W-169 a V2 sale wrote only its purchase and sale amounts into the P&L, so every V2 year shows no
 profit, brokerage or misc, and "total realised profit" counts V1 sales only. Each V2 sale's trade-outcome row, written
@@ -1895,7 +1909,7 @@ owner runs it and the results go into the run log.
 - **6.0.1 Merge and tag.** PR #64 merged into `master` as a **merge commit** — never squash or rebase: the docs cite
   hundreds of commit hashes (D-780 C4a). Tag the merge `m1` and push the tag. Run every database below from that tag:
   `git worktree add ../wealthlens-m1 m1`. The merge also pushes the image to Docker Hub as `latest` (`cicd.yaml`); the
-  repository there is private (owner, D-780).
+  repository there is public (owner, D-784, replacing D-780's private).
 - **6.0.2 Keys, once per environment** (§0.5 step 1; D-780 C3a): `openssl rand -base64 32` twice per environment — dev,
   staging, prod each get their own `TAX_DATA_KEY` and `TAX_DIGEST_KEY`, never shared. Store each pair in the secret store
   **and** its backup, off the laptop, before the first start: a lost `TAX_DATA_KEY` is data no one can read again. One
@@ -1952,8 +1966,11 @@ owner runs it and the results go into the run log.
   with nothing new at ERROR or WARN in its start log; §3's counts recorded; for staging and prod, the owner has opened
   their own portfolio in the app and seen it as before (holdings, P&L by year) or each difference traced to a logged step.
 
-**The order across databases** (D-780 C2a): **6.1 prod rehearsed on dev → 6.2 staging → 6.3 prod → 6.4 dev, fresh.** Dev
-is empty, so it holds the rehearsal first and is wiped; its own fresh start comes last.
+**The order across databases** (D-780 C2a; D-786): **6.1 prod rehearsed on dev → 6.2 staging → 6.3 prod.** Dev is empty, so
+it holds the rehearsal first and is wiped. **6.4 is not taken** (D-786): MongoDB is to be replaced by MySQL or PostgreSQL
+(W-337), so a fresh dev database comes on the new one. After 6.3's sign-off the MongoDB tools are removed from the
+machine (`brew uninstall mongodb-database-tools mongosh && brew untap mongodb/brew`, then `which mongosh mongodump` finds
+nothing).
 
 ### 6.1 Prod rehearsed on dev · owner · **once, before 6.3**
 
@@ -1990,7 +2007,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 6 | §0.5 steps 2 – 4 | run | Count, back up, drop the eleven tax collections |
 | 7 | §0.8 | run | Count, back up, drop the legacy salary and policy collections |
 | 8 | §1.o | check | No account that chose its own role, or the correction as §1.o says |
-| 9 | §1.r step 1 | run | Token on the previous build (6.0.4); start `m1` **jobs off** |
+| 9 | §1.r step 1 | run | Token on the previous build (6.0.4); then **§0.8 again** — the previous build seeds the legacy policies at every start (`ec85b188` `PolicySeederService`, W-334c2 row 4a); start `m1` **jobs off** |
 | 10 | §1 (1.1 – 1.7), §1.x, §1.y, §1.n, §1.l | check | Start log; `NO RATE CARDS` absent only if cards exist (they are cleared next) |
 | 11 | §1.r steps 2 – 7 | run | Backup, check, encrypt, check; step 7's `staleness-sweep` on request (6.0.8) |
 | 12 | §1A | run | Clears configuration 12 / 11 / 2 and per-user `user_charges` 328, `charge_accounts` 1, P&L charge side 2 (2026-10-27 counts) |
@@ -2011,7 +2028,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 5 | §0.5 steps 2 – 4 | run | Expected no tax-planning rows; drop is then a no-op |
 | 6 | §0.8 | run | Count, back up, drop |
 | 7 | §1.o | check | As 6.2 |
-| 8 | §1.r step 1 | run | Token on the previous build; start `m1` **jobs off** |
+| 8 | §1.r step 1 | run | Token on the previous build; then **§0.8 again** (as 6.2 row 9); start `m1` **jobs off** |
 | 9 | §1 (1.1 – 1.7), §1.x, §1.y, §1.n, §1.l | check | `NO RATE CARDS` expected until row 12 |
 | 10 | §1.r steps 2 – 7 | run | As 6.2 |
 | 11 | §1A | count only | Configuration 0 / 0 / 0 (2026-10-27): a no-op; per-user data is never cleared on prod |
@@ -2020,7 +2037,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 14 | §2.2 – §2.14 | per step, in order | 2.3 prod only: 163 `FY` rows (2026-10-20); 2.4 where bonus actions exist; 2.2, 2.11, 2.12 only where their checks say; 2.7 expects 0 |
 | 15 | §3 | check | Record the counts |
 
-### 6.4 dev (`wealthlens-dev`), fresh · owner · **after 6.1's wipe**
+### 6.4 dev (`wealthlens-dev`), fresh · owner · **not taken (D-786): kept for the record; a fresh dev comes on W-337's database**
 
 Empty, so nothing is cleared or corrected: §0.2, §0.3, §0.5, §0.8, §1.o, §1.r, §1A and §2 have nothing to act on.
 1. §0.1 with dev's own keys; start `m1` jobs off (6.0.8); §1's checks, §1.x, §1.y, §1.n, §1.l — every `Ensured the indexes of`
@@ -2044,6 +2061,54 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-10-20 | prod `Cluster0` | W-088u8c checks | owner | `FY` rows **163** (W-086a's rewrite never ran here: prod predates `91359d35`); `temporary_transactions` absent |
 | 2026-10-27 | prod `Cluster0` | W-176 counts (one query) | owner | `charge_catalogue` 0 (with the old flag 0); `charge_schedules` 0, `charge_instruments` 0; `user_charges` 0, `charge_accounts` 0; `transactions` 817, `assets` 529; `trade_outcomes` 163 (engine-priced 0, with a term 163, with `deductible_*` 0); `profit_and_loss` 7 (with a charge side 0, without `version` 0); `holding_period_policies` 0 |
 | 2026-10-27 | staging `it-staging` | W-176 counts (one query) | owner | `charge_catalogue` 12 (with the old flag 12); `charge_schedules` 11, `charge_instruments` 2; `user_charges` 328, `charge_accounts` 1; `transactions` 1009, `assets` 649; `trade_outcomes` 201 (engine-priced 1, with a term 201, with `deductible_*` 1); `profit_and_loss` 12 (with a charge side 2, without `version` 0); `holding_period_policies` 11 |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 1, preconditions (read-only), 14:54 UTC | session, at the owner's request | `master` `ec85b188b4d3…`; no `m1` tag; PR #64 `OPEN 172dbc5a9fc6… MERGEABLE CLEAN`; run 44547500820 `172dbc5a9fc6… success` — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 2, the merge, 14:55 UTC | session, at the owner's request | refused by GitHub: `Pull Request is still a draft`; nothing changed (`origin/master` still `ec85b188…`) — **stop**: row 1 did not check `isDraft` |
+| 2026-11-19 | — (W-334a) | PR #64 marked ready for review (`gh pr ready 64`), 14:55 UTC | session, at the owner's word | `✓ … marked as "ready for review"`; no new pipeline run |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 1 again, with `isDraft`, 14:56 UTC | session, at the owner's request | `master` `ec85b188…`; no `m1` tag; `OPEN false 172dbc5a9fc6… MERGEABLE CLEAN`; run 44547500820 `success` — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 2, the merge, 14:56 UTC | session, at the owner's request | merged 14:56:48Z as `ed4707ac17fd…`; parents `ec85b188…` and `172dbc5a…`; empty diff against `172dbc5a` — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 3, the `master` pipeline, 15:03 UTC | session, at the owner's request | run 44549311322, `push`, `ed4707ac…`, `completed success` 15:02:52Z; `Image tags: ***/wealthlens:latest, ***/wealthlens:sha-ed4707ac17fd` (the Docker Hub user is masked as a secret) — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 4, tag `m1`, 15:05 UTC | session, at the owner's request | `refs/tags/m1` `f085c6179192…` (annotated), `refs/tags/m1^{}` `ed4707ac17fd…`; no workflow run for the tag — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 5, Docker Hub (read-only, anonymous API), 15:05 UTC | session | `tperamasani/wealthlens` `is_private: False`, `pull_count` 14873; tags `latest` 15:02:43Z and `sha-ed4707ac17fd` 15:02:45Z present — **stop**: public, D-780 says private |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 5, ruled | owner | "image public fine" (D-784): the image stays public — **go** |
+| 2026-11-19 | — (W-334a) | 6.0.1 row 6, the `m1` worktree, 15:07 UTC | session, at the owner's request | `../wealthlens-m1` at `ed4707ac17fd…` (detached), status empty — **go**; W-334a's rows all logged |
+| 2026-11-19 | — (W-334b) | row 1, tools, 15:17 UTC | session, at the owner's request | `mongosh` 2.14.2 installed; `brew tap mongodb/brew` done; `brew install mongodb-database-tools` refused: `Refusing to load formula … from untrusted tap mongodb/brew` (no core formula) — **stop**: trusting the tap is the owner's call |
+| 2026-11-19 | — (W-334b) | row 1, tools, again, 15:23 UTC | session, at the owner's word | `brew trust --formula mongodb/brew/mongodb-database-tools` (that formula only); installed 100.16.1; `mongosh` 2.14.2, `mongodump` / `mongorestore` / `mongoexport` / `mongoimport` 100.16.1 — **go**; all removed at W-334e's sign-off (D-786) |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 2, tier and backup (Atlas UI) | owner | all three M0 free, no Cloud Backup — **go**: 6.1 step 2 and 6.2 / 6.3 row 1 take the `.archive` path; no copies outside Atlas (owner) |
+| 2026-11-19 | dev, staging (W-334b) | row 3, reach (first run) | owner | dev: `set` `atlas-qx4tq2-shard-0`, databases `wealthlens-dev`, `admin`, `local` — **stop**: `wealthlens-dev` exists though dev was recorded empty; staging: `MongoParseError: Invalid connection string` (a password character not URL-safe). Two cluster passwords were pasted into the session in plain text: **rotate both** before going on; prod not run |
+| 2026-11-19 | dev, staging (W-334b) | row 3 follow-up | owner | both passwords changed, letters and digits only; dev's `wealthlens-dev` is the owner's test data and may be emptied (owner: "we can empty, not a problem") — dropped by the owner before W-334c, read-only check before and after |
+| 2026-11-19 | dev `wealthlens-dev` (W-334b) | row 3: before, drop, after | owner | before: 15 collections — `allowance_catalogue` 39, `allowance_limits` 14, `assets` 2, `perquisite_policies` 1, `profit_and_loss` 1, `tax_slab_policies` 2, `trade_outcomes` 1, `transactions` 3, `user_charges` 2, `user_details` 1, five charge / policy collections 0; drop `{"ok":1,"dropped":"wealthlens-dev"}`; after `set` `atlas-qx4tq2-shard-0`, databases `admin`, `local` — **go** (dev) |
+| 2026-11-19 | staging `it-staging`, prod `Cluster0` (W-334b) | row 3, reach | owner | staging `set` `atlas-12c0g5-shard-0`, databases `it-staging`, `admin`, `local`; prod `set` `atlas-24ynrh-shard-0`, databases `Cluster0`, `admin`, `local` (prod's login is its own user) — **go**; row 3 complete |
+| 2026-11-19 | staging, prod (W-334b) | row 4, keys already used (first run) | owner | `Cluster0` `k1Emails` 0, `loginsWithEmail` 0; `it-staging` 0, 0 — **held**: a database that does not exist on the host also counts 0, so the rerun adds `transactions`' total to prove the right cluster was read |
+| 2026-11-19 | staging, prod (W-334b) | row 4, rerun with the total | owner | prod `atlas-24ynrh-shard-0` `Cluster0`: `transactions` 817, `k1Emails` 0, `loginsWithEmail` 0; staging `atlas-12c0g5-shard-0` `it-staging`: 1009, 0, 0 — **go**: no key has written either; totals equal 2026-10-27's |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 5, keys generated and stored (store and its backup) | owner | every key 32 bytes; SHA-256 prefixes — dev 9dbe9c7018bd / 55b28ef39f76 / 886cb3703540, staging bbf4a26647f6 / c59064f277a6 / 5524e829976b, prod 8d910c6ebabf / f9bf756780af / af38366a5db3 (TAX_DATA / TAX_DIGEST / JWT; 9 distinct); PRIVACY_CONTACT lengths 4 / 25 / 25 — **go** |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 6, keys read back from the backup (first run) | owner | all nine 32 bytes, but every prefix differs from row 5's — **held, a defect in the session's command**: row 5 hashed `printenv` output (the key and a newline), row 6 hashed the key without one (shown by a local test: the same key gives two prefixes); rerun hashing with the newline |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 6 again, hashed as row 5 | owner | all nine 32 bytes, every prefix equal to row 5's — **go**: the backup restores every key |
+| 2026-11-19 | — (W-334b) | rows 7 – 8, the previous build and both builds, 16:13 UTC | session, at the owner's request | `../wealthlens-m0` at `ec85b188b4d3…`; `clean package -pl backend -DskipTests` built `wealthlens.jar` in each (m1 87,810,651 bytes, m0 74,739,166), no error printed — **go** |
+| 2026-11-19 | dev, prod (W-334b) | row 9, the fingerprint (6.0.6), first use | owner | dev `{"collections":0}`; prod twice, `diff` → `IDENTICAL` — the checksum is stable; prod `Cluster0` 8 collections, only `_id_` indexes: `assets` 529 `67aac762`, `corporate_action` 6 `88dfcf3c`, `lastly_performed_corporate_action` 11 `57fbed4a`, `profit_and_loss` 7 `8987a1d5`, `reports` 163 `f94df936`, `trade_outcomes` 163 `2008f9e4`, `transactions` 817 `3e522880`, `user_details` 15 `a811bda6` (counts equal 2026-10-27's where counted) — **go**; W-334c takes its own fresh reference |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 10, nothing else scheduled | owner and session | session: no crontab, LaunchAgents only Google's updater, no `schedule:` in `.github/workflows/`, no session cron; owner: no Atlas trigger on any cluster, no other copy of the app pointed at any — **go**; W-334b's rows all logged |
+| 2026-11-19 | prod `Cluster0` (W-334c1) | row 1, the rehearsal's reference (read-only) | owner | MongoDB 8.0.39; the eight lines equal W-334b row 9's, `{"collections":8}`; kept as `prod-reference.txt` — **go** |
+| 2026-11-19 | prod `Cluster0` (W-334c1) | row 2, the dump (reads prod) | owner | eight `done dumping` lines, counts equal row 1's (1711 documents); `prod-before-m1.archive` 1,271,309 bytes, `-rw-------` — **go**; the file is prod's backup for W-334e |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 3, the restore | owner | 22:01 and 22:05 IST: `mongorestore` could not resolve dev's hosts (`lookup … i/o timeout`, the router's DNS), nothing written (dev `{"collections":0}`); the session's probe resolved them both ways; 22:08 with `GODEBUG=netdns=cgo`: dev empty first, `1711 document(s) restored successfully. 0 document(s) failed`, eight `wealthlens-dev` lines, `{"collections":8}` — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 4, the gate | owner | `sed … prod-reference.txt \| diff - dev-after-restore.txt` → `IDENTICAL` — **go**: dev is prod's copy |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 5, §0.2 duplicates (read-only) | owner | `{"transactions":[],"profit_and_loss":[]}` — **go**: prod's data has no duplicate to block TL-7's unique indexes |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 6, §0.3 `version` (read-only) | owner | `{"withoutVersion":0}` — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 7A, §0.5 step 2 count (read-only) | owner | all eleven `n` 0, `plainPan` 0 — **go**: no backup needed |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 7B, §0.5 step 4 drop + count | owner | eleven `"dropped":true` (MongoDB 8: true for an absent collection too); recount all eleven `n` 0 — **go** (on prod: a no-op) |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 8A, §0.8 step 1 count (read-only) | owner | `present` `[]`, all seven 0, `disabled` 0, `sourceText` 0, `accounts` `[]` — **go**: no backup needed |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 8B, §0.8 steps 3 – 4 drop + count | owner | seven `"dropped":true`; recount `present` `[]`, all 0 — **go** (on prod: a no-op) |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, §1.o roles (read-only) | owner | 15 accounts: `USER` 4, `USER,TEST_USER` 7, `ADMIN,USER,TEST_USER` 3, `ADMIN,USER,SUPER_USER,` 1 (the owner); `aboveUser` 11 — **held for the owner**: roles are comma lists, split on `,` by `UserDetailsImpl.java:24`; only `SUPER_USER` gates anything (34 `hasRole('SUPER_USER')`, 1 `hasAnyRole('SUPER_USER')`; `ADMIN` and `TEST_USER` gate nothing), and only the owner holds it; §1.o's `$ne: "USER"` match counts every list. Emails not recorded |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, ruled | owner | roles left as they are (D-788): only the owner holds `SUPER_USER`; §1.o now checks that — **go**; W-334c1's rows all logged |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 1, §0.1 environment | owner | dev's three keys 32 bytes, prefixes `9dbe9c7018bd` / `55b28ef39f76` / `886cb3703540` (= W-334b row 5); `APP_TAX_JOBS_ENABLED=false`; port 8080 free — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 2, token from the previous build (twice) | owner | the previous build started (6.4 s, 3.8 s); sign-in `BadCredentialsException: Bad credentials` both times (`m0.log:52`: the login was found, the password did not match prod's); stopped again, nothing written — **stop**: prod's password is not known; row 2a added (owner: reset, on prod too in W-334e) |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | rows 2a – 2, password set, token from the previous build | owner | 2a's output not pasted; row 2 signed in with it (proof enough): `sub` the owner, `authorities` `ROLE_ADMIN`, `ROLE_USER`, `ROLE_SUPER_USER`, `FACTOR_PASSWORD`, `exp` 2026-11-19T17:33:34.000Z; the previous build stopped — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 3, `m1`'s first start, jobs off; §1 checks | owner | `APP_TAX_JOBS_ENABLED=false`; started in 41.8 s; 0 ERROR lines; WARN only `NO RATE CARDS` (§1.5, expected) and Spring's `AuthenticationProvider bean` notice; `Ensured the indexes of` 19 entities (§1.x, §1.n, §1.y and the login, consent, processing-log, Gazette ones); `Charge indexes ensured` for 5; `multi-document transactions are ENABLED` (§1.7); `PDFs are read in a child process … heap 256 MiB, CPU 30 s` (§1.l); no `Could not create index`; no `Job` line — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 4, backup before §1.r | owner | `before-1r/`: 35 collections — prod's eight with their counts, `m1`'s new ones empty, and **four legacy policy collections back** (`allowance_catalogue` 39, `allowance_limits` 14, `tax_slab_policies` 2, `perquisite_policies` 1): seeded by the previous build's start in row 2 (`PolicySeederService` `@PostConstruct`) — **go** for the backup; row 4a (§0.8 again) added, and 6.2 row 9 / 6.3 row 8 now say so |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 4a, §0.8 again | owner | seven `"dropped":true`; `present` `[]`, all 0 — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 5, §1.r step 3 (read-only) | owner | identifiers plain: `transactions` 817, `assets` 529, `profit_and_loss` 7, `trade_outcomes` 163, `lastly_performed_corporate_action` 11; actors plain: `trade_outcomes` 163, `corporate_action` 6, `lastly_performed_corporate_action` 11, `profit_and_loss` 7, `assets` 529, `transactions` 817, `reports` 73 (of 163); `loginsToRekey` 15; grievances, processing log, insurances 0 — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 6, §1.r step 4 | owner | dry run: `plainRows` equal row 5 (`reports` not listed: no entity reads it since `4c6c92e0`); real run: `user_details` 15 re-keyed, **every other collection `encryptedRows` 0** with 0 conflicts and no error (`m1-start-1.log:151`) — **stop**; `m1` stopped; every `_id` in the six portfolio collections is stored as a `string` (owner's query) — `StoredFieldEncryption`'s `updateFirst(where("_id").is(…))` matched nothing; the defect is W-338 |
+| 2026-11-19 | — (W-334a1) | row 1, preconditions (read-only) | session, at the owner's request | ed4707ac17fdb1f5250352a2348937eccf6df1cc; b4ef2edd0d94413abdb8bc3917f2dd21a9ed0740; open PRs from branch: 0 — **go** |
+| 2026-11-19 | — (W-334a1) | row 2, PR opened | session, at the owner's request | PR #66, not a draft, head `b4ef2edd…`, base `master`; pipeline run 44577661959 started — **go** |
+| 2026-11-19 | — (W-334a1) | row 3, PR #66 pipeline | session | run 44577661959 `failure`: `StoredFieldEncryptionTest` (unit) pinned the update's query as `{"_id"="g1", …}`; W-338 makes it `BsonString` — an expected mover not run before the commit — **stop**; the test's expectation updated, every test naming the changed classes 38 / 0 locally; nothing merged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
