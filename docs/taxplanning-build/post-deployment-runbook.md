@@ -581,20 +581,21 @@ after each erasure (§1.t), so a snapshot older than that could hold a person no
 **When erased data leaves the backups:** at `erased_at` plus the longest retention below. Data is erased a year after the
 request (§1.z, §1.u), so a snapshot taken during the hold holds it until that snapshot expires.
 
-**The owner's record (W-237f facts 1 – 4, C4a)** — filled in by the owner, not yet given:
+**The owner's record (W-237f facts 1 – 4, C4a)** — filled in by the owner (tier and backup 2026-11-19, W-334b row 2; the rest not yet given; dev is M0 free with no Cloud Backup too):
 
 | | prod `Cluster0` | staging `it-staging` |
 |---|---|---|
-| Atlas tier; Cloud Backup on? | *not given* | *not given* |
-| Snapshot schedule; retention of each kind; point-in-time window | *not given* | *not given* |
-| Longest retention ≤ P1Y? (the check) | *not given* | *not given* |
-| Snapshots or exports kept outside Atlas | *not given* | *not given* |
+| Atlas tier; Cloud Backup on? | M0 free; no Cloud Backup (2026-11-19) | M0 free; no Cloud Backup (2026-11-19) |
+| Snapshot schedule; retention of each kind; point-in-time window | none: no Cloud Backup | none: no Cloud Backup |
+| Longest retention ≤ P1Y? (the check) | no snapshot is kept in Atlas | no snapshot is kept in Atlas |
+| Snapshots or exports kept outside Atlas | none (owner, 2026-11-19) | none (owner, 2026-11-19) |
 | EC2 volume snapshotted (EBS, AMI)? | *not given* | — |
 | Processor terms accepted (Atlas, AWS): document and date (Act s.8(2), r.6(1)(f)) | *not given* | *not given* |
 
 **The check (owner, read-only, safe to repeat):** read each cluster's backup policy in Atlas, enter every retention
 figure above, and confirm none exceeds one year. A longer one is shortened in Atlas before the duties commence. If a
-tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here.
+tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here. **2026-11-19:** every
+cluster is M0 free with no Cloud Backup; the re-plan is folded into W-337, the move off MongoDB (D-786 C5a).
 
 **On every restore.** A restore puts the database back to the snapshot's moment, and every erasure since is lost from the
 data. The records of those erasures are exported first and put back after, and then one call applies them again. It
@@ -1952,8 +1953,11 @@ owner runs it and the results go into the run log.
   with nothing new at ERROR or WARN in its start log; §3's counts recorded; for staging and prod, the owner has opened
   their own portfolio in the app and seen it as before (holdings, P&L by year) or each difference traced to a logged step.
 
-**The order across databases** (D-780 C2a): **6.1 prod rehearsed on dev → 6.2 staging → 6.3 prod → 6.4 dev, fresh.** Dev
-is empty, so it holds the rehearsal first and is wiped; its own fresh start comes last.
+**The order across databases** (D-780 C2a; D-786): **6.1 prod rehearsed on dev → 6.2 staging → 6.3 prod.** Dev is empty, so
+it holds the rehearsal first and is wiped. **6.4 is not taken** (D-786): MongoDB is to be replaced by MySQL or PostgreSQL
+(W-337), so a fresh dev database comes on the new one. After 6.3's sign-off the MongoDB tools are removed from the
+machine (`brew uninstall mongodb-database-tools mongosh && brew untap mongodb/brew`, then `which mongosh mongodump` finds
+nothing).
 
 ### 6.1 Prod rehearsed on dev · owner · **once, before 6.3**
 
@@ -2020,7 +2024,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 14 | §2.2 – §2.14 | per step, in order | 2.3 prod only: 163 `FY` rows (2026-10-20); 2.4 where bonus actions exist; 2.2, 2.11, 2.12 only where their checks say; 2.7 expects 0 |
 | 15 | §3 | check | Record the counts |
 
-### 6.4 dev (`wealthlens-dev`), fresh · owner · **after 6.1's wipe**
+### 6.4 dev (`wealthlens-dev`), fresh · owner · **not taken (D-786): kept for the record; a fresh dev comes on W-337's database**
 
 Empty, so nothing is cleared or corrected: §0.2, §0.3, §0.5, §0.8, §1.o, §1.r, §1A and §2 have nothing to act on.
 1. §0.1 with dev's own keys; start `m1` jobs off (6.0.8); §1's checks, §1.x, §1.y, §1.n, §1.l — every `Ensured the indexes of`
@@ -2054,6 +2058,21 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-19 | — (W-334a) | 6.0.1 row 5, Docker Hub (read-only, anonymous API), 15:05 UTC | session | `tperamasani/wealthlens` `is_private: False`, `pull_count` 14873; tags `latest` 15:02:43Z and `sha-ed4707ac17fd` 15:02:45Z present — **stop**: public, D-780 says private |
 | 2026-11-19 | — (W-334a) | 6.0.1 row 5, ruled | owner | "image public fine" (D-784): the image stays public — **go** |
 | 2026-11-19 | — (W-334a) | 6.0.1 row 6, the `m1` worktree, 15:07 UTC | session, at the owner's request | `../wealthlens-m1` at `ed4707ac17fd…` (detached), status empty — **go**; W-334a's rows all logged |
+| 2026-11-19 | — (W-334b) | row 1, tools, 15:17 UTC | session, at the owner's request | `mongosh` 2.14.2 installed; `brew tap mongodb/brew` done; `brew install mongodb-database-tools` refused: `Refusing to load formula … from untrusted tap mongodb/brew` (no core formula) — **stop**: trusting the tap is the owner's call |
+| 2026-11-19 | — (W-334b) | row 1, tools, again, 15:23 UTC | session, at the owner's word | `brew trust --formula mongodb/brew/mongodb-database-tools` (that formula only); installed 100.16.1; `mongosh` 2.14.2, `mongodump` / `mongorestore` / `mongoexport` / `mongoimport` 100.16.1 — **go**; all removed at W-334e's sign-off (D-786) |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 2, tier and backup (Atlas UI) | owner | all three M0 free, no Cloud Backup — **go**: 6.1 step 2 and 6.2 / 6.3 row 1 take the `.archive` path; no copies outside Atlas (owner) |
+| 2026-11-19 | dev, staging (W-334b) | row 3, reach (first run) | owner | dev: `set` `atlas-qx4tq2-shard-0`, databases `wealthlens-dev`, `admin`, `local` — **stop**: `wealthlens-dev` exists though dev was recorded empty; staging: `MongoParseError: Invalid connection string` (a password character not URL-safe). Two cluster passwords were pasted into the session in plain text: **rotate both** before going on; prod not run |
+| 2026-11-19 | dev, staging (W-334b) | row 3 follow-up | owner | both passwords changed, letters and digits only; dev's `wealthlens-dev` is the owner's test data and may be emptied (owner: "we can empty, not a problem") — dropped by the owner before W-334c, read-only check before and after |
+| 2026-11-19 | dev `wealthlens-dev` (W-334b) | row 3: before, drop, after | owner | before: 15 collections — `allowance_catalogue` 39, `allowance_limits` 14, `assets` 2, `perquisite_policies` 1, `profit_and_loss` 1, `tax_slab_policies` 2, `trade_outcomes` 1, `transactions` 3, `user_charges` 2, `user_details` 1, five charge / policy collections 0; drop `{"ok":1,"dropped":"wealthlens-dev"}`; after `set` `atlas-qx4tq2-shard-0`, databases `admin`, `local` — **go** (dev) |
+| 2026-11-19 | staging `it-staging`, prod `Cluster0` (W-334b) | row 3, reach | owner | staging `set` `atlas-12c0g5-shard-0`, databases `it-staging`, `admin`, `local`; prod `set` `atlas-24ynrh-shard-0`, databases `Cluster0`, `admin`, `local` (prod's login is its own user) — **go**; row 3 complete |
+| 2026-11-19 | staging, prod (W-334b) | row 4, keys already used (first run) | owner | `Cluster0` `k1Emails` 0, `loginsWithEmail` 0; `it-staging` 0, 0 — **held**: a database that does not exist on the host also counts 0, so the rerun adds `transactions`' total to prove the right cluster was read |
+| 2026-11-19 | staging, prod (W-334b) | row 4, rerun with the total | owner | prod `atlas-24ynrh-shard-0` `Cluster0`: `transactions` 817, `k1Emails` 0, `loginsWithEmail` 0; staging `atlas-12c0g5-shard-0` `it-staging`: 1009, 0, 0 — **go**: no key has written either; totals equal 2026-10-27's |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 5, keys generated and stored (store and its backup) | owner | every key 32 bytes; SHA-256 prefixes — dev 9dbe9c7018bd / 55b28ef39f76 / 886cb3703540, staging bbf4a26647f6 / c59064f277a6 / 5524e829976b, prod 8d910c6ebabf / f9bf756780af / af38366a5db3 (TAX_DATA / TAX_DIGEST / JWT; 9 distinct); PRIVACY_CONTACT lengths 4 / 25 / 25 — **go** |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 6, keys read back from the backup (first run) | owner | all nine 32 bytes, but every prefix differs from row 5's — **held, a defect in the session's command**: row 5 hashed `printenv` output (the key and a newline), row 6 hashed the key without one (shown by a local test: the same key gives two prefixes); rerun hashing with the newline |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 6 again, hashed as row 5 | owner | all nine 32 bytes, every prefix equal to row 5's — **go**: the backup restores every key |
+| 2026-11-19 | — (W-334b) | rows 7 – 8, the previous build and both builds, 16:13 UTC | session, at the owner's request | `../wealthlens-m0` at `ec85b188b4d3…`; `clean package -pl backend -DskipTests` built `wealthlens.jar` in each (m1 87,810,651 bytes, m0 74,739,166), no error printed — **go** |
+| 2026-11-19 | dev, prod (W-334b) | row 9, the fingerprint (6.0.6), first use | owner | dev `{"collections":0}`; prod twice, `diff` → `IDENTICAL` — the checksum is stable; prod `Cluster0` 8 collections, only `_id_` indexes: `assets` 529 `67aac762`, `corporate_action` 6 `88dfcf3c`, `lastly_performed_corporate_action` 11 `57fbed4a`, `profit_and_loss` 7 `8987a1d5`, `reports` 163 `f94df936`, `trade_outcomes` 163 `2008f9e4`, `transactions` 817 `3e522880`, `user_details` 15 `a811bda6` (counts equal 2026-10-27's where counted) — **go**; W-334c takes its own fresh reference |
+| 2026-11-19 | dev, staging, prod (W-334b) | row 10, nothing else scheduled | owner and session | session: no crontab, LaunchAgents only Google's updater, no `schedule:` in `.github/workflows/`, no session cron; owner: no Atlas trigger on any cluster, no other copy of the app pointed at any — **go**; W-334b's rows all logged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
