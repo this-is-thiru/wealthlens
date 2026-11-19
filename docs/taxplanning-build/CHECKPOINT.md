@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334b DONE (D-787); W-334a done (D-785); next W-334c (prod rehearsed on dev) — to plan
-Stage           : W-334c · — plan it: checklist from runbook 6.1 + 6.3 rows, every command a full copy-paste block; stop for approval
+Item            : W-334c1 DONE (D-788); dev holds prod's copy (gate IDENTICAL, §0 steps done on it); next W-334c2 — to plan
+Stage           : W-334c2 · — plan it: m0 token, m1 first start jobs off on dev's copy, §1 start checks, §1.r encryption; full copy-paste blocks; stop for approval
 Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
 Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : on the owner's commit word close W-334b; then write plans/W-334c.md as a checklist (copy runbook 6.1 + 6.3 rows with commands, full copy-paste blocks), stop for approval
+Next step       : on the owner's commit word close W-334c1; then plan W-334c2 with full copy-paste blocks (read runbook §1.r fully, §1, §1.x/y/n/l, §0.1), stop for approval
 Open to owner   : approve W-334a, W-334b; commit of these planning docs (needs the owner's word); runner token in git history (repo is PUBLIC); host chmod 666 docker.sock
 Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
-Env notes       : mongosh/mongodump not installed (W-334b row 1); -Dtest=Class skips @Nested — use quoted Class*; never cd inside a $ command
+Env notes       : database tools: prefix GODEBUG=netdns=cgo (router DNS times out for Go's resolver); passwords via read -s only; -Dtest=Class skips @Nested; never cd inside a $ command
 Last verify     : W-336 targeted 73/0 (incl. TaxJobsIntegrationTest 21, endpoint 3, directory 5, shipped switch 3; red first: 3/3 and 404s; guard violation 1 fail, reverted); validate green
-Last item commit: taxplanning W-334b: log the preflight — the tools, clusters, keys, builds and fingerprint are proven before any database is written
+Last item commit: taxplanning W-334c1: log prod's copy in dev and the steps before the first start — prod's real data has no duplicate, no legacy or tax collection, and one SUPER_USER
 Files touched   : none
 Updated         : 2026-11-19, session 108
 ```

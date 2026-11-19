@@ -231,7 +231,8 @@ the new build refuses to read, and `tax_employers`' unique index `tax_employer_t
     "tax_regime_election_history"].map(c => ({ c, dropped: db.getCollection(c).drop() }))
    ```
 
-   A second run returns `dropped: false` for each and changes nothing.
+   A second run changes nothing. On MongoDB 8 `drop()` answers `true` even for a collection that is not there (seen on
+   8.0.4, W-334c1's test), so the count after (step 5's §1.x lines, or step 2 again) is the proof, not the flag.
 5. **After the deploy** (read-only): §1.x's `Ensured the indexes of` lines; then create one profile and check
    `db.tax_profiles.find({}, { pan: 1, pan_digest: 1 })` shows `pan` beginning `k1:` and a 64-character `pan_digest`.
    `tax_access_log` gains a row for each read of a profile, family, draft or computation: never cleared, it is the
@@ -326,7 +327,8 @@ two salary collections — so this runs **before** the deploy and before §1.r.
     "allowance_limits", "tax_year_registry"].map(c => ({ c, dropped: db.getCollection(c).drop() }))
    ```
 
-   A second run returns `dropped: false` for each and changes nothing, as §0.5's drop does.
+   A second run changes nothing, as §0.5's drop does; `drop()` answers `true` on MongoDB 8 even for an absent collection,
+   so step 4's count is the proof.
 4. **Count after**: step 1's query again — `present` is `[]` and every count 0 on every database.
 
 **Way back.** Deploy the previous build, then `mongoimport` each step-2 file into its collection. Delete the step-2 files
@@ -811,7 +813,11 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
       aboveUser: d.user_details.find({ roles: { $ne: "USER" } }, { roles: 1 }).toArray() }; }) }])
 ```
 
-Expected: `aboveUser` lists only your own account. **Only if it lists another account**, in that database, after
+Expected: `aboveUser` lists only your own account. **Roles are a comma list** (`UserDetailsImpl.java:24` splits on `,`;
+old rows hold e.g. `USER,TEST_USER`, `ADMIN,USER,TEST_USER`), and only `SUPER_USER` gates anything (every `hasRole` /
+`hasAnyRole` names it; `ADMIN` and `TEST_USER` gate nothing), so the check that matters is that only your account's list holds
+`SUPER_USER`: `d.user_details.countDocuments({ roles: /(^|,)SUPER_USER(,|$)/ })` is 1 (W-334c1 row 9, D-788: prod's copy had
+11 accounts above `USER`, one with `SUPER_USER`, left as they are). **Only if another account holds `SUPER_USER`**, in that database, after
 `mongodump --db <database> --collection user_details` and keeping this output (the old roles):
 
 ```js
@@ -2073,6 +2079,18 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-19 | — (W-334b) | rows 7 – 8, the previous build and both builds, 16:13 UTC | session, at the owner's request | `../wealthlens-m0` at `ec85b188b4d3…`; `clean package -pl backend -DskipTests` built `wealthlens.jar` in each (m1 87,810,651 bytes, m0 74,739,166), no error printed — **go** |
 | 2026-11-19 | dev, prod (W-334b) | row 9, the fingerprint (6.0.6), first use | owner | dev `{"collections":0}`; prod twice, `diff` → `IDENTICAL` — the checksum is stable; prod `Cluster0` 8 collections, only `_id_` indexes: `assets` 529 `67aac762`, `corporate_action` 6 `88dfcf3c`, `lastly_performed_corporate_action` 11 `57fbed4a`, `profit_and_loss` 7 `8987a1d5`, `reports` 163 `f94df936`, `trade_outcomes` 163 `2008f9e4`, `transactions` 817 `3e522880`, `user_details` 15 `a811bda6` (counts equal 2026-10-27's where counted) — **go**; W-334c takes its own fresh reference |
 | 2026-11-19 | dev, staging, prod (W-334b) | row 10, nothing else scheduled | owner and session | session: no crontab, LaunchAgents only Google's updater, no `schedule:` in `.github/workflows/`, no session cron; owner: no Atlas trigger on any cluster, no other copy of the app pointed at any — **go**; W-334b's rows all logged |
+| 2026-11-19 | prod `Cluster0` (W-334c1) | row 1, the rehearsal's reference (read-only) | owner | MongoDB 8.0.39; the eight lines equal W-334b row 9's, `{"collections":8}`; kept as `prod-reference.txt` — **go** |
+| 2026-11-19 | prod `Cluster0` (W-334c1) | row 2, the dump (reads prod) | owner | eight `done dumping` lines, counts equal row 1's (1711 documents); `prod-before-m1.archive` 1,271,309 bytes, `-rw-------` — **go**; the file is prod's backup for W-334e |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 3, the restore | owner | 22:01 and 22:05 IST: `mongorestore` could not resolve dev's hosts (`lookup … i/o timeout`, the router's DNS), nothing written (dev `{"collections":0}`); the session's probe resolved them both ways; 22:08 with `GODEBUG=netdns=cgo`: dev empty first, `1711 document(s) restored successfully. 0 document(s) failed`, eight `wealthlens-dev` lines, `{"collections":8}` — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 4, the gate | owner | `sed … prod-reference.txt \| diff - dev-after-restore.txt` → `IDENTICAL` — **go**: dev is prod's copy |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 5, §0.2 duplicates (read-only) | owner | `{"transactions":[],"profit_and_loss":[]}` — **go**: prod's data has no duplicate to block TL-7's unique indexes |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 6, §0.3 `version` (read-only) | owner | `{"withoutVersion":0}` — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 7A, §0.5 step 2 count (read-only) | owner | all eleven `n` 0, `plainPan` 0 — **go**: no backup needed |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 7B, §0.5 step 4 drop + count | owner | eleven `"dropped":true` (MongoDB 8: true for an absent collection too); recount all eleven `n` 0 — **go** (on prod: a no-op) |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 8A, §0.8 step 1 count (read-only) | owner | `present` `[]`, all seven 0, `disabled` 0, `sourceText` 0, `accounts` `[]` — **go**: no backup needed |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 8B, §0.8 steps 3 – 4 drop + count | owner | seven `"dropped":true`; recount `present` `[]`, all 0 — **go** (on prod: a no-op) |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, §1.o roles (read-only) | owner | 15 accounts: `USER` 4, `USER,TEST_USER` 7, `ADMIN,USER,TEST_USER` 3, `ADMIN,USER,SUPER_USER,` 1 (the owner); `aboveUser` 11 — **held for the owner**: roles are comma lists, split on `,` by `UserDetailsImpl.java:24`; only `SUPER_USER` gates anything (34 `hasRole('SUPER_USER')`, 1 `hasAnyRole('SUPER_USER')`; `ADMIN` and `TEST_USER` gate nothing), and only the owner holds it; §1.o's `$ne: "USER"` match counts every list. Emails not recorded |
+| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, ruled | owner | roles left as they are (D-788): only the owner holds `SUPER_USER`; §1.o now checks that — **go**; W-334c1's rows all logged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
