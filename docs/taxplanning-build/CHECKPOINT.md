@@ -8,8 +8,8 @@ Item            : W-334c3 DONE (D-792); dev holds prod's copy, encrypted and see
 Stage           : W-334c4 · — plan it: read runbook §2.1 – §2.14 fully; per step a backup before each write; m1.1; tools with lookup + retries; possibly split
 Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
 Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : on the owner's commit word close W-334c3; then plan W-334c4 (read runbook §2.1 – §2.14 fully; prod-only steps 2.1, 2.3 included), stop for approval
-Open to owner   : approve W-334a, W-334b; commit of these planning docs (needs the owner's word); runner token in git history (repo is PUBLIC); host chmod 666 docker.sock
+Next step       : plan W-334c4 — runbook §2.1 – §2.14 on dev's copy with m1.1 (read each section fully; prod-only 2.1, 2.3 included; a backup before each write; full copy-paste blocks; likely split into 2 – 3 items); stop for approval. Nothing is running; prod and staging untouched
+Open to owner   : approve W-334c4's plan; W-340 and W-339 before W-334d; W-337 (MongoDB → MySQL/PostgreSQL) engine and place vs M2; runner token in git history (repo PUBLIC)
 Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries (router DNS still times out); passwords via read -s; never cd inside a $ command
 Last verify     : W-338: 5 affected ITs 37/0, StoredStringId 6/0 (red 6/6 with a bare collection name), Architecture+Modulith green, validate green
