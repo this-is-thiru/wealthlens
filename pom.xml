@@ -24,7 +24,7 @@
         <spring-modulith.version>2.1.0</spring-modulith.version>
         <poi-ooxml.version>5.5.1</poi-ooxml.version>
         <itextpdf.version>5.5.13.4</itextpdf.version>
-        <bouncycastle.version>1.81</bouncycastle.version>
+        <bouncycastle.version>1.85</bouncycastle.version>
         <flying-saucer-pdf.version>10.0.6</flying-saucer-pdf.version>
         <archunit.version>1.3.0</archunit.version>
         <jacoco.version>0.8.14</jacoco.version>
