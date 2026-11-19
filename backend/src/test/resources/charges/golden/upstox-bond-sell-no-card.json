@@ -1,0 +1,19 @@
+{
+  "name": "upstox-bond-sell-no-card",
+  "describes": "A bond sell at Upstox, which no card prices (W-179 G5): NO_SCHEDULE, Rs 0. The broker's unscoped maintenance card agrees with every dimension of the trade, but it has no rule for a sale, so it is not chosen (W-304); from W-177 to W-304 it stood in and the trade read NO_MATCHING_RULES.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": "BOND",
+    "segment": null,
+    "exchange": null,
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 10,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {},
+    "total": 0.0,
+    "resolution": "NO_SCHEDULE"
+  }
+}

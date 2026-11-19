@@ -1,0 +1,75 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-077). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: REBATE-*.json provision1961 (s.87A) and provision2025 (s.156); S2 heading \"Rebate of income-tax in case of certain individuals\". summary: S2 s.156(1) (\"an individual resident in India\"; ceiling), s.156(2)(a)/(b) (the default regime's larger rebate and its marginal relief), s.156(3) (limited to tax at s.202(1) rates), DR 13 T13-1 (special-rate tax stands). routes[0]: REBATE-NEW-TAX-REGIME (s.156(2)(a)). routes[1]: REBATE-NEW-TAX-REGIME-EXCESS (s.156(2)(b)). routes[2]: REBATE-RESIDENT-INDIVIDUAL (s.156(1); no marginal relief, DR 08 T1-O2). disqualifiers[0]: IsResident on all three rows. disqualifiers[1]: HasPersonType [INDIVIDUAL] on all three rows (W-049 B1). disqualifiers[2]: REBATE-NEW-TAX-REGIME limitedToSlabRateTax (s.156(3)).",
+  "key": "SEC-REBATE-FOR-CERTAIN-INDIVIDUALS",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.87A",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.156",
+    "presence": "PRESENT"
+  },
+  "plainName": "Rebate of income-tax for resident individuals",
+  "summary": "If you are an individual resident in India and your total income is not above a ceiling, some or all of your income-tax is taken off. In the default regime the rebate and its ceiling are larger, and just above that ceiling a marginal relief keeps your tax from exceeding the income by which you crossed it; there the rebate never reduces tax charged at special rates, such as on some capital gains. At the other rates the rebate simply stops at its ceiling, with no marginal relief.",
+  "routes": [
+    {
+      "name": "Total income within the default regime's ceiling",
+      "description": "In the default regime, the tax at slab rates, up to the rebate's limit, is taken off.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "REBATE-NEW-TAX-REGIME"
+        }
+      ]
+    },
+    {
+      "name": "Total income just above the default regime's ceiling",
+      "description": "In the default regime, tax above the income by which you crossed the ceiling is taken off, so crossing it never costs more than the extra income.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "REBATE-NEW-TAX-REGIME-EXCESS"
+        }
+      ]
+    },
+    {
+      "name": "Total income within the ceiling at the other rates",
+      "description": "If you opted out of the default regime, the tax up to the rebate's limit is taken off. Above the ceiling there is none.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "REBATE-RESIDENT-INDIVIDUAL"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Not available to a person who is not resident in India.",
+      "enforcedBy": {
+        "type": "ByCondition",
+        "condition": "IsResident"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Available only to an individual, not to a Hindu undivided family or any other kind of assessee.",
+      "enforcedBy": {
+        "type": "ByCondition",
+        "condition": "HasPersonType"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "In the default regime, the rebate cannot reduce tax charged at special rates.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REBATE-NEW-TAX-REGIME"
+      }
+    }
+  ]
+}

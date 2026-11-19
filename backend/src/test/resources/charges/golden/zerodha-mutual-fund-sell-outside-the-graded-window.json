@@ -20,7 +20,7 @@
     ]
   },
   "expected": {
-    "lines": {
+    "lines": { "BROKERAGE": 0.00, 
       "EXIT_LOAD": 0.0,
       "STT": 1.0
     },

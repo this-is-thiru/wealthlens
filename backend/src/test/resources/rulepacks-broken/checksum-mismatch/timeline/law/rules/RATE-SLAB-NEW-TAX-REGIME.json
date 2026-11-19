@@ -1,0 +1,94 @@
+{
+  "ruleId": "RATE-SLAB-NEW-TAX-REGIME",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.115BAC(1A)(iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.202(1) Table",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "SlabLadder",
+        "base": "ROUNDED_TOTAL_INCOME",
+        "bands": [
+          {
+            "lowerExclusive": "0",
+            "upperInclusive": "400000",
+            "rate": "0"
+          },
+          {
+            "lowerExclusive": "400000",
+            "upperInclusive": "800000",
+            "rate": "5"
+          },
+          {
+            "lowerExclusive": "800000",
+            "upperInclusive": "1200000",
+            "rate": "10"
+          },
+          {
+            "lowerExclusive": "1200000",
+            "upperInclusive": "1600000",
+            "rate": "15"
+          },
+          {
+            "lowerExclusive": "1600000",
+            "upperInclusive": "2000000",
+            "rate": "20"
+          },
+          {
+            "lowerExclusive": "2000000",
+            "upperInclusive": "2400000",
+            "rate": "25"
+          },
+          {
+            "lowerExclusive": "2400000",
+            "upperInclusive": null,
+            "rate": "30"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.202(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
+        "accessedOn": "2026-09-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
+    "accessedOn": "2026-09-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

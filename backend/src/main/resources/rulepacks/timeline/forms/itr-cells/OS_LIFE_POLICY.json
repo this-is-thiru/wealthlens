@@ -1,0 +1,11 @@
+{
+  "code": "OS_LIFE_POLICY",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Sum received under a life insurance policy u/s 56(2)(xiii)",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "LIFE_POLICY"
+    ]
+  }
+}

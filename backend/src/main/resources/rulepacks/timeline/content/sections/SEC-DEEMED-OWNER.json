@@ -1,0 +1,30 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-160). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: HP-ANNUAL-VALUE, the head computed on the house the assessee enters (W-078 C2: deemed owners are entered as owners; D-160 C3); 1961 s.27 / 2025 s.25. summary: S2 s.25(a)–(e) (Gazette 265620 pp.48–49); 1961 s.27 (thc p.148). routes[0]: HP-ANNUAL-VALUE. No disqualifier: the section defines, it does not exclude.",
+  "key": "SEC-DEEMED-OWNER",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.27",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.25",
+    "presence": "PRESENT"
+  },
+  "plainName": "Who counts as the owner of a house",
+  "summary": "You are treated as the owner of a house you transferred without adequate consideration to your spouse, other than to live apart, or to a minor child other than a married daughter; of an impartible estate you hold; of a building allotted or leased to you by a co-operative society, company or association under a house-building scheme; of a building you hold in part performance of a contract of sale; and of a building you hold on a long lease. You enter such a house as your own.",
+  "routes": [
+    {
+      "name": "A house you are treated as owning",
+      "description": "Entered and computed as a house you own.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-ANNUAL-VALUE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": []
+}

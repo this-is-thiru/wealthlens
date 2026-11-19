@@ -1,0 +1,102 @@
+{
+  "ruleId": "SAL-INCLUDES-PENSION-CONTRIBUTION",
+  "ruleSet": "RS-SAL-INCLUDES-PENSION-CONTRIBUTION",
+  "_note": "Which employer contributions are the contribution to a pension scheme that \"salary\" includes: S2 s.16(k) (pp.37–38), \"the contribution made by the Central Government or any other employer … under a pension scheme referred to in section 124\" (SAL-SALARY-INCLUDES's note; OQ-14, D-140); TY 2025-26: 1961 s.17(1)(viii), the pension-scheme contribution (D-140). An employer contribution to the notified pension scheme (employer.fund = NOTIFIED_PENSION_SCHEME). Read by gross salary, which adds the contributions it reaches on a line citing SAL-SALARY-INCLUDES. Conditions only; provenance and introduction are SAL-SALARY-INCLUDES's (W-156e, D-350). Every regime, as that row.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(1)(viii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.16(k)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.10(i) — the latest change to Income-tax Act, 1961 s.17(1) found: clause (ix) inserted",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.17(1) clauses (i)–(viii), pp.140–141; and Gazette CG-DL-E-31032023-244830, Finance Act, 2023 (8 of 2023) s.10(i), inserting clause (ix), p.23, in force 1-4-2023 by s.1(2)(a)",
+        "accessedOn": "2026-09-26",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(1)(viii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.16(k)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.16",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16 clauses (a)–(l), pp.37–38; Finance Act, 2026 (4 of 2026) searched in full: it does not amend s.16",
+        "accessedOn": "2026-09-26",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16 clauses (a)–(l), pp.37–38; Finance Act, 2026 (4 of 2026) searched in full: it does not amend s.16",
+    "accessedOn": "2026-09-26",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

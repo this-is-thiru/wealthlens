@@ -1,0 +1,98 @@
+{
+  "ruleId": "RET-GRATUITY-AVERAGING",
+  "ruleSet": "RS-RET-GRATUITY-AVERAGING",
+  "_note": "The period a gratuity's salary is averaged over (D-317; W-152). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 6 (pp.41–42), \"A = average salary for ten months immediately preceding the month when any such event occurs\". TY 2025-26: Income-tax Act, 1961 s.10(10)(iii) (thc.nic.in p.71), \"calculated on the basis of the average salary for the ten months immediately preceding the month in which any such event occurs\", the words substituted by Act 4 of 1988 s.6 (w.e.f. 1-4-1989; p.71 footnote 3; which sub-clause of s.6 not read). SalaryAveragingPeriod 10: the months immediately preceding the event's month are averaged, by RET-GRATUITY-OTHER's half-month limb (AVERAGE_SALARY_BY_COMPLETED_YEARS); which pay counts is SAL-SALARY-FOR-GRATUITY's. Sources: docs/taxplanning-build/sources/2026-10-21-gratuity-averaging.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 6",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryAveragingPeriod",
+        "months": 10
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Direct Tax Laws (Amendment) Act, 1987 (4 of 1988), s.6 — substituted the words \"calculated on the basis of the average salary for the ten months immediately preceding the month in which any such event occurs, subject to such limit …\" in s.10(10)(iii) of the Income-tax Act, 1961, w.e.f. 1-4-1989 (thc.nic.in copy p.71, footnote 3; the sub-clause of s.6 not read)",
+        "gazetteRef": "Gazette issue not found; s.6(d)(iv) and the assent of 24-1-1988 read in Chaturvedi and Pithisaria's Income Tax Law vol. 7, 3rd ed. (Eastern Law House, 1988), archive.org dli.bengal.10689.11855 (D-185)",
+        "notifiedOn": "1988-01-24",
+        "effectiveFrom": "1989-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://archive.org/details/dli.bengal.10689.11855",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(iii), p.71 (footnote 3: Act 4 of 1988 s.6, w.e.f. 1-4-1989); the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for s.10(10)(iii), none amends it (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md); docs/taxplanning-build/sources/2026-10-21-gratuity-averaging.md",
+        "accessedOn": "2026-10-21",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 6",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryAveragingPeriod",
+        "months": 10
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 6",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 6, pp.41–42; Finance Act, 2026 searched in full: no amendment to s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 6, with s.19(2)(b), pp.41–42, 45",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

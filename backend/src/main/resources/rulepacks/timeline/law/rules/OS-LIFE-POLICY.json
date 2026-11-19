@@ -1,0 +1,100 @@
+{
+  "ruleId": "OS-LIFE-POLICY",
+  "ruleSet": "RS-OS-LIFE-POLICY",
+  "_note": "A life policy's sums not excluded by Schedule II Sl. 2, other than a unit linked policy's (capital gains, S2 s.67(5), W-088) or a Keyman policy's, under other sources (D-205). TY 2026-27: Income-tax Act, 2025 s.92(2)(l), \"the sum exceeding the aggregate of the premium paid, during the term of such life insurance policy, and not claimed as a deduction under this Act, computed in such manner, as may be prescribed\" (p.139), with S4 r.59: A − B in the first tax year a sum is received, C − D after, B and D the premium paid till the receipt, not claimed as a deduction nor counted in an earlier year (pp.1578–1579). \"The sum exceeding\": never below nil. TY 2025-26: 1961 s.56(2)(xiii) (FA 2023 s.32(b), w.e.f. 1-4-2024) with Rules 1962 r.11UACA (G.S.R. 604(E), 16-8-2023), the same formula. This row charges the whole of the computed sum. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-life-policies.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(xiii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(l)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "LIFE_POLICY"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.32(b) — s.56(2)(xiii) of the Income-tax Act, 1961 inserted (w.e.f. 1-4-2024); Income-tax Rules, 1962 r.11UACA, ins. by the Income-tax (Sixteenth Amendment) Rules, 2023, G.S.R. 604(E), 16-8-2023",
+        "gazetteRef": "CG-DL-E-31032023-244830, pp.28–29; CG-DL-E-16082023-248134, pp.2–3",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248134.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082023-248134, G.S.R. 604(E) inserting Rules 1962 r.11UACA, pp.2–3; CG-DL-E-31032023-244830, Finance Act, 2023 s.32(b), pp.28–29; r.11UACA's amendments from 1-9-2025 to 31-3-2026 searched, none; from 16-8-2023 to 1-9-2025, the Income Tax Department's consolidated Rule 11UACA page (upload 13-12-2025), whose only footnote is the 2023 insertion, read via the owner's ChatGPT share — the Department's site answers 403 here (D-206; docs/taxplanning-build/sources/2026-10-17-life-policies.md B10)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(xiii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(l)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "LIFE_POLICY"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(l); Income-tax Rules, 2026 r.59",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(l), p.139; Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.59, pp.1578–1579 — no amendment to 16-10-2026, nor the corrigendum G.S.R. 286(E), touches it",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(l), p.139; Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.59, pp.1578–1579 — no amendment to 16-10-2026, nor the corrigendum G.S.R. 286(E), touches it",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

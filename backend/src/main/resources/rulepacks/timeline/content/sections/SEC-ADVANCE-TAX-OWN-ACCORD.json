@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.210 / 2025 s.406 (coverage MODELLED by ADV-LIABILITY); sources/2026-11-06-advance-tax-interest.md; D-446",
+  "key": "SEC-ADVANCE-TAX-OWN-ACCORD",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.210",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.406",
+    "presence": "PRESENT"
+  },
+  "plainName": "Paying advance tax of one's own accord",
+  "summary": "The person pays on their own estimate and may raise or lower later instalments as the estimate changes.",
+  "routes": [
+    {
+      "name": "Paying advance tax of one's own accord",
+      "description": "The person pays on their own estimate and may raise or lower later instalments as the estimate changes.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "ADV-LIABILITY"
+        }
+      ]
+    }
+  ]
+}

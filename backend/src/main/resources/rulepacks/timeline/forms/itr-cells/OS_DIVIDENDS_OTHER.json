@@ -1,0 +1,12 @@
+{
+  "code": "OS_DIVIDENDS_OTHER",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Dividend income other than (ii) and (iii)",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "DIVIDEND",
+      "UNIT_INCOME"
+    ]
+  }
+}

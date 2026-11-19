@@ -1,0 +1,9 @@
+{
+  "code": "HP_UNREALISED",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "The amount of rent which cannot be realized",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "unrealisedRent"
+  }
+}

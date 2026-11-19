@@ -1,0 +1,107 @@
+{
+  "ruleId": "DED-NPS-OWN",
+  "ruleSet": "RS-DED-NPS-OWN",
+  "_note": "An individual's own payment to the notified pension scheme, \"a deduction not exceeding ₹50000\" (s.124(3), p.160), with a parent's or guardian's deposit to a minor's account, \"the aggregate amount of deduction under sub-section (3) and this sub-section shall not exceed ₹50000\" (s.124(4)). No amount counted under s.123 counts here, nor the reverse (s.124(5), (10)): EMPLOYEE_NPS enters as what DED-SCHEDULE-XV's sub-cap left. The new regime computes total income without \"Chapter VIII other than the provisions of sections 124(1) and 124(2), or 125(2) or 146\" (s.202(2)(a)(xii), p.227) — s.124(3)–(4) are not named, so the old regime only. TY 2026-27 and TY 2025-26. rulebook DED-NPS-SELF-001, -002, DED-NPS-MINOR-001. The 1961 counterpart, s.80CCD(1B), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(1B) (thc p.339): \"whether or not any deductions is allowed under sub-section (1), of the whole of the amount paid or deposited … which shall not exceed fifty thousand rupees\", nothing allowed under (1) counting again; Finance Act, 2025 s.17(a) (p.22, w.e.f. 1-4-2026, so AY 2026-27): \"shall also be allowed, where any payment or deposit is made to the account of a minor … by the assessee, being the parent or guardian of such minor, subject to the condition that the aggregate amount of deduction under this sub-section shall not exceed fifty thousand rupees\" — the same row. Old regime only (s.115BAC(2)(i)). sources/2026-10-07-chapter-via.md B6, M17. D-144. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCD(1B), with its second proviso (a minor's account); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(3)–(5), (10)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AggregateWithCeiling",
+        "contributors": [
+          "EMPLOYEE_NPS",
+          "NPS_MINOR_DEPOSIT"
+        ],
+        "ceiling": "50000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2025 (7 of 2025), s.17(a) — the proviso allowing s.80CCD(1B) for a payment to a minor's account by the parent or guardian, within the same fifty thousand rupees",
+        "gazetteRef": "CG-DL-E-29032025-262125",
+        "notifiedOn": "2025-03-29",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80CCD(1B), p.339; Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.17, p.22; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80CCD(1B) after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCD(1B), with its second proviso (a minor's account); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(3)–(5), (10)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AggregateWithCeiling",
+        "contributors": [
+          "EMPLOYEE_NPS",
+          "NPS_MINOR_DEPOSIT"
+        ],
+        "ceiling": "50000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.124(3)–(5), (10)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(3)–(5), (10), p.160; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(3)–(5), (10), p.160; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

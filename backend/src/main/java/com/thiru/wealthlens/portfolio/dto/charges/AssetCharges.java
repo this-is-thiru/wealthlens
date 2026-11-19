@@ -29,12 +29,6 @@ public class AssetCharges {
     private ChargeNote sell;
 
     /**
-     * The part of the sell charges that reduces the taxable gain, as resolved against the
-     * catalogue when the sell was recorded. Notably excludes STT.
-     */
-    private double deductibleSellCharges;
-
-    /**
      * How much of the user-entered buy charge has already been handed to a disposal.
      *
      * <p>Carried because {@code brokerCharges} on the lot is what was paid, not what remains

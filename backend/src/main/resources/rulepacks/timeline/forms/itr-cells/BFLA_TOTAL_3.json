@@ -1,0 +1,18 @@
+{
+  "code": "BFLA_TOTAL_3",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "Current year's income remaining after set off",
+  "source": {
+    "type": "FromSetOff",
+    "rows": [
+      "SALARIES",
+      "HOUSE_PROPERTY",
+      "SHORT_TERM_LISTED_EQUITY",
+      "SHORT_TERM_SLAB",
+      "LONG_TERM_LISTED_EQUITY",
+      "LONG_TERM_OTHER",
+      "OTHER_SOURCES"
+    ],
+    "column": "afterBroughtForward"
+  }
+}

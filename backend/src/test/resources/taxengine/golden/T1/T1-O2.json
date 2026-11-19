@@ -1,0 +1,14 @@
+{
+  "id": "T1-O2",
+  "source": "DR 08 T1-O2 — Old regime, one rounding step above. TI ₹5,00,010 — **the `H-3` test**",
+  "_source": "**Expected: ₹13,000.**",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "500010",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "13000"
+  }
+}

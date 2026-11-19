@@ -39,12 +39,6 @@ public class TLocalDateTime {
         return String.valueOf(timestamp).length() < 12;
     }
 
-//    public static LocalDateTime atGivenZone(LocalDateTime dateTime, String fromZoneId, String toZoneId) {
-//        ZonedDateTime fromZonedDateTime = dateTime.atZone(ZoneId.of(fromZoneId));
-//        ZonedDateTime toZonedDateTime = fromZonedDateTime.withZoneSameInstant(ZoneId.of(toZoneId));
-//        return toZonedDateTime.toLocalDateTime();
-//    }
-
     public static LocalDateTime atGivenZone(LocalDateTime dateTime, String fromZoneId, String toZoneId) {
         ZonedDateTime fromZonedDateTime = dateTime.atZone(ZoneId.of(fromZoneId));
         ZonedDateTime toZonedDateTime = fromZonedDateTime.withZoneSameInstant(ZoneId.of(toZoneId));

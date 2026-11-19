@@ -1,0 +1,110 @@
+{
+  "_note": "The rules the new regime does not allow, by S2 s.202(2)(a) / 1961 s.115BAC(2)(i) (D-165, D-166) — one set, referenced by NEW_TAX_REGIME, shared by any later regime the same words cover (DR 10 E3.5). Each version lists the rules its year holds that rest on the provision: professional tax ((a)(iv); 1961 s.16(iii)); Chapter VIII ((a)(xii); 1961 Chapter VI-A, not 80CCD(2), 80CCH(2)); HRA and LTA ((a)(i), Sch. III Sl. 11, 8; 1961 s.10(13A), (5)); CEA, hostel, uniform ((a)(ii), not prescribed by S4 r.280(3); 1961 s.10(14), not in r.2BB(3)); own-residence interest ((a)(v); 1961 s.24(b) for s.23(2), with the pre-construction share in TY 2025-26 only — TY 2026-27 allows s.22(1)(c), D-156); a Government employee's entertainment allowance (1961 s.16(ii), TY 2025-26 only). Rows the regime keys rather than forbids stay ExceptIn: SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE, DED-NPS-EMPLOYER-OTHER, PERQ-MEAL-VOUCHER (TY 2025-26).",
+  "id": "DIS-NEW-TAX-REGIME-NO-EXEMPTION",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "displayName": "Income-tax Act, 1961 s.115BAC(2)(i) computes the new regime's total income without this exemption or deduction",
+      "basis": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "disallowedRules": [
+        "DED-AGNIVEER-OWN",
+        "DED-DEPOSIT-INTEREST-SENIOR",
+        "DED-DISABILITY",
+        "DED-DISABILITY-SEVERE",
+        "DED-DISABLED-DEPENDANT",
+        "DED-DISABLED-DEPENDANT-SEVERE",
+        "DED-DONATION-CASH",
+        "DED-DONATION-HALF",
+        "DED-DONATION-QUALIFYING",
+        "DED-DONATION-WHOLE",
+        "DED-EDUCATION-LOAN",
+        "DED-ELECTRIC-VEHICLE-LOAN",
+        "DED-HEALTH-CHECKUP",
+        "DED-HEALTH-FAMILY",
+        "DED-HEALTH-FAMILY-SENIOR",
+        "DED-HEALTH-PARENTS",
+        "DED-HEALTH-PARENTS-SENIOR",
+        "DED-HOUSE-LOAN",
+        "DED-HOUSE-LOAN-EARLIER",
+        "DED-NPS-OWN",
+        "DED-PREMIUM-SHARE",
+        "DED-RENT-PAID",
+        "DED-SAVINGS-INTEREST",
+        "DED-SCHEDULE-XV",
+        "DED-SPECIFIED-DISEASE",
+        "DED-SPECIFIED-DISEASE-SENIOR",
+        "HP-OWN-RESIDENCE-INTEREST",
+        "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
+        "SAL-ALW-CHILDREN-EDUCATION",
+        "SAL-ALW-HOSTEL",
+        "SAL-ALW-UNIFORM",
+        "SAL-ENTMT-ALLOWANCE",
+        "SAL-HOUSE-RENT-ALLOWANCE",
+        "SAL-LEAVE-TRAVEL-CONCESSION",
+        "SAL-LEAVE-TRAVEL-JOURNEYS",
+        "SAL-TAX-ON-EMPLOYMENT"
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C)(a) (Income-tax Act, 1961 s.115BAC(2)(i) substituted), pp.33–34",
+        "accessedOn": "2026-10-09",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "displayName": "Income-tax Act, 2025 s.202(2)(a) computes the new tax regime's total income without this exemption or deduction",
+      "basis": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "disallowedRules": [
+        "DED-AGNIVEER-OWN",
+        "DED-DEPOSIT-INTEREST-SENIOR",
+        "DED-DISABILITY",
+        "DED-DISABILITY-SEVERE",
+        "DED-DISABLED-DEPENDANT",
+        "DED-DISABLED-DEPENDANT-SEVERE",
+        "DED-DONATION-CASH",
+        "DED-DONATION-HALF",
+        "DED-DONATION-QUALIFYING",
+        "DED-DONATION-WHOLE",
+        "DED-EDUCATION-LOAN",
+        "DED-ELECTRIC-VEHICLE-LOAN",
+        "DED-HEALTH-CHECKUP",
+        "DED-HEALTH-FAMILY",
+        "DED-HEALTH-FAMILY-SENIOR",
+        "DED-HEALTH-PARENTS",
+        "DED-HEALTH-PARENTS-SENIOR",
+        "DED-HOUSE-LOAN",
+        "DED-HOUSE-LOAN-EARLIER",
+        "DED-NPS-OWN",
+        "DED-PREMIUM-SHARE",
+        "DED-RENT-PAID",
+        "DED-SAVINGS-INTEREST",
+        "DED-SCHEDULE-XV",
+        "DED-SPECIFIED-DISEASE",
+        "DED-SPECIFIED-DISEASE-SENIOR",
+        "HP-OWN-RESIDENCE-INTEREST",
+        "SAL-ALW-CHILDREN-EDUCATION",
+        "SAL-ALW-HOSTEL",
+        "SAL-ALW-UNIFORM",
+        "SAL-HOUSE-RENT-ALLOWANCE",
+        "SAL-LEAVE-TRAVEL-CONCESSION",
+        "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
+        "SAL-LEAVE-TRAVEL-JOURNEYS",
+        "SAL-TAX-ON-EMPLOYMENT"
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.202(2)(a), p.227",
+        "accessedOn": "2026-10-09",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ]
+}

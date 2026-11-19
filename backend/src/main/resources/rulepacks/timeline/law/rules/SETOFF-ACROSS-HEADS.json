@@ -1,0 +1,108 @@
+{
+  "ruleId": "SETOFF-ACROSS-HEADS",
+  "ruleSet": "RS-SETOFF-ACROSS-HEADS",
+  "_note": "A loss under one head set off against income under the others (D-217; rulebook SETOFF-INTRA-001's companion R18; DR 13 R-7). TY 2026-27: Income-tax Act, 2025 s.109(1) (p.148): a head's loss \"shall be set off against income of the assessee under any other head, including \"Capital gains\", if any, assessable for that tax year\", subject to (a) business loss not against salaries and (b) the house-property limit (SETOFF-HOUSE-PROPERTY); s.109(2) keeps a capital-gains loss within its head. TY 2025-26: Income-tax Act, 1961 s.71(1), (2) as substituted by the Finance (No. 2) Act, 1991 s.23 (thc copy p.318). Neither Act prescribes an order of absorption: AbsorptionOrder is a declared default — SALARIES, then HOUSE_PROPERTY, then OTHER_SOURCES, the loss head itself skipped — shown on every set-off line (DR 13 R-7; OQ-28, W-082). Capital gains absorb a loss last, part by part in SETOFF-WITHIN-CAPITAL-GAINS's order (D-243); a capital-gains loss absorbs no other head (S2 s.109(2); 1961 s.71(3)). The business head is not built; its limbs bite when it is. A loss under other sources not set off is not carried: the 2025 Act's Chapter VII carries forward the house-property (s.110), capital-gains (s.111), business (s.112), speculation (s.113), specified-business (s.114) and specified-activity (s.115) losses only (Gazette 265620 pp.148–150).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.71(1), (2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.109(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "AbsorptionOrder",
+        "heads": [
+          "SALARIES",
+          "HOUSE_PROPERTY",
+          "OTHER_SOURCES",
+          "CAPITAL_GAINS"
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 1991 (49 of 1991), s.23 — Income-tax Act, 1961 s.71 substituted w.e.f. 1-4-1992",
+        "gazetteRef": "Act 49 of 1991 (assent 27-9-1991) s.23: read in Acts of the Parliament of India, 1991 (the Legislative Department's annual volume; Wikimedia Commons DjVu scan, read from the page images), p.185 (DjVu p.193), the Act's head DjVu p.177; the Gazette of India issue itself not read (as D-215)",
+        "notifiedOn": "1991-09-27",
+        "effectiveFrom": "1992-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Acts_of_the_Parliament_of_India_1991.djvu",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 s.71(1), (2), thc.nic.in copy (current to Act 7 of 2019) p.318; no amendment of s.71 in the Finance Acts 2020–2025, TLA 2019 or TOLA 2020 (read in their egazette texts); the Finance (No. 2) Act, 1991 s.23 (Acts of the Parliament of India, 1991, p.185)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.71(1), (2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.109(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "AbsorptionOrder",
+        "heads": [
+          "SALARIES",
+          "HOUSE_PROPERTY",
+          "OTHER_SOURCES",
+          "CAPITAL_GAINS"
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.109(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.109(1), (2), p.148; not amended by the Finance Act, 2026",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.109, p.148",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

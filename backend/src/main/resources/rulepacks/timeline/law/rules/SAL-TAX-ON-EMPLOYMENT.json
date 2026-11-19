@@ -1,0 +1,98 @@
+{
+  "ruleId": "SAL-TAX-ON-EMPLOYMENT",
+  "ruleSet": "RS-SAL-TAX-ON-EMPLOYMENT",
+  "_note": "The tax on employment (professional tax), deducted in full from salary where the regime allows it (D-093; rulebook SAL-PTAX-001, -002, H-13). The amount is the total of the SALARIES lines whose component feeds this row. TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 1 (p.41): \"Sum paid by the assessee as a tax on employment as per article 276(2) of the Constitution, leviable by or under any law. — Entire amount.\"; not in the new regime, s.202(2)(a)(iv) (p.227): the total income is computed \"without any exemption or deduction under— … (iv) section 19(1) (Table: Sl. No. 1)\". Finance Act, 2026 (4 of 2026) searched in full: it does not amend s.19 or s.202. TY 2025-26: Income-tax Act, 1961 s.16(iii) (thc.nic.in, p.140; inserted by Act 13 of 1989 s.5, w.e.f. 1-4-1990): \"a deduction of any sum paid by the assessee on account of a tax on employment within the meaning of clause (2) of article 276 of the Constitution, leviable by or under any law\"; not in the new regime, s.115BAC(2)(i) as substituted by Finance Act, 2023 s.52 (p.34), which lists \"clause (ii) or clause (iii) of section 16\". The row applies in every regime; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-165), so the exclusion is explained by its provision.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(iii); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 1; excluded by s.202(2)(a)(iv)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "HeadTotal",
+        "head": "SALARIES"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), computed without the deduction under s.16(iii) (s.115BAC(2)(i))",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52 (s.115BAC), pp.33–34; Income-tax Act, 1961 s.16(iii) as on thc.nic.in (current to Act 7 of 2019), p.140",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(iii); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 1; excluded by s.202(2)(a)(iv)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "HeadTotal",
+        "head": "SALARIES"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 1 and s.202(2)(a)(iv)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 1, p.41, and s.202(2)(a)(iv), p.227; Finance Act, 2026 searched in full: no amendment",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 1, p.41",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

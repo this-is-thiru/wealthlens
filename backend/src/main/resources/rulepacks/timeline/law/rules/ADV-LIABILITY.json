@@ -1,0 +1,100 @@
+{
+  "ruleId": "ADV-LIABILITY",
+  "ruleSet": "RS-ADV-LIABILITY",
+  "_note": "Who must pay advance tax, and how much — the bill less tax deducted or collected at source, on the person's own estimate: not a resident individual of 60 or more at any time in the year with no business or profession income; nobody whose advance tax (the bill less tax at source) is below ₹10,000. Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.207, s.208, s.209(1)(a), (d), s.210(1), (2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.403, s.404, s.405(1), s.406",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "AdvanceTaxLiability",
+        "exemptFromAge": 60,
+        "atLeast": "10000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.207 – s.210, as in the thc.nic.in consolidation",
+        "gazetteRef": "Act 43 of 1961 (assent 13-9-1961), the date the repo's other as-enacted rows carry; the section's later insertion and substitutions as in the thc.nic.in consolidation; the Gazette issue not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.207 – s.210 pp.675–678; amending Acts 2019 – 2026 searched (sources row list)",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.207, s.208, s.209(1)(a), (d), s.210(1), (2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.403, s.404, s.405(1), s.406",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "AdvanceTaxLiability",
+        "exemptFromAge": 60,
+        "atLeast": "10000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.403 – s.406",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.403 – s.406 pp.432–433",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.403 – s.406 pp.432–433",
+    "accessedOn": "2026-11-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

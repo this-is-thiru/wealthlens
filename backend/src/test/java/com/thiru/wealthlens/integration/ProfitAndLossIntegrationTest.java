@@ -6,6 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
@@ -18,7 +19,10 @@ import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
+import java.util.EnumMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -43,7 +47,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
     private MongoTemplate mongoTemplate;
 
     @Test
-    void updateProfitAndLoss_whenSelfShortTermGain_shouldCreatePnl() {
+    void updateProfitAndLoss_whenSelfSale_shouldCreatePnl() {
         // GIVEN
         String email = "test@example.com";
         UserMail userMail = UserMail.from(email);
@@ -65,38 +69,26 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         ProfitAndLossEntity pnl = findPnlByEmail(email);
         assertNotNull(pnl);
         assertNotNull(pnl.getRealisedProfits());
-        assertNotNull(pnl.getRealisedProfits().getShortTermCapitalGains());
-        // Note: Financial year is calculated by server based on current date
-        // Verify short term vs long term classification is correct
-        assertNull(pnl.getRealisedProfits().getLongTermCapitalGains());
+        assertNotNull(pnl.getRealisedProfits().getGainsByAssetAndSegment().get(AssetType.EQUITY)
+                .get(TradeSegment.DELIVERY));
     }
 
     @Test
-    void updateProfitAndLoss_whenSelfLongTermGain_shouldUpdateLongTerm() {
-        // GIVEN
-        String email = "test@example.com";
-        UserMail userMail = UserMail.from(email);
-        String stockCode = "HDFCBANK";
+    void updateProfitAndLoss_whenSaved_keepsTheSplitByAssetTypeAndSegment() {
+        // Given -- 10 bought at 100 and sold at 150, delivery (the request's default)
+        String email = "split@example.com";
+        ProfitAndLossContext context = buildContext(email, "RELIANCE", LocalDate.of(2024, 1, 15),
+                LocalDate.of(2024, 6, 20), 10.0, 100.0, 150.0, AccountType.SELF);
 
-        LocalDate buyDate = LocalDate.of(2022, 1, 15);
-        LocalDate sellDate = LocalDate.of(2024, 6, 20);
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(email), context);
 
-        AssetRequest buyRequest = createBuyRequest(email, stockCode, buyDate, 100.0, 10.0);
-
-        AssetRequest sellRequest = createSellRequest(email, stockCode, sellDate, 100.0, 20.0, AccountType.SELF);
-
-        ProfitAndLossContext context = buildContext(email, stockCode, buyDate, sellDate, 100.0, 10.0, 20.0, AccountType.SELF);
-
-        // WHEN
-        profitAndLossService.updateProfitAndLoss(userMail, context);
-
-        // THEN
-        ProfitAndLossEntity pnl = findPnlByEmail(email);
-        assertNotNull(pnl);
-        assertNotNull(pnl.getRealisedProfits());
-        // Long term: holding > 1 year
-        assertNull(pnl.getRealisedProfits().getShortTermCapitalGains());
-        assertNotNull(pnl.getRealisedProfits().getLongTermCapitalGains());
+        // Then -- read back through Mongo, the nested enum-keyed map survives
+        FinancialReport split = findPnlByEmail(email).getRealisedProfits().getGainsByAssetAndSegment()
+                .get(AssetType.EQUITY).get(TradeSegment.DELIVERY);
+        assertNotNull(split);
+        MoneyAssert.assertMoney(1500.0, split.getSellAmount());
+        MoneyAssert.assertMoney(1000.0, split.getPurchaseAmount());
     }
 
     @Test
@@ -122,7 +114,8 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         ProfitAndLossEntity pnl = findPnlByEmail(email);
         assertNotNull(pnl);
         assertNotNull(pnl.getOutSourcedRealisedProfits());
-        assertNotNull(pnl.getOutSourcedRealisedProfits().getShortTermCapitalGains());
+        assertNotNull(pnl.getOutSourcedRealisedProfits().getGainsByAssetAndSegment().get(AssetType.EQUITY)
+                .get(TradeSegment.DELIVERY));
     }
 
     @Test
@@ -165,9 +158,10 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         ProfitAndLossEntity pnl = new ProfitAndLossEntity(email);
         pnl.setFinancialYear("2023-2024");
         RealisedProfits realisedProfits = RealisedProfits.empty();
-        FinancialReport shortTerm = FinancialReport.empty();
-        shortTerm.setProfit(500.0);
-        realisedProfits.setShortTermCapitalGains(shortTerm);
+        FinancialReport delivery = FinancialReport.empty();
+        delivery.setProfit(500.0);
+        realisedProfits.setGainsByAssetAndSegment(new EnumMap<>(Map.of(AssetType.EQUITY,
+                new EnumMap<>(Map.of(TradeSegment.DELIVERY, delivery)))));
         pnl.setRealisedProfits(realisedProfits);
         mongoTemplate.save(pnl, "profit_and_loss");
 
@@ -179,7 +173,8 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         assertEquals(email, response.getEmail());
         assertEquals("2023-2024", response.getFinancialYear());
         assertNotNull(response.getRealisedProfits());
-        assertEquals(500.0, response.getRealisedProfits().getShortTermCapitalGains().getProfit(), 0.01);
+        MoneyAssert.assertMoney(500.0, response.getRealisedProfits().getGainsByAssetAndSegment().get(AssetType.EQUITY)
+                .get(TradeSegment.DELIVERY).getProfit());
     }
 
     @Test
@@ -235,32 +230,6 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
 
         // WHEN/THEN - Service should handle gracefully without throwing
         assertDoesNotThrow(() -> profitAndLossService.updateProfitAndLoss(userMail, context));
-    }
-
-    @Test
-    void updateProfitAndLoss_whenExactOneYearBoundary_shouldTreatAsLongTerm() {
-        // GIVEN
-        String email = "boundary@example.com";
-        UserMail userMail = UserMail.from(email);
-        String stockCode = "BOUNDARY";
-
-        LocalDate buyDate = LocalDate.of(2023, 4, 1);
-        LocalDate sellDate = LocalDate.of(2024, 4, 1); // Exactly 1 year
-
-        AssetRequest buyRequest = createBuyRequest(email, stockCode, buyDate, 50.0, 5.0);
-
-        AssetRequest sellRequest = createSellRequest(email, stockCode, sellDate, 50.0, 12.0, AccountType.SELF);
-
-        ProfitAndLossContext context = buildContext(email, stockCode, buyDate, sellDate, 50.0, 5.0, 12.0, AccountType.SELF);
-
-        // WHEN
-        profitAndLossService.updateProfitAndLoss(userMail, context);
-
-        // THEN
-        ProfitAndLossEntity pnl = findPnlByEmail(email);
-        assertNotNull(pnl);
-        // At exactly 1 year boundary - verify classification is consistent
-        assertNotNull(pnl.getRealisedProfits());
     }
 
     @Test

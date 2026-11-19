@@ -1,0 +1,11 @@
+{
+  "code": "OS_FAMILY_PENSION",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Family Pension",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "FAMILY_PENSION"
+    ]
+  }
+}

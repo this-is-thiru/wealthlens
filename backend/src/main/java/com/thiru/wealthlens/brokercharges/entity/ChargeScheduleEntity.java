@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.brokercharges.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
@@ -38,7 +40,8 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
  * after the rates changed. Whether a card is the current one is expressed by a null {@code endDate}.
  */
 @Data
-@AllArgsConstructor
+// A body binds through the no-arg constructor, so an omitted field keeps its initialiser (W-205).
+@AllArgsConstructor(onConstructor_ = @JsonCreator(mode = JsonCreator.Mode.DISABLED))
 @NoArgsConstructor
 @Document(value = "charge_schedules")
 public class ChargeScheduleEntity implements AuditableEntity {
@@ -107,5 +110,6 @@ public class ChargeScheduleEntity implements AuditableEntity {
 
     @Field("audit_metadata")
     @Setter(value = AccessLevel.NONE)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private AuditMetadata auditMetadata = new AuditMetadata();
 }

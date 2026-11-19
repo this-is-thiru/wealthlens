@@ -1,0 +1,12 @@
+{
+  "code": "SALARY_EXEMPT_U10",
+  "_note": "HRA, leave travel and s.10(14) allowances (ExemptionNode); gratuity, leave encashment, commutation, VRS and retrenchment are s.10(10) – (10C) exemptions in the 1961 Act (RetirementNode) (Q1a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Less allowances to the extent exempt u/s 10",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "salary.exemptions",
+      "salary.retirement"
+    ]
+  }
+}

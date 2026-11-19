@@ -7,6 +7,6 @@ import lombok.Data;
 
 @Data
 public class BulkGetRequest {
-	private DateRange dateRange;
+	private DateRangeFilter dateRange;
 	private List<QueryFilter> queryFilters = new ArrayList<>();
 }

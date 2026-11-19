@@ -1,5 +1,11 @@
 package com.thiru.wealthlens.integration;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
+import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.shared.protection.FieldCipher;
+import com.thiru.wealthlens.testsupport.FakeClamd;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.restassured.RestAssured;
@@ -35,17 +41,10 @@ public abstract class AbstractIntegrationTest {
     private static final int JWT_EXPIRATION_SECONDS = 60 * 30;
 
     /**
-     * Collections seeded once per Spring context (PolicySeederService runs at @PostConstruct)
-     * and shared read-only by every test. Everything else is per-test state and is cleared
-     * after each test. Anything not listed here is wiped, so a new collection needs no
+     * Reference data shared read-only by every test. Everything else is per-test state and is cleared after each test. Anything not listed here is wiped, so a new collection needs no
      * change to this class — which is the point.
      */
     private static final Set<String> SEEDED_REFERENCE_COLLECTIONS = Set.of(
-            "allowance_catalogue",
-            "allowance_limits",
-            "tax_slab_policies",
-            "tax_year_registry",
-            "perquisite_policies",
             // Written by ChargeSeederService, which since ADR-27 runs only when asked. Dropping it
             // between tests would leave whichever test seeds it carrying the cost for the rest, and
             // any rate card published afterwards would be rejected for naming codes the catalogue
@@ -64,12 +63,18 @@ public abstract class AbstractIntegrationTest {
      * {@code org.testcontainers.mongodb.MongoDBContainer} does so only when asked. Dropping it
      * would leave {@code app.mongodb.transactions-enabled=true} pointed at a standalone server, and
      * every {@code @Transactional} write spanning two collections would fail.
+     *
+     * <p><b>Pinned to 8.0.4.</b> Later 8.0 patches refuse to start on Linux 6.19 and newer
+     * (SERVER-121912), which CI's Ubuntu 26 runner has (kernel 7.0).
      */
     static final MongoDBContainer mongoDBContainer;
     static {
-        mongoDBContainer = new MongoDBContainer("mongo:8.0").withReplicaSet();
+        mongoDBContainer = new MongoDBContainer("mongo:8.0.4").withReplicaSet();
         mongoDBContainer.start();
     }
+
+    /** The malware scanner every upload passes through (W-131e); shared and left running, as the Mongo container is. */
+    protected static final FakeClamd CLAMD = FakeClamd.start();
 
     @AfterAll
     static void tearDownContainer() {
@@ -82,6 +87,8 @@ public abstract class AbstractIntegrationTest {
     static void mongoProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
         registry.add("app.mongodb.transactions-enabled", () -> "true");
+        registry.add("app.tax.documents.scan.host", () -> "localhost");
+        registry.add("app.tax.documents.scan.port", CLAMD::port);
     }
 
     @LocalServerPort
@@ -89,6 +96,9 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected MongoTemplate mongoTemplate;
+
+    @Autowired
+    private FieldCipher fieldCipher;
 
     @BeforeAll
     void setUpRestAssured() {
@@ -100,8 +110,9 @@ public abstract class AbstractIntegrationTest {
      * Clears every collection except the seeded reference data.
      *
      * <p>Uses {@code deleteMany} rather than {@code drop} deliberately: dropping a collection
-     * also drops its indexes, forcing a rebuild on the next write. Deleting documents is faster
-     * and keeps index behaviour under test realistic.
+     * also drops its indexes, and nothing recreates them until the next startup
+     * ({@code PortfolioIndexInitializer}), so every later class in the shared container would run
+     * without its unique indexes (W-300). {@code ArchitectureTest.nothing_drops_a_collection} holds it.
      */
     @AfterEach
     void cleanDatabase() {
@@ -111,6 +122,16 @@ public abstract class AbstractIntegrationTest {
             }
             mongoTemplate.getDb().getCollection(collectionName).deleteMany(new Document());
         }
+    }
+
+    /** An identifier as stored (W-253): what a raw document holds and a raw query matches. */
+    protected String storedIdentifier(String identifier) {
+        return fieldCipher.encryptSearchable(identifier);
+    }
+
+    /** The login of {@code email}, which is a field now rather than the id (W-253 C2a); {@code null} when there is none. */
+    protected UserDetail storedLogin(String email) {
+        return mongoTemplate.findOne(query(where("email").is(email)), UserDetail.class);
     }
 
     protected String generateToken(String email) {

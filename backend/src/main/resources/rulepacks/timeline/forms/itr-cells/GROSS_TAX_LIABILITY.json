@@ -1,0 +1,13 @@
+{
+  "code": "GROSS_TAX_LIABILITY",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Gross tax liability",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "TAX_AFTER_REBATE",
+      "TAX_SURCHARGE",
+      "TAX_CESS"
+    ]
+  }
+}

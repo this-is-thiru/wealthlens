@@ -1,0 +1,47 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-247). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.74 / 2025 s.111 (coverage MODELLED, D-247). summary: S2 s.111(1), (2) (Gazette 265620 p.148), s.536(2)(n) (p.493); 1961 s.74(1), (2) (thc p.325). routes[0]: SETOFF-CARRIED-CAPITAL-GAINS (TaxYearSpan; the order declared, D-247). disqualifiers[0]: s.121 / s.80, the return condition, enforced by the same row (CarriedCapitalLoss.determinedInReturnFiledInTime). disqualifiers[1]: s.111(1)(a)(ii) / s.74(1)(b), a long-term loss against long-term gains only.",
+  "key": "SEC-CAPITAL-LOSS-CARRIED",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.74",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.111",
+    "presence": "PRESENT"
+  },
+  "plainName": "Carrying forward a capital loss",
+  "summary": "A capital loss not set off in the year it arose is carried to later years and set only against capital gains, for a limited number of years, after which it lapses. A short-term loss may be set against any capital gain; a long-term loss only against long-term gains.",
+  "routes": [
+    {
+      "name": "The carried loss against later capital gains",
+      "description": "The oldest year's loss is used first, its long-term part before its short-term; the order is stated, because the law does not fix one.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SETOFF-CARRIED-CAPITAL-GAINS"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "PROCESS_MISSED",
+      "description": "A loss not worked out in a return filed in time is not carried forward.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "SETOFF-CARRIED-CAPITAL-GAINS"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A long-term loss cannot be set against short-term gains.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "SETOFF-CARRIED-CAPITAL-GAINS"
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "OS_MACHINERY_RENT",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Rental income from machinery, plants, buildings, etc., Gross",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "MACHINERY_LETTING",
+      "MACHINERY_AND_BUILDING_LETTING"
+    ]
+  }
+}

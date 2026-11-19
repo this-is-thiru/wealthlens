@@ -1,0 +1,11 @@
+{
+  "code": "OS_GIFTS",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Income of the nature referred to in section 56(2)(x) which is chargeable to tax",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "GIFTS"
+    ]
+  }
+}

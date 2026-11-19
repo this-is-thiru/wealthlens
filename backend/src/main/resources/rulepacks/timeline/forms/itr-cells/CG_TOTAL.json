@@ -1,0 +1,11 @@
+{
+  "code": "CG_TOTAL",
+  "_note": "s.115BBH gains are not computed, so 3d adds nothing. Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Total capital gains",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_SHORT_AND_LONG"
+    ]
+  }
+}

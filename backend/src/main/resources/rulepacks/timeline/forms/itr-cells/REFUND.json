@@ -1,0 +1,12 @@
+{
+  "code": "REFUND",
+  "_note": "The net payable rounded under s.288B — the balance after credits with interest and fees (RoundNetPayableNode reads tax.balance and interest.and.fees), where negative, shown without its sign (Q4a). Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Refund",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "round.netpayable"
+    ]
+  },
+  "sign": "NEGATIVE_PART"
+}

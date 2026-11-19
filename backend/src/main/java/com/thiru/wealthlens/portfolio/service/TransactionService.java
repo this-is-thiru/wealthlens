@@ -4,8 +4,8 @@ import com.thiru.wealthlens.portfolio.config.IdempotencyProperties;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
-import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -14,7 +14,6 @@ import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -48,8 +47,11 @@ public class TransactionService {
      * a heuristic and says so.
      *
      * <p>Callers <b>must</b> honour {@link TransactionRecord#replay()} and skip applying the trade.
+     *
+     * @param tradeFlow the flow that received the trade, stored on it so the lot shape it was given can be told later
+     *     (W-283a1, D-580)
      */
-    public TransactionRecord recordTransaction(UserMail userMail, AssetRequest assetRequest) {
+    public TransactionRecord recordTransaction(UserMail userMail, AssetRequest assetRequest, TradeFlow tradeFlow) {
         if (assetRequest.getTransactionDate() == null) {
             assetRequest.setTransactionDate(LocalDate.now());
         }
@@ -89,60 +91,12 @@ public class TransactionService {
         TransactionEntity entity = assetRequest.asTransaction();
         entity.setEmail(email);
         entity.setIdempotencyKey(assetRequest.getIdempotencyKey());
+        entity.setTradeFlow(tradeFlow);
         entity.setTradeFingerprint(fingerprint);
         entity.setSubmittedAt(LocalDateTime.now());
         log.info("Transaction: {}, Stock: '{}' on '{}' noted successfully for: {}", entity.getTransactionType(),
                 entity.getStockName(), entity.getTransactionDate(), email);
         return TransactionRecord.created(transactionRepository.save(entity).getId());
-    }
-
-    /**
-     * @deprecated the id alone cannot tell a caller that nothing was written, so a caller that acts
-     *     on it applies a replayed trade to the portfolio a second time. Use
-     *     {@link #recordTransaction} and honour its {@code replay} flag. Retained because the V1
-     *     flow is in live use.
-     */
-    @Deprecated
-    public String addTransaction(UserMail userMail, AssetRequest assetRequest) {
-
-        if (assetRequest.getTransactionDate() == null) {
-            assetRequest.setTransactionDate(LocalDate.now());
-        }
-        if (assetRequest.getTempTransactionId() != null) {
-            Optional<TransactionEntity> existing = transactionRepository
-                .findByEmailAndSourceTempTransactionId(userMail.getEmail(), assetRequest.getTempTransactionId());
-            if (existing.isPresent()) {
-                log.warn("Duplicate transaction suppressed for sourceTempTransactionId {}", assetRequest.getTempTransactionId());
-                return existing.get().getId();
-            }
-        }
-        TransactionEntity transactionEntity = assetRequest.asTransaction();
-        transactionEntity.setEmail(userMail.getEmail());
-
-        log.info("Transaction: {}, Stock: '{}' on '{}' noted successfully for: {}", transactionEntity.getTransactionType(),
-                transactionEntity.getStockName(), transactionEntity.getTransactionDate(), userMail.getEmail());
-        TransactionEntity savedTransactionEntity = transactionRepository.save(transactionEntity);
-        return savedTransactionEntity.getId();
-    }
-
-    public List<TransactionEntity> transactionsForCorporateActions(double quantity, String stockCode, LocalDate recordDate) {
-
-        List<TransactionEntity> transactionEntities = transactionRepository.findByStockCodeAndTransactionDateBeforeOrderByTransactionDateDesc(stockCode, recordDate);
-
-        List<TransactionEntity> transactionsToConsider = new ArrayList<>();
-        for (TransactionEntity transactionEntity : transactionEntities) {
-            if (quantity <= 0) {
-                break;
-            }
-
-            transactionsToConsider.add(transactionEntity);
-            quantity -= transactionEntity.getQuantity();
-        }
-
-        if (quantity > 0) {
-            throw new IllegalArgumentException("Invalid transactions");
-        }
-        return transactionsToConsider;
     }
 
     public List<TransactionEntity> transactionsForCorporateActions(String stockCode, LocalDate recordDate) {
@@ -197,29 +151,7 @@ public class TransactionService {
         }).toList();
     }
 
-
-//    public List<Transaction> testMethod(UserMail userMail, String stockCode, LocalDate recordDate) {
-//
-//        String email = userMail.getEmail();
-//        return transactionRepository.findByEmailAndStockCodeAndTransactionDateBeforeOrderByTransactionDateDesc(email, stockCode, recordDate);
-//    }
-
-    public void updateTransactions() {
-        List<TransactionEntity> transactionEntities = transactionRepository.findAll();
-
-        transactionEntities.forEach(transaction -> {
-                    AssetType assetType = transaction.getAssetType();
-                    transaction.setAssetType(assetType == null ? AssetType.MUTUAL_FUND : assetType);
-                }
-        );
-        transactionRepository.saveAll(transactionEntities);
-    }
-
     public void deleteTransactions(UserMail userMail) {
         transactionRepository.deleteByEmail(userMail.getEmail());
-    }
-
-    public List<TransactionEntity> allTransactions() {
-        return transactionRepository.findAll();
     }
 }

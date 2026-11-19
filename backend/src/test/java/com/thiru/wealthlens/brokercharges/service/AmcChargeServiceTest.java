@@ -25,6 +25,7 @@ import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
+import com.thiru.wealthlens.shared.privacy.HeldAccounts;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,11 +60,15 @@ class AmcChargeServiceTest {
     @Mock
     private UserChargeService userChargeService;
 
+    @Mock
+    private HeldAccounts heldAccounts;
+
     private AmcChargeService service;
 
     @BeforeEach
     void setUp() {
-        service = new AmcChargeService(chargeAccountRepository, userChargeService, new ChargeEngineProperties(true, false, false));
+        service = new AmcChargeService(chargeAccountRepository, userChargeService, new ChargeEngineProperties(true, false, false),
+                heldAccounts);
     }
 
     @Test
@@ -77,6 +82,30 @@ class AmcChargeServiceTest {
 
         // Then
         verify(userChargeService, times(2)).computeAndRecord(any());
+    }
+
+    @Test
+    void runCycle_whenTheAccountIsHeldForErasure_billsNothing() {
+        // Given — W-237d C3a: a request to erase the account stops processing at once
+        givenDue(account(DEMAT, null));
+        when(heldAccounts.contains(EMAIL)).thenReturn(true);
+
+        // When
+        List<ChargeAccountEntity> billed = service.runCycle(AmcChargeFrequency.ANNUALLY, BILLED_THROUGH);
+
+        // Then
+        assertThat(billed).isEmpty();
+        verify(userChargeService, never()).computeAndRecord(any());
+    }
+
+    @Test
+    void findDue_whenTheAccountIsHeldForErasure_leavesItOut() {
+        // Given
+        givenDue(account(DEMAT, null));
+        when(heldAccounts.contains(EMAIL)).thenReturn(true);
+
+        // When / Then
+        assertThat(service.findDue(AmcChargeFrequency.ANNUALLY, BILLED_THROUGH)).isEmpty();
     }
 
     @Test
@@ -206,7 +235,7 @@ class AmcChargeServiceTest {
         // period is settled, so it must not be retried every cycle.
         givenDue(account(DEMAT, null));
         when(userChargeService.computeAndRecord(any()))
-                .thenReturn(new ChargeComputation("sched-1", "ZERODHA_AMC", null,
+                .thenReturn(new ChargeComputation("sched-1", "ZERODHA_AMC", null, null, null,
                         ChargeResolution.RESOLVED, List.of(), 0.0));
         when(userChargeService.findForTransaction(anyString(), anyString())).thenReturn(row("row-1"));
         when(chargeAccountRepository.save(any())).thenAnswer(call -> call.getArgument(0));
@@ -254,7 +283,7 @@ class AmcChargeServiceTest {
         line.setAmount(amount);
 
         when(userChargeService.computeAndRecord(any())).thenReturn(new ChargeComputation(
-                "sched-1", "ZERODHA_AMC", null, ChargeResolution.RESOLVED, List.of(line), amount));
+                "sched-1", "ZERODHA_AMC", null, null, null, ChargeResolution.RESOLVED, List.of(line), amount));
         when(userChargeService.findForTransaction(anyString(), anyString())).thenReturn(row("row-1"));
         when(chargeAccountRepository.save(any())).thenAnswer(call -> call.getArgument(0));
     }
@@ -296,7 +325,7 @@ class AmcChargeServiceTest {
     void runCycle_whenTheEngineIsDisabled_refusesWithoutBillingAnything() {
         // Given
         AmcChargeService disabled = new AmcChargeService(
-                chargeAccountRepository, userChargeService, new ChargeEngineProperties(false, false, false));
+                chargeAccountRepository, userChargeService, new ChargeEngineProperties(false, false, false), heldAccounts);
 
         // When / Then
         org.assertj.core.api.Assertions.assertThatThrownBy(
@@ -346,7 +375,7 @@ class AmcChargeServiceTest {
     void findDue_whenTheEngineIsDisabled_refuses() {
         // Given
         AmcChargeService disabled = new AmcChargeService(
-                chargeAccountRepository, userChargeService, new ChargeEngineProperties(false, false, false));
+                chargeAccountRepository, userChargeService, new ChargeEngineProperties(false, false, false), heldAccounts);
 
         // When / Then
         org.assertj.core.api.Assertions.assertThatThrownBy(

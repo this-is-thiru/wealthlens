@@ -1,0 +1,12 @@
+{
+  "code": "SALARY_NET",
+  "_note": "The forms' own difference; s.89A relief is not computed, so ITR-2's 3a takes nothing from it. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Net salary",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "SALARY_GROSS",
+      "-SALARY_EXEMPT_U10"
+    ]
+  }
+}

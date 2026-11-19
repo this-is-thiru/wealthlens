@@ -1,0 +1,97 @@
+## G1 1
+entity/model/YearlyChargeSummary.java:42: return (monthly.getMonth().getValue() - Month.APRIL.getValue() + 12) % 12;
+## G2 24
+dto/context/ChargeComputation.java:25: return new ChargeComputation(null, null, null, resolution, List.of(), 0.0);
+dto/context/ChargeContext.java:61: return 0.0;
+dto/context/ChargeContext.java:63: return baseAmounts.getOrDefault(basis, 0.0);
+entity/model/ChargeSummaryReport.java:70: amountByCode.put(code, TMoney.add(amountByCode.getOrDefault(code, 0.0), increment));
+service/ChargeReconciliationService.java:81: totalComputed = totalComputed.add(BigDecimal.valueOf(computation.getTotalCharges()));
+service/ChargeReconciliationService.java:82: totalEntered = totalEntered.add(BigDecimal.valueOf(transaction.getBrokerCharges()));
+service/ChargeReconciliationService.java:113: delta = scaled(BigDecimal.valueOf(computation.getTotalCharges())
+service/ChargeReconciliationService.java:114: .subtract(BigDecimal.valueOf(transaction.getBrokerCharges())));
+service/ChargeSimulationService.java:115: accounted = accounted.add(BigDecimal.valueOf(lot.quantity()));
+service/ChargeSimulationService.java:120: BigDecimal declared = BigDecimal.valueOf(request.getQuantity());
+service/ChargeDeductibilityService.java:40: return 0.0;
+service/AmcChargeService.java:144: Map.of(AmountBasis.TURNOVER, 0.0),
+engine/ChargeEngine.java:303: BigDecimal flat = BigDecimal.valueOf(rule.getFlatAmount());
+engine/ChargeEngine.java:307: amount = amount.max(BigDecimal.valueOf(rule.getMinAmount()));
+engine/ChargeEngine.java:310: amount = amount.min(BigDecimal.valueOf(rule.getMaxAmount()));
+engine/ChargeEngine.java:333: return BigDecimal.valueOf(context.amount(rule.effectiveAmountBasis()));
+engine/ChargeFormulaEvaluator.java:183: return getOrDefault(key, 0.0);
+engine/ChargeAmounts.java:22: return value == null ? BigDecimal.ZERO : BigDecimal.valueOf(value);
+engine/ChargeAccumulator.java:47: .map(line -> BigDecimal.valueOf(line.getAmount()))
+engine/ChargeAccumulator.java:61: .map(line -> BigDecimal.valueOf(line.getAmount()))
+engine/SlabChargeCalculator.java:62: BigDecimal base = BigDecimal.valueOf(context.amount(rule.effectiveAmountBasis()));
+engine/SlabChargeCalculator.java:84: return value instanceof Number number ? number.doubleValue() : 0.0;
+engine/TurnoverChargeCalculator.java:36: BigDecimal base = requireNonNegative(rule, "base amount", BigDecimal.valueOf(context.amount(basis)));
+engine/PerUnitChargeCalculator.java:30: return perUnit.multiply(BigDecimal.valueOf(context.quantity()));
+## G4 20
+service/ChargeScheduleValidator.java:165: switch (rule.getBasis()) {
+service/ChargeScheduleValidator.java:166: case TURNOVER, DERIVED -> requirePresent(rule, rule.getRate(), "rate", errors);
+service/ChargeScheduleValidator.java:167: case FLAT, SCOPED_FLAT -> requirePresent(rule, rule.getFlatAmount(), "flat amount", errors);
+service/ChargeScheduleValidator.java:168: case PER_UNIT -> requirePresent(rule, rule.getPerUnitAmount(), "per unit amount", errors);
+service/ChargeScheduleValidator.java:169: case SLAB -> requireBands(rule, errors);
+service/ChargeScheduleValidator.java:170: case FORMULA -> requireFormula(rule, errors);
+service/ChargeRecordingGatewayImpl.java:96: return switch (transactionType) {
+service/ChargeRecordingGatewayImpl.java:97: case BUY -> ChargeEvent.BUY;
+service/ChargeRecordingGatewayImpl.java:98: case SELL -> ChargeEvent.SELL;
+engine/ScopedFlatChargeCalculator.java:60: return switch (scope) {
+engine/ScopedFlatChargeCalculator.java:61: case NONE -> false;
+engine/ScopedFlatChargeCalculator.java:62: case PER_SCRIP_PER_DAY -> userChargeRepository.existsChargeForScripOnDate(
+engine/ScopedFlatChargeCalculator.java:65: case PER_DAY -> userChargeRepository.existsChargeForDay(
+engine/ScopedFlatChargeCalculator.java:68: case PER_ORDER -> perOrder(rule, context);
+engine/ChargeRounding.java:42: return switch (effective) {
+engine/ChargeRounding.java:43: case NONE -> amount;
+engine/SlabChargeCalculator.java:74: return switch (rule.effectiveSlabBandBasis()) {
+engine/SlabChargeCalculator.java:75: case TURNOVER -> context.amount(com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis.TURNOVER);
+engine/SlabChargeCalculator.java:76: case QUANTITY -> context.quantity();
+engine/SlabChargeCalculator.java:77: case HOLDING_DAYS -> holdingDays(context);
+## G5 13
+service/UserChargeService.java:124: return Map.of();
+service/ChargeScheduleValidator.java:307: Set<String> names = new LinkedHashSet<>(Set.of(
+service/ChargeSimulationService.java:13: import java.util.EnumMap;
+service/ChargeSimulationService.java:168: return new EnumMap<>(request.getBaseAmounts());
+service/ChargeSimulationService.java:171: Map<AmountBasis, Double> derived = new EnumMap<>(AmountBasis.class);
+service/AmcChargeService.java:144: Map.of(AmountBasis.TURNOVER, 0.0),
+service/AmcChargeService.java:146: Map.of());
+service/ChargeRecordingGatewayImpl.java:14: import java.util.EnumMap;
+service/ChargeRecordingGatewayImpl.java:126: Map<AmountBasis, Double> baseAmounts = new EnumMap<>(AmountBasis.class);
+engine/ChargeCalculatorRegistry.java:5: import java.util.EnumMap;
+engine/ChargeCalculatorRegistry.java:25: private final Map<ChargeBasis, ChargeCalculator> byBasis = new EnumMap<>(ChargeBasis.class);
+engine/ChargeEngine.java:21: import java.util.EnumMap;
+engine/ChargeEngine.java:345: Map<AmountBasis, Double> baseAmounts = new EnumMap<>(AmountBasis.class);
+## G6 7
+service/ChargeScheduleValidator.java:262: if (rule.getBasis() != ChargeBasis.DERIVED) {
+service/AmcChargeService.java:94: if (computation.resolution() != ChargeResolution.RESOLVED) {
+engine/ChargeEngine.java:224: if (sourced.source() == ChargeRuleSource.INSTRUMENT && existing.source() != ChargeRuleSource.INSTRUMENT) {
+engine/ChargeEngine.java:244: if (side == null || side == ChargeSide.BOTH) {
+engine/ChargeEngine.java:304: amount = rule.getAggregator() == AggregatorType.MIN ? amount.min(flat) : amount.max(flat);
+engine/ChargeEngine.java:330: if (rule.getBasis() == ChargeBasis.DERIVED) {
+engine/ScopedFlatChargeCalculator.java:52: if (scope == null || scope == DedupeScope.NONE) {
+## G7 26
+dto/response/ChargeScheduleDrift.java:26: static final String ABSENT = "absent from the database";
+dto/enums/ChargeResolution.java:64: public static final List<ChargeResolution> UNRESOLVED =
+entity/model/ChargeSummaryReport.java:32: private static final int PAISE_SCALE = 2;
+service/ChargeEngineSwitch.java:24: private static final String DISABLED =
+service/ChargeSeederService.java:69: private static final String CATALOGUE = "classpath:data/charges/charge-catalogue.json";
+service/ChargeSeederService.java:70: private static final String SCHEDULES = "classpath*:data/charges/*.json";
+service/ChargeSeederService.java:71: private static final String INSTRUMENTS = "classpath*:data/charges/instruments/*.json";
+service/ChargeSeederService.java:72: private static final String CATALOGUE_FILE = "charge-catalogue.json";
+service/ChargeSeederService.java:75: private static final List<String> DATABASE_OWNED = List.of("id", "auditMetadata");
+service/ChargeScheduleValidator.java:58: private static final Set<String> VOCABULARY = vocabulary();
+service/ChargeCodes.java:26: private static final Pattern VALID = Pattern.compile("^[A-Z][A-Z0-9_]*$");
+service/ChargeReconciliationService.java:47: private static final int PAISE_SCALE = 2;
+service/ChargeScheduleService.java:54: private static final int VERIFICATION_MAX_AGE_DAYS = 90;
+service/ChargeSimulationService.java:54: private static final BigDecimal LOT_QUANTITY_TOLERANCE = new BigDecimal("0.0001");
+service/ChargeRecordingGatewayImpl.java:52: private static final int CASH_SEGMENT_LOT_SIZE = 1;
+engine/ChargeEngine.java:57: private static final Comparator<SourcedRule> EVALUATION_ORDER = Comparator
+engine/ChargeFormulaEvaluator.java:39: private static final Pattern VARIABLE = Pattern.compile("#([A-Za-z_][A-Za-z0-9_]*)");
+engine/DerivedChargeCalculator.java:29: private static final int PERCENT = 2;
+engine/ChargeRounding.java:25: private static final int PAISE_SCALE = 2;
+engine/ChargeRounding.java:26: private static final int RUPEE_SCALE = 0;
+engine/SlabChargeCalculator.java:30: private static final int PERCENT = 2;
+engine/TurnoverChargeCalculator.java:25: private static final int PERCENT = 2;
+engine/ChargeScheduleResolver.java:49: private static final int PLAN_CODE_WEIGHT = 8;
+engine/ChargeScheduleResolver.java:50: private static final int EXCHANGE_WEIGHT = 4;
+engine/ChargeScheduleResolver.java:51: private static final int SEGMENT_WEIGHT = 2;
+engine/ChargeScheduleResolver.java:52: private static final int ASSET_TYPE_WEIGHT = 1;

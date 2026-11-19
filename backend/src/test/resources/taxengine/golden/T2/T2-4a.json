@@ -1,0 +1,14 @@
+{
+  "id": "T2-4a",
+  "source": "DR 08 T2-4 — The regime divergence at ₹5,00,00,000 — **the \"no 37% band\" test** (OLD REGIME)",
+  "_source": "**Expected: ₹1,92,56,250 (old) and ₹1,89,54,000 (new).** Status `VERIFIED`.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "50000000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "19256250"
+  }
+}

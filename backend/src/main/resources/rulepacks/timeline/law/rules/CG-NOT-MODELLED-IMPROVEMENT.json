@@ -1,0 +1,113 @@
+{
+  "ruleId": "CG-NOT-MODELLED-IMPROVEMENT",
+  "ruleSet": "RS-CG-NOT-MODELLED",
+  "ruleSetPosition": 2,
+  "_note": "A land or building sale is computed on the cost of acquisition alone, while 2025 s.72(1)(b) with s.90(1)(b) / 1961 s.48 with s.55(1)(b) also deduct the cost of any improvement — which can only lower the tax. Not built (W-088g7): no improvement is recorded. The law reaches any capital asset; the row is scoped to land or building, the kind W-088g7 builds, because a share has no improvement. An ATTENTION notice on the bucket's term line (W-088g4, D-432); building W-088g7 deletes the row. It cites the definitions (s.90(1)(b); s.55(1)(b)(2)) rather than the deducting sections, which are MODELLED for the cost of acquisition and so may not be named by a row that models nothing (CoverageCitationTest). Sources: docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 2, 3, 9.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.55(1)(b)(2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.90(1)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "NotModelledProvision",
+        "subject": "the cost of any improvement, deducted with the cost of acquisition",
+        "effect": "MAY_LOWER"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2017 (7 of 2017), s.28 — Income-tax Act, 1961 s.55(1)(b)(2): \"1st day of April, 2001\" substituted for \"1st day of April, 1981\", applicable from 1-4-2018 (thc copy, footnote 11 to s.55)",
+        "gazetteRef": "Act 7 of 2017: Gazette of India, Extraordinary, Part II, Section 1, No. 7, 31-3-2017 (egazette 2017/175141), as the repo records it for OS-GIFT-IMMOVABLE; the amending page is not re-read here",
+        "notifiedOn": "2017-03-31",
+        "effectiveFrom": "2018-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.55(1)(b)(2)(i), p.299; Finance Act, 2023 s.31 amends s.55(1)(b)(1) only (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md row 9 and the search)",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.55(1)(b)(2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.90(1)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "NotModelledProvision",
+        "subject": "the cost of any improvement, deducted with the cost of acquisition",
+        "effect": "MAY_LOWER"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.72(1)(b), s.90(1)(b) — the cost of any improvement",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.72(1)(b), p.117; s.90(1)(b), p.134 (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 2–3)",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.72(1)(b), p.117; s.90(1)(b), p.134 (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 2–3)",
+    "accessedOn": "2026-11-01",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

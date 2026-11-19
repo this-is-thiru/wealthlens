@@ -1,0 +1,16 @@
+{
+  "code": "START_UP_SHARE_TAX_DEFERRED",
+  "_note": "r.164(3)(m): \"in whose case payment or deduction of tax has been deferred under section 391(2) or section 392(3)\"; (6)(n): \"income of the nature specified in section 17(1)(d) on which tax is payable or deductible under section 391(2) or section 392(3)\" — one fact, worded twice. s.391(2), s.392(3): tax on s.17(1)(d) income (specified security or sweat equity share) from an eligible start-up (s.140) is paid or deducted within the time in s.289(3). The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (VIII), \"sub-section (2) of section 191 or sub-section (1C) of section 192\" (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
+  "question": "Is the tax on shares or securities allotted to you by your employer, an eligible start-up, deferred?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(m), p.1663; r.164(6)(n), p.1663; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.391(2) and s.392(3), p.396, reading s.17(1)(d); egazette 2021/226336, Income-tax (7th Amendment) Rules, 2021, G.S.R. 242(E), Income-tax Rules, 1962 r.12(1)(a) proviso (VIII), p.219",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

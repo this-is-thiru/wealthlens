@@ -1,0 +1,9 @@
+{
+  "code": "SALARY_GROSS_PER_EMPLOYER",
+  "_note": "ITR-2 S.1 repeats per employer; the engine computes totals only. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Gross salary from one employer",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Per employer: the computation holds the total of all employers, shown as total gross salary"
+  }
+}

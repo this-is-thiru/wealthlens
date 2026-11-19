@@ -1,0 +1,12 @@
+{
+  "code": "HP_B_PLUS_C",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Total (1b + 1c)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "HP_UNREALISED",
+      "HP_LOCAL_TAXES"
+    ]
+  }
+}

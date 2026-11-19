@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4). s.516 covers both amounts in one sentence; the 1961 Act splits them into ss.288A and 288B, so there is one entry per amount (SC-1 counts the sections an entry's provisions cite).",
+  "_sources": "provisions: 1961 s.199 / 2025 s.390 (coverage MODELLED by CREDIT-TAX-PAID, D-436); sources/2026-11-01-tax-credits.md",
+  "key": "SEC-CREDIT-TAX-AT-SOURCE",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.199",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.390",
+    "presence": "PRESENT"
+  },
+  "plainName": "Credit for tax deducted or collected at source",
+  "summary": "Tax deducted or collected at source and paid to the Government counts as tax paid on behalf of the person it was deducted from.",
+  "routes": [
+    {
+      "name": "Credit for tax deducted or collected at source",
+      "description": "Tax deducted or collected at source and paid to the Government counts as tax paid on behalf of the person it was deducted from.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "CREDIT-TAX-PAID"
+        }
+      ]
+    }
+  ]
+}

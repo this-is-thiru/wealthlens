@@ -1,0 +1,13 @@
+{
+  "code": "TAX_REBATE_87A",
+  "_note": "The rebate rows of the year's regimes. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Rebate under section 87A",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "REBATE-RESIDENT-INDIVIDUAL",
+      "REBATE-NEW-TAX-REGIME",
+      "REBATE-NEW-TAX-REGIME-EXCESS"
+    ]
+  }
+}

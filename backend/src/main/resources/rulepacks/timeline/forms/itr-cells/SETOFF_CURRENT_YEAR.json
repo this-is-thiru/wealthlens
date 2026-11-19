@@ -1,0 +1,13 @@
+{
+  "code": "SETOFF_CURRENT_YEAR",
+  "_note": "The SET_OFF lines of SETOFF-ACROSS-HEADS, SETOFF-HOUSE-PROPERTY: the loss taken against the other heads; a house-property loss is set off under SETOFF-HOUSE-PROPERTY, any other under SETOFF-ACROSS-HEADS. Only SET_OFF lines: each row also writes a MEASURE line for the amount allowed or left, so adding every line counted the set-off twice (found by W-093a's loss persona, D-658; corrects D-655). Drafted by Claude, adopted by the owner's rulings (W-092).",
+  "label": "Losses of current year set off",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "SETOFF-ACROSS-HEADS",
+      "SETOFF-HOUSE-PROPERTY"
+    ],
+    "kind": "SET_OFF"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "code": "OS_DEDUCTION_DIVIDEND_INTEREST",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest expenditure on dividend u/s 57(i)",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "OS-DIVIDEND-INTEREST"
+    ]
+  }
+}

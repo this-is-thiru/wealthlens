@@ -6,11 +6,17 @@ import com.thiru.wealthlens.auth.dto.LoginResponse;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
+import com.thiru.wealthlens.shared.privacy.HeldAccounts;
+import com.thiru.wealthlens.shared.privacy.PrivacyConsents;
+import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,45 +40,35 @@ public class AuthService {
     private final UserDetailsRepository userDetailsRepo;
     private final PasswordEncoder passwordEncoder;
     private final SecurityConfig securityConfig;
+    private final HeldAccounts heldAccounts;
+    private final RegisteredUserDirectory signIns;
+    private final PrivacyConsents privacyConsents;
+    private final Clock clock;
 
     public String addUser(RegistrationRequest request) {
 
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(request.getEmail());
+        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findByEmail(request.getEmail());
         if (optionalUserDetails.isPresent()) {
             throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists");
         }
+        // The login is erased last; until the erasure is recorded done, the email is not free (W-237d).
+        if (heldAccounts.contains(request.getEmail())) {
+            throw new IllegalArgumentException("The account " + request.getEmail() + " is being erased");
+        }
+        privacyConsents.requireCurrent(request.getPrivacyNoticeVersion());
 
         UserDetail userEntity = new UserDetail();
         userEntity.setEmail(request.getEmail());
         userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
-        userEntity.setRoles(request.getRole().name());
+        // A role above USER is granted by the owner, never chosen at registration (W-255; runbook §0.1.3).
+        userEntity.setRoles(AuthHelper.Role.USER.name());
+        LocalDateTime registeredAt = nowUtc();
+        userEntity.setLastSignedInAt(registeredAt);
         userDetailsRepo.save(userEntity);
+        privacyConsents.recordConsent(request.getEmail(), request.getPrivacyNoticeVersion(), registeredAt);
         return "user with username " + request.getEmail() + " added to system ";
     }
 
-
-    /**
-     * This needs to be re-visited
-     * This method upgrades the role of a user in the system
-     *
-     * @param request The object containing the email and the role to be upgraded
-     * @return a success message
-     * @throws IllegalArgumentException if the user already exists
-     */
-    public String upgradeRole(RegistrationRequest request) {
-
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(request.getEmail());
-        if (optionalUserDetails.isPresent()) {
-            throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists");
-        }
-
-        UserDetail userEntity = new UserDetail();
-        userEntity.setEmail(request.getEmail());
-        userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
-        userEntity.setRoles(request.getRole().name());
-        userDetailsRepo.save(userEntity);
-        return "user with username " + request.getEmail() + " added to system";
-    }
 
     public Claims extractAllClaims(String authToken) {
         try {
@@ -114,7 +110,7 @@ public class AuthService {
             throw new IllegalArgumentException("Old password cannot be same as new password");
         }
 
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(email);
+        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findByEmail(email);
         if (optionalUserDetails.isEmpty()) {
             throw new UsernameNotFoundException("User with email " + email + " not found");
         }
@@ -128,11 +124,22 @@ public class AuthService {
         return email + "'s password changed successfully";
     }
 
+    /**
+     * Called only after a successful sign-in, which is what keeps the account's purpose served (W-249), and which gives an
+     * account registered before W-250 the notice it was never shown (Act s.5(2)(a)).
+     */
     public LoginResponse generateToken(String username, Authentication authentication) {
-        return createToken(username, authentication);
+        LocalDateTime signedInAt = nowUtc();
+        signIns.recordSignIn(username, signedInAt);
+        String noticeVersion = privacyConsents.recordNotice(username, signedInAt);
+        return createToken(username, authentication, noticeVersion);
     }
 
-    private LoginResponse createToken(String username, Authentication authentication) {
+    private LocalDateTime nowUtc() {
+        return LocalDateTime.now(clock.withZone(ZoneOffset.UTC));
+    }
+
+    private LoginResponse createToken(String username, Authentication authentication, String noticeVersion) {
         int expirationTime = 60 * 30;
         Map<String, Object> claims = new HashMap<>();
         AuthHelper.setRoles(claims, authentication.getAuthorities());
@@ -146,7 +153,7 @@ public class AuthService {
                 .signWith(getSignInKey())
                 .compact();
 
-        return LoginResponse.from(token, expirationTime);
+        return LoginResponse.from(token, expirationTime, PrivacyNotice.PAGE, noticeVersion);
     }
 
     private SecretKey getSignInKey() {

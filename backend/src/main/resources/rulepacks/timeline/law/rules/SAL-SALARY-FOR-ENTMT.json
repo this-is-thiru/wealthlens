@@ -1,0 +1,56 @@
+{
+  "ruleId": "SAL-SALARY-FOR-ENTMT",
+  "ruleSet": "RS-SAL-SALARY-FOR-ENTMT",
+  "_note": "The salary the entertainment allowance deduction is measured against, TY 2025-26 only (D-105): Income-tax Act, 1961 s.16(ii) (thc.nic.in p.140), \"his salary (exclusive of any allowance, benefit or other perquisite)\". Dearness allowance is an allowance, so it is not in it, whatever the terms of employment say — unlike the HRA and gratuity bases. Which pay lines count is each component's salaryBaseFor: BASIC outright; bonus and commission are left out pending OQ-5. The Income-tax Act, 2025 has no counterpart (SAL-ENTMT-ALLOWANCE).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(ii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "presence": "ABSENT_IN_THIS_ACT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), computed without the deduction under s.16(ii) (s.115BAC(2)(i))",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.16(ii), p.140 (footnote 3: Act 14 of 2001 s.12, w.e.f. 1-4-2002); Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52 (s.115BAC(2)(i)), p.34; Income-tax Act, 1961 s.16(ii): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+    "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.16(ii), p.140; Income-tax Act, 1961 s.16(ii): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md",
+    "accessedOn": "2026-10-10",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

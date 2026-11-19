@@ -1,0 +1,16 @@
+{
+  "code": "NET_AGRICULTURAL_INCOME",
+  "_note": "Net agricultural income, which the Finance Act brings into the rates (partial integration; W-258, C2a): FA 2026 s.2(2)(a) (TY 2025-26, p.2), \"any net agricultural income exceeding five thousand rupees, in addition to the total income\", and s.3(2)(a) (TY 2026-27, p.9), \"any agricultural net income exceeding ₹ 5000\" — the limit is the RS-RATE-AGRICULTURAL rows'. \"Net agricultural income\" is \"the total amount of agricultural income, from whatever source derived, of that person computed in accordance with the rules contained in Part IV-A [IV-B] of the First Schedule\" (s.2(7)(b), p.9; s.3(18)(c), p.29; Part IV-A p.101, Part IV-B p.104): the person computes it, as ITR-2 Schedule EI 2(iv) asks (\"Gross Agricultural receipts\" less \"Expenditure incurred on agriculture\" less \"Unabsorbed agricultural loss of previous eight assessment years\", \"enter nil if loss\"; Gazette CG-DL-E-30032026-271435). A separate question from AGRICULTURAL_INCOME, which r.164's bar reads (\"agricultural income\", not net). The wording is drafted by Claude and adopted by the owner (W-258 C2a, session 107). Valid for TY 2025-26 and TY 2026-27, as AGRICULTURAL_INCOME (D-748 scope).",
+  "question": "What was your net agricultural income for the tax year — gross agricultural receipts less agricultural expenditure and unabsorbed agricultural losses of the previous eight years, nil if a loss?",
+  "answerKind": "AMOUNT",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+    "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.2(2)(a), p.2; s.2(7)(b), p.9; s.3(2)(a), p.9; s.3(18)(c), p.29; Gazette CG-DL-E-30032026-271435, Income-tax (Third Amendment) Rules, 2026, G.S.R. 227(E), FORM ITR-2 Schedule EI item 2",
+    "accessedOn": "2026-11-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

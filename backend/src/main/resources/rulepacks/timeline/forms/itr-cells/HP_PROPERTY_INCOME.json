@@ -1,0 +1,9 @@
+{
+  "code": "HP_PROPERTY_INCOME",
+  "_note": "The properties' 1k add up to HP.3. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Income from house property (1f – 1i + 1j)",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "income"
+  }
+}

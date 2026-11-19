@@ -6,12 +6,15 @@ import com.thiru.wealthlens.insurance.dto.enums.PolicyType;
 import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -27,11 +30,13 @@ public class InsuranceEntity implements AuditableEntity {
 	private String id;
 
 	@Field("email")
+	@ValueConverter(SearchableIdentifier.class)
 	private String email;
 	@Field("port_from")
 	private String portFrom;
 	@Field("port_to")
 	private String portTo;
+	@ValueConverter(EncryptedField.class)
 	@Field("insurance_id")
 	private String insuranceId;
 	@Field("insurance_type")
@@ -52,16 +57,21 @@ public class InsuranceEntity implements AuditableEntity {
 	private String maturityAmount;
 	@Field("broker")
 	private String broker;
+	@ValueConverter(EncryptedField.class)
 	@Field("agent_name")
 	private String agentName;
+	@ValueConverter(EncryptedField.class)
 	@Field("agent_email")
 	private String agentEmail;
+	@ValueConverter(EncryptedField.class)
 	@Field("agent_contact")
 	private String agentContact;
+	@ValueConverter(EncryptedField.class)
 	@Field("agent_address")
 	private String agentAddress;
 	@Field("insurance_status")
 	private String insuranceStatus;
+	@ValueConverter(EncryptedField.class)
 	@Field("notes")
 	private String notes;
 

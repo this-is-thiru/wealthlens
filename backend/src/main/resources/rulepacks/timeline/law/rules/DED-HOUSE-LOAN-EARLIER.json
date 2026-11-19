@@ -1,0 +1,121 @@
+{
+  "ruleId": "DED-HOUSE-LOAN-EARLIER",
+  "ruleSet": "RS-DED-HOUSE-LOAN-EARLIER",
+  "_note": "Interest on a loan for a first house: an individual, \"interest payable on loan taken by him from any financial institution for the purpose of acquisition of a residential house property\" (s.130(1), p.165), \"shall not exceed ₹ 50000\" (s.130(2)); \"(a) the loan has been sanctioned by the financial institution during the period beginning on the 1st April, 2016 and ending on the 31st March, 2017; (b) the amount of loan sanctioned … does not exceed thirty-five lakh rupees; (c) the value of residential house property does not exceed fifty lakh rupees; and (d) the assessee does not own any residential house property on the date of sanction of loan\" (s.130(3), p.166) — \"value\" is undefined, entered as the house's value. ChapterEightNode tries this before DED-HOUSE-LOAN (s.131(1)). The same interest is not deductible under any other provision for the same or any other tax year (s.130(4)) — house-property interest under s.22(1)(b) must leave it out (W-078). rulebook DED-80EE-001, DED-80EX-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80EE, is the TY 2025-26 version (W-075d4). D-139. TY 2025-26: Income-tax Act, 1961 s.80EE (thc p.347): interest payable on a loan from a financial institution for acquiring a residential property, \"(2) … shall not exceed fifty thousand rupees\"; (3)(i) sanctioned \"during the period beginning on the 1st day of April, 2016 and ending on the 31st day of March, 2017\", (ii) loan not exceeding \"thirty-five lakh rupees\", (iii) value not exceeding \"fifty lakh rupees\", (iv) no residential house property owned on the date of sanction; (4) no deduction of the same interest elsewhere — the same row. sources/2026-10-07-chapter-via.md B17. D-147. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches a loan by its purpose (loan.purpose), as its quoted words say (W-156d, D-349).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80EE; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.130",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SanctionedLoanLimit",
+        "limit": "50000",
+        "sanctionedFrom": "2016-04-01",
+        "sanctionedTo": "2017-03-31",
+        "maxAmountSanctioned": "3500000",
+        "maxPropertyValue": "5000000",
+        "requiresNoHouseOwned": true
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "loan.purpose",
+          "code": "RESIDENTIAL_HOUSE"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80EE — subs. by Act 28 of 2016, s.38 (w.e.f. 1-4-2017)",
+        "gazetteRef": "Act 28 of 2016: Gazette of India, Extraordinary, Part II, Section 1, No. 32, 14-5-2016 (egazette 2016/169739), p.19",
+        "notifiedOn": "2016-05-14",
+        "effectiveFrom": "2017-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2016/169739.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80EE, p.347",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80EE after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md; none amends s.80EE) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80EE; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.130",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SanctionedLoanLimit",
+        "limit": "50000",
+        "sanctionedFrom": "2016-04-01",
+        "sanctionedTo": "2017-03-31",
+        "maxAmountSanctioned": "3500000",
+        "maxPropertyValue": "5000000",
+        "requiresNoHouseOwned": true
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "loan.purpose",
+          "code": "RESIDENTIAL_HOUSE"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.130",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.130, pp.165–166",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.130, pp.165–166",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

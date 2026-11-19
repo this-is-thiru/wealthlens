@@ -1,0 +1,11 @@
+{
+  "code": "TAXES_PAID",
+  "_note": "Advance tax, self-assessment tax and tax at source credited. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Total taxes paid",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "credits"
+    ]
+  }
+}

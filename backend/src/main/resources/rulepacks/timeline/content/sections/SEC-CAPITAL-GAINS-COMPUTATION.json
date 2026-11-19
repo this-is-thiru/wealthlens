@@ -1,0 +1,57 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-375). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.48 / 2025 s.72 (coverage MODELLED for the charges on a disposal only, W-162a, D-375). summary: S2 s.72(1)(a), (b), (3)(b) (Gazette 265620 p.117); 1961 s.48(i), (ii) and the securities-transaction-tax proviso (thc p.272; Finance Act, 1992 s.24; Finance (No. 2) Act, 2004 s.12). routes[0]: CG-CHARGE-COST; routes[1]: CG-CHARGE-TRANSFER — which contract-note charges are which, the owner's ruling D-375 C2a. disqualifiers[0]: CG-CHARGE-STT (statute). disqualifiers[1]: CG-CHARGE-MISC, a product choice (D-375 C4a). Not modelled: indexation, cost by mode of acquisition, the non-resident rules, the interest bar (docs/taxplanning-build/sources/2026-10-27-capital-gains-computation.md).",
+  "key": "SEC-CAPITAL-GAINS-COMPUTATION",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.48",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.72",
+    "presence": "PRESENT"
+  },
+  "plainName": "Working out a capital gain",
+  "summary": "A capital gain is what the asset sold for, less what it cost and less what was spent wholly and only on selling it. Charges paid when buying count as part of the cost, and charges paid when selling as an expense of the sale; securities transaction tax is never deducted.",
+  "routes": [
+    {
+      "name": "Charges on the purchase",
+      "description": "Brokerage, exchange and regulator fees, stamp duty, depository charges and the tax on them, paid when buying, are added to the cost.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "CG-CHARGE-COST"
+        }
+      ]
+    },
+    {
+      "name": "Charges on the sale",
+      "description": "The same charges paid when selling, and a fund's exit load, are deducted as expenses of the sale.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "CG-CHARGE-TRANSFER"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Securities transaction tax is not deducted, whether paid on the purchase or on the sale.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "CG-CHARGE-STT"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A charge entered by hand, without saying what it was for, is not deducted, since nothing shows it was spent on the purchase or the sale.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "CG-CHARGE-MISC"
+      }
+    }
+  ]
+}

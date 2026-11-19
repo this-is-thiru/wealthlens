@@ -1,0 +1,112 @@
+{
+  "ruleId": "CG-SPECULATIVE",
+  "ruleSet": "RS-CG-NOT-COMPUTED",
+  "_note": "Equity sold intraday is outside the capital-gains head: a speculative transaction, business income, which this engine does not compute, so a bucket it reaches is refused (W-160a, D-363). TY 2026-27: Income-tax Act, 2025 s.66(31), \"“speculative transaction” means a transaction in which a contract for the purchase or sale of any commodity, including stocks and shares, is periodically or ultimately settled otherwise than by the actual delivery or transfer of the commodity or scrips\" (p.103), for Part D of Chapter IV (profits and gains of business). TY 2025-26: Income-tax Act, 1961 s.43(5), the same words (thc p.236), unamended in that part to AY 2026-27. Reached by capitalgains.asset = EQUITY and trade.transfer.segment = INTRADAY, the reach portfolio's TradeClassifier gave intraday (W-160a C3a). Conditions only. Every regime. Sources: docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md S1, S3.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.43(5)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.66(31)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "EQUITY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "trade.transfer.segment",
+          "code": "INTRADAY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.21 — Income-tax Act, 1961 s.43(5): \"recognised stock exchange\" for \"recognised association\" in proviso (e), and Explanation 2 clause (iii) substituted, w.e.f. 1-4-2020; proviso (d) ins. by Act 18 of 2005, s.14 (w.e.f. 1-4-2006), as the thc copy's footnote states",
+        "gazetteRef": "CG-DL-E-27032020-218938",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2020-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.43(5) and its provisos and Explanation 1, pp.236–237; the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 searched for s.43 — only the Finance Act, 2020 s.21 touches clause (5), proviso (e) and Explanation 2 (Gazette CG-DL-E-27032020-218938, p.23) (docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md)",
+        "accessedOn": "2026-10-24",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.43(5)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.66(31)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "EQUITY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "trade.transfer.segment",
+          "code": "INTRADAY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.66(31)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.66(31), (33), pp.102–103 (docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md)",
+        "accessedOn": "2026-10-24",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.66(31), (33), pp.102–103 (docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md)",
+    "accessedOn": "2026-10-24",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

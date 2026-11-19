@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.portfolio.config;
 
-import com.thiru.wealthlens.portfolio.entity.HoldingPeriodPolicyEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -31,7 +30,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PortfolioIndexInitializer {
 
-    private static final List<Class<?>> PORTFOLIO_ENTITIES = List.of(ProfitAndLossEntity.class, TradeOutcomeEntity.class, HoldingPeriodPolicyEntity.class,
+    private static final List<Class<?>> PORTFOLIO_ENTITIES = List.of(ProfitAndLossEntity.class, TradeOutcomeEntity.class,
                     TransactionEntity.class);
 
     private final MongoTemplate mongoTemplate;

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 class TJsonMapperTest {
 
@@ -34,5 +35,53 @@ class TJsonMapperTest {
         Assertions.assertEquals(student1.name(), student.name());
         Assertions.assertEquals(student1.dob(), student.dob());
         Assertions.assertEquals(student1.createdDate(), student.createdDate());
+    }
+
+    @Test
+    void readAsList_whenContentIsEmpty_throws() {
+        // Given
+        String content = "";
+
+        // When / Then
+        Assertions.assertThrows(JacksonException.class, () -> TJsonMapper.readAsList(content, String.class));
+    }
+
+    @Test
+    void readAsList_whenSourceObjectIsNull_throws() {
+        // Given
+        Object source = null;
+
+        // When
+        NullPointerException refusal = Assertions.assertThrows(NullPointerException.class,
+                () -> TJsonMapper.readAsList(source, String.class));
+
+        // Then
+        Assertions.assertEquals("nothing to read: the source is null", refusal.getMessage());
+    }
+
+    @Test
+    void copy_whenSourceIsNull_throws() {
+        // Given
+        Student source = null;
+
+        // When
+        NullPointerException refusal = Assertions.assertThrows(NullPointerException.class,
+                () -> TJsonMapper.copy(source, Student.class));
+
+        // Then
+        Assertions.assertEquals("nothing to read: the source is null", refusal.getMessage());
+    }
+
+    @Test
+    void safeCopy_whenSourceIsNull_throws() {
+        // Given
+        Student source = null;
+
+        // When
+        NullPointerException refusal = Assertions.assertThrows(NullPointerException.class,
+                () -> TJsonMapper.safeCopy(source, Student.class));
+
+        // Then
+        Assertions.assertEquals("nothing to read: the source is null", refusal.getMessage());
     }
 }

@@ -1,0 +1,11 @@
+{
+  "code": "CG_B3_LTCG",
+  "_note": "s.54F is not computed. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Long-term capital gains on sale of capital assets at B3",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_B3_LTCG_112A"
+    ]
+  }
+}

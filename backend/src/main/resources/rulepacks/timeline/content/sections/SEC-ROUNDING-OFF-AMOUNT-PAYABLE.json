@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4). s.516 covers both amounts in one sentence; the 1961 Act splits them into ss.288A and 288B, so there is one entry per amount (SC-1 counts the sections an entry's provisions cite).",
+  "_sources": "provisions: RATE-ROUND-PAYABLE.json (1961 s.288B; 2025 s.516). summary: S2 s.516 (\"any amount payable or refundable\"); 1961 s.288B (\"Any amount payable, and the amount of refund due\"); 01-rulebook.md RATE-ROUND-003 (the final amount). routes[0]: RATE-ROUND-PAYABLE. A refund's rounding direction is ROUND-NEG-001, STATUS UNCLEAR, so the summary does not describe it. No disqualifiers: s.516 has no exception.",
+  "key": "SEC-ROUNDING-OFF-AMOUNT-PAYABLE",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.288B",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.516",
+    "presence": "PRESENT"
+  },
+  "plainName": "Rounding off the tax you pay or the refund you get",
+  "summary": "The final amount you pay, or the refund due to you, is rounded to the nearest multiple of {{RATE-ROUND-PAYABLE.toNearest}} rupees. Paise are dropped first, and then the amount goes up if its last figure is five or more and down otherwise. This is the last step of the computation.",
+  "routes": [
+    {
+      "name": "Always applied",
+      "description": "Nothing to claim or choose: the rounded figure is the amount payable or refundable.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-ROUND-PAYABLE"
+        }
+      ]
+    }
+  ]
+}

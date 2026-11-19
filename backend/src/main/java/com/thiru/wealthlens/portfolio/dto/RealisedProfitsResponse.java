@@ -2,7 +2,8 @@ package com.thiru.wealthlens.portfolio.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.Map;
@@ -12,8 +13,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class RealisedProfitsResponse {
-	private FinancialReportResponse shortTermCapitalGains;
-	private FinancialReportResponse longTermCapitalGains;
 
 	/**
 	 * What the charges engine computed for this period, keyed by charge code, with the months
@@ -36,15 +35,10 @@ public class RealisedProfitsResponse {
 	private YearlyChargeSummary yearlyChargeSummary;
 
 	/**
-	 * Every realised amount, partitioned by classification (D8).
-	 *
-	 * <p>Beside the pair above, not instead of it, so an existing caller sees exactly what it saw
-	 * before. Mapped by name through {@code TJsonMapper.safeCopy}, so the field name here must keep
-	 * matching {@code RealisedProfits.gainsByClassification}.
-	 *
-	 * <p><b>Not summable</b> — see {@code CapitalGainsType.countsAsCapitalGains()}.
+	 * Every realised amount, split by asset type and segment (D-366). Summable. Mapped by name, so the
+	 * field name must keep matching {@code RealisedProfits.gainsByAssetAndSegment}.
 	 */
-	private Map<CapitalGainsType, FinancialReportResponse> gainsByClassification = new EnumMap<>(CapitalGainsType.class);
+	private Map<AssetType, Map<TradeSegment, FinancialReportResponse>> gainsByAssetAndSegment = new EnumMap<>(AssetType.class);
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime lastUpdatedTime;

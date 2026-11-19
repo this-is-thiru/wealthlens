@@ -1,0 +1,168 @@
+{
+  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack, regime references renamed (NEW_TAX_REGIME -> SYN_DEFAULT, SYN_FLAT; FIRST_SCHEDULE_RATES -> SYN_CLASSIC); not law, never shipped. Original note: A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(y): \"contribution made by an individual to a pension scheme notified by the Central Government, to the extent of (i) 10% of salary, including dearness allowance, if the terms of employment so provide, but excluding all other allowances and perquisites, during the tax year in the case of an employee of the Central Government or any other employer; or (ii) 20% of gross total income during the tax year in the case of any other individual\" (Gazette 265620, p.563). D-130. DED-SCHEDULE-XV sub-caps it at limb (i); limb (ii) is not modelled (D-130); what s.123 does not allow feeds DED-NPS-OWN (s.124(3), (5), (10)). Withheld from pay or paid by the employee, SALARIES as DR 05 M2 names it. TY 2025-26: Income-tax Act, 1961 s.80CCD(1), (1B) (thc pp.338–339): paid \"in his account under a pension scheme notified … by the Central Government\" — s.80CCD(1) within ten per cent of salary for an employee, inside s.80CCE; what that leaves under (1B). sources/2026-10-07-chapter-via.md; D-144.",
+  "code": "EMPLOYEE_NPS",
+  "displayName": "Your own National Pension System contribution",
+  "head": "SALARIES",
+  "kind": "EMPLOYEE_CONTRIBUTION",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV",
+    "DED-NPS-OWN"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(y), p.563; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80CCD(1), (1B), pp.338–339",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  },
+  "liquidity": {
+    "terms": [
+      {
+        "event": "Exit at superannuation, government sector",
+        "terms": "At least 40% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum. Where the wealth is five lakh rupees or less, all of it may be withdrawn without an annuity.",
+        "validity": {
+          "from": "2025-04-01",
+          "to": "2025-12-14"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2015/164281.pdf",
+          "sourceDescription": "PFRDA (Exits and Withdrawals under the National Pension System) Regulations, 2015, Gazette Part III s.4 No. 159 of 11-05-2015 (egazette 2015/164281) reg. 3(a); proviso (v) as substituted by (Amendment) Regulations, 2021, CG-DL-E-14062021-227597 (VI)",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Exit before superannuation, government sector",
+        "terms": "At least 80% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum. Where the wealth is two lakh fifty thousand rupees or less, all of it may be withdrawn without an annuity.",
+        "validity": {
+          "from": "2025-04-01",
+          "to": "2025-12-14"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2015/164281.pdf",
+          "sourceDescription": "PFRDA (Exits and Withdrawals under the National Pension System) Regulations, 2015, Gazette Part III s.4 No. 159 of 11-05-2015 (egazette 2015/164281) reg. 3(b); provisos 2 and 3 as substituted by (Amendment) Regulations, 2021, CG-DL-E-14062021-227597",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Exit at sixty or on superannuation, non-government sector",
+        "terms": "At least 40% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum. Where the wealth is five lakh rupees or less, all of it may be withdrawn without an annuity.",
+        "validity": {
+          "from": "2025-04-01",
+          "to": "2025-12-14"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2021/227597.pdf",
+          "sourceDescription": "Reg. 4(a) as substituted by (Amendment) Regulations, 2021, CG-DL-E-14062021-227597",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Voluntary exit before sixty or superannuation, non-government sector",
+        "terms": "At least 80% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum. Where the wealth is two lakh fifty thousand rupees or less, all of it may be withdrawn without an annuity. A subscriber with no employer-employee relationship may exit so after at least five years in the system.",
+        "validity": {
+          "from": "2025-04-01",
+          "to": "2025-12-14"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2015/164281.pdf",
+          "sourceDescription": "PFRDA (Exits and Withdrawals under the National Pension System) Regulations, 2015, Gazette Part III s.4 No. 159 of 11-05-2015 (egazette 2015/164281) reg. 4(b), first para as amended by (Second Amendment) Regulations, 2021, CG-DL-E-29122021-232219 (XIV); provisos 1 and 2 as substituted by (Amendment) Regulations, 2021, CG-DL-E-14062021-227597",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Partial withdrawal",
+        "terms": "Not exceeding 25% of the contributions made by the subscriber, excluding the employer's, for the purposes in reg. 8(1)(A) (children's higher education or marriage, a house, specified illnesses and the others listed); after at least three years in the system; at most three times during the subscription.",
+        "validity": {
+          "from": "2025-04-01",
+          "to": "2025-12-14"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/178004.pdf",
+          "sourceDescription": "Reg. 8 as substituted by (First Amendment) Regulations, 2017, No. 315 of 10-08-2017 (egazette 2017/178004) (VI): 8(1), (B)(a), (B)(b) and (C)",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Exit at superannuation, government sector",
+        "terms": "The subscriber may stay in the system until eighty-five. At exit at least 40% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum or periodic payouts. Wealth of eight lakh rupees or less may all be withdrawn; above eight and up to twelve lakh, up to six lakh as a lump sum and the balance as systematic unit redemption over at least six years, an annuity or another approved option.",
+        "validity": {
+          "from": "2025-12-15"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/268548.pdf",
+          "sourceDescription": "Reg. 3(1)(a) as substituted by (Amendment) Regulations, 2025, Gazette No. 808 of 15-12-2025, CG-DL-E-16122025-268548, cl. 6",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Exit on resignation, dismissal or removal, government sector",
+        "terms": "At least 80% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum or periodic payouts. Where the wealth is five lakh rupees or less, all of it may be withdrawn.",
+        "validity": {
+          "from": "2025-12-15"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/268548.pdf",
+          "sourceDescription": "Reg. 3(1)(b) as substituted by (Amendment) Regulations, 2025, Gazette No. 808 of 15-12-2025, CG-DL-E-16122025-268548, cl. 6",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Exit after fifteen years, at sixty or on superannuation, non-government sector",
+        "terms": "The subscriber may stay in the system until eighty-five. At exit at least 20% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum or periodic payouts. Wealth of eight lakh rupees or less may all be withdrawn; above eight and up to twelve lakh, up to six lakh as a lump sum and the balance as systematic unit redemption over at least six years, an annuity or another approved option. A corporate subscriber of a body owned or controlled by a Government exits under reg. 3(1)(a) instead.",
+        "validity": {
+          "from": "2025-12-15"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/268548.pdf",
+          "sourceDescription": "Reg. 4(1)(a) as substituted by (Amendment) Regulations, 2025, Gazette No. 808 of 15-12-2025, CG-DL-E-16122025-268548, cl. 7",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Voluntary exit before then, non-government sector",
+        "terms": "At least 80% of the accumulated pension wealth buys an annuity; the balance is paid as a lump sum or periodic payouts. Where the wealth is five lakh rupees or less, all of it may be withdrawn.",
+        "validity": {
+          "from": "2025-12-15"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/268548.pdf",
+          "sourceDescription": "Reg. 4(1)(b) as substituted by (Amendment) Regulations, 2025, Gazette No. 808 of 15-12-2025, CG-DL-E-16122025-268548, cl. 7",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Partial withdrawal",
+        "terms": "Not exceeding 25% of the subscriber's own contributions, for the purposes in reg. 8(1)(A); after at least three years in the system; up to four times before sixty, superannuation or retirement, whichever is later, at least four years apart; after that, every three years, up to 25% of the contribution (the own contribution where there is more than one stream).",
+        "validity": {
+          "from": "2025-12-15"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/268548.pdf",
+          "sourceDescription": "Reg. 8(1) as amended by (Amendment) Regulations, 2025, Gazette No. 808 of 15-12-2025, CG-DL-E-16122025-268548, cl. 13 (a), (g); (B)(a) as substituted by (First Amendment) Regulations, 2017, No. 315 of 10-08-2017 (egazette 2017/178004) (VI)",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    ],
+    "unstated": []
+  }
+}

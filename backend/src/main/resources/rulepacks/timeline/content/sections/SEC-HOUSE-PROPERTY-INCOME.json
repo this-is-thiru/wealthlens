@@ -1,0 +1,39 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-160). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: HP-ANNUAL-VALUE (HP-CHARGE-001), 1961 s.22 / 2025 s.20. summary: S2 s.20(1), (2) (Gazette 265620 p.46); 1961 s.22 (thc p.146). routes[0]: HP-ANNUAL-VALUE. disqualifiers[0]: s.20 'other than such portions … as he may occupy for the purposes of any business or profession' — no input; the business head is DEFERRED (D-160 C2).",
+  "key": "SEC-HOUSE-PROPERTY-INCOME",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.22",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.20",
+    "presence": "PRESENT"
+  },
+  "plainName": "Income from house property",
+  "summary": "A building or land attached to it that you own is taxed under this head on its annual value, whether or not it earned rent. The part you occupy for your own business or profession is taxed with the business instead.",
+  "routes": [
+    {
+      "name": "A building or land you own",
+      "description": "Taxed on its annual value, as determined for the year.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-ANNUAL-VALUE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "The part of a building you occupy for your own business or profession is not taxed under this head.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Not built yet: it comes with the business head."
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "code": "OS_DEDUCTION_EXPENSES",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Expenses / Deductions other than on dividend interest",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "OS-BANKER-COMMISSION",
+      "OS-OTHER-EXPENDITURE",
+      "OS-COMPENSATION-INTEREST"
+    ]
+  }
+}

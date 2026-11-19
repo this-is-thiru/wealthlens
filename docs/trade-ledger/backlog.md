@@ -1,5 +1,7 @@
 # Trade ledger — backlog
 
+> **2026-11-11 (W-264a, D-535):** B-1, B-2, B-4 and B-9 are now fix rows W-282, W-284, W-283 and W-268 in `../taxplanning-build/03-WORK-ITEMS.md`; status per entry: `../taxplanning-build/reviews/2026-11-11-portfolio-gap-audit.md` §4. This file is no longer the list.
+
 Things found during TL-1..TL-7 that are real, are not blocking, and were deliberately not done.
 Each says what it is, why it was left, and what "done" would look like.
 
@@ -56,12 +58,14 @@ rows are rewritten. Harmless until something groups by the field.
 
 ## B-4 — `profit_and_loss` and `assets` cannot be rebuilt from `transactions`
 
+> **2026-11-12 (W-283, D-575):** `profit_and_loss` half done — `POST /portfolio/user/{email}/profit-and-loss/rebuild` (`SUPER_USER`, dry run by default) folds `trade_outcomes` and the buys' and sales' `user_charges` as recorded; runbook §2.11. `assets` is W-283a (D-576): designed in [`assets-rebuild.md`](assets-rebuild.md) (D-577), built by W-283a1, W-283a2 (read-only replay, D-582) and W-283a3 (the write, `dryRun=false`, D-586); runbook §2.12. B-4 is closed.
+
 `transactions` is the source of truth. `assets` (holdings) and `profit_and_loss` are derived from it,
 and there is no way to recompute either — so any correction to them is a careful manual edit against
 a nested document.
 
-`trade_outcomes` already has exactly this: drop the collection, restart, and
-`TradeOutcomeMigrationRunner` rebuilds it from raw transactions. That is why, of the three derived
+`trade_outcomes` already has exactly this: delete a user's rows and `POST /trade-outcomes/rebuild`
+recomputes them from raw transactions (W-088u8b, D-284; the startup runner it replaced is gone). That is why, of the three derived
 collections, it is the only one that is easy to correct.
 
 **Why it matters.** It surfaced writing the duplicate-remediation section of
@@ -82,6 +86,8 @@ expected to return nothing. It becomes urgent the first time they do not.
 ---
 
 ## B-9 — `TestController` mutates state without saving the lots
+
+> **2026-11-13 (W-311, D-659):** the route is gone — `TestController`, its body type and its test removed; the path answers 404. B-9 is closed.
 
 `POST /test/user/{email}/transact/sell` (authenticated — it is in `AuthConfig`'s list) takes
 `stockEntities` from the request body and calls the V2 sell helper, but never saves them.

@@ -17,6 +17,8 @@ public enum CorporateActionType {
 
     @JsonIgnore
     private static List<CorporateActionType> filterableCorporateActions() {
-        return List.of(BONUS, STOCK_SPLIT, RIGHTS_ISSUANCE, BUYBACK, DEMERGER);
+        // Only actions perform can apply hold a trade (W-316): a rights issue or buyback is recorded, not applied, so holding
+        // a trade for one held it for good and stopped the quarter's run at it
+        return List.of(BONUS, STOCK_SPLIT, DEMERGER);
     }
 }

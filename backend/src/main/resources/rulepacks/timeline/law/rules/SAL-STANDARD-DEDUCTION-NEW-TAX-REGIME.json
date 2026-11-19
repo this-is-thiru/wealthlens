@@ -1,0 +1,136 @@
+{
+  "ruleId": "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
+  "ruleSet": "RS-SAL-STANDARD-DEDUCTION",
+  "_note": "The standard deduction where income-tax is computed under the new regime: the statutory amount or the salary, whichever is less (D-093; rulebook SAL-STDDED-001, -003). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 2(a) (p.41): \"₹ 75000 or the salary, whichever is less, where income-tax is computed under section 202(1)\". Finance Act, 2026 (4 of 2026) searched in full: it does not amend s.19 or s.202. TY 2025-26: Income-tax Act, 1961 s.16(ia) (\"fifty thousand rupees or the amount of the salary, whichever is less\", Finance Act, 2019 s.3) with the proviso inserted by Finance (No. 2) Act, 2024 (15 of 2024) s.10 (gazette p.21), w.e.f. 1-4-2025: \"Provided that in a case where income-tax is computed under clause (ii) of sub-section (1A) of section 115BAC, the provisions of this clause shall have effect as if for the words 'fifty thousand rupees', the words 'seventy-five thousand rupees' had been substituted\". For AY 2026-27 the new regime is computed under s.115BAC(1A)(iii) (Finance Act, 2025 s.25, which also omitted \"or after\" from clause (ii)). The Taxation Laws (Amendment) Act, 2025 (29 of 2025) s.3 (gazette CG-DL-E-22082025-265618, p.2) extends the proviso to that clause: \"after the word, brackets and figures 'clause (ii)', the words, brackets and figures 'or clause (iii)' shall be inserted and shall be deemed to have been inserted with effect from the 1st day of April, 2025\" — so the ₹75,000 for TY 2025-26 stands on the statute (D-108). The Department applies the same figure: CBDT ITR-1 Validation Rules for AY 2026-27, Version 1.0 (15-5-2026), p.16, rule 215, and the ITR-1 schema. The Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the interim Finance Act, 2024, unread, all precede the proviso (August 2024) and cannot bear on it.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(ia) and its proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "statutory amount",
+            "shape": {
+              "type": "Fixed",
+              "amount": "75000"
+            }
+          },
+          {
+            "name": "salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "SALARY"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Taxation Laws (Amendment) Act, 2025 (29 of 2025), s.3 — \"or clause (iii)\" inserted in the proviso to s.16(ia), deemed from 1-4-2025, extending the Rs 75,000 to s.115BAC(1A)(iii); the proviso itself inserted by Finance (No. 2) Act, 2024 (15 of 2024) s.10",
+        "gazetteRef": "CG-DL-E-22082025-265618",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2025-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265618.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265618.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265618, Taxation Laws (Amendment) Act, 2025 s.3, pp.1–2; Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.10, p.21; Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.25, pp.24–25",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(ia) and its proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "statutory amount",
+            "shape": {
+              "type": "Fixed",
+              "amount": "75000"
+            }
+          },
+          {
+            "name": "salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "SALARY"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 2(a)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 2(a), p.41; Finance Act, 2026 searched in full: no amendment",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 2(a), p.41",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

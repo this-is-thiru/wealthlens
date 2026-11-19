@@ -1,0 +1,27 @@
+{
+  "code": "NOTICE_PAY",
+  "_note": "Paid in money on retirement or termination, and salary: pay in lieu of notice from the employer on termination, compensation \"at or in connection with the termination of his employment\" and so profits in lieu of salary (S2 s.18(1)(a)(i), s.16(f); 1961 s.17(3)(i)); no entry of s.19(1) deducts it, so it is taxed in full (rulebook RET-NOTICE-001) (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
+  "displayName": "Notice pay",
+  "head": "SALARIES",
+  "kind": "SALARY",
+  "cashNature": "CASH",
+  "treatment": "TAXABLE",
+  "feedsInto": [
+    "SAL-SALARY-INCLUDES"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16(f) and s.18(1)(a); Income-tax Act, 1961 s.10(10)–(10C) and s.17",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

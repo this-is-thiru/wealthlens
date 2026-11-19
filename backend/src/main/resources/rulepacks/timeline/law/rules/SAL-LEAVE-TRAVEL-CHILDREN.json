@@ -1,0 +1,100 @@
+{
+  "ruleId": "SAL-LEAVE-TRAVEL-CHILDREN",
+  "ruleSet": "RS-SAL-LEAVE-TRAVEL-CHILDREN",
+  "_note": "How many surviving children the leave travel concession covers (D-212; rulebook SAL-LTA-CHILD-001): two, not counting children born before 1-10-1998 nor children of a multiple birth after one child. TY 2026-27, Income-tax Rules, 2026 r.278(5)–(6) (p.1776); TY 2025-26, Income-tax Rules, 1962 r.2B(4) and its proviso — the rulebook's \"r.2B(5),(6)\" is wrong (erratum there). The limit falls on children: a journey on which a child beyond it travels keeps the rest of the family's travel exempt, the child's share a nil line. Which counted children are covered the Rules do not say; the two eldest are taken, r.278(6)'s \"multiple births after one child\" counting children by birth (D-212 C3a, an inference). \"Surviving\" is read on the journey's start date. In every regime as a row; the new regime forbids the concession through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(5), with Income-tax Rules, 1962 r.2B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 8, with Income-tax Rules, 2026 r.278; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SurvivingChildrenLimit",
+        "children": 2,
+        "exceptBornBefore": "1998-10-01"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (First Amendment) Rules, 1998, S.O. 34(E), 12-1-1998 — r.2B(4) inserted w.r.e.f. 1-10-1997 (the DoR compendium's footnote 9); corrected by S.O. 201(E), 12-3-1998 (Notification No. 10546, F. No. 142/85/97-TPL)",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), 12-1-1998, p.39 — as cited in S.O. 201(E); the Department's pages for S.O. 34(E) and S.O. 201(E) as relayed by the owner's ChatGPT share t_6ad1f9cb43088191bebeec3cbf177912 (D-186)",
+        "notifiedOn": "1998-01-12",
+        "effectiveFrom": "1997-10-01",
+        "retrospective": true,
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/34e-notification-s.o.34-e-date-of-issue-12/1/1998",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/rule-2b-1",
+        "sourceDescription": "Income-tax Rules, 1962 r.2B(4): \"The exemption referred to in sub-rule (1) shall not be available to more than two surviving children of an individual after 1st October, 1998 : Provided that this sub-rule shall not apply in respect of children born before 1st October, 1998, and also in case of multiple births after one child.\" — in the owner's capture of the Income Tax Department's rule page (upload date 13-12-2025; vouched for by the owner, D-177, which names r.2B(2)–(4) read in it) and, word for word, in the Department of Revenue's compendium of the Rules, dor.gov.in files/rules_files/IT Rules_1.pdf p.350 (footnote 9: \"Inserted by the IT (First Amdt.) Rules, 1998, w.r.e.f. 1-10-1997\"); no later amendment of r.2B(4): G.S.R. 320(E), 2021 (Gazette CG-DL-E-05052021-226843 pp.3–4) inserts (1A)–(1B) only (docs/taxplanning-build/sources/2026-10-17-lta-children.md)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(5), with Income-tax Rules, 1962 r.2B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 8, with Income-tax Rules, 2026 r.278; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SurvivingChildrenLimit",
+        "children": 2,
+        "exceptBornBefore": "1998-10-01"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 278",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278(5): \"The exemption referred to in sub-rule (1) shall not be available to more than two surviving children of an individual.\" and r.278(6): \"The provisions of sub-rule (5) shall not apply in respect of children born before 1st October, 1998, and also in case of multiple births after one child.\" (p.1776); Income-tax Act, 2025 Sch. III Table Sl. 8 (pp.505–506) and s.202(2)(a)(i) (p.227)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278(5)–(6), p.1776",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

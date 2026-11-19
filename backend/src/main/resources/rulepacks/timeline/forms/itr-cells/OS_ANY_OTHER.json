@@ -1,0 +1,16 @@
+{
+  "code": "OS_ANY_OTHER",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Any other income",
+  "source": {
+    "type": "FromOtherSourceKinds",
+    "kinds": [
+      "KEYMAN_POLICY",
+      "FORFEITED_ADVANCE",
+      "TERMINATION_COMPENSATION",
+      "COMMUTED_FUND_PENSION",
+      "DEATH_GRATUITY",
+      "EMPLOYEE_CONTRIBUTIONS"
+    ]
+  }
+}

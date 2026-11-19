@@ -1,0 +1,25 @@
+{
+  "name": "zerodha-equity-futures-sell-1cr-on-the-stt-change",
+  "describes": "A Rs 1,00,00,000 futures sell on 2026-03-30, the only shipped size at which the IPFT contribution is visible: Rs 0.01 per crore of turnover is Rs 0.01 here and rounds to nil on every smaller fixture, so this case pins 0.0000001% rather than any rate that disappears. STT 0.05% from assent; GST 18% of Rs 20.00 + Rs 182.99 + Rs 10.00 + Rs 0.01.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "FUTURES",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 10000,
+    "transactionDate": "2026-03-30"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 5000.0,
+      "EXCHANGE_TXN": 182.99,
+      "SEBI_FEE": 10.0,
+      "IPFT": 0.01,
+      "GST": 38.34
+    },
+    "total": 5251.34
+  }
+}

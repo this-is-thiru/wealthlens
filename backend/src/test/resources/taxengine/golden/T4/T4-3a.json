@@ -1,0 +1,25 @@
+{
+  "id": "T4-3a",
+  "source": "DR 08 T4-3 — TY 2025-26, PF-RPF12-001, independent of the aggregate cap",
+  "_source": "**Expected: ₹30,000 added to salary, with `PF-AGGCAP-001` contributing nothing.** \"PF-AGGCAP-001: aggregate 1,50,000 ≤ 7,50,000 → no excess = 0\"; \"PF-RPF12-001: 12% of 10,00,000 = 1,20,000 … employer contribution above 12% = 30,000 → taxable\". TY 2025-26: 1961 Sch. IV Pt A r.6(a) (D-151). No excess, so no fund history is needed.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "1000000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "employerContributions": [
+      {
+        "fund": "RECOGNISED_PROVIDENT_FUND",
+        "amount": "150000"
+      }
+    ]
+  },
+  "expected": {
+    "employerContributionCharges": "30000"
+  }
+}

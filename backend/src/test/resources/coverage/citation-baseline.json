@@ -1,0 +1,582 @@
+{
+  "_note": "W-184: every MODELLED row's listing of a rule that does not itself name the row's section. Each entry keeps the pairing and states, in one sentence, the claim that justifies it; a listing that could not state its claim was removed instead. The check compares this list as an exact set, so it may only shrink: a new mismatch fails, and so does an entry that no longer mismatches.",
+  "listed": [
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "111A",
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "reason": "the rule is the listed-security definition (s.2(42A), first proviso) the rate reads; the definition's row is not computational, so the rate rows are its home"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "112",
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "reason": "the rule is the listed-security definition (s.2(42A), first proviso) the rate reads; the definition's row is not computational, so the rate rows are its home"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "112A",
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "reason": "the rule is the listed-security definition (s.2(42A), first proviso) the rate reads; the definition's row is not computational, so the rate rows are its home"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "22",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "the section charges the annual value; the figure it charges is computed by the s.23 rule (D-208 C2a's head row)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "25",
+      "rule": "HP-OWN-RESIDENCE-INTEREST",
+      "reason": "s.25 bars the interest deduction the rule computes (SEC-INTEREST-PAYABLE-OUTSIDE-INDIA); the bar is the rule's nil line (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "26",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "26",
+      "rule": "HP-ARREARS",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "26",
+      "rule": "HP-OWN-RESIDENCE",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "26",
+      "rule": "HP-STANDARD-DEDUCTION",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "27",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "the section changes who is charged, not how; the deemed owner's income is the annual value the rule computes"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "4",
+      "rule": "RATE-SLAB-FIRST-SCHEDULE",
+      "reason": "the rule's provision is the First Schedule, which s.4's charge reads; the Schedule has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "4",
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+      "reason": "the rule's provision is the First Schedule, which s.4's charge reads; the Schedule has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "4",
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
+      "reason": "the rule's provision is the First Schedule, which s.4's charge reads; the Schedule has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "4",
+      "rule": "RATE-SLAB-NEW-TAX-REGIME",
+      "reason": "s.4 charges the tax the s.115BAC ladder computes; the charge row carries the ladder"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "45",
+      "rule": "CG-DEPOSIT",
+      "reason": "the rule keeps a deposit out of the head with a nil line (W-160a, D-363); the charge row is where the nil line is computed, though the rule cites the other-sources charge"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "45",
+      "rule": "CG-DERIVATIVE",
+      "reason": "the rule refuses a derivative transaction at the charge, citing the definition's proviso (s.43(5)); the charge row is where the refusal is computed"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "45",
+      "rule": "CG-SPECULATIVE",
+      "reason": "the rule refuses a speculative transaction at the charge, citing the definition (s.43(5)); the charge row is where the refusal is computed"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "45",
+      "rule": "RATE-CG-LONG-LISTED-EQUITY",
+      "reason": "the charge applies the rate the rule computes; the rate's own row lists it too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "45",
+      "rule": "RATE-CG-LONG-OTHER",
+      "reason": "the charge applies the rate the rule computes; the rate's own row lists it too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "45",
+      "rule": "RATE-CG-SHORT-LISTED-EQUITY",
+      "reason": "the charge applies the rate the rule computes; the rate's own row lists it too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "58",
+      "rule": "OS-BANKER-COMMISSION",
+      "reason": "the section bars the deduction the rule computes; the bar is the rule's nil line (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "58",
+      "rule": "OS-DIVIDEND-INTEREST",
+      "reason": "the section bars the deduction the rule computes; the bar is the rule's nil line (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "58",
+      "rule": "OS-OTHER-EXPENDITURE",
+      "reason": "the section bars the deduction the rule computes; the bar is the rule's nil line (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "70",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "D-219 models the intra-head set-off by the per-property HP rules HousePropertyNode nets; the row carries them"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "70",
+      "rule": "HP-INTEREST",
+      "reason": "D-219 models the intra-head set-off by the per-property HP rules HousePropertyNode nets; the row carries them"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "70",
+      "rule": "HP-OWN-RESIDENCE-INTEREST",
+      "reason": "D-219 models the intra-head set-off by the per-property HP rules HousePropertyNode nets; the row carries them"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "71B",
+      "rule": "SETOFF-CARRIED-DISALLOWED-PART",
+      "reason": "the section carries the HP loss forward; the rule computes the part s.115BAC(2)(ii)(a) disallows, so it is part of the carry-forward"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "74",
+      "rule": "CG-PARTS",
+      "reason": "the rule's note reads s.74(1) for the restriction the carried loss takes; its provision reference names only the set-off section"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "87",
+      "rule": "REBATE-NEW-TAX-REGIME",
+      "reason": "the section allows a rebate off the income-tax; the only rebate rules built are s.87A's, which the operative row lists too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "87",
+      "rule": "REBATE-NEW-TAX-REGIME-EXCESS",
+      "reason": "the section allows a rebate off the income-tax; the only rebate rules built are s.87A's, which the operative row lists too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "87",
+      "rule": "REBATE-RESIDENT-INDIVIDUAL",
+      "reason": "the section allows a rebate off the income-tax; the only rebate rules built are s.87A's, which the operative row lists too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "108",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "D-219 models the intra-head set-off by the per-property HP rules HousePropertyNode nets; the row carries them"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "108",
+      "rule": "HP-INTEREST",
+      "reason": "D-219 models the intra-head set-off by the per-property HP rules HousePropertyNode nets; the row carries them"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "108",
+      "rule": "HP-OWN-RESIDENCE-INTEREST",
+      "reason": "D-219 models the intra-head set-off by the per-property HP rules HousePropertyNode nets; the row carries them"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "OS-LIFE-POLICY-PREMIUM",
+      "reason": "s.11(1), (2) gives effect to Schedules II-VI (W-078e); the rule reads a Schedule II entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "OS-LIFE-POLICY-RATIO",
+      "reason": "s.11(1), (2) gives effect to Schedules II-VI (W-078e); the rule reads a Schedule II entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "OS-PF-TAXABLE-INTEREST",
+      "reason": "s.11(1), (2) gives effect to Schedules II-VI (W-078e); the rule reads a Schedule II entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-AGGREGATE-HISTORY-GRATUITY",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-BAR-ARREARS-RELIEF",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-BAR-ONCE-ONLY",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-COMMUTED-PENSION-FUND",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-COMMUTED-PENSION-GOVERNMENT",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-COMMUTED-PENSION-OTHER",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-GRATUITY-AGGREGATE",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-GRATUITY-AVERAGING",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-GRATUITY-GOVERNMENT",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-GRATUITY-OTHER",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-GRATUITY-STATUTORY",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-LEAVE-ENCASHMENT-OTHER",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-RETRENCHMENT",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-RETRENCHMENT-APPROVED-SCHEME",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-VOLUNTARY-RETIREMENT",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT",
+      "reason": "D-161 models s.11 by the rows 1961 s.10 is modelled by; the rule's 2025 provision is the s.19(1) Table, which the s.19 row lists too - the mirror is this row's claim (OQ-35)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-ALW-CHILDREN-EDUCATION",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-ALW-CONVEYANCE",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-ALW-HOSTEL",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-ALW-TRANSPORT-DISABLED",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-ALW-UNIFORM",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-HOUSE-RENT-ALLOWANCE",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-LEAVE-TRAVEL-CHILDREN",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-LEAVE-TRAVEL-CONCESSION",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "11",
+      "rule": "SAL-LEAVE-TRAVEL-JOURNEYS",
+      "reason": "s.11(1), (2) gives effect to Schedule III (W-078e); the rule reads the Schedule's entry, which has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "110",
+      "rule": "SETOFF-CARRIED-DISALLOWED-PART",
+      "reason": "the section carries the HP loss forward; the rule computes the part s.202(2)(b)(i) disallows, so it is part of the carry-forward"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "111",
+      "rule": "CG-PARTS",
+      "reason": "the rule's note reads s.111(1)(a)(ii) for the restriction the carried loss takes; its provision reference names only the set-off section"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "123",
+      "rule": "DED-PREMIUM-SHARE",
+      "reason": "s.123 reads the sums in Schedule XV; the rule is a Schedule XV paragraph (para 2), so the ceiling row is its home"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "123",
+      "rule": "DED-SCHEDULE-XV-GOVERNMENT-SALARY",
+      "reason": "the rule defines the salary para 1(c) reads; a Schedule XV paragraph has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "123",
+      "rule": "SAL-SALARY-FOR-EMPLOYEE-PENSION",
+      "reason": "s.123 reads the sums in Schedule XV; the rule defines para 1(y)'s salary, a Schedule paragraph with no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "155",
+      "rule": "REBATE-NEW-TAX-REGIME",
+      "reason": "the section allows a rebate off the income-tax; the only rebate rules built are s.156's, which the operative row lists too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "155",
+      "rule": "REBATE-NEW-TAX-REGIME-EXCESS",
+      "reason": "the section allows a rebate off the income-tax; the only rebate rules built are s.156's, which the operative row lists too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "155",
+      "rule": "REBATE-RESIDENT-INDIVIDUAL",
+      "reason": "the section allows a rebate off the income-tax; the only rebate rules built are s.156's, which the operative row lists too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "18",
+      "rule": "SAL-SALARY-INCLUDES",
+      "reason": "s.18's profits in lieu of salary are one component the salary rule sums for the head; the row carries the rule that adds it"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "196",
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "reason": "the rule is the listed-security definition (s.2(101)(b)(i)) the rate reads; the definition's row is not computational, so the rate rows are its home"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "197",
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "reason": "the rule is the listed-security definition (s.2(101)(b)(i)) the rate reads; the definition's row is not computational, so the rate rows are its home"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "198",
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "reason": "the rule is the listed-security definition (s.2(101)(b)(i)) the rate reads; the definition's row is not computational, so the rate rows are its home"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "20",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "the section charges the annual value; the figure it charges is computed by the s.21 rule (D-208 C2a's head row)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "24",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "24",
+      "rule": "HP-ARREARS",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "24",
+      "rule": "HP-OWN-RESIDENCE",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "24",
+      "rule": "HP-STANDARD-DEDUCTION",
+      "reason": "the section computes each co-owner's share by the head's own rules; the row carries the rules the share is computed by (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "25",
+      "rule": "HP-ANNUAL-VALUE",
+      "reason": "the section changes who is charged, not how; the deemed owner's income is the annual value the rule computes"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "4",
+      "rule": "RATE-SLAB-FIRST-SCHEDULE",
+      "reason": "the rule's provision is the First Schedule, which s.4's charge reads; the Schedule has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "4",
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+      "reason": "the rule's provision is the First Schedule, which s.4's charge reads; the Schedule has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "4",
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
+      "reason": "the rule's provision is the First Schedule, which s.4's charge reads; the Schedule has no row of its own"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "4",
+      "rule": "RATE-SLAB-NEW-TAX-REGIME",
+      "reason": "s.4 charges the tax the s.202 ladder computes; the charge row carries the ladder"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "67",
+      "rule": "CG-DEPOSIT",
+      "reason": "the rule keeps a deposit out of the head with a nil line (W-160a, D-363); the charge row is where the nil line is computed, though the rule cites the other-sources charge"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "67",
+      "rule": "CG-DERIVATIVE",
+      "reason": "the rule refuses a derivative transaction at the charge, citing the definition's proviso (s.66(31)); the charge row is where the refusal is computed"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "67",
+      "rule": "CG-SPECULATIVE",
+      "reason": "the rule refuses a speculative transaction at the charge, citing the definition (s.66(31)); the charge row is where the refusal is computed"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "67",
+      "rule": "RATE-CG-LONG-LISTED-EQUITY",
+      "reason": "the charge applies the rate the rule computes; the rate's own row lists it too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "67",
+      "rule": "RATE-CG-LONG-OTHER",
+      "reason": "the charge applies the rate the rule computes; the rate's own row lists it too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "67",
+      "rule": "RATE-CG-SHORT-LISTED-EQUITY",
+      "reason": "the charge applies the rate the rule computes; the rate's own row lists it too"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "94",
+      "rule": "OS-BANKER-COMMISSION",
+      "reason": "the section bars the deduction the rule computes; the bar is the rule's nil line (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "94",
+      "rule": "OS-DIVIDEND-INTEREST",
+      "reason": "the section bars the deduction the rule computes; the bar is the rule's nil line (D-208 C2a)"
+    },
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "94",
+      "rule": "OS-OTHER-EXPENDITURE",
+      "reason": "the section bars the deduction the rule computes; the bar is the rule's nil line (D-208 C2a)"
+    }
+  ],
+  "orphaned": []
+}

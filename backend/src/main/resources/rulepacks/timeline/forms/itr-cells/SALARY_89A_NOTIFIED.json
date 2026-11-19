@@ -1,0 +1,9 @@
+{
+  "code": "SALARY_89A_NOTIFIED",
+  "_note": "Not computed. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Income from retirement benefit account maintained in a notified country u/s 89A",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Section 89A retirement-benefit accounts are not computed; enter the figure from your records"
+  }
+}

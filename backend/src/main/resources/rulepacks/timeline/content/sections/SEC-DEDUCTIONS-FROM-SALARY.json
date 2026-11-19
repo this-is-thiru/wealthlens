@@ -1,0 +1,69 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-093, D-105). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: SAL-TAX-ON-EMPLOYMENT.json, SAL-STANDARD-DEDUCTION-*.json (1961 s.16(ia), (iii); 2025 s.19(1) Table Sl. 1, 2). summary: S2 s.19(1) (p.41) \"computed after making the deductions … in column B\"; Sl. 1 \"Sum paid by the assessee as a tax on employment … Entire amount\"; Sl. 2 \"Standard deduction … or the salary, whichever is less\". routes[0]: SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME, -ANY-OTHER-CASE. routes[1]: SAL-TAX-ON-EMPLOYMENT. disqualifiers[0]: s.202(2)(a)(iv) (1961 s.115BAC(2)(i)), enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists SAL-TAX-ON-EMPLOYMENT (D-165; until then the row's ExceptIn, D-093). Table Sl. 3–14 (gratuity, leave encashment and others) are not modelled here: SEC-SALARY-RETIREMENT (W-066a, D-103; the rest W-066c, W-066d). No LATER_REVERSAL: the rulebook sources none. routes[3]: SAL-ENTMT-ALLOWANCE — 1961 s.16(ii) (rulebook SAL-ENTMT-001), TY 2025-26 only, outside the new regime (s.115BAC(2)(i)); absent from the 2025 Act (D-105).",
+  "key": "SEC-DEDUCTIONS-FROM-SALARY",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.16",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.19(1)",
+    "presence": "PRESENT"
+  },
+  "plainName": "Deductions from salary",
+  "summary": "Before your salary is taxed, two amounts come off it: a standard deduction that every employee gets without spending anything, capped at your salary, and any professional tax you paid. The standard deduction is larger in the default regime; professional tax comes off only in the regime you opt into. Other amounts in the same list, such as gratuity, are handled separately.",
+  "routes": [
+    {
+      "name": "Standard deduction",
+      "description": "Given to every employee automatically; it never exceeds your salary, so it cannot turn salary into a loss.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME"
+        }
+      ]
+    },
+    {
+      "name": "Standard deduction outside the default regime",
+      "description": "The same deduction, at the smaller amount, if you opt out of the default regime.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"
+        }
+      ]
+    },
+    {
+      "name": "Professional tax you paid",
+      "description": "The whole of the professional tax you paid to your state comes off your salary.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-TAX-ON-EMPLOYMENT"
+        }
+      ]
+    },
+    {
+      "name": "Entertainment allowance for Government employees",
+      "description": "Under the earlier Act only, an entertainment allowance granted to a Government employee comes off salary outside the default regime, up to a fifth of basic salary or a fixed limit, whichever is less.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-ENTMT-ALLOWANCE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Professional tax does not come off in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    }
+  ]
+}

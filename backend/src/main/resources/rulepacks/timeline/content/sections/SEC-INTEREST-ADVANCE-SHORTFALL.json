@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.234B / 2025 s.424 (coverage MODELLED by INT-ADVANCE-SHORTFALL); sources/2026-11-06-advance-tax-interest.md; D-446",
+  "key": "SEC-INTEREST-ADVANCE-SHORTFALL",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.234B",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.424",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest for too little advance tax",
+  "summary": "Interest by the month, from the start of the next year, where advance tax paid falls below the share of the assessed tax the Act sets.",
+  "routes": [
+    {
+      "name": "Interest for too little advance tax",
+      "description": "Charged on the shortfall until it is paid on the return or assessed.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "INT-ADVANCE-SHORTFALL"
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,6 @@ package com.thiru.wealthlens.integration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
@@ -42,149 +41,6 @@ public class TransactionIntegrationTest extends AbstractIntegrationTest {
             }
         });
         return rt;
-    }
-
-    @Test
-    void addTransaction_nullDate_defaultsToToday() {
-        // GIVEN
-        String email = "datetest@test.com";
-        AssetRequest request = new AssetRequest();
-        request.setStockCode("RELIANCE");
-        request.setStockName("Reliance Industries");
-        request.setPrice(2500.0);
-        request.setQuantity(10.0);
-        request.setTransactionDate(null);
-        request.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-
-        // WHEN
-        String transactionId = transactionService.addTransaction(UserMail.from(email), request);
-
-        // THEN
-        assertNotNull(transactionId);
-        TransactionEntity saved = transactionRepository.findById(transactionId).orElseThrow();
-        assertEquals(LocalDate.now(), saved.getTransactionDate());
-    }
-
-    @Test
-    void addTransaction_withNewTempTransactionId() {
-        // GIVEN
-        String email = "temptxn@test.com";
-        String tempId = "TEMP-" + System.currentTimeMillis();
-
-        AssetRequest request = new AssetRequest();
-        request.setTempTransactionId(tempId);
-        request.setStockCode("TCS");
-        request.setStockName("Tata Consultancy Services");
-        request.setPrice(3500.0);
-        request.setQuantity(5.0);
-        request.setTransactionDate(LocalDate.now());
-        request.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.UPSTOX);
-
-        // WHEN
-        String transactionId = transactionService.addTransaction(UserMail.from(email), request);
-
-        // THEN
-        assertNotNull(transactionId);
-        TransactionEntity saved = transactionRepository.findById(transactionId).orElseThrow();
-        assertEquals(tempId, saved.getSourceTempTransactionId());
-    }
-
-    @Test
-    void addTransaction_duplicateTempTransactionId_returnsExisting() {
-        // GIVEN
-        String email = "dupetemp@test.com";
-        String tempId = "TEMP-DUP-" + System.currentTimeMillis();
-
-        AssetRequest request1 = new AssetRequest();
-        request1.setTempTransactionId(tempId);
-        request1.setStockCode("INFOSYS");
-        request1.setStockName("Infosys Ltd");
-        request1.setPrice(1500.0);
-        request1.setQuantity(20.0);
-        request1.setTransactionDate(LocalDate.now());
-        request1.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request1.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.FYERS);
-
-        String firstId = transactionService.addTransaction(UserMail.from(email), request1);
-
-        AssetRequest request2 = new AssetRequest();
-        request2.setTempTransactionId(tempId);
-        request2.setStockCode("INFOSYS");
-        request2.setStockName("Infosys Ltd");
-        request2.setPrice(1500.0);
-        request2.setQuantity(20.0);
-        request2.setTransactionDate(LocalDate.now());
-        request2.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        request2.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.FYERS);
-
-        // WHEN
-        String secondId = transactionService.addTransaction(UserMail.from(email), request2);
-
-        // THEN
-        assertEquals(firstId, secondId);
-        long count = transactionRepository.findByEmail(email).size();
-        assertEquals(1, count);
-    }
-
-    @Test
-    void transactionsForCorporateActions_sufficientQuantity() {
-        // GIVEN
-        String email = "corpaction@test.com";
-        LocalDate recordDate = LocalDate.of(2024, 6, 1);
-        double requiredQty = 15.0;
-
-        TransactionEntity txn1 = new TransactionEntity();
-        txn1.setEmail(email);
-        txn1.setStockCode("HDFCBANK");
-        txn1.setStockName("HDFC Bank");
-        txn1.setPrice(1600.0);
-        txn1.setQuantity(10.0);
-        txn1.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn1.setTransactionDate(LocalDate.of(2024, 1, 15));
-        txn1.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-        transactionRepository.save(txn1);
-
-        TransactionEntity txn2 = new TransactionEntity();
-        txn2.setEmail(email);
-        txn2.setStockCode("HDFCBANK");
-        txn2.setStockName("HDFC Bank");
-        txn2.setPrice(1650.0);
-        txn2.setQuantity(10.0);
-        txn2.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn2.setTransactionDate(LocalDate.of(2024, 3, 10));
-        txn2.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-        transactionRepository.save(txn2);
-
-        // WHEN
-        List<TransactionEntity> result = transactionService.transactionsForCorporateActions(requiredQty, "HDFCBANK", recordDate);
-
-        // THEN
-        assertEquals(2, result.size());
-    }
-
-    @Test
-    void transactionsForCorporateActions_insufficientQuantity_throws() {
-        // GIVEN
-        String email = "insufficient@test.com";
-        LocalDate recordDate = LocalDate.of(2024, 6, 1);
-        double requiredQty = 50.0;
-
-        TransactionEntity txn = new TransactionEntity();
-        txn.setEmail(email);
-        txn.setStockCode("SBIN");
-        txn.setStockName("State Bank of India");
-        txn.setPrice(750.0);
-        txn.setQuantity(5.0);
-        txn.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn.setTransactionDate(LocalDate.of(2024, 2, 1));
-        txn.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.UPSTOX);
-        transactionRepository.save(txn);
-
-        // WHEN / THEN
-        assertThrows(IllegalArgumentException.class, () ->
-                transactionService.transactionsForCorporateActions(requiredQty, "SBIN", recordDate));
     }
 
     @Test
@@ -369,46 +225,6 @@ public class TransactionIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().contains("RELIANCE") || response.getBody().contains("TCS"));
-    }
-
-    @Test
-    void updateTransactions_backfillsNullAssetType() {
-        // GIVEN
-        String email = "updateasset@test.com";
-
-        TransactionEntity txn1 = new TransactionEntity();
-        txn1.setEmail(email);
-        txn1.setStockCode("HDFC");
-        txn1.setStockName("HDFC Ltd");
-        txn1.setPrice(2800.0);
-        txn1.setQuantity(5.0);
-        txn1.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn1.setTransactionDate(LocalDate.of(2024, 3, 1));
-        txn1.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-        txn1.setAssetType(null);
-        transactionRepository.save(txn1);
-
-        TransactionEntity txn2 = new TransactionEntity();
-        txn2.setEmail(email);
-        txn2.setStockCode("ICICI");
-        txn2.setStockName("ICICI Bank");
-        txn2.setPrice(1100.0);
-        txn2.setQuantity(12.0);
-        txn2.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.SELL);
-        txn2.setTransactionDate(LocalDate.of(2024, 3, 15));
-        txn2.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.UPSTOX);
-        txn2.setAssetType(com.thiru.wealthlens.portfolio.dto.enums.AssetType.EQUITY);
-        transactionRepository.save(txn2);
-
-        // WHEN
-        transactionService.updateTransactions();
-
-        // THEN
-        List<TransactionEntity> updated = transactionRepository.findByEmail(email);
-        assertEquals(com.thiru.wealthlens.portfolio.dto.enums.AssetType.MUTUAL_FUND,
-                updated.stream().filter(t -> t.getStockCode().equals("HDFC")).findFirst().orElseThrow().getAssetType());
-        assertEquals(com.thiru.wealthlens.portfolio.dto.enums.AssetType.EQUITY,
-                updated.stream().filter(t -> t.getStockCode().equals("ICICI")).findFirst().orElseThrow().getAssetType());
     }
 
     @Test

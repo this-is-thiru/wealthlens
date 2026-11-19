@@ -1,0 +1,12 @@
+{
+  "code": "CFL_CURRENT_LTCL",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "Long-term capital loss of the current year carried forward",
+  "source": {
+    "type": "FromSetOff",
+    "rows": [
+      "CAPITAL_GAINS_LOSS_LEFT"
+    ],
+    "column": "longTerm"
+  }
+}

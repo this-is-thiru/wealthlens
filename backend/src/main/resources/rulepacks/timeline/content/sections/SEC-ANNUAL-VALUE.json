@@ -1,0 +1,83 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-160). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: HP-ANNUAL-VALUE, HP-OWN-RESIDENCE, HP-UNREALISED-RENT; 1961 s.23 / 2025 s.21. summary: S2 s.21(1)–(4), (6), (7) (Gazette 265620 p.47); 1961 s.23(1)–(4) with s.23(2) as substituted by FA 2025 s.10; Rules 2026 r.21, Rules 1962 r.4. routes[0]: HP-ANNUAL-VALUE. routes[1]: HP-UNREALISED-RENT (D-157). routes[2]: HP-OWN-RESIDENCE (OwnResidenceHouses). disqualifiers[0]: s.21(7)(a), HousePropertyNode's refusal. disqualifiers[1]: s.21(7)(b), HouseProperty's refusal of rent on an own residence. disqualifiers[2]: s.21(5) as amended by FA 2026 s.37, deferred with the business head (D-155, D-160 C2). disqualifiers[3]: HousePropertyNode refuses a negative annual value until W-081.",
+  "key": "SEC-ANNUAL-VALUE",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.23",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.21",
+    "presence": "PRESENT"
+  },
+  "plainName": "Annual value of a house",
+  "summary": "A house's annual value is the higher of what it might reasonably let for and the rent you received or were owed, but only the rent where a vacancy brought it below, less the local taxes you actually paid in the year. Rent you cannot realise, on the conditions the rules set, is left out of the rent first. A house you live in, or cannot live in, is valued at nil, for no more than two houses you choose and not if it was let at any time or gave you another benefit.",
+  "routes": [
+    {
+      "name": "A let or unlet house",
+      "description": "The higher of what it might let for and the rent, the rent where a vacancy brought it below, less local taxes paid.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-ANNUAL-VALUE"
+        }
+      ]
+    },
+    {
+      "name": "Rent you cannot realise",
+      "description": "Rent owed but proved lost and irrecoverable on the rules' conditions is left out of the rent before the comparison.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-UNREALISED-RENT"
+        }
+      ]
+    },
+    {
+      "name": "Your own residence",
+      "description": "Valued at nil for the houses you specify.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-OWN-RESIDENCE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "More houses than the law allows are entered as your own residence; the others must be valued as unlet.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "HP-OWN-RESIDENCE"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A house let at any time in the year, or giving you any other benefit, is not valued at nil.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "HP-OWN-RESIDENCE"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A house held as stock-in-trade and not let has its own nil value for a period after completion.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Not built yet: it comes with the business head."
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Local taxes paid above the house's value would make a loss.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Not built yet: setting off a loss under this head comes with set-off."
+      }
+    }
+  ]
+}

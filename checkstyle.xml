@@ -2,16 +2,83 @@
 <!DOCTYPE module PUBLIC
         "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+    The build-enforced half of CLAUDE.md "Engineering standards" (decision D-045, item W-045a).
+    Every violation fails the build. Legacy violations that predate this file are listed in
+    checkstyle-suppressions.xml, whose baseline section may only shrink (CheckstyleBaselineTest).
+-->
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
-    <property name="severity" value="warning"/>
+    <property name="severity" value="error"/>
     <property name="fileExtensions" value="java"/>
 
+    <module name="SuppressionFilter">
+        <property name="file" value="${checkstyle.suppressions.file}"/>
+        <property name="optional" value="false"/>
+    </module>
+
+    <module name="FileLength">
+        <property name="max" value="1500"/>
+    </module>
+
     <module name="TreeWalker">
-        <!-- No wildcard imports -->
+        <!-- Naming -->
+        <module name="TypeName"/>
+        <module name="MethodName">
+            <property name="id" value="methodNameMain"/>
+        </module>
+        <module name="MethodName">
+            <!-- Tests: methodName_whenCondition_expectedResult (CLAUDE.md, Conventions) -->
+            <property name="id" value="methodNameTest"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$"/>
+        </module>
+        <module name="ConstantName"/>
+        <module name="StaticVariableName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="PackageName"/>
+        <module name="AbbreviationAsWordInName">
+            <property name="allowedAbbreviationLength" value="3"/>
+        </module>
+
+        <!-- Imports -->
         <module name="AvoidStarImport">
-            <property name="severity" value="error"/>
             <property name="excludes" value="java.util,lombok,org.springframework.web.bind.annotation,org.springframework.http,org.apache.poi.ss.usermodel"/>
+        </module>
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+        <module name="IllegalImport"/>
+
+        <!-- Nothing silent -->
+        <module name="IllegalCatch"/>
+        <module name="EmptyCatchBlock"/>
+        <module name="EmptyBlock"/>
+        <module name="NeedBraces"/>
+
+        <!-- Correctness -->
+        <module name="EqualsHashCode"/>
+        <module name="StringLiteralEquality"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="OneStatementPerLine"/>
+        <module name="MultipleVariableDeclarations"/>
+        <module name="HideUtilityClassConstructor"/>
+
+        <!-- Size -->
+        <module name="MethodLength">
+            <property name="max" value="60"/>
+        </module>
+        <module name="ParameterNumber">
+            <property name="max" value="7"/>
+            <property name="ignoreOverriddenMethods" value="true"/>
+        </module>
+        <module name="CyclomaticComplexity">
+            <property name="max" value="12"/>
+        </module>
+
+        <!-- A TODO must name the item that owns it: TODO(W-061) -->
+        <module name="TodoComment">
+            <property name="format" value="(TODO|FIXME|XXX)(?!\(W-\d+[a-z]?\))"/>
         </module>
     </module>
 </module>

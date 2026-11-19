@@ -1,0 +1,95 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-NPS-* provision1961 (s.80CCD) and provision2025 (s.124); S2 heading \"Deduction in respect of employer and assessee contribution to pension scheme of Central Government\". summary: S2 s.124(1)–(5), (10); 1961 s.80CCD(1), (1B), (2) (sources B5–B7, M2, M8, M15, M17). routes[0]: DED-NPS-EMPLOYER-GOVT (s.124(1)(a); 80CCD(2)(a)). routes[1]: DED-NPS-EMPLOYER-OTHER (s.124(1)(b); 80CCD(2)(b)). routes[2]: DED-NPS-EMPLOYER-NEW-TAX-REGIME (s.124(2); 80CCD(2) proviso). routes[3]: DED-SCHEDULE-XV (Schedule XV para 1(y); 80CCD(1) inside 80CCE). routes[4]: DED-NPS-OWN (s.124(3)–(4); 80CCD(1B) with its second proviso). disqualifiers[0]: DED-NPS-OWN regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: ChapterEightNode refuses two employments' contributions (OQ-15, D-132). disqualifiers[2]: Schedule XV para 1(y)(ii) / 80CCD(1)(b), the non-employee's share of gross total income, not built (DED-SCHEDULE-XV note). disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-NPS-OWN (D-166; until then DED-NPS-OWN's ExceptIn).",
+  "key": "SEC-PENSION-SCHEME",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80CCD",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.124",
+    "presence": "PRESENT"
+  },
+  "plainName": "Pension scheme contributions",
+  "summary": "Contributions to the Government's notified pension scheme are deducted in two ways. What your employer puts into your account is deducted up to a share of your salary: a larger share where the employer is the Central or a State Government, a smaller one for any other employer in the old regime, and the larger one again for any employer in the default regime, which keeps this deduction. What you put in yourself counts first towards the investments ceiling, within its own share of your salary; what that leaves, together with what you put into a minor's account as parent or guardian, is deducted up to a further fixed amount, in the old regime only.",
+  "routes": [
+    {
+      "name": "Your employer is the Central or a State Government",
+      "description": "The Government's contribution to your account is deducted up to the larger share of your salary, in every regime.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-NPS-EMPLOYER-GOVT"
+        }
+      ]
+    },
+    {
+      "name": "Another employer, in the old regime",
+      "description": "Its contribution is deducted up to the smaller share of your salary.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-NPS-EMPLOYER-OTHER"
+        }
+      ]
+    },
+    {
+      "name": "Another employer, in the default regime",
+      "description": "Its contribution is deducted up to the larger share of your salary.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-NPS-EMPLOYER-NEW-TAX-REGIME"
+        }
+      ]
+    },
+    {
+      "name": "Your own contribution, inside the investments ceiling",
+      "description": "What you pay in counts towards the investments ceiling, but only up to a share of your salary.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
+        }
+      ]
+    },
+    {
+      "name": "Your own contribution beyond that, and a minor's account",
+      "description": "What the ceiling's share left out, with what you pay into a minor's account as parent or guardian, is deducted up to a further fixed amount.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-NPS-OWN"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Your own contribution is not deducted in the default regime; only the employer's is.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Contributions from two employers in one year are not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "whether each employer's contribution is measured against that employer's salary or the whole year's is not settled"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "If you are not an employee, your own contribution's share of gross total income is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "the limit for a contributor who is not an employee is not built"
+      }
+    }
+  ]
+}

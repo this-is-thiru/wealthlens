@@ -1,0 +1,16 @@
+{
+  "code": "UNILATERAL_FOREIGN_TAX_DEDUCTION",
+  "_note": "r.164(3)(i): \"... or deduction of tax under section 160\". s.160(1): a resident who paid income-tax on foreign income in a country with no agreement under s.159 is entitled to a deduction from Indian income-tax. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (II), \"section 91\" (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
+  "question": "Are you claiming a deduction for income-tax paid in a country with which India has no double-taxation agreement?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(i), p.1662; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.160, p.189; CBDT Notification 34/2013, Income-tax (3rd Amendment) Rules, 2013, S.O. 1111(E), 1 May 2013 — the Department copy (https://www.incometax.gov.in/iec/foportal/sites/default/files/2020-08/Notification_No.342013.pdf), READ under the owner's pre-October-2013 ruling (D-652), Income-tax Rules, 1962 r.12(1)(a) proviso (II), p.2",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

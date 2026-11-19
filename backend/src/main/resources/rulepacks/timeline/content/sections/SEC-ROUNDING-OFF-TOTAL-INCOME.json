@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4). s.516 covers both amounts in one sentence; the 1961 Act splits them into ss.288A and 288B, so there is one entry per amount (SC-1 counts the sections an entry's provisions cite).",
+  "_sources": "provisions: RATE-ROUND-TOTAL-INCOME.json (1961 s.288A; 2025 s.516). summary: S2 s.516 (\"ignoring any part of a rupee consisting of paise and thereafter ... five or more ... less than five\"); 1961 s.288A same words; 01-rulebook.md RATE-ROUND-003 (before the slab walk). routes[0]: RATE-ROUND-TOTAL-INCOME (\"shall be deemed to be the total income\"). No disqualifiers: s.516 has no exception.",
+  "key": "SEC-ROUNDING-OFF-TOTAL-INCOME",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.288A",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.516",
+    "presence": "PRESENT"
+  },
+  "plainName": "Rounding off your total income",
+  "summary": "Your total income is rounded to the nearest multiple of {{RATE-ROUND-TOTAL-INCOME.toNearest}} rupees before any tax is worked out on it. Paise are dropped first, and then the amount goes up if its last figure is five or more and down otherwise.",
+  "routes": [
+    {
+      "name": "Always applied",
+      "description": "Nothing to claim or choose: the rounded figure is your total income for the rest of the computation.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-ROUND-TOTAL-INCOME"
+        }
+      ]
+    }
+  ]
+}

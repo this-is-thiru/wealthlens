@@ -69,6 +69,17 @@ public final class ChargeFixtures {
         return trade(amounts, attributes, List.of());
     }
 
+    /** A trade like {@link #trade()}, on the given event. */
+    public static ChargeContext tradeOn(ChargeEvent event) {
+        Map<AmountBasis, Double> amounts = new EnumMap<>(AmountBasis.class);
+        amounts.put(AmountBasis.TURNOVER, 100000.0);
+
+        return new ChargeContext(
+                EMAIL, "txn-1", "ord-1", STOCK_CODE, ACCOUNT_HOLDER, BrokerName.ZERODHA, AssetType.EQUITY,
+                TradeSegment.DELIVERY, "NSE", null, event, TRADE_DATE, null,
+                100, 1000, 1, amounts, List.of(), new HashMap<>());
+    }
+
     /** A trade whose scope dimensions are what the test is about. */
     public static ChargeContext tradeInScope(AssetType assetType, TradeSegment segment, String exchange, String planCode) {
         Map<AmountBasis, Double> amounts = new EnumMap<>(AmountBasis.class);

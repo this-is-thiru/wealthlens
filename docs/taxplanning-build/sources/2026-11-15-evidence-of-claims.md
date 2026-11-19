@@ -1,0 +1,21 @@
+# Sourcing for W-119b — the evidence of claims an employee furnishes (2026-11-15)
+
+**READ** = read in the primary document by this session, page given; **NOT SEARCHED** = stated as such. Pages are the
+Gazette's printed page numbers, which here equal the PDF's page index.
+
+| # | Finding | Status | Source |
+|---|---|---|---|
+| E1 | **Income-tax Rules, 2026 r.205**, heading: *"Furnishing of evidence of claims by employee under section 392(5)(b) for deduction of tax from income under head 'Salaries'."* (1): *"The assessee shall furnish to the person responsible for making payment under section 392(1), the evidence or the particulars of the claims referred to in sub-rule (2) in Form No. 124, for the purpose of estimating his income or for computing the tax required to be deducted at source."* | **READ** | egazette 2026/271092 (CG-DL-E-20032026-271092, G.S.R. 198(E), 20-3-2026) p.1687 |
+| E2 | r.205(2) Table, column B "Nature of claims", column C "Evidence or particulars". **Sl. 1** *"House rent allowance."* — *"Name, address and Permanent Account Number of the landlord or landlords, where the aggregate rent paid during the tax year exceeds ₹ 100000 and relationship with the landlord, if any."* **Sl. 2** *"Leave travel concession or assistance."* — *"Evidence of expenditure."* **Sl. 3** *"Deduction of interest under the head 'Income from house property'."* — *"Name, address and Permanent Account Number of the lender."* **Sl. 4** *"Deduction under Chapter VIII."* — *"Evidence of investment or expenditure."* | **READ** | same, p.1687 |
+| E3 | The table has four rows and no other. It names no rent receipt, no count of months, and no lender's certificate. | **READ** | same, p.1687 |
+| E4 | Any amendment to r.205 after 20-3-2026 | **SEARCHED, none (W-120, 2026-11-16)** — the amendments to 8-10-2026 (`2026-10-11-groups-c-e.md` H3: G.S.R. 241, 646, 656, 822, 830, 871(E)) touch rr.128, 157, 160, 176, 215, 218, 219, 225, 231, 246, 256 and 332; the corrigendum G.S.R. 286(E) (egazette 2026/271857, sha256 `eeb4a65b0e2c04e8…`) corrects p.1664 (item 1) then p.1711 (item 2), nothing on p.1687; the scan of 276957 – 277271 (`2026-10-16-r280-watch.md`, `2026-10-17-r280-watch.md`) and of 277272 – 277946 (674 PDFs, every page extracted with pypdf 6.14.0, none text-less, newest dated 12-11-2026; searched for "Income-tax Rules, 2026", "Income-tax (", "Central Board of Direct Taxes", "rule 205", whitespace removed; the scanner hits 276956, G.S.R. 871(E), as its proof) found the **Seventh Amendment**, G.S.R. 901(E), 19-10-2026 (277288, sha256 `58905c33fa44a71d…`: (a) r.281A, (b) Form No. 173A) and the **Eighth Amendment**, G.S.R. 961(E) (277540, `b357a4a1853774d9…`: r.189A, Form No. 112A; its note: "last amended vide … G.S.R. 901(E), dated the 19th October, 2026"). Neither touches r.205 or Form No. 124. Other hits: S.O. 5694(E) (277283), S.O. 6016(E) (277668), exemption notifications; 277905, a Part I personnel notice | egazette as cited |
+| E5 | The 1961 Rules' counterpart for TY 2025-26 (r.26C, Form No. 12BB) Sl. 2 – 4 | **READ as enacted (W-120, 2026-11-16)** — Income-tax (11th Amendment) Rules, 2016, r.26C(2) Table: Sl. 2 *"Leave travel concession or assistance. — Evidence of expenditure."*; Sl. 3 *"Deduction of interest under the head 'Income from house property'. — Name, address and permanent account number of the lender."*; Sl. 4 *"Deduction under Chapter VI-A. — Evidence of investment or expenditure."* Amendments from 2016 to 2025 not searched (`2026-10-09-landlord-pan.md` L4), the same standing as Sl. 1 | egazette 2016/169418 p.6 (sha256 `42cdcb275f7e80dd…`) |
+
+## Effect on W-119b
+
+- What r.205(2) asks for is **particulars or evidence furnished to the employer** for deduction at source. It is not a
+  condition of any exemption or deduction, which agrees with the owner's C6a (missing evidence never changes the tax).
+- Months of rent receipted (W-119 C4a; `DR 12` T12-1) are the product's record of what a person holds — not a
+  requirement of this table (E3). They must not be presented as one.
+- The lender's certificate is a condition of the higher own-residence interest limit (s.22(2)(a)(ii), (4)) and is
+  already an engine fact (`HousingLoan.lenderCertificateHeld`); Sl. 3 asks for the lender's name, address and PAN.

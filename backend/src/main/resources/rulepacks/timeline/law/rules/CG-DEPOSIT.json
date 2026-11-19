@@ -1,0 +1,102 @@
+{
+  "ruleId": "CG-DEPOSIT",
+  "ruleSet": "RS-CG-ELSEWHERE",
+  "_note": "A deposit's gain is outside the capital-gains head: what portfolio records on a fixed deposit is its interest, income from other sources, entered there (OS-INTEREST), so a bucket this row reaches is left out of the head with a nil line naming it, never computed twice (W-160a, D-363; C2a). TY 2026-27: Income-tax Act, 2025 s.92(1) (p.137), the residual charge OS-INTEREST's note quotes. TY 2025-26: Income-tax Act, 1961 s.56(1) (thc p.303). Reached by capitalgains.asset = FD. Conditions only; introduction and provenance are OS-INTEREST's. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(1)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "FD"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.56(1) as enacted; s.56(2)(id) ins. by the Finance Act, 1988 (26 of 1988), s.18 (w.e.f. 1-4-1989)",
+        "gazetteRef": "Act 26 of 1988: Gazette of India, Extraordinary, Part II, Section 1, 13-5-1988 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 10, 6-6-2002, pp.142–143; s.56(1): Act 43 of 1961 (assent 13-9-1961), as enacted, read in Acts of the Parliament of India, 1961 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.307 (PDF p.319); the Gazette of India issue itself not read (D-215)",
+        "notifiedOn": "1988-05-13",
+        "effectiveFrom": "1989-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0203/0203-10-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.56(1), (2)(id), p.303; the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for ss.56–58 (docs/taxplanning-build/sources/2026-10-16-other-sources.md)",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(1)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "FD"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(1), (2)(e)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(1), (2)(e), pp.137–138; Finance Act, 2026 (Gazette CG-DL-E-31032026-271439) does not amend s.92",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(1), (2)(e), pp.137–138; Finance Act, 2026 (Gazette CG-DL-E-31032026-271439) does not amend s.92",
+    "accessedOn": "2026-10-16",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

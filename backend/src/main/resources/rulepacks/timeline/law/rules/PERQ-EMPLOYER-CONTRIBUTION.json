@@ -1,0 +1,106 @@
+{
+  "ruleId": "PERQ-EMPLOYER-CONTRIBUTION",
+  "ruleSet": "RS-PERQ-EMPLOYER-CONTRIBUTION",
+  "_note": "The employer's contributions to the assessee's account in a recognised provident fund, the notified pension scheme and an approved superannuation fund, taken together, are a perquisite to the extent they exceed the limit in the tax year (D-126; rulebook PF-AGGCAP-001). TY 2026-27: Income-tax Act, 2025 s.17(1)(h), \"aggregate amount of any contribution, in excess of ₹ 750000 in a tax year\" — the scheme of s.124(1) (Gazette 265620, p.38). TY 2025-26: Income-tax Act, 1961 s.17(2)(vii) as substituted by the Finance Act, 2020 s.13 from 1-4-2021, \"to the extent it exceeds seven lakh and fifty thousand rupees in a previous year\" — the scheme of s.80CCD(1) (Gazette 218938, p.21). EmployerContributionNode adds every employment's contributions and hands in the aggregate; exactly the limit is nil. Every employee. The accretion on the excess (s.17(1)(i)) is W-073b; the employer-NPS deduction is Chapter VIII's, not netted. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(vii) as substituted by the Finance Act, 2020 s.13",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(h)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AmountInExcess",
+        "amount": "CONTRIBUTIONS",
+        "threshold": {
+          "type": "Fixed",
+          "amount": "750000"
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.13 — Income-tax Act, 1961 s.17(2)(vii) and (viia) substituted",
+        "gazetteRef": "CG-DL-E-27032020-218938",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2021-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "sourceDescription": "Gazette CG-DL-E-27032020-218938, Finance Act, 2020 s.13, p.21",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(vii) as substituted by the Finance Act, 2020 s.13",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(h)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AmountInExcess",
+        "amount": "CONTRIBUTIONS",
+        "threshold": {
+          "type": "Fixed",
+          "amount": "750000"
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.17(1)(h)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(h), p.38",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(h), p.38",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

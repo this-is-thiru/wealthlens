@@ -1,0 +1,9 @@
+{
+  "code": "SALARY_89A_EARLIER_RELIEF",
+  "_note": "Not computed. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Income taxable during the previous year on which relief u/s 89A was claimed in any earlier previous year",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Section 89A retirement-benefit accounts are not computed; enter the figure from your records"
+  }
+}

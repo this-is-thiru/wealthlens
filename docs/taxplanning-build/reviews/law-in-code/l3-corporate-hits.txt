@@ -1,0 +1,26 @@
+## G1 5
+service/CorporateActionService.java:42: private static final List<Month> QUARTER_START_MONTHS = List.of(Month.JANUARY, Month.APRIL, Month.JULY, Month.OCTOBER);
+service/CorporateActionService.java:164: LocalDate fromDate = LocalDate.of(actionPerformDto.year(), quarterStart, ONE);
+service/CorporateActionService.java:166: if (Month.OCTOBER == quarterStart) {
+service/CorporateActionService.java:167: toDate = LocalDate.of(actionPerformDto.year() + 1, quarterStart.plus(3), ONE).minusDays(ONE);
+service/CorporateActionService.java:169: toDate = LocalDate.of(actionPerformDto.year(), quarterStart.plus(3), ONE).minusDays(ONE);
+## G2 2
+service/CorporateActionService.java:562: double newPrice = oldPrice * (mainStockPricePercentage / 100);
+service/CorporateActionService.java:586: newEntity.setPrice(demergerContext.pricePercentage() * (entity.getPrice() / 100));
+## G4 10
+service/CorporateActionService.java:219: switch (action) {
+service/CorporateActionService.java:220: case BONUS -> processBonusShares(email, corporateAction, brokerName);
+service/CorporateActionService.java:221: case DEMERGER -> processDemergerOfShares(email, corporateAction, brokerName);
+service/CorporateActionService.java:222: case STOCK_SPLIT -> processStockSplit(email, corporateAction, brokerName);
+service/CorporateActionService.java:238: switch (action) {
+service/CorporateActionService.java:239: case STOCK_SPLIT -> processStockSplit(actionWrapper);
+service/CorporateActionService.java:240: case NAME_OR_SYMBOL_CHANGE -> processNameOrSymbolChange(actionWrapper);
+service/CorporateActionService.java:608: switch (actionWrapper.getType()) {
+service/CorporateActionService.java:609: case DEMERGER -> validateDemergerData(actionWrapper.getDemergerDetail());
+service/CorporateActionService.java:610: case BONUS -> validateBonusData(actionWrapper);
+## G5 1
+service/CorporateActionService.java:42: private static final List<Month> QUARTER_START_MONTHS = List.of(Month.JANUARY, Month.APRIL, Month.JULY, Month.OCTOBER);
+## G7 3
+dto/enums/CorporateActionType.java:16: public static final List<CorporateActionType> FILTERABLE_CORPORATE_ACTIONS = filterableCorporateActions();
+service/CorporateActionService.java:41: private static final int ONE = 1;
+service/CorporateActionService.java:42: private static final List<Month> QUARTER_START_MONTHS = List.of(Month.JANUARY, Month.APRIL, Month.JULY, Month.OCTOBER);

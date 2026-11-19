@@ -4,15 +4,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 
 @Configuration
-@EnableMongoAuditing(
-        auditorAwareRef = "securityAuditorAware"
-//        dateTimeProviderRef = "utcLocalDateTimeProvider"
-)
+@EnableMongoAuditing(auditorAwareRef = "securityAuditorAware")
 public class MongoDBConfig {
-
-//    // Bean to provide UTC timestamps to audited entities
-//    @Bean
-//    public DateTimeProvider utcLocalDateTimeProvider() {
-//        return () -> Optional.of(LocalDateTime.now(ZoneOffset.UTC));
-//    }
 }

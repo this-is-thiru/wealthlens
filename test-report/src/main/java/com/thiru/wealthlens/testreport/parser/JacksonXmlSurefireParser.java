@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.dataformat.xml.XmlMapper;
 
@@ -36,7 +37,7 @@ public class JacksonXmlSurefireParser implements SurefireReportParser {
             for (Path path : stream) {
                 try {
                     suites.add(parse(path));
-                } catch (Exception e) {
+                } catch (JacksonException e) {
                     log.warn("Skipping invalid report file: {}", path, e);
                 }
             }

@@ -1,0 +1,9 @@
+{
+  "code": "OS_DIVIDEND_2_22_E",
+  "_note": "C4a reverses W-093a Q2a: DEEMED_DIVIDEND is the s.2(40)(f) / 2(22)(f) kind (Gazette 265620 p.10). Drafted by Claude, adopted by the owner's ruling C4a (W-323, D-662).",
+  "label": "Dividend income u/s 2(22)(e)",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "A dividend u/s 2(22)(e), a loan or advance to a shareholder, is not a kind the computation holds; enter it from your records"
+  }
+}

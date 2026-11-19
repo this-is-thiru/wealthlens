@@ -1,0 +1,98 @@
+{
+  "ruleId": "PERQ-GIFT",
+  "ruleSet": "RS-PERQ-GIFT",
+  "_note": "A gift, voucher or token (in lieu of a gift) from the employer, to the employee or a household member: \"the sum equal to the amount of such gift\", but \"'nil', if the value … is below\" the limit \"in aggregate during the tax year\" (D-117; rulebook PERQ-GIFT-2026, PERQ-GIFT-BOUNDARY-001). This row is the limit; the node aggregates per employer (D-117 C4a) and compares strictly below — at the limit the whole is salary, not the excess. TY 2026-27: \"₹ 15,000\" (r.15(5) Table IV Sl. 4, Gazette 271092, p.1546). TY 2025-26: \"five thousand rupees\" (Rules 1962 r.3(7)(iv) proviso, consolidated rule 3, p.4). For every employee. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viii), with Income-tax Rules, 1962 r.3(7)(iv)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 4",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "5000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(7) stands as in the rule in force from 1-4-2009 (r.3(10)) with r.3(7)(iii)'s second proviso from G.S.R. 452(E)",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/42998/Rule-3_2025-12-13_12-11-50_d5ea0b09d5ea0b_en.pdf/09d9b9ee-e51d-2f37-bc21-8c787c0061ea",
+        "sourceDescription": "Income Tax Department, consolidated Income-tax Rules, 1962 rule 3, r.3(7)(iv), p.4 (owner's download, 2026-09-28) — Income-tax Rules, 1962 r.3(7)(iv) as substituted from 1-4-2009 by Notification No. 94/2009 (S.O. 3245(E), 18-12-2009, the Income-tax (Thirteenth Amendment) Rules, 2009) and corrected by Notification No. 2/2010 (S.O. 66(E), 12-1-2010), both read in the Income Tax Department's own copies (D-172; the Gazette facsimiles, Part II s.3(ii), are not on egazette and are unread); the later amendments of rule 3 are read in the Gazette (G.S.R. 415(E) of 2020, 452(E), 615(E), 636(E) of 2023) and the Gazette amendment chain from 1-9-2025 to 31-3-2026 touches no part of rule 3 (docs/taxplanning-build/sources/2026-10-10-rule-3.md)",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viii), with Income-tax Rules, 1962 r.3(7)(iv)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 4",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "15000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 4, p.1546",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 4, p.1546",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

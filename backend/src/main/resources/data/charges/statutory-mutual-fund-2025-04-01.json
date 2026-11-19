@@ -1,0 +1,51 @@
+{
+  "scheduleCode": "STATUTORY_MF_2025_04",
+  "brokerName": null,
+  "assetType": "MUTUAL_FUND",
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/198304.pdf",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "STAMP_DUTY",
+      "displayName": "Stamp duty",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BUY",
+      "events": [
+        "BUY"
+      ],
+      "rate": 0.005,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 10,
+      "notes": "0.005% on the amount invested. Statutory, levied on purchase only. Law: Indian Stamp Act, 1899, Schedule I Article 56A(a), issue of security other than debenture: 0.005%; a mutual fund unit is a security (s.2(23A), SCRA s.2(h)(id)). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 6."
+    },
+    {
+      "code": "STT",
+      "displayName": "Securities Transaction Tax",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "SELL",
+      "events": [
+        "SELL"
+      ],
+      "eligibility": "#equityOriented == true",
+      "rate": 0.001,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 20,
+      "notes": "0.001% on redemption of equity-oriented schemes only. Statutory. The scheme attribute comes from the instrument profile, which is why the broker's mutual fund card requires one: with no profile the variable is unset, this rule is quietly skipped, and the gap is recorded as NO_INSTRUMENT_PROFILE rather than passing unnoticed. Law: Finance (No. 2) Act, 2004 s.98 Table Sl. 5, sale of a unit of an equity-oriented fund to the Mutual Fund: 0.001 per cent (Finance Act 2013 s.135(v)). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 3."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "code": "SIGNING_AUTHORITY_OUTSIDE_INDIA",
+  "_note": "r.164(3)(b) and (6)(b): \"has signing authority in any account located outside India\". The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (IA) (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
+  "question": "Did you have signing authority in any account located outside India?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(b), p.1662; r.164(6)(b), p.1663; egazette 2018/184509, Income-tax (Second Amendment) Rules, 2018, G.S.R. 332(E), Income-tax Rules, 1962 r.12(1)(a) proviso (IA), p.177",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

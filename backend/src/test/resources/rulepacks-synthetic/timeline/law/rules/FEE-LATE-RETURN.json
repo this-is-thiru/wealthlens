@@ -1,0 +1,104 @@
+{
+  "ruleId": "FEE-LATE-RETURN",
+  "ruleSet": "RS-FEE-LATE-RETURN",
+  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack, regime references renamed (NEW_TAX_REGIME -> SYN_DEFAULT, SYN_FLAT; FIRST_SCHEDULE_RATES -> SYN_CLASSIC); not law, never shipped. Original note: The fee for a return furnished after its due date: 1961 s.234F(1) as substituted by the Finance Act, 2021 s.60 — ₹5,000, at most ₹1,000 where total income does not exceed ₹5,00,000; 2025 s.428(a) as substituted by the Finance Act, 2026 s.96 — ₹1,000 where it does not exceed ₹5,00,000, ₹5,000 otherwise. The thc copy's ₹5,000 / ₹10,000 is superseded. Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.234F(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.428(a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "LateReturnFee",
+        "incomeAtMost": "500000",
+        "lowerFee": "1000",
+        "lowerFeeIsCeiling": true,
+        "fee": "5000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2021, s.60, substituting s.234F(1) of the Income-tax Act, 1961",
+        "gazetteRef": "CG-DL-E-28032021-226208",
+        "notifiedOn": "2021-03-28",
+        "effectiveFrom": "2021-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2021/226208.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2021/226208.pdf",
+        "sourceDescription": "Gazette CG-DL-E-28032021-226208, Finance Act, 2021 s.60 p.45 (in force 1-4-2021 by s.1(2)(a)); Income-tax Act, 1961 s.234F as on thc.nic.in p.698 for the rest of the section",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.234F(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.428(a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "LateReturnFee",
+        "incomeAtMost": "500000",
+        "lowerFee": "1000",
+        "lowerFeeIsCeiling": false,
+        "fee": "5000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026, s.96, substituting s.428 of the Income-tax Act, 2025",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-30",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.96 p.59 (in force 1-4-2026 by s.1(2)(a)); Income-tax Act, 2025 s.428 as enacted p.449, superseded",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+    "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.96 p.59 (in force 1-4-2026 by s.1(2)(a)); Income-tax Act, 2025 s.428 as enacted p.449, superseded",
+    "accessedOn": "2026-11-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

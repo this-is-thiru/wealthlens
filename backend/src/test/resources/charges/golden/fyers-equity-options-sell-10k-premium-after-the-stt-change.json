@@ -1,0 +1,26 @@
+{
+  "name": "fyers-equity-options-sell-10k-premium-after-the-stt-change",
+  "describes": "The option sale at Fyers in April 2026: the STT at 0.15% and the newer window's rates, with the clearing charge at 0.009% of the Rs 10,000 premium (W-186).",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": "EQUITY",
+    "segment": "OPTIONS",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 100,
+    "quantity": 100,
+    "transactionDate": "2026-04-01"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 15.0,
+      "EXCHANGE_TXN": 3.55,
+      "SEBI_FEE": 0.01,
+      "IPFT": 0.0,
+      "CLEARING": 0.9,
+      "GST": 4.4
+    },
+    "total": 43.86
+  }
+}

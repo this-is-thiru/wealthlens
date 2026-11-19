@@ -1,0 +1,12 @@
+{
+  "code": "CG_A2_CONSIDERATION",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Full value of consideration (short-term, equity share or equity-oriented fund, STT paid)",
+  "source": {
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "SHORT_TERM_LISTED_EQUITY"
+    ],
+    "figure": "consideration"
+  }
+}

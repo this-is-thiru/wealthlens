@@ -1,0 +1,27 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(a): \"premium paid for a life insurance policy — (i) in the case of an individual, on life of such individual, spouse of the individual and any child of the individual … subject to paragraph 2\" (Gazette 265620, p.561). Entered per policy (LifeInsurancePolicy), never as a plain qualifying payment: para 2 limits each policy's premium to a share of its actual capital sum assured (DED-PREMIUM-SHARE). D-134. TY 2025-26: Income-tax Act, 1961 s.80C(2)(i) (thc p.330): \"to effect or to keep in force an insurance on the life of persons specified in sub-section (4)\", each premium within s.80C(3)/(3A)'s share (DED-PREMIUM-SHARE). sources/2026-10-07-chapter-via.md; D-144.",
+  "code": "LIFE_INSURANCE_PREMIUM",
+  "displayName": "Life insurance premium",
+  "kind": "QUALIFYING_PAYMENT",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV",
+    "DED-PREMIUM-SHARE"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(a), p.561; para 2, pp.563–564; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(i), p.330",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

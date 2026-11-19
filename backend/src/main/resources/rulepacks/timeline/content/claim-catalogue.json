@@ -1,0 +1,1735 @@
+{
+  "_note": "The claim catalogue (DR 22; W-117a, D-699): how a deduction or exemption is claimed. One entry for a rule: a rule is named, as an entry's rule or in its covers, once. Texts type no figure — a figure comes from a {{RuleId.field}} placeholder, a section number from basis. Each year's pack keeps the entries whose rule it holds, covering only the rules it holds.",
+  "entries": [
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.11(1) (p.36) and Sch. III preamble (p.504) and Table Sl. 11 (p.506): the exemption's conditions (a) – (d) are the allowance's purpose, the prescribed extent, a home not owned, and rent actually paid — none is proof given to an employer; s.392(5)(b) (p.397) puts the duty to obtain evidence of prescribed claims on the employer. So the return takes the claim (owner's ruling, session 97, option (a)). s.392(4)(a)'s \"at his option\" (p.397) covers five other particulars and is not this entry's basis (erratum on DR 22 C2). provision1961: s.10(13A) and its Explanation, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.77 — the same conditions, none about proof given to an employer (W-117b C3a; sources/2026-11-14-claim-channel.md C16). steps[2]: SAL-HOUSE-RENT-LANDLORD-PAN (r.205(2) Table Sl. 1; sources/2026-10-09-landlord-pan.md). Content: Claude's drafts, adopted by the owner (D-699).",
+      "rule": "SAL-HOUSE-RENT-ALLOWANCE",
+      "section": "SEC-HOUSE-RENT-ALLOWANCE",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.10(13A)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.11(1) with Sch. III Table Sl. 11; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Keep a rent receipt for every month you pay rent.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "A receipt for each month's rent."
+        },
+        {
+          "order": 2,
+          "instruction": "If your rent for the year is more than {{SAL-HOUSE-RENT-LANDLORD-PAN.exceeds}}, get your landlord's name, address and PAN.",
+          "actor": "LANDLORD",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Give the receipts and those details to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "If you missed your employer's cut-off, claim it in your return instead.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "LANDLORD",
+          "askFor": "Their name, address and PAN, where your rent is above that figure."
+        },
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your rent, and the last day they take proofs."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Rent receipts",
+          "closedBy": "A receipt for each month you paid rent.",
+          "from": "LANDLORD",
+          "recordedAs": "RENT_RECEIPTS"
+        },
+        {
+          "name": "Your landlord's particulars",
+          "closedBy": "Their name, address and PAN, where your rent is above that figure.",
+          "from": "LANDLORD",
+          "recordedAs": "LANDLORD_PARTICULARS"
+        }
+      ],
+      "mistakes": [
+        "Leaving dearness allowance out of the salary the limits are measured on.",
+        "Claiming for the whole year when you lived there for part of it.",
+        "Claiming for a home you own and live in."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025 s.133(6), Gazette CG-DL-E-22082025-265620 p.169 (read for D-142; \"only on the basis of the information relating to such donation\" re-read, session 97); 1961 s.80G(5D) Explanation 2A as DED-DONATION-UNREPORTED's provision (sources/2026-10-07-chapter-via.md M6). chapterViiiPart: s.133 sits under \"B.—Deductions in respect of certain payments\" (heading p.159; s.133 p.167; \"C.—\" begins p.171), same Gazette copy. appliesTo: the donees s.133(6) names only (D-142 C6; DR 22 erratum W-078f); the other donees are W-117b's. mistakes[1]: s.80G(5D) (sources/2026-10-07-chapter-via.md B27). Content: Claude's drafts, adopted by the owner (D-699).",
+      "rule": "DED-DONATION-UNREPORTED",
+      "section": "SEC-DONATIONS",
+      "channel": "THIRD_PARTY_REPORTED",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "NOT_ALLOWABLE_UNLESS_REPORTED",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80G(5D) Explanation 2A",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.133(6)",
+          "presence": "PRESENT"
+        }
+      },
+      "appliesTo": "A donation to a charitable institution or fund that has to report it to the tax department. Other donations are not covered here.",
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Ask the institution whether it reports your donation to the tax department.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Get its certificate of the donation.",
+          "actor": "INSTITUTION",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The institution's certificate of your donation."
+        },
+        {
+          "order": 3,
+          "instruction": "Check that the donation appears in your annual information statement before you file.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "Its certificate of your donation, and whether it has reported the donation to the tax department."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "The institution's certificate",
+          "closedBy": "The certificate it issues once it has reported the donation.",
+          "from": "INSTITUTION",
+          "recordedAs": "NOT_RECORDED"
+        }
+      ],
+      "mistakes": [
+        "Claiming a donation the institution has not reported.",
+        "Claiming a cash donation above the limit."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.123 (p.159) and Sch. XV paras 1 – 3 (pp.561 – 564) read in full: no condition about the employer or proof given to one; s.392(5)(b) (p.397) binds the payer only (the HRA inference, C3). chapterViiiPart: s.123 under \"B.—Deductions in respect of certain payments\" (p.159). steps[1]: Sch. XV para 1(f), an employee's contribution to a recognised provident fund. mistakes[1]: para 3(b)(iii) excludes what s.22 allows; mistakes[2]: para 1(q) excludes development fees and donations. provision1961: s.80C, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.330. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "DED-SCHEDULE-XV",
+      "section": "SEC-INVESTMENT-DEDUCTION",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80C",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.123 with Sch. XV; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Start from the provident fund your employer already takes from your salary: it counts towards this deduction.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Add what you paid in the year: life insurance premiums, your children's tuition fees, the principal repaid on your home loan and the listed savings schemes.",
+          "actor": "YOU",
+          "by": "TAX_YEAR_END",
+          "warnsOfLateReturnBar": false,
+          "produces": "A receipt or statement for each payment."
+        },
+        {
+          "order": 3,
+          "instruction": "Give the proofs to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Claim in your return whatever your employer did not count.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your investments, and the last day they take proofs."
+        },
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A statement of what you paid in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Payment receipts and statements",
+          "closedBy": "A receipt or statement for each payment, dated in the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "QUALIFYING_PAYMENT"
+        }
+      ],
+      "mistakes": [
+        "Forgetting that the provident fund taken from your salary already counts.",
+        "Counting home-loan interest here: only the principal repaid counts.",
+        "Counting development fees or donations to a school as tuition fees."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.124 (pp.160 – 161) read in full: the word \"employer\" appears only in (1) and (2), the employer's contribution (W-117c's); (3) – (5) and (10), the person's own contribution, carry no employer condition; s.392(5)(b) (p.397) binds the payer only. steps[1], mistakes[0]: s.124(5) and (10) — an amount allowed under s.123 is not allowed here, and the reverse. chapterViiiPart: Part B (p.159). provision1961: s.80CCD(1B) and its proviso, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.339. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "DED-NPS-OWN",
+      "section": "SEC-PENSION-SCHEME",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80CCD(1B)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.124(3) – (5), (10); s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check how much of your own pension scheme contribution is already counted with your investments.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Pay the rest into your own pension scheme account before the tax year ends.",
+          "actor": "YOU",
+          "by": "TAX_YEAR_END",
+          "warnsOfLateReturnBar": false,
+          "produces": "Your pension scheme account statement for the year."
+        },
+        {
+          "order": 3,
+          "instruction": "Give the statement to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "If you missed your employer's cut-off, claim it in your return instead.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your pension scheme contribution, and the last day they take proofs."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Pension scheme statement",
+          "closedBy": "A statement of what you paid into your own account in the tax year.",
+          "from": "YOU",
+          "recordedAs": "QUALIFYING_PAYMENT"
+        }
+      ],
+      "mistakes": [
+        "Counting the same contribution both with your investments and here."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.126 (pp.161 – 162) read in full: no condition about the employer; s.392(5)(b) (p.397) binds the payer only. steps[1]: s.126(9) — any mode but cash, cash allowed for a preventive health check-up. steps[3]: s.126(8)(a), the senior citizen's limit. steps[4]: s.126(8)(b), (10)(a), (c). mistakes[1]: s.126(7) — medical expenditure on a senior citizen is allowed only where no premium was paid for that person (narrowed at build from the draft's \"the same person\"). covers: the section's other rules (C1a). chapterViiiPart: Part B (p.159). provision1961: s.80D, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.341. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "DED-HEALTH-FAMILY",
+      "covers": [
+        "DED-HEALTH-CASH-PERMITTED",
+        "DED-HEALTH-CHECKUP",
+        "DED-HEALTH-FAMILY-SENIOR",
+        "DED-HEALTH-INSURANCE-LIMB",
+        "DED-HEALTH-INSURANCE-PAID",
+        "DED-HEALTH-MEDICAL-LIMB",
+        "DED-HEALTH-PARENTS",
+        "DED-HEALTH-PARENTS-SENIOR",
+        "DED-HEALTH-SPREAD"
+      ],
+      "section": "SEC-HEALTH-INSURANCE",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80D",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.126; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Pay every premium by a method other than cash; only a preventive health check-up may be paid in cash.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Get the insurer's certificate of each premium, showing the period it covers.",
+          "actor": "INSTITUTION",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The insurer's certificate of the premium."
+        },
+        {
+          "order": 3,
+          "instruction": "Note the age of each person insured, your parents included: a senior citizen has a higher limit.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Where you paid a premium for several years at once, count only this year's share.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 5,
+          "instruction": "Give the certificates to your employer on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 6,
+          "instruction": "If you missed your employer's cut-off, claim it in your return instead.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "Its certificate of each premium you paid, with the period it covers."
+        },
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for your health insurance, and the last day they take proofs."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Insurer's certificate",
+          "closedBy": "A certificate for each premium, showing the period it covers.",
+          "from": "INSTITUTION",
+          "recordedAs": "HEALTH_PAYMENT"
+        }
+      ],
+      "mistakes": [
+        "Paying a premium in cash.",
+        "Claiming medical expenses for a senior citizen whose health insurance premium you also paid."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.22 (pp.47 – 48) read in full: no condition about the employer; the higher limit needs \"a certificate from the person to whom interest is payable\" (s.22(2)(a)(ii), (4)). A loss under \"Income from house property\" is one of the five particulars s.392(4)(a) (p.397, C1) lets a person give the employer \"at his option\" — here a true basis. steps[2]: the higher limit's conditions, s.22(2)(a)(i) – (ii); the limits by placeholder from conditionsMet, anyOtherCase and aggregate (s.22(2), (5)). mistakes[0]: Sch. XV para 3(a)(iii) takes principal repaid. covers: the own-residence rules (C1a). provision1961: s.24(b) and its provisos, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.147. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md. evidence[1]: Income-tax Rules, 2026 r.205(2) Table Sl. 3, Gazette CG-DL-E-20032026-271092 p.1687 — \"Name, address and Permanent Account Number of the lender\"; for TY 2025-26 the 1962 Rules r.26C(2) Sl. 3, egazette 2016/169418 p.6, as enacted (W-120 C3a, D-718).",
+      "rule": "HP-OWN-RESIDENCE-INTEREST-CAP",
+      "covers": [
+        "HP-OWN-RESIDENCE",
+        "HP-OWN-RESIDENCE-HIGHER-LIMIT",
+        "HP-OWN-RESIDENCE-INTEREST",
+        "HP-OWN-RESIDENCE-PRE-CONSTRUCTION"
+      ],
+      "section": "SEC-HOUSE-PROPERTY-DEDUCTIONS",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.24(b)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.22(1)(b), (2), (4); s.392(4)(a)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Get your lender's certificate of the interest payable for the year, showing any later loan taken to repay the first.",
+          "actor": "LENDER",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The lender's certificate of interest."
+        },
+        {
+          "order": 2,
+          "instruction": "Check your limit: up to {{HP-OWN-RESIDENCE-INTEREST-CAP.conditionsMet}} where the loan bought or built the home, the work was completed within the time the law allows and you hold the lender's certificate; up to {{HP-OWN-RESIDENCE-INTEREST-CAP.anyOtherCase}} otherwise; never more than {{HP-OWN-RESIDENCE-INTEREST-CAP.aggregate}} for all your homes together.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "If you want less tax deducted from your salary, give your employer the loss from your home on the declaration form they give you.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Claim it in your return either way.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "LENDER",
+          "askFor": "A certificate of the interest payable for the year, including on any loan taken to repay the first."
+        },
+        {
+          "whom": "EMPLOYER",
+          "askFor": "The declaration form for a loss from your home, and the last day they take it."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Lender's certificate of interest",
+          "closedBy": "The certificate for the year, from the person the interest is payable to.",
+          "from": "LENDER",
+          "recordedAs": "LENDER_CERTIFICATE"
+        },
+        {
+          "name": "Your lender's particulars",
+          "closedBy": "Their name, address and PAN.",
+          "from": "LENDER",
+          "recordedAs": "LENDER_PARTICULARS"
+        }
+      ],
+      "mistakes": [
+        "Counting principal repaid as interest: the principal belongs with your investments.",
+        "Using the higher limit when the home was not completed in time after the loan was taken."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — Sch. III Table Sl. 8 (p.505): the sum must be \"received by, or due to, such individual\" from his employer, and is exempt only up to \"expenses actually incurred\"; nothing about proof given to the employer; s.392(5)(b) (p.397) binds the payer only. Income-tax Rules, 2026 r.278 (Gazette CG-DL-E-20032026-271092 pp.1775 – 1776) read in full: fares by mode, two journeys in a block of four calendar years from the calendar year 2022 (2), the carry-over (3) – (4), the two-children limit (5) – (6); no employer-proof condition. appliesTo, steps[1]: C4a — no assistance from the employer means nothing to claim. mistakes[1]: r.278(2), calendar years. covers: r.278's rules (C1a); SAL-LEAVE-TRAVEL-DISTANCE-RATE is TY 2026-27's only, so TY 2025-26's pack covers the other two. provision1961: s.10(5) and its proviso, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.67 (r.2B of the 1962 Rules is not this entry's basis). Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "SAL-LEAVE-TRAVEL-CONCESSION",
+      "covers": [
+        "SAL-LEAVE-TRAVEL-CHILDREN",
+        "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
+        "SAL-LEAVE-TRAVEL-JOURNEYS"
+      ],
+      "section": "SEC-LEAVE-TRAVEL-CONCESSION",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.10(5)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.11(1) with Sch. III Table Sl. 8; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "appliesTo": "Travel assistance your employer actually paid you for a journey in India. With no assistance from your employer there is nothing to claim.",
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check that your employer pays you travel assistance: without it there is nothing to claim.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Travel in India and keep the tickets for each journey.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "A ticket for each journey and each person travelling."
+        },
+        {
+          "order": 3,
+          "instruction": "Check how many journeys you have already used in the current block of calendar years.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Claim through your employer's process, with the tickets.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 5,
+          "instruction": "If your employer paid the assistance but taxed it, claim it in your return.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "Their process for claiming travel assistance, and the last day they take tickets."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Travel tickets",
+          "closedBy": "A ticket for each journey and each person travelling.",
+          "from": "YOU",
+          "recordedAs": "JOURNEY_EXPENDITURE"
+        }
+      ],
+      "mistakes": [
+        "Claiming without having travelled.",
+        "Treating the block of years as tax years: it runs in calendar years."
+      ]
+    },
+    {
+      "_sources": "channel, ifMissingFromForm16: Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.19(1) Table Sl. 1 (p.41): \"Sum paid by the assessee as a tax on employment\", the entire amount; no condition about the employer; s.392(5)(b) (p.397) binds the payer only. mistakes[0]: \"Sum paid\" — tax due but unpaid is not deducted. provision1961: s.16(iii), thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF p.140. Content: Claude's drafts, adopted by the owner (W-117b plan, session 97); changes at build are listed in sources/2026-11-14-claim-channel.md.",
+      "rule": "SAL-TAX-ON-EMPLOYMENT",
+      "section": "SEC-DEDUCTIONS-FROM-SALARY",
+      "channel": "EMPLOYER_OPTIONAL",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.16(iii)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.19(1) Table Sl. 1; s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check your payslips for the tax on employment your employer took and paid to the State.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Where you paid it yourself, keep the receipt.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The State's receipt for the tax you paid."
+        },
+        {
+          "order": 3,
+          "instruction": "Claim in your return what your employer did not count.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [],
+      "evidence": [
+        {
+          "name": "Receipt for tax paid yourself",
+          "closedBy": "The State's receipt for each payment you made yourself.",
+          "from": "YOU",
+          "recordedAs": "NOT_RECORDED"
+        }
+      ],
+      "mistakes": [
+        "Claiming tax that was due but not paid in the year."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.153 (p.185) read in full: no employer condition; (1)(a) and (2)(a) savings deposits, excluding time deposits. channel (W-117c C1a): s.392(4)(a)(iv) (p.397) lets other-head income be given to the employer at the person's option, and r.205(2) Table Sl. 4 (Rules, G.S.R. 198(E), p.1687) lists any Chapter VIII deduction; s.392(5)(b) binds the payer only. chapterViiiPart: Part D (p.185). provision1961: s.80TTA, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF pp.424 – 425. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-SAVINGS-INTEREST",
+      "section": "SEC-SAVINGS-INTEREST",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "D",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80TTA",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.153(1)(a), (c), (2)(a); s.392(4)(a)(iv), (5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Add up the interest every savings account paid you in the year, from banks, co-operative banks and the Post Office.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The year's interest on each savings account."
+        },
+        {
+          "order": 2,
+          "instruction": "Tell your employer of the interest and the deduction only if you want less tax deducted from your salary.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Enter the interest as income in your return; the deduction is worked out from it.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A statement of the interest each savings account paid in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Interest statement",
+          "closedBy": "Each bank's or the Post Office's statement of savings interest for the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "NOT_RECORDED"
+        }
+      ],
+      "mistakes": [
+        "Counting fixed-deposit interest as savings interest.",
+        "Leaving the interest out of income because the deduction covers it."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.153 (p.185) read in full: no employer condition; (1)(b) and (2)(b) a senior citizen's interest on deposits in any account, time deposits included. channel (W-117c C1a): as the savings-interest entry, s.392(4)(a)(iv) and r.205(2) Table Sl. 4. chapterViiiPart: Part D (p.185). provision1961: s.80TTB, thc.nic.in PDF p.425; s.80TTA excludes a person s.80TTB applies to (p.424). Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-DEPOSIT-INTEREST-SENIOR",
+      "section": "SEC-DEPOSIT-INTEREST-SENIOR",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "D",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80TTB",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.153(1)(b), (2)(b); s.392(4)(a)(iv), (5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Add up the interest on every deposit, fixed deposits included, from banks, co-operative banks and the Post Office.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The year's interest on each deposit."
+        },
+        {
+          "order": 2,
+          "instruction": "Tell your employer or pension payer of the interest and the deduction only if you want less tax deducted.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Enter the interest as income in your return; the deduction is worked out from it.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A statement of the interest each deposit paid in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Interest statement",
+          "closedBy": "Each bank's or the Post Office's statement of deposit interest for the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "NOT_RECORDED"
+        }
+      ],
+      "mistakes": [
+        "Claiming it for a year before you are a senior citizen.",
+        "Claiming the savings-interest deduction as well."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.154 (pp.185 – 186) read in full: no employer condition; (2)(a) a copy of the medical authority's certificate furnished, (2)(b) a certificate needing reassessment renewed, (2)(c) in the prescribed form and manner along with the return. channel and verdict (W-117c C2a). chapterViiiPart: Part E (p.185). provision1961: s.80U(2) and proviso, thc.nic.in PDF p.426. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-DISABILITY",
+      "covers": [
+        "DED-DISABILITY-SEVERE"
+      ],
+      "section": "SEC-DISABILITY",
+      "channel": "RETURN_WITH_DOCUMENT",
+      "chapterViiiPart": "E",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80U",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.154",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Get a certificate of your disability from a medical authority.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The medical authority's certificate."
+        },
+        {
+          "order": 2,
+          "instruction": "If the certificate says the disability is to be reassessed, get a new certificate before it expires.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "Furnish a copy of the certificate with your return, in the form the Rules prescribe.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [],
+      "evidence": [
+        {
+          "name": "Disability certificate",
+          "closedBy": "A copy furnished with your return, current for the tax year.",
+          "from": "YOU",
+          "recordedAs": "NOT_RECORDED"
+        }
+      ],
+      "mistakes": [
+        "Using a certificate that has expired.",
+        "A dependant also claiming for you as their dependant."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.127 (pp.162 – 164) read in full: no employer condition; (6) a copy of the medical authority's certificate furnished in the prescribed form and manner along with the return; (7) a reassessment certificate renewed; (8) the dependant must not claim under s.154; (9)(b) who is a dependant. channel and verdict (W-117c C2a). chapterViiiPart: Part B (p.159). provision1961: s.80DD(4) and proviso, thc.nic.in PDF p.343. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-DISABLED-DEPENDANT",
+      "covers": [
+        "DED-DEPENDANT",
+        "DED-DEPENDANT-OWN-CLAIM",
+        "DED-DISABLED-DEPENDANT-SEVERE"
+      ],
+      "section": "SEC-DISABLED-DEPENDANT",
+      "channel": "RETURN_WITH_DOCUMENT",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80DD",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.127",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check the person is your spouse, child, parent, brother or sister, and depends on you wholly or mainly.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Keep the bills for their treatment, training and care, or the receipts of the approved scheme you pay into for them.",
+          "actor": "YOU",
+          "by": "TAX_YEAR_END",
+          "warnsOfLateReturnBar": false,
+          "produces": "Bills or scheme receipts for the year."
+        },
+        {
+          "order": 3,
+          "instruction": "Get a certificate of their disability from a medical authority; if it says the disability is to be reassessed, get a new one before it expires.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "The medical authority's certificate."
+        },
+        {
+          "order": 4,
+          "instruction": "Furnish a copy of the certificate with your return, in the form the Rules prescribe.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [],
+      "evidence": [
+        {
+          "name": "Dependant's disability certificate",
+          "closedBy": "A copy furnished with your return, current for the tax year.",
+          "from": "YOU",
+          "recordedAs": "NOT_RECORDED"
+        },
+        {
+          "name": "Bills or scheme receipts",
+          "closedBy": "The bills or receipts for what you spent or paid in the tax year.",
+          "from": "YOU",
+          "recordedAs": "DEPENDANT_SUPPORT"
+        }
+      ],
+      "mistakes": [
+        "Claiming for a dependant who claims the deduction for their own disability.",
+        "Using a certificate that has expired."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.124(1) – (2) (p.160) re-read: the deduction arises only \"if the employer makes any contribution\" to the person's pension account. channel and verdict (W-117c C3a): nothing to claim without the employer's contribution; one made and missing from Form 16 is taken by the return. chapterViiiPart: Part B (p.159). provision1961: s.80CCD(2), thc.nic.in PDF p.339. Content: Claude's drafts, adopted by the owner (W-117c plan, session 100).",
+      "rule": "DED-NPS-EMPLOYER-OTHER",
+      "covers": [
+        "DED-NPS-EMPLOYER-GOVT",
+        "DED-NPS-EMPLOYER-NEW-TAX-REGIME"
+      ],
+      "section": "SEC-PENSION-SCHEME",
+      "channel": "EMPLOYER_PROVIDED",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "NOTHING_TO_CLAIM",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80CCD(2)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.124(1), (2)",
+          "presence": "PRESENT"
+        }
+      },
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Check your payslips, or your employer's certificate of tax deducted from your salary, for your employer's contribution to your pension scheme account.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "If your employer made no contribution, there is nothing to claim.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 3,
+          "instruction": "If your employer did contribute and their certificate of tax deducted does not show the deduction, claim it in your return.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "EMPLOYER",
+          "askFor": "A statement of what they contributed to your pension scheme account in the tax year."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Employer's contribution",
+          "closedBy": "Your payslips or pension scheme statement showing the employer's contribution for the tax year.",
+          "from": "EMPLOYER",
+          "recordedAs": "NOT_RECORDED"
+        }
+      ],
+      "mistakes": [
+        "Counting your own contribution here."
+      ]
+    },
+    {
+      "_sources": "Income-tax Act, 2025, Gazette CG-DL-E-22082025-265620 — s.133 (pp.167 – 169) read: (1)(a) the whole of donations to the named funds, (1)(b) half of donations to the others, (2) the qualifying limit over both, (3) a sum allowed here qualifies under no other provision, (4) money only, (5) the cash bar, (6) the donee's report for (1)(b)(ii) only, which the reported-donation entry covers; no employer condition, and r.205(2) Table Sl. 4 lists any Chapter VIII deduction (W-117e C2a). One claim of three rules, priced together (C1a); the cash bar stays outside, named by placeholder (C3a). chapterViiiPart: Part B (p.159). provision1961: s.80G(1), (2), (4), (5D), Explanation 5, thc.nic.in consolidated Income-tax Act, 1961 (current to Act 7 of 2019) PDF pp.348 – 353. Content: Claude's drafts, adopted by the owner (W-117e plan, session 100).",
+      "rule": "DED-DONATION-WHOLE",
+      "covers": [
+        "DED-DONATION-HALF",
+        "DED-DONATION-QUALIFYING"
+      ],
+      "section": "SEC-DONATIONS",
+      "channel": "EMPLOYER_OPTIONAL",
+      "chapterViiiPart": "B",
+      "ifMissingFromForm16": "CLAIMABLE_IN_RETURN",
+      "basis": {
+        "provision1961": {
+          "instrument": "Income-tax Act, 1961",
+          "reference": "s.80G(1), (2), (4)",
+          "presence": "PRESENT"
+        },
+        "provision2025": {
+          "instrument": "Income-tax Act, 2025",
+          "reference": "s.133(1), (2); s.392(5)(b)",
+          "presence": "PRESENT"
+        }
+      },
+      "appliesTo": "Donations of money to a fund, institution or body that the law names for this deduction. For a charitable institution or fund that must report your donation, see also the reported-donation entry.",
+      "steps": [
+        {
+          "order": 1,
+          "instruction": "Give by any way other than cash if a donation is more than {{DED-DONATION-CASH.atMost}}.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 2,
+          "instruction": "Get a receipt from the fund or institution, with its name and the amount.",
+          "actor": "YOU",
+          "by": "NONE",
+          "warnsOfLateReturnBar": false,
+          "produces": "A receipt for each donation."
+        },
+        {
+          "order": 3,
+          "instruction": "Give the receipt to your employer on the declaration form they give you if you want less tax deducted.",
+          "actor": "YOU",
+          "by": "EMPLOYER_PROOF_CUT_OFF",
+          "warnsOfLateReturnBar": false
+        },
+        {
+          "order": 4,
+          "instruction": "Otherwise claim it in your return.",
+          "actor": "YOU",
+          "by": "RETURN_DUE",
+          "warnsOfLateReturnBar": false
+        }
+      ],
+      "askWhom": [
+        {
+          "whom": "INSTITUTION",
+          "askFor": "A receipt for each donation, with its name and the amount."
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Donation receipt",
+          "closedBy": "The receipt for each donation made in the tax year.",
+          "from": "INSTITUTION",
+          "recordedAs": "DONATION"
+        }
+      ],
+      "mistakes": [
+        "Giving goods or services instead of money.",
+        "Paying more than the limit in cash.",
+        "Counting the same sum again under another section."
+      ]
+    }
+  ],
+  "notYetCatalogued": [
+    "CG-EXEMPT-RESIDENTIAL-HOUSE",
+    "DED-AGNIVEER-GOVERNMENT",
+    "DED-AGNIVEER-OWN",
+    "DED-EDUCATION-LOAN",
+    "DED-ELECTRIC-VEHICLE-LOAN",
+    "DED-HOUSE-LOAN",
+    "DED-HOUSE-LOAN-EARLIER",
+    "DED-PREMIUM-SHARE",
+    "DED-RENT-PAID",
+    "DED-SCHEDULE-XV-GOVERNMENT-SALARY",
+    "DED-SPECIFIED-DISEASE",
+    "DED-SPECIFIED-DISEASE-SENIOR",
+    "HP-INTEREST",
+    "HP-PRE-CONSTRUCTION",
+    "OS-COMMUTED-PENSION",
+    "OS-DEATH-GRATUITY",
+    "OS-DIVIDEND-INTEREST",
+    "OS-GIFT-COVID-DEATH",
+    "OS-GIFT-EXCLUSION",
+    "OS-LIFE-POLICY",
+    "OS-LIFE-POLICY-RATIO",
+    "OS-OTHER-EXPENDITURE",
+    "RET-COMMUTED-PENSION-FUND",
+    "RET-COMMUTED-PENSION-GOVERNMENT",
+    "RET-COMMUTED-PENSION-OTHER",
+    "RET-GRATUITY-GOVERNMENT",
+    "RET-GRATUITY-OTHER",
+    "RET-GRATUITY-STATUTORY",
+    "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+    "RET-LEAVE-ENCASHMENT-OTHER",
+    "RET-RETRENCHMENT",
+    "RET-RETRENCHMENT-APPROVED-SCHEME",
+    "RET-VOLUNTARY-RETIREMENT",
+    "SAL-ALW-CHILDREN-EDUCATION",
+    "SAL-ALW-CONVEYANCE",
+    "SAL-ALW-HOSTEL",
+    "SAL-ALW-TRANSPORT-DISABLED",
+    "SAL-ALW-UNIFORM"
+  ],
+  "notAClaim": [
+    {
+      "rule": "ADV-INSTALMENTS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "ADV-LIABILITY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-CHARGE-COST",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-CHARGE-MISC",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-CHARGE-STT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-CHARGE-TRANSFER",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-DEPOSIT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-DERIVATIVE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-INDEXED-COST-LAND-BUILDING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-NOT-MODELLED-IMPROVEMENT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-NOT-MODELLED-STAMPDUTY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-NOT-MODELLED-VALUE2001",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PART-LONG-LISTED",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PART-LONG-NOTIFIED",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PART-LONG-OTHER",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PART-LONG-OTHER-LAND-BUILDING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PART-SHORT-LISTED",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PART-SHORT-SLAB",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PART-SHORT-SLAB-LAND-BUILDING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-PARTS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-SPECULATIVE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-TERM-LAND-BUILDING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CG-TERM-LISTED-SECURITY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "CREDIT-TAX-PAID",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "DED-DONATION-CASH",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "DED-WITHIN-GROSS-TOTAL",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "FEE-LATE-RETURN",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "HP-ANNUAL-VALUE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "HP-ARREARS",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "HP-STANDARD-DEDUCTION",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "HP-UNREALISED-RENT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "INT-ADVANCE-SHORTFALL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "INT-CALCULATION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "INT-DEFERMENT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "INT-LATE-RETURN",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "INT-REFUND",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-BANKER-COMMISSION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-BUSINESS-TRUST",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-COMPENSATION-INTEREST",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "OS-COMPENSATION-INTEREST-INCOME",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-DIVIDEND",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-FAMILY-PENSION",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "OS-FAMILY-PENSION-NEW-TAX-REGIME",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "OS-FORFEITED-ADVANCE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-GIFT",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "OS-GIFT-IMMOVABLE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-GIFT-PROPERTY-BOUGHT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-GIFT-PROPERTY-FREE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-INTEREST",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-KEYMAN-POLICY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-LIFE-POLICY-PREMIUM",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-PF-TAXABLE-INTEREST",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-RESIDUAL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "OS-TERMINATION-COMPENSATION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ACCOM-CONTINUED",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ACCOM-FURNITURE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ACCOM-GOVERNMENT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ACCOM-HOTEL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ACCOM-LEASED",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ACCOM-OWNED",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-CAR",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-ELECTRONIC",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ASSET-TRANSFER-OTHER",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ASSET-USE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-ASSET-USE-EXCLUDED",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-CHAUFFEUR",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-CONVEYANCE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-EMPLOYEE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-OWNRUN-ELECTRIC",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-OWNRUN-LARGE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-OWNRUN-SMALL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-ELECTRIC",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-LARGE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PARTLY-SMALL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PATH-CONVEYANCE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PATH-EMPLOYEE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PATH-OFFICIAL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PATH-OWNRUN",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PATH-PARTLY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PATH-PRIVATE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CAR-PRIVATE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CARRIER-TRAVEL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CLUB",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CLUB-BUSINESS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CLUB-BUSINESS-UNIFORM",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CLUB-UNIFORM",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CREDIT-CARD",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-CREDIT-CARD-OFFICIAL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-EDUCATION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-EDUCATION-FREE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-EMPLOYER-ACCRETION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-EMPLOYER-CONTRIBUTION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-GIFT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-HOLIDAY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-LOAN",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-LOAN-PETTY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-MEAL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-MEAL-AT-WORK",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-MEAL-REMOTE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-MEAL-TEA-SNACKS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-MEAL-VOUCHER",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-MEDABROAD-STAY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-MEDABROAD-TRAVEL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-OTHER-BENEFIT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-RPF-CONTRIBUTION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-RPF-INTEREST",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-SERVICES",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-SPECIFIED-DATE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-SPECIFIED-EMPLOYEE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-SPECIFIED-SECURITY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-TELEPHONE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "PERQ-UTILITY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-60TO79",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-FIRST-SCHEDULE-AGE-80",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-AGRICULTURAL-NEW-TAX-REGIME",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-CG-COST-INFLATION-INDEX",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-CG-LONG-LISTED-EQUITY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-CG-LONG-OTHER",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-CG-SHORT-LISTED-EQUITY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-CG-SHORTFALL-ORDER",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-COST-INFLATION-INDEX",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-HEALTH-EDUCATION-CESS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-ROUND-PAYABLE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-ROUND-TOTAL-INCOME",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },    {
+      "rule": "RATE-SLAB-NEW-TAX-REGIME",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-CEILING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-EXCLUDING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-FIRST-SCHEDULE-LIMIT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-CEILING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-EXCLUDING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RATE-SUR-NEW-TAX-REGIME-LIMIT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "REBATE-NEW-TAX-REGIME",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "REBATE-NEW-TAX-REGIME-EXCESS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "REBATE-RESIDENT-INDIVIDUAL",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "REG-NEW-TAX-REGIME-NO-SETOFF",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RET-AGGREGATE-HISTORY-GRATUITY",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "RET-BAR-ARREARS-RELIEF",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "RET-BAR-ONCE-ONLY",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "RET-GRATUITY-AGGREGATE",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "RET-GRATUITY-AVERAGING",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "SAL-ENTMT-ALLOWANCE",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "SAL-HOUSE-RENT-LANDLORD-PAN",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "SAL-INCLUDES-PENSION-CONTRIBUTION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-FOR-EMPLOYEE-PENSION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-FOR-EMPLOYER-PENSION",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ENTMT",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-FOR-GRATUITY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-FOR-HRA",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-FOR-RPF",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-SALARY-INCLUDES",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
+      "because": "APPLIES_WITHOUT_A_CLAIM"
+    },
+    {
+      "rule": "SETOFF-ACROSS-HEADS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SETOFF-CARRIED-CAPITAL-GAINS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SETOFF-CARRIED-DISALLOWED-PART",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SETOFF-CARRIED-HOUSE-PROPERTY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SETOFF-HOUSE-PROPERTY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "SETOFF-WITHIN-CAPITAL-GAINS",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "STT-PURCHASE-DELIVERY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "STT-SALE-DELIVERY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    },
+    {
+      "rule": "STT-SALE-NONDELIVERY",
+      "because": "NOT_A_DEDUCTION_OR_EXEMPTION"
+    }
+  ]
+}

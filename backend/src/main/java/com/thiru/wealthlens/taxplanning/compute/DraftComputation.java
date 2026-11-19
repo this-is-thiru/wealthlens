@@ -1,0 +1,79 @@
+package com.thiru.wealthlens.taxplanning.compute;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
+import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
+import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.convert.ValueConverter;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoId;
+
+/**
+ * A computation as it was shown, with the draft revision it read, so a figure can be explained later ({@code DR 19} E6). Its own
+ * collection, {@code tax_draft_computations}: the legacy module held {@code tax_computations} when it was built (D-442).
+ */
+@Data
+@NoArgsConstructor
+@Document("tax_draft_computations")
+public class DraftComputation implements AuditableEntity, CreatedWithId {
+
+    @MongoId
+    private String id;
+
+    @Indexed(unique = true)
+    @Field("receipt")
+    private String receipt;
+
+    @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
+    private String email;
+
+    @Indexed
+    @Field("draft_id")
+    private String draftId;
+
+    @Field("revision")
+    private int revision;
+
+    @ValueConverter(EncryptedField.class)
+    @Field("result_json")
+    private String resultJson;
+
+    /** The law and exec layer versions it ran under, in the clear: pack structure, not personal data ({@code DR 14} O7; W-138). */
+    @Field("law_and_exec")
+    private List<String> lawAndExec;
+
+    /** The checksum, then, of each rule its trace read: what later names the rules that changed under it (W-138). */
+    @Field("rule_checksums")
+    private Map<String, String> ruleChecksums;
+
+    /**
+     * When it was computed, in UTC, from the clock (W-123b): its own field, since the audit's created-at is never filled
+     * for an entity whose id is set before saving. Null for one stored before W-123b.
+     */
+    @Field("computed_at")
+    private LocalDateTime computedAt;
+
+    @Field("audit_metadata")
+    private AuditMetadata auditMetadata = new AuditMetadata();
+
+    /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
+    @Transient
+    @JsonIgnore
+    private boolean newlyCreated;
+
+    @Override
+    public boolean isNew() {
+        return newlyCreated || id == null;
+    }
+}

@@ -27,6 +27,7 @@ public class CorporateActionController {
     private final CorporateActionService corporateActionService;
     private final TemporaryTransactionService temporaryTransactionService;
 
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/add")
     public ResponseEntity<String> addCorporateAction(@RequestBody CorporateActionDto corporateActionRequest) {
 
@@ -39,6 +40,7 @@ public class CorporateActionController {
         return corporateActionService.getCorporateActionDetails(id);
     }
 
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PutMapping("/update/priority/{id}/{priority}")
     public ResponseEntity<String> updateCorporateActionPriority(@PathVariable String id, @PathVariable int priority) {
 
@@ -64,6 +66,7 @@ public class CorporateActionController {
         corporateActionService.deleteCorporateActions(id);
     }
 
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PutMapping("/perform")
     public ResponseEntity<String> updateCorporateAction(@RequestBody CorporateActionDto corporateActionRequest) {
 
@@ -71,6 +74,7 @@ public class CorporateActionController {
         return ResponseEntity.ok(message);
     }
 
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PutMapping("/perform/test")
     public ResponseEntity<Boolean> anyCorporateActionToPerform(@RequestBody CorporateActionDto request) {
 

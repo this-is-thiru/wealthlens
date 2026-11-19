@@ -1,0 +1,110 @@
+{
+  "ruleId": "HP-OWN-RESIDENCE",
+  "ruleSet": "RS-HP-OWN-RESIDENCE",
+  "_note": "A house the owner occupies for his own residence, or cannot actually occupy for any reason, has a nil annual value — for at most the houses the assessee specifies, and not if let at any time in the year or if the owner derives any other benefit from it (D-155; rulebook HP-SELFOCC-001, -002). TY 2026-27: Income-tax Act, 2025 s.21(6) \"shall be taken as nil, if the owner occupies it for his own residence or cannot actually occupy it due to any reason\"; (7)(a) \"shall apply only in respect of two of such houses as specified by the assessee\"; (7)(b) \"shall not apply, if the house or any part thereof is actually let during any time of the tax year, or if the owner derives any other benefit from it\" (Gazette 265620, p.47). TY 2025-26: Income-tax Act, 1961 s.23(2) as substituted by the Finance Act, 2025 s.10 — the same words (Gazette 262125, p.20); s.23(3); s.23(4) \"more than two houses … only in respect of two of such houses, which the assessee may, at his option, specify\" (\"two\" by Act 7 of 2019, s.4, w.e.f. 1-4-2020; thc pp.146–147). OwnResidenceHouses carries the two; HousePropertyNode refuses more own-residence houses than it until the house election (W-083) chooses. \"Any other benefit\" is an entry condition. Every regime. The row reaches a house entered as an own residence (house.occupancy = OWN_RESIDENCE; W-157, D-355).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.23(2)–(4)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.21(6), (7)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "OwnResidenceHouses",
+        "houses": 2
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "house.occupancy",
+          "code": "OWN_RESIDENCE"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2025 (7 of 2025), s.10 — Income-tax Act, 1961 s.23(2) substituted",
+        "gazetteRef": "CG-DL-E-29032025-262125",
+        "notifiedOn": "2025-03-29",
+        "effectiveFrom": "2025-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "sourceDescription": "Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.10, p.20; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.23(3), (4), pp.146–147; Income-tax Act, 1961 s.23(2)–(4): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.23(2)–(4)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.21(6), (7)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "OwnResidenceHouses",
+        "houses": 2
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "house.occupancy",
+          "code": "OWN_RESIDENCE"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.21(6), (7)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.21(6), (7), p.47",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.21(6), (7), p.47",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

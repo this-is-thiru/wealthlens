@@ -1,0 +1,144 @@
+## G1 2
+service/TemporaryTransactionService.java:115: return LocalDate.of(year, quarterStartMonth, ONE);
+service/CapitalGainsSummaryService.java:64: LocalDate.of(startYear, 3, 31), LocalDate.of(startYear + 1, 4, 1));
+## G2 45
+service/TradeMatchingService.java:105: double qty = txn.getQuantity() != null ? txn.getQuantity() : 0.0;
+service/TradeMatchingService.java:240: double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
+service/TradeMatchingService.java:352: .quantity(sellTxn.getQuantity() != null ? sellTxn.getQuantity() : 0.0)
+service/ChargeViewAssembler.java:131: charges.setTotal(TMoney.add(buy == null ? 0.0 : buy.getTotal(), sell == null ? 0.0 : sell.getTotal()));
+service/ChargeViewAssembler.java:192: byCode.merge(code, amount == null ? 0.0 : amount, TMoney::add));
+service/PortfolioService.java:757: double sellReqQuantity = assetRequest.getQuantity() != null ? assetRequest.getQuantity() : 1.0;
+service/PortfolioService.java:766: double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
+service/PortfolioService.java:836: assetResponse.setQuantity(assetQuantityMap.getOrDefault(stockWithBroker, 0.0));
+service/AnalyticsService.java:59: ? realised.getShortTermCapitalGains().getProfit() : 0.0;
+service/AnalyticsService.java:61: ? realised.getLongTermCapitalGains().getProfit() : 0.0;
+service/AnalyticsService.java:103: total > 0 ? (e.getValue() / total) * 100 : 0.0
+service/AnalyticsService.java:117: .averageProfitPerWin(0.0)
+service/AnalyticsService.java:118: .averageLossPerLoss(0.0)
+service/AnalyticsService.java:119: .winLossRatio(0.0)
+service/AnalyticsService.java:120: .averageHoldingPeriodDays(0.0)
+service/AnalyticsService.java:121: .portfolioTurnover(0.0)
+service/AnalyticsService.java:142: double avgProfit = wins.stream().mapToDouble(TradeOutcomeEntity::getNetProfit).average().orElse(0.0);
+service/AnalyticsService.java:143: double avgLoss = losses.stream().mapToDouble(o -> Math.abs(o.getNetProfit())).average().orElse(0.0);
+service/AnalyticsService.java:145: double winLossRatio = lossCount > 0 ? (double) winCount / lossCount : 0.0;
+service/AnalyticsService.java:146: double avgHolding = outcomes.stream().mapToDouble(TradeOutcomeEntity::getHoldingPeriodDays).average().orElse(0.0);
+service/AnalyticsService.java:151: double turnover = totalBuyValue > 0 ? totalSellValue / totalBuyValue : 0.0;
+service/AnalyticsService.java:169: double invested = investedByStock.getOrDefault(e.getKey(), 1.0);
+service/AnalyticsService.java:170: double pct = invested > 0 ? (e.getValue() / invested) * 100 : 0.0;
+service/AnalyticsService.java:178: double invested = investedByStock.getOrDefault(e.getKey(), 1.0);
+service/AnalyticsService.java:179: double pct = invested > 0 ? (e.getValue() / invested) * 100 : 0.0;
+service/AnalyticsService.java:224: double totalCurrentValue = 0.0;
+service/AnalyticsService.java:247: .xirr(0.0)
+service/AnalyticsService.java:248: .xirrPercentage(0.0)
+service/AnalyticsService.java:261: .xirrPercentage(xirr * 100)
+service/AnalyticsService.java:270: .xirr(0.0)
+service/AnalyticsService.java:271: .xirrPercentage(0.0)
+service/TradeOutcomeRecorder.java:98: double total = amount == null ? 0.0 : amount;
+service/TradeOutcomeRecorder.java:115: double buyShare = lot.originalQuantity() > 0 ? lot.quantity() / lot.originalQuantity() : 0.0;
+service/TradeOutcomeRecorder.java:169: totalSellValue, netProfit, totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0);
+service/TradeOutcomeRecorder.java:248: breakup.forEach((code, amount) -> scaled.put(code, TMoney.scale((amount == null ? 0.0 : amount) * share)));
+service/EntityExportService.java:87: transaction.setPrice(0.0);
+service/EntityExportService.java:88: transaction.setQuantity(0.0);
+service/EntityExportService.java:89: transaction.setBrokerCharges(0.0);
+service/EntityExportService.java:90: transaction.setMiscCharges(0.0);
+service/LotChargeAllocator.java:65: return 0.0;
+service/LotChargeAllocator.java:69: return 0.0;
+service/CapitalGainsSummaryService.java:165: return breakup.getOrDefault(STT, 0.0) > 0 ? SttEvidence.PAID : SttEvidence.NOT_PAID;
+service/export/PortfolioExportColumns.java:53: asset -> asset.getCharges() == null ? 0.0 : asset.getCharges().getTotal()));
+service/export/PortfolioExportColumns.java:118: return 0.0;
+service/export/PortfolioExportColumns.java:121: return note == null ? 0.0 : note.getTotal();
+## G4 36
+dto/enums/CapitalGainsType.java:36: return switch (this) {
+dto/enums/CapitalGainsType.java:37: case SHORT_TERM, LONG_TERM -> true;
+dto/enums/CapitalGainsType.java:38: case SPECULATIVE, NOT_CAPITAL_GAINS, UNCLASSIFIED -> false;
+service/PortfolioService.java:121: return switch (transactionType) {
+service/PortfolioService.java:122: case BUY -> {
+service/PortfolioService.java:126: case SELL -> {
+service/PortfolioService.java:152: return switch (transactionType) {
+service/PortfolioService.java:153: case BUY -> {
+service/PortfolioService.java:157: case SELL -> {
+service/PortfolioService.java:819: List<AssetEntity> assetEntities = switch (holdingType) {
+service/PortfolioService.java:820: case LONG_TERM -> getLongTermHeldAssets(userMail, oneYearBeforeDate);
+service/PortfolioService.java:821: case SHORT_TERM -> getShortTermHeldAssets(userMail, oneYearBeforeDate);
+service/AnalyticsService.java:209: switch (txn.getTransactionType()) {
+service/AnalyticsService.java:210: case BUY -> signedAmount = -(grossAmount + txn.getBrokerCharges() + txn.getMiscCharges());
+service/AnalyticsService.java:211: case SELL -> signedAmount = grossAmount - txn.getBrokerCharges() - txn.getMiscCharges();
+service/EntityExportService.java:47: return switch (entityName) {
+service/parser/AssetRequestParser.java:177: return switch (assetType) {
+service/parser/AssetRequestParser.java:178: case EQUITY, BOND, MUTUAL_FUND, FD, INSURANCE -> null;
+service/parser/AssetRequestParser.java:179: case GOLD_BOND -> maturityDate != null ? maturityDate : transactionDate.plusYears(8);
+service/parser/model/AssetRequestParserImpl.java:106: return switch (excelDataType) {
+service/parser/model/AssetRequestParserImpl.java:107: case BOOLEAN -> CellDetail.of(ExcelDataType.BOOLEAN, cell.getBooleanCellValue());
+service/parser/model/AssetRequestParserImpl.java:108: case INTEGER, LONG -> CellDetail.of(ExcelDataType.LONG, (long) cell.getNumericCellValue());
+service/parser/model/AssetRequestParserImpl.java:109: case DOUBLE -> CellDetail.of(ExcelDataType.DOUBLE, cell.getNumericCellValue());
+service/parser/model/AssetRequestParserImpl.java:110: case STRING -> CellDetail.of(ExcelDataType.STRING, cell.getStringCellValue());
+service/parser/model/AssetRequestParserImpl.java:111: case LOCAL_DATE_TIME ->
+service/parser/model/AssetRequestParserImpl.java:113: case LOCAL_DATE ->
+service/parser/model/AssetRequestParserImpl.java:115: case ERROR -> CellDetail.of(ExcelDataType.ERROR, cell.getErrorCellValue());
+service/parser/model/AssetRequestParserImpl.java:116: case NULL -> CellDetail.of(ExcelDataType.NULL, null);
+holding/TradeClassifier.java:47: return switch (query.segment()) {
+holding/TradeClassifier.java:48: case INTRADAY -> query.assetType() == AssetType.EQUITY
+holding/TradeClassifier.java:52: case FUTURES, OPTIONS -> new TradeClassification(CapitalGainsType.UNCLASSIFIED, null,
+holding/TradeClassifier.java:55: case DELIVERY, NA -> null;
+holding/HoldingPeriodResolver.java:101: return switch (policy.outcome()) {
+holding/HoldingPeriodResolver.java:102: case NOT_CAPITAL_GAINS -> CapitalGainsType.NOT_CAPITAL_GAINS;
+holding/HoldingPeriodResolver.java:103: case ALWAYS_SHORT_TERM -> CapitalGainsType.SHORT_TERM;
+holding/HoldingPeriodResolver.java:104: case LONG_TERM_AFTER_MONTHS -> heldBeyond(policy.months(), query)
+## G5 13
+dto/RealisedProfitsResponse.java:7: import java.util.EnumMap;
+dto/RealisedProfitsResponse.java:47: private Map<CapitalGainsType, FinancialReportResponse> gainsByClassification = new EnumMap<>(CapitalGainsType.class);
+entity/AssetEntity.java:151: public static Set<String> ALLOWED_FIELDS = Set.of(EMAIL, "transaction_date", "transaction_type",
+entity/model/RealisedProfits.java:6: import java.util.EnumMap;
+entity/model/RealisedProfits.java:54: private Map<CapitalGainsType, FinancialReport> gainsByClassification = new EnumMap<>(CapitalGainsType.class);
+service/ChargeViewAssembler.java:52: return new ChargeLookup(Map.of(), Map.of());
+service/ChargeViewAssembler.java:61: return new ChargeLookup(userChargeService.findForTransactions(email, transactionIds), Map.of());
+service/ChargeViewAssembler.java:82: Map<String, List<TradeOutcomeEntity>> outcomes = lotIds.isEmpty() ? Map.of()
+service/ChargeViewAssembler.java:173: charge.getAmountByCode() == null ? Map.of() : charge.getAmountByCode()));
+service/TradeOutcomeRecorder.java:245: return Map.of();
+service/ProfitAndLossService.java:33: import java.util.EnumMap;
+service/ProfitAndLossService.java:450: TOptional.mapO(realisedProfits.getGainsByClassification(), new EnumMap<>(CapitalGainsType.class));
+service/EntityExportService.java:69: boolean isProdEnv = Set.of(env.getActiveProfiles()).contains(ENV_PROD);
+## G6 15
+dto/Acquisition.java:26: if (corporateAction.isPresent() != (mode == AcquisitionMode.CORPORATE_ACTION)) {
+service/AnalyticsService.java:67: long buyTrades = transactions.stream().filter(t -> t.getTransactionType() == TransactionType.BUY).count();
+service/AnalyticsService.java:68: long sellTrades = transactions.stream().filter(t -> t.getTransactionType() == TransactionType.SELL).count();
+service/ProfitAndLossService.java:119: if (accountType == AccountType.SELF) {
+service/ProfitAndLossService.java:340: if (transactionType == TransactionType.SELL) {
+service/ProfitAndLossService.java:344: } else if (transactionType == TransactionType.BUY) {
+service/ProfitAndLossService.java:412: if (accountType == AccountType.SELF) {
+service/ProfitAndLossService.java:566: boolean self = profitLossContext.accountType() == AccountType.SELF;
+migration/BonusAllotmentDateCorrection.java:86: if (action.getType() != CorporateActionType.BONUS) {
+holding/TradeClassifier.java:48: case INTRADAY -> query.assetType() == AssetType.EQUITY
+holding/HoldingPeriodResolver.java:97: return policy.outcome() == HoldingPeriodOutcome.LONG_TERM_AFTER_MONTHS ? 0 : 1;
+holding/HoldingPeriodService.java:52: if (resolution.capitalGainsType() == CapitalGainsType.UNCLASSIFIED
+holding/HoldingPeriodService.java:53: || resolution.capitalGainsType() == CapitalGainsType.NOT_CAPITAL_GAINS) {
+holding/HoldingPeriodService.java:60: return resolution.capitalGainsType() == CapitalGainsType.SHORT_TERM;
+holding/HoldingPeriodQuery.java:22: return keyedOn == HoldingPeriodDate.ACQUISITION ? acquisitionDate : transferDate;
+## G7 23
+dto/TradeVenue.java:23: public static final TradeVenue UNRECORDED = new TradeVenue(Optional.empty(), Optional.empty());
+dto/Acquisition.java:19: public static final Acquisition UNRECORDED = new Acquisition(AcquisitionMode.UNRECORDED, Optional.empty());
+entity/AssetEntity.java:148: public static final String EMAIL = "email";
+service/TemporaryTransactionService.java:33: private static final int ONE = 1;
+service/TradeFingerprint.java:24: private static final char SEPARATOR = '\u001f';
+service/PortfolioService.java:68: private static final String REPLAYED_MESSAGE =
+service/ProfitAndLossService.java:54: private static final int MARCH = 3;
+service/ProfitAndLossService.java:58: private static final int FORTNIGHT_BOUNDARY = 15;
+service/EntityExportService.java:35: private static final String ENV_UAT = "uat";
+service/EntityExportService.java:36: private static final String ENV_PROD = "prod";
+service/EntityExportService.java:37: private static final String FILE_NAME_DATE_FORMAT = "dd-MMMM-yyyy--hh-mm-ss-a";
+service/CapitalGainsSummaryService.java:48: private static final Pattern FINANCIAL_YEAR = Pattern.compile("(\\d{4})-(\\d{4})");
+service/CapitalGainsSummaryService.java:51: private static final String STT = "STT";
+service/parser/model/AbstractRequestParser.java:15: private static final String EXCEL_TYPE = "text/xls";
+service/parser/model/AssetRequestParserImpl.java:27: private static final List<String> ALLOWED_QUARTERS = List.of("Q1", "Q2", "Q3", "Q4");
+service/export/PortfolioExportColumns.java:36: public static final List<ExcelColumn<AssetResponse>> ASSETS = List.of(
+service/export/PortfolioExportColumns.java:56: public static final List<ExcelColumn<TransactionQuantity>> TRANSACTION_QUANTITIES = List.of(
+service/export/PortfolioExportColumns.java:63: public static final List<ExcelColumn<TransactionEntity>> TRANSACTIONS = List.of(
+service/export/PortfolioExportColumns.java:86: public static final List<ExcelColumn<TransactionEntity>> TRANSACTION_TEMPLATE = List.of(
+service/export/PortfolioExcelExporter.java:23: private static final String ASSETS_SHEET = "ASSETS";
+service/export/PortfolioExcelExporter.java:24: private static final String TRANSACTIONS_SHEET = "TRANSACTIONS";
+migration/RebuildBuyChargeCorrection.java:43: private static final String REBUILD_LOT_ID = "^lot-";
+holding/HoldingPeriodSeeder.java:33: private static final String POLICY_FILE = "data/holding-periods/holding-period-policies.json";
+## G8 3
+service/EntityExportService.java:80: transaction.setStockCode("STOCK_CODE");
+service/export/PortfolioExcelExporter.java:23: private static final String ASSETS_SHEET = "ASSETS";
+service/export/PortfolioExcelExporter.java:24: private static final String TRANSACTIONS_SHEET = "TRANSACTIONS";

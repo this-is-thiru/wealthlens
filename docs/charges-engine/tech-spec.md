@@ -225,6 +225,9 @@ public enum TradeSegment { DELIVERY, INTRADAY, FUTURES, OPTIONS, NA }
 
 Indexes: compound `{broker_name:1, asset_type:1, segment:1, start_date:-1}`, plus `{status:1}`.
 
+> **Erratum (W-203, 2026-10-31):** the `currency` row above is wrong — `ChargeScheduleEntity` has no such field; it was removed in `8940fc4a` ("never read by anything"), and the shipped rate cards no longer carry it (the seeders now refuse an unknown key). A multi-currency card adds the field with its own rule data.
+> Verified by: `backend/src/main/java/com/thiru/wealthlens/brokercharges/entity/ChargeScheduleEntity.java:44-111`; `grep -rl '"currency"' backend/src/main/resources/data/charges` finds none.
+
 ### 4.2 `ChargeRule` — embedded
 
 | Field | Mongo | Type | Notes |
@@ -823,6 +826,9 @@ The current implementation puts almost everything in Tier 3. The goal of the rul
 | SGB | 1 | Secondary market = brokerage; primary issuance = a new `ChargeEvent`, no charges |
 | US / international equity | 2 | Forex markup as a `TURNOVER` rule; TCS as `DERIVED` on `PRINCIPAL`; `currency` already exists on the schedule |
 | MTF (margin funding) | **3** | See §13.5 — genuinely does not fit the per-event model |
+
+> **Erratum (W-203, 2026-10-31):** "`currency` already exists on the schedule" is wrong — the field was removed in `8940fc4a` and the cards no longer set it; US / international equity would add it (with its rule data) as part of that work.
+> Verified by: `ChargeScheduleEntity.java:44-111`.
 
 ### 13.4 What "extensible" is worth in Phase A
 

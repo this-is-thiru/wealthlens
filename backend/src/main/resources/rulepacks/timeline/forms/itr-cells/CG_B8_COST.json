@@ -1,0 +1,12 @@
+{
+  "code": "CG_B8_COST",
+  "_note": "The cost with the charges a row classes as cost of acquisition. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Cost of acquisition without indexation (long-term, other assets)",
+  "source": {
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "LONG_TERM_OTHER"
+    ],
+    "figure": "costOfAcquisition"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "ruleId": "CREDIT-TAX-PAID",
+  "ruleSet": "RS-CREDIT-TAX-PAID",
+  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack, regime references renamed (NEW_TAX_REGIME -> SYN_DEFAULT, SYN_FLAT; FIRST_SCHEDULE_RATES -> SYN_CLASSIC); not law, never shipped. Original note: Tax already paid for the year, credited in full against the bill: deducted or collected at source, paid in advance, paid on the return. A payment's date does not change the credit (s.266(2)(a) / s.140A(1)(i) take tax 'already paid'); interest on a late one is W-112's. Sources: sources/2026-11-01-tax-credits.md; D-436.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.140A(1)(i), (ii), with s.199(1), s.219",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.266(2)(a), (b), with s.390(5), s.410",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "TAX_ALREADY_PAID"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.140A(1)(i), (ii), with s.199(1), s.219, as in the thc.nic.in consolidation",
+        "gazetteRef": "Act 43 of 1961 (assent 13-9-1961), the date the repo's other as-enacted rows carry; s.199 and s.219 and s.140A's later insertion and substitutions as in the thc.nic.in consolidation; the Gazette issue not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.140A(1) p.571, s.199(1) p.660, s.219 p.683",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.140A(1)(i), (ii), with s.199(1), s.219",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.266(2)(a), (b), with s.390(5), s.410",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "TAX_ALREADY_PAID"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.266(2)(a), (b), with s.390(5), s.410",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.266(2) pp.297–298, s.390(5) p.396, s.410 p.435",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.266(2) pp.297–298, s.390(5) p.396, s.410 p.435",
+    "accessedOn": "2026-11-01",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

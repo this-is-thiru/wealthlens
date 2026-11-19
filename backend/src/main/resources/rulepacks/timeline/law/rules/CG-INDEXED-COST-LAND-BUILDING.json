@@ -1,0 +1,140 @@
+{
+  "ruleId": "CG-INDEXED-COST-LAND-BUILDING",
+  "ruleSet": "RS-CG-INDEXED-COST",
+  "_note": "The indexed cost of a long-term capital asset, for the cap on the tax on land or building acquired before 23-7-2024 (W-088g, D-426). TY 2025-26: Income-tax Act, 1961 s.112(1)(a) as substituted by the Finance (No. 2) Act, 2024 s.30 (Gazette 256436, pp.26-27) - the second proviso ignores so much of the tax on the gain computed with indexed cost as exceeds the tax on the gain at the rate in item (B), for a resident individual or HUF's land or building acquired before 23-7-2024; the indexed cost is s.48's (its second proviso and Explanation (iii)), the cost multiplied by the index of the year of transfer and divided by the index of the first year the asset was held or of the year beginning 1-4-2001, whichever is later. TY 2026-27: Income-tax Act, 2025 s.197(3) (Gazette 265620, p.221) - the same limitation for a resident individual or HUF and land or building acquired before 23-7-2024; \"indexed cost\" is s.72's (s.197(6)(d)), and s.72(8)(b)-(c) states the divisor. What qualifies is stated as conditions: residence, the two person types the provision names, the asset kind and the acquisition date, strictly - the day itself is not before it. A bucket no row meets has no indexed measure, so the 20 % limb of RATE-CG-LONG-OTHER's cap cannot bind for it, which is how a non-resident keeps the 12.5 % of s.112(1)(a) / s.197(1)(b) alone. Indexed cost is the cost only: no input carries the cost of an improvement, which s.48 Explanation (iii) also indexes and s.72(2) reads as indexed, so an improvement entered inside cost would be indexed as cost. Sources: docs/taxplanning-build/sources/2026-10-31-land-building-cap.md rows 2-7, 9-10.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.197(3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "IndexedCost",
+        "floorYear": "2001-02"
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "HasPersonType",
+          "types": [
+            "INDIVIDUAL",
+            "HUF"
+          ]
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        },
+        {
+          "type": "ItemDateBefore",
+          "fact": "capitalgains.acquired.on",
+          "date": "2024-07-23"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.30 - Income-tax Act, 1961 s.112(1)(a) and its second proviso substituted, the proviso limiting the tax on a resident individual or HUF's land or building acquired before 23-7-2024 to the tax on the gain computed with indexed cost, deemed w.e.f. 23-7-2024",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2024-07-23",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.30, pp.26-27 (s.112(1)(a) and the second proviso); Income-tax Act, 1961 s.48's second proviso and Explanation (iii), (v), thc.nic.in copy pp.272-273 (docs/taxplanning-build/sources/2026-10-31-land-building-cap.md rows 5-7, 9-10)",
+        "accessedOn": "2026-10-31",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.197(3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "IndexedCost",
+        "floorYear": "2001-02"
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "HasPersonType",
+          "types": [
+            "INDIVIDUAL",
+            "HUF"
+          ]
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        },
+        {
+          "type": "ItemDateBefore",
+          "fact": "capitalgains.acquired.on",
+          "date": "2024-07-23"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.197(3) - the tax on a resident individual or HUF's land or building acquired before 23-7-2024 limited to the tax on the gain computed with indexed cost",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.197(3), p.221; s.197(6)(d), p.222; s.72(2), p.117 and s.72(8)(a)-(c), p.118; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025 (docs/taxplanning-build/sources/2026-10-31-land-building-cap.md rows 1-4, 8)",
+        "accessedOn": "2026-10-31",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.197, pp.221-222",
+    "accessedOn": "2026-10-31",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

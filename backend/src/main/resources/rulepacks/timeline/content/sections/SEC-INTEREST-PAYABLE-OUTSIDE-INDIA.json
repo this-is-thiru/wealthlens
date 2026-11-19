@@ -1,0 +1,39 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-160). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: HP-INTEREST and HP-OWN-RESIDENCE-INTEREST cite both; 1961 s.25 / 2025 s.22(6). summary: S2 s.22(6) (Gazette 265620 p.48); 1961 s.25 (thc p.147). routes[0]: HP-INTEREST. disqualifiers[0]: HousingLoan.payableOutsideIndiaUntaxed, a nil line in HousePropertyInterest.",
+  "key": "SEC-INTEREST-PAYABLE-OUTSIDE-INDIA",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.25",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.22(6)",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest payable outside India",
+  "summary": "Interest on a house loan payable outside India is not deducted from income from house property where no tax was paid or deducted on it and no one in India acts as the lender's agent.",
+  "routes": [
+    {
+      "name": "Interest payable in India, or taxed at source",
+      "description": "Deducted as any other interest on the house.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-INTEREST"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Interest payable outside India with no tax paid or deducted and no agent in India.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "HP-INTEREST"
+      }
+    }
+  ]
+}

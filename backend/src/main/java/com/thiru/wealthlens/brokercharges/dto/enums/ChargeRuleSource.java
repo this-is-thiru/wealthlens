@@ -18,5 +18,8 @@ public enum ChargeRuleSource {
     SCHEDULE,
 
     /** From the instrument itself, scoped by scheme. Exit loads and scheme-level fees. */
-    INSTRUMENT
+    INSTRUMENT,
+
+    /** From the statutory card, which names no broker: charges the law levies whoever executes the trade. */
+    STATUTORY
 }

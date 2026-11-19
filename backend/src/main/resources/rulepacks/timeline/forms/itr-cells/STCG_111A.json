@@ -1,0 +1,11 @@
+{
+  "code": "STCG_111A",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Short-term chargeable @ 20%",
+  "source": {
+    "type": "FromCapitalGainsParts",
+    "parts": [
+      "SHORT_TERM_LISTED_EQUITY"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "zerodha-equity-delivery-sell-100k-after-nse-revision",
-  "describes": "The same Rs 1,00,000 sell priced after 2026-03-01, when NSE raised the cash market transaction charge from 0.00297% to 0.0030699%. Nothing else moved. This is the first shipped rate change the temporal model has had to carry, and the point of it: the 2025 fixture above still prices at the old rate, because its card still covers its own window.",
+  "describes": "The same Rs 1,00,000 sell priced after 2026-03-01, when NSE raised the cash market transaction charge from 0.00297% to 0.0030699% and cut the separate IPFT contribution from Rs 10 to Rs 0.01 per crore (W-185), which rounds to nil on this size. This is the first shipped rate change the temporal model has had to carry, and the point of it: the 2025 fixture above still prices at the old rate, because its card still covers its own window.",
   "context": {
     "brokerName": "ZERODHA",
     "assetType": "EQUITY",
@@ -17,10 +17,10 @@
       "STT": 100.0,
       "EXCHANGE_TXN": 3.07,
       "SEBI_FEE": 0.1,
-      "IPFT": 0.1,
+      "IPFT": 0.0,
       "DP": 13.5,
-      "GST": 3.02
+      "GST": 3.0
     },
-    "total": 119.79
+    "total": 119.67
   }
 }

@@ -1,0 +1,32 @@
+{
+  "id": "T6-5",
+  "source": "DR 08 T6-5 — the ₹30,000 limb",
+  "_source": "\"Self-occupied; construction completed six years after the end of the tax year of borrowing; interest ₹2,50,000.\" \"HP-CAP-SELFOCC-001(i) not satisfied → the ₹30,000 limb applies; deduction = min(2,50,000 , 30,000) = 30,000\"; \"Expected: ₹30,000.\" So the head is −₹30,000, set off whole. Old regime (the DR 08 matrix column). INFERENCE, not DR 08's: no pre-construction interest; the house completed in the year run, six years after the end of the tax year of borrowing (completedYearsAfterBorrowingYear 6); the lender's certificate held. INFERENCE, not DR 08's (D-217 C5): the other-sources deposit interest of ₹3,00,000 that absorbs the loss — DR 08 states no income under another head, and any amount of ₹2,00,000 or more gives the same set-off.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "houseProperties": [
+    {
+      "occupancy": "OWN_RESIDENCE",
+      "expectedLettingValue": "0",
+      "rentReceivable": "0",
+      "localTaxesPaid": "0",
+      "interestPayable": "250000",
+      "preConstructionInterest": "0",
+      "preConstructionInstalment": 1,
+      "completedYearsAfterBorrowingYear": 6
+    }
+  ],
+  "otherSources": [
+    {
+      "kind": "DEPOSIT_INTEREST",
+      "received": "300000"
+    }
+  ],
+  "expected": {
+    "housePropertyIncome": "-30000",
+    "housePropertyLossSetOff": "30000"
+  }
+}

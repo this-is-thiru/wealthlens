@@ -1,0 +1,123 @@
+{
+  "ruleId": "CG-NOT-MODELLED-VALUE2001",
+  "ruleSet": "RS-CG-NOT-MODELLED",
+  "ruleSetPosition": 3,
+  "_note": "A land or building acquired before 1-4-2001 is computed on its price, while 2025 s.90(9)(a)–(b), (10) / 1961 s.55(2)(b)(i) and its proviso let the taxpayer take its fair market value on that date instead, no more than its stamp-duty value then — which can only lower the tax. Not built (W-088g8): neither value is held. The date is the law's, so it is this row's condition. An ATTENTION notice on the bucket's term line (W-088g4, D-432); building W-088g8 deletes the row. Sources: docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 4, 5, 10, 11.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.55(2)(b)(i) and its proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.90(9)(a), (b), (10)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "NotModelledProvision",
+        "subject": "the fair market value on the base date as the cost of acquisition, at the taxpayer's option, no more than the stamp-duty value then",
+        "effect": "MAY_LOWER"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        },
+        {
+          "type": "ItemDateBefore",
+          "fact": "capitalgains.acquired.on",
+          "date": "2001-04-01"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.28 — Income-tax Act, 1961 s.55(2)(b): the proviso capping the fair market value of land or building on 1-4-2001 at its stamp-duty value, applicable from 1-4-2021",
+        "gazetteRef": "CG-DL-E-27032020-218938",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2021-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "sourceDescription": "Gazette CG-DL-E-27032020-218938, Finance Act, 2020 s.28, p.24; Income-tax Act, 1961 s.55(2)(b)(i) as on thc.nic.in (current to Act 7 of 2019), p.302 (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 10–11)",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.55(2)(b)(i) and its proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.90(9)(a), (b), (10)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "NotModelledProvision",
+        "subject": "the fair market value on the base date as the cost of acquisition, at the taxpayer's option, no more than the stamp-duty value then",
+        "effect": "MAY_LOWER"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        },
+        {
+          "type": "ItemDateBefore",
+          "fact": "capitalgains.acquired.on",
+          "date": "2001-04-01"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.90(9)(a), (b), (10) — the fair market value on 1-4-2001 at the assessee's option, capped at the stamp-duty value then for land or building",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.90(9)(a), (b), p.136; s.90(10), p.137 (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 4–5)",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.90(9)(a), (b), p.136; s.90(10), p.137 (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 4–5)",
+    "accessedOn": "2026-11-01",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

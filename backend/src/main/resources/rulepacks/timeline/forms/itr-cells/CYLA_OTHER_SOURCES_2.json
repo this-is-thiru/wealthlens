@@ -1,0 +1,12 @@
+{
+  "code": "CYLA_OTHER_SOURCES_2",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "House property loss of the current year set off — Net income from other sources chargeable at normal applicable rates",
+  "source": {
+    "type": "FromSetOff",
+    "rows": [
+      "OTHER_SOURCES"
+    ],
+    "column": "housePropertyLossSetOff"
+  }
+}

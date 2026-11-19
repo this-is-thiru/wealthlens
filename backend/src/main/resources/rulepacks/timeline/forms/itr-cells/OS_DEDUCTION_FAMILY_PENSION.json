@@ -1,0 +1,12 @@
+{
+  "code": "OS_DEDUCTION_FAMILY_PENSION",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Deduction u/s 57(iia) (in case of family pension only)",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "OS-FAMILY-PENSION",
+      "OS-FAMILY-PENSION-NEW-TAX-REGIME"
+    ]
+  }
+}

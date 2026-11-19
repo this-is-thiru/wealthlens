@@ -1,0 +1,15 @@
+{
+  "code": "OS_GROSS_NORMAL_RATES",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Gross income chargeable to tax at normal applicable rates",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "OS_DIVIDENDS",
+      "OS_INTEREST",
+      "OS_MACHINERY_RENT",
+      "OS_GIFTS",
+      "OS_OTHER_INCOME"
+    ]
+  }
+}

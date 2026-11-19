@@ -1,0 +1,12 @@
+{
+  "code": "BFLA_STCG_APPLICABLE_2",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "Brought forward loss set off — Short-term capital gain taxable at applicable rates",
+  "source": {
+    "type": "FromSetOff",
+    "rows": [
+      "SHORT_TERM_SLAB"
+    ],
+    "column": "broughtForwardSetOff"
+  }
+}

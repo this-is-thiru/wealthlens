@@ -1,0 +1,4 @@
+{
+  "_note": "Boundaries BoundaryCaseGenerator finds in the shipped packs that no T1/T2 case works by hand yet (W-140, D-454); seeded from the generator's first run, 2026-11-07. Each waits for a hand figure; when its case is written, its entry goes. BoundaryCoverageTest fails on a boundary in neither place, and on an entry that no longer names one. Emptied by W-140a: every entry now has a T1/T2 case (sources/2026-11-07-boundary-figures.md).",
+  "boundaries": []
+}

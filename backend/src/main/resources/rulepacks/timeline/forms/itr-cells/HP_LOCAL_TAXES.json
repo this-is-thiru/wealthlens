@@ -1,0 +1,9 @@
+{
+  "code": "HP_LOCAL_TAXES",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Tax paid to local authorities",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "localTaxes"
+  }
+}

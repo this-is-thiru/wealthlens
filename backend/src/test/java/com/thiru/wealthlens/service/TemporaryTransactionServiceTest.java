@@ -2,6 +2,7 @@ package com.thiru.wealthlens.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
@@ -11,9 +12,12 @@ import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionR
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -40,6 +44,9 @@ class TemporaryTransactionServiceTest {
     @Mock
     private LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
 
+    @Mock
+    private PortfolioRepository portfolioRepository;
+
     private TemporaryTransactionService service;
 
     private UserMail userMail;
@@ -50,7 +57,8 @@ class TemporaryTransactionServiceTest {
         service = new TemporaryTransactionService(
                 corporateActionRepository,
                 transactionRepository,
-                lastlyPerformedCorporateActionRepo
+                lastlyPerformedCorporateActionRepo,
+                portfolioRepository
         );
         userMail = UserMail.from("test@example.com");
         assetRequest = new AssetRequest();
@@ -71,7 +79,7 @@ class TemporaryTransactionServiceTest {
         )).thenReturn(List.of());
 
         // When
-        String tempId = service.filterOutTransaction(userMail, assetRequest);
+        String tempId = service.filterOutTransaction(userMail, assetRequest, TradeFlow.V1);
 
         // Then: no block found, so null is returned
         assertNull(tempId);
@@ -106,7 +114,7 @@ class TemporaryTransactionServiceTest {
         when(transactionRepository.save(any(TransactionEntity.class))).thenReturn(savedEntity);
 
         // When
-        String tempId = service.filterOutTransaction(userMail, assetRequest);
+        String tempId = service.filterOutTransaction(userMail, assetRequest, TradeFlow.V1);
 
         // Then
         assertEquals("temp-123", tempId);
@@ -116,6 +124,46 @@ class TemporaryTransactionServiceTest {
         assertEquals(TransactionStatus.TEMPORARY, saved.getStatus());
         assertEquals(assetRequest, saved.getAssetRequest());
         assertEquals("test@example.com", saved.getEmail());
+    }
+
+    @Test
+    void anyCorporateActionToPerform_whenAnEarlierQuartersActionReachesAHeldLot_isTrue() {
+        // Given -- a split recorded 20 Dec 2024, unperformed; a ZERODHA lot of the stock bought 5 Dec 2024 (W-289)
+        when(corporateActionRepository.findByStockCodeAndTypeInAndRecordDateBefore(eq("RELIANCE"), any(),
+                eq(LocalDate.of(2025, 1, 1)))).thenReturn(List.of(earlierSplit()));
+        when(portfolioRepository.findByEmailAndStockCodeAndTransactionDateBefore("test@example.com", "RELIANCE",
+                LocalDate.of(2024, 12, 20))).thenReturn(List.of(lot(BrokerName.ZERODHA)));
+
+        // When / Then -- a 15 Jan 2025 trade waits for it
+        assertTrue(service.anyCorporateActionToPerform(userMail, "RELIANCE", LocalDate.of(2025, 1, 15), BrokerName.ZERODHA));
+    }
+
+    @Test
+    void anyCorporateActionToPerform_whenAnEarlierQuartersActionReachesOnlyAnotherBrokersLot_isFalse() {
+        // Given -- the same split; the only lot before it is held with UPSTOX
+        when(corporateActionRepository.findByStockCodeAndTypeInAndRecordDateBefore(eq("RELIANCE"), any(),
+                eq(LocalDate.of(2025, 1, 1)))).thenReturn(List.of(earlierSplit()));
+        when(portfolioRepository.findByEmailAndStockCodeAndTransactionDateBefore("test@example.com", "RELIANCE",
+                LocalDate.of(2024, 12, 20))).thenReturn(List.of(lot(BrokerName.UPSTOX)));
+
+        // When / Then -- a split is performed per broker; nothing of ZERODHA's is reached
+        assertFalse(service.anyCorporateActionToPerform(userMail, "RELIANCE", LocalDate.of(2025, 1, 15), BrokerName.ZERODHA));
+    }
+
+    private static CorporateActionEntity earlierSplit() {
+        CorporateActionEntity split = new CorporateActionEntity();
+        split.setStockCode("RELIANCE");
+        split.setType(CorporateActionType.STOCK_SPLIT);
+        split.setAssetType(AssetType.EQUITY);
+        split.setRecordDate(LocalDate.of(2024, 12, 20));
+        return split;
+    }
+
+    private static AssetEntity lot(BrokerName brokerName) {
+        AssetEntity lot = new AssetEntity();
+        lot.setBrokerName(brokerName);
+        lot.setTransactionDate(LocalDate.of(2024, 12, 5));
+        return lot;
     }
 
     @Test

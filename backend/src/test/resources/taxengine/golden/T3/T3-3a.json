@@ -1,0 +1,29 @@
+{
+  "id": "T3-3a",
+  "source": "DR 08 T3-3 — TY 2026-27, Pune, limb (c) at 50%. VERIFIED",
+  "_source": "**Expected: ₹4,00,000 for TY 2026-27 (`VERIFIED`)** — limb (c). Basic ₹8,00,000; no DA; HRA ₹5,00,000; rent ₹55,000/month = 6,60,000.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "800000",
+      "HRA": "500000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [
+      {
+        "from": "2026-04-01",
+        "to": "2027-03-31",
+        "location": "PUNE",
+        "ownedByAssessee": false,
+        "rentPaid": "660000"
+      }
+    ]
+  },
+  "expected": {
+    "salaryExemptions": "400000",
+    "limitedBy": "percentage of salary"
+  }
+}

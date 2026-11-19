@@ -1,0 +1,13 @@
+{
+  "code": "STCG_TOTAL",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Total short-term (enter nil if loss)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "STCG_111A",
+      "STCG_APPLICABLE_RATE"
+    ]
+  },
+  "sign": "NIL_IF_LOSS"
+}

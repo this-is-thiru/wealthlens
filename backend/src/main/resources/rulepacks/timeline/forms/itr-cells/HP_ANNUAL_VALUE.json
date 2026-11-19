@@ -1,0 +1,9 @@
+{
+  "code": "HP_ANNUAL_VALUE",
+  "_note": "Nil for an own residence. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Annual value (1a – 1d)",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "annualValue"
+  }
+}

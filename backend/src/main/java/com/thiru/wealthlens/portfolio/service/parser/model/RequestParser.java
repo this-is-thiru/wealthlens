@@ -5,7 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface RequestParser<RequestType> {
 
-    List<RequestType> parse(MultipartFile file, List<String> errors);
+    List<RequestType> parse(MultipartFile file);
 
     ExcelParser getExcelParser();
 

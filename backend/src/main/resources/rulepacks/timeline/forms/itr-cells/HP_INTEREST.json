@@ -1,0 +1,9 @@
+{
+  "code": "HP_INTEREST",
+  "_note": "An own residence shows its share of the limited aggregate, apportioned by interest before the limit (owner: \"Apportion\"). Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest payable on borrowed capital",
+  "source": {
+    "type": "FromItemFigure",
+    "figure": "interest"
+  }
+}

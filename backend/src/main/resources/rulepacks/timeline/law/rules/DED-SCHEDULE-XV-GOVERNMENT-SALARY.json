@@ -1,0 +1,103 @@
+{
+  "ruleId": "DED-SCHEDULE-XV-GOVERNMENT-SALARY",
+  "ruleSet": "RS-DED-SCHEDULE-XV-GOVERNMENT-SALARY",
+  "_note": "Which employments' salary is \"payable by or on behalf of the Government\" for Schedule XV para 1(c) (DED-SCHEDULE-XV's note: \"(c)'s 'to the extent of 20 % of salary' is the GOVERNMENT_DEFERRED_ANNUITY sub-cap on GOVERNMENT_SALARY, the Government employments' pay in money under the head\"; OQ-16, D-154): an employment whose employer is the Central or a State Government (employer.kind = GOVERNMENT). Read twice: the employments whose salary makes GOVERNMENT_SALARY, and the employments a pay line whose sub-cap reads GOVERNMENT_SALARY must come from. TY 2025-26: Income-tax Act, 1961 s.80C(2)(iii), whose \"one-fifth of the salary\" DED-SCHEDULE-XV's note maps to the same sub-cap (D-154). Conditions only; provenance and introduction are DED-SCHEDULE-XV's (W-156d, D-349). Old regime only, as that row.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80C(2)(iii); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Schedule XV para 1(c)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.kind",
+          "code": "GOVERNMENT"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80CCE — \"one hundred and fifty thousand rupees\" subs. by Act 25 of 2014, s.29 (w.e.f. 1-4-2015), with the words in s.80C(1) subs. by s.27 ibid.",
+        "gazetteRef": "Act 25 of 2014: Gazette of India, Extraordinary, Part II, Section 1, No. 29, 6-8-2014 (egazette 2014/160514), p.14",
+        "notifiedOn": "2014-08-06",
+        "effectiveFrom": "2015-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2014/160514.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C pp.330–335, s.80CCC p.338, s.80CCD(1) pp.338–339, s.80CCE p.340; s.80C(2)(xxv) ins. by egazette 2019/209695, Finance (No. 2) Act, 2019 s.23, p.16; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 ss.80C, 80CCC, 80CCD(1) and 80CCE after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80C(2)(iii); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Schedule XV para 1(c)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.kind",
+          "code": "GOVERNMENT"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.123 and Schedule XV",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.123, p.159; Schedule XV para 1, pp.561–563; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.123, p.159; Schedule XV para 1, pp.561–563; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

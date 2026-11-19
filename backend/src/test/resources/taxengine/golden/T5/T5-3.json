@@ -1,0 +1,21 @@
+{
+  "id": "T5-3",
+  "source": "DR 08 T5-3 — sub-cap ordering. VERIFIED",
+  "_source": "**Expected: ₹90,000.** Basic ₹4,00,000. Employee NPS ₹1,50,000. Nothing else. \"sub-cap first — 10% × 4,00,000 = 40,000 … residue … capped at 50,000\"; the wrong order gives ₹1,50,000.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "400000",
+      "EMPLOYEE_NPS": "150000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": []
+  },
+  "expected": {
+    "chapterEightDeduction": "90000"
+  }
+}

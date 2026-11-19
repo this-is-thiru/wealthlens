@@ -1,0 +1,16 @@
+{
+  "code": "INCOME_TAXABLE_UNDER_S115BBDA",
+  "_note": "Income-tax Rules, 1962 r.12(1)(a) proviso (V): \"has income taxable under section 115BBDA\" (2017). Written as the rule writes it (W-090d C2a, D-652): whether any such income can arise in TY 2025-26 is the law's question, which the person answers; the engine computes none. The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 only: r.12(1) as in force for AY 2026-27; TY 2026-27's r.164(3) has no such item.",
+  "question": "Do you have any income taxable under section 115BBDA of the Income-tax Act, 1961?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2026-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175133.pdf",
+    "sourceDescription": "egazette 2017/175133, Income-tax (Fourth Amendment) Rules, 2017, S.O. 1006(E), inserting Income-tax Rules, 1962 r.12(1)(a) proviso items (IV) – (VI), p.163",
+    "accessedOn": "2026-11-13",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

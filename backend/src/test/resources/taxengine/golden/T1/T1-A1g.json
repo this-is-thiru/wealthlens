@@ -1,0 +1,15 @@
+{
+  "id": "T1-A1g",
+  "source": "W-140a — Old regime, age 60–79, one rounding step above the 3,00,000 basic exemption (TI = 300010)",
+  "_source": "Worked by hand in docs/taxplanning-build/sources/2026-11-07-boundary-figures.md, row T1-A1g",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "300010",
+  "ageAtYearEnd": 65,
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "0"
+  }
+}

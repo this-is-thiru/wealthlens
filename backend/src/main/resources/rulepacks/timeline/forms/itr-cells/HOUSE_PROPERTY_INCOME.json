@@ -1,0 +1,11 @@
+{
+  "code": "HOUSE_PROPERTY_INCOME",
+  "_note": "The head's income, a loss shown as negative. Drafted by Claude, adopted by the owner's rulings Q1a – Q4a (W-092, D-654).",
+  "label": "Income under the head Income from House Property",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "houseproperty.income"
+    ]
+  }
+}

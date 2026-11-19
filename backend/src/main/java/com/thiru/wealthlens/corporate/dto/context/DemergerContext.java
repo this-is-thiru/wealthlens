@@ -7,7 +7,6 @@ public record DemergerContext(
         String stockCode,
         String stockName,
         double pricePercentage,
-        double quantityRatio,
         AssetEntity entity,
         List<DemergedStockContext> demergedStocks
 ) {

@@ -1,0 +1,25 @@
+{
+  "name": "upstox-equity-intraday-sell-10k",
+  "describes": "A Rs 10,000 intraday sell at Upstox: 0.1% is Rs 10, under the Rs 20 cap, so the percentage applies. Before W-177 this trade had no card and was recorded NO_SCHEDULE at Rs 0.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": "EQUITY",
+    "segment": "INTRADAY",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 10,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 10.0,
+      "STT": 3.0,
+      "EXCHANGE_TXN": 0.3,
+      "SEBI_FEE": 0.01,
+      "IPFT": 0.01,
+      "GST": 1.86
+    },
+    "total": 15.18
+  }
+}

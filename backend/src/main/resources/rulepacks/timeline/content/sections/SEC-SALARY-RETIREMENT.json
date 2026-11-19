@@ -1,0 +1,157 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-103, D-106, D-109). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: RET-*.json (1961 s.10(10), (10A), (10AA), (10B), (10C); 2025 s.19(1) Table Sl. 3–14 with s.19(2)). summary: S2 s.19(1) (p.41) \"computed after making the deductions\"; s.18(1)(a) profits in lieu of salary include compensation on termination, and no entry of s.19(1) deducts notice pay (rulebook RET-NOTICE-001). routes[0]: RET-GRATUITY-GOVERNMENT (Sl. 3, 4). routes[1]: RET-COMMUTED-PENSION-GOVERNMENT, -OTHER, -FUND (Sl. 7–9). routes[2]: RET-LEAVE-ENCASHMENT-GOVERNMENT (Sl. 13). routes[3]: RET-VOLUNTARY-RETIREMENT (Sl. 12), RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT (one limit for the year, D-227), RET-BAR-ARREARS-RELIEF, RET-BAR-ONCE-ONLY (s.19(2)(e)(iii), (ii); W-155b). routes[4]: RET-RETRENCHMENT-APPROVED-SCHEME (Sl. 11). routes[5]: RET-GRATUITY-OTHER, RET-GRATUITY-AGGREGATE, RET-AGGREGATE-HISTORY-GRATUITY (Sl. 6, s.19(2)(a); S.O. 1213(E); B every gratuity entry, D-339). routes[6]: RET-LEAVE-ENCASHMENT-OTHER, RET-LEAVE-ENCASHMENT-AGGREGATE, RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT (Sl. 14, s.19(2)(f); S.O. 2276(E)) (D-106; B both leave entries, D-339). routes[7]: RET-GRATUITY-STATUTORY (Sl. 5; 1961 s.10(10)(ii)), RET-RETRENCHMENT (Sl. 10; s.10(10B)) — the Payment of Gratuity Act / Industrial Disputes Act, repealed 21-11-2025, read as the Code on Social Security s.53 / Industrial Relations Code s.70(b) (D-107); the statutory amount the employer's figure (D-109). disqualifiers[0]: RET-BAR-ARREARS-RELIEF, s.19(2)(e)(iii); 1961 s.10(10C) third proviso. disqualifiers[1]: RET-BAR-ONCE-ONLY, s.19(2)(e)(ii); second proviso (W-155c1). Every entry applies in every regime (s.202(2)(a); s.115BAC(2)(i)).",
+  "key": "SEC-SALARY-RETIREMENT",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.10(10), (10A), (10AA), (10B), (10C)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.19(1) Table Sl. 3–14, s.19(2)",
+    "presence": "PRESENT"
+  },
+  "plainName": "Retirement and leaving a job",
+  "summary": "Money paid when you retire or leave a job is salary, but some of it comes off before tax. Gratuity, commuted pension and leave encashment under government schemes come off in full; a pension commuted by any other employer comes off up to a share of its commuted value; compensation under a voluntary retirement scheme comes off up to a fixed limit, once in a lifetime; gratuity from other employers and other employees' leave encashment come off up to limits the government sets, measured on your salary before you left. Notice pay and other compensation for leaving are taxed in full. These apply in both regimes.",
+  "routes": [
+    {
+      "name": "Gratuity under government pension rules",
+      "description": "Death-cum-retirement gratuity under the government's pension rules or a similar scheme, and a defence retiring gratuity, come off in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-GOVERNMENT"
+        }
+      ]
+    },
+    {
+      "name": "Commuted pension",
+      "description": "A pension commuted under a government scheme or from a pension fund comes off in full; one commuted by any other employer comes off up to a third of the whole pension's commuted value if you also received gratuity, and up to a half if not.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-GOVERNMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-FUND"
+        }
+      ]
+    },
+    {
+      "name": "Leave encashment for government employees",
+      "description": "A central or state government employee's payment for earned leave at retirement comes off in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-GOVERNMENT"
+        }
+      ]
+    },
+    {
+      "name": "Voluntary retirement",
+      "description": "Compensation under a voluntary retirement scheme comes off up to a fixed limit, and no more than what you received.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-VOLUNTARY-RETIREMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-BAR-ARREARS-RELIEF"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-BAR-ONCE-ONLY"
+        }
+      ]
+    },
+    {
+      "name": "Retrenchment under an approved scheme",
+      "description": "A workman's retrenchment compensation under a scheme the central government approved comes off in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-RETRENCHMENT-APPROVED-SCHEME"
+        }
+      ]
+    },
+    {
+      "name": "Gratuity from any other employer",
+      "description": "Gratuity outside the government schemes comes off up to the least of what you received, a limit the government sets, and half a month's salary for each completed year of service, measured on your average salary for the ten months before the month you left. The limit also caps what comes off across all your employers and years.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-AGGREGATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-AGGREGATE-HISTORY-GRATUITY"
+        }
+      ]
+    },
+    {
+      "name": "Leave encashment for other employees",
+      "description": "Payment for earned leave at retirement, for an employee not in government service, comes off up to the least of what you received, the value of your leave at credit, ten months of your average salary, and a limit the government sets, which also caps what comes off across all your employers and years.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT"
+        }
+      ]
+    },
+    {
+      "name": "Gratuity under the gratuity law, and retrenchment",
+      "description": "Gratuity paid under the gratuity law comes off up to what that law entitles you to, and a workman's retrenchment compensation up to the least of what was received, what the labour law entitles, and a limit the government sets. Your employer states the amount the law entitles. The labour laws the tax law names were replaced during the earlier year by new codes, which are read in their place.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-STATUTORY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-RETRENCHMENT"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Voluntary retirement compensation does not come off at all if relief for salary arrears was allowed on it.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "RET-BAR-ARREARS-RELIEF"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Voluntary retirement compensation comes off only once in a lifetime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "RET-BAR-ONCE-ONLY"
+      }
+    }
+  ]
+}

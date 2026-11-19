@@ -10,6 +10,7 @@ import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
+import com.thiru.wealthlens.shared.privacy.HeldAccounts;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,7 @@ public class AmcChargeService {
     private final ChargeAccountRepository chargeAccountRepository;
     private final UserChargeService userChargeService;
     private final ChargeEngineProperties chargeEngineProperties;
+    private final HeldAccounts heldAccounts;
 
     /**
      * Bills every account of the given frequency not yet covered through the given date.
@@ -61,7 +63,7 @@ public class AmcChargeService {
      */
     public List<ChargeAccountEntity> findDue(AmcChargeFrequency frequency, LocalDate billedThrough) {
         ChargeEngineSwitch.requireEnabled(chargeEngineProperties);
-        return chargeAccountRepository.findDueForAmc(frequency, billedThrough);
+        return due(frequency, billedThrough);
     }
 
     public List<ChargeAccountEntity> runCycle(AmcChargeFrequency frequency, LocalDate billedThrough) {
@@ -70,7 +72,7 @@ public class AmcChargeService {
 
         List<ChargeAccountEntity> billed = new ArrayList<>();
 
-        for (ChargeAccountEntity account : chargeAccountRepository.findDueForAmc(frequency, billedThrough)) {
+        for (ChargeAccountEntity account : due(frequency, billedThrough)) {
             if (alreadyCovered(account, billedThrough)) {
                 // The repository query excludes these; the guard is restated because a duplicate
                 // charge is indistinguishable from a legitimate one once written.
@@ -79,6 +81,12 @@ public class AmcChargeService {
             bill(account, billedThrough).ifPresent(billed::add);
         }
         return billed;
+    }
+
+    /** An account held for erasure is not billed: the request stops processing at once (W-237d C3a). */
+    private List<ChargeAccountEntity> due(AmcChargeFrequency frequency, LocalDate billedThrough) {
+        return chargeAccountRepository.findDueForAmc(frequency, billedThrough).stream()
+                .filter(account -> !heldAccounts.contains(account.getEmail())).toList();
     }
 
     private static boolean alreadyCovered(ChargeAccountEntity account, LocalDate billedThrough) {

@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
@@ -116,7 +117,7 @@ class UserChargeServiceTest {
     @Test
     void computeAndRecord_storesTheProvenanceOfTheComputation() {
         // Given — a corrected rate card has to be able to find every row it produced
-        givenComputation(new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", "prof-1",
+        givenComputation(new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", "stat-1", "STATUTORY_EQ_2025_04", "prof-1",
                 ChargeResolution.RESOLVED, List.of(line("BROKERAGE", 20.0)), 20.0));
         givenNoExistingRow();
 
@@ -127,6 +128,8 @@ class UserChargeServiceTest {
         UserChargeEntity saved = captureSaved();
         assertThat(saved.getScheduleId()).isEqualTo("sched-1");
         assertThat(saved.getScheduleCode()).isEqualTo("ZERODHA_EQ_2025_04");
+        assertThat(saved.getStatutoryScheduleId()).isEqualTo("stat-1");
+        assertThat(saved.getStatutoryScheduleCode()).isEqualTo("STATUTORY_EQ_2025_04");
         assertThat(saved.getInstrumentId()).isEqualTo("prof-1");
         assertThat(saved.getResolution()).isEqualTo(ChargeResolution.RESOLVED);
     }
@@ -198,7 +201,7 @@ class UserChargeServiceTest {
 
     @Test
     void findGaps_returnsEveryRowWhoseChargesCouldNotBeFullyAssessed() {
-        // Given — the four reasons a stored zero should not be read as "this trade was free".
+        // Given — the five reasons a stored zero should not be read as "this trade was free".
         //
         // NO_MATCHING_RULES is one of them because a card can resolve and still price nothing: an
         // unscoped card — a maintenance card is the obvious one — matches every dimension of a trade
@@ -208,6 +211,7 @@ class UserChargeServiceTest {
         when(userChargeRepository.findByEmailAndResolutionIn(EMAIL, List.of(
                 ChargeResolution.NO_SCHEDULE,
                 ChargeResolution.NO_INSTRUMENT_PROFILE,
+                ChargeResolution.NO_STATUTORY_SCHEDULE,
                 ChargeResolution.NO_MATCHING_RULES,
                 ChargeResolution.PROVISIONAL))).thenReturn(rows);
 
@@ -234,6 +238,60 @@ class UserChargeServiceTest {
     }
 
     @Test
+    void findOptionalForTransaction_whenTheTransactionWasPriced_returnsItsRow() {
+        // Given
+        UserChargeEntity row = new UserChargeEntity();
+        when(userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-1")).thenReturn(Optional.of(row));
+
+        // When / Then
+        assertThat(service.findOptionalForTransaction(EMAIL, "txn-1")).containsSame(row);
+    }
+
+    @Test
+    void findOptionalForTransaction_whenTheTransactionWasNeverPriced_isEmptyRatherThanRejected() {
+        // Given — a lot bought before the engine was switched on has no row, and never will (ADR-32)
+        when(userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-9")).thenReturn(Optional.empty());
+
+        // When / Then
+        assertThat(service.findOptionalForTransaction(EMAIL, "txn-9")).isEmpty();
+    }
+
+    @Test
+    void findForTransactions_keysEachRowByItsTransactionAndLeavesUnpricedIdsOut() {
+        // Given — three ids asked for, two priced
+        UserChargeEntity first = chargeFor("txn-1");
+        UserChargeEntity second = chargeFor("txn-2");
+        List<String> ids = List.of("txn-1", "txn-2", "txn-3");
+        when(userChargeRepository.findByEmailAndTransactionIdIn(EMAIL, ids)).thenReturn(List.of(first, second));
+
+        // When / Then — "never priced" stays distinguishable from "priced at nothing"
+        assertThat(service.findForTransactions(EMAIL, ids))
+                .containsOnlyKeys("txn-1", "txn-2")
+                .containsEntry("txn-1", first)
+                .containsEntry("txn-2", second);
+    }
+
+    @Test
+    void findForTransactions_whenTwoRowsShareATransaction_keepsTheFirst() {
+        // Given — the unique index makes this impossible on a sound database; the map must not throw
+        UserChargeEntity first = chargeFor("txn-1");
+        UserChargeEntity duplicate = chargeFor("txn-1");
+        List<String> ids = List.of("txn-1");
+        when(userChargeRepository.findByEmailAndTransactionIdIn(EMAIL, ids)).thenReturn(List.of(first, duplicate));
+
+        // When / Then
+        assertThat(service.findForTransactions(EMAIL, ids)).containsOnlyKeys("txn-1").containsEntry("txn-1", first);
+    }
+
+    @Test
+    void findForTransactions_whenNoIdsAreGiven_isEmptyWithoutQuerying() {
+        // When / Then
+        assertThat(service.findForTransactions(EMAIL, List.of())).isEmpty();
+        assertThat(service.findForTransactions(EMAIL, null)).isEmpty();
+        verifyNoInteractions(userChargeRepository);
+    }
+
+    @Test
     void deleteByEmail_removesEveryRowForTheUser() {
         service.deleteByEmail(EMAIL);
 
@@ -241,6 +299,12 @@ class UserChargeServiceTest {
     }
 
     // ---------------------------------------------------------------- fixtures
+
+    private static UserChargeEntity chargeFor(String transactionId) {
+        UserChargeEntity row = new UserChargeEntity();
+        row.setTransactionId(transactionId);
+        return row;
+    }
 
     private void givenComputation(ChargeComputation computation) {
         when(chargeEngine.compute(any())).thenReturn(computation);
@@ -260,7 +324,7 @@ class UserChargeServiceTest {
 
     private static ChargeComputation computation(ChargeResolution resolution, ChargeLine... lines) {
         double total = List.of(lines).stream().mapToDouble(ChargeLine::getAmount).sum();
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", null, resolution, List.of(lines), total);
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", null, null, null, resolution, List.of(lines), total);
     }
 
     private static ChargeLine line(String code, double amount) {

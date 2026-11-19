@@ -1,0 +1,14 @@
+{
+  "id": "T2-16",
+  "source": "W-140a — Old regime, the last income where the 50-lakh relief binds (TI = 5195890)",
+  "_source": "Worked by hand in docs/taxplanning-build/sources/2026-11-07-boundary-figures.md, row T2-16",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "5195890",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "1568730"
+  }
+}

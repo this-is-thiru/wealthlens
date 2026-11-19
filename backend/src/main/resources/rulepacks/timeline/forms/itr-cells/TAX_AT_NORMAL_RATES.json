@@ -1,0 +1,13 @@
+{
+  "code": "TAX_AT_NORMAL_RATES",
+  "_note": "\"Tax at normal rates on 15 of Part B-TI\": X of FA 2026 s.2(2)(b). tax.bybasis keeps the slab tax as charged (X − Y, W-258), so 2a is 2d − 2b + 2c — the tax on total income less the tax at special rates, plus the rebate on agricultural income; without agricultural income in the rates it is the slab tax, as before (W-258a C1a). Placed by ITR-2 only. Drafted by Claude, adopted by the owner's ruling W-258a (D-779).",
+  "label": "Tax at normal rates",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "TAX_ON_TOTAL_INCOME",
+      "-TAX_AT_SPECIAL_RATES",
+      "REBATE_AGRICULTURAL"
+    ]
+  }
+}

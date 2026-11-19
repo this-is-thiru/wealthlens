@@ -1,0 +1,12 @@
+{
+  "code": "LTCG_112A_COST",
+  "_note": "The s.112A buckets' costOfAcquisition (Q1a, D-658; was ManualEntry under D-655 Q10a). Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Total cost of acquisition (s.112A)",
+  "source": {
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "LONG_TERM_LISTED_EQUITY"
+    ],
+    "figure": "costOfAcquisition"
+  }
+}

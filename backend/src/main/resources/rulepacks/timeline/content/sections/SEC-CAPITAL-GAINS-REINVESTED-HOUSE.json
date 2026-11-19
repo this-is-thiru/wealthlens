@@ -1,0 +1,55 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, W-088i). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.54F / 2025 s.86 (coverage MODELLED, W-088i). summary: S2 s.86(1), (5), (8) (Gazette 265620 pp.130–131); 1961 s.54F(1) and its proviso, second proviso (thc pp.292–293; the proviso as substituted by Act 10 of 2000 s.28, the second by Finance Act 2023 s.30 p.28). routes[0]: CG-EXEMPT-RESIDENTIAL-HOUSE. disqualifiers[0]: the bar is s.86(5) / the s.54F(1) proviso, carried as the row's two counts. Not modelled here: the deposit route (s.86(2)–(4) / s.54F(4)), the charge-backs (s.86(6), (7) / s.54F(2), (3)) and the cap on net consideration (s.86(9)) — W-088i2 and W-088i3.",
+  "key": "SEC-CAPITAL-GAINS-REINVESTED-HOUSE",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.54F",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.86",
+    "presence": "PRESENT"
+  },
+  "plainName": "A gain put into a house",
+  "summary": "A long-term gain on an asset other than a residential house is not charged, wholly or in part, where the taxpayer buys or builds one house in India within the periods the law sets, and no other house stands in the way.",
+  "routes": [
+    {
+      "name": "The gain taken out of the charge",
+      "description": "So much of the gain as the cost of the new house bears to the net consideration is not charged, and the whole of it where the cost reaches the net consideration.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "CG-EXEMPT-RESIDENTIAL-HOUSE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Other residential houses owned on the transfer date, or bought or built around it, whose income is chargeable under house property, bar the exemption.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "CG-EXEMPT-RESIDENTIAL-HOUSE"
+      }
+    },
+    {
+      "kind": "LATER_REVERSAL",
+      "description": "Buying or building another house, or selling the new one, within the periods the law sets after the year of the claim, brings the exempted gain back into the charge.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "buying or building another house after the year of the claim, or selling the new one, brings the exempted gain back into the charge, and that is not modelled yet"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A gain put into a deposit with the bank before filing, rather than into the house itself, is exempt on the deposit's cost and charged if the deposit is not used.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "a gain put into a deposit before filing rather than into the house itself is not modelled yet"
+      }
+    }
+  ]
+}

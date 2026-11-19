@@ -9,12 +9,13 @@ import com.thiru.wealthlens.portfolio.dto.analytics.StockPerformance;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrResponse;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
+import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
@@ -24,8 +25,12 @@ import com.thiru.wealthlens.shared.util.calculator.XirrCalculator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -45,7 +50,7 @@ public class AnalyticsService {
         String email = userMail.getEmail();
 
         List<AssetEntity> assets = portfolioRepository.findByEmail(email);
-        List<TransactionEntity> transactions = transactionRepository.findByEmail(email);
+        List<TransactionEntity> transactions = recorded(transactionRepository.findByEmail(email));
         List<ProfitAndLossEntity> pnlList = profitAndLossRepository.findAllByEmail(email);
 
         double totalInvested = assets.stream()
@@ -53,14 +58,11 @@ public class AnalyticsService {
                 .sum();
 
         double totalRealizedProfit = pnlList.stream()
-                .mapToDouble(pnl -> {
-                    RealisedProfits realised = pnl.getRealisedProfits();
-                    double st = (realised != null && realised.getShortTermCapitalGains() != null)
-                            ? realised.getShortTermCapitalGains().getProfit() : 0.0;
-                    double lt = (realised != null && realised.getLongTermCapitalGains() != null)
-                            ? realised.getLongTermCapitalGains().getProfit() : 0.0;
-                    return st + lt;
-                })
+                .map(ProfitAndLossEntity::getRealisedProfits)
+                .filter(Objects::nonNull)
+                .flatMap(realised -> realised.getGainsByAssetAndSegment().values().stream())
+                .flatMap(bySegment -> bySegment.values().stream())
+                .mapToDouble(FinancialReport::getProfit)
                 .sum();
 
         long totalTrades = transactions.size();
@@ -116,7 +118,7 @@ public class AnalyticsService {
                     .breakevenCount(0L)
                     .averageProfitPerWin(0.0)
                     .averageLossPerLoss(0.0)
-                    .winLossRatio(0.0)
+                    .winLossRatio(null)
                     .averageHoldingPeriodDays(0.0)
                     .portfolioTurnover(0.0)
                     .build();
@@ -142,7 +144,8 @@ public class AnalyticsService {
         double avgProfit = wins.stream().mapToDouble(TradeOutcomeEntity::getNetProfit).average().orElse(0.0);
         double avgLoss = losses.stream().mapToDouble(o -> Math.abs(o.getNetProfit())).average().orElse(0.0);
 
-        double winLossRatio = lossCount > 0 ? (double) winCount / lossCount : 0.0;
+        // With no losses there is no ratio; 0.0 would read as no wins (W-322)
+        Double winLossRatio = lossCount > 0 ? (double) winCount / lossCount : null;
         double avgHolding = outcomes.stream().mapToDouble(TradeOutcomeEntity::getHoldingPeriodDays).average().orElse(0.0);
 
         // Portfolio turnover = total sell value / total buy value
@@ -196,85 +199,86 @@ public class AnalyticsService {
                 .build();
     }
 
+    /**
+     * The return on the user's recorded trades. A holding is valued at the price the caller gives; a holding with no price
+     * is left out whole, its trades as well as its value, and named, because counting what it cost and not what it is
+     * worth reads as a loss of all of it (W-318). Held trades are not recorded yet, so they are not cash flows (W-319).
+     */
     public XirrResponse calculateXirr(UserMail userMail, XirrRequest request) {
         String email = userMail.getEmail();
-        List<TransactionEntity> transactions = transactionRepository.findByEmail(email);
-        List<AssetEntity> assets = portfolioRepository.findByEmail(email);
+        Map<String, Double> prices = currentPrices(request);
+        List<AssetEntity> holdings = portfolioRepository.findByEmail(email).stream()
+                .filter(asset -> asset.getQuantity() != null && asset.getQuantity() > 0)
+                .toList();
+        Set<String> unpriced = holdings.stream()
+                .map(AssetEntity::getStockCode)
+                .filter(stockCode -> !prices.containsKey(stockCode))
+                .collect(Collectors.toSet());
 
         List<CashFlow> cashFlows = new ArrayList<>();
-
-        for (TransactionEntity txn : transactions) {
-            double grossAmount = txn.getPrice() * txn.getQuantity();
-            double signedAmount;
-            switch (txn.getTransactionType()) {
-                case BUY -> signedAmount = -(grossAmount + txn.getBrokerCharges() + txn.getMiscCharges());
-                case SELL -> signedAmount = grossAmount - txn.getBrokerCharges() - txn.getMiscCharges();
-                default -> { continue; }
-            }
-            cashFlows.add(new CashFlow(signedAmount, txn.getTransactionDate()));
-        }
-
-        boolean includesOpenPositions = false;
-        String message = null;
-
-        if (request != null && request.getCurrentPrices() != null && !request.getCurrentPrices().isEmpty()) {
-            Map<String, Double> priceMap = request.getCurrentPrices().stream()
-                .collect(Collectors.toMap(MarketPriceEntry::getStockCode, MarketPriceEntry::getPrice));
-
-            double totalCurrentValue = 0.0;
-            for (AssetEntity asset : assets) {
-                if (asset.getQuantity() != null && asset.getQuantity() > 0) {
-                    Double currentPrice = priceMap.get(asset.getStockCode());
-                    if (currentPrice != null) {
-                        totalCurrentValue += currentPrice * asset.getQuantity();
-                    }
-                }
-            }
-
-            if (totalCurrentValue > 0) {
-                cashFlows.add(new CashFlow(totalCurrentValue, LocalDate.now()));
-                includesOpenPositions = true;
-            }
-        } else {
-            boolean hasOpenPositions = assets.stream().anyMatch(a -> a.getQuantity() != null && a.getQuantity() > 0);
-            if (hasOpenPositions) {
-                message = "Open positions excluded. Provide currentPrices for full XIRR.";
+        for (TransactionEntity txn : recorded(transactionRepository.findByEmail(email))) {
+            if (!unpriced.contains(txn.getStockCode())) {
+                cashFlowOf(txn).ifPresent(cashFlows::add);
             }
         }
+        double currentValue = holdings.stream()
+                .filter(asset -> prices.containsKey(asset.getStockCode()))
+                .mapToDouble(asset -> prices.get(asset.getStockCode()) * asset.getQuantity())
+                .sum();
+        boolean includesOpenPositions = currentValue > 0;
+        if (includesOpenPositions) {
+            cashFlows.add(new CashFlow(currentValue, LocalDate.now()));
+        }
+        String message = unpriced.isEmpty() ? null : "Left out for want of a current price: " + String.join(", ", unpriced.stream().sorted().toList())
+                + ". Give currentPrices for them to include them.";
+        return xirrOf(cashFlows, includesOpenPositions, message);
+    }
 
-        if (cashFlows.size() < 2) {
-            return XirrResponse.builder()
-                .xirr(0.0)
-                .xirrPercentage(0.0)
+    /** One price per stock; a stock priced twice is refused, since either price would be a guess (W-321). */
+    private static Map<String, Double> currentPrices(XirrRequest request) {
+        Map<String, Double> prices = new HashMap<>();
+        if (request == null || request.getCurrentPrices() == null) {
+            return prices;
+        }
+        for (MarketPriceEntry entry : request.getCurrentPrices()) {
+            if (prices.containsKey(entry.getStockCode())) {
+                throw new IllegalArgumentException("currentPrices names " + entry.getStockCode()
+                        + " more than once; give one price per stock");
+            }
+            prices.put(entry.getStockCode(), entry.getPrice());
+        }
+        return prices;
+    }
+
+    private static Optional<CashFlow> cashFlowOf(TransactionEntity txn) {
+        double grossAmount = txn.getPrice() * txn.getQuantity();
+        return switch (txn.getTransactionType()) {
+            case BUY -> Optional.of(new CashFlow(-(grossAmount + txn.getBrokerCharges() + txn.getMiscCharges()), txn.getTransactionDate()));
+            case SELL -> Optional.of(new CashFlow(grossAmount - txn.getBrokerCharges() - txn.getMiscCharges(), txn.getTransactionDate()));
+            default -> Optional.empty();
+        };
+    }
+
+    private static XirrResponse xirrOf(List<CashFlow> cashFlows, boolean includesOpenPositions, String message) {
+        XirrResponse.XirrResponseBuilder response = XirrResponse.builder()
                 .calculationDate(LocalDate.now())
                 .cashFlowsCount(cashFlows.size())
-                .converged(false)
-                .includesOpenPositions(includesOpenPositions)
-                .message("Insufficient cash flows for XIRR calculation")
-                .build();
+                .includesOpenPositions(includesOpenPositions);
+        if (cashFlows.size() < 2) {
+            return response.xirr(0.0).xirrPercentage(0.0).converged(false)
+                    .message(message == null ? "Insufficient cash flows for XIRR calculation"
+                            : "Insufficient cash flows for XIRR calculation. " + message).build();
         }
-
         try {
             double xirr = XirrCalculator.calculate(cashFlows);
-            return XirrResponse.builder()
-                .xirr(xirr)
-                .xirrPercentage(xirr * 100)
-                .calculationDate(LocalDate.now())
-                .cashFlowsCount(cashFlows.size())
-                .converged(true)
-                .includesOpenPositions(includesOpenPositions)
-                .message(message)
-                .build();
+            return response.xirr(xirr).xirrPercentage(xirr * 100).converged(true).message(message).build();
         } catch (IllegalArgumentException e) {
-            return XirrResponse.builder()
-                .xirr(0.0)
-                .xirrPercentage(0.0)
-                .calculationDate(LocalDate.now())
-                .cashFlowsCount(cashFlows.size())
-                .converged(false)
-                .includesOpenPositions(includesOpenPositions)
-                .message(e.getMessage())
-                .build();
+            return response.xirr(0.0).xirrPercentage(0.0).converged(false).message(e.getMessage()).build();
         }
+    }
+
+    /** The trades that happened: one held behind a corporate action is not recorded yet (W-319). */
+    private static List<TransactionEntity> recorded(List<TransactionEntity> transactions) {
+        return transactions.stream().filter(txn -> txn.getStatus() != TransactionStatus.TEMPORARY).toList();
     }
 }

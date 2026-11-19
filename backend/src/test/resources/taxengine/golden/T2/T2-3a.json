@@ -1,0 +1,14 @@
+{
+  "id": "T2-3a",
+  "source": "DR 08 T2-3 — New regime, the crossover where surcharge relief stops binding (TI = 51,61,190)",
+  "_source": "**Expected: ₹12,90,840 for both.**",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "5161190",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "1290840"
+  }
+}

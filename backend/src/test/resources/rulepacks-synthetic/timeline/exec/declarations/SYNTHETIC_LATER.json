@@ -1,0 +1,16 @@
+{
+  "code": "SYNTHETIC_LATER",
+  "_note": "A synthetic declaration for W-090a1's tests, shaped on the question of Income-tax Rules, 2026 r.164(3)(g); not law, never shipped. Asked only from 2101-04-01, so the 2099-00 and 2100-01 packs drop it and 2101-02 keeps it.",
+  "question": "Did you hold an unlisted equity share at any time during the tax year?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2101-04-01"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Synthetic, shaped on Gazette 271092, Income-tax Rules, 2026 r.164(3)(g); W-090a1's test pack only",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "UNVERIFIED",
+    "whatToCheck": "Nothing to settle: a synthetic row for tests, never shipped; the shipped rows are W-090a2's"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "T3-3b",
+  "source": "DR 08 T3-3 — TY 2025-26, Pune, limb (c) at 40%. PROVISIONAL",
+  "_source": "**₹3,20,000 for TY 2025-26 (`PROVISIONAL`)** — limb (c). Pune is not among r.2A's four cities, so it is entered as ANY_OTHER_PLACE.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "800000",
+      "HRA": "500000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [
+      {
+        "from": "2025-04-01",
+        "to": "2026-03-31",
+        "location": "ANY_OTHER_PLACE",
+        "ownedByAssessee": false,
+        "rentPaid": "660000"
+      }
+    ]
+  },
+  "expected": {
+    "salaryExemptions": "320000",
+    "limitedBy": "percentage of salary"
+  }
+}

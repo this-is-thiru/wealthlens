@@ -1,0 +1,14 @@
+{
+  "code": "DED_80D",
+  "_note": "The rows that leave 80D's DEDUCTION lines; the limb, spread, check-up and cash rows feed them and are left out, so nothing is counted twice. Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Deduction u/s 80D",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "DED-HEALTH-FAMILY",
+      "DED-HEALTH-FAMILY-SENIOR",
+      "DED-HEALTH-PARENTS",
+      "DED-HEALTH-PARENTS-SENIOR"
+    ]
+  }
+}

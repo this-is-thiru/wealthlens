@@ -1,0 +1,12 @@
+{
+  "code": "LTCG_AT_12_5",
+  "_note": "The s.112A part and the s.112 part (CG-PART-LONG-LISTED, CG-PART-LONG-OTHER, 2025-26): ITR-2 Part B-TI 3b(i) is \"Long-term chargeable @ 12.5%\", which holds both for transfers in TY 2025-26 (Q8a, D-655; corrects D-654's s.112A-only reading). Drafted by Claude, adopted by the owner's rulings (W-092).",
+  "label": "Long-term capital gains chargeable @ 12.5%",
+  "source": {
+    "type": "FromCapitalGainsParts",
+    "parts": [
+      "LONG_TERM_LISTED_EQUITY",
+      "LONG_TERM_OTHER"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "upstox-equity-futures-sell-20k",
+  "describes": "A Rs 20,000 futures sell at Upstox: 0.05% is Rs 10, under the Rs 20 cap.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": "EQUITY",
+    "segment": "FUTURES",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 200,
+    "quantity": 100,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 10.0,
+      "STT": 4.0,
+      "EXCHANGE_TXN": 0.35,
+      "SEBI_FEE": 0.02,
+      "IPFT": 0.02,
+      "GST": 1.87
+    },
+    "total": 16.26
+  }
+}

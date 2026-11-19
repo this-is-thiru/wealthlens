@@ -1,0 +1,12 @@
+{
+  "code": "CG_A5_DEDUCTIONS",
+  "_note": "Cost of improvement is not computed, so it adds nothing. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Total deductions under section 48 (short-term, other assets)",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_A5_COST",
+      "CG_A5_EXPENDITURE"
+    ]
+  }
+}

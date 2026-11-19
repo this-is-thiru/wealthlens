@@ -1,0 +1,9 @@
+{
+  "code": "CFL_EARLIER_YEARS",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "Losses of earlier years, by assessment year",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Losses of earlier years are carried in by year from your earlier returns; enter each year's row and the adjustment from Schedule BFLA"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "code": "OS_SPECIAL_RATES",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Income chargeable at special rates",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Income at special rates under other sources (winnings, s.115BBE) is not computed"
+  }
+}

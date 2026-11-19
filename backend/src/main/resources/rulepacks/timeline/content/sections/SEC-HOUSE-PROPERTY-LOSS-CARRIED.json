@@ -1,0 +1,49 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-219). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.71B / 2025 s.110 (coverage MODELLED, D-219). summary: S2 s.110(1), (2) (Gazette 265620 p.148); 1961 s.71B (thc p.319); S2 s.121 does not reach s.110 (p.158). routes[0]: SETOFF-CARRIED-HOUSE-PROPERTY (TaxYearSpan, OQ-29). routes[1]: SETOFF-CARRIED-DISALLOWED-PART. disqualifiers[0]: s.202(2)(b)(i), (3) / s.115BAC(2)(ii)(a), (3), DIS-NEW-TAX-REGIME-NO-SETOFF.",
+  "key": "SEC-HOUSE-PROPERTY-LOSS-CARRIED",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.71B",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.110",
+    "presence": "PRESENT"
+  },
+  "plainName": "Carrying forward a loss from house property",
+  "summary": "A house-property loss not set off in the year it arose is carried to later years and set only against income from house property, for a limited number of years, after which it lapses. A return filed late does not lose it.",
+  "routes": [
+    {
+      "name": "The carried loss against later house-property income",
+      "description": "The oldest year's loss is used first; the order is stated, because the law does not fix one.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SETOFF-CARRIED-HOUSE-PROPERTY"
+        }
+      ]
+    },
+    {
+      "name": "The part that arose from own-home interest",
+      "description": "It is used like the rest of the loss in the old regime.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SETOFF-CARRIED-DISALLOWED-PART"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "In the default regime, the part of a carried loss that arose from a deduction that regime does not allow is not used, and it is treated as fully used.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-SETOFF"
+      }
+    }
+  ]
+}

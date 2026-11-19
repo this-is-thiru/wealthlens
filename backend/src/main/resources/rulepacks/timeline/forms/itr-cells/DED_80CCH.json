@@ -1,0 +1,12 @@
+{
+  "code": "DED_80CCH",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Deduction u/s 80CCH",
+  "source": {
+    "type": "FromRules",
+    "rules": [
+      "DED-AGNIVEER-OWN",
+      "DED-AGNIVEER-GOVERNMENT"
+    ]
+  }
+}

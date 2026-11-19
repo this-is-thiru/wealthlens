@@ -1,0 +1,29 @@
+{
+  "id": "T4-4",
+  "source": "DR 08 T4-4 — PF-EEINT-001, the employee side",
+  "_source": "\"Employee's own RPF contribution ₹6,00,000 in the year; employer also contributes.\" \"PF-EEINT-001: employer DOES contribute → threshold is 2,50,000; excess contribution = 3,50,000\". As DR 08's W-074b erratum (D-209): the computation is read (Rules 1962 r.9D; S4 r.277) and charges the fund's taxable-account interest, which the case does not state — entered as nil, so other-sources income is nil. DR 08 states no regime; OS-PF-TAXABLE-INTEREST applies in every regime, so the default (new) regime. No employer contribution amount is stated, so none is entered and nothing is added to salary. INFERENCE, not DR 08's: the nil interest, the regime, the nil charge.",
+  "regime": "NEW_TAX_REGIME",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "2400000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "providentFundAccounts": [
+      {
+        "contributed": "600000",
+        "employerContributes": true,
+        "taxableAccountInterest": "0"
+      }
+    ]
+  },
+  "expected": {
+    "employerContributionCharges": "0",
+    "providentFundExcess": "350000",
+    "otherSourcesIncome": "0"
+  }
+}

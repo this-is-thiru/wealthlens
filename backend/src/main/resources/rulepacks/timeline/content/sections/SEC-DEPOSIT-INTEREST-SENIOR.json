@@ -1,0 +1,63 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-DEPOSIT-INTEREST-SENIOR provision1961 (s.80TTB) and provision2025 (s.153; its savings limb is SEC-SAVINGS-INTEREST). summary: S2 s.153(1)(b), (2)(b), (5), s.2(100); 1961 s.80TTB and its Explanation (sources/2026-10-16-deposit-interest.md; D-195). routes[0]: DED-DEPOSIT-INTEREST-SENIOR, its IsResident and AgeAtLeast conditions. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists the row (D-166). disqualifiers[1]: s.2(100), the row's conditions. disqualifiers[2]: s.153(1)(i)–(iii), the entered kind (OtherSourceKind), which the row reaches by its othersources.kind condition (D-319). disqualifiers[3]: OQ-25.",
+  "key": "SEC-DEPOSIT-INTEREST-SENIOR",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80TTB",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.153",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest on deposits of a senior citizen",
+  "summary": "If you are a senior citizen — resident in India and sixty or more at any time in the year — interest on any deposit with a bank, a co-operative bank or a post office, fixed deposits included, is deducted up to a limit. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "Deposit interest of a senior citizen",
+      "description": "The interest on any deposit, up to the higher limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-DEPOSIT-INTEREST-SENIOR"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Deposit interest is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "You are not resident in India, or not sixty at any time in the year.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DEPOSIT-INTEREST-SENIOR"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Interest from anyone other than a bank, a co-operative bank or a post office — a company deposit or a loan — is not deducted.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DEPOSIT-INTEREST-SENIOR"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Where an expense is entered against the deposit interest, the deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "whether the interest is taken before or after the expense is not settled"
+      }
+    }
+  ]
+}

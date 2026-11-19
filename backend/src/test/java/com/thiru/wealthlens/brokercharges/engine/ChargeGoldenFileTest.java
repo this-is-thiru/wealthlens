@@ -111,6 +111,12 @@ class ChargeGoldenFileTest {
                         .filter(card -> card.getBrokerName() == call.getArgument(0))
                         .filter(card -> !card.getStartDate().isAfter(call.getArgument(1)))
                         .toList());
+        // The statutory cards name no broker (D-380); the same window filter over those
+        when(scheduleRepository.findStatutoryCandidates(any())).thenAnswer(call ->
+                shippedCards().stream()
+                        .filter(card -> card.getBrokerName() == null)
+                        .filter(card -> !card.getStartDate().isAfter(call.getArgument(0)))
+                        .toList());
 
         UserChargeRepository userChargeRepository = mock(UserChargeRepository.class);
         List<String> alreadyCharged = new ArrayList<>();

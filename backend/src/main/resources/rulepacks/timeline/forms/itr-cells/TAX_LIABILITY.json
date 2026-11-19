@@ -1,0 +1,11 @@
+{
+  "code": "TAX_LIABILITY",
+  "_note": "ITR-1 D5 (no surcharge can arise on ITR-1) and ITR-2 B-TTI 12; relief u/s 89 – 91 is not computed (Q9a). Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Tax after rebate, with surcharge and cess",
+  "source": {
+    "type": "FromNodes",
+    "nodes": [
+      "tax.netpayable"
+    ]
+  }
+}

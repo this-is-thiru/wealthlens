@@ -1,0 +1,130 @@
+{
+  "ruleId": "SETOFF-HOUSE-PROPERTY",
+  "ruleSet": "RS-SETOFF-HOUSE-PROPERTY",
+  "_note": "A house-property loss set off against other heads only up to ₹2,00,000 (D-217; rulebook SETOFF-HP-001). TY 2026-27: Income-tax Act, 2025 s.109(1)(b) (p.148): \"loss under the head \"Income from house property\" shall be set off to the extent of ₹ 200000 against income under any other head\". TY 2025-26: Income-tax Act, 1961 s.71(3A), inserted by the Finance Act, 2017 s.31 w.e.f. 1-4-2018: \"shall not be entitled to set off such loss, to the extent the amount of the loss exceeds two lakh rupees, against income under the other head\". In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-SETOFF (S2 s.202(2)(b)(ii), (3); 1961 s.115BAC(2)(ii)(b), (3)), where the loss is destroyed, not carried. Within the head, losses between properties are netted first (s.108(1); s.70(1); HousePropertyNode). What is not set off is carried forward (s.110; s.71B) — W-081b.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.71(3A)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.109(1)(b)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "the loss",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "LOSS"
+            }
+          },
+          {
+            "name": "the limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "200000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2017 (7 of 2017), s.31 — Income-tax Act, 1961 s.71(3A) inserted w.e.f. 1-4-2018",
+        "gazetteRef": "Act 7 of 2017: Gazette of India, Extraordinary, Part II, Section 1, No. 7, 31-3-2017 (egazette 2017/175141), p.18",
+        "notifiedOn": "2017-03-31",
+        "effectiveFrom": "2018-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175141.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2017/175141.pdf",
+        "sourceDescription": "Gazette (egazette 2017/175141), Finance Act, 2017 s.31, p.18 (Income-tax Act, 1961 s.71(3A)); thc.nic.in copy of the 1961 Act p.318; no amendment of s.71 in the Finance Acts 2020–2025",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.71(3A)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.109(1)(b)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "the loss",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "LOSS"
+            }
+          },
+          {
+            "name": "the limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "200000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.109(1)(b)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.109(1)(b), p.148; not amended by the Finance Act, 2026",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.109(1)(b), p.148",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

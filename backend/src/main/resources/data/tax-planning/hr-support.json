@@ -1,0 +1,28 @@
+{
+  "_note": "How likely an employer is to agree to a change of each pay component (the pack's SALARY rows) and each employer fund (EmployerFund), A2.6 hrSupportLikelihood. A product judgement with no legal source: drafted by Claude from common Indian payroll practice and adopted by the owner, 2026-11-08 (W-238f C4, D-495); the reason for each value is in that decision row. Reported, never a veto (A2.2 C10). HrSupportCoverageTest fails the build when the pack gains a SALARY row or a fund without a value here.",
+  "likelihoods": {
+    "SPECIAL_ALLOWANCE": "HIGH",
+    "HRA": "HIGH",
+    "LTA": "HIGH",
+    "CHILDREN_EDUCATION_ALLOWANCE": "MEDIUM",
+    "HOSTEL_ALLOWANCE": "MEDIUM",
+    "CONVEYANCE_ALLOWANCE": "MEDIUM",
+    "TRANSPORT_ALLOWANCE_DISABLED": "MEDIUM",
+    "UNIFORM_ALLOWANCE": "EMPLOYER_DISCRETION",
+    "BASIC": "LOW",
+    "ENTERTAINMENT_ALLOWANCE": "LOW",
+    "RECOGNISED_PROVIDENT_FUND": "LOW",
+    "NOTIFIED_PENSION_SCHEME": "EMPLOYER_DISCRETION",
+    "APPROVED_SUPERANNUATION_FUND": "EMPLOYER_DISCRETION",
+    "DEARNESS_ALLOWANCE": "NOT_APPLICABLE",
+    "BONUS": "NOT_APPLICABLE",
+    "COMMISSION": "NOT_APPLICABLE",
+    "GRATUITY": "NOT_APPLICABLE",
+    "LEAVE_ENCASHMENT": "NOT_APPLICABLE",
+    "NOTICE_PAY": "NOT_APPLICABLE",
+    "RETRENCHMENT_COMPENSATION": "NOT_APPLICABLE",
+    "VRS_COMPENSATION": "NOT_APPLICABLE",
+    "COMMUTED_PENSION": "NOT_APPLICABLE",
+    "UNCOMMUTED_PENSION": "NOT_APPLICABLE"
+  }
+}

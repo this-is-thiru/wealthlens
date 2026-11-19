@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.corporate.service;
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.CorporateActionPerformDto;
+import com.thiru.wealthlens.corporate.dto.SplitRatio;
 import com.thiru.wealthlens.corporate.dto.context.DemergedStockContext;
 import com.thiru.wealthlens.corporate.dto.context.DemergerContext;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
@@ -13,10 +14,10 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.service.PortfolioQueryService;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -41,7 +43,6 @@ public class CorporateActionService {
     private static final int ONE = 1;
     private static final List<Month> QUARTER_START_MONTHS = List.of(Month.JANUARY, Month.APRIL, Month.JULY, Month.OCTOBER);
 
-    private final PortfolioQueryService portfolioQueryService;
     private final PortfolioService portfolioService;
     private final TransactionService transactionService;
     private final TemporaryTransactionService temporaryTransactionService;
@@ -51,6 +52,9 @@ public class CorporateActionService {
 
     public String addCorporateAction(CorporateActionDto actionWrapper) {
         validateCorporateActionData(actionWrapper);
+        if (actionWrapper.getType() == CorporateActionType.STOCK_SPLIT) {
+            SplitRatio.parse(actionWrapper.getRatio());
+        }
 
         CorporateActionEntity corporateActionEntity = actionWrapper.getAsEntity();
         List<CorporateActionEntity> actions = corporateActionRepository.findByStockCodeAndRecordDateAndOrderByPriorityAsc(actionWrapper.getStockCode(), actionWrapper.getRecordDate());
@@ -99,29 +103,6 @@ public class CorporateActionService {
         return TCollectionUtil.map(actions, corporateAction -> TJsonMapper.copy(corporateAction, CorporateActionDto.class));
     }
 
-//    public void performQuarterlyCorporateActions(String email, int year, int quarter) {
-//
-//        Month quarterStart = TLocalDate.firstMonthOfQuarter(quarter);
-//        LocalDate fromDate = LocalDate.of(year, quarterStart, ONE);
-//        LocalDate toDate = LocalDate.of(year, quarterStart.plus(3), ONE).minusDays(ONE);
-//        List<CorporateActionEntity> corporateActions = corporateActionRepository.findByTypeInAndRecordDateBetween(CorporateActionType.FILTERABLE_CORPORATE_ACTIONS, fromDate, toDate);
-//        for (CorporateActionEntity corporateAction : corporateActions) {
-//            performQuarterlyCorporateAction(email, corporateAction);
-//        }
-//        log.info(corporateActions);
-//    }
-//
-//    public void performQuarterlyCorporateAction(String email, CorporateActionEntity corporateAction) {
-//
-//        CorporateActionType action = corporateAction.getType();
-//        if (Objects.requireNonNull(action) == CorporateActionType.BONUS) {
-//            processBonusShares(email, corporateAction);
-//        } else {
-//            throw new IllegalArgumentException("Invalid action type" + action);
-//        }
-//        log.info("Quarterly corporate action: {} noted successfully for stock: {}", action, corporateAction.getStockCode());
-//    }
-
     @Transactional
     public void deleteCorporateActions(String id) {
         corporateActionRepository.deleteById(id);
@@ -156,10 +137,7 @@ public class CorporateActionService {
 
     private void performPendingCorporateActions(String email, CorporateActionPerformDto actionPerformDto, BrokerName brokerName) {
 
-        Month quarterStart = Month.valueOf(actionPerformDto.month());
-        if (!QUARTER_START_MONTHS.contains(quarterStart)) {
-            throw new IllegalArgumentException("Invalid month: " + actionPerformDto.month());
-        }
+        Month quarterStart = quarterStart(actionPerformDto.month());
 
         LocalDate fromDate = LocalDate.of(actionPerformDto.year(), quarterStart, ONE);
         LocalDate toDate;
@@ -179,6 +157,15 @@ public class CorporateActionService {
         }
 
         log.info(corporateActions);
+    }
+
+    /** The month a quarter starts in, by its name; anything else is refused naming the four (W-315). */
+    private static Month quarterStart(String month) {
+        return QUARTER_START_MONTHS.stream()
+                .filter(start -> start.name().equals(month))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("A quarter starts in one of " + QUARTER_START_MONTHS
+                        + ", but the month was '" + month + "'"));
     }
 
     private List<CorporateActionEntity> getCurrentQuarterCorporateActions(LocalDate start, LocalDate transactionDate) {
@@ -227,7 +214,7 @@ public class CorporateActionService {
     }
 
     /**
-     * Processes a single corporate action (stock-split or name-change) by writing
+     * Processes a single corporate action (a name change) by writing
      * to portfolio and transaction collections. Safe only when MongoDB replica set
      * + {@code app.mongodb.transactions-enabled=true} is set.
      */
@@ -236,54 +223,13 @@ public class CorporateActionService {
 
         CorporateActionType action = actionWrapper.getType();
         switch (action) {
-            case STOCK_SPLIT -> processStockSplit(actionWrapper);
+            case STOCK_SPLIT -> throw new IllegalArgumentException("A stock split applies per user and broker, through"
+                    + " PUT /corporate-action/user/{email}/perform");
             case NAME_OR_SYMBOL_CHANGE -> processNameOrSymbolChange(actionWrapper);
             default -> throw new IllegalArgumentException("Invalid action type" + action);
         }
 
         return "Corporate action: " + action + " noted successfully for stock: " + actionWrapper.getStockCode();
-    }
-
-    // TODO: Remove - Doesn't work, need to fix
-    @Deprecated
-    private void processStockSplit(CorporateActionDto actionWrapper) {
-
-        String stockCode = actionWrapper.getStockCode();
-        LocalDate recordDate = actionWrapper.getRecordDate();
-        String[] splitRatio = actionWrapper.getRatio().split(":");
-        double multiplier = Integer.parseInt(splitRatio[0]);
-        double ratio = Double.parseDouble(splitRatio[1]);
-
-        double quantityMultiplier = multiplier / ratio;
-        double priceMultiplier = 1 / quantityMultiplier;
-
-        List<AssetEntity> stockEntities = portfolioService.stocksForCorporateActions(stockCode, recordDate);
-
-        double quantity = 0;
-        for (AssetEntity assetEntity : stockEntities) {
-            double previousQuantity = assetEntity.getQuantity();
-
-            assetEntity.setQuantity(previousQuantity * quantityMultiplier);
-            assetEntity.setPrice(assetEntity.getPrice() * priceMultiplier);
-
-            CorporateActionEntity corporateActionDto = actionWrapper.getAsEntity();
-            assetEntity.getCorporateActions().add(corporateActionDto);
-            quantity += previousQuantity;
-        }
-        portfolioService.saveCorporateActionProcessedStocks(stockEntities);
-
-        List<TransactionEntity> transactionEntities = transactionService.transactionsForCorporateActions(quantity, stockCode, recordDate);
-
-        for (TransactionEntity transactionEntity : transactionEntities) {
-            double previousQuantity = transactionEntity.getQuantity();
-
-            transactionEntity.setQuantity(previousQuantity * quantityMultiplier);
-            transactionEntity.setPrice(transactionEntity.getPrice() * priceMultiplier);
-
-            CorporateActionEntity corporateActionDto = actionWrapper.getAsEntity();
-            transactionEntity.getCorporateActions().add(corporateActionDto);
-        }
-        transactionService.saveCorporateActionProcessedTransactions(transactionEntities);
     }
 
     private void processNameOrSymbolChange(CorporateActionDto actionWrapper) {
@@ -315,6 +261,12 @@ public class CorporateActionService {
 
         String stockCode = corporateAction.getStockCode();
         LocalDate recordDate = corporateAction.getRecordDate();
+        if (corporateAction.getAllotmentDate() == null) {
+            throw new IllegalArgumentException("The bonus on " + stockCode + " (record date " + recordDate + ") has no"
+                    + " allotment date; a bonus share's holding period runs from its allotment (Income-tax Act, 1961"
+                    + " Explanation 1(i)(f) to s.2(42A); Income-tax Act, 2025 s.2(101)(c)(C)(IV)) — add it before"
+                    + " performing");
+        }
 
         List<AssetEntity> stockEntities = portfolioService.stocksForCorporateActions(email, stockCode, recordDate);
         if (stockEntities.isEmpty()) {
@@ -333,7 +285,30 @@ public class CorporateActionService {
 
     }
 
+    /**
+     * Allots a bonus to each account holder at the broker from their own lots, as a depository credits each demat
+     * account: one holder's entitlement is never another's (W-312).
+     */
     public void processBonusShares(String email, CorporateActionEntity corporateAction, BrokerName brokerName, List<AssetEntity> stockEntities) {
+        Map<Holder, List<AssetEntity>> lotsByHolder = TCollectionUtil.groupingBy(stockEntities, Holder::of);
+        for (Map.Entry<Holder, List<AssetEntity>> holderLots : lotsByHolder.entrySet()) {
+            allotBonus(email, corporateAction, brokerName, holderLots.getKey(), new ArrayList<>(holderLots.getValue()));
+        }
+    }
+
+    /** One account holder's lots at a broker, as a depository keeps them. */
+    private record Holder(AccountType accountType, String accountHolder) {
+        static Holder of(AssetEntity lot) {
+            return new Holder(lot.getAccountType(), lot.getAccountHolder());
+        }
+
+        boolean holds(TransactionEntity transaction) {
+            return accountType == transaction.getAccountType() && Objects.equals(accountHolder, transaction.getAccountHolder());
+        }
+    }
+
+    private void allotBonus(String email, CorporateActionEntity corporateAction, BrokerName brokerName, Holder holder,
+                            List<AssetEntity> stockEntities) {
         String stockCode = corporateAction.getStockCode();
 
         int totalShares = TCollectionUtil.map(stockEntities, assetEntity -> assetEntity.getQuantity().intValue()).stream().reduce(0, Integer::sum);
@@ -342,7 +317,7 @@ public class CorporateActionService {
         int denominator = Integer.parseInt(splitRatio[1]);
         int bonusSharesCount = totalShares * numerator / denominator;
 
-        List<String> newTransactionIds = processBonusSharesTxns(email, bonusSharesCount, corporateAction, brokerName);
+        List<String> newTransactionIds = processBonusSharesTxns(email, bonusSharesCount, corporateAction, brokerName, holder);
         if (newTransactionIds.size() != 1) {
             log.warn("Bonus shares txns: {} added for symbol: {} in Broker: {} with multiple transactions", newTransactionIds, stockCode, brokerName);
             throw new IllegalArgumentException("Multiple transactions added for bonus shares: " + newTransactionIds);
@@ -354,10 +329,11 @@ public class CorporateActionService {
         bonusSharesEntity.setId(null);
         bonusSharesEntity.setQuantity((double) bonusSharesCount);
         bonusSharesEntity.setPrice(0);
-        bonusSharesEntity.setTransactionDate(corporateAction.getExDate());
+        bonusSharesEntity.setTransactionDate(corporateAction.getAllotmentDate());
         bonusSharesEntity.setOrderTimeQuantities(List.of());
         bonusSharesEntity.setCorporateActionType(CorporateActionType.BONUS);
         bonusSharesEntity.setBuyTransactionIds(newTransactionIds);
+        asAllotment(bonusSharesEntity);
         stockEntities.add(bonusSharesEntity);
 
         for (AssetEntity assetEntity : stockEntities) {
@@ -370,23 +346,51 @@ public class CorporateActionService {
         log.info("Bonus shares: {} added for symbol: {} in Broker: {}", newTransactionIds.getFirst(), stockCode, brokerName);
     }
 
-    public List<String> processBonusSharesTxns(String email, int bonusSharesCount, CorporateActionEntity corporateAction, BrokerName brokerName) {
+    /**
+     * A bonus lot copied from a held lot keeps only what an allotment is: it cost nothing, was never sold from, and has
+     * been through this bonus alone (W-291, D-589). Copied charges were charged again on every sale of bonus shares.
+     * Public and static so the {@code assets} replay builds the same lot ({@code LotLedger.allot}).
+     */
+    public static void asAllotment(AssetEntity bonusLot) {
+        bonusLot.setBrokerCharges(0);
+        bonusLot.setMiscCharges(0);
+        bonusLot.setAllocatedBuyCharges(0);
+        bonusLot.setAllocatedBuyMiscCharges(0);
+        bonusLot.setSellTransactionIds(new ArrayList<>());
+        bonusLot.setCorporateActions(new ArrayList<>());
+    }
+
+    private List<String> processBonusSharesTxns(String email, int bonusSharesCount, CorporateActionEntity corporateAction, BrokerName brokerName,
+                                                Holder holder) {
 
         String stockCode = corporateAction.getStockCode();
         LocalDate recordDate = corporateAction.getRecordDate();
 
         // Transaction update
-        List<TransactionEntity> transactionEntities = transactionService.testTransactionsForCorporateActions(email, stockCode, brokerName, recordDate);
+        List<TransactionEntity> transactionEntities = TCollectionUtil.filter(
+                transactionService.testTransactionsForCorporateActions(email, stockCode, brokerName, recordDate), holder::holds);
         List<String> existingTransactionIds = TCollectionUtil.map(transactionEntities, TransactionEntity::getId);
 
         TransactionEntity first = TCollectionUtil.filter(transactionEntities, transaction -> TransactionType.BUY.equals(transaction.getTransactionType())).getFirst();
         TransactionEntity bonusSharesTransaction = TJsonMapper.copy(first, TransactionEntity.class);
         bonusSharesTransaction.setId(null);
+        // A copy of the buy, but no trade flow received it (W-283a1 C1a, D-580).
+        bonusSharesTransaction.setTradeFlow(null);
         bonusSharesTransaction.setPrice(0);
         bonusSharesTransaction.setQuantity((double) bonusSharesCount);
         bonusSharesTransaction.setTotalValue(0);
-        bonusSharesTransaction.setTransactionDate(corporateAction.getExDate());
+        bonusSharesTransaction.setTransactionDate(corporateAction.getAllotmentDate());
         bonusSharesTransaction.setCorporateActionType(CorporateActionType.BONUS);
+        // Allotted, not ordered or submitted: nothing of the buy's cost or identity is the bonus's (W-291 C1a). The key
+        // and the redrive link are unique indexes, so copying them refused the bonus outright.
+        bonusSharesTransaction.setBrokerCharges(0);
+        bonusSharesTransaction.setMiscCharges(0);
+        bonusSharesTransaction.setOrderId(null);
+        bonusSharesTransaction.setOrderExecutionTime(null);
+        bonusSharesTransaction.setIdempotencyKey(null);
+        bonusSharesTransaction.setTradeFingerprint(null);
+        bonusSharesTransaction.setSubmittedAt(null);
+        bonusSharesTransaction.setSourceTempTransactionId(null);
         transactionEntities.add(bonusSharesTransaction);
 
         for (TransactionEntity transactionEntity : transactionEntities) {
@@ -432,8 +436,14 @@ public class CorporateActionService {
         }
     }
 
+    /**
+     * Applies a split to this user's lots with this broker held before the record date, then records it as performed. A
+     * lot's cost, date and charges do not change, and transactions stay the record of what was traded (W-213, D-438). The
+     * ratio is read first, so a malformed one stored before W-216 refuses rather than lifting the block on trades.
+     */
     public void processStockSplit(String email, CorporateActionEntity corporateAction, BrokerName brokerName) {
 
+        SplitRatio ratio = SplitRatio.parse(corporateAction.getRatio());
         String stockCode = corporateAction.getStockCode();
         LocalDate recordDate = corporateAction.getRecordDate();
 
@@ -449,73 +459,45 @@ public class CorporateActionService {
                 log.info("CA skipping for broker name {} and stock {}", entry.getKey(), stockCode);
                 continue;
             }
-            processStockSplit(corporateAction, entry.getKey(), entry.getValue());
+            applySplit(corporateAction, ratio, entry.getValue());
             updateLastlyPerformedCorporateAction(email, stockCode, corporateAction.getAssetType(), corporateAction.getType(), corporateAction.getExDate(), entry.getKey());
         }
     }
 
-    private void processStockSplit(CorporateActionEntity corporateAction, BrokerName brokerName, List<AssetEntity> stockEntities) {
-
-        String stockCode = corporateAction.getStockCode();
-
-        int totalShares = TCollectionUtil.map(stockEntities, assetEntity -> assetEntity.getQuantity().intValue()).stream().reduce(0, Integer::sum);
-        String[] splitRatio = corporateAction.getRatio().split(":");
-        int numerator = Integer.parseInt(splitRatio[0]);
-        int denominator = Integer.parseInt(splitRatio[1]);
-        int bonusSharesCount = totalShares * numerator / denominator;
-//
-//        String[] demergerPriceRatio = demergerDetail.getDemergerPriceRatio().split(":");
-//        double mainStockPriceRatio = Double.parseDouble(demergerPriceRatio[0]);
-//        double secondaryStockPriceRatio = Double.parseDouble(demergerPriceRatio[1]);
-//
-//        if (demergerDetail.getDemergerStocks().size() != 1) {
-//            throw new IllegalArgumentException("Invalid demerger ratio format");
-//        }
-//
-//        var newDemergerStock = demergerDetail.getDemergerStocks().getFirst();
-//        var demergedStockContext = new DemergedStockContext(newDemergerStock.getStockCode(), newDemergerStock.getStockName(), secondaryStockPriceRatio, secondaryStockRatio);
-//
-//        List<AssetEntity> finalDemergedStocks = new ArrayList<>();
-//        for (AssetEntity assetEntity : stockEntities) {
-//            var demergerContext = new DemergerContext(demergerDetail.getMainStockCode(), demergerDetail.getMainStockName(), mainStockPriceRatio, mainStockRatio, assetEntity, new ArrayList<>(Collections.singleton(demergedStockContext)));
-//            List<AssetEntity> demergedStocks = processStockSplitForEachAssetEntry(demergerContext);
-//
-//            CorporateActionEntity action = TJsonMapper.copy(corporateAction, CorporateActionEntity.class);
-//            demergedStocks.parallelStream().forEach(a -> a.getCorporateActions().add(action));
-//            finalDemergedStocks.addAll(demergedStocks);
-//        }
-//
-//        portfolioService.saveCorporateActionProcessedStocks(finalDemergedStocks);
-//        log.info("Demerger of shares added for symbol: {} in Broker: {}", stockCode, brokerName);
+    private void applySplit(CorporateActionEntity corporateAction, SplitRatio ratio, List<AssetEntity> lots) {
+        splitLots(corporateAction, ratio, lots);
+        portfolioService.saveCorporateActionProcessedStocks(lots);
     }
 
-    public List<AssetEntity> processStockSplitForEachAssetEntry(DemergerContext demergerContext) {
-//        double mainStockPricePercentage = demergerContext.pricePercentage();
-//        AssetEntity entity = demergerContext.entity();
-//
-//        List<AssetEntity> demergedStocks = new ArrayList<>();
-//        for (var demergerStockContext : demergerContext.demergedStocks()) {
-//            AssetEntity asNewEntity = asNewEntity(demergerStockContext, entity);
-//            demergedStocks.add(asNewEntity);
-//        }
-//
-//        var oldPrice = entity.getPrice();
-//        double newPrice = oldPrice * (mainStockPricePercentage / 100);
-//        entity.setPrice(newPrice);
-//        entity.setStockCode(demergerContext.stockCode());
-//        entity.setStockName(demergerContext.stockName());
-//        demergedStocks.add(entity);
-//
-        return null;
+    /**
+     * A split's effect on lots, nothing saved: the step the {@code assets} rebuild replays, so it cannot split
+     * differently from a performed one (W-283a2, D-582).
+     */
+    public static void splitLots(CorporateActionEntity corporateAction, SplitRatio ratio, List<AssetEntity> lots) {
+        for (AssetEntity lot : lots) {
+            lot.setQuantity(ratio.quantityAfter(lot.getQuantity()));
+            lot.setPrice(ratio.priceAfter(lot.getPrice()));
+            lot.getCorporateActions().add(TJsonMapper.copy(corporateAction, CorporateActionEntity.class));
+        }
     }
 
     private void processDemergerOfShares(CorporateActionEntity corporateAction, BrokerName brokerName, List<AssetEntity> stockEntities) {
+        portfolioService.saveCorporateActionProcessedStocks(demergeLots(corporateAction, stockEntities));
+        log.info("Demerger of shares added for symbol: {} in Broker: {}", corporateAction.getStockCode(), brokerName);
+    }
 
-        String stockCode = corporateAction.getStockCode();
+    /**
+     * A demerger's effect on lots, nothing saved: each lot repriced and renamed to the main stock, and a new lot per
+     * demerged stock; returns them all. The step the {@code assets} rebuild replays (W-283a2, D-582).
+     *
+     * @throws IllegalArgumentException if the demerger names other than one demerged stock
+     */
+    public List<AssetEntity> demergeLots(CorporateActionEntity corporateAction, List<AssetEntity> stockEntities) {
         var demergerDetail = corporateAction.getDemergerDetail();
+        // new:held, as the market writes it (W-313): "1:10" allots one new share for every ten held
         String[] demergerRatio = demergerDetail.getDemergerRatio().split(":");
-        int mainStockRatio = Integer.parseInt(demergerRatio[0]);
-        int secondaryStockRatio = Integer.parseInt(demergerRatio[1]);
+        int newShares = Integer.parseInt(demergerRatio[0]);
+        int heldShares = Integer.parseInt(demergerRatio[1]);
 
         String[] demergerPriceRatio = demergerDetail.getDemergerPriceRatio().split(":");
         double mainStockPriceRatio = Double.parseDouble(demergerPriceRatio[0]);
@@ -526,20 +508,18 @@ public class CorporateActionService {
         }
 
         var newDemergerStock = demergerDetail.getDemergerStocks().getFirst();
-        var demergedStockContext = new DemergedStockContext(newDemergerStock.getStockCode(), newDemergerStock.getStockName(), secondaryStockPriceRatio, secondaryStockRatio);
+        var demergedStockContext = new DemergedStockContext(newDemergerStock.getStockCode(), newDemergerStock.getStockName(), secondaryStockPriceRatio, newShares, heldShares);
 
         List<AssetEntity> finalDemergedStocks = new ArrayList<>();
         for (AssetEntity assetEntity : stockEntities) {
-            var demergerContext = new DemergerContext(demergerDetail.getMainStockCode(), demergerDetail.getMainStockName(), mainStockPriceRatio, mainStockRatio, assetEntity, new ArrayList<>(Collections.singleton(demergedStockContext)));
+            var demergerContext = new DemergerContext(demergerDetail.getMainStockCode(), demergerDetail.getMainStockName(), mainStockPriceRatio, assetEntity, new ArrayList<>(Collections.singleton(demergedStockContext)));
             List<AssetEntity> demergedStocks = processDemergerForEachAssetEntry(demergerContext);
 
             CorporateActionEntity action = TJsonMapper.copy(corporateAction, CorporateActionEntity.class);
             demergedStocks.parallelStream().forEach(a -> a.getCorporateActions().add(action));
             finalDemergedStocks.addAll(demergedStocks);
         }
-
-        portfolioService.saveCorporateActionProcessedStocks(finalDemergedStocks);
-        log.info("Demerger of shares added for symbol: {} in Broker: {}", stockCode, brokerName);
+        return finalDemergedStocks;
     }
 
     public List<AssetEntity> processDemergerForEachAssetEntry(DemergerContext demergerContext) {
@@ -576,8 +556,10 @@ public class CorporateActionService {
 
         newEntity.setStockCode(demergerContext.stockCode());
         newEntity.setStockName(demergerContext.stockName());
-        newEntity.setQuantity(demergerContext.quantityRatio() * entity.getQuantity());
-        newEntity.setPrice(demergerContext.pricePercentage() * (entity.getPrice() / 100));
+        // The lot's cost share, spread over the shares allotted for it: quantity × price is the parent's cost × the share
+        newEntity.setQuantity(entity.getQuantity() * demergerContext.newShares() / demergerContext.heldShares());
+        newEntity.setPrice(entity.getPrice() * demergerContext.pricePercentage() / 100
+                * demergerContext.heldShares() / demergerContext.newShares());
         newEntity.setCorporateActionType(CorporateActionType.DEMERGER);
         return newEntity;
     }
@@ -614,9 +596,9 @@ public class CorporateActionService {
         String[] demergerRatios = demergerRatio.split(":");
         String[] demergerPriceRatios = demergerPriceRatio.split(":");
 
-        // TODO: come to this for uneven ratios
-        if (demergerRatios.length != 2) {
-            throw new IllegalArgumentException("Invalid demerger ratio format");
+        if (!demergerRatio.matches("[1-9][0-9]{0,8}:[1-9][0-9]{0,8}")) {
+            throw new IllegalArgumentException("A demerger's ratio is new shares to shares held, two whole numbers above nil"
+                    + " such as 1:10, but it was " + demergerRatio);
         }
 
         if (demergerRatios.length != demergerDetail.demergerStocks().size() + 1) {

@@ -1,0 +1,30 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.80CCE (A0 p.340, heading \"Limit on deductions under section 80C, section 80CCC and 80CCD\"); its 2025 place is the s.123 ceiling itself (DED-MAP-021: the 2025 Act has no 80CCE, the aggregation is structural in s.123). summary: 1961 s.80CCE; S2 s.123 (sources B9; DR 06 G2.2). routes[0]: DED-SCHEDULE-XV.",
+  "key": "SEC-INVESTMENT-AGGREGATE-LIMIT",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80CCE",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.123",
+    "presence": "PRESENT"
+  },
+  "plainName": "One ceiling over the investments, the pension-fund annuity and your own pension contribution",
+  "summary": "The investments deduction, the pension-fund annuity and your own pension contribution do not each have a ceiling of their own to add up: together they share one ceiling, and whatever is beyond it is not deducted. The further deduction for your own pension contribution, and your employer's contribution, sit outside this ceiling.",
+  "routes": [
+    {
+      "name": "The three together, within one ceiling",
+      "description": "Everything counted towards the investments ceiling is added up and held within it.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": []
+}

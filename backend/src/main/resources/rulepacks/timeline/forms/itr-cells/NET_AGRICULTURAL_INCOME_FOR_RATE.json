@@ -1,0 +1,9 @@
+{
+  "code": "NET_AGRICULTURAL_INCOME_FOR_RATE",
+  "_note": "The declared net agricultural income (NET_AGRICULTURAL_INCOME), unavailable while unanswered: B-TI 14 \"Net agricultural income/ any other income for rate purpose\" and Schedule EI 2(iv). B-TI 14 points to \"3 of Schedule EI\" (other exempt income), read as 2(iv), the net agricultural income — a reading of the form (W-258a C2a, C3a). Drafted by Claude, adopted by the owner's ruling W-258a (D-779).",
+  "label": "Net agricultural income for rate purpose",
+  "source": {
+    "type": "FromDeclaration",
+    "code": "NET_AGRICULTURAL_INCOME"
+  }
+}

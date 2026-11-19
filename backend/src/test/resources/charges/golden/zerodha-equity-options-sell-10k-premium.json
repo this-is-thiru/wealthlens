@@ -1,0 +1,25 @@
+{
+  "name": "zerodha-equity-options-sell-10k-premium",
+  "describes": "An option sold for Rs 10,000 of premium at Zerodha: flat Rs 20 brokerage; STT, the NSE charge, SEBI's fee and the inferred IPFT all on the premium.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "OPTIONS",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 100,
+    "quantity": 100,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 10.0,
+      "EXCHANGE_TXN": 3.5,
+      "SEBI_FEE": 0.01,
+      "IPFT": 0.05,
+      "GST": 4.24
+    },
+    "total": 37.8
+  }
+}

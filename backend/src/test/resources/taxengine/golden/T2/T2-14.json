@@ -1,0 +1,14 @@
+{
+  "id": "T2-14",
+  "source": "W-140a — Old regime, at the 50-lakh surcharge threshold (TI = 5000000)",
+  "_source": "Worked by hand in docs/taxplanning-build/sources/2026-11-07-boundary-figures.md, row T2-14",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "5000000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "1365000"
+  }
+}

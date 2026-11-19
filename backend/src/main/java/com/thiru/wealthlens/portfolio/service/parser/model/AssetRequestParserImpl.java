@@ -8,6 +8,7 @@ import com.thiru.wealthlens.shared.util.collection.TOptional;
 import com.thiru.wealthlens.shared.util.parser.CellDetail;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -33,7 +35,7 @@ public class AssetRequestParserImpl implements ExcelParser {
     }
 
     @Override
-    public InputRecords parse(MultipartFile file, Map<String, ExcelDataType> dataTypeMap, List<String> errors) {
+    public InputRecords parse(MultipartFile file, Map<String, ExcelDataType> dataTypeMap) {
 
         try {
             XSSFWorkbook excelWorkbook = new XSSFWorkbook(file.getInputStream());
@@ -45,15 +47,11 @@ public class AssetRequestParserImpl implements ExcelParser {
             int rowIndex = 0;
             for (Row row : transactionsSheet) {
                 if (rowIndex == 0) {
-                    List<String> fileHeaders = extractHeaders(row);
-                    inputRecords.setHeaders(fileHeaders);
-                } else {
-
+                    inputRecords.setHeaders(extractHeaders(row));
+                } else if (hasAnyValue(row)) {
                     InputRecord inputRecord = new InputRecord();
-                    Map<String, CellDetail> record = extractRows(rowIndex, row, inputRecords.getHeaders(), dataTypeMap, errors);
-                    inputRecord.setRecord(record);
+                    inputRecord.setRecord(extractRow(rowIndex, row, inputRecords.getHeaders(), dataTypeMap));
                     inputRecord.setRecordNumber(rowIndex);
-
                     inputRecords.getRecords().add(inputRecord);
                 }
                 rowIndex++;
@@ -76,33 +74,51 @@ public class AssetRequestParserImpl implements ExcelParser {
         return fileHeaders;
     }
 
-    private static Map<String, CellDetail> extractRows(int rowIndex, Row row, List<String> fileHeaders, Map<String, ExcelDataType> dataTypeMap, List<String> errors) {
+    /** A row a spreadsheet keeps after the data, formatted but empty, is not a trade (W-276 C2a). */
+    private static boolean hasAnyValue(Row row) {
+        for (Cell cell : row) {
+            if (!isEmpty(cell)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        Iterator<Cell> cellIterator = row.cellIterator();
+    /** Never written, blank, or text of only spaces: nothing was entered. */
+    private static boolean isEmpty(Cell cell) {
+        return cell == null || cell.getCellType() == CellType.BLANK
+                || (cell.getCellType() == CellType.STRING && cell.getStringCellValue().isBlank());
+    }
+
+    /**
+     * Reads cell <i>i</i> under header <i>i</i>. A spreadsheet program writes no cell for an empty one, so reading in
+     * iteration order moved every later value one header left; an empty or blank cell is absent, never 0 (W-276).
+     */
+    private static Map<String, CellDetail> extractRow(int rowIndex, Row row, List<String> fileHeaders,
+                                                      Map<String, ExcelDataType> dataTypeMap) {
+        refuseValuesUnderNoHeader(rowIndex, row, fileHeaders.size());
         Map<String, CellDetail> record = new HashMap<>();
-
-        int columnIndex = 0;
-        while (cellIterator.hasNext()) {
-            Cell cell = cellIterator.next();
-            String cellHeader = fileHeaders.get(columnIndex);
-            CellDetail cellDetail = getCellDetail(cell, cellHeader, dataTypeMap);
-            record.put(cellHeader, cellDetail);
-            columnIndex++;
+        for (int column = 0; column < fileHeaders.size(); column++) {
+            String header = fileHeaders.get(column);
+            Cell cell = row.getCell(column, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+            record.put(header, isEmpty(cell) ? CellDetail.def() : getCellDetail(rowIndex, cell, header, dataTypeMap));
         }
-        if (record.size() != fileHeaders.size()) {
-            errors.add("Invalid number of columns in row: " + rowIndex + ", headers count: " + fileHeaders.size() + ", actual count: " + record.size());
-            return null;
-        }
-
         log.info("Parsed Record: {}", record);
         return record;
     }
 
-    private static CellDetail getCellDetail(Cell cell, String cellHeader, Map<String, ExcelDataType> dataTypeMap) {
+    private static void refuseValuesUnderNoHeader(int rowIndex, Row row, int headerCount) {
+        for (Cell cell : row) {
+            if (cell.getColumnIndex() >= headerCount && !isEmpty(cell)) {
+                throw new BadRequestException("Row " + rowIndex + " has a value in column " + (cell.getColumnIndex() + 1)
+                        + ", which has no header");
+            }
+        }
+    }
 
+    private static CellDetail getCellDetail(int rowIndex, Cell cell, String cellHeader, Map<String, ExcelDataType> dataTypeMap) {
+        ExcelDataType excelDataType = dataTypeMap.getOrDefault(cellHeader, ExcelDataType.NULL);
         try {
-            ExcelDataType excelDataType = dataTypeMap.getOrDefault(cellHeader, ExcelDataType.NULL);
-
             return switch (excelDataType) {
                 case BOOLEAN -> CellDetail.of(ExcelDataType.BOOLEAN, cell.getBooleanCellValue());
                 case INTEGER, LONG -> CellDetail.of(ExcelDataType.LONG, (long) cell.getNumericCellValue());
@@ -115,10 +131,21 @@ public class AssetRequestParserImpl implements ExcelParser {
                 case ERROR -> CellDetail.of(ExcelDataType.ERROR, cell.getErrorCellValue());
                 case NULL -> CellDetail.of(ExcelDataType.NULL, null);
             };
-        } catch (Exception e) {
-            log.error("Error while parsing excel file error: {}, cellHeader: {}", e, cellHeader);
-            throw new BadRequestException(e.getMessage());
+        } catch (IllegalStateException | DateTimeException misfit) {
+            log.warn("Row {}, {}: {}", rowIndex, cellHeader, misfit.getMessage());
+            throw new BadRequestException("Row " + rowIndex + ", " + cellHeader + ": expected " + expected(excelDataType));
         }
+    }
+
+    private static String expected(ExcelDataType excelDataType) {
+        return switch (excelDataType) {
+            case BOOLEAN -> "true or false";
+            case INTEGER, LONG, DOUBLE -> "a number";
+            case LOCAL_DATE -> "a date";
+            case LOCAL_DATE_TIME -> "a date and time as text";
+            case STRING -> "text";
+            case ERROR, NULL -> "a value of its column's kind";
+        };
     }
 
     private static int sheetIndex(String quarter) {

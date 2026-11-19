@@ -1,0 +1,143 @@
+{
+  "ruleId": "DED-DONATION-HALF",
+  "ruleSet": "RS-DED-DONATION-HALF",
+  "_note": "Donations allowed at half: \"an amount equal to 50% of the aggregate of the sums paid as donation by an assessee during the tax year to\" s.133(1)(b)(i) the Prime Minister's Drought Relief Fund, without limit, and (ii)–(vi) — a registered or approved charitable fund or institution, the Government or a local authority for a charitable purpose other than family planning, a housing or town-planning authority, a notified minority-community corporation, an entity repairing a notified place — within s.133(2)'s qualifying limit (p.169); Income-tax Rules, 2026 Form No. 114 note 5 (p.2217): \"Donor shall be eligible for deduction of 50% of the donation made subject to 10% of adjusted gross total income as per section 133(2)\". Base AMOUNT_PAID, the sum counted. A (b)(ii) donation is allowed only on the donee's report (s.133(6)). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(1) (thc p.348): \"plus fifty per cent of the balance of such aggregate\" ((i)), \"fifty per cent of the aggregate\" ((ii)) — half of every sum not on the whole list: (a)(iii) the Prime Minister's Drought Relief Fund without limit; (a)(iv), (v), (vi), (via) and (b) within s.80G(4)'s limit. sources/2026-10-07-chapter-via.md B24, B25. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches a donation by its clause (donation.clause): DROUGHT_RELIEF_FUND, CHARITABLE_INSTITUTION and PUBLIC_BODY, the s.133(1)(b) donees (W-156a, D-344).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(1)(i), (ii); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(1)(b); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "50",
+        "base": "AMOUNT_PAID"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "DROUGHT_RELIEF_FUND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "CHARITABLE_INSTITUTION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "PUBLIC_BODY"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80G(1) — subs. by Act 66 of 1976, s.17 (w.e.f. 1-4-1977), (1)(i) subs. by Act 32 of 1985, s.18 (w.e.f. 1-4-1986)",
+        "gazetteRef": "Act 66 of 1976 (assent 27-5-1976) s.17: read in Acts of the Parliament of India, 1976 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.442 (PDF p.456); Act 32 of 1985 (assent 24-5-1985) s.18(a): read in Acts of the Parliament of India, 1985 (the Legislative Department's annual volume; Wikimedia Commons DjVu scan, read from the page images), p.143 (DjVu p.155); the Gazette of India issue itself not read (D-215)",
+        "notifiedOn": "1985-05-24",
+        "effectiveFrom": "1986-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Acts_of_the_Parliament_of_India_1985.djvu",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80G(1), (2), (4), (5D), Explanations, pp.348–353; Gazette CG-DL-E-29092020-222110, Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 s.3(XII)(a), p.16; Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.40(I), p.30; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80G after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 and the Finance Acts of 2020 to 2025 (read for Chapter VI-A in W-075d0 and W-075d5, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(1)(i), (ii); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(1)(b); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "50",
+        "base": "AMOUNT_PAID"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "DROUGHT_RELIEF_FUND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "CHARITABLE_INSTITUTION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "PUBLIC_BODY"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(1)(b)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(1)(b), (6), p.169; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(1)(b), (6), p.169; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-07",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

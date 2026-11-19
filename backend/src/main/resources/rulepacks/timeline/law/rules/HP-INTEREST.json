@@ -1,0 +1,132 @@
+{
+  "ruleId": "HP-INTEREST",
+  "ruleSet": "RS-HP-INTEREST",
+  "_note": "Interest payable on capital borrowed to acquire, construct, repair, renew or reconstruct a house is deducted in full from income from house property, for a house other than an own residence (D-156; rulebook HP-DED-INT-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(b) \"where the property has been acquired, constructed, repaired, renewed or reconstructed with borrowed capital, the amount of any interest payable on such capital\" (Gazette 265620, p.47); s.22(6): interest payable outside India is not allowed if tax has not been paid or deducted on it under Chapter XIX-B and there is no agent in India under s.306 (p.48). TY 2025-26: Income-tax Act, 1961 s.24(b), the same words; s.25, interest payable outside India with no tax paid or deducted under Chapter XVII-B and no agent under s.163 (thc p.147). The whole of it: PercentOfBase 100 states the node's arithmetic, as HP-ANNUAL-VALUE does. An own residence's interest is HP-OWN-RESIDENCE-INTEREST. Interest the assessee deducts under s.130 or s.131 is left out (s.130(4), s.131(3); D-139). Every regime: s.202(2)(a)(v) and 1961 s.115BAC(2)(i) disallow it only for an own residence. The row reaches the loans of a house let or not let, any house other than an own residence (house.occupancy = LET or NOT_LET; W-157, D-355).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b), s.25",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(b), (6)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "INTEREST"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "LET"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "NOT_LET"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.24 — subs. by Act 14 of 2001, s.15 (w.e.f. 1-4-2002)",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, 11-5-2001 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 26-5-2005, pp.107, 117–118",
+        "notifiedOn": "2001-05-11",
+        "effectiveFrom": "2002-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0506/0506-8-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(b), s.25, p.147; Income-tax Act, 1961 s.24(b), s.25: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b), s.25",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(b), (6)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "INTEREST"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "LET"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "NOT_LET"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.22(1)(b), (6)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(b), p.47; s.22(6), p.48",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(b), p.47; s.22(6), p.48",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

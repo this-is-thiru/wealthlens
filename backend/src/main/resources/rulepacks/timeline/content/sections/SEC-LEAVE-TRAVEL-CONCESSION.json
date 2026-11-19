@@ -1,0 +1,55 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-100). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: SAL-LEAVE-TRAVEL-CONCESSION.json (1961 s.10(5) with Rules 1962 r.2B; 2025 Sch. III Table Sl. 8 with Rules 2026 r.278). summary: Sch. III Sl. 8(a)–(d) (p.505–506); r.278(1)–(4) (pp.1775–1776). routes[0]: SAL-LEAVE-TRAVEL-CONCESSION (least of amount incurred and the fare admitted by mode; SAL-LEAVE-TRAVEL-DISTANCE-RATE for TY 2026-27's per-kilometre case). disqualifiers[0]: s.202(2)(a)(i) / 1961 s.115BAC(2)(i), the row's ExceptIn. disqualifiers[1]: r.278(2)–(4) / r.2B(2)–(3), SAL-LEAVE-TRAVEL-JOURNEYS. disqualifiers[2]: r.278(5)–(6) / r.2B(4), SAL-LEAVE-TRAVEL-CHILDREN (D-212; was NotModelled, Appendix F). No LATER_REVERSAL: the rulebook sources none. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists SAL-LEAVE-TRAVEL-CONCESSION (D-166; until then SAL-LEAVE-TRAVEL-CONCESSION's ExceptIn).",
+  "key": "SEC-LEAVE-TRAVEL-CONCESSION",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.10(5)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "Sch. III Table Sl. 8",
+    "presence": "PRESENT"
+  },
+  "plainName": "Leave travel concession",
+  "summary": "If your employer pays towards travel when you go on leave anywhere in India, part of it is not taxed: for each journey, the lesser of what you actually spent and the fare the rules allow for how you travelled, and only for a limited number of journeys in each block of calendar years. It is never more than the assistance you received.",
+  "routes": [
+    {
+      "name": "Travel on leave within India, paid for in part by your employer",
+      "description": "Each journey counts up to the lesser of what you spent and the fare the rules allow for its mode of travel.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-LEAVE-TRAVEL-CONCESSION"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Not available in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Journeys beyond the number the rules allow in a block of calendar years are not exempt, apart from one carried over from a block you did not use.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "SAL-LEAVE-TRAVEL-JOURNEYS"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Travel for more than two surviving children is not covered, with exceptions for older children and multiple births.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "SAL-LEAVE-TRAVEL-CHILDREN"
+      }
+    }
+  ]
+}

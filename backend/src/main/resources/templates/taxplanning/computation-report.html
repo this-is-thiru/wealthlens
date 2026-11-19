@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${report.header.title}"></title>
+    <style>
+        body { font-family: "Noto Sans"; font-size: 10pt; color: #222; margin: 0; }
+        h1 { font-size: 16pt; margin: 0 0 4pt 0; }
+        h2 { font-size: 12pt; margin: 14pt 0 4pt 0; }
+        p { margin: 2pt 0; }
+        .note { border: 1pt solid #8a6d00; padding: 6pt; margin: 8pt 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 0.5pt solid #ccc; padding: 3pt; text-align: left; vertical-align: top; }
+        td.figure, th.figure { text-align: right; white-space: nowrap; }
+        .mark { font-weight: bold; }
+        .disclaimer { margin-top: 16pt; font-size: 9pt; }
+    </style>
+</head>
+<body>
+    <h1 th:text="${report.header.title}"></h1>
+    <p th:text="${report.header.receipt}"></p>
+    <p th:text="${report.header.taxYear}"></p>
+    <table class="totals">
+        <tr><td th:text="${report.header.totalIncomeLabel}"></td><td class="figure" th:text="${report.header.totalIncome}"></td></tr>
+        <tr><td th:text="${report.header.finalAmountLabel}"></td><td class="figure" th:text="${report.header.finalAmount}"></td></tr>
+    </table>
+    <div class="note" th:if="${report.packNote.isPresent()}" th:text="${report.packNote.get()}"></div>
+    <div class="note" th:if="${report.coarseNote.isPresent()}" th:text="${report.coarseNote.get()}"></div>
+    <th:block th:each="section : ${report.sections}">
+        <h2 th:text="${section.heading}"></h2>
+        <table>
+            <tr>
+                <th th:text="${report.columns.step}"></th>
+                <th th:text="${report.columns.rule}"></th>
+                <th class="figure" th:text="${report.columns.figure}"></th>
+            </tr>
+            <tr th:each="line : ${section.lines}">
+                <td><span th:text="${line.sentence}"></span><th:block th:if="${line.mark.isPresent()}"> <span class="mark" th:text="${line.mark.get()}"></span></th:block></td>
+                <td th:text="${line.rule}"></td>
+                <td class="figure" th:text="${line.figure}"></td>
+            </tr>
+        </table>
+    </th:block>
+    <p class="disclaimer" th:text="${report.disclaimer}"></p>
+</body>
+</html>

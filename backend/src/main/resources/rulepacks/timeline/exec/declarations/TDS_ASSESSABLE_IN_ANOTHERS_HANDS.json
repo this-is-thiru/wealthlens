@@ -1,0 +1,16 @@
+{
+  "code": "TDS_ASSESSABLE_IN_ANOTHERS_HANDS",
+  "_note": "r.164(3)(h) and (6)(k): \"is assessable for the whole or any part of the income on which tax has been deducted at source in the hands of a person other than the assessee\". The question's wording is drafted by Claude, to be adopted by the owner; the clause is quoted from the Gazette. Valid for TY 2025-26 and TY 2026-27 (W-090d, D-652 G1a): for TY 2025-26 it is Income-tax Rules, 1962 r.12(1)(a) proviso (IG) (Income-tax Rules, 1962, kept live by r.164(14)); the question names no section, so one wording serves both years.",
+  "question": "Is any income on which tax was deducted at source assessable, in whole or in part, in the hands of a person other than you?",
+  "answerKind": "YES_NO",
+  "validity": {
+    "from": "2025-04-01",
+    "to": "2027-03-31"
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.164(3)(h), p.1662; r.164(6)(k), p.1663; egazette 2019/201697, Income-tax (Second Amendment) Rules, 2019, G.S.R. 279(E), Income-tax Rules, 1962 r.12(1)(a) proviso (IG), p.250",
+    "accessedOn": "2026-11-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "code": "CG_LTCG_TOTAL",
+  "_note": "B1, B2, B4 – B7, B9 – B11 are not computed. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Total long term capital gain chargeable",
+  "source": {
+    "type": "SumOf",
+    "cells": [
+      "CG_B3_LTCG",
+      "CG_B8_GAIN"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "code": "TAX_AT_SPECIAL_RATES",
+  "_note": "Q7a. Drafted by Claude, adopted by the owner's rulings Q5a, Q7a – Q10 (W-092 second pass, D-655).",
+  "label": "Tax at special rates",
+  "source": {
+    "type": "FromTaxBasis",
+    "basis": "ALL_SPECIAL_RATES"
+  }
+}

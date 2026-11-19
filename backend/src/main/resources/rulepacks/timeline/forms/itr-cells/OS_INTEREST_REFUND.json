@@ -1,0 +1,9 @@
+{
+  "code": "OS_INTEREST_REFUND",
+  "_note": "Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "Interest from Income-tax Refund",
+  "source": {
+    "type": "ManualEntry",
+    "guidance": "Interest on an income-tax refund is not a kind the computation holds; enter it from your Form 26AS"
+  }
+}

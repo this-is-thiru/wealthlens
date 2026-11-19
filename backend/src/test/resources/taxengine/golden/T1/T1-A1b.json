@@ -1,0 +1,15 @@
+{
+  "id": "T1-A1b",
+  "source": "DR 08 T1-A1 — Old regime, age variants at the basic exemption",
+  "_source": "| T1-A1b | 65 | OLD | ₹3,00,000 | below ₹3,00,000 threshold ⇒ tax 0 | **₹0** |",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "300000",
+  "ageAtYearEnd": 65,
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "0"
+  }
+}

@@ -64,8 +64,12 @@ public class ChargeScheduleValidator {
      * @throws BadRequestException listing every problem found, naming the rule each belongs to
      */
     public void validate(ChargeScheduleEntity schedule) {
+        boolean statutory = schedule.getBrokerName() == null;
         List<String> errors = validateCard(
-                schedule.getStartDate(), schedule.getEndDate(), schedule.getRules());
+                schedule.getStartDate(), schedule.getEndDate(), schedule.getRules(), statutory);
+        if (statutory) {
+            validateStatutoryScope(schedule, errors);
+        }
 
         if (!errors.isEmpty()) {
             throw new BadRequestException("Charge schedule " + schedule.getScheduleCode()
@@ -85,7 +89,7 @@ public class ChargeScheduleValidator {
      */
     public void validate(ChargeInstrumentEntity instrument) {
         List<String> errors = validateCard(
-                instrument.getStartDate(), instrument.getEndDate(), instrument.getRules());
+                instrument.getStartDate(), instrument.getEndDate(), instrument.getRules(), false);
 
         if (!errors.isEmpty()) {
             throw new BadRequestException("Charge instrument profile " + instrument.getStockCode()
@@ -93,8 +97,29 @@ public class ChargeScheduleValidator {
         }
     }
 
-    /** Every problem with a validity window and a set of rules, whichever document carries them. */
-    private List<String> validateCard(LocalDate startDate, LocalDate endDate, List<ChargeRule> declared) {
+    /**
+     * A card naming no broker is the statutory card (D-380, D-381): the law's charges, whoever the
+     * broker is. A plan code and an instrument-profile requirement are the broker's terms, so such a
+     * card may carry neither.
+     */
+    private static void validateStatutoryScope(ChargeScheduleEntity schedule, List<String> errors) {
+        if (schedule.getPlanCode() != null) {
+            errors.add("it names no broker, so it is a statutory card, and a statutory card cannot name plan "
+                    + schedule.getPlanCode());
+        }
+        if (schedule.isRequiresInstrumentProfile()) {
+            errors.add("it names no broker, so it is a statutory card, and a statutory card cannot require an"
+                    + " instrument profile");
+        }
+    }
+
+    /**
+     * Every problem with a validity window and a set of rules, whichever document carries them.
+     *
+     * @param statutory whether a derived rule's base may be declared on the broker's card instead
+     */
+    private List<String> validateCard(
+            LocalDate startDate, LocalDate endDate, List<ChargeRule> declared, boolean statutory) {
         Set<String> catalogue = chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE).stream()
                 .map(ChargeCatalogueEntity::getCode)
                 .collect(Collectors.toSet());
@@ -109,7 +134,7 @@ public class ChargeScheduleValidator {
             // requiresInstrumentProfile flag, so the gap stops being reported as well.
             errors.add("it declares no rules");
         } else {
-            validateRules(rules, catalogue, errors);
+            validateRules(rules, catalogue, statutory, errors);
         }
         return errors;
     }
@@ -126,7 +151,8 @@ public class ChargeScheduleValidator {
         }
     }
 
-    private void validateRules(List<ChargeRule> rules, Set<String> catalogue, List<String> errors) {
+    private void validateRules(
+            List<ChargeRule> rules, Set<String> catalogue, boolean statutory, List<String> errors) {
         validateCodesAreUnique(rules, errors);
 
         Map<String, ChargeRule> byCode = new HashMap<>();
@@ -138,7 +164,7 @@ public class ChargeScheduleValidator {
             validateAmountsArePositive(rule, errors);
             validateAggregator(rule, errors);
             validateSlabs(rule, errors);
-            validateDerivedBase(rule, byCode, errors);
+            validateDerivedBase(rule, byCode, statutory ? catalogue : Set.of(), errors);
             validateExpression(rule, "formula", rule.getFormula(), errors);
             validateExpression(rule, "eligibility", rule.getEligibility(), errors);
         }
@@ -258,7 +284,13 @@ public class ChargeScheduleValidator {
      * A derived rule reads the accumulator, which holds only what has already been applied. Naming
      * a code that evaluates later taxes a line that does not exist yet and quietly under-collects.
      */
-    private static void validateDerivedBase(ChargeRule rule, Map<String, ChargeRule> byCode, List<String> errors) {
+    /**
+     * @param elsewhere codes a base may name without this card declaring them: on a statutory card,
+     *                  any catalogued code, because GST there taxes lines on the broker's card. Their
+     *                  order is checked by the engine, which sees both cards
+     */
+    private static void validateDerivedBase(
+            ChargeRule rule, Map<String, ChargeRule> byCode, Set<String> elsewhere, List<String> errors) {
         if (rule.getBasis() != ChargeBasis.DERIVED) {
             return;
         }
@@ -271,6 +303,9 @@ public class ChargeScheduleValidator {
 
         for (String baseCode : baseCodes) {
             ChargeRule base = byCode.get(baseCode);
+            if (base == null && elsewhere.contains(baseCode)) {
+                continue;
+            }
             if (base == null) {
                 errors.add("rule " + rule.getCode() + " names base code " + baseCode
                         + ", which the schedule does not declare");

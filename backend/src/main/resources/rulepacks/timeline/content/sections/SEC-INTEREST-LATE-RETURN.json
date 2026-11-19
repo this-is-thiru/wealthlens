@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.234A / 2025 s.423 (coverage MODELLED by INT-LATE-RETURN); sources/2026-11-06-advance-tax-interest.md; D-446",
+  "key": "SEC-INTEREST-LATE-RETURN",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.234A",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.423",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest for a late return",
+  "summary": "Interest by the month on tax still unpaid after advance tax and tax at source, from the day after the return was due until it is furnished.",
+  "routes": [
+    {
+      "name": "Interest for a late return",
+      "description": "Charged by the month on the tax left after advance tax and tax at source.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "INT-LATE-RETURN"
+        }
+      ]
+    }
+  ]
+}

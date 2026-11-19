@@ -19,6 +19,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -142,5 +143,23 @@ class TransactionServiceChargesTest {
         note.setTotal(total);
         note.setSourceCount(1);
         return note;
+    }
+
+    @Test
+    @DisplayName("userTransactions: maps the filtered trades, each with its id")
+    void userTransactions_whenFiltered_mapsTheMatchingTrades() {
+        // Given (W-287)
+        List<QueryFilter> filters = List.of();
+        when(mongoTemplateService.getDocuments(USER, filters, TransactionEntity.class))
+                .thenReturn(List.of(transaction("txn-1")));
+        when(chargeViewAssembler.forTransactions(anyString(), any()))
+                .thenReturn(ChargeViewAssembler.ChargeLookup.empty());
+
+        // When
+        List<TransactionResponse> responses = service().userTransactions(USER, filters);
+
+        // Then
+        assertEquals(1, responses.size());
+        assertEquals("txn-1", responses.getFirst().getTransactionId());
     }
 }

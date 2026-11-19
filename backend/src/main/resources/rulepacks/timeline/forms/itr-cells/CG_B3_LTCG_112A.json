@@ -1,0 +1,12 @@
+{
+  "code": "CG_B3_LTCG_112A",
+  "_note": "Schedule 112A's column 14, the buckets' gain before set-off. Drafted by Claude, adopted by the owner's rulings Q1a – Q5a (W-093a, D-658).",
+  "label": "LTCG u/s 112A",
+  "source": {
+    "type": "FromCapitalGainsBuckets",
+    "parts": [
+      "LONG_TERM_LISTED_EQUITY"
+    ],
+    "figure": "gain"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "code": "BFLA_SALARIES_3",
+  "_note": "Set-off row by row from the set-off node (SetOffRows). Drafted by Claude, adopted by the owner's rulings Q4a, Q5a (W-093a, D-658).",
+  "label": "Current year's income remaining after set off — Salaries",
+  "source": {
+    "type": "FromSetOff",
+    "rows": [
+      "SALARIES"
+    ],
+    "column": "afterBroughtForward"
+  }
+}

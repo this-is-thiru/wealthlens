@@ -1,0 +1,48 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-219, D-388). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.70 / 2025 s.108 (coverage MODELLED: limb (1) by the house-property rows whose per-property figures HousePropertyNode nets, D-219, D-208 C2a's precedent; limb (2) by SETOFF-WITHIN-CAPITAL-GAINS and CG-PARTS, which cite s.108(2) / s.70(2), (3), W-165, D-388). summary: S2 s.108(1), (2) (Gazette 265620 p.147); 1961 s.70(1)–(3) (thc p.317–318). routes[0]: the property rows (W-078b C2a). routes[1]: SETOFF-WITHIN-CAPITAL-GAINS (CapitalGainsAbsorptionOrder, W-088a, D-243), moved from SEC-CAPITAL-GAINS-CHARGE (W-165, D-388).",
+  "key": "SEC-SET-OFF-WITHIN-HEAD",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.70",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.108",
+    "presence": "PRESENT"
+  },
+  "plainName": "Setting off a loss within the same head of income",
+  "summary": "A loss from one source under a head is set against income from another source under the same head in the same year — for example, a loss on one house against income from another house.",
+  "routes": [
+    {
+      "name": "One house's loss against another house's income",
+      "description": "Each house's income or loss is worked out, and they are added together under the head.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-ANNUAL-VALUE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "HP-INTEREST"
+        },
+        {
+          "type": "ByRule",
+          "rule": "HP-OWN-RESIDENCE-INTEREST"
+        }
+      ]
+    },
+    {
+      "name": "The year's gains and losses netted within the head",
+      "description": "A short-term loss may be set against any gain; a long-term loss only against long-term gains. The order is stated, because the law does not fix one.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SETOFF-WITHIN-CAPITAL-GAINS"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": []
+}

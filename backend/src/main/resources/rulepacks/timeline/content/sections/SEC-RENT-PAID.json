@@ -1,0 +1,79 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-RENT-PAID provision1961 (s.80GG) and provision2025 (s.134). summary: S2 s.134(1)–(5) with Income-tax Rules, 2026 r.65 (Form No. 31); 1961 s.80GG and its Explanation with Rules 1962 r.11B (Form No. 10BA) (sources B10, R1; D-141, D-148). routes[0]: DED-RENT-PAID. disqualifiers[0]: the row's regimes. disqualifiers[1]: s.134(4)(c), RentPaidDeduction. disqualifiers[2]: s.134(4)(a), (b). disqualifiers[3]: s.134(3), r.65 — the claim needs the RentDeclaration. disqualifiers[4]: OQ-23. disqualifiers[5]: RentPaidDeduction. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-RENT-PAID (D-166; until then DED-RENT-PAID's ExceptIn).",
+  "key": "SEC-RENT-PAID",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80GG",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.134",
+    "presence": "PRESENT"
+  },
+  "plainName": "Rent paid without house rent allowance",
+  "summary": "If you pay rent for the home you live in and receive no house rent allowance, the rent is deducted to the extent it exceeds a share of your total income, within a monthly limit and a larger share of your total income, whichever is less. Total income here is before this deduction. You must file the declaration the Rules prescribe, and you may not own a home where you live or work, or an occupied home elsewhere valued as your own residence. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "Rent for your own residence",
+      "description": "The rent beyond the share of total income, within the lesser limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-RENT-PAID"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Rent paid is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "House rent allowance was received in the year.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-RENT-PAID"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "You, your spouse, a minor child or your family own a home where you live or work, or you occupy a home you own elsewhere.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-RENT-PAID"
+      }
+    },
+    {
+      "kind": "PROCESS_MISSED",
+      "description": "The declaration was not filed.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-RENT-PAID"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Where the donations' qualifying limit binds as well, the deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "each deduction's base depends on the other"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A Hindu undivided family's claim under this deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "the deduction for a Hindu undivided family is not built"
+      }
+    }
+  ]
+}

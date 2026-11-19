@@ -1,0 +1,26 @@
+{
+  "name": "fyers-equity-futures-sell-10l-after-the-stt-change",
+  "describes": "A Rs 10,00,000 futures sell at Fyers in April 2026, with Fyers' clearing charge at 0.0005% of the traded value (W-186).",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": "EQUITY",
+    "segment": "FUTURES",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 1000,
+    "transactionDate": "2026-04-01"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 500.0,
+      "EXCHANGE_TXN": 18.3,
+      "SEBI_FEE": 1.0,
+      "IPFT": 0.0,
+      "CLEARING": 5.0,
+      "GST": 7.97
+    },
+    "total": 552.27
+  }
+}

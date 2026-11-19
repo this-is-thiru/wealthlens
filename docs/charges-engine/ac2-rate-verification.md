@@ -14,9 +14,15 @@ corrections are in the seed files; §6 is what remains operationally.
 | Zerodha | `https://zerodha.com/charges` | 2026-09-08 |
 | Upstox | `https://upstox.com/brokerage-charges/` | 2026-09-08 |
 | Fyers | `https://fyers.in/charges-list` | 2026-09-08 |
-| NSE transaction charge revision | NSE circular, 2026-02-27, effective 2026-03-01 | via search |
-| NSE IPFT revision | raised from ₹0.01/crore to ₹10/crore w.e.f. 2023-04-01 | via search |
+| NSE transaction charge revision | NSE circular NSE/FA/73061, 2026-02-27, effective 2026-03-01 (cash ₹306.99 + IPFT ₹0.01 per crore) | via search; **read 2026-10-30 (W-187)** |
+| NSE IPFT revision | NSE circular NSE/FA/56129, 2023-03-24: raised from ₹0.01/crore to ₹10/crore w.e.f. 2023-04-01 (₹50/crore of premium on options) | via search; **read 2026-10-30 (W-187)** |
 | Zerodha AMC | `support.zerodha.com` — ₹300 + 18% GST annually | via search |
+
+**Cards added after this check (W-177, W-178):** their evidence is not here but in
+`docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md` (broker prices; NSE circulars NSE/FA/56129,
+NSE/FA/64232, NSE/FA/73061 quoted from their PDFs) and `…/2026-10-28-statutory-charge-rates.md` (STT, stamp duty,
+SEBI fee, GST), both re-sourced by W-187 (D-396). **NSE/FA/73061 rolled the IPFT back to ₹0.01 per crore from
+2026-03-01** (0.0000001 %); the 2026-03 cards' IPFT lines are corrected by W-185.
 
 ---
 
@@ -108,8 +114,8 @@ the transaction charge is set by the exchange, not the broker, so all three shou
 
 | Source | Says | As a percentage |
 |---|---|---|
-| Zerodha page | "₹0.01 per crore + GST" | 0.000001% |
-| Fyers page | "NSE IPFT ₹0.01/Crore" | 0.000001% |
+| Zerodha page | "₹0.01 per crore + GST" | 0.0000001% |
+| Fyers page | "NSE IPFT ₹0.01/Crore" | 0.0000001% |
 | Upstox page | "₹0.10 per Lakh" | **0.0001%** |
 | NSE (via search) | raised ₹0.01/crore → **₹10/crore** w.e.f. 2023-04-01 | **0.0001%** |
 | **Shipped cards** | 0.0001% | — |
@@ -126,6 +132,12 @@ pre-2023 figure nobody updated. That is what the cards already had, so no value 
 is that the rule's `notes` now state the basis rather than the word PLACEHOLDER. Confirming it
 against a real contract note remains worth doing, and revising it is a rate change like any other —
 a new card, no Java.
+
+**Erratum (W-185, 2026-10-31).** NSE/FA/73061 (2026-02-27) rolled the contribution back to ₹0.01 per
+crore from 2026-03-01, so from that date Zerodha's and Fyers' pages are right and the 2026-03 cards
+carry 0.0000001 %. The ₹10 per crore decision above still holds for its own window, 1-4-2023 →
+28-2-2026 (₹50 per crore of premium on options, same window); Upstox's ₹0.10 per lakh is ₹10 per
+crore — the same rate — so all three pages agreed all along once each window is kept apart.
 
 ### 4.2 What to do about the window — this is the decision that shapes everything else
 

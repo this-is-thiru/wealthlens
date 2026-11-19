@@ -1,0 +1,32 @@
+{
+  "scheduleCode": "FYERS_MAINTENANCE_2025_04",
+  "brokerName": "FYERS",
+  "assetType": null,
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://fyers.in/charges-list",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "AMC",
+      "displayName": "Annual maintenance charge",
+      "category": "SUBSCRIPTION",
+      "basis": "FLAT",
+      "side": "BOTH",
+      "events": [
+        "AMC_CYCLE"
+      ],
+      "flatAmount": 0.0,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "Nil: \"Demat Annual Maintenance Charges (AMC) | \u20b9 0\"; fyers.in/pricing: \"\u20b90 annual maintenance charges (AMC) for trading and demat accounts\". A card rather than none, so the cycle records Rs 0 instead of NO_SCHEDULE. Read 2026-10-28 at https://fyers.in/charges-list (W-177; sources/2026-10-28-broker-charge-pages.md)."
+    }
+  ]
+}

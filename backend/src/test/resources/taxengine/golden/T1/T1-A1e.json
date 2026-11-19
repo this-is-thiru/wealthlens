@@ -1,0 +1,15 @@
+{
+  "id": "T1-A1e",
+  "source": "DR 08 T1-A1 — Old regime, age variants at the basic exemption",
+  "_source": "| T1-A1e | 82 | **NEW** | ₹5,00,000 | `RATE-SLAB-AGE-002`: no age variant, so the ₹4,00,000 band applies. 1,00,000 × 5% = 5,000; `REBATE-NEW-001` min(5,000, 60,000) = 5,000 | **₹0** |",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "500000",
+  "ageAtYearEnd": 82,
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "0"
+  }
+}
