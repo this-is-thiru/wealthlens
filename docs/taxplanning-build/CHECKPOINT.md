@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c2 DONE (D-791); dev holds prod's copy encrypted by m1.1; next W-334c3 (§1A count, §1B seed) — to plan
-Stage           : W-334c3 · — plan it (read runbook §1A, §1B); full blocks; m1.1 jar; tools with lookup + retries
+Item            : W-334c3 DONE (D-792); dev holds prod's copy, encrypted and seeded (dev-after-c3.txt); next W-334c4 (§2.1 – §2.14) — to plan
+Stage           : W-334c4 · — plan it: read runbook §2.1 – §2.14 fully; per step a backup before each write; m1.1; tools with lookup + retries; possibly split
 Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
 Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : on the owner's commit word close W-334c2; then plan W-334c3 with full blocks (read runbook §1A, §1B), stop for approval
+Next step       : on the owner's commit word close W-334c3; then plan W-334c4 (read runbook §2.1 – §2.14 fully; prod-only steps 2.1, 2.3 included), stop for approval
 Open to owner   : approve W-334a, W-334b; commit of these planning docs (needs the owner's word); runner token in git history (repo is PUBLIC); host chmod 666 docker.sock
 Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries (router DNS still times out); passwords via read -s; never cd inside a $ command
 Last verify     : W-338: 5 affected ITs 37/0, StoredStringId 6/0 (red 6/6 with a bare collection name), Architecture+Modulith green, validate green
-Last item commit: taxplanning W-334c2: log m1.1's first start and §1.r on prod's copy — all 1548 rows encrypted with no conflict, where m1 encrypted none
+Last item commit: taxplanning W-334c3: log §1A and §1B on prod's copy with m1.1 — the charge engine seeds 39 cards and prices a known trade at 119.67
 Files touched   : none
 Updated         : 2026-11-19, session 108
 ```
