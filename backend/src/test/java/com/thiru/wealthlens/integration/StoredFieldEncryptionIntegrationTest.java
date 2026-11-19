@@ -120,6 +120,23 @@ class StoredFieldEncryptionIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void encrypt_whenTheIdIsAStringShapedLikeAnObjectId_encryptsTheRow() {
+        // Given: rows written by the build before W-253 keep a String _id of 24 hex digits (prod, W-334c2 row 6)
+        String id = "65f0a1b2c3d4e5f6a7b8c9d0";
+        mongoTemplate.getCollection("transactions").insertOne(new Document("_id", id).append("email", USER)
+                .append("account_holder", "Self"));
+
+        // When
+        run(false, "SUPER_USER").statusCode(200)
+                .body("collections.find { it.collection == 'transactions' }.encryptedRows", equalTo(1));
+
+        // Then
+        Document stored = raw("transactions", id);
+        assertThat(stored.getString("email")).startsWith("k1:");
+        assertThat(stored.getString("account_holder")).startsWith("k1:");
+    }
+
+    @Test
     void encrypt_whenRunTwice_encryptsThePlainRowsOnceAndTheyReadBack() {
         // Given
         insertPlainRows();

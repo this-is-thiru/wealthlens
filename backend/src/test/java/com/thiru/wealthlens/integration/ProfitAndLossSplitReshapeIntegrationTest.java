@@ -110,6 +110,23 @@ class ProfitAndLossSplitReshapeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void reshape_whenTheYearsIdIsAStringShapedLikeAnObjectId_movesThePairIntoTheSplit() {
+        // Given: the build before W-253 stored a P&L year's _id as a String of 24 hex digits (prod, W-334c2 row 6)
+        insertPnl("65f0a1b2c3d4e5f6a7b8c9d1", pairAndMap(), null);
+        outcome("o1", AssetType.EQUITY, TradeSegment.DELIVERY, AccountType.SELF);
+
+        // When
+        reshape.reshape(false, "test");
+
+        // Then -- the same sums as the first test: purchase 1,600, profit 730
+        Document realised = side("65f0a1b2c3d4e5f6a7b8c9d1", "realised_profits");
+        Document year = split(realised, AssetType.EQUITY, TradeSegment.DELIVERY);
+        MoneyAssert.assertMoney(1600.0, year.getDouble("purchase_amount"));
+        MoneyAssert.assertMoney(730.0, year.getDouble("profit"));
+        assertThat(carriesOldFields(realised)).isFalse();
+    }
+
+    @Test
     void reshape_whenTheSplitAlreadyHasSales_addsThePairToThem() {
         // Given -- a sale since the deploy: 200 bought, 300 sold
         Document realised = pairAndMap().append("gains_by_asset_and_segment", new Document("EQUITY",

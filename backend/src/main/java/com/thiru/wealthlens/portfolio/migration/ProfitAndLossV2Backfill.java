@@ -6,6 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.V2BackfillReport.UnplacedRow;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.entity.helper.StoredId;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
@@ -122,7 +123,7 @@ public class ProfitAndLossV2Backfill {
         String path = target.side() + "." + SPLIT + "." + row.getAssetType() + "." + segmentOf(row);
         Update update = new Update().set(path, StoredReport.sum(target.entry(), sale)).addToSet(COUNTED, row.getId())
                 .set("audit_metadata.updatedBy", cipher.encryptSearchable(auditor)).set("audit_metadata.updatedAt", TLocalDateTime.now());
-        mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(target.pnl().get("_id"))
+        mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(StoredId.of(target.pnl()))
                 .and(COUNTED).ne(row.getId())), update, COLLECTION);
     }
 

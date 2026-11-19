@@ -4,6 +4,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
+import com.thiru.wealthlens.shared.entity.helper.StoredId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -118,7 +119,7 @@ public class StoredFieldEncryption {
         int conflicts = 0;
         try (Stream<Document> rows = mongoTemplate.stream(holdingPlainText(fields), Document.class, fields.collection())) {
             for (Document row : (Iterable<Document>) rows::iterator) {
-                Query unchanged = query(where("_id").is(row.get("_id")));
+                Query unchanged = query(where("_id").is(StoredId.of(row)));
                 Update update = new Update();
                 if (!seal(fields, row, unchanged, update)) {
                     continue;

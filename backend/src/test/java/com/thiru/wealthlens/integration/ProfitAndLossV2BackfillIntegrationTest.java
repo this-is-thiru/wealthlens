@@ -104,6 +104,22 @@ class ProfitAndLossV2BackfillIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void backfill_whenTheYearsIdIsAStringShapedLikeAnObjectId_addsTheFigures() {
+        // Given: the build before W-253 stored a P&L year's _id as a String of 24 hex digits (prod, W-334c2 row 6)
+        insertPnl("65f0a1b2c3d4e5f6a7b8c9d1");
+        recorderRow("r1");
+
+        // When
+        backfill.backfill(false, AFTER_EVERY_ROW, "test");
+
+        // Then -- the same figures as the first test: brokerage 50, misc 5, profit 445
+        for (Document level : levels(entry("65f0a1b2c3d4e5f6a7b8c9d1"))) {
+            MoneyAssert.assertMoney(50.0, level.getDouble("brokerage"));
+            MoneyAssert.assertMoney(445.0, level.getDouble("profit"));
+        }
+    }
+
+    @Test
     void backfill_whenARowHasNoChargeBreakup_leavesItAlone() {
         // Given -- a V1 or rebuilt row: its figures are in the P&L already
         insertPnl("p1");

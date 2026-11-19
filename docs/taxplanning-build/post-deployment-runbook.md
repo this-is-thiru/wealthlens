@@ -716,7 +716,8 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
       loginsToRekey: d.user_details.countDocuments({ email: { $exists: false } }) }; }) }])
 ```
 
-4. **Dry run**, then the real run, with step 1's token:
+4. **Dry run**, then the real run, with step 1's token. **Needs `m1.1` (W-338, D-789):** on `m1` the real run matched no row whose
+   `_id` is a string of 24 hex digits — every portfolio row on prod — and reported `encryptedRows` 0 without an error:
    `curl -X POST -H "Authorization: Bearer <token>" "<host>/privacy/stored-fields/encrypt"` (a dry run by default),
    then the same URL ending `?dryRun=false`. Expected: the dry run's `plainRows` per collection equal step 3's counts
    (`user_details` equals `loginsToRekey`) and `encryptedRows` 0; the real run's `encryptedRows` equal `plainRows` and
@@ -1273,6 +1274,9 @@ fields back; no code reads them.
 
 ### 2.6 W-160d3 (D-369) — move the P&L's stored short / long pair into its split · `SUPER_USER` · **every database · once · outstanding**
 
+**Needs `m1.1` (W-338, D-789):** on `m1` the rewrite matched no `profit_and_loss` year whose `_id` is a string of 24 hex digits
+(prod's are), and wrote nothing.
+
 **Why.** Since W-160d2 the P&L reads realised figures only from `gains_by_asset_and_segment`, its split by asset type
 and segment. Documents written before W-160d1 hold them in the short / long pair (`short_term_capital_gains`,
 `long_term_capital_gains`) and V2's duplicate `gains_by_classification`. Until this runs, those years show no
@@ -1350,6 +1354,9 @@ it.
 **Retired after use:** W-171 / WL-37, once this is logged for every database. There is no code to remove.
 
 ### 2.8 W-172 (D-373) — add the V2 sales' profit, brokerage and misc to the P&L · `SUPER_USER` · **every database · once · outstanding**
+
+**Needs `m1.1` (W-338, D-789):** on `m1` the backfill matched no `profit_and_loss` year whose `_id` is a string of 24 hex digits
+(prod's are), and added nothing.
 
 **Why.** Before W-169 a V2 sale wrote only its purchase and sale amounts into the P&L, so every V2 year shows no
 profit, brokerage or misc, and "total realised profit" counts V1 sales only. Each V2 sale's trade-outcome row, written
@@ -2000,7 +2007,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 6 | §0.5 steps 2 – 4 | run | Count, back up, drop the eleven tax collections |
 | 7 | §0.8 | run | Count, back up, drop the legacy salary and policy collections |
 | 8 | §1.o | check | No account that chose its own role, or the correction as §1.o says |
-| 9 | §1.r step 1 | run | Token on the previous build (6.0.4); start `m1` **jobs off** |
+| 9 | §1.r step 1 | run | Token on the previous build (6.0.4); then **§0.8 again** — the previous build seeds the legacy policies at every start (`ec85b188` `PolicySeederService`, W-334c2 row 4a); start `m1` **jobs off** |
 | 10 | §1 (1.1 – 1.7), §1.x, §1.y, §1.n, §1.l | check | Start log; `NO RATE CARDS` absent only if cards exist (they are cleared next) |
 | 11 | §1.r steps 2 – 7 | run | Backup, check, encrypt, check; step 7's `staleness-sweep` on request (6.0.8) |
 | 12 | §1A | run | Clears configuration 12 / 11 / 2 and per-user `user_charges` 328, `charge_accounts` 1, P&L charge side 2 (2026-10-27 counts) |
@@ -2021,7 +2028,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 5 | §0.5 steps 2 – 4 | run | Expected no tax-planning rows; drop is then a no-op |
 | 6 | §0.8 | run | Count, back up, drop |
 | 7 | §1.o | check | As 6.2 |
-| 8 | §1.r step 1 | run | Token on the previous build; start `m1` **jobs off** |
+| 8 | §1.r step 1 | run | Token on the previous build; then **§0.8 again** (as 6.2 row 9); start `m1` **jobs off** |
 | 9 | §1 (1.1 – 1.7), §1.x, §1.y, §1.n, §1.l | check | `NO RATE CARDS` expected until row 12 |
 | 10 | §1.r steps 2 – 7 | run | As 6.2 |
 | 11 | §1A | count only | Configuration 0 / 0 / 0 (2026-10-27): a no-op; per-user data is never cleared on prod |
@@ -2091,6 +2098,14 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 8B, §0.8 steps 3 – 4 drop + count | owner | seven `"dropped":true`; recount `present` `[]`, all 0 — **go** (on prod: a no-op) |
 | 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, §1.o roles (read-only) | owner | 15 accounts: `USER` 4, `USER,TEST_USER` 7, `ADMIN,USER,TEST_USER` 3, `ADMIN,USER,SUPER_USER,` 1 (the owner); `aboveUser` 11 — **held for the owner**: roles are comma lists, split on `,` by `UserDetailsImpl.java:24`; only `SUPER_USER` gates anything (34 `hasRole('SUPER_USER')`, 1 `hasAnyRole('SUPER_USER')`; `ADMIN` and `TEST_USER` gate nothing), and only the owner holds it; §1.o's `$ne: "USER"` match counts every list. Emails not recorded |
 | 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, ruled | owner | roles left as they are (D-788): only the owner holds `SUPER_USER`; §1.o now checks that — **go**; W-334c1's rows all logged |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 1, §0.1 environment | owner | dev's three keys 32 bytes, prefixes `9dbe9c7018bd` / `55b28ef39f76` / `886cb3703540` (= W-334b row 5); `APP_TAX_JOBS_ENABLED=false`; port 8080 free — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 2, token from the previous build (twice) | owner | the previous build started (6.4 s, 3.8 s); sign-in `BadCredentialsException: Bad credentials` both times (`m0.log:52`: the login was found, the password did not match prod's); stopped again, nothing written — **stop**: prod's password is not known; row 2a added (owner: reset, on prod too in W-334e) |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | rows 2a – 2, password set, token from the previous build | owner | 2a's output not pasted; row 2 signed in with it (proof enough): `sub` the owner, `authorities` `ROLE_ADMIN`, `ROLE_USER`, `ROLE_SUPER_USER`, `FACTOR_PASSWORD`, `exp` 2026-11-19T17:33:34.000Z; the previous build stopped — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 3, `m1`'s first start, jobs off; §1 checks | owner | `APP_TAX_JOBS_ENABLED=false`; started in 41.8 s; 0 ERROR lines; WARN only `NO RATE CARDS` (§1.5, expected) and Spring's `AuthenticationProvider bean` notice; `Ensured the indexes of` 19 entities (§1.x, §1.n, §1.y and the login, consent, processing-log, Gazette ones); `Charge indexes ensured` for 5; `multi-document transactions are ENABLED` (§1.7); `PDFs are read in a child process … heap 256 MiB, CPU 30 s` (§1.l); no `Could not create index`; no `Job` line — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 4, backup before §1.r | owner | `before-1r/`: 35 collections — prod's eight with their counts, `m1`'s new ones empty, and **four legacy policy collections back** (`allowance_catalogue` 39, `allowance_limits` 14, `tax_slab_policies` 2, `perquisite_policies` 1): seeded by the previous build's start in row 2 (`PolicySeederService` `@PostConstruct`) — **go** for the backup; row 4a (§0.8 again) added, and 6.2 row 9 / 6.3 row 8 now say so |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 4a, §0.8 again | owner | seven `"dropped":true`; `present` `[]`, all 0 — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 5, §1.r step 3 (read-only) | owner | identifiers plain: `transactions` 817, `assets` 529, `profit_and_loss` 7, `trade_outcomes` 163, `lastly_performed_corporate_action` 11; actors plain: `trade_outcomes` 163, `corporate_action` 6, `lastly_performed_corporate_action` 11, `profit_and_loss` 7, `assets` 529, `transactions` 817, `reports` 73 (of 163); `loginsToRekey` 15; grievances, processing log, insurances 0 — **go** |
+| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 6, §1.r step 4 | owner | dry run: `plainRows` equal row 5 (`reports` not listed: no entity reads it since `4c6c92e0`); real run: `user_details` 15 re-keyed, **every other collection `encryptedRows` 0** with 0 conflicts and no error (`m1-start-1.log:151`) — **stop**; `m1` stopped; every `_id` in the six portfolio collections is stored as a `string` (owner's query) — `StoredFieldEncryption`'s `updateFirst(where("_id").is(…))` matched nothing; the defect is W-338 |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
