@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334a1 planned (E), awaiting approval — new PR (not #65: Dependabot's), merge, tag m1.1, worktree ../wealthlens-m1.1
-Stage           : W-334a1 P — fix pushed; rows 1 – 3 again with the new head and its PR #66 run
+Item            : W-334a1 DONE (D-790): m1.1 = 6b5412db, worktree ../wealthlens-m1.1 built; next: re-plan W-334c2 for m1.1
+Stage           : W-334c2 B → to re-plan: row 0 reset dev's copy (drop, restore archive, gate IDENTICAL), m1.1 jar everywhere, then rows 1 – 9 again
 Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
 Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : owner approves W-334a1; run rows 1 – 7 (session runs them at the owner's request); then W-334c1 row 3 again (wipe dev, restore archive) and W-334c2 on m1.1
+Next step       : on the owner's commit word close W-334a1; then update plans/W-334c2.md for the rerun (reset dev, m1.1 jar), board W-334c2 B → E, stop for approval
 Open to owner   : approve W-334a, W-334b; commit of these planning docs (needs the owner's word); runner token in git history (repo is PUBLIC); host chmod 666 docker.sock
 Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
 Env notes       : database tools: prefix GODEBUG=netdns=cgo (router DNS times out for Go's resolver); passwords via read -s only; -Dtest=Class skips @Nested; never cd inside a $ command
 Last verify     : W-338: 5 affected ITs 37/0, StoredStringId 6/0 (red 6/6 with a bare collection name), Architecture+Modulith green, validate green
-Last item commit: taxplanning W-338: match a stored row by its _id as stored in the one-time rewrites — on prod's string ids the encryption and two P&L rewrites matched nothing and reported success
+Last item commit: taxplanning W-334a1: log the merge of PR #66 as 6b5412db and the tag m1.1 — every database now runs the interim run from the build that encrypts prod's rows
 Files touched   : none
 Updated         : 2026-11-19, session 108
 ```

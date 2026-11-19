@@ -1909,7 +1909,8 @@ owner runs it and the results go into the run log.
 - **6.0.1 Merge and tag.** PR #64 merged into `master` as a **merge commit** — never squash or rebase: the docs cite
   hundreds of commit hashes (D-780 C4a). Tag the merge `m1` and push the tag. Run every database below from that tag:
   `git worktree add ../wealthlens-m1 m1`. The merge also pushes the image to Docker Hub as `latest` (`cicd.yaml`); the
-  repository there is public (owner, D-784, replacing D-780's private).
+  repository there is public (owner, D-784, replacing D-780's private). **`m1.1` replaces `m1` for every database** (W-338,
+  D-789; tagged by W-334a1, D-790): `git worktree add ../wealthlens-m1.1 m1.1`; `m1` stays as the record of what W-334c1 – c2 ran.
 - **6.0.2 Keys, once per environment** (§0.5 step 1; D-780 C3a): `openssl rand -base64 32` twice per environment — dev,
   staging, prod each get their own `TAX_DATA_KEY` and `TAX_DIGEST_KEY`, never shared. Store each pair in the secret store
   **and** its backup, off the laptop, before the first start: a lost `TAX_DATA_KEY` is data no one can read again. One
@@ -2109,6 +2110,11 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-19 | — (W-334a1) | row 1, preconditions (read-only) | session, at the owner's request | ed4707ac17fdb1f5250352a2348937eccf6df1cc; b4ef2edd0d94413abdb8bc3917f2dd21a9ed0740; open PRs from branch: 0 — **go** |
 | 2026-11-19 | — (W-334a1) | row 2, PR opened | session, at the owner's request | PR #66, not a draft, head `b4ef2edd…`, base `master`; pipeline run 44577661959 started — **go** |
 | 2026-11-19 | — (W-334a1) | row 3, PR #66 pipeline | session | run 44577661959 `failure`: `StoredFieldEncryptionTest` (unit) pinned the update's query as `{"_id"="g1", …}`; W-338 makes it `BsonString` — an expected mover not run before the commit — **stop**; the test's expectation updated, every test naming the changed classes 38 / 0 locally; nothing merged |
+| 2026-11-19 | — (W-334a1) | the fix pushed | session, at the owner's word | `2f53253e`; PR #66 head `2f53253e…`, not a draft; run 44579651993 started; rows 1 – 3 are re-read against this head |
+| 2026-11-19 | — (W-334a1) | rows 1 and 3 again, 17:46 UTC | session, at the owner's request | `master` `ed4707ac…`, head `2f53253e…`, no `m1.1` tag; run 44579651993 `success` on `2f53253e` (17:45:38Z); PR #66 `MERGEABLE CLEAN` — **go** |
+| 2026-11-19 | — (W-334a1) | row 4, the merge | session, at the owner's request | PR #66 merged 17:46:59Z as `6b5412db…`; parents `ed4707ac…`, `2f53253e…`; empty diff against `2f53253e` — **go** |
+| 2026-11-19 | — (W-334a1) | row 5, the `master` pipeline | session, at the owner's request | run 44580857756, `push`, `6b5412db`, `completed success` 17:51:22Z; `Image tags: ***/wealthlens:latest, ***/wealthlens:sha-6b5412dbef1e` — **go** |
+| 2026-11-19 | — (W-334a1) | rows 6 – 7, tag `m1.1`, worktree | session, at the owner's request | `refs/tags/m1.1` `81508ba5…` (annotated), `m1.1^{}` `6b5412db…`; no workflow for the tag; `../wealthlens-m1.1` at `6b5412db…`, `wealthlens.jar` built (87,811,501 bytes) — **go**; W-334a1's rows all logged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
