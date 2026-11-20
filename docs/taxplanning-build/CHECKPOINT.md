@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334a3 done (D-814), m1.3 = 72d7fd4e; W-351 placed (D-813); committed and pushed
-Stage           : W-334c7 split (D-816); W-334c7a E — plans/W-334c7a.md (W-334c6's 15 rows on m1.3), awaiting approval / row 1
+Item            : W-334c7a done (D-817), committed and pushed; dev = dev-after-c7a.txt
+Stage           : next — plan W-334c7b (§2 + W-348a/b + W-350 + §2.16 step 5); the other two users' declarations still needed for W-348b
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-334c7 —, W-334c7a E, W-334c7b ·, W-334c7c ·, W-348a ·, W-348b ·, W-350 ·, W-351 ·, W-334d ·, W-334e ·
-Next step       : owner runs W-334c7a rows 1 – 15 (m1.3); then plan c7b
+Board           : W-334c7a D, W-334c7b ·, W-334c7c ·, W-348a ·, W-348b ·, W-350 ·, W-351 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-334c7b
 Open to owner   : the other two users' declarations; W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
 Owner actions   : obtain the other two users' segment declarations (W-348a); the owner's own given: all delivery (D-815)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-334c7: split the rehearsal on m1.3 into three parts and plan c7a — reset, encryption and charge engine again on the build prod will run
+Last item commit: taxplanning W-334c7a: log the reset, encryption and charge engine on prod's copy with m1.3 — all go; §2.1 now pairs one user with unexplained changes, so W-348b compares before it deletes
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
