@@ -7,6 +7,9 @@ import static org.hamcrest.Matchers.everyItem;
 
 import com.thiru.wealthlens.insurance.entity.InsuranceEntity;
 import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
+import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.shared.privacy.Grievance;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -134,6 +137,66 @@ class StoredFieldEncryptionIntegrationTest extends AbstractIntegrationTest {
         Document stored = raw("transactions", id);
         assertThat(stored.getString("email")).startsWith("k1:");
         assertThat(stored.getString("account_holder")).startsWith("k1:");
+    }
+
+    private Document corporateActionCopy(String createdBy) {
+        return new Document("stock_code", "INFY").append("type", "BONUS")
+                .append("audit_metadata", new Document("createdBy", createdBy).append("updatedBy", createdBy));
+    }
+
+    /**
+     * Inserts a row stored before W-256 whose corporate-action copies hold their actors as written then — one plain, one already
+     * sealed — runs the encryption, and returns the stored copies (W-341; found by W-334c4a row 4 on prod's copy).
+     */
+    private List<Document> encryptRowEmbedding(String collection, String listField, String id) {
+        mongoTemplate.getCollection(collection).insertOne(new Document("_id", id).append("email", USER)
+                .append("account_holder", "Self")
+                .append(listField, List.of(corporateActionCopy(OWNER), corporateActionCopy(storedIdentifier(OWNER)))));
+        run(false, "SUPER_USER").statusCode(200)
+                .body("collections.find { it.collection == '" + collection + "' }.encryptedRows", equalTo(1));
+        return raw(collection, id).getList(listField, Document.class);
+    }
+
+    private void assertSealed(List<Document> copies, String collection) {
+        Document plainBefore = copies.getFirst().get("audit_metadata", Document.class);
+        assertThat(plainBefore.getString("createdBy")).startsWith("k1:");
+        assertThat(plainBefore.getString("updatedBy")).startsWith("k1:");
+        assertThat(copies.get(1).get("audit_metadata", Document.class).getString("createdBy")).isEqualTo(storedIdentifier(OWNER));
+        run(false, "SUPER_USER").statusCode(200)
+                .body("collections.find { it.collection == '" + collection + "' }.plainRows", equalTo(0));
+    }
+
+    @Test
+    void encrypt_whenATradeOutcomeEmbedsACorporateActionWithAPlainActor_sealsItAndTheRowReadsBack() {
+        // Given / When
+        List<Document> copies = encryptRowEmbedding("trade_outcomes", "applied_corporate_actions", "outcome-1");
+
+        // Then
+        assertSealed(copies, "trade_outcomes");
+        TradeOutcomeEntity outcome = mongoTemplate.findById("outcome-1", TradeOutcomeEntity.class);
+        assertThat(outcome.getAppliedCorporateActions().getFirst().getAuditMetadata().getCreatedBy()).isEqualTo(OWNER);
+    }
+
+    @Test
+    void encrypt_whenALotEmbedsACorporateActionWithAPlainActor_sealsItAndTheLotReadsBack() {
+        // Given / When
+        List<Document> copies = encryptRowEmbedding("assets", "corporate_actions", "lot-1");
+
+        // Then
+        assertSealed(copies, "assets");
+        AssetEntity lot = mongoTemplate.findById("lot-1", AssetEntity.class);
+        assertThat(lot.getCorporateActions().getFirst().getAuditMetadata().getUpdatedBy()).isEqualTo(OWNER);
+    }
+
+    @Test
+    void encrypt_whenATransactionEmbedsACorporateActionWithAPlainActor_sealsItAndTheTransactionReadsBack() {
+        // Given / When
+        List<Document> copies = encryptRowEmbedding("transactions", "corporate_actions", "transaction-1");
+
+        // Then
+        assertSealed(copies, "transactions");
+        TransactionEntity transaction = mongoTemplate.findById("transaction-1", TransactionEntity.class);
+        assertThat(transaction.getCorporateActions().getFirst().getAuditMetadata().getCreatedBy()).isEqualTo(OWNER);
     }
 
     @Test

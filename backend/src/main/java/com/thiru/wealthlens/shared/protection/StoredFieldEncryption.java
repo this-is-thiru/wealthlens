@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -48,12 +49,13 @@ public class StoredFieldEncryption {
      * {@code AssetRequest} fields, so each is stored under its Java name.
      */
     private static final List<StoredFields> FIELDS = List.of(
-            new StoredFields("privacy_grievances", List.of("text", "answer"), Map.of(), List.of(EMAIL)),
-            new StoredFields("privacy_processing_log", List.of("remote_address"), Map.of(), List.of("principal", "subject_email")),
+            new StoredFields("privacy_grievances", List.of("text", "answer"), Map.of(), List.of(EMAIL), Map.of()),
+            new StoredFields("privacy_processing_log", List.of("remote_address"), Map.of(), List.of("principal", "subject_email"),
+                    Map.of()),
             new StoredFields("insurances",
                     List.of("insurance_id", "agent_name", "agent_email", "agent_contact", "agent_address", "notes"),
                     Map.of("policyDetails", List.of("policy_id", "agent_name", "agent_email", "agent_contact",
-                            "agent_address", "notes", "policy_description")), List.of(EMAIL)),
+                            "agent_address", "notes", "policy_description")), List.of(EMAIL), Map.of()),
             identifiers("transactions", EMAIL, "account_holder", "asset_request.email", "asset_request.accountHolder"),
             identifiers("assets", EMAIL, "account_holder"),
             identifiers("profit_and_loss", EMAIL),
@@ -110,7 +112,46 @@ public class StoredFieldEncryption {
             stored.add(own == null ? fields : fields.withIdentifiers(own));
         }
         actors.forEach((collection, paths) -> stored.add(identifiers(collection, paths.toArray(String[]::new))));
-        return stored;
+        Map<String, Map<String, List<String>>> embedded = embeddedActors();
+        List<StoredFields> withEmbedded = new ArrayList<>(stored.stream().map(fields -> {
+            Map<String, List<String>> lists = embedded.remove(fields.collection());
+            return lists == null ? fields : fields.withListIdentifiers(lists);
+        }).toList());
+        embedded.forEach((collection, lists) -> withEmbedded.add(identifiers(collection).withListIdentifiers(lists)));
+        return withEmbedded;
+    }
+
+    /**
+     * The actors inside each element of a list of entities that hold {@link AuditMetadata} — the corporate-action copies a trade
+     * outcome, a lot and a transaction embed (W-341). Read from the mapping, as the top-level actors are: collection, list field, paths.
+     */
+    private Map<String, Map<String, List<String>>> embeddedActors() {
+        Map<String, Map<String, List<String>>> embedded = new TreeMap<>();
+        var mapping = mongoTemplate.getConverter().getMappingContext();
+        for (MongoPersistentEntity<?> entity : mapping.getPersistentEntities()) {
+            if (entity.isAnnotationPresent(org.springframework.data.mongodb.core.mapping.Document.class)) {
+                entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> {
+                    MongoPersistentEntity<?> element = property.isCollectionLike() && property.getComponentType() != null
+                            ? mapping.getPersistentEntity(property.getComponentType()) : null;
+                    auditField(element).ifPresent(audit -> embedded.computeIfAbsent(entity.getCollection(), any -> new TreeMap<>())
+                            .put(property.getFieldName(), AUDIT_ACTORS.stream().map(actor -> audit + "." + actor).toList()));
+                });
+            }
+        }
+        return embedded;
+    }
+
+    private static Optional<String> auditField(MongoPersistentEntity<?> entity) {
+        if (entity == null) {
+            return Optional.empty();
+        }
+        List<String> audit = new ArrayList<>();
+        entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> {
+            if (property.getType() == AuditMetadata.class) {
+                audit.add(property.getFieldName());
+            }
+        });
+        return audit.stream().findFirst();
     }
 
     private StoredFieldEncryptionReport.CollectionCount encrypt(StoredFields fields, boolean dryRun) {
@@ -179,6 +220,8 @@ public class StoredFieldEncryption {
                 .map(field -> where(field).regex(PLAIN)).toList());
         fields.listFields().forEach((list, inner) -> any.add(where(list).elemMatch(
                 new Criteria().orOperator(inner.stream().map(field -> where(field).regex(PLAIN)).toList()))));
+        fields.listIdentifiers().forEach((list, paths) -> any.add(where(list).elemMatch(
+                new Criteria().orOperator(paths.stream().map(path -> where(path).regex(PLAIN)).toList()))));
         return query(new Criteria().orOperator(any));
     }
 
@@ -210,7 +253,39 @@ public class StoredFieldEncryption {
                 sealed = true;
             }
         }
+        for (Map.Entry<String, List<String>> list : fields.listIdentifiers().entrySet()) {
+            List<Document> items = row.getList(list.getKey(), Document.class, List.of());
+            List<Document> sealedItems = items.stream().map(item -> sealIdentifiers(item, list.getValue())).toList();
+            if (!sealedItems.equals(items)) {
+                unchanged.addCriteria(where(list.getKey()).is(items));
+                update.set(list.getKey(), sealedItems);
+                sealed = true;
+            }
+        }
         return sealed;
+    }
+
+    /** An element with each identifier at its dotted path in the searchable form; a path absent from it is left absent. */
+    private Document sealIdentifiers(Document item, List<String> paths) {
+        Document sealed = item;
+        for (String path : paths) {
+            sealed = sealAt(sealed, path.split("\\."), 0);
+        }
+        return sealed;
+    }
+
+    private Document sealAt(Document document, String[] path, int depth) {
+        if (!document.containsKey(path[depth])) {
+            return document;
+        }
+        Document copy = new Document(document);
+        Object value = document.get(path[depth]);
+        if (depth == path.length - 1) {
+            copy.put(path[depth], sealIdentifier(value));
+        } else if (value instanceof Document inner) {
+            copy.put(path[depth], sealAt(inner, path, depth + 1));
+        }
+        return copy;
     }
 
     /** A plain identifier, or each plain one in a list of them, in its searchable form; anything else as it is. */
@@ -235,17 +310,24 @@ public class StoredFieldEncryption {
     }
 
     private static StoredFields identifiers(String collection, String... paths) {
-        return new StoredFields(collection, List.of(), Map.of(), List.of(paths));
+        return new StoredFields(collection, List.of(), Map.of(), List.of(paths), Map.of());
     }
 
     /**
      * A collection's encrypted fields: top-level, inside each element of a list of sub-documents, and the identifiers, which take the
-     * searchable form and may be dotted paths into a sub-document or name a list of identifiers.
+     * searchable form and may be dotted paths into a sub-document or name a list of identifiers — at the top level, or as dotted
+     * paths inside each element of a list of sub-documents ({@code listIdentifiers}, W-341).
      */
-    private record StoredFields(String collection, List<String> fields, Map<String, List<String>> listFields, List<String> identifiers) {
+    private record StoredFields(String collection, List<String> fields, Map<String, List<String>> listFields, List<String> identifiers,
+            Map<String, List<String>> listIdentifiers) {
 
         StoredFields withIdentifiers(List<String> more) {
-            return new StoredFields(collection, fields, listFields, Stream.concat(identifiers.stream(), more.stream()).toList());
+            return new StoredFields(collection, fields, listFields, Stream.concat(identifiers.stream(), more.stream()).toList(),
+                    listIdentifiers);
+        }
+
+        StoredFields withListIdentifiers(Map<String, List<String>> lists) {
+            return new StoredFields(collection, fields, listFields, identifiers, Map.copyOf(lists));
         }
     }
 }
