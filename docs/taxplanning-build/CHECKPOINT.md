@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-341 done (D-794), committed and pushed; W-334c4a stopped at row 4; next W-334a2 (m1.2), then the rehearsal from W-334c1 row 3
-Stage           : W-334a2 E approved — plan committed; rows 1 – 7 next (session runs them)
+Item            : W-334a2 done (D-795): m1.2 = d6f2b3af; next the rehearsal again on m1.2 from W-334c1 row 3 — to plan
+Stage           : W-334a2 D, committed and pushed; next plan the rehearsal rerun on m1.2
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-341 D, W-334a2 E, W-334c4 —, W-334c4a E (stopped), W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : on approval: commit + push the plan (head H), then rows 1 – 7 run by the session at the owner's request; then the rehearsal from W-334c1 row 3 on m1.2
+Board           : W-341 D, W-334a2 D, W-334c4 —, W-334c4a E (stopped), W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : plan the rehearsal rerun on m1.2 (reset dev's copy, c2 rows 1 – 9, c3 rows 1 – 7, c4a rows 1 – 14; every jar path m1.2); stop for approval
 Open to owner   : approve W-334a2's plan; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
 Owner actions   : stop m1.1 (kill $(cat m1.pid) in ~/wealthlens-runs/w334c)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
-Last verify     : W-341: StoredFieldEncryption* 9/0 + 1/0 (red 3/3 first), Architecture 25/0, Modulith, FinishedPlan, CheckstyleBaseline, validate green
-Last item commit: taxplanning W-341: seal the actors in the corporate-action copies trade outcomes, lots and transactions embed — 93 of prod's rows were unreadable on m1.1
+Last verify     : PR #67 run 44668840263 green (full tiers on W-341); master run 44669461334 green
+Last item commit: taxplanning W-334a2: log the merge of PR #67 as d6f2b3af and the tag m1.2 — every database now runs from the build that seals the embedded actors
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
