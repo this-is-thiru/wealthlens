@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-349 done (D-811), committed and pushed
-Stage           : next — plan W-348 (options for prod's 163 old outcome rows; owner's ruling)
+Item            : W-348 ruled (D-812), committed and pushed; W-348a/b/c, W-334a3 placed
+Stage           : next — plan W-350 (the 18 held trades), then W-334a3 (m1.3), then the rehearsal of W-348a/b + W-350
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-349 D, W-348 ·, W-350 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-348 (options and ruling)
+Board           : W-348 D, W-348a ·, W-348b ·, W-348c ·, W-334a3 ·, W-350 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-350 and W-334a3
 Open to owner   : the two test users' logins (remove or keep); W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
-Owner actions   : decide the two test users' logins; W-348's ruling when planned
+Owner actions   : your own segment declaration for W-348a (were all your prod trades delivery?); the two test users' logins
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-349: count §3.5 and §3.3 on the row's facts — both selected on the stored term §2.5 removes, so they read 0 on every database after it
+Last item commit: taxplanning W-348: rule on prod's old outcome rows — rebuild them with today's code, segments from each user's declaration, unbroken charges recorded again (W-348a/b/c, m1.3)
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
