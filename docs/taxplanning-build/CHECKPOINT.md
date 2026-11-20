@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-354 done (D-832); next W-348a / W-348b
-Stage           : W-354 committed and closed (board D); WL-A-2 republished, read back equal; not pushed. W-353 pushed, merged (PR #69, 2229df87), tagged m1.4 (D-833)
+Item            : W-334c8a done (D-835); next plan W-334c8b
+Stage           : W-334c8a committed, closed and pushed; dev holds prod's copy after §1B on m1.4 (dev-after-c8a.txt) — part 2 starts from it
 Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
-Board           : W-353 D, W-354 D, W-348a · / W-348b ·, W-351 ·, W-334d ·, W-334e ·, W-337 ·
-Next step       : on 'resume': resume check; plan W-348a / W-348b for the other two users on a fresh copy of prod (their trades declared delivery, D-825); then W-334d (staging)
-Open to owner   : push (W-354 committed, unpushed); api-collection Buy Stock.yml:68 doc proposal
+Board           : W-354 D, W-334c8 —, W-334c8a D, W-334c8b ·, W-334c8c ·, W-348a · / W-348b ·, W-351 ·, W-334d ·, W-334e ·, W-337 ·
+Next step       : on 'resume': resume check; plan W-334c8b (§2.1 – §2.17 + W-348a/b for all three users + W-350 + §2.16 step 5) from W-334c7b1 – c7b3's plans and D-835; users found from the data
+Open to owner   : W-334c8b plan (to be written); api-collection Buy Stock.yml:68 doc proposal
 Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive (mode 600), prod-reference.txt, allotment-dates.json and the query scripts only; zsh: wrap globs in (setopt null_glob; …); DNS timeouts — 3-try loops; never cd inside a $ command
 Last verify     : W-354: rehearsal x2 on throwaway mongo:8.0.4 (results in D-832); docs only
-Last item commit: taxplanning W-354: add runbook §2.17 to remove prod's last test entries — DUMMY3, its test login and the orphan ICICIBANK lot of "username" were the trades and lots with no asset type
+Last item commit: taxplanning W-334c8a: rehearse prod's run again on m1.4 from a fresh copy, part 1 — every row go and every count equal to m1.3's, prod unchanged since 2026-11-19
 Files touched   : none
 Updated         : 2026-11-20, session 111
 ```
