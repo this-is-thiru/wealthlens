@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c8c done (D-837); W-334c8 complete; next plan W-334d (staging)
-Stage           : W-334c8c committed, closed and pushed; dev wiped; rehearsal files deleted
+Item            : W-334d1 done and committed (D-839); W-334d2 approved (C1a, C2a), rows 1 – 15 on staging
+Stage           : d1 rows 1 – 8 all go; staging-before-m14.archive proven; d1/ holds the owner baseline (mode 600); dev wiped; staging-only scripts s-*.js written; board W-334d1 D, W-334d2 E
 Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
 Board           : W-334c8 D, W-334c8a D, W-334c8b D, W-334c8c D, W-348a · / W-348b · (done at W-334e), W-351 ·, W-334d ·, W-334e ·, W-337 ·
-Next step       : on 'resume': resume check; plan W-334d (staging) from its row and the m1.4 rehearsal (D-834 – D-837)
-Open to owner   : W-334d plan (to be written); api-collection Buy Stock.yml:68 doc proposal
+Next step       : on 'resume': resume check; continue W-334d2 at the next unlogged row (run log '(W-334d2)'); the way back: restore staging-before-m14.archive
+Open to owner   : W-334d2 row 1 output; api-collection Buy Stock.yml:68 doc proposal
 Env notes       : jars in ../wealthlens-m1.4, ../wealthlens-m1.3, ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive + prod-before-m14.archive (mode 600), both references, allotment-dates.json and the query scripts only; dev wiped; zsh: (setopt null_glob; …); DNS: rerun the line
 Last verify     : W-354: rehearsal x2 on throwaway mongo:8.0.4 (results in D-832); docs only
-Last item commit: taxplanning W-334c8c: sign off the prod rehearsal on m1.4 and wipe dev — §3 as expected or explained, §3.27 178 outside the exchange table, all BMF
+Last item commit: taxplanning W-334d1: read staging on a copy before touching it — its backup restores identical, no key has written it, and §2.1 / §2.3 now apply there
 Files touched   : none
 Updated         : 2026-11-20, session 111
 ```
