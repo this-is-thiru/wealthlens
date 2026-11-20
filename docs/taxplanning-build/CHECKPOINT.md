@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-343 (D-800) and W-345 (D-801) done, committed and pushed; pipeline on the next PR
-Stage           : W-334c4b waits for the owner's four allotment dates; D-798 stands — §2.1's dry run rechecked on the next build carrying W-343 (runbook §2.1 note, W-334c4c row)
+Item            : W-339 (D-803), W-340 (D-804) done, committed and pushed; D-802 dates; W-346 placed
+Stage           : next — owner's source choice for ASHOKLEY/MSUMI (recommended: annual reports); W-346 read-only check; then W-334c4b
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-343 D, W-344 D, W-345 D, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : commit both (separate commits); owner decides whether W-343 reopens D-798 (§2.1 might now pair on a build carrying it); W-334c4b once dates are in
+Board           : W-339 D, W-340 D, W-346 ·, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : owner runs W-339 rows 1 – 3; owner chooses ASHOKLEY/MSUMI source (open the announcements, or accept the annual reports); W-346 (record dates) before W-334c4b; commit the batch
 Open to owner   : approve W-334c6; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
 Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
-Last verify     : W-343 rebuild 6/0, §2.1 6/0 + 5/0 (red first); W-345 gap audit 62/0, CA 48/0, split 7/0, Architecture 25/0, Modulith, Checkstyle (red first)
-Last item commit: portfolio W-345: refuse a stock code with a leading or trailing space on every entry — a spaced code holds apart from its clean twin
+Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
+Last item commit: taxplanning W-339: back up and drop reports on prod's copy (163 rows no code reads) — runbook §2.15; bonus allotment dates recorded (D-802), W-346 placed
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
