@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-347 done (D-808), committed and pushed
-Stage           : next — plan W-334c4d (per-user §2.12 → §2.11), then W-334c5
+Item            : W-334c4d done (D-809), committed and pushed; §2 complete on prod's copy
+Stage           : next — plan W-334c5 (§3 counts, compare, wipe dev, delete the rehearsal's backups; keep prod-before-m1.archive)
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-347 D, W-334c4d ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-334c4d
+Board           : W-334c4d D, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-334c5
 Open to owner   : the two test users' logins (remove or keep); W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
 Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-347: remove the owner's test stocks DUMMY and LAVANYA on prod's copy — 9 transactions and 8 lots in two users holding nothing else; runbook §2.16
+Last item commit: taxplanning W-334c4d: log the per-user rebuilds on prod's copy — 12 of the owner's lots corrected, the P&L's empty realised years filled from 90 sales and reconciled
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
