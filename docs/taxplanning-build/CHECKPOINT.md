@@ -4,18 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-348 ruled (D-812), committed and pushed; W-348a/b/c, W-334a3 placed
-Stage           : W-334a3 E approved — plan committed; rows 1 – 7 run by the session
-Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-348 D, W-348a ·, W-348b ·, W-348c ·, W-334a3 ·, W-350 ·, W-334d ·, W-334e ·
-Next step       : on 'commit and push': commit the plan, then rows 1 – 7 (PR, pipeline, merge, master pipeline, tag m1.3, worktree)
-Open to owner   : the two test users' logins (remove or keep); W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
-Owner actions   : your own segment declaration for W-348a (were all your prod trades delivery?); the two test users' logins
-Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
-Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-348: rule on prod's old outcome rows — rebuild them with today's code, segments from each user's declaration, unbroken charges recorded again (W-348a/b/c, m1.3)
+Item            : W-353 done (D-830); next W-354
+Stage           : W-353 committed and closed (board D); WL-A-2 republished, read back equal; not pushed
+Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
+Board           : W-353 D, W-354 ·, W-348a · / W-348b ·, W-351 ·, W-334d ·, W-334e ·, W-337 ·
+Next step       : on 'resume': resume check; plan W-354 (prod's 5 trades with no asset_type: read who / what / how, no email printed; owner runs the query), §2 template; then W-348a / W-348b on a fresh copy; then W-334d (staging)
+Open to owner   : push (W-353 committed, unpushed); api-collection Buy Stock.yml:68 doc proposal
+Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive (mode 600), prod-reference.txt, allotment-dates.json and the query scripts only; zsh: wrap globs in (setopt null_glob; …); DNS timeouts — 3-try loops; never cd inside a $ command
+Last verify     : targeted: PortfolioServiceTest 36/0/0, TradeExchangePropertiesTest 3/0/0, TradeExchangeRefusalIntegrationTest 2/0/0, CostBasis 9/0/0, CollisionRetry 7/0/0, Idempotency 12/0/0, Modulith 1/0/0, Architecture 26/0/0; validate green; tiers on the pipeline after push
+Last item commit: taxplanning W-353: refuse a trade whose exchange its asset type does not list — BMF, nse, NSE and none reached the tax side, which refused the term or settled no STT
 Files touched   : none
-Updated         : 2026-11-20, session 109
+Updated         : 2026-11-20, session 111
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

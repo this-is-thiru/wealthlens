@@ -163,6 +163,16 @@ app:
       # Set to 0 to disable the derived-fingerprint fallback entirely. Client-supplied keys keep
       # working either way.
       window-seconds: 60
+    trade-exchanges:
+      # The exchanges a trade of each asset type may name, matched exactly (W-353, D-826, D-828); anything else, or
+      # none, is refused with a 400. A type not listed accepts nothing. Stored trades are not re-read.
+      accepted:
+        EQUITY: [NSE, BSE]
+        MUTUAL_FUND: [NSE, BSE]
+        BOND: [NSE, BSE, OFF_EXCHANGE]
+        GOLD_BOND: [NSE, BSE, OFF_EXCHANGE]
+        FD: [OFF_EXCHANGE]
+        INSURANCE: [OFF_EXCHANGE]
   charges:
     # MASTER SWITCH. Set false to stop the charges engine computing or recording anything:
     # /charges/simulate and the AMC cycle answer 503, and shadow recording
