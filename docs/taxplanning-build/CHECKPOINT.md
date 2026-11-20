@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334a2 done (D-795): m1.2 = d6f2b3af; next the rehearsal again on m1.2 from W-334c1 row 3 — to plan
-Stage           : W-334a2 D, committed and pushed; next plan the rehearsal rerun on m1.2
+Item            : W-334c6 (D-796) and W-334c4a (D-797) done, committed and pushed; dev = dev-after-c4a.txt
+Stage           : next — plan W-334c4b (needs the owner's four allotment dates) and W-342's read-only diagnostic
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-341 D, W-334a2 D, W-334c4 —, W-334c4a E (stopped), W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : plan the rehearsal rerun on m1.2 (reset dev's copy, c2 rows 1 – 9, c3 rows 1 – 7, c4a rows 1 – 14; every jar path m1.2); stop for approval
-Open to owner   : approve W-334a2's plan; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
-Owner actions   : stop m1.1 (kill $(cat m1.pid) in ~/wealthlens-runs/w334c)
+Board           : W-334c6 D, W-334c4a D, W-342 ·, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : commit; then plan W-334c4b (§2.4 with the owner's four allotment dates, §2.5 – §2.8) and W-342's read-only diagnostic (lead, unverified: MSUMI bonus 2025-07-19 after the stored rebuild)
+Open to owner   : approve W-334c6; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
+Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : PR #67 run 44668840263 green (full tiers on W-341); master run 44669461334 green
-Last item commit: taxplanning W-334a2: log the merge of PR #67 as d6f2b3af and the tag m1.2 — every database now runs from the build that seals the embedded actors
+Last item commit: taxplanning W-334c4a: log §2.1 – §2.3 on prod's copy with m1.2 — 163 financial years rewritten, §2.1 refuses both users (W-342), §2.2 has nothing to write
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
