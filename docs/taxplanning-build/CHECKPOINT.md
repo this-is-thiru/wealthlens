@@ -4,18 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c3 DONE (D-792); dev holds prod's copy, encrypted and seeded (dev-after-c3.txt); next W-334c4 (§2.1 – §2.14) — to plan
-Stage           : W-334c4 · — plan it: read runbook §2.1 – §2.14 fully; per step a backup before each write; m1.1; tools with lookup + retries; possibly split
-Done session 108: plans/W-334a.md, plans/W-334b.md written; W-334 plan step 3 ticked; STATE lines 7, 8, 65 updated
-Board           : W-334a E, W-334b E, W-334c – f ·; W-335 B; every other open item waits (W-299, W-294, W-113a, W-324, W-131i, W-126d, W-146a)
-Next step       : plan W-334c4 — runbook §2.1 – §2.14 on dev's copy with m1.1 (read each section fully; prod-only 2.1, 2.3 included; a backup before each write; full copy-paste blocks; likely split into 2 – 3 items); stop for approval. Nothing is running; prod and staging untouched
-Open to owner   : approve W-334c4's plan; W-340 and W-339 before W-334d; W-337 (MongoDB → MySQL/PostgreSQL) engine and place vs M2; runner token in git history (repo PUBLIC)
-Owner actions   : W-334a rows 1 – 6, then W-334b rows 1 – 9
-Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries (router DNS still times out); passwords via read -s; never cd inside a $ command
-Last verify     : W-338: 5 affected ITs 37/0, StoredStringId 6/0 (red 6/6 with a bare collection name), Architecture+Modulith green, validate green
-Last item commit: taxplanning W-334c3: log §1A and §1B on prod's copy with m1.1 — the charge engine seeds 39 cards and prices a known trade at 119.67
+Item            : W-341 done (D-794), committed and pushed; W-334c4a stopped at row 4; next W-334a2 (m1.2), then the rehearsal from W-334c1 row 3
+Stage           : W-341 D, committed and pushed; next plan W-334a2 (m1.2)
+Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
+Board           : W-341 D, W-334a2 ·, W-334c4 —, W-334c4a E (stopped), W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : plan W-334a2 (W-334a1's rows for m1.2: preconditions incl. draft, merge commit, master pipeline, tag, worktree); stop for approval
+Open to owner   : approve W-334a2's plan; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
+Owner actions   : stop m1.1 (kill $(cat m1.pid) in ~/wealthlens-runs/w334c)
+Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
+Last verify     : W-341: StoredFieldEncryption* 9/0 + 1/0 (red 3/3 first), Architecture 25/0, Modulith, FinishedPlan, CheckstyleBaseline, validate green
+Last item commit: taxplanning W-341: seal the actors in the corporate-action copies trade outcomes, lots and transactions embed — 93 of prod's rows were unreadable on m1.1
 Files touched   : none
-Updated         : 2026-11-19, session 108
+Updated         : 2026-11-20, session 109
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

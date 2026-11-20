@@ -713,10 +713,13 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
       actors: d.getCollectionNames().map(c => ({ c, plain: d.getCollection(c).countDocuments({ $or:
         ["audit_metadata.createdBy", "audit_metadata.updatedBy", "changed_by", "updated_by"].map(plain) }) }))
         .filter(x => x.plain > 0),
+      embeddedActors: [["trade_outcomes", "applied_corporate_actions"], ["assets", "corporate_actions"], ["transactions", "corporate_actions"]]
+        .map(([c, l]) => ({ c, plain: d.getCollection(c).countDocuments({ [l]: { $elemMatch: { $or:
+          ["audit_metadata.createdBy", "audit_metadata.updatedBy"].map(plain) } } }) })).filter(x => x.plain > 0),
       loginsToRekey: d.user_details.countDocuments({ email: { $exists: false } }) }; }) }])
 ```
 
-4. **Dry run**, then the real run, with step 1's token. **Needs `m1.1` (W-338, D-789):** on `m1` the real run matched no row whose
+4. **Dry run**, then the real run, with step 1's token. **Needs `m1.2` (W-341, D-794):** on `m1.1` the actors inside the corporate-action copies that `trade_outcomes`, `assets` and `transactions` embed stay plain (prod's copy: 11, 39 and 43 rows, W-334c4a row 4a), and every read of such a row fails with `A stored field is not encrypted under a known key`; their rows are counted in `plainRows` either way (their top-level email is plain too), so only step 6's `embeddedActors` shows the difference. **And `m1.1` (W-338, D-789):** on `m1` the real run matched no row whose
    `_id` is a string of 24 hex digits — every portfolio row on prod — and reported `encryptedRows` 0 without an error:
    `curl -X POST -H "Authorization: Bearer <token>" "<host>/privacy/stored-fields/encrypt"` (a dry run by default),
    then the same URL ending `?dryRun=false`. Expected: the dry run's `plainRows` per collection equal step 3's counts
@@ -726,7 +729,7 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
    plain twin, and the plain one was left as it was (the log names each `_id`: `left plain: its encrypted identifier
    duplicates a unique index entry`). Compare the two in the backup and the database; keep the fuller, merging figures by
    hand as §0.2 describes for a duplicate `{email, financial_year}`, delete the other, and run step 4 again.
-6. **Check after:** step 3 again — `0` everywhere, `identifiers` and `actors` empty, `loginsToRekey` 0. Then sign in on
+6. **Check after:** step 3 again — `0` everywhere, `identifiers`, `actors` and `embeddedActors` empty, `loginsToRekey` 0. Then sign in on
    the new build: it works.
 7. **Run the start-time sweep.** Where the jobs are off (every shipped profile from W-336), on request:
    `curl -s -X POST "$BASE/tax-planning/admin/jobs/staleness-sweep/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
@@ -1910,7 +1913,7 @@ owner runs it and the results go into the run log.
   hundreds of commit hashes (D-780 C4a). Tag the merge `m1` and push the tag. Run every database below from that tag:
   `git worktree add ../wealthlens-m1 m1`. The merge also pushes the image to Docker Hub as `latest` (`cicd.yaml`); the
   repository there is public (owner, D-784, replacing D-780's private). **`m1.1` replaces `m1` for every database** (W-338,
-  D-789; tagged by W-334a1, D-790): `git worktree add ../wealthlens-m1.1 m1.1`; `m1` stays as the record of what W-334c1 – c2 ran.
+  D-789; tagged by W-334a1, D-790): `git worktree add ../wealthlens-m1.1 m1.1`; `m1` stays as the record of what W-334c1 – c2 ran. **`m1.2` replaces `m1.1`** (W-341, D-794; tagged by W-334a2): `git worktree add ../wealthlens-m1.2 m1.2`; the rehearsal restarts at W-334c1 row 3 on it.
 - **6.0.2 Keys, once per environment** (§0.5 step 1; D-780 C3a): `openssl rand -base64 32` twice per environment — dev,
   staging, prod each get their own `TAX_DATA_KEY` and `TAX_DIGEST_KEY`, never shared. Store each pair in the secret store
   **and** its backup, off the laptop, before the first start: a lost `TAX_DATA_KEY` is data no one can read again. One
@@ -2134,6 +2137,11 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 5, drift and unverified | owner | `[]`, `[]` — **go** |
 | 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 6, one simulate | owner | `ZERODHA_EQ_DELIVERY_2025_04`, `RESOLVED`; BROKERAGE 0.0, STT 100.0, EXCHANGE_TXN 2.97, SEBI_FEE 0.1, IPFT 0.1, DP 13.5, GST 3.0; total 119.67 (= staging-runbook §4.1) — **go** |
 | 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 7, stop and fingerprint | owner | `Charges engine ready` 0 (logged only at start, before the seed); `m1.1` stopped; charge collections 13 / 39 / 2; portfolio 529, 163, 817, 7, 15 unchanged; kept as `dev-after-c3.txt` — **go**; W-334c3's rows all logged |
+| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 1, environment, `m1.1` started, token | owner | dev's prefixes `9dbe9c7018bd` / `55b28ef39f76` / `886cb3703540`, each 32; jobs off; port free; started 5.9 s; ERROR 0; `NO RATE CARDS` 0 (seeded in W-334c3); sign-in on `m1.1`: the owner, `ROLE_SUPER_USER` — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 2, §2.1 count before (read-only) | owner | `tradeOutcomes` 163; `rebuildRows` 163, `lots` 146, `lotsSoldMoreThanOnce` 12, `rowsOnThoseLots` 29, `chargedOnThoseLots` 68.99166666666666 (= prod 2026-10-20; the encrypted identifiers group as the plain ones did) — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 3, §2.1 backup of the rebuild rows | owner | lookup resolved; attempt 1 `exported 163 records`; `c4a/trade_outcomes-rebuild-rows-backup.json` 163 lines, mode 600 — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 4, §2.1 dry run | owner | HTTP 500 `A stored field is not encrypted under a known key`; nothing written (it failed reading, `RebuildBuyChargeCorrection.java:50`). Cause read from `m1-start-4.log`: `SearchableIdentifier.read` on an `AuditMetadata` actor inside a `trade_outcomes.applied_corporate_actions[]` copy of a corporate action — §1.r's `StoredFieldEncryption.storedFields()` seals only top-level `AuditMetadata`, never the copies embedded in `trade_outcomes.applied_corporate_actions`, `assets.corporate_actions`, `transactions.corporate_actions` — **stop** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 4a, embedded corporate-action copies (read-only) | owner | plain actor in a copy: `trade_outcomes` 11 of 163 (11 with copies), `assets` 39 of 529 (41 with copies), `transactions` 43 of 817 (44 with copies); `corporate_action` top level plain 0 — **stop** stands: 93 rows unreadable on `m1.1`; W-341 proposed |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
