@@ -8,6 +8,7 @@ import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
+import com.thiru.wealthlens.portfolio.config.TradeExchangeProperties;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
@@ -38,6 +39,7 @@ import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,6 +77,15 @@ class PortfolioServiceTest {
     @Mock
     private TradeOutcomeRecorder tradeOutcomeRecorder;
 
+    /** D-826 and D-828, written out by hand rather than read from the yaml the code binds. */
+    private static final TradeExchangeProperties EXCHANGES = new TradeExchangeProperties(Map.of(
+            AssetType.EQUITY, List.of("NSE", "BSE"),
+            AssetType.MUTUAL_FUND, List.of("NSE", "BSE"),
+            AssetType.BOND, List.of("NSE", "BSE", "OFF_EXCHANGE"),
+            AssetType.GOLD_BOND, List.of("NSE", "BSE", "OFF_EXCHANGE"),
+            AssetType.FD, List.of("OFF_EXCHANGE"),
+            AssetType.INSURANCE, List.of("OFF_EXCHANGE")));
+
     private TestablePortfolioService portfolioService;
     private UserMail userMail;
 
@@ -101,7 +112,8 @@ class PortfolioServiceTest {
                 temporaryTransactionService,
                 chargeRecordingGateway,
                 properties,
-                tradeOutcomeRecorder
+                tradeOutcomeRecorder,
+                EXCHANGES
         );
     }
 
@@ -119,12 +131,13 @@ class PortfolioServiceTest {
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeEngineProperties chargeEngineProperties,
-                TradeOutcomeRecorder tradeOutcomeRecorder) {
+                TradeOutcomeRecorder tradeOutcomeRecorder,
+                TradeExchangeProperties tradeExchangeProperties) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    tradeOutcomeRecorder);
+                    tradeOutcomeRecorder, tradeExchangeProperties);
         }
 
         void resetAddTransactionBehaviour() {
@@ -166,12 +179,13 @@ class PortfolioServiceTest {
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeEngineProperties chargeEngineProperties,
-                TradeOutcomeRecorder tradeOutcomeRecorder) {
+                TradeOutcomeRecorder tradeOutcomeRecorder,
+                TradeExchangeProperties tradeExchangeProperties) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    tradeOutcomeRecorder);
+                    tradeOutcomeRecorder, tradeExchangeProperties);
         }
 
         @Override
@@ -188,7 +202,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -206,7 +220,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -357,6 +371,8 @@ class PortfolioServiceTest {
         request.setQuantity(10.0);
         request.setTransactionDate(LocalDate.now());
         request.setEmail(userMail.getEmail());
+        request.setAssetType(AssetType.EQUITY);
+        request.setExchangeName("NSE");
         return request;
     }
 
@@ -673,7 +689,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
 
         // When
         String result = realService.addTransaction(userMail, request, new ArrayList<>());
@@ -849,6 +865,117 @@ class PortfolioServiceTest {
         assertEquals(TradeSegment.DELIVERY, captor.getValue().getBuySegment());
         assertEquals("NSE", captor.getValue().getSellExchangeName());
         assertEquals(TradeSegment.INTRADAY, captor.getValue().getSellSegment());
+    }
+
+
+    // ========================================
+    // W-353 -- a trade names an exchange its asset type accepts (D-826, D-828)
+    // ========================================
+
+    private RealPortfolioService realService() {
+        return new RealPortfolioService(
+                portfolioRepository, transactionService, profitAndLossService,
+                tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
+    }
+
+    private AssetRequest trade(AssetType assetType, String exchange) {
+        AssetRequest request = createAssetRequest("STOCK1");
+        request.setAssetType(assetType);
+        request.setExchangeName(exchange);
+        return request;
+    }
+
+    private void assertRefusedV2(AssetRequest request, String message) {
+        BadRequestException refused = assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+        assertEquals(message, refused.getMessage());
+        verify(transactionService, never()).recordTransaction(any(), any(), any());
+    }
+
+    @Test
+    void addTransaction_whenAMutualFundNamesBmf_refusesNamingTheValue() {
+        // Given -- V1, the value prod's 178 fund trades carry
+        AssetRequest request = trade(AssetType.MUTUAL_FUND, "BMF");
+
+        // When
+        BadRequestException refused = assertThrows(BadRequestException.class,
+                () -> realService().addTransaction(userMail, request, new ArrayList<>()));
+
+        // Then
+        assertEquals("Exchange \"BMF\" is not accepted for a trade of type MUTUAL_FUND; name one of [NSE, BSE]",
+                refused.getMessage());
+        verify(transactionService, never()).recordTransaction(any(), any(), any());
+    }
+
+    @Test
+    void addTransactionV2_whenAnEquityNamesLowerCaseNse_refusesIt() {
+        // Given / When / Then -- matched exactly, never upper-cased
+        assertRefusedV2(trade(AssetType.EQUITY, "nse"),
+                "Exchange \"nse\" is not accepted for a trade of type EQUITY; name one of [NSE, BSE]");
+    }
+
+    @Test
+    void addTransactionV2_whenAnEquityNamesNseWithATrailingSpace_refusesIt() {
+        // Given / When / Then -- never trimmed
+        assertRefusedV2(trade(AssetType.EQUITY, "NSE "),
+                "Exchange \"NSE \" is not accepted for a trade of type EQUITY; name one of [NSE, BSE]");
+    }
+
+    @Test
+    void addTransactionV2_whenNoExchangeIsNamed_refusesIt() {
+        // Given / When / Then
+        assertRefusedV2(trade(AssetType.EQUITY, null), "A trade of type EQUITY must name its exchange, one of [NSE, BSE]");
+    }
+
+    @Test
+    void addTransactionV2_whenNoAssetTypeIsNamed_refusesIt() {
+        // Given / When / Then
+        assertRefusedV2(trade(null, "NSE"), "A trade must name its asset type");
+    }
+
+    @Test
+    void addTransactionV2_whenAnFdNamesNse_refusesIt() {
+        // Given / When / Then
+        assertRefusedV2(trade(AssetType.FD, "NSE"),
+                "Exchange \"NSE\" is not accepted for a trade of type FD; name one of [OFF_EXCHANGE]");
+    }
+
+    @Test
+    void addTransactionV2_whenEachTypeNamesAnExchangeItAccepts_recordsTheTrade() {
+        // Given -- one accepted venue per rule of D-828
+        AssetRequest goldBond = trade(AssetType.GOLD_BOND, "BSE");
+        goldBond.setMaturityDate(LocalDate.of(2032, 2, 1));
+        List<AssetRequest> accepted = List.of(trade(AssetType.FD, "OFF_EXCHANGE"),
+                trade(AssetType.BOND, "OFF_EXCHANGE"), goldBond, trade(AssetType.MUTUAL_FUND, "BSE"));
+
+        // When
+        accepted.forEach(request -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+
+        // Then
+        verify(transactionService, times(accepted.size())).recordTransaction(any(), any(), eq(TradeFlow.V2));
+    }
+
+    @Test
+    void redriveTemporaryTransactions_whenAHeldFundNamesBmf_failsOnlyThatItem() {
+        // Given -- a trade held before W-353 with the old workaround, and one with a listed venue
+        TransactionEntity held = new TransactionEntity();
+        held.setId("temp-bmf");
+        held.setAssetRequest(trade(AssetType.MUTUAL_FUND, "BMF"));
+        TransactionEntity fine = new TransactionEntity();
+        fine.setId("temp-fine");
+        fine.setAssetRequest(createAssetRequest("STOCK2"));
+        when(temporaryTransactionService.getAllTemporaryTransactions(userMail)).thenReturn(List.of(held, fine));
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), eq(true))).thenReturn(false);
+
+        // When
+        RedriveResult result = portfolioService.redriveTemporaryTransactions(userMail);
+
+        // Then
+        assertEquals("Exchange \"BMF\" is not accepted for a trade of type MUTUAL_FUND; name one of [NSE, BSE]",
+                result.getFailed().get("temp-bmf"));
+        assertEquals(List.of("temp-fine"), result.getSucceeded());
     }
 
 }

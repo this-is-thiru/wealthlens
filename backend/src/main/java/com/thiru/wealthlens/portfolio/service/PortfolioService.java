@@ -2,6 +2,7 @@ package com.thiru.wealthlens.portfolio.service;
 
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
+import com.thiru.wealthlens.portfolio.config.TradeExchangeProperties;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
@@ -70,6 +71,7 @@ public class PortfolioService {
     private final ChargeEngineProperties chargeEngineProperties;
 
     private final TradeOutcomeRecorder tradeOutcomeRecorder;
+    private final TradeExchangeProperties tradeExchangeProperties;
 
     /**
      * Multi-document write: creates a TransactionEntity and, for BUY/SELL, also
@@ -180,10 +182,13 @@ public class PortfolioService {
      * W-088g5, D-433): the broker path cannot carry its purchase expenses into its cost, and its sale is entered through
      * {@link PropertySaleService} (W-088g9).
      *
+     * <p>The exchange must be one its asset type lists in {@link TradeExchangeProperties}, exactly as written (W-353,
+     * D-826, D-828): the tax side refuses the term of, or settles no STT on, a trade on any other venue (D-825).
+     *
      * <p>Runs in {@code processTransaction} and {@code processTransactionV2}, so the upload and redrive are checked as the
      * JSON routes are (W-277, PS-1).
      */
-    private static void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {
+    private void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {
         String requestEmail = assetRequest.getEmail();
         if (requestEmail != null && !requestEmail.isBlank() && !userMail.getEmail().equals(requestEmail)) {
             throw new BadRequestException("Email does not match");
@@ -223,6 +228,24 @@ public class PortfolioService {
 
         if (assetRequest.getAssetType() == AssetType.LAND_OR_BUILDING) {
             throw new BadRequestException(AssetType.NOT_A_BROKER_TRADE);
+        }
+
+        checkExchange(assetRequest);
+    }
+
+    private void checkExchange(AssetRequest assetRequest) {
+        AssetType assetType = assetRequest.getAssetType();
+        if (assetType == null) {
+            throw new BadRequestException("A trade must name its asset type");
+        }
+        List<String> accepted = tradeExchangeProperties.acceptedFor(assetType);
+        String exchange = assetRequest.getExchangeName();
+        if (exchange == null) {
+            throw new BadRequestException("A trade of type " + assetType + " must name its exchange, one of " + accepted);
+        }
+        if (!accepted.contains(exchange)) {
+            throw new BadRequestException("Exchange \"" + exchange + "\" is not accepted for a trade of type " + assetType
+                    + "; name one of " + accepted);
         }
     }
 
