@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-346 (D-805), W-334c4b (D-806) done, committed and pushed; dev = dev-after-c4b.txt
-Stage           : next — plan W-334c4c (§2.9, §2.10, §2.13, §2.14, per-user rebuilds as their checks say)
+Item            : W-334c4c done (D-807), committed and pushed; dev = dev-after-c4c.txt
+Stage           : next — plan W-347 (DUMMY / LAVANYA test entries), then W-334c4d, then W-334c5
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-346 D, W-334c4b D, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-334c4c
+Board           : W-334c4c D, W-347 ·, W-334c4d ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-347 (read-only sizing of DUMMY / LAVANYA across every collection first)
 Open to owner   : approve W-334c6; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
 Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-334c4b: log §2.4 – §2.8 on prod's copy with m1.2 — bonus lots dated from their allotment, 163 terms removed, 3 P&L years placed in the split
+Last item commit: taxplanning W-334c4c: log §2.9, §2.10, §2.13, §2.14 on prod's copy with m1.2 — 10 bonus transactions cleared of a buy's charges; test stocks found (W-347), per-user rebuilds placed (W-334c4d)
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
