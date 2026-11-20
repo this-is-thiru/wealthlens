@@ -15,6 +15,7 @@ import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import io.restassured.response.ValidatableResponse;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import org.assertj.core.groups.Tuple;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -97,6 +98,26 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
         rebuild("?dryRun=false", "SUPER_USER").statusCode(200).body("usersRebuilt", equalTo(1))
                 .body("rowsWritten", equalTo(2)).body("skipped.email", contains(A, C));
         assertThat(tradeOutcomeRepository.findByEmail(B)).hasSize(2);
+    }
+
+    @Test
+    void rebuild_whenTwoSalesShareADay_allocatesThemInIdOrderWhateverOrderTheyWereStored() {
+        // Given — d bought 2 on 10 Jan and 2 on 11 Jan, and sold 2 (id …sell-a) and 1 (id …sell-b) on 3 Feb, stored b
+        // first; by id, sell-a takes the 10 Jan lot whole and sell-b 1 of the 11 Jan lot (W-343; prod's copy, W-342)
+        String d = "d@example.com";
+        mongoTemplate.save(transaction(d, "buy-1", TransactionType.BUY, 2.0, LocalDate.of(2024, 1, 10)));
+        mongoTemplate.save(transaction(d, "buy-2", TransactionType.BUY, 2.0, LocalDate.of(2024, 1, 11)));
+        mongoTemplate.save(transaction(d, "sell-b", TransactionType.SELL, 1.0, LocalDate.of(2025, 2, 3)));
+        mongoTemplate.save(transaction(d, "sell-a", TransactionType.SELL, 2.0, LocalDate.of(2025, 2, 3)));
+
+        // When
+        rebuild("?dryRun=false", "SUPER_USER").statusCode(200);
+
+        // Then
+        assertThat(tradeOutcomeRepository.findByEmail(d)).extracting(TradeOutcomeEntity::getSourceSellTransactionId,
+                TradeOutcomeEntity::getSourceBuyLotId, TradeOutcomeEntity::getBuyQuantity)
+                .containsExactlyInAnyOrder(Tuple.tuple(d + "-sell-a", "lot-RELIANCE-2024-01-10", 2.0),
+                        Tuple.tuple(d + "-sell-b", "lot-RELIANCE-2024-01-11", 1.0));
     }
 
     @Test

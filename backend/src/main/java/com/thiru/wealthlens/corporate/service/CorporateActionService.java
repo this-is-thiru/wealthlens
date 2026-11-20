@@ -564,12 +564,29 @@ public class CorporateActionService {
         return newEntity;
     }
 
+    /** Codes match exactly everywhere, so a spaced one would name a stock apart from its clean twin (W-345). */
+    private static void refuseOuterSpace(String stockCode) {
+        if (stockCode != null && !stockCode.equals(stockCode.strip())) {
+            throw new IllegalArgumentException("Stock code \"" + stockCode + "\" has a leading or trailing space; it would name a "
+                    + "stock apart from \"" + stockCode.strip() + "\"");
+        }
+    }
+
     private void validateCorporateActionData(CorporateActionDto actionWrapper) {
         if (actionWrapper == null) {
             throw new IllegalArgumentException("Corporate action data is missing");
         }
         if (StringUtils.isBlank(actionWrapper.getStockCode())) {
             throw new IllegalArgumentException("Stock code is missing");
+        }
+        refuseOuterSpace(actionWrapper.getStockCode());
+        refuseOuterSpace(actionWrapper.getToStockCode());
+        CorporateActionDto.DemergerDetailDto demerger = actionWrapper.getDemergerDetail();
+        if (demerger != null) {
+            refuseOuterSpace(demerger.mainStockCode());
+            if (demerger.demergerStocks() != null) {
+                demerger.demergerStocks().forEach(stock -> refuseOuterSpace(stock.stockCode()));
+            }
         }
         if (actionWrapper.getType() == null) {
             throw new IllegalArgumentException("Invalid corporate action type");

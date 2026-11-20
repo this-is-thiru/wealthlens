@@ -939,6 +939,29 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void addTransaction_whenTheStockCodeHasAnOuterSpace_isRefusedOnEveryEntry() throws IOException {
+        // Given — "INFY " on V1 and V2, " INFY" in an upload: each would be stored as a stock apart from INFY (W-345; prod's
+        // copy holds "MOTHERSON ", W-344)
+        Map<String, Object> spaced = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
+        spaced.put("stockCode", STOCK + " ");
+        byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).getCell(1).setCellValue(" " + STOCK));
+
+        // When
+        ResponseEntity<String> v1 = post(OWNER, "/portfolio/user/" + OWNER + "/transaction", spaced);
+        ResponseEntity<String> v2 = post(OWNER, "/portfolio/user/" + OWNER + "/transaction/v2", spaced);
+        ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
+
+        // Then — each refused, naming the code; nothing stored
+        assertEquals(List.of(400, 400, 400), List.of(v1.getStatusCode().value(), v2.getStatusCode().value(),
+                uploaded.getStatusCode().value()));
+        assertTrue(v1.getBody().contains("leading or trailing space"), v1.getBody());
+        assertTrue(v2.getBody().contains("leading or trailing space"), v2.getBody());
+        assertTrue(uploaded.getBody().contains("leading or trailing space"), uploaded.getBody());
+        assertEquals(0, lotsOf(OWNER).size());
+        assertEquals(0, transactionsOf(OWNER).size());
+    }
+
+    @Test
     void uploadTransactions_whenATradeBreaksATradeRule_refusesTheFileNamingTheTrade() throws IOException {
         // Given — three one-trade sheets: quantity 0, price −5, dated 1 Jan of next year (W-277, PS-1)
         byte[] zeroQuantity = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).getCell(8).setCellValue(0.0));

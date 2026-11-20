@@ -201,6 +201,13 @@ public class PortfolioService {
             throw new BadRequestException("Price must not be negative, but was: " + assetRequest.getPrice());
         }
 
+        String stockCode = assetRequest.getStockCode();
+        if (stockCode != null && !stockCode.equals(stockCode.strip())) {
+            // Codes match exactly everywhere, so a spaced one would hold apart from its clean twin (W-345)
+            throw new BadRequestException("Stock code \"" + stockCode + "\" has a leading or trailing space; it would be stored as a "
+                    + "stock apart from \"" + stockCode.strip() + "\"");
+        }
+
         LocalDate transactionDate = assetRequest.getTransactionDate();
         if (transactionDate != null && transactionDate.isAfter(LocalDate.now())) {
             throw new BadRequestException(

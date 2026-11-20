@@ -207,7 +207,7 @@ public class StoredFieldEncryption {
                     rekeyed.put(EMAIL, sealed);
                     mongoTemplate.insert(rekeyed, LOGINS);
                 }
-                if (mongoTemplate.remove(query(where("_id").is(email).and(EMAIL).exists(false)), LOGINS).getDeletedCount() == 1) {
+                if (mongoTemplate.remove(query(where("_id").is(StoredId.of(row)).and(EMAIL).exists(false)), LOGINS).getDeletedCount() == 1) {
                     encrypted++;
                 }
             }

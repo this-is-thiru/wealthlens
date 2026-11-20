@@ -103,8 +103,8 @@ public class TransactionBasedTradeOutcomeMigration {
             return List.of();
         }
 
-        // Sort sells by date
-        sellTransactions.sort(Comparator.comparing(TransactionEntity::getTransactionDate));
+        // Same-day sales by id, as the assets rebuild orders them, so FIFO hands out lots the same way on every run (W-343)
+        sellTransactions.sort(Comparator.comparing(TransactionEntity::getTransactionDate).thenComparing(TransactionEntity::getId));
 
         // Step 2c: Build BuyLots from BUYs
         List<BuyLot> buyLots = tradeMatchingService.buildLotsFromBuys(buyTransactions);

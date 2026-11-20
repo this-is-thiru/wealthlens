@@ -40,7 +40,7 @@ public class TaxJobRunner {
         try {
             auditor.runAs(job.name(), () -> job.run(new JobContext(job.name(), clock, () -> holds(job, holder), failures)));
         } finally {
-            mongoTemplate.remove(query(where("_id").is(job.name()).and("holder").is(holder)), JobLease.class);
+            mongoTemplate.remove(query(where("job").is(job.name()).and("holder").is(holder)), JobLease.class);
         }
         return true;
     }
@@ -49,7 +49,7 @@ public class TaxJobRunner {
         Instant now = clock.instant();
         Update lease = new Update().set("holder", holder).set("expires_at", now.plus(job.timeout()));
         try {
-            mongoTemplate.findAndModify(query(where("_id").is(job.name()).and("expires_at").lt(now)), lease,
+            mongoTemplate.findAndModify(query(where("job").is(job.name()).and("expires_at").lt(now)), lease,
                     FindAndModifyOptions.options().upsert(true).returnNew(true), JobLease.class);
             return true;
         } catch (DuplicateKeyException held) {
@@ -58,7 +58,7 @@ public class TaxJobRunner {
     }
 
     private boolean holds(TaxJob job, String holder) {
-        return mongoTemplate.exists(query(where("_id").is(job.name()).and("holder").is(holder).and("expires_at").gt(clock.instant())),
+        return mongoTemplate.exists(query(where("job").is(job.name()).and("holder").is(holder).and("expires_at").gt(clock.instant())),
                 JobLease.class);
     }
 }
