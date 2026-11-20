@@ -5,7 +5,7 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-334c7b1 done (D-819), committed and pushed; dev = dev-after-c7b1.txt
-Stage           : next — plan W-334c7b2 (W-348a owner = delivery; W-348b owner's rows with old-vs-new compare, §2.12, §2.11); others wait for their declarations
+Stage           : D-820 committed and pushed; next plan W-334c7b2 (W-348a owner = delivery; W-348b owner's rows with old-vs-new compare, §2.12, §2.11)
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
 Board           : W-334c7b1 D, W-334c7b2 ·, W-334c7b3 ·, W-334c7c ·, W-348a ·, W-348b ·, W-350 ·, W-351 ·, W-334d ·, W-334e ·
 Next step       : commit; plan W-334c7b2
@@ -13,7 +13,7 @@ Open to owner   : the other two users' declarations; W-337 engine and place vs M
 Owner actions   : obtain the other two users' segment declarations (W-348a); the owner's own given: all delivery (D-815)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-334c7b1: log §2 on prod's copy with m1.3 — every count equal to the m1.2 rehearsal; the test stocks and the one test login removed
+Last item commit: taxplanning D-820: Milestone 2 without a hosted deployment — the prod run is the deployment; M2 is the deploy gate, the removals and the W-351 review
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
