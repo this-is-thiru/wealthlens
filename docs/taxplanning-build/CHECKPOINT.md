@@ -4,18 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : session 109 paused (owner: session limit). Dev holds prod's copy on m1.3 with §1 and all §2 done (dev-after-c7b1.txt)
-Stage           : W-334c7b2 · — owner's account ONLY (owner, 2026-11-20: "if my account don't have problem, leave others for now"); the other two users wait
-Done session 109: D-793 – D-820 — W-341, m1.2, m1.3 (72d7fd4e), W-334c4a – d, c5, c6, c7a, c7b1, W-339, W-340, W-342 – W-347, W-349; W-348 ruled; W-351 placed (M2 review); M2 without hosting (D-820)
-Board           : W-334c7b1 D, W-334c7b2 ·, W-334c7b3 ·, W-334c7c ·, W-348a ·, W-348b ·, W-350 ·, W-351 ·, W-334d ·, W-334e ·
-Next step       : on 'resume': resume check; then plan W-334c7b2 for the owner only — first a read-only count of the owner's §3.1 rows (broker charges with no breakdown: brokerage 360 / 367.60 / 6.07 by year), then W-348a (segment = delivery) and W-348b (rebuild with old-vs-new compare, §2.12, §2.11); bring the §3.1 count to the owner to re-decide C3a (re-enter) vs C3b (unbroken charge non-deductible, a rule change)
-Open to owner   : the other two users' declarations; W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
-Owner actions   : none tonight; the other two users (one at FYERS, email starting "mo…"; one unknown — maybe another of the owner's accounts) are left for now — identify later by the c4d mapping script, test or real
-Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; rehearsal files ~/wealthlens-runs/w334c (c7b/ holds personal-data backups, mode 700); database tools need GODEBUG=netdns=cgo + a dscacheutil lookup + 3 tries; never cd inside a $ command
-Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning D-820: Milestone 2 without a hosted deployment — the prod run is the deployment; M2 is the deploy gate, the removals and the W-351 review
+Item            : W-334c7b2 done (D-822): W-348a + W-348b for the owner's account on dev's copy with m1.3, every row go; fingerprint dev-after-c7b2.txt
+Stage           : DONE — committed and pushed on "commit it and push"; WL-A-2 republished
+Done session 110: D-821 (the 61 refused rows left as they are, years filed; W-352, W-348c not taken), D-822 (owner's segment 448 → DELIVERY; 90 rows rebuilt, compared, −16.00 double-counted buy charges; lots 298; P&L 3 years)
+Board           : W-334c7b2 D, W-334c7b3 ·, W-334c7c ·, W-348a · / W-348b · (owner's done; the other two users' wait for declarations), W-348c —, W-350 ·, W-351 ·, W-352 —, W-334d ·, W-334e ·
+Next step       : on 'resume': resume check; then plan W-334c7b3 (W-350, the 18 held trades) on dev as it stands (dev-after-c7b2.txt)
+Open to owner   : the other two users' segment declarations; W-337 engine and place vs M2; runner token in git history (repo PUBLIC); 13 rows with exchange BMF (§3.5 term refused) — noted, years filed
+Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; rehearsal files ~/wealthlens-runs/w334c (c7b/ holds personal-data backups, mode 700); scripts c7b2-01/02/05/08/11 there; database tools need GODEBUG=netdns=cgo + a dscacheutil lookup + 3 tries; never cd inside a $ command
+Last verify     : no code changed this session; scripts tried on throwaway mongo:8.0.4 (results in plans/W-334c7b2.md)
+Last item commit: taxplanning W-334c7b2: rebuild the owner's outcome rows, lots and P&L on prod's copy with m1.3 — every old row compared first, −16.00 double-counted buy charges gone; the 61 refused rows left as they are, their years filed
 Files touched   : none
-Updated         : 2026-11-20, session 109
+Updated         : 2026-11-20, session 110
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
