@@ -5,10 +5,10 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-348 ruled (D-812), committed and pushed; W-348a/b/c, W-334a3 placed
-Stage           : next — plan W-350 (the 18 held trades), then W-334a3 (m1.3), then the rehearsal of W-348a/b + W-350
+Stage           : W-334a3 E approved — plan committed; rows 1 – 7 run by the session
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
 Board           : W-348 D, W-348a ·, W-348b ·, W-348c ·, W-334a3 ·, W-350 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-350 and W-334a3
+Next step       : on 'commit and push': commit the plan, then rows 1 – 7 (PR, pipeline, merge, master pipeline, tag m1.3, worktree)
 Open to owner   : the two test users' logins (remove or keep); W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
 Owner actions   : your own segment declaration for W-348a (were all your prod trades delivery?); the two test users' logins
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
