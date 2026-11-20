@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c8b done (D-836); next plan W-334c8c
-Stage           : W-334c8b committed, closed and pushed; dev holds prod's copy after §2 + W-348 (all three users) on m1.4 (dev-after-c8b.txt); c7b/w354-backup.json kept until c8c deletes it
+Item            : W-334c8c done (D-837); W-334c8 complete; next plan W-334d (staging)
+Stage           : W-334c8c committed, closed and pushed; dev wiped; rehearsal files deleted
 Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
-Board           : W-334c8a D, W-334c8b D, W-334c8c ·, W-348a · / W-348b · (done at W-334e), W-351 ·, W-334d ·, W-334e ·, W-337 ·
-Next step       : on 'resume': resume check; plan W-334c8c from W-334c7c's plan: §3 incl. 3.27 (expect outside 178 — check), sign-off summary of c8a – c8c, wipe dev, delete the rehearsal files incl. c7b/ and w354-backup.json, keep prod-before-m14.archive + prod-reference-m14.txt for W-334e
-Open to owner   : W-334c8b plan (to be written); api-collection Buy Stock.yml:68 doc proposal
-Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive (mode 600), prod-reference.txt, allotment-dates.json and the query scripts only; zsh: wrap globs in (setopt null_glob; …); DNS timeouts — 3-try loops; never cd inside a $ command
+Board           : W-334c8 D, W-334c8a D, W-334c8b D, W-334c8c D, W-348a · / W-348b · (done at W-334e), W-351 ·, W-334d ·, W-334e ·, W-337 ·
+Next step       : on 'resume': resume check; plan W-334d (staging) from its row and the m1.4 rehearsal (D-834 – D-837)
+Open to owner   : W-334d plan (to be written); api-collection Buy Stock.yml:68 doc proposal
+Env notes       : jars in ../wealthlens-m1.4, ../wealthlens-m1.3, ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive + prod-before-m14.archive (mode 600), both references, allotment-dates.json and the query scripts only; dev wiped; zsh: (setopt null_glob; …); DNS: rerun the line
 Last verify     : W-354: rehearsal x2 on throwaway mongo:8.0.4 (results in D-832); docs only
-Last item commit: taxplanning W-334c8b: rehearse §2.1 – §2.17, the test account and W-348a / W-348b for all three users on m1.4 — every row go, the other two users' rows gain only facts, the owner's repeat D-822
+Last item commit: taxplanning W-334c8c: sign off the prod rehearsal on m1.4 and wipe dev — §3 as expected or explained, §3.27 178 outside the exchange table, all BMF
 Files touched   : none
 Updated         : 2026-11-20, session 111
 ```
