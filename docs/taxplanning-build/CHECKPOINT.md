@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-344 done (D-799), committed and pushed; W-345 placed
-Stage           : next W-334c4b — waits for the owner's four allotment dates (HDFCBANK, ASHOKLEY, MSUMI, RELIANCE), each with its source
+Item            : W-343 (D-800) and W-345 (D-801) done, committed and pushed; pipeline on the next PR
+Stage           : next W-334c4b — waits for the owner's four allotment dates; owner may reopen D-798 given W-343
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-342 D, W-344 D, W-343 ·, W-345 ·, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : commit; W-334c4b's plan once the owner sends the allotment dates; W-343 / W-345 (code) before M2
+Board           : W-343 D, W-344 D, W-345 D, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : commit both (separate commits); owner decides whether W-343 reopens D-798 (§2.1 might now pair on a build carrying it); W-334c4b once dates are in
 Open to owner   : approve W-334c6; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
 Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
-Last verify     : PR #67 run 44668840263 green (full tiers on W-341); master run 44669461334 green
-Last item commit: taxplanning W-344: add the §3.25 check for stock codes with outer spaces — prod's one, a closed MOTHERSON position, is left; W-345 refuses new ones
+Last verify     : W-343 rebuild 6/0, §2.1 6/0 + 5/0 (red first); W-345 gap audit 62/0, CA 48/0, split 7/0, Architecture 25/0, Modulith, Checkstyle (red first)
+Last item commit: portfolio W-345: refuse a stock code with a leading or trailing space on every entry — a spaced code holds apart from its clean twin
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```

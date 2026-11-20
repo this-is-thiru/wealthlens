@@ -101,6 +101,36 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         assertEquals("Stock code is missing", exception.getMessage());
     }
 
+    @Test
+    void addCorporateAction_whenAStockCodeHasAnOuterSpace_throwsException() {
+        // GIVEN — a bonus on "INFY ", a target " TCS" and a demerged "ITCHOTELS ": each would name a stock apart from the clean
+        // code (W-345)
+        CorporateActionDto spacedStock = spacedAction("INFY ", null, CorporateActionType.BONUS);
+        CorporateActionDto spacedTarget = spacedAction("INFY", " TCS", CorporateActionType.BONUS);
+        CorporateActionDto spacedDemerged = spacedAction("ITC", null, CorporateActionType.DEMERGER);
+        spacedDemerged.setDemergerDetail(new CorporateActionDto.DemergerDetailDto("1:10", "100", "ITC", "ITC",
+                List.of(new CorporateActionDto.DemergerStockDto("ITCHOTELS ", "ITC Hotels"))));
+
+        // WHEN / THEN
+        for (var refused : List.of(List.of(spacedStock, "\"INFY \""), List.of(spacedTarget, "\" TCS\""),
+                List.of(spacedDemerged, "\"ITCHOTELS \""))) {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> corporateActionService.addCorporateAction((CorporateActionDto) refused.get(0)));
+            assertTrue(exception.getMessage().contains(refused.get(1) + " has a leading or trailing space"), exception.getMessage());
+        }
+    }
+
+    private static CorporateActionDto spacedAction(String stockCode, String toStockCode, CorporateActionType type) {
+        CorporateActionDto dto = new CorporateActionDto();
+        dto.setStockCode(stockCode);
+        dto.setToStockCode(toStockCode);
+        dto.setType(type);
+        dto.setRecordDate(LocalDate.of(2024, 1, 15));
+        dto.setExDate(LocalDate.of(2024, 1, 20));
+        dto.setRatio("1:1");
+        return dto;
+    }
+
     // ========== VALIDATION: addCorporateAction null type ==========
 
     @Test
