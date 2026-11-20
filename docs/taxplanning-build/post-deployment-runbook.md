@@ -1154,7 +1154,7 @@ A failing user is an error naming them; the users before stay written.
    report gave for them, and each row's `audit_metadata.createdBy` is `<stored caller email>` (§0.7). A second call reports
    `rowsWritten` 0.
 
-**Know this:** rebuilt rows carry no charge breakdown, so the capital-gains summary refuses a user whose rebuilt rows
+**Know this:** since W-343 (D-800) same-day sales are replayed in id order, so a run gives the same rows every time (before it, MongoDB's unfixed order could move a sale to another lot, W-342). Rebuilt rows carry no charge breakdown, so the capital-gains summary refuses a user whose rebuilt rows
 have broker charges (D-238 C2a; §3.1). Rebuild one user at a time (delete only that user's rows), never the whole
 collection.
 
