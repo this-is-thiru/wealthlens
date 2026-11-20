@@ -4,14 +4,14 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c7b1 done (D-819), committed and pushed; dev = dev-after-c7b1.txt
-Stage           : D-820 committed and pushed; next plan W-334c7b2 (W-348a owner = delivery; W-348b owner's rows with old-vs-new compare, §2.12, §2.11)
-Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
+Item            : session 109 paused (owner: session limit). Dev holds prod's copy on m1.3 with §1 and all §2 done (dev-after-c7b1.txt)
+Stage           : W-334c7b2 · — to plan: W-348a (owner's segment = all delivery, D-815) + W-348b (owner's rows rebuilt with an old-vs-new compare before any delete, then §2.12, §2.11)
+Done session 109: D-793 – D-820 — W-341, m1.2, m1.3 (72d7fd4e), W-334c4a – d, c5, c6, c7a, c7b1, W-339, W-340, W-342 – W-347, W-349; W-348 ruled; W-351 placed (M2 review); M2 without hosting (D-820)
 Board           : W-334c7b1 D, W-334c7b2 ·, W-334c7b3 ·, W-334c7c ·, W-348a ·, W-348b ·, W-350 ·, W-351 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-334c7b2
+Next step       : on 'resume': read this file, run the resume check, then plan W-334c7b2; then c7b3 (W-350), the other two users' rebuild, c7c, W-334d, W-334e (~11 – 15 h hands-on)
 Open to owner   : the other two users' declarations; W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
-Owner actions   : obtain the other two users' segment declarations (W-348a); the owner's own given: all delivery (D-815)
-Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
+Owner actions   : ask the other two users whether their prod trades were all delivery (W-348a); nothing is running — app stopped, port free
+Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; rehearsal files ~/wealthlens-runs/w334c (c7b/ holds personal-data backups, mode 700); database tools need GODEBUG=netdns=cgo + a dscacheutil lookup + 3 tries; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
 Last item commit: taxplanning D-820: Milestone 2 without a hosted deployment — the prod run is the deployment; M2 is the deploy gate, the removals and the W-351 review
 Files touched   : none
