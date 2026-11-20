@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c4c done (D-807), committed and pushed; dev = dev-after-c4c.txt
-Stage           : next — plan W-347 (DUMMY / LAVANYA test entries), then W-334c4d, then W-334c5
+Item            : W-347 done (D-808), committed and pushed
+Stage           : next — plan W-334c4d (per-user §2.12 → §2.11), then W-334c5
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-334c4c D, W-347 ·, W-334c4d ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-347 (read-only sizing of DUMMY / LAVANYA across every collection first)
-Open to owner   : approve W-334c6; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
+Board           : W-347 D, W-334c4d ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-334c4d
+Open to owner   : the two test users' logins (remove or keep); W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
 Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-334c4c: log §2.9, §2.10, §2.13, §2.14 on prod's copy with m1.2 — 10 bonus transactions cleared of a buy's charges; test stocks found (W-347), per-user rebuilds placed (W-334c4d)
+Last item commit: taxplanning W-347: remove the owner's test stocks DUMMY and LAVANYA on prod's copy — 9 transactions and 8 lots in two users holding nothing else; runbook §2.16
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```

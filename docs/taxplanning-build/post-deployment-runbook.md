@@ -1674,6 +1674,23 @@ reports --file reports-backup.json`. No code would read it.
 
 **Retired after use:** W-339, once this is logged for every database. There is no code to remove.
 
+### 2.16 W-347 (D-808) — remove the owner's test entries `DUMMY` and `LAVANYA` · owner, `mongosh` · **prod · once; other databases sized at their run**
+
+**Why.** The owner entered trades in two made-up stocks on prod to test the app (owner, 2026-11-20). They sit in two users' data with no
+corporate action behind their bonuses and count in those users' holdings. On prod's copy (W-347 row 1) they are 9 transactions and 8
+lots, in two users who hold nothing else and have no P&L year, so removing them needs no rebuild.
+
+1. **Count before** (read-only): every collection's documents naming either stock, per user (`c347-01-test-stocks.js`, the query in the
+   rehearsal files). Expect on prod: `transactions` 9, `assets` 8, nothing else; each involved user with no other transaction and no P&L
+   year. If a user holds anything else, stop: §2.12 and §2.11 follow for them.
+2. **Back up:** `mongoexport` of `transactions` and `assets` with `--query '{"stock_code":{"$in":["DUMMY","LAVANYA"]}}'`.
+3. **Delete:** `db.transactions.deleteMany({ stock_code: { $in: ["DUMMY", "LAVANYA"] } })` and the same on `assets`. Expect 9 and 8.
+4. **Verify:** step 1 lists nothing.
+
+**Second run:** safe; nothing is left to match. **Way back:** `mongoimport` of step 2's two files.
+
+**Retired after use:** W-347, once logged for prod. There is no code to remove.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
@@ -2043,7 +2060,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 12 | §1A | run | Clears configuration 12 / 11 / 2 and per-user `user_charges` 328, `charge_accounts` 1, P&L charge side 2 (2026-10-27 counts) |
 | 13 | §1B | run | Seed, drift, unverified, one simulate |
 | 14 | §2.1 | skip | Staging has no rebuild rows (run log 2026-10-20) |
-| 15 | §2.2 – §2.15 | per step, in order | 2.0 retired; 2.3 prod only (staging's `FY` rows 0); 2.2, 2.11, 2.12 only where their checks say; 2.7 drops 11 policies |
+| 15 | §2.2 – §2.15 | per step, in order | 2.0 retired; 2.16 prod only (staging's test entries, if any, sized at its run); 2.3 prod only (staging's `FY` rows 0); 2.2, 2.11, 2.12 only where their checks say; 2.7 drops 11 policies |
 | 16 | §3 | check | Record the counts |
 
 ### 6.3 prod (`Cluster0`) · owner · **after 6.1 is logged and compared**
@@ -2064,7 +2081,7 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 11 | §1A | count only | Configuration 0 / 0 / 0 (2026-10-27): a no-op; per-user data is never cleared on prod |
 | 12 | §1B | run | Seed, drift, unverified, one simulate |
 | 13 | §2.1 | count only | **Not run** (W-342, D-798): step 1's count (163 / 146 / 12 / 29 / 68.99) logged, then "not run" — the ₹15.99 over-count is accepted (§3.24) |
-| 14 | §2.2 – §2.15 | per step, in order | 2.3 prod only: 163 `FY` rows (2026-10-20); 2.4 where bonus actions exist; 2.2, 2.11, 2.12 only where their checks say; 2.7 expects 0 |
+| 14 | §2.2 – §2.16 | per step, in order | 2.3 prod only: 163 `FY` rows (2026-10-20); 2.4 where bonus actions exist; 2.2, 2.11, 2.12 only where their checks say; 2.7 expects 0 |
 | 15 | §3 | check | Record the counts |
 
 ### 6.4 dev (`wealthlens-dev`), fresh · owner · **not taken (D-786): kept for the record; a fresh dev comes on W-337's database**
@@ -2245,6 +2262,10 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 8, §3.18, §3.19, stored segments (read-only) | owner | `s3_18` `[]`, `s3_19` `[]`; all 163 rows hold neither `segment` nor `sell_segment` — **go**: no stored fact records a non-delivery segment, so §2.14 should find nothing |
 | 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 9, §2.14 dry run | owner | 0 transactions, 0 rows, no users, no mixed buys — **go**; nothing to write (C1a), rows 10 – 12 not taken; §2.14 done |
 | 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 13, stop and fingerprint | owner | `m1.2` stopped; changed: `transactions` 817 (new checksum — §2.13), the app's own `privacy_processing_log` 44 → 49 and `user_details` 15; nothing else — **go**; kept as `dev-after-c4c.txt`; W-334c4c's rows all logged |
+| 2026-11-20 | dev (prod rehearsal) (W-347) | row 1, documents naming DUMMY or LAVANYA (read-only, no email) | owner | `assets` 8 (U1 DUMMY 3 bought + 1 bonus; U2 LAVANYA 1 bought + 3 bonus), `transactions` 9 (U1 DUMMY 5, U2 LAVANYA 4); nothing in `trade_outcomes`, `profit_and_loss`, `corporate_action` or elsewhere; 2 users, each with **no other transaction and no P&L year** — **go**: the test entries stand alone, so removing them needs no rebuild |
+| 2026-11-20 | dev (prod rehearsal) (W-347) | row 2, backup of the test documents | owner | attempt 1 each: `transactions` 9, `assets` 8 (records = lines) — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-347) | row 3, delete | owner | `{"transactions":9,"assets":8}` (= row 1) — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-347) | row 4, verify | owner | `{"collections":[],"usersInvolved":0,"theirOtherHoldings":[]}` — **go**; W-347's rows all logged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
