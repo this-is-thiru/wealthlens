@@ -5,10 +5,10 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-341 done (D-794), committed and pushed; W-334c4a stopped at row 4; next W-334a2 (m1.2), then the rehearsal from W-334c1 row 3
-Stage           : W-341 D, committed and pushed; next plan W-334a2 (m1.2)
+Stage           : W-334a2 E approved — plan committed; rows 1 – 7 next (session runs them)
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-341 D, W-334a2 ·, W-334c4 —, W-334c4a E (stopped), W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : plan W-334a2 (W-334a1's rows for m1.2: preconditions incl. draft, merge commit, master pipeline, tag, worktree); stop for approval
+Board           : W-341 D, W-334a2 E, W-334c4 —, W-334c4a E (stopped), W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : on approval: commit + push the plan (head H), then rows 1 – 7 run by the session at the owner's request; then the rehearsal from W-334c1 row 3 on m1.2
 Open to owner   : approve W-334a2's plan; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
 Owner actions   : stop m1.1 (kill $(cat m1.pid) in ~/wealthlens-runs/w334c)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
