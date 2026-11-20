@@ -28,10 +28,12 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -376,6 +378,34 @@ class ArchitectureTest {
                 throw new AssertionError(
                         "Withdrawn names (name → replacement: " + withdrawn + ") still appear in: " + offenders);
             }
+        }
+    }
+
+    /**
+     * A criterion on {@code _id} is built from the id as stored, through {@code StoredId.of} (W-340, D-789). Spring Data
+     * converts a String of 24 hex digits to an {@code ObjectId} in a query naming no entity, so on prod's string ids an
+     * update matched nothing and reported success (W-338). An entity-typed query names the id property instead, whose
+     * mapping keeps the stored type.
+     *
+     * <p>A source scan: ArchUnit reads bytecode, where the field name passed to {@code where} is a constant it cannot see.
+     */
+    @Test
+    void an_id_criterion_is_built_from_the_stored_id() throws IOException {
+        Pattern idCriterion = Pattern.compile("where\\(\"_id\"\\)\\s*\\.(is|in|ne|nin)\\((?!StoredId\\.of\\()");
+        try (Stream<Path> paths = Files.walk(Path.of("src/main/java"))) {
+            List<String> offenders = paths.filter(f -> f.toString().endsWith(".java")).flatMap(f -> {
+                try {
+                    Matcher found = idCriterion.matcher(Files.readString(f));
+                    List<String> hits = new ArrayList<>();
+                    while (found.find()) {
+                        hits.add(f.getFileName() + ": " + found.group());
+                    }
+                    return hits.stream();
+                } catch (IOException e) {
+                    throw new IllegalStateException("could not read " + f, e);
+                }
+            }).toList();
+            assertThat(offenders).as("an _id criterion not built by StoredId.of — W-338's silent no-match").isEmpty();
         }
     }
 
