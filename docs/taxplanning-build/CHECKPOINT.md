@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c7b2 done (D-822): W-348a + W-348b for the owner's account on dev's copy with m1.3, every row go; fingerprint dev-after-c7b2.txt
-Stage           : DONE — committed and pushed on "commit it and push"; WL-A-2 republished
-Done session 110: D-821 (the 61 refused rows left as they are, years filed; W-352, W-348c not taken), D-822 (owner's segment 448 → DELIVERY; 90 rows rebuilt, compared, −16.00 double-counted buy charges; lots 298; P&L 3 years)
-Board           : W-334c7b2 D, W-334c7b3 ·, W-334c7c ·, W-348a · / W-348b · (owner's done; the other two users' wait for declarations), W-348c —, W-350 ·, W-351 ·, W-352 —, W-334d ·, W-334e ·
-Next step       : on 'resume': resume check; then plan W-334c7b3 (W-350, the 18 held trades) on dev as it stands (dev-after-c7b2.txt)
-Open to owner   : the other two users' segment declarations; W-337 engine and place vs M2; runner token in git history (repo PUBLIC); 13 rows with exchange BMF (§3.5 term refused) — noted, years filed
-Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; rehearsal files ~/wealthlens-runs/w334c (c7b/ holds personal-data backups, mode 700); scripts c7b2-01/02/05/08/11 there; database tools need GODEBUG=netdns=cgo + a dscacheutil lookup + 3 tries; never cd inside a $ command
-Last verify     : no code changed this session; scripts tried on throwaway mongo:8.0.4 (results in plans/W-334c7b2.md)
-Last item commit: taxplanning W-334c7b2: rebuild the owner's outcome rows, lots and P&L on prod's copy with m1.3 — every old row compared first, −16.00 double-counted buy charges gone; the 61 refused rows left as they are, their years filed
+Item            : W-334c7c in progress (rows 1 – 2 go; row 3 sign-off + wipe question asked) — W-334c7b3 done (D-823) — W-350 done: the 18 held trades were one TEST_USER account's (codes A/B/C, no request kept); the whole account removed on dev's copy; fingerprint dev-after-c7b3.txt
+Stage           : W-334c7b3 committed and pushed with W-334c7c's plan and its rows 1 – 2 (one commit); WL-A-2 republished; awaiting the owner's sign-off (row 3) and wipe answer
+Done session 110: D-821 (61 refused rows left), D-822 (W-334c7b2, pushed 7b1ca4e2), D-823 (W-334c7b3)
+Board           : W-334c7b1 D, W-334c7b2 D, W-334c7b3 D, W-350 D, W-334c7c E, W-348a · / W-348b · (the other two users' wait), W-351 ·, W-334d ·, W-334e ·
+Next step       : W-334c7c approved; rows 1 – 2 go (§3 as expected; 3.5 2/49 now counted, the other users' unrebuilt rows + owner's BMF sales); row 3 sign-off summary handed; W-334c7b3 still uncommitted (owner's word)
+Open to owner   : the other two users' segment declarations (both still there: the removed test account held no outcome rows); W-337 engine and place vs M2; runner token in git history (repo PUBLIC); 13 BMF rows (§3.5)
+Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; rehearsal files ~/wealthlens-runs/w334c (c7b/ holds personal-data backups, mode 700); scripts c7b2-*, c7b3-* there; DNS timeouts on the owner's network — the 3-try loops hold; never cd inside a $ command
+Last verify     : no code changed this session; scripts tried on throwaway mongo:8.0.4 (results in the plans)
+Last item commit: taxplanning W-334c7b3: remove the test account holding prod's 18 unredrivable held trades on its copy — codes A / B / C, no request kept, so a redrive could never replay them and the account stayed blocked
 Files touched   : none
 Updated         : 2026-11-20, session 110
 ```
