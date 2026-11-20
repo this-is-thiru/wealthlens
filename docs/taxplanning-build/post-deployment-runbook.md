@@ -2314,6 +2314,33 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 13, §1A count, clear, count | owner | all six 0, four indexes; configuration 0 / 0 / 0, per-user refused; all 0 again — **go** |
 | 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 14, §1B seed, drift, unverified, simulate | owner | 13 / 39 (0) / 2 (0), drift 0; `[]`, `[]`; `ZERODHA_EQ_DELIVERY_2025_04` `RESOLVED`, total 119.67 — **go** |
 | 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 15, stop and fingerprint | owner | `m1.3` stopped; 13 / 39 / 2; 529, 7, 163, 817, 15 — **go**; kept as `dev-after-c7a.txt`; W-334c7a's rows all logged |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row 1, environment, `m1.3` started, token | owner | dev's prefixes, each 32; port free; started 6.0 s; ERROR 0; `NO RATE CARDS` 0; the owner, `ROLE_SUPER_USER` — **go** (approval taken) |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A2, §2.1 count (count only, D-798) | owner | 163; 163 / 146 / 12 / 29 / 68.99166666666666 — **go**; §2.1 logged "not run" |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A7, §2.2 dry run | owner | 8 examined, 5 rebuilt, 0 rows, 3 skipped holding 163 — **go**; no write |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A8, §2.3 count | owner | 163 / 163 / 0 — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A9, §2.3 dry run | owner | `rows` 163 — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A10, §2.3 backup | owner | attempts 1 – 2 timed out on the router's DNS, attempt 3 `exported 163 records`; 163 lines — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A11, §2.3 write | owner | `rows` 163 (= dry run) — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A12, §2.3 verify | owner | `fyRows` 0; 53 / 67 / 43; second dry run 0 — **go**; §2.3 done |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows A13 + B2, the bonus actions (read-only) | owner | 6 actions; four bonuses, `allotment` null; assets / transactions / tradeOutcomes 1/1/0, 1/1/0, 2/2/0, 2/2/0 — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row B3, §2.4 dry run | owner | 1/1/0 → 2025-08-28, 1/1/0 → 2025-07-17, 2/2/0 → 2025-07-21, 2/2/0 → 2024-10-29 — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row B4, §2.4 backup | owner | 4 / 23 / 49 / 16, attempt 1 each — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row B5, §2.4 write | owner | = dry run — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B6 + B7, §2.4 verify, §2.5 count | owner | allotment 2025-08-28 / 2025-07-17 / 2025-07-21 / 2024-10-29; second dry run `[[0,0,0],[1,1,0],[0,0,0],[0,0,0]]`; `withTerm` 163 — **go**; §2.4 done |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B8 + B9, §2.5 dry run and backup | owner | `rows` 163; attempts 1 – 2 DNS timeouts, attempt 3 `exported 163 records`, 163 lines — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B10 + B11, §2.5 write and verify | owner | `rows` 163; `withTerm` 0; second dry run 0 — **go**; §2.5 done |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B12 + B13, §2.6 count and dry run | owner | 7 / 3; placed 3 (EQUITY ×2, MUTUAL_FUND ×1), unplaced 0 — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B14 – B16, §2.6 backup (guarded write), write, verify | owner | attempt 3 `exported 7 records`; placed 3, unplaced 0; `withPair` 0; second dry run 0 / 0 — **go**; §2.6 done |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B17 + B18, §2.7 drop, §2.8 count + dry run | owner | `holding_period_policies` present, 0; exported 0 (attempt 3); dropped, absent after; `recorderRows` 0; backfill dry run 0 / 0 / 0 / 0 — **go**; §2.7 done, §2.8 nothing to write |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows C2 – C4, §2.9, §2.10, §2.13 step 1 (read-only) | owner | deductible 0, dry run 0; catalogue 13, flag 0; bonus transactions 10, copied 10, charged bonus lots 1 / 3 / 6 — **go**; §2.9 and §2.10 nothing to write |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows C5 – C7, §2.13 backup (guarded), correction, verify | owner | exported 10; matched 10, modified 10; copied 0, charged lots 6 / 1 / 3 (W-348b / c7b2) — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows C8 + C9, §2.14 checks and dry run | owner | §3.18 / §3.19 empty; 163 rows null / null; dry run 0 / 0 / none / 0 — **go**; §2.14 nothing to write |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows D1 – D3, §2.15 (guarded drop) | owner | 163 counted; attempt 3 `exported 163 records`; dropped; absent, 0 — **go**; §2.15 done |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows E0 + E1, the test users captured; the test stocks sized | owner | 2 stored emails to a local file; `assets` 8, `transactions` 9, 2 users holding nothing else — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows E2 – E4, test stocks backup (guarded), delete, verify | owner | exported 9 (attempt 2) and 8; deleted 9 / 8; none left — **go** |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row E5, the test users' own documents (read-only, no email) | owner | `users` 2; `before` only `user_details` 1 — one of the two test users has a login, the other none (no login, consent or log row anywhere); `writtenByThem` none — **go**: one login to remove |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows E6 + E7, §2.16 step 5 backup (guarded) and delete | owner | exported 1; deleted `user_details` 1; after `{}`; the email file removed — **go**; §2.16 done |
+| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row F1, stop and fingerprint | owner | `m1.3` stopped; `assets` 529 → 521, `transactions` 817 → 808, `user_details` 15 → 14, `corporate_action` 6, `profit_and_loss` 7, `trade_outcomes` 163 (new checksums), the app's own log 12 → 43; `reports` and `holding_period_policies` gone; 31 → 29 collections — **go**; kept as `dev-after-c7b1.txt`; W-334c7b1's rows all logged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.

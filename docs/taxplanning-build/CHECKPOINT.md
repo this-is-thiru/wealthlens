@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c7a done (D-817), committed and pushed; dev = dev-after-c7a.txt
-Stage           : next — plan W-334c7b (§2 + W-348a/b + W-350 + §2.16 step 5); the other two users' declarations still needed for W-348b
+Item            : W-334c7b1 done (D-819), committed and pushed; dev = dev-after-c7b1.txt
+Stage           : next — plan W-334c7b2 (W-348a owner = delivery; W-348b owner's rows with old-vs-new compare, §2.12, §2.11); others wait for their declarations
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-334c7a D, W-334c7b ·, W-334c7c ·, W-348a ·, W-348b ·, W-350 ·, W-351 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-334c7b
+Board           : W-334c7b1 D, W-334c7b2 ·, W-334c7b3 ·, W-334c7c ·, W-348a ·, W-348b ·, W-350 ·, W-351 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-334c7b2
 Open to owner   : the other two users' declarations; W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
 Owner actions   : obtain the other two users' segment declarations (W-348a); the owner's own given: all delivery (D-815)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-334c7a: log the reset, encryption and charge engine on prod's copy with m1.3 — all go; §2.1 now pairs one user with unexplained changes, so W-348b compares before it deletes
+Last item commit: taxplanning W-334c7b1: log §2 on prod's copy with m1.3 — every count equal to the m1.2 rehearsal; the test stocks and the one test login removed
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
