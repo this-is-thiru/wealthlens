@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c4d done (D-809), committed and pushed; §2 complete on prod's copy
-Stage           : next — plan W-334c5 (§3 counts, compare, wipe dev, delete the rehearsal's backups; keep prod-before-m1.archive)
+Item            : W-334c5 done (D-810), committed and pushed; the prod rehearsal complete, dev wiped
+Stage           : next — plan W-349; prod NOT ready: W-348, W-350, m1.3 + rehearsal
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-334c4d D, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-334c5
+Board           : W-334c5 D, W-348 ·, W-349 ·, W-350 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-349 (§3.5 / §3.3 on the row's facts); then W-348's decision, m1.3, the rehearsal of W-348 + W-350, W-334d, W-334e
 Open to owner   : the two test users' logins (remove or keep); W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
-Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
+Owner actions   : decide the two test users' logins; W-348's ruling when planned
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-334c4d: log the per-user rebuilds on prod's copy — 12 of the owner's lots corrected, the P&L's empty realised years filled from 90 sales and reconciled
+Last item commit: taxplanning W-334c5: sign off the prod rehearsal and wipe dev — §3 on prod's copy shows the tax side cannot use its sales yet (W-348); two §3 checks fixed, two found stale
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
