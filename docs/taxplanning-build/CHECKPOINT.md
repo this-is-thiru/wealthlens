@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334c5 done (D-810), committed and pushed; the prod rehearsal complete, dev wiped
-Stage           : next — plan W-349; prod NOT ready: W-348, W-350, m1.3 + rehearsal
+Item            : W-349 done (D-811), committed and pushed
+Stage           : next — plan W-348 (options for prod's 163 old outcome rows; owner's ruling)
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-334c5 D, W-348 ·, W-349 ·, W-350 ·, W-334d ·, W-334e ·
-Next step       : commit; plan W-349 (§3.5 / §3.3 on the row's facts); then W-348's decision, m1.3, the rehearsal of W-348 + W-350, W-334d, W-334e
+Board           : W-349 D, W-348 ·, W-350 ·, W-334d ·, W-334e ·
+Next step       : commit; plan W-348 (options and ruling)
 Open to owner   : the two test users' logins (remove or keep); W-337 engine and place vs M2; runner token in git history (repo PUBLIC)
 Owner actions   : decide the two test users' logins; W-348's ruling when planned
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : W-340 rule red on 4 sites then green: Architecture 26/0, StoredFieldEncryption 9/0 + 1/0, StoredIdentifierEncryption 3/0, TaxJobs 21/0, TaxJobEndpoint 3/0, TaxJobDirectory 5/0
-Last item commit: taxplanning W-334c5: sign off the prod rehearsal and wipe dev — §3 on prod's copy shows the tax side cannot use its sales yet (W-348); two §3 checks fixed, two found stale
+Last item commit: taxplanning W-349: count §3.5 and §3.3 on the row's facts — both selected on the stored term §2.5 removes, so they read 0 on every database after it
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```

@@ -1770,17 +1770,18 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
     performed: d.lastly_performed_corporate_action.countDocuments({ action_type: "STOCK_SPLIT" }),
     ratios: d.corporate_action.distinct("ratio", { type: "STOCK_SPLIT" }) }; }) }])
 
-// 3.5 — equity capital-gains disposals whose term the engine refuses: the sale not recorded on NSE or BSE (W-088k3, D-305)
+// 3.5 — equity disposals whose term the engine refuses: the sale not recorded on NSE or BSE (W-088k3, D-305). On the row's
+// facts only (W-349): the stored term this once selected on is removed by §2.5, which left the count at 0 on every database
 db.trade_outcomes.aggregate([
-  { $match: { asset_type: "EQUITY", capital_gains_type: { $in: ["SHORT_TERM", "LONG_TERM"] },
-              sell_exchange_name: { $nin: ["NSE", "BSE"] } } },
+  { $match: { asset_type: "EQUITY", sell_exchange_name: { $nin: ["NSE", "BSE"] } } },
   { $group: { _id: "$email", rows: { $sum: 1 } } },
   { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
 ])
 
 // 3.3 — equity disposals the engine still refuses for STT after W-088j2c (D-298, D-299, D-300): a side with nil charges and no
 // breakdown that no RS-STT-CHARGEABLE row settles. An upper bound: a long-term buy by purchase before 1-10-2004 is
-// settled by CG-PART-LONG-NOTIFIED but is counted here.
+// settled by CG-PART-LONG-NOTIFIED but is counted here. Since W-349 the buy arm counts every term — the stored term it
+// selected long-term rows by is removed by §2.5, and the term is the engine's to decide (RS-CG-TERM), so the bound is wider.
 db.trade_outcomes.aggregate([
   { $match: { asset_type: "EQUITY", $or: [
       { $and: [
@@ -1789,7 +1790,6 @@ db.trade_outcomes.aggregate([
           { $or: [ { sell_exchange_name: { $nin: ["NSE", "BSE"] } },
                    { sell_segment: { $nin: ["DELIVERY", "INTRADAY"] } } ] } ] },
       { $and: [
-          { capital_gains_type: "LONG_TERM" },
           { acquisition_corporate_action: { $nin: ["BONUS", "DEMERGER"] } },
           { $or: [ { buy_charge_breakup: { $exists: false } }, { buy_charge_breakup: {} } ] },
           { buy_broker_charges: { $in: [0, null] } },
