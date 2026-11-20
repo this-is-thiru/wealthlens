@@ -4,12 +4,12 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334d2 done and committed (D-840); planning W-334d3
-Stage           : staging on m1.4: encrypted under staging's keys, legacy dropped, charge data cleared, cards seeded; app stopped; d2/ holds before-1r dump + fingerprints; way back = staging-before-m14.archive
+Item            : PAUSED by the owner (2026-11-20, late). W-334d3 split (D-841); W-334d3a approved, scripts built and tried, no row run yet
+Stage           : staging is consistent after d2 (m1.4, encrypted, cards seeded, app stopped); nothing running; d3a row 1 not run; d1/, d2/, staging-before-m14.archive kept; d3/ empty
 Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
 Board           : W-334c8 D, W-334c8a D, W-334c8b D, W-334c8c D, W-348a · / W-348b · (done at W-334e), W-351 ·, W-334d ·, W-334e ·, W-337 ·
-Next step       : on 'resume': resume check; plan W-334d3: §2.1 (owner skipped: EMAMILTD), §2.2 – §2.15 for staging, d1's 4 questions (ITS-22 collections, 2 test logins, W-348 for staging users, held trade), compare with d1/ baseline, sign-off, delete d1/ d2/ + staging archive
-Open to owner   : W-334d3 plan (being written); api-collection Buy Stock.yml:68 doc proposal
+Next step       : on 'resume': resume check; continue W-334d3a at the next unlogged row (run log '(W-334d3a)'); owner: "batch them" — read-only checks of a step in one block, each write alone after its backup check and a go
+Open to owner   : resume at W-334d3a row 1 (batched); api-collection Buy Stock.yml:68 doc proposal
 Env notes       : jars in ../wealthlens-m1.4, ../wealthlens-m1.3, ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive + prod-before-m14.archive (mode 600), both references, allotment-dates.json and the query scripts only; dev wiped; zsh: (setopt null_glob; …); DNS: rerun the line
 Last verify     : W-354: rehearsal x2 on throwaway mongo:8.0.4 (results in D-832); docs only
 Last item commit: taxplanning W-334d2: bring staging to m1.4 up to the charge engine — encrypted under its own keys, legacy dropped, charge data cleared and rate cards seeded
