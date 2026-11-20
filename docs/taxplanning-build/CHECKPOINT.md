@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-342 done (D-798), committed and pushed; W-343, W-344 placed
-Stage           : next W-334c4b — waits for the owner's four allotment dates (HDFCBANK, ASHOKLEY, MSUMI, RELIANCE)
+Item            : W-344 done (D-799), committed and pushed; W-345 placed
+Stage           : next W-334c4b — waits for the owner's four allotment dates (HDFCBANK, ASHOKLEY, MSUMI, RELIANCE), each with its source
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
-Board           : W-334c4a D, W-342 D, W-343 ·, W-344 ·, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
-Next step       : commit; then W-334c4b's plan (§2.4 with the owner's allotment dates, §2.5 – §2.8); W-344 before W-334d; W-343 before M2
+Board           : W-342 D, W-344 D, W-343 ·, W-345 ·, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
+Next step       : commit; W-334c4b's plan once the owner sends the allotment dates; W-343 / W-345 (code) before M2
 Open to owner   : approve W-334c6; W-340, W-339 before W-334d; W-337; runner token in git history (repo PUBLIC)
 Owner actions   : allotment dates from each company's announcement: HDFCBANK (rec 2025-08-27), ASHOKLEY (2025-07-17), MSUMI (2025-07-19), RELIANCE (2024-10-28)
 Env notes       : database tools: GODEBUG=netdns=cgo AND a dscacheutil lookup + up to 3 tries; passwords via read -s; never cd inside a $ command
 Last verify     : PR #67 run 44668840263 green (full tiers on W-341); master run 44669461334 green
-Last item commit: taxplanning W-342: find why §2.1 refuses both users on prod's copy — same-day sales replay in no fixed order; the ₹15.99 over-count is accepted and §2.1 is not run on prod
+Last item commit: taxplanning W-344: add the §3.25 check for stock codes with outer spaces — prod's one, a closed MOTHERSON position, is left; W-345 refuses new ones
 Files touched   : none
 Updated         : 2026-11-20, session 109
 ```
