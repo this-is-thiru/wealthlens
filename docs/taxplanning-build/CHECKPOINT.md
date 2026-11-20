@@ -5,7 +5,7 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-343 (D-800) and W-345 (D-801) done, committed and pushed; pipeline on the next PR
-Stage           : next W-334c4b — waits for the owner's four allotment dates; owner may reopen D-798 given W-343
+Stage           : W-334c4b waits for the owner's four allotment dates; D-798 stands — §2.1's dry run rechecked on the next build carrying W-343 (runbook §2.1 note, W-334c4c row)
 Done session 109: W-334c4 split (D-793); c4a rows 1 – 3, 4 (stop), 4a logged; W-341 built: embedded CA actors sealed, 3 red-first ITs, runbook §1.r embeddedActors; c2-05-plain-check.js widened
 Board           : W-343 D, W-344 D, W-345 D, W-334c4b ·, W-334c4c ·, W-334c5 ·, W-334d ·, W-334e ·
 Next step       : commit both (separate commits); owner decides whether W-343 reopens D-798 (§2.1 might now pair on a build carrying it); W-334c4b once dates are in

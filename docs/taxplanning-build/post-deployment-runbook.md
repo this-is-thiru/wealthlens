@@ -1124,7 +1124,7 @@ and `AnalyticsService`.
 **Second run:** safe, it changes nothing. **Way back:** `mongoimport --mode upsert` of the step-2 file. Detail:
 `plans/W-088u7.md`.
 
-**Not run on prod (W-342, D-798):** the rehearsal (W-334c4a, W-342) found it refuses both users, because the replay orders same-day sales by date only, so it pairs no row; the over-count it was to remove is **₹15.99** on nine lots (of ₹68.99 carried), accepted and recorded in §3.24. Step 1's count is still taken on prod and logged, and the step recorded "not run". **Removed after use:** W-147 / WL-29, once prod's "not run" is logged.
+**Not run on prod (W-342, D-798):** the rehearsal (W-334c4a, W-342) found it refuses both users, because the replay orders same-day sales by date only, so it pairs no row; the over-count it was to remove is **₹15.99** on nine lots (of ₹68.99 carried), accepted and recorded in §3.24. Step 1's count is still taken on prod and logged, and the step recorded "not run". **On the next build that carries W-343 (D-800)** — same-day sales replayed in id order, which by W-342 row 1's ids is the order prod's rows were made in — its rehearsal runs step 3 (the dry run, read-only) once more: if both users then pair, the owner decides whether to correct the ₹15.99 instead (owner, 2026-11-20: D-798 stands until then). **Removed after use:** W-147 / WL-29, once prod's "not run" is logged.
 
 ### 2.2 W-088u8b (D-284) — rebuild `trade_outcomes` from raw transactions · `SUPER_USER` · **when needed, not once**
 
