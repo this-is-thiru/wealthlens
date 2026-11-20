@@ -1686,8 +1686,13 @@ lots, in two users who hold nothing else and have no P&L year, so removing them 
 2. **Back up:** `mongoexport` of `transactions` and `assets` with `--query '{"stock_code":{"$in":["DUMMY","LAVANYA"]}}'`.
 3. **Delete:** `db.transactions.deleteMany({ stock_code: { $in: ["DUMMY", "LAVANYA"] } })` and the same on `assets`. Expect 9 and 8.
 4. **Verify:** step 1 lists nothing.
+5. **The two test users themselves** (owner, 2026-11-20: "remove the test logins"; D-815). Take their stored emails from step 1 **before**
+   step 3 (`transactions.distinct("email", { stock_code: { $in: ["DUMMY", "LAVANYA"] } })`, kept in a local file, never printed). After step
+   4: count every collection's documents carrying either stored email (`email`, `principal`, `subject_email`, `audit_metadata.createdBy`),
+   back up those documents, delete them — the login in `user_details` last — and count again: 0. Not the app's account erasure (§1.u), which
+   holds an account a year before erasing it: these are the owner's own test accounts, removed at once.
 
-**Second run:** safe; nothing is left to match. **Way back:** `mongoimport` of step 2's two files.
+**Second run:** safe; nothing is left to match. **Way back:** `mongoimport` of step 2's two files and step 5's backup.
 
 **Retired after use:** W-347, once logged for prod. There is no code to remove.
 
