@@ -1956,7 +1956,7 @@ owner runs it and the results go into the run log.
   hundreds of commit hashes (D-780 C4a). Tag the merge `m1` and push the tag. Run every database below from that tag:
   `git worktree add ../wealthlens-m1 m1`. The merge also pushes the image to Docker Hub as `latest` (`cicd.yaml`); the
   repository there is public (owner, D-784, replacing D-780's private). **`m1.1` replaces `m1` for every database** (W-338,
-  D-789; tagged by W-334a1, D-790): `git worktree add ../wealthlens-m1.1 m1.1`; `m1` stays as the record of what W-334c1 – c2 ran. **`m1.2` replaces `m1.1`** (W-341, D-794; tagged by W-334a2): `git worktree add ../wealthlens-m1.2 m1.2`; the rehearsal restarts at W-334c1 row 3 on it.
+  D-789; tagged by W-334a1, D-790): `git worktree add ../wealthlens-m1.1 m1.1`; `m1` stays as the record of what W-334c1 – c2 ran. **`m1.2` replaces `m1.1`** (W-341, D-794; tagged by W-334a2): `git worktree add ../wealthlens-m1.2 m1.2`; the rehearsal restarts at W-334c1 row 3 on it. **`m1.3` replaces `m1.2`** (W-340, W-343, W-345; tagged by W-334a3, D-814): `git worktree add ../wealthlens-m1.3 m1.3`; the next rehearsal (W-348a, W-348b, W-350) runs on it.
 - **6.0.2 Keys, once per environment** (§0.5 step 1; D-780 C3a): `openssl rand -base64 32` twice per environment — dev,
   staging, prod each get their own `TAX_DATA_KEY` and `TAX_DIGEST_KEY`, never shared. Store each pair in the secret store
   **and** its backup, off the laptop, before the first start: a lost `TAX_DATA_KEY` is data no one can read again. One
@@ -2287,6 +2287,13 @@ one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 | 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 3, compare and sign-off (6.1 step 6, 6.0.7) | owner | session summary: W-334c1 – c6, c4a – c4d, W-339, W-342, W-344, W-346, W-347 run on prod's copy, every row logged; stops and their outcomes: plain embedded actors (W-341, `m1.2`), §2.1's same-day order (W-342/W-343, ₹15.99 accepted), test stocks (W-347), two blind §3 checks fixed (§3.22, §3.24) and two found stale (§3.3, §3.5, W-349); open before prod: W-348 (the old outcome rows), W-350 (18 held trades), W-345 / W-343 in the next release; owner: "yes to all your recommendations, go ahead" — **signed off** |
 | 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 4, wipe dev (6.1 step 7) | owner | `{"ok":1,"dropped":"wealthlens-dev"}`; `{"collections":0}` — **go** |
 | 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 5, the rehearsal's files deleted | owner | left: `prod-before-m1.archive` (mode 600), `prod-reference.txt`, `allotment-dates.json`, the query files (`.js`, `.sh`) — **go**; W-334c5's rows all logged; the prod rehearsal (W-334c) is complete |
+| 2026-11-20 | — (W-334a3) | row 1, preconditions | session, at the owner's request | tree clean; `master` `d6f2b3af…`; `H` = `HEAD` = `2618d1a0…`; no `m1.3`; open PRs 0 — **go** |
+| 2026-11-20 | — (W-334a3) | row 2, the PR | session, at the owner's request | PR #68 ready, head `2618d1a0…`, base `master` — **go** |
+| 2026-11-20 | — (W-334a3) | row 3, the PR's pipeline | session, at the owner's request | run 44694391485 `pull_request` `2618d1a0…` `completed success` (every tier on W-340, W-343, W-345); `MERGEABLE CLEAN` — **go** |
+| 2026-11-20 | — (W-334a3) | row 4, the merge | session, at the owner's request | merged as `72d7fd4e…`; parents `d6f2b3af…`, `2618d1a0…`; empty diff against `2618d1a0` — **go** |
+| 2026-11-20 | — (W-334a3) | row 5, the `master` pipeline | session, at the owner's request | run 44695255307, `push`, `72d7fd4e…`, `completed success`; image `sha-72d7fd4e7461` — **go** |
+| 2026-11-20 | — (W-334a3) | row 6, tag `m1.3` | session, at the owner's request | `refs/tags/m1.3` `4d9b3ef4…`, `^{}` `72d7fd4e…` — **go** |
+| 2026-11-20 | — (W-334a3) | row 7, the `m1.3` worktree | session, at the owner's request | `../wealthlens-m1.3` at `72d7fd4e…`; `wealthlens.jar` 87,813,931 bytes, no error printed — **go**; W-334a3's rows all logged |
 
 **Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
 present), 1.3's 0 and the section 3 counts, for each database.
