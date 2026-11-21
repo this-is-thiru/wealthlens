@@ -92,6 +92,7 @@ when its run is logged for both. Everything below is the full sequence for a fre
    db.charge_accounts.countDocuments({last_billed_through: {$ne: null}, $or: [{billing_events: {$exists: false}}, {billing_events: {$size: 0}}]})
    ```
    Expected `0`. Anything above 0 is an account whose date came from a request body before W-206: stop and tell the owner; this item corrects nothing.
+8. W-359b (D-867) — nothing to run: the API's contract is `GET /api/v1/admin/docs/openapi` (a `SUPER_USER` token; the api-collection's `OpenAPI spec.yml`). No Swagger UI is served.
 
 ## 0. Before deploying
 

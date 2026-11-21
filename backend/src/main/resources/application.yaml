@@ -213,3 +213,13 @@ management:
       access: read-only
       probes:
         enabled: true
+# The API's contract, generated from the controllers, for an admin (W-359b, D-853 C5a)
+springdoc:
+  api-docs:
+    path: /api/v1/admin/docs/openapi
+  # A page is asked for as ?page=&size= (ApiDocs.PageQuery), not as one object
+  default-flat-param-object: true
+  # springdoc's own page model adds a sort, which is not read (D-861 C3a); ApiDocs declares page and size only
+  model-converters:
+    pageable-converter:
+      enabled: false

@@ -70,6 +70,12 @@
             <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
 
+        <!-- The spec only, no UI: a browser cannot carry the admin token a page in the admin zone needs (W-359b C1a) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+        </dependency>
+
         <!-- Spring Modulith -->
         <dependency>
             <groupId>org.springframework.modulith</groupId>
