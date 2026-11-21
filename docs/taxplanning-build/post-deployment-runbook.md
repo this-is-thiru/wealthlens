@@ -84,6 +84,7 @@ below is the full sequence for a fresh database (W-337).
 1. W-358d1 (D-873) — nothing to run: every answer carries `X-Request-Id` (quote it when asking about a request); log lines print it and write emails as `[email]`; new `privacy_processing_log` rows store `request_id` (older rows have none).
 2. Phase 15 batch (D-874 – D-883) — nothing to run: the six one-time corrections answer 404 (`…/trade-outcomes/rebuild-charges/correct`, `…/financial-years/rewrite`, `…/stored-terms/remove`, `…/deductible-charges/remove`, `…/profit-and-loss/split/reshape`, `…/corporate-actions/bonus/allotment-dates/correct`, all under `/api/v1/admin/portfolio`); runbook §0.6, §0.8, §2.1, §2.3 – §2.7, §2.9, §2.10 retired and §6 removed.
 3. W-358d2 (D-884) — nothing to run: 5 failed sign-ins for one address from one client in 15 minutes, or 30 calls from one client to `/api/v1/public/auth/**`, answer 429 with `Retry-After`; registering a taken or held address answers "This email cannot be registered" (the address named nowhere), and a wrong notice version is now reported first.
+4. §1.h W-358d3 (D-885) — nothing to run: each sign-in rewrites its account's password hash as Argon2id; the read-only count before and a week after; going back to `m1.5` needs a password reset for each upgraded account (§1.h).
 
 ## 0. Before deploying
 
@@ -916,6 +917,31 @@ and ended by `POST /api/v1/public/auth/logout` (both `{"refresh_token": "…"}`)
 
 **Way back:** deploy the previous build; it never reads `refresh_tokens`. Its rows are hashes that sign nobody in, so no backup is needed
 before dropping it: `db.refresh_tokens.drop()`.
+
+### 1.h W-358d3 (D-885) — passwords rehashed as Argon2id at sign-in · owner · **first deploy carrying W-358d3, then a week after**
+
+Nothing to run. Each successful sign-in rewrites that account's stored hash in `user_details.password` as `{argon2}$argon2id$…` when it
+was older (every hash stored before W-358d3 is unlabelled BCrypt, `$2a$10$…`, or `$2y$` from `htpasswd`); registration and a password
+change store Argon2id from the start. An account nobody signs in to keeps its BCrypt hash, which still signs in. A plain-text
+(`{noop}`) or digest (`{MD5}`, `{SHA-1}` …) value never signs anyone in.
+
+**Read-only, before the deploy and a week after** (IntelliJ console on the cluster, one query):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    const users = d.user_details.countDocuments({});
+    const upgraded = d.user_details.countDocuments({ password: /^\{argon2\}/ });
+    return { database: n, users, upgraded, bcrypt: users - upgraded }; }) }])
+```
+
+Expected before: `upgraded` 0. A week after: `upgraded` the accounts that signed in or registered since, `upgraded` + `bcrypt` =
+`users`. A second run changes nothing (it only reads).
+
+**Way back (D-885 C3a: no copy of the hashes is kept).** `m1.5` and earlier cannot read a labelled hash, so after going back an
+upgraded account is refused until its password is reset: `htpasswd -bnBC 10 "" '<password>' | tr -d ':\n'` gives a BCrypt hash;
+`db.user_details.updateOne({ email: "<stored email>" }, { $set: { password: "<hash>" } })` with the stored form of the email (§0.7). The
+query above (`upgraded`) counts the accounts this concerns.
 
 ## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
 
