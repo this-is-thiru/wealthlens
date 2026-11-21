@@ -33,7 +33,7 @@ class RouteAccessIntegrationTest extends AbstractIntegrationTest {
 
     /** Public by name in {@code AuthConfig}; every other route needs a login. */
     private static final List<PathPattern> PUBLIC = parse("/auth/login", "/auth/register", "/helper/**", "/finances/**",
-            "/template/**", "/privacy/rights", "/privacy", "/error");
+            "/template/**", "/privacy/rights", "/privacy", "/error", "/auth/token/refresh", "/auth/logout");
 
     private static final String OWNER = "owner-of-the-path@example.com";
     private static final String INTRUDER = "someone-else@example.com";

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** The people and accounts a profile refers to. {@code UserValidator}, called by {@code AuthFilter}, refuses a caller whose token is not the path's email ({@code DR 14} O2). */
+/** The people and accounts a profile refers to. {@code UserValidator}, asked by {@code AuthConfig}'s access rule, refuses a caller whose token is not the path's email ({@code DR 14} O2). */
 @RequiredArgsConstructor
 @RequestMapping("/tax/user/{email}/profiles/{profileId}")
 @RestController

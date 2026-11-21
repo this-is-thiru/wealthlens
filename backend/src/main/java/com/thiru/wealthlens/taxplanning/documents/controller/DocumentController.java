@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-/** Uploaded certificates (TS T8; W-131d1). {@code UserValidator}, called by {@code AuthFilter}, refuses a caller whose token is not the path's email ({@code DR 14} O2). */
+/** Uploaded certificates (TS T8; W-131d1). {@code UserValidator}, asked by {@code AuthConfig}'s access rule, refuses a caller whose token is not the path's email ({@code DR 14} O2). */
 @RequiredArgsConstructor
 @RequestMapping("/tax/user/{email}/documents")
 @RestController

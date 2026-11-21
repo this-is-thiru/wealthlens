@@ -408,7 +408,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void protectedEndpoint_withWrongUserPath_returns401() {
+    void protectedEndpoint_withWrongUserPath_returns403() {
         // GIVEN
         String email1 = "user1@test.com";
         String email2 = "user2@test.com";
@@ -421,7 +421,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
 
         String token = generateToken(email1);
 
-        // WHEN / THEN - user1 tries to access user2's transactions
+        // WHEN / THEN - user1 tries to access user2's transactions: signed in, so forbidden rather than unauthenticated (W-358b)
         String url = baseUrl() + "/transactions/user/" + email2;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
@@ -429,6 +429,6 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
 
         RestTemplate rt = createNoErrorRestTemplate();
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
-        assertEquals(401, response.getStatusCode().value());
+        assertEquals(403, response.getStatusCode().value());
     }
 }

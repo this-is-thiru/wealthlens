@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Taxpayer profiles (TS T8's base, D-046 B3). {@code UserValidator}, called by {@code AuthFilter}, refuses a caller whose token is not the path's email ({@code DR 14} O2). */
+/** Taxpayer profiles (TS T8's base, D-046 B3). {@code UserValidator}, asked by {@code AuthConfig}'s access rule, refuses a caller whose token is not the path's email ({@code DR 14} O2). */
 @RequiredArgsConstructor
 @RequestMapping("/tax/user/{email}/profiles")
 @RestController

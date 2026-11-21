@@ -1,34 +1,27 @@
 package com.thiru.wealthlens.auth.service;
 
-import com.thiru.wealthlens.auth.config.SecurityConfig;
 import com.thiru.wealthlens.auth.dto.AuthHelper;
 import com.thiru.wealthlens.auth.dto.LoginResponse;
+import com.thiru.wealthlens.auth.dto.RefreshResponse;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
+import com.thiru.wealthlens.auth.entity.RefreshToken;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
 import com.thiru.wealthlens.shared.privacy.HeldAccounts;
 import com.thiru.wealthlens.shared.privacy.PrivacyConsents;
 import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
+import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.FactorGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,11 +33,12 @@ public class AuthService {
 
     private final UserDetailsRepository userDetailsRepo;
     private final PasswordEncoder passwordEncoder;
-    private final SecurityConfig securityConfig;
     private final HeldAccounts heldAccounts;
     private final RegisteredUserDirectory signIns;
     private final PrivacyConsents privacyConsents;
     private final Clock clock;
+    private final AccessTokens accessTokens;
+    private final RefreshTokens refreshTokens;
 
     public String addUser(RegistrationRequest request) {
 
@@ -71,37 +65,6 @@ public class AuthService {
     }
 
 
-    public Claims extractAllClaims(String authToken) {
-        try {
-            return Jwts.parser()
-                    .verifyWith(getSignInKey())
-                    .build()
-                    .parseSignedClaims(authToken)
-                    .getPayload();
-        } catch (MalformedJwtException e) {
-            log.error("Invalid JWT token: {}", e.getMessage());
-        } catch (ExpiredJwtException e) {
-            log.error("JWT token is expired: {}", e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            log.error("JWT token is unsupported: {}", e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.error("JWT claims string is empty: {}", e.getMessage());
-        } catch (JwtException e) {
-            // Any other token failure the library reports (a bad signature, say); nothing outside it is caught (W-358a)
-            log.error("Invalid JWT token: {}", e.getMessage());
-        }
-
-        return null;
-    }
-
-    public Boolean isTokenExpired(Claims claims) {
-        return claims.getExpiration().before(new Date());
-    }
-
-    public Boolean validateToken(Claims claims) {
-        return !isTokenExpired(claims);
-    }
-
     public String changePassword(String email, RegistrationRequest request) {
 
         if (!Objects.equals(email, request.getEmail())) {
@@ -123,6 +86,8 @@ public class AuthService {
         }
         userEntity.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userDetailsRepo.save(userEntity);
+        // Whoever held a refresh token signs in again with the new password (W-358b).
+        refreshTokens.endAll(email);
         return email + "'s password changed successfully";
     }
 
@@ -142,25 +107,32 @@ public class AuthService {
     }
 
     private LoginResponse createToken(String username, Authentication authentication, String noticeVersion) {
-        int expirationTime = 60 * 30;
-        Map<String, Object> claims = new HashMap<>();
-        AuthHelper.setRoles(claims, authentication.getAuthorities());
-        Date expiration = new Date(System.currentTimeMillis() + 1000 * expirationTime);
-
-        String token = Jwts.builder()
-                .claims(claims)
-                .subject(username)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(expiration)
-                .signWith(getSignInKey())
-                .compact();
-
-        return LoginResponse.from(token, expirationTime, PrivacyNotice.PAGE, noticeVersion);
+        List<String> authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+        List<String> factors = authentication.getAuthorities().stream().filter(FactorGrantedAuthority.class::isInstance)
+                .map(GrantedAuthority::getAuthority).toList();
+        String accessToken = accessTokens.issue(username, authorities);
+        String refreshToken = refreshTokens.start(username, factors);
+        return LoginResponse.from(accessToken, (int) AccessTokens.LIFETIME.toSeconds(), refreshToken, PrivacyNotice.PAGE, noticeVersion);
     }
 
-    private SecretKey getSignInKey() {
-        byte[] bytes = Base64.getDecoder()
-                .decode(securityConfig.keySecret());
-        return new SecretKeySpec(bytes, "HmacSHA256");
+    /**
+     * Rotates a refresh token (W-358b). The roles are read again, so a role granted or withdrawn holds from the next refresh; an
+     * account held or erased since the sign-in is refused, and its family ended.
+     */
+    public RefreshResponse refresh(String presented) {
+        RefreshToken spent = refreshTokens.spend(presented);
+        UserDetailsImpl user = userDetailsRepo.findByEmail(spent.getEmail()).filter(login -> !heldAccounts.contains(login.getEmail()))
+                .map(UserDetailsImpl::new).orElseThrow(() -> {
+                    refreshTokens.endFamily(spent.getFamilyId());
+                    return RefreshTokens.refused();
+                });
+        List<String> authorities = Stream.concat(user.getAuthorities().stream().map(GrantedAuthority::getAuthority), spent.getFactors().stream())
+                .toList();
+        String accessToken = accessTokens.issue(user.getUsername(), authorities);
+        return new RefreshResponse(accessToken, AccessTokens.LIFETIME.toSeconds(), refreshTokens.succeed(spent));
+    }
+
+    public void logout(String presented) {
+        refreshTokens.end(presented);
     }
 }

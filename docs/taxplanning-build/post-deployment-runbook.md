@@ -683,7 +683,7 @@ fails** (`StoredActorEncryptionIntegrationTest`). Hence the first start with the
 (step 7).
 
 1. **A `SUPER_USER` token from the previous build.** Sign-in cannot find a login until step 4 re-keys it, but a token is
-   read from its own claims, not from the database (`AuthFilter`). Right before switching the build, sign in on the
+   read from its own claims, not from the database (`AuthFilter`; `AccessTokenConfig` from W-358b). Right before switching the build, sign in on the
    previous build as your `SUPER_USER` account and keep the token: it lasts 30 minutes. If it runs out first, deploy the
    previous build again, sign in, and switch back. **Start the new build with `APP_TAX_JOBS_ENABLED=false`**
    (`app.tax.jobs.enabled`; the shipped value from W-336, set anyway), so no job reads a plain row before step 4.
@@ -875,6 +875,22 @@ From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored 
 6. **After**, on staging with the switch on (§1.n): `db.tax_documents.countDocuments()`, then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/tax/user/<email>/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
 
 **A second run** is safe: step 2 reports the network and volume exist, and step 3 reports the name in use — `docker start clamd` instead. `freshclam` inside the container updates the signatures once a day; nothing to run. **Way back:** turn the switch off first (§1.n), then `docker rm -f clamd` and `docker volume rm clam_db`; the scanner stores nothing of ours.
+
+### 1.j W-358b (D-854) — refresh tokens; callers sign in again · owner · **first deploy carrying W-358b**
+
+Automatic at startup (`LoginIndexInitializer`). **Before** (read-only, `mongosh` on the database): `db.refresh_tokens.countDocuments({})` — expected `0`
+(the collection is new). **Confirm** the log holds `Ensured the indexes of UserDetail` and `Ensured the indexes of RefreshToken`; a failure stops
+startup. **After** (read-only): `db.refresh_tokens.getIndexes().map(i => i.name)` — expected `_id_`, `refresh_token_hash_idx`,
+`refresh_token_family_idx`, `refresh_token_email_idx`, `refresh_token_expiry_idx` (the last with `expireAfterSeconds: 0`: Mongo removes a row
+once its 14 days pass). A second start changes nothing. Nothing to run by hand.
+
+**For callers:** an access token lasts 15 minutes (was 30); the sign-in also returns `refresh_token`, renewed by `POST /auth/token/refresh`
+and ended by `POST /auth/logout` (both `{"refresh_token": "…"}`). A token signed by the previous build either keeps working until it expires
+(at most 30 minutes) or is refused; a refused caller signs in again. A token on another user's `/…/user/{email}/…` path now answers **403**
+(was 401). The api-collection's `Auth/Login.yml` keeps the refresh token in `REFRESH_TOKEN`.
+
+**Way back:** deploy the previous build; it never reads `refresh_tokens`. Its rows are hashes that sign nobody in, so no backup is needed
+before dropping it: `db.refresh_tokens.drop()`.
 
 ## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
 

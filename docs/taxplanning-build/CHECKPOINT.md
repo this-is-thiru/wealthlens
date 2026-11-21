@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-359a BUILT (D-853), awaiting 'commit it' (api-collection: commit inside the submodule, then stage its pointer); PR #70 pipeline 44887511915 SUCCESS; next W-358b
-Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED (node autoremoved too — owner told); kept: ~/wealthlens-runs/archives/ (prod-after-m14 1,635 / staging-after-m14 1,406 docs, mode 600, delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js; everything else of the run deleted
-Done session 112: staging finished (D-842, D-843); prod: split (D-844), e1 (D-845), e2 (D-846, D-847), e3 (D-848, D-849); W-355, W-356 placed
-Board           : W-358a D, W-357a D, W-359a D (built, uncommitted); W-359 E, W-358b E, W-358c E, W-359b E; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·
-Next step       : after 'commit it': commit api-collection (2 files) inside the submodule, then the item commit with its pointer; push to PR #70; then build W-358b per plans/W-359.md
-Open to owner   : 'commit it' for W-359a; PR #70 not to merge until the owner says (pipeline 44887511915 success); api-collection Buy Stock.yml:68 doc proposal
-Env notes       : no MongoDB tools on this machine now (reinstall: brew tap mongodb/brew && brew install mongodb-database-tools); prod host cluster0.x6trgen.mongodb.net, staging it-staging.6fu8nvy.mongodb.net
-Last verify     : W-359a — 15 classes green (ControllerAdviser 23 red-first 22/23, Actuator 3 proven by removing the dependency, RouteAccess 5, Auth 17); validate clean; doc tests green
-Last item commit: taxplanning W-357a: remove the docs history and keep what is cited — decisions in their own file, an index, a tag for the rest
-Files touched   : ControllerAdviser, ControllerAdviserTest, AuthConfig, pom, application.yaml, ActuatorIntegrationTest (new), RouteAccessIntegrationTest, 9 integration tests; removed ResponseWrapperAdvice, ApiResponse, ErrorResponse; CLAUDE.md; DECISIONS, STATE, 03-WORK-ITEMS, plans/W-359.md (new); api-collection 2 files (plus this file)
-Updated         : 2026-11-21, session 112 (W-359a built)
+Item            : W-358b DONE (D-854), committed with api-collection pointer and pushed to PR #70; next W-358c (not started)
+Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED; kept: ~/wealthlens-runs/archives/ (delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js
+Done session 113: W-358b built — resource server, 15-min access, 14-day rotating refresh tokens (fixed from sign-in), cross-user path now 403
+Board           : W-358a D, W-357a D, W-359a D, W-358b D; W-359 E, W-358c E, W-359b E; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·
+Next step       : check PR #70's pipeline for the W-358b push (fix if red); then build W-358c per plans/W-359.md commit 3 (zoned /api/v1 URLs, /me, UserValidator removed), red first; publish WL-A-2 if not confirmed
+Open to owner   : PR #70 not to merge until the owner says; refresh expiry fixed 14 d from sign-in (D-854, owner may prefer sliding); httpBasic still on (proposal in D-854); 5 Dependabot alerts on master; api-collection Buy Stock.yml:68 doc proposal
+Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
+Last verify     : W-358b — RefreshToken 12 (red 12/12 first), Auth 17, RouteAccess 5, AccountErasure 8 + 10 more classes green; 3 probes failed as expected and restored; validate clean
+Last item commit: taxplanning W-358b: read tokens with Spring's resource server and add rotating refresh tokens — a stolen access token lasts 15 minutes, a reused refresh token ends the sign-in
+Files touched   : (none) (plus this file)
+Updated         : 2026-11-21, session 113 (W-358b committed and pushed)
 ```
 ## Resume check (run these, compare, then act on "Next step")
 

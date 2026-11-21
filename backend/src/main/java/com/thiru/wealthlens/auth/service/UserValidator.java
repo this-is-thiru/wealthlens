@@ -5,43 +5,23 @@ import com.thiru.wealthlens.shared.util.collection.TStringUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
+/** Whether a caller asks for another user's {@code /…/user/{email}/…} path; asked by {@code AuthConfig}'s access rule until W-358c's {@code /me}. */
 public class UserValidator {
-    public static boolean isRestrictedUser(UserDetails user) {
-        if(isSuperUser(user)) {
+
+    public static boolean isRestrictedUser(String username, Collection<? extends GrantedAuthority> authorities, HttpServletRequest request) {
+        if (isSuperUser(authorities)) {
             return false;
         }
-        String username = user.getUsername();
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String email = extractUsernameFromPath(request);
+        String email = extractUsernameFromPath(URLDecoder.decode(request.getRequestURI(), StandardCharsets.UTF_8));
         return email != null && !username.equals(email);
     }
 
-    public static boolean isRestrictedUser(String username, List<GrantedAuthority> authorities) {
-        if(isSuperUser(authorities)) {
-            return false;
-        }
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String email = extractUsernameFromPath(request);
-        return email != null && !username.equals(email);
-    }
-
-    private static boolean isSuperUser(List<GrantedAuthority> authorities) {
+    private static boolean isSuperUser(Collection<? extends GrantedAuthority> authorities) {
         return authorities.stream().map(GrantedAuthority::getAuthority).anyMatch(authority -> authority.equals("ROLE_SUPER_USER"));
-    }
-
-    private static boolean isSuperUser(UserDetails user) {
-        return user.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_SUPER_USER"));
-    }
-
-    private static String extractUsernameFromPath(HttpServletRequest request) {
-        String path = URLDecoder.decode(request.getRequestURI(), StandardCharsets.UTF_8);
-        return extractUsernameFromPath(path);
     }
 
     private static String extractUsernameFromPath(String path) {
