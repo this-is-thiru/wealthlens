@@ -7,7 +7,7 @@ Copy-paste these. They are written so a smaller model cannot drift.
 
 ## P0 — Before the first item, once
 
-> Read `docs/taxplanning-build/STATE.md` "Decisions taken during the build".
+> Read `docs/taxplanning-build/DECISIONS.md`.
 >
 > Seven questions are open. **Q1** (ship TY 2025-26 at launch, or TY 2026-27 only?) and **Q3**
 > (modulith `Type.CLOSED` or `OPEN`?) block `W-001`.
@@ -16,7 +16,7 @@ Copy-paste these. They are written so a smaller model cannot drift.
 > `docs/taxplanning-design/16-getting-started.md` §S1 with its one-line reason. Then stop and wait
 > for my answers.
 >
-> When I answer, record each in STATE.md under "Decisions taken during the build" in the form
+> When I answer, record each in DECISIONS.md, appended to its table, in the form
 > `D-00n | YYYY-MM-DD | <question> | <decision> | <who>`, tick its checkbox, and confirm which are
 > still open. **Do not start `W-001` until Q1 and Q3 are recorded.**
 
@@ -126,8 +126,8 @@ when the checkpoint check fails.
 
 > Review of **`<W-0nn>`**: **approved.**
 >
-> 1. Update STATE.md: set `<W-0nn>` to `DONE` with today's date, append a line to "Completed items",
->    advance "Current position" to the next item, and add anything learned to "Notes for resume".
+> 1. Update STATE.md: set `<W-0nn>` to `DONE` with today's date, advance "Current position" to the next
+>    item, and add anything learned to CHECKPOINT.md (a ruling as a D-row in DECISIONS.md).
 > 2. **Before committing**, set STATE.md's **"Last checkpoint"** line to
 >    `W-0nn — "taxplanning W-0nn: <one-line title>"`. It must match the subject you are about to use.
 > 3. Stage and commit **only** the files in this item's `Produces` list, plus STATE.md, in **one**
@@ -171,8 +171,8 @@ when the checkpoint check fails.
 ## P6 — Ending a session cleanly
 
 > We are stopping. Before you finish:
-> 1. update STATE.md — statuses, "Current position", "Last updated", "Notes for resume";
-> 2. if an item is mid-flight, write in "Notes for resume" exactly which files exist, which compile,
+> 1. update STATE.md — statuses, "Current position", "Last updated"; CHECKPOINT.md;
+> 2. if an item is mid-flight, write in CHECKPOINT.md exactly which files exist, which compile,
 >    and what remains;
 > 3. run `git status --short` and list what is uncommitted;
 > 4. confirm no file under `docs/taxplanning-design/` was modified.
@@ -231,7 +231,7 @@ Run this **before** approving any plan that touches a rupee value.
 >    reopening `<W-0nn>`. Give the trade-off of each.
 >
 > **Do not revert, reopen or edit anything until I choose.** When I do, record it in STATE.md under
-> "Decisions taken during the build" and set the status accordingly.
+> DECISIONS.md and set the status accordingly.
 
 ---
 

@@ -119,6 +119,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 - **Money is never asserted with a bare `assertEquals`.** Use `com.thiru.wealthlens.testsupport.MoneyAssert` — exact double comparison on rupee amounts is a latent failure.
 - **`ArchitectureTest`** encodes the conventions below as ArchUnit rules (no field injection, controllers do not reach repositories, snake_case `@Field` names, no console printing). Introducing a violation fails the build.
 - **Checkstyle fails the build** (10.x, `validate`, main and test sources) with the rule set in `checkstyle.xml` — the enforced half of "Engineering standards". Code that predates it is listed in `checkstyle-suppressions.xml` between the `BASELINE` markers; that list may only shrink (`CheckstyleBaselineTest`). Fix a violation rather than suppressing it. `ArchitectureTest` adds the naming rules (no generic class suffixes, no duplicate simple class names).
+- **Docs:** `docs/README.md` is the index. Decisions (D-rows) and blockers live in `docs/taxplanning-build/DECISIONS.md`; `STATE.md` holds the status board and current position; the history removed by W-357a is in git tag `docs-history-m1`.
 - **`FinishedPlanTest` fails the build** when a plan in `docs/taxplanning-build/plans/` belongs to an item the STATE.md status board marks `D` or `—` but still has an open `- [ ]` step that does not say "not taken" (W-200, D-399). Tick the step with the commit that did it, or mark it "not taken" with why.
 - **The commit gate checks standards, not tests:** `.claude/hooks/pre-commit-gate.sh` runs `./mvnw validate` (Checkstyle and `spotless:check`, a few seconds) before any `git commit` from a Claude Code session and blocks it on failure; `.claude/hooks/pre-commit-gate-test.sh` tests it. It runs no test — the pipeline runs every tier, so a failing test is found there (W-267, D-534). `.claude/hooks/unit-tier.sh` runs the unit tier by hand at low priority (JUnit parallel factor 0.5).
 - Third-party versions not managed by the Spring Boot parent live in the root `pom.xml` `<dependencyManagement>`; module poms declare deps without versions.
@@ -180,6 +181,5 @@ Within every module: `controller/` (no business logic) → `service/` (`@Transac
 
 ## Notes
 
-- `.kimchi/docs/` holds design/analysis documents written during past feature work (module dependency maps, tax-planning specs, migration plans). Useful background, not authoritative about current code.
 - `api-collection/` is an OpenCollection-format HTTP request collection covering the API surface.
 - The root `README.md` documents the data model in detail but predates the tax-planning build-out; trust the code over it.

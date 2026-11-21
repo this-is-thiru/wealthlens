@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-358a done (D-851), committed and pushed (with D-850's placements before it); next W-357a (docs removal)
+Item            : W-357a BUILT (D-852), awaiting owner's 'commit it' (then WL-A-2); next the API rebuild W-359 + W-358b + W-358c
 Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED (node autoremoved too — owner told); kept: ~/wealthlens-runs/archives/ (prod-after-m14 1,635 / staging-after-m14 1,406 docs, mode 600, delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js; everything else of the run deleted
 Done session 112: staging finished (D-842, D-843); prod: split (D-844), e1 (D-845), e2 (D-846, D-847), e3 (D-848, D-849); W-355, W-356 placed
-Board           : W-358a D; W-357a ·, W-357b ·, W-358b ·, W-358c ·, W-358d ·, W-359 ·, W-355 ·, W-356 ·, W-337 ·
-Next step       : plan W-357a (tag docs-history-m1, delete history + .kimchi/docs, index, slim STATE / work items, update 5 tests, CLAUDE.md, START-HERE, memory); check the pipeline run for W-358a later
+Board           : W-358a D, W-357a D; W-357b · (scope extended), W-358b ·, W-358c ·, W-358d ·, W-359 ·, W-355 ·, W-356 ·, W-337 ·
+Next step       : after the commit: plan the API rebuild (W-359 + W-358b + W-358c, one plan, commits each) — new decisions go into DECISIONS.md now, not STATE.md
 Open to owner   : go for W-357a's plan; api-collection Buy Stock.yml:68 doc proposal; the owner's upload of the trades Y2 listed
 Env notes       : no MongoDB tools on this machine now (reinstall: brew tap mongodb/brew && brew install mongodb-database-tools); prod host cluster0.x6trgen.mongodb.net, staging it-staging.6fu8nvy.mongodb.net
 Last verify     : W-358a — 10 classes 110/110 incl. RouteAccess 5/5, PropertySale 9/9, ArchitectureTest 26; validate clean; violation proven
 Last item commit: taxplanning W-358a: deny every route by default and guard every route the app serves — an unlisted path no longer opens by accident
-Files touched   : none
+Files touched   : 438 deletions; DECISIONS.md (new), docs/README.md (new), STATE.md, 03-WORK-ITEMS.md, runbook, 00-START-HERE.md, 04-PROMPTS.md, CLAUDE.md, plans/W-357a.md (new) (plus this file)
 Updated         : 2026-11-21, session 112 (W-334e3 run and closed out, uncommitted)
 ```
 ## Resume check (run these, compare, then act on "Next step")

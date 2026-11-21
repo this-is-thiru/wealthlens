@@ -161,7 +161,7 @@ These override any instinct, any shortcut, and anything else in this repository.
                                        mismatch → STOP, report `git log --oneline -10`
                                        (non-item commits are ignored by this check)
 2. git status --short                → uncommitted work?
-3. Read STATE.md "Current position" and "Notes for resume"
+3. Read STATE.md "Current position" (decisions are in `DECISIONS.md`)
 4. Act on the status you find:
      EXPLAINED        → the plan is written. Ask for approval. Do NOT code yet.
      IN_PROGRESS      → check which of "Produces" exist and compile. Finish only what is missing.
@@ -266,7 +266,7 @@ Rules for an erratum:
 | **Never edit or delete the original text.** | The error and its correction must both be visible. A silently corrected document teaches nothing |
 | **Only where you have proof.** | A command that failed, or a `file:line` you read. Not a suspicion |
 | **One block, immediately after the wrong statement.** | Not a footnote, not a separate errata page |
-| **Record it in `STATE.md` too**, under "Notes for resume" | so a resumed session sees it without re-reading 25 documents |
+| **Record it in `CHECKPOINT.md` too** (and as a D-row in `DECISIONS.md` if it is a ruling) | so a resumed session sees it without re-reading 25 documents |
 | **Nothing else in that file may change.** | `git diff` on a design doc must show additions only, all of them erratum blocks |
 | **It is still part of the item's report.** | The reviewer sees it before it is committed |
 
@@ -287,7 +287,9 @@ reader in exactly the way it misled you. Extended to `03-WORK-ITEMS.md` by decis
 | `02-TECH-SPEC.md` | every type, package, collection, endpoint, invariant | when an item cites a type |
 | `03-WORK-ITEMS.md` | the ordered backlog with checkboxes | every session |
 | `04-PROMPTS.md` | copy-paste prompts for each stage | every session |
-| `STATE.md` | decisions, blockers, status board, history | when the checkpoint points there |
+| `STATE.md` | status board, current position, open owner questions, unverified rules | when the checkpoint points there |
+| `DECISIONS.md` | every decision (D-rows) and blocker (B-00n), cited by the code | when a D-row or B-row is named |
+| [`../README.md`](../README.md) | the docs index; history is in git tag `docs-history-m1` | to find any doc |
 | `CHECKPOINT.md` | **the resume point** — ~20 lines, overwritten | first and last thing, every session (§5b) |
 | `plans/W-0nn.md` | an item's plan, approval and ticked steps | while that item is in flight |
 | `reviews/` | dated reviews of the build documents | when a decision cites one |
@@ -310,8 +312,8 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 | ID | Means | Home | Cite as |
 |---|---|---|---|
 | `W-0nn`, `W-0nnx` | work item; suffixed ids are splits/insertions, never renumbered | `03-WORK-ITEMS.md` | `W-045b` |
-| `B-00n` | a blocker | `STATE.md` | `B-002` |
-| `D-0nn` | a build decision (three digits) | `STATE.md` | `D-046` |
+| `B-00n` | a blocker | `DECISIONS.md` | `B-002` |
+| `D-0nn` | a build decision (three digits) | `DECISIONS.md` | `D-046` |
 | `B1`, `B2` | backlog rules (B1: an item carries its own test; B2: a `permits` clause lists only what exists) | `03-WORK-ITEMS.md` | `WI rule B2` |
 | `R1`–`R15` | the absolute rules | this file §4 | `START-HERE R7` |
 | `P0`–`P11`, `P1-quick` | prompts | `04-PROMPTS.md` | `prompt P11` |
