@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.shared.exception;
 
-
+import com.thiru.wealthlens.shared.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.LocalDate;
@@ -146,10 +146,16 @@ public class ControllerAdviser {
         return problem(HttpStatus.NOT_FOUND.value(), ex.getMessage(), request);
     }
 
+    /**
+     * An unexpected failure (W-364): its message names the code's insides — classes, nulls — so it goes only to the log, and the caller
+     * is told it failed and given the request's id to quote (W-358d1).
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, HttpServletRequest request) {
         log(ex);
-        return problem(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(), request);
+        String detail = RequestIdFilter.current().map(id -> "Something went wrong. Quote " + RequestIdFilter.HEADER + " " + id + " when you report it.")
+                .orElse("Something went wrong.");
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR.value(), detail, request);
     }
 
     /** Every error as RFC 9457 {@code ProblemDetail} (W-359a): the status, its reason as the title, the message, the path. */
