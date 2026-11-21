@@ -31,7 +31,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-089d | PARKED | Salary TDS | The deploy gate | No figure yet; Form 130 needs it |
 | W-089e | PARKED | The un-limited rebate with special-rate income | When a source settles it, else waived at the deploy gate | Refused (row) |
 | W-078j7c | PARKED | The r.280 watch, next run | The deploy gate | A source watch; run before the deploy |
-| W-206 | PARKED | Request DTOs at the five entity-bound endpoints | The deploy gate | No figure at risk (row read, D-445) |
+| W-206 | NOW (D-863: before W-359b) | Request DTOs at the five entity-bound endpoints | The deploy gate | No figure at risk (row read, D-445) |
 | W-207 | PARKED | A non-premium's multi-year sum and the spreading row | The deploy gate | Refused (row) |
 | W-208 | PARKED | BSE rate cards | The deploy gate | **Wrong, small:** BSE undercharged about ₹68 per ₹1 crore per side |
 | W-209 | PARKED | The Zerodha AMC tiers and the first-year waiver | The deploy gate | **Wrong, small:** AMC flat ₹300 |
