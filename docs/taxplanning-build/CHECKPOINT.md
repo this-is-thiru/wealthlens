@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-358c3b DONE (D-862), committed and pushed to PR #70 with the W-358c3a fix; W-358c complete
+Item            : W-361 DONE (D-865), W-360 DONE (D-864) — committed and pushed to PR #70 (session 114)
 Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED; kept: ~/wealthlens-runs/archives/ (delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js
-Done session 113: W-358b built — resource server, 15-min access, 14-day rotating refresh tokens (fixed from sign-in), cross-user path now 403
-Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-359 E, W-359b E; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·
-Next step       : check PR #70's run for this push (fix if red); then next by board order: W-359b (OpenAPI + Swagger UI in the admin zone, plans/W-359.md commit 4) — plan first
-Open to owner   : PR #70 not to merge until the owner says; refresh expiry fixed 14 d from sign-in (D-854, owner may prefer sliding); httpBasic still on (proposal in D-854); 5 Dependabot alerts on master; api-collection Buy Stock.yml:68 doc proposal
+Done session 113: W-358b (D-854) + 401→403 fix; W-358c split (D-855); W-358c1 (D-856); W-358c2 (D-857, D-858); W-358c3 split (D-859); W-358c3a (D-860) + fix; W-358c3b (D-861, D-862); runbook "Next deploy" list
+Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-359 E, W-359b E; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·
+Next step       : check the pipeline run for the push (fix if red); then plan W-206 (request DTOs, §2 template, probe first) → W-359b → merge PR #70 on the owner's word → deploy
+Open to owner   : PR #70 merge after W-359b and a green run (owner proposal); after W-359b by board order W-358d, W-357b, W-355, W-356, W-351 (M2 review), W-337 (SQL, after deploying everything); past commits keep Claude co-author lines
 Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
-Last verify     : W-358c3b — Pagination red 8/8 → green 8/8, probe bites; 27 classes green; validate clean; every api-collection file parses
-Last item commit: taxplanning W-358c3b: answer a page for the seven lists that grow — Spring's PagedModel, 50 by default, at most 200
+Last verify     : W-360 tree 1.85, Form130Parser 25 + DocumentBytes 7 green; W-361 red 200≠401 → green, probe bites, 9 classes green; validate clean
+Last item commit: taxplanning W-361: turn HTTP Basic off — a password on every request skipped the sign-in record and the refresh flow
 Files touched   : (none) (plus this file)
-Updated         : 2026-11-21, session 113 (W-358c3b committed and pushed)
+Updated         : 2026-11-21, session 114
 ```
 ## Resume check (run these, compare, then act on "Next step")
 

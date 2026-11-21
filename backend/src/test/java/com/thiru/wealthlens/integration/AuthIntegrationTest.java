@@ -431,4 +431,20 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
         assertEquals(403, response.getStatusCode().value());
     }
+
+    @Test
+    void protectedEndpoint_whenBasicCredentials_returns401() {
+        // Given — a registered user's right password, sent as HTTP Basic instead of signing in (W-361)
+        String email = "basic@test.com";
+        given().contentType(ContentType.JSON).body(registration(email)).when().post("/api/v1/public/auth/register").then().statusCode(200);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(email, "password123");
+
+        // When
+        ResponseEntity<String> response = createNoErrorRestTemplate().exchange(URI.create(baseUrl() + "/api/v1/me/portfolio/transactions"),
+                HttpMethod.GET, new HttpEntity<Void>(headers), String.class);
+
+        // Then
+        assertEquals(401, response.getStatusCode().value());
+    }
 }

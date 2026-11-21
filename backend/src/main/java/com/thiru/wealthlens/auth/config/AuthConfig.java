@@ -61,7 +61,6 @@ public class AuthConfig {
                         // zone annotation never opens by accident. RouteAccessIntegrationTest checks every route against these rules.
                         .anyRequest().denyAll())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .httpBasic(Customizer.withDefaults())
                 // Spring's resource server reads the access token (W-358b, AccessTokenConfig)
                 .oauth2ResourceServer(server -> server.bearerTokenResolver(tokenOutsidePublicPaths())
                         .jwt(jwt -> jwt.decoder(accessTokenDecoder).jwtAuthenticationConverter(accessTokenAuthentication)))
