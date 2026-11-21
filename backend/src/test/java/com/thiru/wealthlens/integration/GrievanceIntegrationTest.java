@@ -89,7 +89,7 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
     @Test
     void raise_whenTheTokenIsAnotherUsers_isRefusedAndNothingIsStored() throws IOException, InterruptedException {
         // When / Then
-        raise(OTHER, USER, "Not mine to raise").statusCode(401);
+        raise(OTHER, USER, "Not mine to raise").statusCode(403);
         HttpResponse<String> mine = read("/privacy/grievances/user/" + USER, USER, "USER");
         assertThat(mine.statusCode()).isEqualTo(200);
         assertThat(json(mine).size()).isZero();

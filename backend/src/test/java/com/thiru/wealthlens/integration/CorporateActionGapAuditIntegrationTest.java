@@ -247,7 +247,7 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(quantity("TCS")).isEqualTo(20.0);
     }
 
-    // Scenario 16: refused, with 401 (noted in the report: a signed-in caller on another user's path)
+    // Scenario 16: refused, with 403 since W-358b (D-854: a signed-in caller on another user's path; was 401)
     @Test
     void userRoutes_whenThePathNamesAnotherUser_areRefused() {
         // Given -- another user's holding
@@ -271,8 +271,8 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
                 + "/portfolio/user/" + other + "/stocks/all"), HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
         // Then
-        assertThat(performed.getStatusCode().value()).as(performed.getBody()).isEqualTo(401);
-        assertThat(read.getStatusCode().value()).as(read.getBody()).isEqualTo(401);
+        assertThat(performed.getStatusCode().value()).as(performed.getBody()).isEqualTo(403);
+        assertThat(read.getStatusCode().value()).as(read.getBody()).isEqualTo(403);
     }
 
     // Scenario 8 (W-314)

@@ -143,10 +143,10 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         String id = createdProfileId();
 
         // When / Then — their own token, the owner's path
-        assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles", null).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles/" + id, null).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles", null).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles/" + id, null).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles/" + id + "/employers", null).getStatusCode())
-                .isEqualTo(HttpStatus.UNAUTHORIZED);
+                .isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test

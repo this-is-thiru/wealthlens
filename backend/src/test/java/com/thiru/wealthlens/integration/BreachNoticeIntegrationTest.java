@@ -159,7 +159,7 @@ class BreachNoticeIntegrationTest extends AbstractIntegrationTest {
         postedToEveryone();
 
         // When / Then
-        assertThat(read("/user/" + ANU, BALA, "USER").statusCode()).isEqualTo(401);
+        assertThat(read("/user/" + ANU, BALA, "USER").statusCode()).isEqualTo(403);
     }
 
     @Test
