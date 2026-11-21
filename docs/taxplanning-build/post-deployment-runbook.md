@@ -1231,7 +1231,9 @@ so the old form misleads only whoever reads the field. This makes the stored yea
 
 **Removed after use:** W-149 / WL-32, once this is logged for prod.
 
-### 2.4 W-088k4b (D-308) — date the bonus lots processed before W-088k4a from their allotment · `SUPER_USER` · **every database with bonus actions · once · outstanding**
+### 2.4 W-088k4b (D-308) — date the bonus lots processed before W-088k4a from their allotment · `SUPER_USER` · **retired by W-150 (D-876) · do not run**
+
+> **Retired.** Run on prod (W-334e2: written, second dry run 0) and staging (W-334d3a); W-150 removed its route and code. Kept below as the record of what it did.
 
 **Why.** A bonus share's holding period runs from its allotment (1961 Explanation 1(i)(f) to s.2(42A); 2025
 s.2(101)(c)(C)(IV)). Before W-088k4a a bonus lot, its transaction and the disposals of it were dated at the action's
