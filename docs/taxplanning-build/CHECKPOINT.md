@@ -4,14 +4,14 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-359b DONE (D-867), W-359 complete — committed and pushed to PR #70 with api-collection 0684031 (session 114)
+Item            : W-362 P (D-868) — the next deploy; plan committed on PR #70; W-362a row 1 waits for this push's run
 Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED; kept: ~/wealthlens-runs/archives/ (delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js
 Done session 113: W-358b (D-854) + 401→403 fix; W-358c split (D-855); W-358c1 (D-856); W-358c2 (D-857, D-858); W-358c3 split (D-859); W-358c3a (D-860) + fix; W-358c3b (D-861, D-862); runbook "Next deploy" list
-Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·
-Next step       : check the pipeline run for the W-359b push: green AND ApiCollectionContractIntegrationTest ran (TEST-*.xml in the report, not skipped; if the submodule did not fetch, propose an HTTPS .gitmodules URL to the owner); then merge PR #70 on the owner's word → deploy (runbook 'Next deploy' 1–8)
+Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·, W-362 P, W-362a ·, W-362b ·, W-362c ·
+Next step       : when this push's run is green: give W-362a row 1 with <H> = this commit and <R> = its run; owner runs rows, session answers go/stop and logs in the runbook run log
 Open to owner   : PR #70 merge after W-359b and a green run (owner proposal); after W-359b by board order W-358d, W-357b, W-355, W-356, W-351 (M2 review), W-337 (SQL, after deploying everything); past commits keep Claude co-author lines
 Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
-Last verify     : W-359b — red 4/4 → green, 3 probes bite, 19 classes green, validate clean; run 44917077462 (W-206) success
+Last verify     : pipeline 44918976061 green: 505 reports, the collection check and the spec tests ran on CI
 Last item commit: taxplanning W-359b: generate the API spec for an admin and check the api-collection against it — the only client had drifted from the code
 Files touched   : (none) (plus this file)
 Updated         : 2026-11-21, session 114
