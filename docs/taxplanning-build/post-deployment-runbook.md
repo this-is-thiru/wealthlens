@@ -1378,7 +1378,9 @@ file.
 
 **Removed after use:** W-170 / WL-36, once this is logged for every database and its `unplaced` list is placed.
 
-### 2.7 W-160f (D-371) — drop `portfolio`'s holding-period policies · owner, `mongosh` · **every database · once · outstanding**
+### 2.7 W-160f (D-371) — drop `portfolio`'s holding-period policies · owner, `mongosh` · **retired by W-171 (D-880) · do not run**
+
+> **Retired.** Run on prod (W-334e2: present and empty, dropped) and staging (W-334d3a: 11 backed up, dropped); `holding_period_policies` is gone from both. Kept below as the record of what it did.
 
 **Why.** `holding_period_policies` held `portfolio`'s own copy of the holding-period law, seeded by `POST
 /api/v1/admin/charges/seed`. Since W-160f no code reads, writes or seeds it: the term is the engine's `RS-CG-TERM` (D-305, D-362).
