@@ -75,6 +75,12 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 
 Findings that did not earn a row (D-435).
 
+- **Ideas, not scheduled (owner, 2026-11-21, D-850)** — none earns a row until the owner picks it:
+  - **TOTP MFA** (authenticator app): no extra hosting or frontend; added as a provider on W-358b's standard pieces.
+  - **Passkeys** (WebAuthn): wait for a frontend login page and the final domain (a passkey is bound to its domain).
+  - **Live market prices** and the unrealised P&L they allow; **sector allocation** (needs a sector fact per asset);
+    **benchmark comparison** (e.g. Nifty 50); **charge analytics**; **notifications**; **multi-currency**; **a frontend**.
+
 - 2025 s.266(2)(c) – (g) (s.157 relief, foreign relief, s.206 credit, s.391(2)) are not entered, so the balance can only be too high, never too low (W-089b, D-436); W-089a owns (c).
 - A sold lot no card priced refuses the summary until charges can be entered by code for such assets (W-223 C2a, D-437). A refusal, not a wrong figure, so no row; it needs a decision before the deploy gate.
 - Not built from `DR 11` (D-441 C3a): snapshots every 50 revisions (replay stays short until a draft has hundreds), fork, draft-to-draft diff, quota eviction, year rollover, per-field provenance (no reader before document import).
