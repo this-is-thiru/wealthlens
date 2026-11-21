@@ -31,6 +31,10 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,8 +102,8 @@ public class CorporateActionService {
         return "Priority has been updated for the action: " + id + " stock: " + entity.getStockCode() + " from: " + existingPriority + " to: " + priority;
     }
 
-    public List<CorporateActionEntity> getCorporateActions(List<String> ids) {
-        return corporateActionRepository.findAllById(ids);
+    public Page<CorporateActionEntity> getCorporateActions(List<String> ids, Pageable pageable) {
+        return corporateActionRepository.findByIdIn(ids, latestRecordFirst(pageable));
     }
 
     @Transactional
@@ -107,8 +111,14 @@ public class CorporateActionService {
         corporateActionRepository.deleteById(id);
     }
 
-    public List<CorporateActionEntity> getAllCorporateActions() {
-        return corporateActionRepository.findAll();
+    public Page<CorporateActionEntity> getAllCorporateActions(Pageable pageable) {
+        return corporateActionRepository.findAll(latestRecordFirst(pageable));
+    }
+
+    /** Corporate actions have no stored order, so a page reads the latest record date first, the id breaking a tie (D-861 C3a). */
+    private static Pageable latestRecordFirst(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "recordDate").and(Sort.by("id")));
     }
 
     /**

@@ -115,7 +115,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         assertEquals(200, tradeV2(trade("TCS", "INTRADAY", "BUY", 10, 1000, "2025-06-10")).getStatusCode().value());
 
         // When
-        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get(0);
+        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get("content").get(0);
         JsonNode lot = json(get("/api/v1/me/portfolio/stocks")).get(0);
 
         // Then -- recorded on the intraday card, and with authoritative on the lot costs the computed ₹3.92
@@ -130,7 +130,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         assertEquals(200, tradeV1(trade("TCS", "INTRADAY", "BUY", 10, 1000, "2025-06-10")).getStatusCode().value());
 
         // When
-        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get(0);
+        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get("content").get(0);
 
         // Then -- priced and recorded as intraday; V1 records, but only V2 makes it the cost (W-264b G4)
         assertEquals("ZERODHA_EQ_INTRADAY_2025_04", recorded.get("scheduleCode").asString());
@@ -156,7 +156,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         int billedAgain = json(call(HttpMethod.POST, cycle, admin(), null)).size();
 
         // Then -- 300 + 54 = ₹354, and the second run bills nobody
-        JsonNode charge = json(get("/api/v1/me/charges/user-charges")).get(0);
+        JsonNode charge = json(get("/api/v1/me/charges/user-charges")).get("content").get(0);
         assertEquals(1, billed);
         assertEquals(0, billedAgain);
         assertMoney(354.0, charge.get("totalCharges").asDouble());
@@ -226,7 +226,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
 
         // When
         JsonNode sale = null;
-        for (JsonNode row : json(get("/api/v1/me/charges/user-charges"))) {
+        for (JsonNode row : json(get("/api/v1/me/charges/user-charges")).get("content")) {
             if ("SELL".equals(row.get("event").asString())) {
                 sale = row;
             }

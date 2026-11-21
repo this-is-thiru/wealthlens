@@ -11,6 +11,8 @@ import com.thiru.wealthlens.shared.web.MeApi;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,12 +43,13 @@ public class UserChargesController {
      * because guessing which end was meant returns a short list that looks like missing charges.
      */
     @GetMapping
-    public List<UserChargeResponse> history(
+    public PagedModel<UserChargeResponse> history(
             @CallerEmail String email,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to,
-            @RequestParam(required = false) AssetType assetType) {
-        return userChargeService.findHistory(email, from, to, assetType).stream().map(UserChargeResponse::from).toList();
+            @RequestParam(required = false) AssetType assetType,
+            Pageable pageable) {
+        return new PagedModel<>(userChargeService.findHistory(email, from, to, assetType, pageable).map(UserChargeResponse::from));
     }
 
     /** The contract note for one trade, line by line. */

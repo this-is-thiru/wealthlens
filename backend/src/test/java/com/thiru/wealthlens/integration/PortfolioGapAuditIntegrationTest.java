@@ -187,12 +187,12 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
 
         // When
-        TransactionResponse[] listed = get(OWNER, "/api/v1/me/portfolio/transactions", TransactionResponse[].class).getBody();
+        List<TransactionResponse> listed = get(OWNER, "/api/v1/me/portfolio/transactions", TransactionsPage.class).getBody().content();
 
         // Then — three rows, three distinct ids, all OWNER's
-        assertEquals(3, listed.length);
-        assertEquals(3, Arrays.stream(listed).map(TransactionResponse::getTransactionId).distinct().count());
-        assertTrue(Arrays.stream(listed).allMatch(row -> OWNER.equals(row.getEmail())));
+        assertEquals(3, listed.size());
+        assertEquals(3, listed.stream().map(TransactionResponse::getTransactionId).distinct().count());
+        assertTrue(listed.stream().allMatch(row -> OWNER.equals(row.getEmail())));
     }
 
     @Test
@@ -424,12 +424,11 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
 
         // When
-        TransactionEntity[] listed = get(OWNER, "/api/v1/me/portfolio/transactions", TransactionEntity[].class)
-                .getBody();
+        List<TransactionResponse> listed = get(OWNER, "/api/v1/me/portfolio/transactions", TransactionsPage.class).getBody().content();
 
         // Then — OWNER's one trade, none of OTHER's
-        assertEquals(1, listed.length);
-        assertEquals(OWNER, listed[0].getEmail());
+        assertEquals(1, listed.size());
+        assertEquals(OWNER, listed.getFirst().getEmail());
     }
 
     @Test
@@ -1311,4 +1310,8 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                 .toList();
     }
 
+
+    /** A page of a user's trades as the route answers it since W-358c3b: the rows are under {@code content}. */
+    private record TransactionsPage(List<TransactionResponse> content) {
+    }
 }

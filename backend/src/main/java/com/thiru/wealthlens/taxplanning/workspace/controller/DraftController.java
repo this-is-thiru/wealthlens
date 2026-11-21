@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -88,8 +90,8 @@ public class DraftController {
     }
 
     @GetMapping("/drafts/{draftId}/revisions")
-    public List<RevisionResponse> revisions(@CallerEmail String email, @PathVariable String draftId) {
-        return draftService.revisions(email, draftId).stream().map(RevisionResponse::of).toList();
+    public PagedModel<RevisionResponse> revisions(@CallerEmail String email, @PathVariable String draftId, Pageable pageable) {
+        return new PagedModel<>(draftService.revisions(email, draftId, pageable).map(RevisionResponse::of));
     }
 
     @GetMapping("/drafts/{draftId}/revisions/{number}")

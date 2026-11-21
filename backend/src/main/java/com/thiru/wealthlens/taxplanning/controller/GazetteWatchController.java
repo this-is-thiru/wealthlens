@@ -6,8 +6,9 @@ import com.thiru.wealthlens.taxplanning.gazette.GazetteCursorResponse;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteLeadResponse;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteWatchService;
 import java.security.Principal;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +27,8 @@ public class GazetteWatchController {
     /** Every lead, newest first. */
     @GetMapping("/gazette-leads")
     @PreAuthorize("hasRole('SUPER_USER')")
-    public ResponseEntity<List<GazetteLeadResponse>> leads() {
-        return ResponseEntity.ok(gazetteWatch.leads().stream().map(GazetteLeadResponse::from).toList());
+    public ResponseEntity<PagedModel<GazetteLeadResponse>> leads(Pageable pageable) {
+        return ResponseEntity.ok(new PagedModel<>(gazetteWatch.leads(pageable).map(GazetteLeadResponse::from)));
     }
 
     /** Where the watch starts: it reads the numbers after {@code lastNumber} in {@code year}'s folder. */

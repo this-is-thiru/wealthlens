@@ -18,6 +18,11 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,20 +117,26 @@ public class TransactionService {
         return TCollectionUtil.map(savedTransactions, TransactionEntity::getId);
     }
 
-    public List<TransactionResponse> userTransactions(UserMail userMail, List<QueryFilter> queryFilters) {
-        return withCharges(userMail, getUserTransactions(userMail, queryFilters));
-    }
-
-    public List<TransactionEntity> getUserTransactions(UserMail userMail, List<QueryFilter> queryFilters) {
-        return mongoTemplateService.getDocuments(userMail, queryFilters, TransactionEntity.class);
+    public Page<TransactionResponse> userTransactions(UserMail userMail, List<QueryFilter> queryFilters, Pageable pageable) {
+        return withCharges(userMail, mongoTemplateService.getDocuments(userMail, queryFilters, TransactionEntity.class, newestFirst(pageable)));
     }
 
     public List<TransactionEntity> getUserTransactions(UserMail userMail) {
         return transactionRepository.findByEmail(userMail.getEmail());
     }
 
-    public List<TransactionResponse> getAllUserTransactions(UserMail userMail) {
-        return withCharges(userMail, transactionRepository.findByEmail(userMail.getEmail()));
+    public Page<TransactionResponse> getAllUserTransactions(UserMail userMail, Pageable pageable) {
+        return withCharges(userMail, transactionRepository.findByEmail(userMail.getEmail(), newestFirst(pageable)));
+    }
+
+    /** A user's trades have no stored order, so a page reads newest first, the id breaking a tie (W-358c3b, D-861 C3a). */
+    private static Pageable newestFirst(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "transactionDate").and(Sort.by("id")));
+    }
+
+    private Page<TransactionResponse> withCharges(UserMail userMail, Page<TransactionEntity> page) {
+        return new PageImpl<>(withCharges(userMail, page.getContent()), page.getPageable(), page.getTotalElements());
     }
 
     /**

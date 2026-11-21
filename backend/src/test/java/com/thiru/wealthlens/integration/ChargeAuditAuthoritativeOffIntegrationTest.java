@@ -23,7 +23,7 @@ class ChargeAuditAuthoritativeOffIntegrationTest extends AbstractChargeAuditInte
 
         // Then -- the ₹12.38 is recorded and the lot still costs the entered ₹15
         JsonNode lot = json(get("/api/v1/me/portfolio/stocks")).get(0);
-        JsonNode recorded = json(get("/api/v1/me/charges/user-charges"));
+        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get("content");
         assertEquals(200, status);
         assertEquals(1, recorded.size());
         assertMoney(15.0, lot.get("brokerCharges").asDouble());

@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -39,6 +40,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 /**
  * Computing a charge and recording what was computed.
@@ -349,17 +355,19 @@ class UserChargeServiceTest {
     // ------------------------------------------------------- filtered history (Chunk 9)
 
     @Test
-    void findHistory_whenNoFilterIsGiven_returnsEverythingNewestFirst() {
+    void findHistory_whenNoFilterIsGiven_readsAPageNewestFirst() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
-                .thenReturn(List.of(charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2))));
+        when(userChargeRepository.findByEmail(eq(EMAIL), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2)))));
 
         // When
-        List<UserChargeEntity> history = service.findHistory(EMAIL, null, null, null);
+        Page<UserChargeEntity> history = service.findHistory(EMAIL, null, null, null, PageRequest.of(0, 50));
 
-        // Then — no dates means no range query; the full history is already ordered
-        assertThat(history).hasSize(1);
-        verify(userChargeRepository).findByEmailOrderByTransactionDateDesc(EMAIL);
+        // Then — no dates means no range query; the page is read newest first, the id breaking a tie (W-358c3b)
+        assertThat(history.getContent()).hasSize(1);
+        ArgumentCaptor<Pageable> page = ArgumentCaptor.forClass(Pageable.class);
+        verify(userChargeRepository).findByEmail(eq(EMAIL), page.capture());
+        assertThat(page.getValue().getSort()).isEqualTo(Sort.by(Sort.Direction.DESC, "transactionDate").and(Sort.by("id")));
     }
 
     @Test
@@ -368,22 +376,22 @@ class UserChargeServiceTest {
         // list worth pulling across to discard most of it
         LocalDate from = LocalDate.of(2025, 4, 1);
         LocalDate to = LocalDate.of(2025, 6, 30);
-        when(userChargeRepository.findByEmailAndTransactionDateBetween(EMAIL, from, to))
-                .thenReturn(List.of(charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2))));
+        when(userChargeRepository.findByEmailAndTransactionDateBetween(eq(EMAIL), eq(from), eq(to), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2)))));
 
         // When
-        List<UserChargeEntity> history = service.findHistory(EMAIL, from, to, null);
+        Page<UserChargeEntity> history = service.findHistory(EMAIL, from, to, null, PageRequest.of(0, 50));
 
         // Then
-        assertThat(history).hasSize(1);
-        verify(userChargeRepository).findByEmailAndTransactionDateBetween(EMAIL, from, to);
+        assertThat(history.getContent()).hasSize(1);
+        verify(userChargeRepository).findByEmailAndTransactionDateBetween(eq(EMAIL), eq(from), eq(to), any(Pageable.class));
     }
 
     @Test
     void findHistory_whenOnlyOneDateIsGiven_isRejectedRatherThanGuessed() {
         // Given / When / Then — an open-ended range could mean "since April" or "up to April",
         // and answering the wrong one looks like missing charges
-        assertThatThrownBy(() -> service.findHistory(EMAIL, LocalDate.of(2025, 4, 1), null, null))
+        assertThatThrownBy(() -> service.findHistory(EMAIL, LocalDate.of(2025, 4, 1), null, null, PageRequest.of(0, 50)))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("both");
     }
@@ -391,24 +399,24 @@ class UserChargeServiceTest {
     @Test
     void findHistory_whenRangeIsInverted_isRejected() {
         assertThatThrownBy(() -> service.findHistory(
-                EMAIL, LocalDate.of(2025, 6, 30), LocalDate.of(2025, 4, 1), null))
+                EMAIL, LocalDate.of(2025, 6, 30), LocalDate.of(2025, 4, 1), null, PageRequest.of(0, 50)))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("after");
     }
 
     @Test
-    void findHistory_whenAssetTypeIsGiven_keepsOnlyThatAssetType() {
-        // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).thenReturn(List.of(
-                charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2)),
-                charge(AssetType.MUTUAL_FUND, LocalDate.of(2025, 6, 3))));
+    void findHistory_whenAssetTypeIsGiven_matchesItInTheQuery() {
+        // Given — matched by the database, not filtered after the read, so a page is a full page (W-358c3b)
+        when(userChargeRepository.findByEmailAndAssetType(eq(EMAIL), eq(AssetType.MUTUAL_FUND), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(charge(AssetType.MUTUAL_FUND, LocalDate.of(2025, 6, 3)))));
 
         // When
-        List<UserChargeEntity> history = service.findHistory(EMAIL, null, null, AssetType.MUTUAL_FUND);
+        Page<UserChargeEntity> history = service.findHistory(EMAIL, null, null, AssetType.MUTUAL_FUND, PageRequest.of(0, 50));
 
         // Then
-        assertThat(history).extracting(UserChargeEntity::getAssetType)
+        assertThat(history.getContent()).extracting(UserChargeEntity::getAssetType)
                 .containsExactly(AssetType.MUTUAL_FUND);
+        verify(userChargeRepository).findByEmailAndAssetType(eq(EMAIL), eq(AssetType.MUTUAL_FUND), any(Pageable.class));
     }
 
     private static UserChargeEntity charge(AssetType assetType, LocalDate date) {

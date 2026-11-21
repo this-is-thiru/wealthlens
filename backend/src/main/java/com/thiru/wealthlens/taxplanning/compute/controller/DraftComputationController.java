@@ -32,10 +32,11 @@ import com.thiru.wealthlens.taxplanning.compute.DraftReconciliation;
 import com.thiru.wealthlens.taxplanning.compute.DraftReconciliationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftRegimeComparison;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -147,8 +148,8 @@ public class DraftComputationController {
 
     /** Every computation of a profile, newest first: the receipts to take each report by before erasure (W-123b C1a). */
     @GetMapping("/profiles/{profileId}/computations")
-    public List<ComputationListing> computations(@CallerEmail String email, @PathVariable String profileId) {
-        return service.computations(email, profileId);
+    public PagedModel<ComputationListing> computations(@CallerEmail String email, @PathVariable String profileId, Pageable pageable) {
+        return new PagedModel<>(service.computations(email, profileId, pageable));
     }
 
     /** The same receipt as a PDF, made on request and kept nowhere (W-123a C4a). */

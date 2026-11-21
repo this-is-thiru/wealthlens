@@ -19,6 +19,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,22 +75,22 @@ public class UserChargeService {
      *                             A half-open range reads as "since April" to one caller and "up to
      *                             April" to another, and guessing wrong looks like missing charges
      */
-    public List<UserChargeEntity> findHistory(String email, LocalDate from, LocalDate to, AssetType assetType) {
+    public Page<UserChargeEntity> findHistory(String email, LocalDate from, LocalDate to, AssetType assetType, Pageable pageable) {
         if ((from == null) != (to == null)) {
             throw new BadRequestException("A date range needs both from and to, or neither");
         }
         if (from != null && from.isAfter(to)) {
             throw new BadRequestException("Date range starts after it ends: " + from + " is after " + to);
         }
-
-        List<UserChargeEntity> charges = from == null
-                ? userChargeRepository.findByEmailOrderByTransactionDateDesc(email)
-                : userChargeRepository.findByEmailAndTransactionDateBetween(email, from, to);
-
-        if (assetType == null) {
-            return charges;
+        // Newest first, the id breaking a tie (W-358c3b, D-861 C3a); the asset type is matched in the query, so a page is a full page
+        Pageable newestFirst = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "transactionDate").and(Sort.by("id")));
+        if (from == null) {
+            return assetType == null ? userChargeRepository.findByEmail(email, newestFirst)
+                    : userChargeRepository.findByEmailAndAssetType(email, assetType, newestFirst);
         }
-        return charges.stream().filter(charge -> charge.getAssetType() == assetType).toList();
+        return assetType == null ? userChargeRepository.findByEmailAndTransactionDateBetween(email, from, to, newestFirst)
+                : userChargeRepository.findByEmailAndTransactionDateBetweenAndAssetType(email, from, to, assetType, newestFirst);
     }
 
     /** Rows whose charges could not be fully assessed. Drives the gaps report. */

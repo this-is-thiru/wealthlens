@@ -6,6 +6,9 @@ import com.thiru.wealthlens.shared.web.MeApi;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,11 +26,11 @@ public class CorporateActionController {
         return CorporateActionResponse.from(corporateActionService.getCorporateActionDetails(id));
     }
 
-    /** Every corporate action, or only those whose ids are given (W-358c3a: was {@code /all} and {@code /list}). */
+    /** Every corporate action, or only those whose ids are given (W-358c3a: was {@code /all} and {@code /list}), a page at a time. */
     @GetMapping
-    public List<CorporateActionResponse> corporateActions(@RequestParam Optional<List<String>> ids) {
-        List<CorporateActionEntity> actions = ids.map(corporateActionService::getCorporateActions)
-                .orElseGet(corporateActionService::getAllCorporateActions);
-        return actions.stream().map(CorporateActionResponse::from).toList();
+    public PagedModel<CorporateActionResponse> corporateActions(@RequestParam Optional<List<String>> ids, Pageable pageable) {
+        Page<CorporateActionEntity> actions = ids.map(given -> corporateActionService.getCorporateActions(given, pageable))
+                .orElseGet(() -> corporateActionService.getAllCorporateActions(pageable));
+        return new PagedModel<>(actions.map(CorporateActionResponse::from));
     }
 }

@@ -20,6 +20,14 @@ spring:
       # an export filter sent as "filters" for "queryFilters" once returned every row with a 200 (W-201, W-202).
       fail-on-unknown-properties: true
 
+  # W-358c3b (D-861): a list that grows answers Spring Data's page, {"content", "page"}; 50 when no size is given, never more than 200
+  data:
+    web:
+      pageable:
+        serialization-mode: via-dto
+        default-page-size: 50
+        max-page-size: 200
+
 app:
   security:
     key-secret: ${JWT_SECURITY_KEY}

@@ -6,8 +6,9 @@ import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
-import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,12 +23,13 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping("/search")
-    public List<TransactionResponse> getUserTransaction(@CallerEmail String email, @RequestBody BulkGetRequest bulkGetRequest) {
-        return transactionService.userTransactions(UserMail.from(email), bulkGetRequest.getQueryFilters());
+    public PagedModel<TransactionResponse> getUserTransaction(@CallerEmail String email, @RequestBody BulkGetRequest bulkGetRequest,
+            Pageable pageable) {
+        return new PagedModel<>(transactionService.userTransactions(UserMail.from(email), bulkGetRequest.getQueryFilters(), pageable));
     }
 
     @GetMapping
-    public List<TransactionResponse> getUserTransaction(@CallerEmail String email) {
-        return transactionService.getAllUserTransactions(UserMail.from(email));
+    public PagedModel<TransactionResponse> getUserTransaction(@CallerEmail String email, Pageable pageable) {
+        return new PagedModel<>(transactionService.getAllUserTransactions(UserMail.from(email), pageable));
     }
 }

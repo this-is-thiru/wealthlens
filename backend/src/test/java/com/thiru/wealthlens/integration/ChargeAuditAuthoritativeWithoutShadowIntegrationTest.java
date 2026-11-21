@@ -23,7 +23,7 @@ class ChargeAuditAuthoritativeWithoutShadowIntegrationTest extends AbstractCharg
 
         // Then -- nothing is recorded and the lot costs the entered ₹15, as CLAUDE.md says authoritative needs shadow
         JsonNode lot = json(get("/api/v1/me/portfolio/stocks")).get(0);
-        JsonNode recorded = json(get("/api/v1/me/charges/user-charges"));
+        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get("content");
         assertEquals(200, status);
         assertEquals(0, recorded.size());
         assertMoney(15.0, lot.get("brokerCharges").asDouble());

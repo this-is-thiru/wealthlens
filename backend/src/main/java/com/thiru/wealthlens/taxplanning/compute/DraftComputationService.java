@@ -22,7 +22,6 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -189,15 +192,17 @@ public class DraftComputationService {
      * @throws BadRequestException if the profile is not this account's, or is held for erasure
      */
     @Transactional(readOnly = true)
-    public List<ComputationListing> computations(String email, String profileId) {
+    /**
+     * A page of the profile's computations, newest first (one never computed last), the receipt breaking a tie; only the page read
+     * is logged as read (W-358c3b, D-861).
+     */
+    public Page<ComputationListing> computations(String email, String profileId, Pageable pageable) {
         Map<String, FilingDraft> drafts = draftService.profileDrafts(email, profileId).stream()
                 .collect(Collectors.toMap(FilingDraft::getId, Function.identity()));
-        return repository.findByDraftIdIn(drafts.keySet()).stream()
-                .sorted(Comparator.comparing(DraftComputation::getComputedAt,
-                        Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder()))
-                        .thenComparing(DraftComputation::getReceipt))
-                .map(stored -> listing(email, stored, drafts.get(stored.getDraftId())))
-                .toList();
+        Pageable newestFirst = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "computedAt").and(Sort.by("receipt")));
+        return repository.findByDraftIdIn(drafts.keySet(), newestFirst)
+                .map(stored -> listing(email, stored, drafts.get(stored.getDraftId())));
     }
 
     private ComputationListing listing(String email, DraftComputation stored, FilingDraft draft) {
