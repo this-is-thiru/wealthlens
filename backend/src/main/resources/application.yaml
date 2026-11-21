@@ -191,3 +191,17 @@ app:
     # every trade resolves NO_SCHEDULE and is charged nothing. ChargeReadinessAuditor warns at
     # startup when that is the case; docs/charges-engine/production-runbook.md is the procedure.
     authoritative: true
+
+# W-359a: health and readiness only, read by an admin (AuthConfig: /actuator/** needs SUPER_USER); every other endpoint off.
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      access: read-only
+      probes:
+        enabled: true

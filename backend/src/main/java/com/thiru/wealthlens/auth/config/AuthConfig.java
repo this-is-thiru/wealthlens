@@ -38,7 +38,10 @@ public class AuthConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register", "/helper/**", "/finances/**", "/template/**", "/privacy/rights",
                                 // The notice as a page (W-247); an exact path, so nothing under /privacy/** opens with it.
-                                "/privacy").permitAll()
+                                "/privacy",
+                                // Where a refusal or failure is rendered: an error dispatch carries no login, so a 403 from a rule
+                                // below would otherwise come back as 401 (W-359a, ActuatorIntegrationTest).
+                                "/error").permitAll()
                         .requestMatchers("/auth/**", "/portfolio/**", "/reports/**", "/transactions/**", "/corporate-action/**",
                                 "/temporary-transactions/**", "/broker-charges/**", "/user-broker-charges/**", "/analytics/**", "/tax-planning/**",
                                 // The charges engine: a rate card sets what every user is charged, /charges/amc/impose bills
@@ -48,6 +51,8 @@ public class AuthConfig {
                                 "/tax/**",
                                 // A user's grievances and the owner's queue (W-237b); only the notice is public.
                                 "/privacy/**").authenticated()
+                        // Health and readiness (W-359a): an admin's, like the other operator routes
+                        .requestMatchers("/actuator/**").hasRole("SUPER_USER")
                         // Deny by default (W-358a): a path nobody names above still needs a login, so a new route never
                         // opens by accident, as POST /properties/user/{email}/sales did while this line was permitAll.
                         // RouteAccessIntegrationTest checks every route the application serves against these rules.

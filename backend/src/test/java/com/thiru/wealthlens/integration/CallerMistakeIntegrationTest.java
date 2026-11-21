@@ -44,7 +44,7 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
 
     private static void assertAnswered(ResponseEntity<String> response, HttpStatus status, String message) {
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(status);
-        assertThat(JSON.readTree(response.getBody()).get("message").asString()).isEqualTo(message);
+        assertThat(JSON.readTree(response.getBody()).get("detail").asString()).isEqualTo(message);
     }
 
     @Test

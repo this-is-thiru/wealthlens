@@ -173,7 +173,7 @@ class HeldAssetsIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(JSON.readTree(response.getBody()).get("message").asString())
+        assertThat(JSON.readTree(response.getBody()).get("detail").asString())
                 .isEqualTo("Parameter 'term' must be one of [SHORT_TERM, LONG_TERM], but was 'MEDIUM'");
     }
 

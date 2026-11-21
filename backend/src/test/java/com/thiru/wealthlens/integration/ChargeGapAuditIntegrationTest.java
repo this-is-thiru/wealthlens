@@ -213,7 +213,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         // Then
         assertEquals(400, response.getStatusCode().value());
         assertEquals("Date range starts after it ends: 2026-01-01 is after 2025-01-01",
-                json(response).get("message").asString());
+                json(response).get("detail").asString());
     }
 
     @Test

@@ -579,7 +579,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
     private void assertRefused(ResponseEntity<String> response, String message) {
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(JSON.readTree(response.getBody()).get("message").asString()).isEqualTo(message);
+        assertThat(JSON.readTree(response.getBody()).get("detail").asString()).isEqualTo(message);
     }
 
     @Test

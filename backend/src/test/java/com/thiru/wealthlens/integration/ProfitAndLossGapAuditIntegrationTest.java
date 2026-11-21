@@ -199,7 +199,7 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then -- the short form is refused naming the stored form; a year with nothing traded is simply empty
         assertThat(shortForm.getStatusCode().value()).as(shortForm.getBody()).isEqualTo(400);
-        assertThat(JSON.readTree(shortForm.getBody()).get("message").asString())
+        assertThat(JSON.readTree(shortForm.getBody()).get("detail").asString())
                 .isEqualTo("A financial year is written as portfolio writes it, such as 2025-2026, but was 2025-26");
         assertThat(untraded.getStatusCode().value()).isEqualTo(200);
     }
@@ -281,7 +281,7 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(response.getStatusCode().value()).as(response.getBody()).isEqualTo(400);
-        assertThat(JSON.readTree(response.getBody()).get("message").asString())
+        assertThat(JSON.readTree(response.getBody()).get("detail").asString())
                 .isEqualTo("currentPrices names TCS more than once; give one price per stock");
     }
 }

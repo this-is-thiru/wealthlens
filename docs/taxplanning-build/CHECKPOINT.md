@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-357a BUILT (D-852), awaiting owner's 'commit it' (then WL-A-2); next the API rebuild W-359 + W-358b + W-358c
+Item            : W-359a BUILT (D-853), awaiting 'commit it' (api-collection: commit inside the submodule, then stage its pointer); PR #70 pipeline 44887511915 SUCCESS; next W-358b
 Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED (node autoremoved too — owner told); kept: ~/wealthlens-runs/archives/ (prod-after-m14 1,635 / staging-after-m14 1,406 docs, mode 600, delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js; everything else of the run deleted
 Done session 112: staging finished (D-842, D-843); prod: split (D-844), e1 (D-845), e2 (D-846, D-847), e3 (D-848, D-849); W-355, W-356 placed
-Board           : W-358a D, W-357a D; W-357b · (scope extended), W-358b ·, W-358c ·, W-358d ·, W-359 ·, W-355 ·, W-356 ·, W-337 ·
-Next step       : after the commit: plan the API rebuild (W-359 + W-358b + W-358c, one plan, commits each) — new decisions go into DECISIONS.md now, not STATE.md
-Open to owner   : go for W-357a's plan; api-collection Buy Stock.yml:68 doc proposal; the owner's upload of the trades Y2 listed
+Board           : W-358a D, W-357a D, W-359a D (built, uncommitted); W-359 E, W-358b E, W-358c E, W-359b E; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·
+Next step       : after 'commit it': commit api-collection (2 files) inside the submodule, then the item commit with its pointer; push to PR #70; then build W-358b per plans/W-359.md
+Open to owner   : 'commit it' for W-359a; PR #70 not to merge until the owner says (pipeline 44887511915 success); api-collection Buy Stock.yml:68 doc proposal
 Env notes       : no MongoDB tools on this machine now (reinstall: brew tap mongodb/brew && brew install mongodb-database-tools); prod host cluster0.x6trgen.mongodb.net, staging it-staging.6fu8nvy.mongodb.net
-Last verify     : W-358a — 10 classes 110/110 incl. RouteAccess 5/5, PropertySale 9/9, ArchitectureTest 26; validate clean; violation proven
-Last item commit: taxplanning W-358a: deny every route by default and guard every route the app serves — an unlisted path no longer opens by accident
-Files touched   : 438 deletions; DECISIONS.md (new), docs/README.md (new), STATE.md, 03-WORK-ITEMS.md, runbook, 00-START-HERE.md, 04-PROMPTS.md, CLAUDE.md, plans/W-357a.md (new) (plus this file)
-Updated         : 2026-11-21, session 112 (W-334e3 run and closed out, uncommitted)
+Last verify     : W-359a — 15 classes green (ControllerAdviser 23 red-first 22/23, Actuator 3 proven by removing the dependency, RouteAccess 5, Auth 17); validate clean; doc tests green
+Last item commit: taxplanning W-357a: remove the docs history and keep what is cited — decisions in their own file, an index, a tag for the rest
+Files touched   : ControllerAdviser, ControllerAdviserTest, AuthConfig, pom, application.yaml, ActuatorIntegrationTest (new), RouteAccessIntegrationTest, 9 integration tests; removed ResponseWrapperAdvice, ApiResponse, ErrorResponse; CLAUDE.md; DECISIONS, STATE, 03-WORK-ITEMS, plans/W-359.md (new); api-collection 2 files (plus this file)
+Updated         : 2026-11-21, session 112 (W-359a built)
 ```
 ## Resume check (run these, compare, then act on "Next step")
 

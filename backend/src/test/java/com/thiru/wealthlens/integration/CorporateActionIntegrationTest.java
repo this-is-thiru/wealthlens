@@ -358,7 +358,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .post("/corporate-action/add")
                 .then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("message", containsString("'date'"));
+                .body("detail", containsString("'date'"));
 
         assertEquals(0, mongoTemplate.getCollection("corporate_action").countDocuments());
     }

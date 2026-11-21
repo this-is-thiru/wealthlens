@@ -300,10 +300,10 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then -- the caller is told the four months a quarter starts in
         assertThat(lowercase.getStatusCode().value()).isEqualTo(400);
-        assertThat(JSON.readTree(lowercase.getBody()).get("message").asString())
+        assertThat(JSON.readTree(lowercase.getBody()).get("detail").asString())
                 .isEqualTo("A quarter starts in one of [JANUARY, APRIL, JULY, OCTOBER], but the month was 'april'");
         assertThat(february.getStatusCode().value()).isEqualTo(400);
-        assertThat(JSON.readTree(february.getBody()).get("message").asString())
+        assertThat(JSON.readTree(february.getBody()).get("detail").asString())
                 .isEqualTo("A quarter starts in one of [JANUARY, APRIL, JULY, OCTOBER], but the month was 'FEBRUARY'");
     }
 
@@ -399,7 +399,7 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(added.getStatusCode().value()).isEqualTo(400);
-        assertThat(JSON.readTree(added.getBody()).get("message").asString()).isEqualTo(
+        assertThat(JSON.readTree(added.getBody()).get("detail").asString()).isEqualTo(
                 "A demerger's ratio is new shares to shares held, two whole numbers above nil such as 1:10, but it was 1.5:10");
     }
 

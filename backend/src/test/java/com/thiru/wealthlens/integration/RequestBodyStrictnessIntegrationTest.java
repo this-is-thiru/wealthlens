@@ -27,7 +27,7 @@ class RequestBodyStrictnessIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         given().header("Authorization", "Bearer " + generateToken(EMAIL)).contentType(ContentType.JSON).body(body)
                 .when().post(EXPORT)
-                .then().statusCode(400).body("message", containsString("filters"));
+                .then().statusCode(400).body("detail", containsString("filters"));
     }
 
     @Test
