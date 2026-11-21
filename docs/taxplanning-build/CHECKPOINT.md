@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-362 P (D-868) — the next deploy; plan committed on PR #70; W-362a row 1 waits for this push's run
-Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED; kept: ~/wealthlens-runs/archives/ (delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js
+Item            : W-362 DONE (D-868 – D-871): m1.5 (master e832b56a) on staging and prod, both signed off; Next deploy list empty; WL-A-2 republished — close-out NOT committed (owner's word)
+Stage           : prod and staging on m1.5 (e832b56a), signed off 2026-11-21; app stopped; worktrees m1.4 (way back) and m1.5 on disk; MongoDB tools REMOVED (reads via IntelliJ console); archives ~/wealthlens-runs/archives (delete by 2027-11-21 or after W-337)
 Done session 113: W-358b (D-854) + 401→403 fix; W-358c split (D-855); W-358c1 (D-856); W-358c2 (D-857, D-858); W-358c3 split (D-859); W-358c3a (D-860) + fix; W-358c3b (D-861, D-862); runbook "Next deploy" list
-Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·, W-362 P, W-362a ·, W-362b ·, W-362c ·
-Next step       : when this push's run is green: give W-362a row 1 with <H> = this commit and <R> = its run; owner runs rows, session answers go/stop and logs in the runbook run log
+Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·, W-362 —, W-362a D, W-362b D, W-362c D
+Next step       : commit the W-362 close-out on the owner's word (on review/taxplanning; master has the plan via m1.5, the run records follow in the next PR); then by board order W-358d, W-357b, W-355, W-356, W-351, W-337
 Open to owner   : PR #70 merge after W-359b and a green run (owner proposal); after W-359b by board order W-358d, W-357b, W-355, W-356, W-351 (M2 review), W-337 (SQL, after deploying everything); past commits keep Claude co-author lines
 Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
 Last verify     : pipeline 44918976061 green: 505 reports, the collection check and the spec tests ran on CI
 Last item commit: taxplanning W-359b: generate the API spec for an admin and check the api-collection against it — the only client had drifted from the code
-Files touched   : (none) (plus this file)
+Files touched   : runbook (run log, Next deploy emptied), DECISIONS (D-869 – D-871), STATE, plans/W-362.md
 Updated         : 2026-11-21, session 114
 ```
 ## Resume check (run these, compare, then act on "Next step")

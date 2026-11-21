@@ -78,21 +78,9 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ## Next deploy — what prod and staging still need
 
-Both are on `m1.4` (D-849); the app runs locally, nothing is hosted. The next deploy needs only these, in this order; each line goes
-when its run is logged for both. Everything below is the full sequence for a fresh database (W-337).
-
-1. §1.j W-358b — refresh tokens; callers sign in again.
-2. §1.i W-358c1 — every route moves under `/api/v1/…`; the notice's version changes.
-3. W-358c2 (D-858) — nothing to run: responses no longer carry `auditMetadata` (and transactions not `idempotencyKey`, `tradeFingerprint`, `submittedAt`, `assetRequest`, `tradeFlow`); a client reading those moves off them.
-4. W-358c3a (D-860) — nothing to run: the paths that named a verb moved (`plans/W-358c3.md` table, e.g. `GET /api/v1/me/portfolio/stocks`, `DELETE /api/v1/me/portfolio`, `PATCH /api/v1/admin/corporate-actions/{id}`); `GET /api/v1/me/portfolio/all/transactions`, `PUT /api/v1/admin/corporate-actions/perform/test` and `GET /api/v1/public/auth/login` are gone.
-5. W-358c3b (D-862) — nothing to run: a user's transactions and their search, charge history, corporate actions, Gazette leads, a profile's computations and a draft's revisions answer a page (`content`, `page`; `?page=`, `&size=` up to 200) instead of a bare list.
-6. W-361 (D-865) — nothing to run: HTTP Basic is off; a request carrying a password instead of a token answers 401 — sign in for a token.
-7. W-206 (D-866) — nothing to write. Registering a demat account and publishing a rate card read request types: a body naming `email`, `lastBilledThrough`, `billingEvents` or `auditMetadata` answers 400 naming the field. **Read-only check, per database, owner, before or after the deploy (safe to repeat):** accounts whose billing date did not come from the AMC run, which writes the date and a billing event together (`AmcChargeService:114-116`):
-   ```
-   db.charge_accounts.countDocuments({last_billed_through: {$ne: null}, $or: [{billing_events: {$exists: false}}, {billing_events: {$size: 0}}]})
-   ```
-   Expected `0`. Anything above 0 is an account whose date came from a request body before W-206: stop and tell the owner; this item corrects nothing.
-8. W-359b (D-867) — nothing to run: the API's contract is `GET /api/v1/admin/docs/openapi` (a `SUPER_USER` token; the api-collection's `OpenAPI spec.yml`). No Swagger UI is served.
+Both are on `m1.5` (W-362, D-870, D-871); the app runs locally, nothing is hosted. **Nothing is pending.** An item that needs
+something at the next deploy adds its line here when it is committed; each line goes when its run is logged for both. Everything
+below is the full sequence for a fresh database (W-337).
 
 ## 0. Before deploying
 
@@ -2201,3 +2189,23 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 
 | Date | Database | Step | Run by | Result |
 |---|---|---|---|---|
+| 2026-11-21 | — (W-362a, D-868) | row 1, preconditions | owner | `master` 2229df87; no `m1.5` tag; PR #70 `OPEN false 356c8e01 MERGEABLE`, first `UNSTABLE` while run 44920213218 ran, then `CLEAN`; run 44920213218 `success` on 356c8e01 — **go** |
+| 2026-11-21 | — (W-362a, D-868) | row 2, PR #70 merged as a merge commit | owner | `M` = e832b56a, parents 2229df87 and 356c8e01; `git diff --stat 356c8e01 origin/master` empty — **go** |
+| 2026-11-21 | — (W-362a, D-868) | row 3, the `master` pipeline | session | run 44920860461 (`push`, Build and Push Docker Image) `success` on e832b56a; image tags `wealthlens:latest`, `wealthlens:sha-e832b56a5d0a` — **go** |
+| 2026-11-21 | — (W-362a, D-868) | row 4, `m1.5` tagged, worktree and jar | owner | tag `m1.5` → e832b56a pushed; `../wealthlens-m1.5` at e832b56a; `wealthlens.jar` 91,407,010 bytes (Spotless's `sun.misc.Unsafe` notices only) — **go** |
+| 2026-11-21 | — (W-362a, D-868) | row 5, WL-A-2 published from `m1.5`'s runbook | session | `{"idReadable":"WL-A-2",…}`; read back: 198,836 characters holding the file's 198,654 after the source-of-truth header — **go**; W-362a done |
+| 2026-11-21 | staging (W-362b, D-868) | row 1, environment | owner | keys 32 bytes, prefixes bbf4a26647f6 / c59064f277a6 / 5524e829976b; PRIVACY_CONTACT 25; owner email first empty (re-entered: 25); app password set; jobs off; port 8080 free; jars 91,407,010 (`m1.5`) and 87,816,823 (`m1.4`) — **go** |
+| 2026-11-21 | staging (W-362b, D-868) | row 2, before (read-only, IntelliJ console) | owner | `it-staging`: users 14, consents 1, `refresh_tokens` absent, billedWithoutEvent 0 (W-206 check) — **go** |
+| 2026-11-21 | staging (W-362b, D-868) | row 3, `m1.5` started (staging profile) | owner | `Started` in 7.458 s; `Ensured the indexes of` UserDetail, RefreshToken, PrivacyConsent; no ERROR; WARN: the malware scan is off (staging yaml `scan.enabled: false`, W-131h, D-769) and SpringDoc's "endpoint is enabled by default" (D-867 C1a: the spec in every profile, admin only) — both expected; m1.4's `AuthenticationProvider` notice gone with W-358b — **go** |
+| 2026-11-21 | staging (W-362b, D-868) | row 4, routes and a sign-in | owner | rights 200; notice version 6f36c92105ff376fa931f28523cdaddcd1fa80ceea7322b9fc67a6efa3638f44 (new); old rights path 401; expires_in 900, refresh token 43 chars; my stocks 200; basic auth 401; spec paths 136; refreshed 900, rotated yes; logout 204 — **go** |
+| 2026-11-21 | prod (W-362b row 5 run on the wrong console) | read-only, not a W-362c row | owner | `Cluster0`: users 12, consents 1, `refresh_tokens` absent, billedWithoutEvent 0 — nothing changed; W-362c row 2 reads prod again |
+| 2026-11-21 | staging (W-362b, D-868) | row 5, after (read-only, IntelliJ console) | owner | `it-staging`: refreshTokens 2, refreshLive 0, indexes `_id_`, `refresh_token_email_idx`, `refresh_token_expiry_idx` (TTL 0), `refresh_token_family_idx`, `refresh_token_hash_idx`; billedWithoutEvent 0; users 14; consents 1 — **go** |
+| 2026-11-21 | staging (W-362b, D-868) | row 6, `m1.5` stopped | owner | exit 143 (the `kill`); port 8080 free; ERROR lines in the run's log 0 — **go**; awaiting the owner's sign-off |
+| 2026-11-21 | staging (W-362b, D-870) | sign-off | owner | "staging signed off" — staging on `m1.5`; W-362b done |
+| 2026-11-21 | prod (W-362c, D-868) | row 1, environment | owner | keys 32 bytes, prefixes 8d910c6ebabf / f9bf756780af / af38366a5db3; PRIVACY_CONTACT 25; owner email 25; app password set; jobs off; port 8080 free; both jars — **go** |
+| 2026-11-21 | prod (W-362c, D-868) | row 2, before (read-only, IntelliJ console) | owner | `Cluster0`: users 12, consents 1, `refresh_tokens` absent, billedWithoutEvent 0 (W-206 check) — as the earlier read; **go** |
+| 2026-11-21 | prod (W-362c, D-868) | row 3, `m1.5` started (prod profile) | owner | `Started` in 6.727 s; the indexes of UserDetail, RefreshToken, PrivacyConsent ensured; no ERROR; WARN exactly staging's two (malware scan off, `application-prod.yaml:135`; SpringDoc's spec notice, D-867 C1a) — **go** |
+| 2026-11-21 | prod (W-362c, D-868) | row 4, routes and a sign-in | owner | rights 200; notice version 6f36c92105ff376fa931f28523cdaddcd1fa80ceea7322b9fc67a6efa3638f44 (as staging); old rights path 401; expires_in 900, refresh token 43 chars; my stocks 200; basic auth 401; spec paths 136; refreshed 900, rotated yes; logout 204 — **go** |
+| 2026-11-21 | prod (W-362c, D-868) | row 5, after (read-only, IntelliJ console) | owner | `Cluster0`: refreshTokens 2, refreshLive 0, indexes `_id_`, `refresh_token_email_idx`, `refresh_token_expiry_idx` (TTL 0), `refresh_token_family_idx`, `refresh_token_hash_idx`; billedWithoutEvent 0; users 12; consents 1 — **go** |
+| 2026-11-21 | prod (W-362c, D-868) | row 6, `m1.5` stopped | owner | exit 143 (the `kill`); port 8080 free; ERROR lines in the run's log 0 — **go**; awaiting the owner's sign-off |
+| 2026-11-21 | prod (W-362c, D-871) | sign-off | owner | "prod signed off" — prod on `m1.5`; W-362c done, W-362 complete |
