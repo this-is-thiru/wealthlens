@@ -44,6 +44,12 @@ class RetiredOneTimeRoutesIntegrationTest extends AbstractIntegrationTest {
         refuses("/api/v1/admin/portfolio/profit-and-loss/split/reshape");
     }
 
+    @Test
+    void deductibleChargeRemoval_whenAnAdminPosts_answers404() {
+        // Given / When / Then — W-174, runbook §2.9: the deductible charges removed from trade_outcomes on staging (W-334d3a, 1, after 0); prod had none (W-334e2)
+        refuses("/api/v1/admin/portfolio/trade-outcomes/deductible-charges/remove");
+    }
+
     private void refuses(String route) {
         given().header("Authorization", "Bearer " + generateToken(ADMIN, "SUPER_USER")).contentType(ContentType.JSON).body("{}")
                 .when().post(route)

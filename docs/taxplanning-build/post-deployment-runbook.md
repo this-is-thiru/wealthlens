@@ -1457,7 +1457,9 @@ read `placed` on a second dry run before writing. **Way back:** `mongoimport --m
 **Removed after use:** W-173 / WL-38, which also unsets `pnl_backfilled_outcome_ids`, once this is logged for every
 database and its `unplaced` list is placed.
 
-### 2.9 W-162b (D-377) — remove the deductible charges stored on `trade_outcomes` · `SUPER_USER` · **every database · once · outstanding**
+### 2.9 W-162b (D-377) — remove the deductible charges stored on `trade_outcomes` · `SUPER_USER` · **retired by W-174 (D-879) · do not run**
+
+> **Retired.** Run on prod (W-334e2: 0, nothing to write) and staging (W-334d3a: 1, after 0); W-174 removed its route and code. Kept below as the record of what it did.
 
 **Why.** Each V2 recorder row stored `deductible_buy_charges` and `deductible_sell_charges`, the part of its charge
 breakdowns the charge catalogue's flag called deductible. Which charges reduce a capital gain is the tax side's rule
