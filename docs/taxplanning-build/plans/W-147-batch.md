@@ -88,6 +88,6 @@ from the migrated data).
 - [x] 7. W-174 (D-879)
 - [x] 8. W-171 (D-880)
 - [x] 9. W-175 (D-881)
-- [ ] 10. W-331 (and C1's row)
+- [x] 10. W-331 (D-882); C1's row is the owner's (the commands in D-882), logged in the run log when run
 - [ ] 11. W-335
 - [ ] 12. WL-A-2 republished

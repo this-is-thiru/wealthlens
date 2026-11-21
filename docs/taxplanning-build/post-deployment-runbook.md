@@ -62,7 +62,7 @@ three databases, dev included, is §6 (W-334, D-780):** it orders these steps pe
 | 0.1 | Environment, replica set, a `SUPER_USER` | check | check |
 | 0.2 | Duplicate checks before the unique indexes | run | run |
 | 0.3 | `profit_and_loss.version` present | **done**: 0 without (2026-10-27) | **done**: 0 without (2026-10-27) |
-| 0.8 | Legacy salary and policy collections: count, back up, drop (W-159) | run | run |
+| 0.8 | Legacy salary and policy collections: count, back up, drop (W-159) | **retired** (W-331): done (W-334e1) | **retired** (W-331): done (W-334d2) |
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
@@ -249,7 +249,9 @@ the new build refuses to read, and `tax_employers`' unique index `tax_employer_t
 **Way back.** Deploy the previous build, then `mongoimport` each step-3 file into its collection. Rows written by the new
 build are encrypted and the previous build cannot read them: drop those collections again first.
 
-### 0.6 W-134a (D-448) — the legacy salary data, counted; the deploy held until W-159 · owner, `mongosh` · **every database · before the one deploy**
+### 0.6 W-134a (D-448) — the legacy salary data, counted; the deploy held until W-159 · owner, `mongosh` · **retired by W-331 (D-882) · do not run**
+
+> **Retired.** Replaced by §0.8 (W-159), which counted the same rows before dropping them. Kept below as the record of what it did.
 
 **Why.** `salary_profiles` and `tax_computations` (the `/tax-planning` salary flow) hold salary structure, deduction
 figures, a disability flag and pasted CTC text in plain text, which `DR 14` O1.1 says must be encrypted. W-134's
@@ -300,7 +302,9 @@ once per environment: for the test keys of `FieldCipherTest` (`AAECAw…Hh8=` / 
 `k1:S2S9g4PmcIjT3j52RiPQbAfhd5GQLs4wzEgLXeegdyJPvg==`. It reads nothing and writes nothing. Do not paste the keys into a
 shared terminal history: prefix the command with a space where the shell ignores those, or clear the history after.
 
-### 0.8 W-159 (D-726) — the legacy salary and policy collections, backed up and dropped · owner, `mongosh` · **every database · before the one deploy**
+### 0.8 W-159 (D-726) — the legacy salary and policy collections, backed up and dropped · owner, `mongosh` · **retired by W-331 (D-882) · do not run**
+
+> **Retired.** Run on prod (W-334e1: seven dropped, `present` `[]`) and staging (W-334d2: seven dropped). Its step-2 exports are deleted by the owner (D-882, C1a). Kept below as the record of what it did.
 
 **Why.** W-159 removed the older salary flow (`/tax-planning/user/**`) and the policy store it computed from. Nothing in
 the build reads or writes these seven collections any more: `salary_profiles` and `tax_computations` (salary structure,
