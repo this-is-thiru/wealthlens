@@ -65,7 +65,9 @@ public class AuthFilter extends OncePerRequestFilter {
                 throw new BadCredentialsException("Token expired or invalid");
             }
             filterChain.doFilter(request, response);
-        } catch (Exception e) {
+        } catch (BadCredentialsException e) {
+            // A bad token, or a token for another user's path: the request goes on without a login, so a protected route
+            // answers 401. Nothing else is caught here (W-358a).
             log.error("Error in authentication filter {}", e.getMessage());
             filterChain.doFilter(request, response);
         }

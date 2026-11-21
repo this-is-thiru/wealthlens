@@ -11,6 +11,7 @@ import com.thiru.wealthlens.shared.privacy.PrivacyConsents;
 import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -85,8 +86,9 @@ public class AuthService {
             log.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             log.error("JWT claims string is empty: {}", e.getMessage());
-        } catch (Exception e) {
-            log.error("Invalid JWT token");
+        } catch (JwtException e) {
+            // Any other token failure the library reports (a bad signature, say); nothing outside it is caught (W-358a)
+            log.error("Invalid JWT token: {}", e.getMessage());
         }
 
         return null;

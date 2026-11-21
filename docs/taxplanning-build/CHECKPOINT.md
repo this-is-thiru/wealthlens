@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334e3 done (D-849), W-334e and W-334 complete; close-out written, NOT committed (awaiting owner's "commit it"); then WL-A-2
+Item            : W-358a done (D-851), committed and pushed (with D-850's placements before it); next W-357a (docs removal)
 Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED (node autoremoved too — owner told); kept: ~/wealthlens-runs/archives/ (prod-after-m14 1,635 / staging-after-m14 1,406 docs, mode 600, delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js; everything else of the run deleted
 Done session 112: staging finished (D-842, D-843); prod: split (D-844), e1 (D-845), e2 (D-846, D-847), e3 (D-848, D-849); W-355, W-356 placed
-Board           : W-334e —, W-334e1/e2/e3 D, W-348a D, W-348b D, W-355 ·, W-356 ·, W-337 ·
-Next step       : on "commit it": stage the five named files, commit, push if asked, WL-A-2; then next by board order (owner's choice: W-337 MySQL/PostgreSQL move, or another)
-Open to owner   : "commit it" for W-334e3; api-collection Buy Stock.yml:68 doc proposal; the owner's own upload of the trades Y2 listed
+Board           : W-358a D; W-357a ·, W-357b ·, W-358b ·, W-358c ·, W-358d ·, W-359 ·, W-355 ·, W-356 ·, W-337 ·
+Next step       : plan W-357a (tag docs-history-m1, delete history + .kimchi/docs, index, slim STATE / work items, update 5 tests, CLAUDE.md, START-HERE, memory); check the pipeline run for W-358a later
+Open to owner   : go for W-357a's plan; api-collection Buy Stock.yml:68 doc proposal; the owner's upload of the trades Y2 listed
 Env notes       : no MongoDB tools on this machine now (reinstall: brew tap mongodb/brew && brew install mongodb-database-tools); prod host cluster0.x6trgen.mongodb.net, staging it-staging.6fu8nvy.mongodb.net
-Last verify     : FinishedPlanTest + ./mvnw validate (session 112, this close-out)
-Last item commit: taxplanning W-334e2: run §2 on prod and remove its test entries — the rehearsal's counts on every row, two TEST_USER portfolios kept by the owner
-Files touched   : docs/taxplanning-build/STATE.md, docs/taxplanning-build/03-WORK-ITEMS.md, docs/taxplanning-build/post-deployment-runbook.md, docs/taxplanning-build/plans/W-334e3.md (new) (plus this file)
+Last verify     : W-358a — 10 classes 110/110 incl. RouteAccess 5/5, PropertySale 9/9, ArchitectureTest 26; validate clean; violation proven
+Last item commit: taxplanning W-358a: deny every route by default and guard every route the app serves — an unlisted path no longer opens by accident
+Files touched   : none
 Updated         : 2026-11-21, session 112 (W-334e3 run and closed out, uncommitted)
 ```
 ## Resume check (run these, compare, then act on "Next step")

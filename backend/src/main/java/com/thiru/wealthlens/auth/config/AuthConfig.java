@@ -41,16 +41,17 @@ public class AuthConfig {
                                 "/privacy").permitAll()
                         .requestMatchers("/auth/**", "/portfolio/**", "/reports/**", "/transactions/**", "/corporate-action/**",
                                 "/temporary-transactions/**", "/broker-charges/**", "/user-broker-charges/**", "/analytics/**", "/tax-planning/**",
-                                // The charges engine. Listed explicitly because the fallback below
-                                // is permitAll: a path nobody adds here is public. A rate card sets
-                                // what every user is charged, /charges/amc/impose bills real money,
-                                // and /user-charges exposes one person's trading history.
+                                // The charges engine: a rate card sets what every user is charged, /charges/amc/impose bills
+                                // real money, and /user-charges exposes one person's trading history.
                                 "/charge-schedules/**", "/charge-catalogue", "/charges/**", "/user-charges/**", "/charge-accounts/**",
-                                // Taxpayer data: PAN, family, income. Public by the same fallback unless named (W-096, D-440).
+                                // Taxpayer data: PAN, family, income (W-096, D-440).
                                 "/tax/**",
                                 // A user's grievances and the owner's queue (W-237b); only the notice is public.
                                 "/privacy/**").authenticated()
-                        .anyRequest().permitAll())
+                        // Deny by default (W-358a): a path nobody names above still needs a login, so a new route never
+                        // opens by accident, as POST /properties/user/{email}/sales did while this line was permitAll.
+                        // RouteAccessIntegrationTest checks every route the application serves against these rules.
+                        .anyRequest().authenticated())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)

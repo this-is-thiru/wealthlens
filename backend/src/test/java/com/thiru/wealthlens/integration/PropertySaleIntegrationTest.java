@@ -64,6 +64,15 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void recordSale_whenNoToken_expected401AndNothingWritten() {
+        // When — no Authorization header at all (W-358a: the route was public while AuthConfig's fallback was permitAll)
+        given().contentType(ContentType.JSON).body(SALE).post("/properties/user/" + EMAIL + "/sales").then().statusCode(401);
+
+        // Then
+        assertTrue(rows().isEmpty());
+    }
+
+    @Test
     void recordSale_whenWellFormed_expected200AndOneRowTheSummaryReads() {
         // When
         post(SALE).statusCode(200).body(containsString("Property sale recorded: Plot 7"));
