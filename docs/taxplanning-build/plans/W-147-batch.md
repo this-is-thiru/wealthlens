@@ -87,7 +87,7 @@ from the migrated data).
 - [x] 6. W-170 (D-878)
 - [x] 7. W-174 (D-879)
 - [x] 8. W-171 (D-880)
-- [ ] 9. W-175
+- [x] 9. W-175 (D-881)
 - [ ] 10. W-331 (and C1's row)
 - [ ] 11. W-335
 - [ ] 12. WL-A-2 republished

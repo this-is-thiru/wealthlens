@@ -66,7 +66,7 @@ three databases, dev included, is §6 (W-334, D-780):** it orders these steps pe
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.1 – 2.14 | Tax planning, by hand, in order (2.0 retired by W-159) | per step | per step |
+| 2.1 – 2.14 | Tax planning, by hand, in order (retired: 2.0 by W-159; 2.1, 2.3 – 2.7, 2.9, 2.10 by Phase 15, D-874 – D-881) | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -1499,7 +1499,9 @@ both fields back; no code reads them.
 
 **Removed after use:** W-174 / WL-39, once this is logged for every database.
 
-### 2.10 W-162c (D-378) — unset the deductibility flag on `charge_catalogue` · owner, `mongosh` · **every database · once · outstanding**
+### 2.10 W-162c (D-378) — unset the deductibility flag on `charge_catalogue` · owner, `mongosh` · **retired by W-175 (D-881) · do not run**
+
+> **Retired.** Read on prod (W-334e2) and staging (W-334d3a: 0 flagged) — nothing was left to unset. Kept below as the record of what it did.
 
 **Why.** `charge_catalogue.deductible_for_capital_gains` was one yes/no per charge code, the same for every year,
 saying whether the charge reduces a capital gain. Which charges do is the tax side's rule data for the year
