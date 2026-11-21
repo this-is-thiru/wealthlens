@@ -53,8 +53,8 @@ TradeOutcomeRebuild 6, BonusAllotment 3, CorporateAction 48, Portfolio 43 all gr
 
 ### Each item (one commit each, in this order)
 
-- **The six removals** (W-147, W-149, W-150, W-168, W-170, W-174): **red first** — a case in a new
-  `integration/RetiredOneTimeRoutesIntegrationTest` (Javadoc: why these are gone): an admin's `POST` to the route answers **404**, as for
+- **The six removals** (W-147, W-149, W-150, W-168, W-170, W-174): **red first** — a case in
+  `integration/RetiredTestRoutesIntegrationTest` (first written as its own class, folded into this one at the owner's word): an admin's `POST` to the route answers **404**, as for
   W-311's retired routes; today it is served. Then the files and tests above deleted; the runbook section's heading
   `· **retired by W-nnn (D-nnn) · do not run**` with a `> **Retired.**` note (where it ran, what removed it), its body kept as the record
   (as §2.0). Green: the new case, and ArchitectureTest, WealthLensModulith, UnusedPrivateField, RouteAccess, OpenApi, ApiCollectionContract.
@@ -90,4 +90,4 @@ from the migrated data).
 - [x] 9. W-175 (D-881)
 - [x] 10. W-331 (D-882); C1's row is the owner's (the commands in D-882), logged in the run log when run
 - [x] 11. W-335 (D-883)
-- [ ] 12. WL-A-2 republished
+- [x] 12. WL-A-2 republished; YouTrack WL-29, 32, 34, 35, 36, 39, 37, 40, 47, 48 set Done

@@ -82,6 +82,7 @@ something at the next deploy adds its line here when it is committed; each line 
 below is the full sequence for a fresh database (W-337).
 
 1. W-358d1 (D-873) — nothing to run: every answer carries `X-Request-Id` (quote it when asking about a request); log lines print it and write emails as `[email]`; new `privacy_processing_log` rows store `request_id` (older rows have none).
+2. Phase 15 batch (D-874 – D-883) — nothing to run: the six one-time corrections answer 404 (`…/trade-outcomes/rebuild-charges/correct`, `…/financial-years/rewrite`, `…/stored-terms/remove`, `…/deductible-charges/remove`, `…/profit-and-loss/split/reshape`, `…/corporate-actions/bonus/allotment-dates/correct`, all under `/api/v1/admin/portfolio`); runbook §0.6, §0.8, §2.1, §2.3 – §2.7, §2.9, §2.10 retired and §6 removed.
 
 ## 0. Before deploying
 
@@ -2074,3 +2075,4 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-21 | prod (W-362c, D-868) | row 5, after (read-only, IntelliJ console) | owner | `Cluster0`: refreshTokens 2, refreshLive 0, indexes `_id_`, `refresh_token_email_idx`, `refresh_token_expiry_idx` (TTL 0), `refresh_token_family_idx`, `refresh_token_hash_idx`; billedWithoutEvent 0; users 12; consents 1 — **go** |
 | 2026-11-21 | prod (W-362c, D-868) | row 6, `m1.5` stopped | owner | exit 143 (the `kill`); port 8080 free; ERROR lines in the run's log 0 — **go**; awaiting the owner's sign-off |
 | 2026-11-21 | prod (W-362c, D-871) | sign-off | owner | "prod signed off" — prod on `m1.5`; W-362c done, W-362 complete |
+| 2026-11-21 | local (W-331, D-882 C1a) | §0.8's step-2 exports deleted | owner | `find ~ -name 'legacy-*-before-w159.json'` listed none; `-delete` and recount 0 — none on disk; `~/wealthlens-runs/archives` holds only `*-after-m14` dumps, taken after §0.8's drop (no legacy collections) — **done** |
