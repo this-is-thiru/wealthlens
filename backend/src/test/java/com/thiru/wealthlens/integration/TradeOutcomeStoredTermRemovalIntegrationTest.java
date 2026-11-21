@@ -112,7 +112,7 @@ class TradeOutcomeStoredTermRemovalIntegrationTest extends AbstractIntegrationTe
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "SUPER_USER"))
-                .when().post("/trade-outcomes/stored-terms/remove?dryRun=false")
+                .when().post("/api/v1/admin/portfolio/trade-outcomes/stored-terms/remove?dryRun=false")
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("rows", equalTo(2));
         assertThat(carriesTheTerm(stored("both"))).isFalse();
         assertThat(stored("both").get("audit_metadata", Document.class).getString("updatedBy"))
@@ -126,7 +126,7 @@ class TradeOutcomeStoredTermRemovalIntegrationTest extends AbstractIntegrationTe
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "USER"))
-                .when().post("/trade-outcomes/stored-terms/remove?dryRun=false").then().statusCode(403);
+                .when().post("/api/v1/admin/portfolio/trade-outcomes/stored-terms/remove?dryRun=false").then().statusCode(403);
         assertThat(stored("both").getString("capital_gains_type")).isEqualTo("LONG_TERM");
     }
 }

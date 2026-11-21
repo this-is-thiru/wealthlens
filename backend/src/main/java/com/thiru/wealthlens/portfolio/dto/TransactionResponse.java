@@ -5,8 +5,9 @@ import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.charges.ChargeNote;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
-import com.thiru.wealthlens.shared.dto.model.AuditMetadataDto;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
@@ -60,7 +61,9 @@ public class TransactionResponse {
 
     List<CorporateActionDto> corporateActions = new ArrayList<>();
     private String sourceTempTransactionId;
-    private AuditMetadataDto auditMetadata;
+    private TradeSegment segment;
+    /** {@code TEMPORARY} while a corporate action holds the trade back, {@code PROCESSED} once applied. */
+    private TransactionStatus status;
 
     /**
      * What the engine charged for this trade, line by line.

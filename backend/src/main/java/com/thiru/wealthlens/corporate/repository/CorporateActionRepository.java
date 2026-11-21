@@ -2,7 +2,10 @@ package com.thiru.wealthlens.corporate.repository;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -26,4 +29,6 @@ public interface CorporateActionRepository extends MongoRepository<CorporateActi
 
     @Query(value = "{'stock_code': ?0, 'record_date': ?1 }", sort = "{ 'priority' : 1 }")
     List<CorporateActionEntity> findByStockCodeAndRecordDateAndOrderByPriorityAsc(String stockCode, LocalDate recordDate);
+
+    Page<CorporateActionEntity> findByIdIn(Collection<String> ids, Pageable pageable);
 }

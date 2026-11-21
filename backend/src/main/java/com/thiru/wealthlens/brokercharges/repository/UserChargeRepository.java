@@ -2,11 +2,14 @@ package com.thiru.wealthlens.brokercharges.repository;
 
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -50,7 +53,14 @@ public interface UserChargeRepository extends MongoRepository<UserChargeEntity, 
 
     List<UserChargeEntity> findByEmailOrderByTransactionDateDesc(String email);
 
-    List<UserChargeEntity> findByEmailAndTransactionDateBetween(String email, LocalDate from, LocalDate to);
+    Page<UserChargeEntity> findByEmail(String email, Pageable pageable);
+
+    Page<UserChargeEntity> findByEmailAndAssetType(String email, AssetType assetType, Pageable pageable);
+
+    Page<UserChargeEntity> findByEmailAndTransactionDateBetween(String email, LocalDate from, LocalDate to, Pageable pageable);
+
+    Page<UserChargeEntity> findByEmailAndTransactionDateBetweenAndAssetType(String email, LocalDate from, LocalDate to, AssetType assetType,
+            Pageable pageable);
 
     /** Rows whose charges could not be fully assessed. Drives the gaps report. */
     List<UserChargeEntity> findByEmailAndResolutionIn(String email, List<ChargeResolution> resolutions);

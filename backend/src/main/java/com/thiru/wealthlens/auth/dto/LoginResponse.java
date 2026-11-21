@@ -9,6 +9,9 @@ import lombok.Data;
 public class LoginResponse {
 	private String access_token;
 	private int expires_in;
+	/** Renews the access token for 14 days from this sign-in, rotated on each use (W-358b). */
+	@JsonProperty("refresh_token")
+	private String refreshToken;
 	private final String tokenType = "Bearer";
 	/** The privacy notice's page: what a person registered before W-250 is told at sign-in (Act s.5(2)(a)). */
 	@JsonProperty("privacy_notice")

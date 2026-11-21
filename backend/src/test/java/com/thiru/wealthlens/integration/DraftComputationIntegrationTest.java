@@ -91,7 +91,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         if (ifMatch != null) {
             headers.set(HttpHeaders.IF_MATCH, ifMatch);
         }
-        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + path), method,
+        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), method,
                 new HttpEntity<>(body, headers), String.class);
     }
 
@@ -579,7 +579,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
     private void assertRefused(ResponseEntity<String> response, String message) {
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(JSON.readTree(response.getBody()).get("message").asString()).isEqualTo(message);
+        assertThat(JSON.readTree(response.getBody()).get("detail").asString()).isEqualTo(message);
     }
 
     @Test

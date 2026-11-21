@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>It guards the one deployment mistake in this module that is silent by construction. Seeding is
  * a deliberate act since ADR-27, so a fresh database holds no rate cards until somebody calls
- * {@code POST /charges/seed}. Deploy with {@code shadow-recording} or {@code authoritative} switched
+ * {@code POST /api/v1/admin/charges/seed}. Deploy with {@code shadow-recording} or {@code authoritative} switched
  * on before that has happened and every trade resolves {@code NO_SCHEDULE}: nothing throws, nothing
  * fails a health check, the charge is simply zero. Under {@code authoritative} that zero becomes the
  * cost basis, and the only trace is a gaps report nobody is reading on day one.
@@ -53,8 +53,8 @@ public class ChargeReadinessAuditor {
         }
 
         log.warn("Charges engine is switched on but NO RATE CARDS are on file. Every trade will resolve"
-                        + " NO_SCHEDULE and be charged nothing{}. Run POST /charges/seed (SUPER_USER) to"
-                        + " apply the shipped rate cards, then GET /charge-schedules/drift to confirm."
+                        + " NO_SCHEDULE and be charged nothing{}. Run POST /api/v1/admin/charges/seed (SUPER_USER) to"
+                        + " apply the shipped rate cards, then GET /api/v1/admin/charges/charge-schedules/drift to confirm."
                         + " shadow-recording={}, authoritative={}",
                 chargeEngineProperties.authoritative()
                         ? ", and that zero will become the cost basis because authoritative is on"

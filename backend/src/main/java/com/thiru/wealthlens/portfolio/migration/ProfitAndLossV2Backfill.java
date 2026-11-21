@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service;
  * row's id added to the document's {@code pnl_backfilled_outcome_ids} in the same update, conditioned on the id not
  * being there yet — so a row is never counted twice, and a second run, including after one that failed part-way, adds
  * only what is left. A row whose document, side, split entry, month or half does not exist is listed, not written
- * (C4a). Run when a {@code SUPER_USER} asks ({@code POST /profit-and-loss/v2-figures/backfill}), never at startup
+ * (C4a). Run when a {@code SUPER_USER} asks ({@code POST /api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill}), never at startup
  * (D-280). One-time: removed, and the id sets unset, once its run is logged for every database (W-173).
  */
 @Service

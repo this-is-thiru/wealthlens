@@ -28,16 +28,16 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
 
     /** Each rights request the app serves, and the response it answers with. */
     private static final Map<String, Class<?>> RESPONSES = Map.of(
-            "POST /tax/user/{email}/profiles/{profileId}/erasure", ErasureReceipt.class,
-            "POST /privacy/grievances/user/{email}", GrievanceReceipt.class,
-            "POST /privacy/erasure/user/{email}", AccountErasureReceipt.class);
+            "POST /api/v1/me/tax/profiles/{profileId}/erasure", ErasureReceipt.class,
+            "POST /api/v1/me/privacy/grievances", GrievanceReceipt.class,
+            "POST /api/v1/me/privacy/erasure", AccountErasureReceipt.class);
 
     @Test
     void rights_whenReadWithoutSigningIn_publishesTheRightsTheIdentifierAndTheContact()
             throws IOException, InterruptedException {
         // When
         HttpResponse<String> response = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
-                URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/privacy/rights")).GET().build(),
+                URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/public/privacy/rights")).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
 
         // Then — as application-integration-test.yaml states it
@@ -52,8 +52,8 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
                 "Digital Personal Data Protection Act, 2023 s.13",
                 "Digital Personal Data Protection Act, 2023 s.14");
         assertThat(notice.rights()).flatExtracting(PrivacyRight::endpoints)
-                .containsExactly("POST /tax/user/{email}/profiles/{profileId}/erasure", "POST /privacy/erasure/user/{email}",
-                        "POST /privacy/grievances/user/{email}");
+                .containsExactly("POST /api/v1/me/tax/profiles/{profileId}/erasure", "POST /api/v1/me/privacy/erasure",
+                        "POST /api/v1/me/privacy/grievances");
         assertThat(notice.grievanceResponseDays()).isEqualTo(30);
         assertThat(notice.purposeLapse()).isEqualTo(Period.ofYears(3));
     }
@@ -61,13 +61,13 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
     @Test
     void rights_whenRead_tellsTheUserToTakeTheirCopyBeforeAskingForErasure() throws IOException, InterruptedException {
         // When
-        PrivacyNotice notice = JsonMapper.builder().build().readValue(get("/privacy/rights").body(), PrivacyNotice.class);
+        PrivacyNotice notice = JsonMapper.builder().build().readValue(get("/api/v1/public/privacy/rights").body(), PrivacyNotice.class);
 
         // Then — W-247 C2a, as application-integration-test.yaml states it
         assertThat(notice.rights()).filteredOn(right -> right.section().endsWith("s.12(1), (3)")).singleElement()
                 .extracting(PrivacyRight::means).asString()
                 .startsWith("Take your copy first, since nothing can be read once you ask:")
-                .contains("POST /portfolio/user/{email}/stocks/download");
+                .contains("POST /api/v1/me/portfolio/stocks/download");
     }
 
     @Test
@@ -87,7 +87,7 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
                 "Nominating another person to exercise these rights on your death or incapacity",
                 "Digital Personal Data Protection Act, 2023 s.14",
                 "Take your copy first, since nothing can be read once you ask",
-                "POST /privacy/erasure/user/{email}",
+                "POST /api/v1/me/privacy/erasure",
                 "privacy@example.com",
                 "the email address your account is registered with",
                 "when no one has signed in to it for",
@@ -98,7 +98,7 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
     @Test
     void notice_whenThePageIsPublic_theRestOfPrivacyStillNeedsAToken() throws IOException, InterruptedException {
         // When / Then — "/privacy" is an exact public path, not a prefix
-        assertThat(get("/privacy/grievances/user/someone@example.com").statusCode()).isEqualTo(401);
+        assertThat(get("/api/v1/me/privacy/grievances").statusCode()).isEqualTo(401);
     }
 
     private static HttpResponse<String> get(String path) throws IOException, InterruptedException {
@@ -112,7 +112,7 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
             throws IOException, InterruptedException {
         // Given
         HttpResponse<String> response = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
-                URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/privacy/rights")).GET().build(),
+                URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/public/privacy/rights")).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
         PrivacyNotice notice = JsonMapper.builder().build().readValue(response.body(), PrivacyNotice.class);
 

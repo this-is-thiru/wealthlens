@@ -94,7 +94,7 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
     private void accountErasedAt(String email, String asked, String erased) {
         restoredAccountOf(email);
         clock.set(asked);
-        given().header("Authorization", "Bearer " + generateToken(email)).when().post("/privacy/erasure/user/" + email).then()
+        given().header("Authorization", "Bearer " + generateToken(email)).when().post("/api/v1/me/privacy/erasure").then()
                 .statusCode(202);
         clock.set(erased);
         runner.run(accountErasure);
@@ -109,12 +109,12 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
 
     private void profileErasureAskedByAnu() {
         given().header("Authorization", "Bearer " + generateToken(ANU)).when()
-                .post("/tax/user/" + ANU + "/profiles/" + PROFILE + "/erasure").then().statusCode(202);
+                .post("/api/v1/me/tax/profiles/" + PROFILE + "/erasure").then().statusCode(202);
     }
 
     private ValidatableResponse reapply(String body, String role) {
         return given().header("Authorization", "Bearer " + generateToken(OWNER, role)).contentType(ContentType.JSON)
-                .body(body).when().post("/privacy/erasure/reapply").then();
+                .body(body).when().post("/api/v1/admin/privacy/erasure/reapply").then();
     }
 
     private ValidatableResponse reapplySince(String snapshotTakenAt) {
@@ -176,7 +176,7 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
     void reapply_whenAnAccountWasAskedForAfterTheSnapshot_holdsItsRestoredProfileFromTheFirstRequest() {
         // Given — the snapshot predates the request, so the restored profile is not held
         restoredAccountOf(ANU);
-        given().header("Authorization", "Bearer " + generateToken(ANU)).when().post("/privacy/erasure/user/" + ANU).then()
+        given().header("Authorization", "Bearer " + generateToken(ANU)).when().post("/api/v1/me/privacy/erasure").then()
                 .statusCode(202);
         restoredProfile(PROFILE);
         clock.set("2027-06-12T09:00:00Z");

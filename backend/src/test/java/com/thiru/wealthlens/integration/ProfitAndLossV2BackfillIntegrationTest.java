@@ -238,7 +238,7 @@ class ProfitAndLossV2BackfillIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "SUPER_USER"))
-                .when().post("/profit-and-loss/v2-figures/backfill?dryRun=false&recordedBefore=" + AFTER_EVERY_ROW
+                .when().post("/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?dryRun=false&recordedBefore=" + AFTER_EVERY_ROW
                         .withNano(0))
                 .then().statusCode(200).body("placed.size()", equalTo(1));
         MoneyAssert.assertMoney(445.0, entry("p1").getDouble("profit"));
@@ -254,7 +254,7 @@ class ProfitAndLossV2BackfillIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "USER"))
-                .when().post("/profit-and-loss/v2-figures/backfill?dryRun=false&recordedBefore=" + AFTER_EVERY_ROW
+                .when().post("/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?dryRun=false&recordedBefore=" + AFTER_EVERY_ROW
                         .withNano(0))
                 .then().statusCode(403);
         MoneyAssert.assertMoney(0.0, entry("p1").getDouble("profit"));

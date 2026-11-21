@@ -37,7 +37,7 @@ class RetiredTestRoutesIntegrationTest extends AbstractIntegrationTest {
         // When / Then — no such route, and no gain or trade outcome written
         given().header("Authorization", "Bearer " + generateToken(EMAIL, "SUPER_USER")).contentType(ContentType.JSON)
                 .body(body)
-                .when().post("/test/user/" + EMAIL + "/transact/sell")
+                .when().post("/api/v1/admin/portfolio/test/transact/sell")
                 .then().statusCode(404);
         assertEquals(0, mongoTemplate.getCollection("profit_and_loss").countDocuments());
         assertEquals(0, mongoTemplate.getCollection("trade_outcomes").countDocuments());
@@ -48,7 +48,7 @@ class RetiredTestRoutesIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         given().header("Authorization", "Bearer " + generateToken(EMAIL)).contentType(ContentType.JSON)
                 .body("{\"stockCode\": \"TESTCODE1\"}")
-                .when().post("/portfolio/user/" + EMAIL + "/request")
+                .when().post("/api/v1/me/portfolio/request")
                 .then().statusCode(404);
     }
 
@@ -57,7 +57,7 @@ class RetiredTestRoutesIntegrationTest extends AbstractIntegrationTest {
         // When / Then — the filter is served at /assets/search
         given().header("Authorization", "Bearer " + generateToken(EMAIL)).contentType(ContentType.JSON)
                 .body("{\"queryFilters\": []}")
-                .when().post("/portfolio/user/" + EMAIL + "/request2")
+                .when().post("/api/v1/me/portfolio/request2")
                 .then().statusCode(404);
     }
 }

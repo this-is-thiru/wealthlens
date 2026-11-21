@@ -76,6 +76,17 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ---
 
+## Next deploy — what prod and staging still need
+
+Both are on `m1.4` (D-849); the app runs locally, nothing is hosted. The next deploy needs only these, in this order; each line goes
+when its run is logged for both. Everything below is the full sequence for a fresh database (W-337).
+
+1. §1.j W-358b — refresh tokens; callers sign in again.
+2. §1.i W-358c1 — every route moves under `/api/v1/…`; the notice's version changes.
+3. W-358c2 (D-858) — nothing to run: responses no longer carry `auditMetadata` (and transactions not `idempotencyKey`, `tradeFingerprint`, `submittedAt`, `assetRequest`, `tradeFlow`); a client reading those moves off them.
+4. W-358c3a (D-860) — nothing to run: the paths that named a verb moved (`plans/W-358c3.md` table, e.g. `GET /api/v1/me/portfolio/stocks`, `DELETE /api/v1/me/portfolio`, `PATCH /api/v1/admin/corporate-actions/{id}`); `GET /api/v1/me/portfolio/all/transactions`, `PUT /api/v1/admin/corporate-actions/perform/test` and `GET /api/v1/public/auth/login` are gone.
+5. W-358c3b (D-862) — nothing to run: a user's transactions and their search, charge history, corporate actions, Gazette leads, a profile's computations and a draft's revisions answer a page (`content`, `page`; `?page=`, `&size=` up to 200) instead of a bare list.
+
 ## 0. Before deploying
 
 ### 0.1 Environment · owner · **every deploy**
@@ -84,7 +95,7 @@ and seed before anyone trades. On staging the owner is the only user.
 |---|---|---|
 | 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
 | 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
-| 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /auth/register`, then `db.user_details.updateOne({ email: "<stored owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })` with the stored form from §0.7 (from W-253 the email is stored encrypted and is no longer the `_id`), then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
+| 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /api/v1/public/auth/register`, then `db.user_details.updateOne({ email: "<stored owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })` with the stored form from §0.7 (from W-253 the email is stored encrypted and is no longer the `_id`), then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
 
 ### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **every database · before the deploy that first carries TL-7**
 
@@ -353,7 +364,7 @@ as the export rule above says, once step 4 is logged.
 
 ### 1.y W-137 (D-449) — the background jobs · owner · **first deploy carrying them, then after the first runs**
 
-Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. **From W-336 (D-783)** every shipped profile has `app.tax.jobs.enabled: false`: nothing is scheduled, and the owner runs each job through `POST /tax-planning/admin/jobs/{name}/run` (`SUPER_USER`) on §5.2's cadence. The crons — `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`) — apply only where the switch is turned on. Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only. **W-138 (D-450):** `staleness-sweep` runs at every start where the switch is on, and on request where it is off (after every start of a new build, §5.2); it logs `Job staleness-sweep flagged N draft(s)`; after a deploy that changes a pack (a new `law` or `exec` version in a lock), expect N to be the ready and filed drafts computed under the old one, and 0 on the next run. **W-257 (D-487):** a row a job writes carries the job's name as its actor (`audit_metadata.updatedBy`, or `createdBy` on a new row: `auto-archive`, `staleness-sweep`, `retention-purge`), stored like any actor (§0.7 gives the form to query); rows written before W-257 keep `unknown`. Information only — no step.
+Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. **From W-336 (D-783)** every shipped profile has `app.tax.jobs.enabled: false`: nothing is scheduled, and the owner runs each job through `POST /api/v1/admin/tax/jobs/{name}/run` (`SUPER_USER`) on §5.2's cadence. The crons — `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`) — apply only where the switch is turned on. Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only. **W-138 (D-450):** `staleness-sweep` runs at every start where the switch is on, and on request where it is off (after every start of a new build, §5.2); it logs `Job staleness-sweep flagged N draft(s)`; after a deploy that changes a pack (a new `law` or `exec` version in a lock), expect N to be the ready and filed drafts computed under the old one, and 0 on the next run. **W-257 (D-487):** a row a job writes carries the job's name as its actor (`audit_metadata.updatedBy`, or `createdBy` on a new row: `auto-archive`, `staleness-sweep`, `retention-purge`), stored like any actor (§0.7 gives the form to query); rows written before W-257 keep `unknown`. Information only — no step.
 
 **After the first run of each** (read-only):
 
@@ -382,7 +393,7 @@ Expected after: the counts fall by the number of `deleted landlord|lender` log l
 
 ### 1.z W-235 — erasure on request · owner · **first deploy carrying it, then after the first purge that erases**
 
-A user's `POST /tax/user/{email}/profiles/{profileId}/erasure` holds the profile at once (`erasure_requested_at`, its
+A user's `POST /api/v1/me/tax/profiles/{profileId}/erasure` holds the profile at once (`erasure_requested_at`, its
 `pan_digest` removed) and answers `202` with the erase date, one year later (`app.privacy.erasure-hold: P1Y` since W-237d, DPDP
 Rules, 2025 r.8(3)). The monthly `retention-purge` (§1.y) then erases the profile and everything under it — drafts of every
 status, revisions, computations, family, employers, landlords, lenders, bank accounts, workspaces, regime election history,
@@ -419,7 +430,7 @@ holds `Ensured the indexes of GazetteLead`.
 1. **Check before** (read-only): no cursor yet, no leads.
 
    ```bash
-   curl -sS "$BASE/tax-planning/admin/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data | length'
+   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data | length'
    ```
 
    Expect `0`. In `mongosh`: `db.tax_gazette_cursor.find()` returns nothing.
@@ -430,21 +441,21 @@ holds `Ensured the indexes of GazetteLead`.
    400):
 
    ```bash
-   curl -sS -X PUT "$BASE/tax-planning/admin/gazette-cursor" -H "Authorization: Bearer $ADMIN_TOKEN" \
+   curl -sS -X PUT "$BASE/api/v1/admin/tax/gazette-cursor" -H "Authorization: Bearer $ADMIN_TOKEN" \
      -H "Content-Type: application/json" -d '{"year": <year>, "lastNumber": <number>}' | jq '.data'
    ```
 
    Expect the cursor back with `updatedBy` your login.
 4. **Turn it on:** set `app.tax.gazette-watch.enabled=true` for the environment (`APP_TAX_GAZETTEWATCH_ENABLED=true`)
    and restart. With the jobs off (every shipped profile from W-336) run it on request, on §5.2's cadence:
-   `curl -s -X POST "$BASE/tax-planning/admin/jobs/gazette-watch/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
+   `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/gazette-watch/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
    → `{"job": "gazette-watch", "ran": true}`; where `app.tax.jobs.enabled` is true it also runs at 05:00 daily, server time
    (`app.tax.jobs.gazette-watch-cron`). Each run reads at most 400 numbers and stops after 20 missing in a row.
 5. **After the first run** (read-only): the log holds `Job gazette-watch stopped at <year>/<number>`, one
    `Gazette lead <url> …` WARN line per lead, and no `Job gazette-watch refused`; then
 
    ```bash
-   curl -sS "$BASE/tax-planning/admin/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data[] | {url, page, note, possiblyAffected}'
+   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data[] | {url, page, note, possiblyAffected}'
    ```
 
    **Unverified until this run:** whether `egazette.gov.in` serves the server's host daily. A failure in
@@ -459,8 +470,8 @@ Nothing to back up: the watch writes only its own two collections.
 
 ### 1.v W-237b — grievances answered within the published period · owner, `SUPER_USER` · **weekly, from the first deploy carrying it**
 
-A user raises a grievance with `POST /privacy/grievances/user/{email}` (`201`, a receipt naming `respondBy`: the receipt time plus
-`app.privacy.grievance.response-days`, 30, published in `GET /privacy/rights`). DPDP Rules, 2025 r.14(3) allow at most
+A user raises a grievance with `POST /api/v1/me/privacy/grievances` (`201`, a receipt naming `respondBy`: the receipt time plus
+`app.privacy.grievance.response-days`, 30, published in `GET /api/v1/public/privacy/rights`). DPDP Rules, 2025 r.14(3) allow at most
 ninety days (`longest-days-allowed: 90`; a start whose period exceeds it is refused). Nothing to seed; the
 `privacy_grievances` collection is created by the first grievance. The app sends no mail: **this check is the measure
 that keeps answers in time.**
@@ -468,23 +479,23 @@ that keeps answers in time.**
 **Weekly (read-only, safe to repeat, nothing to roll back):** as a `SUPER_USER`,
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" "$BASE/privacy/grievances"
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/v1/admin/privacy/grievances"
 ```
 
 Expected: the unanswered grievances, the one due soonest first. Answer each before its `respondBy`:
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"text": "<the answer>"}' "$BASE/privacy/grievances/<id>/answer"
+  -d '{"text": "<the answer>"}' "$BASE/api/v1/admin/privacy/grievances/<id>/answer"
 ```
 
-`200` with `answer.answeredAt`; the user reads it at `GET /privacy/grievances/user/{email}`. A second answer to the same
+`200` with `answer.answeredAt`; the user reads it at `GET /api/v1/me/privacy/grievances`. A second answer to the same
 grievance is refused (`400`), so a repeated call changes nothing. **Way back:** an answer given in error is corrected by
 writing to the user from the privacy contact; the stored answer is not edited.
 
 ### 1.u W-237d — account-wide erasure · owner · **first deploy carrying it, then after the first run that erases**
 
-A user's `POST /privacy/erasure/user/{email}` holds the whole account at once (`privacy_erasure_requests`: `requested_at`)
+A user's `POST /api/v1/me/privacy/erasure` holds the whole account at once (`privacy_erasure_requests`: `requested_at`)
 and answers `202` with `erasedFrom`, one year later (`app.privacy.erasure-hold: P1Y`, DPDP Rules, 2025 r.8(3)), and the
 privacy contact. From then the account cannot sign in, its tokens are refused, the email cannot be registered again, AMC
 billing skips its charge accounts, and each of its tax profiles is held as §1.z holds one. The `account-erasure`
@@ -544,7 +555,7 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
   .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
     const since = new Date(Date.now() - 31 * 864e5);
     return { database: n,
-      failedLogins: d.privacy_processing_log.aggregate([{ $match: { route: "/auth/login", status: { $ne: 200 },
+      failedLogins: d.privacy_processing_log.aggregate([{ $match: { route: "/api/v1/public/auth/login", status: { $ne: 200 },
         recorded_at: { $gte: since } } }, { $group: { _id: { principal: "$principal", from: "$remote_address" },
         attempts: { $sum: 1 } } }, { $sort: { attempts: -1 } }]).toArray(),
       reachedOthers: d.privacy_processing_log.aggregate([{ $match: { recorded_at: { $gte: since },
@@ -623,7 +634,7 @@ the snapshot, and its email may since belong to a new account, which must not be
 4. **Apply them again** (`SUPER_USER`):
 
    ```bash
-   curl -X POST "$BASE/privacy/erasure/reapply" -H "Authorization: Bearer $ADMIN_TOKEN" \
+   curl -X POST "$BASE/api/v1/admin/privacy/erasure/reapply" -H "Authorization: Bearer $ADMIN_TOKEN" \
      -H "Content-Type: application/json" -d '{"snapshotTakenAt": "<S>"}'
    ```
 
@@ -683,7 +694,7 @@ fails** (`StoredActorEncryptionIntegrationTest`). Hence the first start with the
 (step 7).
 
 1. **A `SUPER_USER` token from the previous build.** Sign-in cannot find a login until step 4 re-keys it, but a token is
-   read from its own claims, not from the database (`AuthFilter`). Right before switching the build, sign in on the
+   read from its own claims, not from the database (`AuthFilter`; `AccessTokenConfig` from W-358b). Right before switching the build, sign in on the
    previous build as your `SUPER_USER` account and keep the token: it lasts 30 minutes. If it runs out first, deploy the
    previous build again, sign in, and switch back. **Start the new build with `APP_TAX_JOBS_ENABLED=false`**
    (`app.tax.jobs.enabled`; the shipped value from W-336, set anyway), so no job reads a plain row before step 4.
@@ -732,7 +743,7 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
 6. **Check after:** step 3 again — `0` everywhere, `identifiers`, `actors` and `embeddedActors` empty, `loginsToRekey` 0. Then sign in on
    the new build: it works.
 7. **Run the start-time sweep.** Where the jobs are off (every shipped profile from W-336), on request:
-   `curl -s -X POST "$BASE/tax-planning/admin/jobs/staleness-sweep/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
+   `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/staleness-sweep/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
    → `ran: true`, and the log shows `Job staleness-sweep flagged <n> draft(s)`. Where they are on, a restart without
    `APP_TAX_JOBS_ENABLED=false` runs it. A stack trace naming `A stored field is not encrypted` means step 6 was
    not `0` — repeat step 4.
@@ -751,7 +762,7 @@ is erased by the `account-erasure` job (§1.u, same job and holders; run on §5.
 `privacy_erasure_requests` with `cause: "PURPOSE_LAPSED"`, `requested_at` the lapse moment, `erased_at` the run. Each
 sign-in and each registration stores `user_details.last_signed_in_at`. An account without it (every account registered
 before W-249) gets the first run's time: **nothing can lapse earlier than three years after the first run on a
-database.** No command to run. The privacy notice (`GET /privacy/rights`, `/privacy`) states the period.
+database.** No command to run. The privacy notice (`GET /api/v1/public/privacy/rights`, `/privacy`) states the period.
 
 **Before the first start:** an environment override `APP_PRIVACY_PURPOSELAPSE` must be longer than `erasure-hold` (P1Y),
 or the app refuses to start naming `app.privacy.purpose-lapse`; none is expected. **Read-only, before the first run and
@@ -775,7 +786,7 @@ back; after a restore, §1.s's reapply erases a lapse erasure again like a reque
 
 ### 1.p W-250 (D-481) — the notice before consent · owner · **first deploy carrying it, then a week after**
 
-Registration (`POST /auth/register`) now needs `privacyNoticeVersion`, the `version` that `GET /privacy/rights` publishes.
+Registration (`POST /api/v1/public/auth/register`) now needs `privacyNoticeVersion`, the `version` that `GET /api/v1/public/privacy/rights` publishes.
 It is a SHA-256 of the notice's wording, so any change to `app.privacy` text gives a new one. Without the current version,
 registration is refused with 400 and nothing is stored. A successful registration writes a `privacy_consents` row
 (`notice_version`, `given_at`). Each sign-in's response carries `privacy_notice` (`/privacy`) and `privacy_notice_version`.
@@ -805,7 +816,7 @@ build. `privacy_consents` can stay (nothing else reads it) or be dropped (`db.pr
 
 ### 1.o W-255 (D-482) — accounts that chose their own role · owner · **every database · before the deploy carrying W-255, then after any correction**
 
-Until W-255, `POST /auth/register` stored whatever `role` the body sent, so anyone could register as `SUPER_USER`. Now
+Until W-255, `POST /api/v1/public/auth/register` stored whatever `role` the body sent, so anyone could register as `SUPER_USER`. Now
 every registration stores `USER`, and a body naming `role` is refused with 400. Roles already stored are not changed
 by the deploy. **Read-only, before the deploy:**
 
@@ -849,7 +860,7 @@ Automatic at startup (`DocumentIndexInitializer`). **Confirm** the log holds `En
 
 **From W-131c (D-764):** the `parse-documents` job reads each stored document with its form's parser. **Confirm** the three profile yamls hold `app.tax.jobs.parse-documents-cron: "0 * * * * *"` and `app.tax.documents.parse-budget: PT30S` (startup fails without them where `app.tax.jobs.enabled` is true). It runs every minute where the jobs are on, and finds nothing until W-131d stores a document. With the jobs off (every shipped profile from W-336) it runs only on request, and an upload starts no run of its own (`ParseRequests` needs the schedule): run `parse-documents` after an upload, or decide when documents are turned on whether an upload starts its own run (W-336 C5a). Expected in the log after an upload: `recorded a SUCCESS|PARTIAL|FAILED attempt at document …`. A line `overran its budget` means a parse thread was abandoned (W-131f isolates it); a `refused document …` failure row means a document has no stored bytes. Nothing to run; a second run reads nothing already read by the same parser version.
 
-**From W-131d1 (D-766):** the endpoints `POST /tax/user/{email}/documents`, `GET …/documents/{id}/parse` and `POST …/documents/{id}/confirm` ship **off**: the three profile yamls hold `app.tax.documents.enabled: false`, and each answers 503 "Uploading documents is switched off". **Confirm** the yamls hold it, and `spring.servlet.multipart.max-file-size: 21MB` / `max-request-size: 22MB` in `application.yaml`. **Turning it on** is the owner's, only after W-131f (isolation) is done. W-131e's scan ships off in staging and prod by the owner's decision (W-131h, D-769), so §1.m is needed only once the scan is turned on: set `enabled: true` in the profile's yaml and redeploy; then `POST` a known Form No. 130 to a test profile, `GET …/parse` within a minute (where `app.tax.jobs.enabled` is true; where it is off, after running `parse-documents`, W-336), and check the access log holds the read (`tax_access_log`, subject `DOCUMENT`). Off again is the same yaml change. The notice's `tax-planning` part now names uploaded certificates, so the deploy carrying W-131d1 publishes a new notice version (§1.p): any client registering must send it.
+**From W-131d1 (D-766):** the endpoints `POST /api/v1/me/tax/documents`, `GET …/documents/{id}/parse` and `POST …/documents/{id}/confirm` ship **off**: the three profile yamls hold `app.tax.documents.enabled: false`, and each answers 503 "Uploading documents is switched off". **Confirm** the yamls hold it, and `spring.servlet.multipart.max-file-size: 21MB` / `max-request-size: 22MB` in `application.yaml`. **Turning it on** is the owner's, only after W-131f (isolation) is done. W-131e's scan ships off in staging and prod by the owner's decision (W-131h, D-769), so §1.m is needed only once the scan is turned on: set `enabled: true` in the profile's yaml and redeploy; then `POST` a known Form No. 130 to a test profile, `GET …/parse` within a minute (where `app.tax.jobs.enabled` is true; where it is off, after running `parse-documents`, W-336), and check the access log holds the read (`tax_access_log`, subject `DOCUMENT`). Off again is the same yaml change. The notice's `tax-planning` part now names uploaded certificates, so the deploy carrying W-131d1 publishes a new notice version (§1.p): any client registering must send it.
 
 **Way back:** drop the three collections and the bucket's two while they are empty. Once documents are stored, profile erasure and retention delete them with their attempts and confirmations (`DocumentRemoval`); a document deleted that should not have been is restored from the database backup.
 
@@ -872,9 +883,38 @@ From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored 
 3. `docker run -d --name clamd --restart unless-stopped --network wealthlens --mount source=clam_db,target=/var/lib/clamav clamav/clamav:1.5`. No port is published: only containers on `wealthlens` reach it, so a document's bytes never leave the host.
 4. **Check** (read-only): `docker inspect --format '{{.State.Health.Status}}' clamd` answers `healthy` (the image's own health check pings `clamd`). The first start loads the signatures; on CI it answered within 17 s (run 44328189271).
 5. Run the app on the same network, naming the scanner: add `--network wealthlens -e CLAMD_HOST=clamd` to its `docker run` (`docker run -d -p 8080:8080 --name wealthlens-container tperamasani/wealthlens`) and redeploy.
-6. **After**, on staging with the switch on (§1.n): `db.tax_documents.countDocuments()`, then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/tax/user/<email>/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
+6. **After**, on staging with the switch on (§1.n): `db.tax_documents.countDocuments()`, then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/api/v1/me/tax/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
 
 **A second run** is safe: step 2 reports the network and volume exist, and step 3 reports the name in use — `docker start clamd` instead. `freshclam` inside the container updates the signatures once a day; nothing to run. **Way back:** turn the switch off first (§1.n), then `docker rm -f clamd` and `docker volume rm clam_db`; the scanner stores nothing of ours.
+
+### 1.i W-358c1 (D-855, D-856) — every route moves under `/api/v1/{public|me|admin}/{module}` · owner · **first deploy carrying W-358c1**
+
+Nothing in a database changes and nothing runs. **For callers:** every URL moved (the old → new table is `plans/W-358c.md`); an old URL
+answers 403 with a token and 401 without one. A user's own routes take the user from the token and name nobody
+(`/api/v1/me/portfolio/transaction`, was `/portfolio/user/{email}/transaction`); the owner reads one user's holdings, charge gaps,
+contract note, reconciliation and erasure receipt at `/api/v1/admin/{module}/users/{email}/…` (D-855 C3a). `/privacy` (the notice
+page), `/error` and `/actuator/**` stay where they were. The privacy notice names the erasure and grievance routes, so its wording —
+and so its version — changes with this deploy (§1.p): a client registering reads the new version from
+`GET /api/v1/public/privacy/rights` first. The api-collection and every command in this runbook use the new paths. **Check after
+(read-only):** `curl -s -o /dev/null -w '%{http_code}\n' "$BASE/api/v1/public/privacy/rights"` — expected `200`;
+`curl -s -o /dev/null -w '%{http_code}\n' "$BASE/privacy/rights"` — expected `401` (outside every zone). **Way back:** deploy the
+previous build; callers go back to the old paths.
+
+### 1.j W-358b (D-854) — refresh tokens; callers sign in again · owner · **first deploy carrying W-358b**
+
+Automatic at startup (`LoginIndexInitializer`). **Before** (read-only, `mongosh` on the database): `db.refresh_tokens.countDocuments({})` — expected `0`
+(the collection is new). **Confirm** the log holds `Ensured the indexes of UserDetail` and `Ensured the indexes of RefreshToken`; a failure stops
+startup. **After** (read-only): `db.refresh_tokens.getIndexes().map(i => i.name)` — expected `_id_`, `refresh_token_hash_idx`,
+`refresh_token_family_idx`, `refresh_token_email_idx`, `refresh_token_expiry_idx` (the last with `expireAfterSeconds: 0`: Mongo removes a row
+once its 14 days pass). A second start changes nothing. Nothing to run by hand.
+
+**For callers:** an access token lasts 15 minutes (was 30); the sign-in also returns `refresh_token`, renewed by `POST /api/v1/public/auth/token/refresh`
+and ended by `POST /api/v1/public/auth/logout` (both `{"refresh_token": "…"}`). A token signed by the previous build either keeps working until it expires
+(at most 30 minutes) or is refused; a refused caller signs in again. A token on another user's `/…/user/{email}/…` path now answers **403**
+(was 401). The api-collection's `Auth/Login.yml` keeps the refresh token in `REFRESH_TOKEN`.
+
+**Way back:** deploy the previous build; it never reads `refresh_tokens`. Its rows are hashes that sign nobody in, so no backup is needed
+before dropping it: `db.refresh_tokens.drop()`.
 
 ## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
 
@@ -951,7 +991,7 @@ sides of a `profit_and_loss` document). The P&L's gains stay.
 **Second run:** safe, including after a run that failed part-way: deleting from an empty collection and unsetting an
 absent field change nothing (all counts 0). **Way back:** `mongoimport --uri "<uri>" --db <db> --collection <c> --file
 charge-engine-<c>-backup.json` per collection, and `mongoimport --mode merge` of the P&L file; then `POST
-/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5, "written directly").
+/api/v1/admin/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5, "written directly").
 
 ## 1B. Charge engine — seed the rate cards · `SUPER_USER` · **every database · after §1A, before the first trade**
 
@@ -961,7 +1001,7 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 1. **Seed:**
 
    ```bash
-   curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    Expect 13 catalogue codes, 39 rate cards and 2 scheme profiles written. That is the 13 entries of
@@ -974,9 +1014,9 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 
    ```bash
    # Must be empty: the shipped files and the database agree
-   curl -sS "$BASE/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS "$BASE/api/v1/admin/charges/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    # Every card with a verifiedOn older than 90 days, or none; rows mean rate verification is due (§5.2), not a failure
-   curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS "$BASE/api/v1/me/charges/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    Expect `unverified` empty. Every card carries a `verifiedOn`: a broker card against its charges page, and a
@@ -989,7 +1029,7 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 3. **One simulate** against a known figure, Zerodha equity delivery, ₹1,00,000 sell:
 
    ```bash
-   curl -sS -X POST "$BASE/charges/simulate" -H "Authorization: Bearer $TOKEN" \
+   curl -sS -X POST "$BASE/api/v1/me/charges/simulate" -H "Authorization: Bearer $TOKEN" \
      -H 'Content-Type: application/json' -d '{
        "brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
        "exchange":"NSE","transactionDate":"2025-06-10","quantity":100,"price":1000
@@ -1110,7 +1150,7 @@ and `AnalyticsService`.
 3. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/trade-outcomes/rebuild-charges/correct" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/rebuild-charges/correct" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    Expect `rowsExamined` ≤ 29 and `rowsCorrected` ≤ 17. Read every entry in `skipped`; a skipped user is left
@@ -1143,7 +1183,7 @@ A failing user is an error naming them; the users before stay written.
 1. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/trade-outcomes/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    **Read `usersRebuilt` and `rowsWritten` before writing.** Only users with transactions and no rows at all should
@@ -1171,7 +1211,7 @@ so the old form misleads only whoever reads the field. This makes the stored yea
 2. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/trade-outcomes/financial-years/rewrite" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/financial-years/rewrite" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    Expect `rows` 163. A row with no sell date is refused by id here, before any write; correct it by hand first.
@@ -1204,7 +1244,7 @@ in the wrong term. This moves them to the allotment date **you supply**, read fr
 3. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/corporate-actions/bonus/allotment-dates/correct" -H "Authorization: Bearer $ADMIN_TOKEN" \
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/corporate-actions/bonus/allotment-dates/correct" -H "Authorization: Bearer $ADMIN_TOKEN" \
      -H "Content-Type: application/json" --data @allotment-dates.json | jq '.data'
    ```
 
@@ -1249,7 +1289,7 @@ after it.
 2. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/trade-outcomes/stored-terms/remove" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/stored-terms/remove" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    Expect `rows` equal to step 1's count.
@@ -1309,7 +1349,7 @@ row for those sides and they are decided one by one (D-366 C2a).
 2. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/profit-and-loss/split/reshape" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/profit-and-loss/split/reshape" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    Read `placed` (where each side's pair would go) and `unplaced` (each side left, with its reason). Keep the
@@ -1334,13 +1374,13 @@ file.
 ### 2.7 W-160f (D-371) — drop `portfolio`'s holding-period policies · owner, `mongosh` · **every database · once · outstanding**
 
 **Why.** `holding_period_policies` held `portfolio`'s own copy of the holding-period law, seeded by `POST
-/charges/seed`. Since W-160f no code reads, writes or seeds it: the term is the engine's `RS-CG-TERM` (D-305, D-362).
+/api/v1/admin/charges/seed`. Since W-160f no code reads, writes or seeds it: the term is the engine's `RS-CG-TERM` (D-305, D-362).
 This removes the stale law from the database. Nothing reads the collection, so no figure changes.
 
 **When:** at the deploy, any time after it.
 
 1. **Count before** (read-only): `db.holding_period_policies.countDocuments({})`. Expect the shipped policies (11),
-   or 0 where `/charges/seed` was never run. 2026-10-27: prod 0, staging 11. §1B no longer writes it. The previous build (`ec85b188`) creates it empty when it starts for §1.r step 1's token, so prod shows it present with 0 (W-334c4b row 17).
+   or 0 where `/api/v1/admin/charges/seed` was never run. 2026-10-27: prod 0, staging 11. §1B no longer writes it. The previous build (`ec85b188`) creates it empty when it starts for §1.r step 1's token, so prod shows it present with 0 (W-334c4b row 17).
 2. **Back up:**
 
    ```bash
@@ -1386,7 +1426,7 @@ purchase and sale only.
 2. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/profit-and-loss/v2-figures/backfill?recordedBefore=<yyyy-MM-ddTHH:mm:ss>" \
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?recordedBefore=<yyyy-MM-ddTHH:mm:ss>" \
      -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
@@ -1426,7 +1466,7 @@ breakdowns themselves (`buy_charge_breakup`, `sell_charge_breakup`) stay.
 2. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/trade-outcomes/deductible-charges/remove" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/deductible-charges/remove" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
    Expect `rows` equal to step 1's count.
@@ -1458,7 +1498,7 @@ stale flag. Nothing reads it, so no figure changes; the catalogue's codes and ot
 **When:** at the deploy, any time after it.
 
 1. **Count before** (read-only): `db.charge_catalogue.countDocuments({ deductible_for_capital_gains: { $exists: true } })`.
-   Expect the codes seeded before W-162c (12), or 0 where `/charges/seed` was never run. **After §1A it is 0 on both
+   Expect the codes seeded before W-162c (12), or 0 where `/api/v1/admin/charges/seed` was never run. **After §1A it is 0 on both
    databases** (staging's 12 codes on 2026-10-27 are cleared there and re-seeded without the flag), so the step
    confirms 0 and writes nothing.
 2. **Back up:**
@@ -1507,7 +1547,7 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
    ```
 2. **Dry run** (the default):
    ```bash
-   curl -sS -X POST "$BASE/portfolio/user/<email>/profit-and-loss/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/users/<email>/profit-and-loss/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
    Read `years`: per financial year, `stored` against `rebuilt`. For a V2-only user they agree to the paisa; any
    difference is the correction, or a V1 figure (above). Decide before writing.
@@ -1551,7 +1591,7 @@ rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, the
    `db.assets.countDocuments({ email: "<stored user email>" })`
 2. **Dry run** (the default):
    ```bash
-   curl -sS -X POST "$BASE/portfolio/user/<email>/assets/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/users/<email>/assets/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
    - Read `lotsDiffering`, then each entry of `lots` with non-empty `differingFields`; `stored` and `rebuilt` sit side
      by side.
@@ -1560,7 +1600,7 @@ rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, the
 4. **Verify (read-only):**
    - the count above now equals `lotsWritten`;
    - a second dry run reports `lotsDiffering` 0 and `newLots` empty;
-   - `GET /portfolio/user/<email>/stocks/all` (and `/mfs`) shows the holdings (`PortfolioController:77 – 86`).
+   - `GET /api/v1/admin/portfolio/users/<email>/stocks` (and `…/mutual-funds`) shows the holdings (`HoldingsAdminController`, D-855 C3a).
 
 **Second run:** safe, including after one that failed part-way. The write is one transaction that deletes and saves
 the user's lots, so a failure leaves them as they were, and a second run writes the same lots under the same ids
@@ -1623,7 +1663,7 @@ them (§2.2 "Know this").
 1. **Before (read-only):** §3.18 and §3.19. Note each one's users.
 2. **Dry run** (the default):
    ```bash
-   curl -sS -X POST "$BASE/transactions/segment/correct" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/transactions/segment/correct" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
    Read `transactionsCorrected`, `rowsCorrected`, `users` and `rowsWithMixedBuys`. The users should be those §3.18
    and §3.19 listed.
@@ -1696,6 +1736,48 @@ lots, in two users who hold nothing else and have no P&L year, so removing them 
 
 **Retired after use:** W-347, once logged for prod. There is no code to remove.
 
+### 2.17 W-354 (D-831, D-832) — remove prod's last test entries: `DUMMY3` and `"username"` · owner, `mongosh` · **prod · once, after §2.16; other databases sized at their run**
+
+**Why.** Prod's 5 trades and 6 lots with no `asset_type` (§3.10) are all test entries (owner, 2026-11-20: "safe to delete"). §2.16
+removes the `LAVANYA` ones; this removes the rest: the stock `DUMMY3` (user A: 1 transaction, 1 lot, a login, nothing else) and the
+`ICICIBANK` lot `6835e328e9c3af1009a6f4dd` (1 @ ₹100, 2023-09-21) held by `"username"`, which stores nothing else and whose buy
+`6835e327e9c3af1009a6f4dc` does not exist. The script finds both users from the data — whoever holds `DUMMY3`, and that lot's
+holder — never from a typed email, so it runs the same before and after §1.r encrypts stored emails. It stops if that lot is not
+`ICICIBANK`. It matches `stock_code: "DUMMY3"` and every document whose `email`, `principal`, `subject_email` or `_id` is one of
+the two users; `audit_metadata.createdBy` is counted, not deleted; no transaction is deleted by id. Scripts in
+`~/wealthlens-runs/w334c`: `w354-04-remove-test-leftovers.js`, `w354-05-restore.js`.
+
+1. **Count before** (read-only). Expect `users` 2; `before` `transactions` 1, `assets` 2, `user_details` 1, and any `principal` /
+   `subject_email` rows of user A (processing log, consent); `perUser` with `otherStocks` 0, `profitAndLossYears` 0, `outcomeRows` 0.
+   **Stop** if a user shows another stock, a P&L year or an outcome row: that is real data.
+```zsh
+read -r 'MONGO_USER?Prod Mongo user: '; read -rs 'MONGO_PASSWORD?Prod Mongo password: '; echo
+(cd ~/wealthlens-runs/w334c && for i in 1 2 3; do TARGET_DB=Cluster0 mongosh "mongodb+srv://cluster0.x6trgen.mongodb.net/Cluster0" --username "$MONGO_USER" --password "$MONGO_PASSWORD" --quiet --file w354-04-remove-test-leftovers.js && break; echo "retry $i"; sleep 5; done)
+unset MONGO_PASSWORD
+```
+2. **Back up and delete.** The script writes `w354-backup.json` (canonical EJSON, mode 600) in that folder, reads it back and
+   deletes only if its counts equal step 1's — the login last. Expect `backup` = `deleted` = step 1's `before`, `after` `{}`. It
+   refuses to run if `w354-backup.json` already exists (an earlier run's backup is kept, never overwritten).
+```zsh
+read -r 'MONGO_USER?Prod Mongo user: '; read -rs 'MONGO_PASSWORD?Prod Mongo password: '; echo
+(cd ~/wealthlens-runs/w334c && for i in 1 2 3; do TARGET_DB=Cluster0 REMOVE=yes mongosh "mongodb+srv://cluster0.x6trgen.mongodb.net/Cluster0" --username "$MONGO_USER" --password "$MONGO_PASSWORD" --quiet --file w354-04-remove-test-leftovers.js && break; echo "retry $i"; sleep 5; done)
+unset MONGO_PASSWORD
+```
+3. **Verify.** Step 1 again: `users` 0, `before` `{}`. Then §3.10: `assets` 0, `transactions` 0 (with §2.16 done).
+
+**Second run:** safe — it finds no user and nothing to delete. **Way back:** `w354-05-restore.js` reinserts the backup's documents,
+skipping any still present:
+```zsh
+read -r 'MONGO_USER?Prod Mongo user: '; read -rs 'MONGO_PASSWORD?Prod Mongo password: '; echo
+(cd ~/wealthlens-runs/w334c && for i in 1 2 3; do TARGET_DB=Cluster0 RESTORE=yes mongosh "mongodb+srv://cluster0.x6trgen.mongodb.net/Cluster0" --username "$MONGO_USER" --password "$MONGO_PASSWORD" --quiet --file w354-05-restore.js && break; echo "retry $i"; sleep 5; done)
+unset MONGO_PASSWORD
+```
+**Rehearsed** on a throwaway `mongo:8.0.4` (W-354's plan): the three cases plus a real user holding ICICIBANK and TCS — wrong
+`TARGET_DB` refused; remove deleted exactly the backup, the real user untouched; second run nothing; restore equal to the start;
+restore again 0; remove with a backup present refused.
+
+**Retired after use:** W-354, once logged for prod. There is no code to remove.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
@@ -1714,7 +1796,7 @@ Any repair would be a new work item with its own section-2 entry.
 | 3.7 | **W-088g5** (D-433) | A `LAND_OR_BUILDING` trade is now **refused** on V1, V2 and the upload (400). Land was enterable from W-088g2 (D-425) until this guard; a row entered in that window **stays as it is** — the guard refuses new entries and touches nothing stored. Expected 0 on every database; a non-zero count is reported to the owner, not corrected (a correction would be its own item, with W-088g9's property entry) | the 3.7 query below, owner, any time after the deploy that carries W-088g5; safe to run again |
 | 3.8 | **W-223** (D-437), **W-230** (D-439) | Until these a V2 buy no rate card priced had its entered `brokerCharges` replaced by nil, and a V2 sale's never reached its row; from them the entered figure stays. A lot or row already written stays nil; its entered charge is still on its source transaction, so nothing is lost. Reported, not corrected: a correction is its own item | the 3.8 query below, owner, any time after the deploy that carries W-223; read-only; safe to run again; nothing to undo |
 | 3.9 | **W-213, W-216** (D-438) | Until W-213 a stock split performed through the per-user path changed no lot, yet was marked performed, and a malformed ratio could be too. A lot affected stays unsplit with a performed row. Reported, not corrected: a correction is its own row, placed once a count is seen. **Read the ratios too:** W-213 reads `n:d` as new shares to old (`2:1` doubles). A stored `1:10` meant as ten-for-one would **shrink** a holding when performed: re-enter such an action before anyone performs it | the 3.9 query below, owner, after the deploy that carries W-213 and before any split is performed; read-only; safe to run again; nothing to undo |
-| 3.10 | **W-268** (D-553 C1a) | `POST /portfolio/user/{email}/update` is **removed**: it let any signed-in user set a missing `asset_type` to `MUTUAL_FUND` on every user's `assets` and `transactions`. Whether it was ever run on a database is not known. A record with no `asset_type` stays as it is; expected 0. A non-zero count is reported to the owner, not corrected — a scoped, idempotent backfill would be its own row, placed once a count is seen | `({ assets: db.assets.countDocuments({ asset_type: null }), transactions: db.transactions.countDocuments({ asset_type: null }) })`, owner, `mongosh`, before or after the deploy that carries W-268; read-only; safe to run again; nothing to undo |
+| 3.10 | **W-268** (D-553 C1a) | `POST /portfolio/user/{email}/update` is **removed**: it let any signed-in user set a missing `asset_type` to `MUTUAL_FUND` on every user's `assets` and `transactions`. Whether it was ever run on a database is not known. A record with no `asset_type` stays as it is; expected 0. A non-zero count is reported to the owner, not corrected — a scoped, idempotent backfill would be its own row, placed once a count is seen. **Prod (W-354, D-831, 2026-11-20):** `assets` 6, `transactions` 5 — all test entries, removed by §2.16 (`LAVANYA` 4 / 4) and §2.17 (`DUMMY3` 1 / 1, the `"username"` lot 1 / 0); expected 0 / 0 after both | `({ assets: db.assets.countDocuments({ asset_type: null }), transactions: db.transactions.countDocuments({ asset_type: null }) })`, owner, `mongosh`, before or after the deploy that carries W-268; read-only; safe to run again; nothing to undo |
 | 3.11 | **W-270** (D-555 C2a) | A trade held back by a corporate action now records the flow that received it (`trade_flow`, `V1` or `V2`), and redrive records it the same way. A `TEMPORARY` transaction stored before W-270 has none; which flow sent it cannot be recovered, so it is redriven through V1 as before — a V2 trade among them comes back merged into a same-day lot and unpriced by the charge engine (W-264a G-8). Reported, not corrected: the count decides whether a row is placed. **Prod (W-334c7b3, D-823):** 18 — all one `TEST_USER` account's buys of codes `A` / `B` / `C`, none keeping its request (a redrive cannot replay them); the whole test account is removed (`c7b3-03-test-account.js`, then `c7b-e5-test-users.js` with backups guarding the delete), so the count is 0 | `db.transactions.countDocuments({ status: "TEMPORARY", trade_flow: null })`, owner, `mongosh`, after the deploy that carries W-270; read-only; safe to run again; nothing to undo |
 | 3.12 | **W-271** (D-556 C2a) | A V1 sale now takes only lots held on its date, as V2's does. Until W-271 a V1 sale (the route, the upload, a V1 redrive) read every lot, so a sale dated before a purchase could consume that later lot; each such allocation left a `trade_outcomes` row whose `buy_date` is after its `sell_date`. Expected 0; a non-zero count is reported to the owner, not corrected — a correction would be its own row | `db.trade_outcomes.countDocuments({ $expr: { $gt: ["$buy_date", "$sell_date"] } })`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.13 | **W-274** (D-560 C3a) | Sale quantities are now compared within a tolerance of 1e-9. Until W-274 a V1 sale of fractional units could leave a lot holding a float remainder (2.8e-17 units seen in W-264a) that was never deleted. Such a lot is no longer shown in the holdings views, but stays stored. Expected 0; a non-zero count is reported to the owner, not corrected — a removal would be its own row | `db.assets.countDocuments({ quantity: { $gt: 0, $lt: 1e-9 } })`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
@@ -1726,12 +1808,12 @@ Any repair would be a new work item with its own section-2 entry.
 | 3.19 | **W-295** (D-595 C3a) | An outcome row now records the segment of its sale whichever flow wrote it. Until W-295 only V2 did: a V1 row and a row rebuilt by §2.2 held `sell_segment` but no `segment`, and §2.11 files a row under `segment`, reading an absent one as delivery. So a §2.11 rebuild moved such a sale out of intraday (live P&L was right). The count lists users with rows whose `sell_segment` is not `DELIVERY` and that have no `segment`; those are the rows filed wrongly. Reported here; §2.14 (W-297) corrects it. **Until §2.14 has run, do not run §2.11 for a user this lists** | `db.trade_outcomes.aggregate([{ $match: { segment: null, sell_segment: { $nin: [null, "DELIVERY"] } } }, { $group: { _id: "$email", rows_filed_as_delivery: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.20 | **W-303** (D-619 C4a) | A fund redeemed inside its exit-load window is now charged the load on its redemption value (the lot's units at the sale price). Until W-303 the engine took a lot's turnover at its **buy** price, so a stored `EXIT_LOAD` on a sale above cost is too low and one below cost too high; the row keeps the sale's `turnover` and each line's `base_amount` (the lot's cost) but not the lots, so it cannot be recomputed from the row alone. The count lists users with rows carrying an exit load; a non-zero count gets a correction row with its own plan (no recompute route exists, CE-4 / W-308) | `db.user_charges.aggregate([{ $match: { "amount_by_code.EXIT_LOAD": { $gt: 0 } } }, { $group: { _id: "$email", exit_load_rows: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, after deploy, on each database; read-only; safe to run again; nothing to undo; log the count in the run log |
 | 3.21 | **W-304** (D-623 C4a) | A card is now chosen for a trade only if one of its active rules declares the trade's event (BUY, SELL, AMC_CYCLE). Until W-304 an unscoped card with no rule for the event, such as a broker's maintenance card (AMC_CYCLE only) or the statutory account card, could stand in for a missing trade card. The trade was then stored as `RESOLVED`, or `NO_MATCHING_RULES`, with the missing card's charges silently absent and not listed by `/gaps`. With the shipped cards there is no such hole from 1 Apr 2025, so every count should be 0; a database's own cards may differ. The count lists, per database, the BUY/SELL rows whose `schedule_code` or `statutory_schedule_code` names a card with no active rule for the row's event. A non-zero count gets a correction row with its own plan (no recompute route exists, CE-4 / W-308) | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("user_charges")).map(n => { const covers = c => ({ $cond: [{ $eq: [{ $size: c }, 0] }, true, { $anyElementTrue: [{ $map: { input: { $ifNull: [{ $first: { $map: { input: c, as: "s", in: "$$s.rules" } } }, []] }, as: "r", in: { $and: [{ $eq: ["$$r.active", true] }, { $in: ["$event", { $ifNull: ["$$r.events", []] }] }] } } }] }] }); const r = db.getSiblingDB(n).user_charges.aggregate([{ $match: { event: { $in: ["BUY", "SELL"] } } }, { $lookup: { from: "charge_schedules", localField: "schedule_code", foreignField: "schedule_code", as: "card" } }, { $lookup: { from: "charge_schedules", localField: "statutory_schedule_code", foreignField: "schedule_code", as: "law" } }, { $project: { broker: covers("$card"), law: covers("$law") } }, { $group: { _id: null, trade_rows: { $sum: 1 }, broker_card_without_the_event: { $sum: { $cond: ["$broker", 0, 1] } }, statutory_card_without_the_event: { $sum: { $cond: ["$law", 0, 1] } } } }]).toArray()[0] ?? { trade_rows: 0, broker_card_without_the_event: 0, statutory_card_without_the_event: 0 }; return { database: n, trade_rows: r.trade_rows, broker_card_without_the_event: r.broker_card_without_the_event, statutory_card_without_the_event: r.statutory_card_without_the_event }; }) }])` — one row per database, owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4` with hand-made rows: 4 trade rows, 2 broker (a maintenance card on a sale, a card whose only rule is switched off), 1 statutory (the account card on a buy), as worked by hand; a database without `user_charges` is skipped. Log the three counts in the run log |
-| 3.22 | **W-313** (D-637 C2a) | A demerger's share ratio is now read **new:held**, as the market writes it (ITC's "1:10" = one ITC Hotels share for every ten ITC). Until W-313 the second number was taken as new shares per share held, so a demerger other than `1:1` allotted the wrong quantity and cost (ITC: 10,000 shares and ₹5,40,400 instead of 100 and ₹54,040). The query lists, per database, every stored demerger whose ratio is not `1:1` and the users holding lots it created. **Check each listed demerger's ratio against its announcement first**: one entered in the old reading is deleted (`DELETE /corporate-action/delete/{id}`) and added again with the right ratio (`POST /corporate-action/add`), both `SUPER_USER`, before any rebuild. Then rebuild each listed user with §2.12, which replays demergers through the fixed code | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("corporate_action")).map(n => { const d = db.getSiblingDB(n); const demergers = d.corporate_action.find({ type: "DEMERGER", "demerger_detail.demerger_ratio": { $ne: "1:1" } }, { _id: 0, stock_code: 1, record_date: 1, "demerger_detail.demerger_ratio": 1, "demerger_detail.demerger_stocks.stock_code": 1 }).toArray(); const created = demergers.flatMap(a => (a.demerger_detail.demerger_stocks || []).map(s => s.stock_code)); const users = created.length === 0 ? [] : d.assets.distinct("email", { corporate_action: "DEMERGER", stock_code: { $in: created } }); return { database: n, demergers_not_one_for_one: demergers.map(a => ({ stock: a.stock_code, ratio: a.demerger_detail.demerger_ratio, record_date: a.record_date, creates: (a.demerger_detail.demerger_stocks || []).map(s => s.stock_code) })), users_to_rebuild: users }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: a `1:10` and a `1:1` demerger, lots from each → the `1:10` one only, with its two users, as worked by hand. Log the lists in the run log; each §2.12 run is logged as §2.12 **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
+| 3.22 | **W-313** (D-637 C2a) | A demerger's share ratio is now read **new:held**, as the market writes it (ITC's "1:10" = one ITC Hotels share for every ten ITC). Until W-313 the second number was taken as new shares per share held, so a demerger other than `1:1` allotted the wrong quantity and cost (ITC: 10,000 shares and ₹5,40,400 instead of 100 and ₹54,040). The query lists, per database, every stored demerger whose ratio is not `1:1` and the users holding lots it created. **Check each listed demerger's ratio against its announcement first**: one entered in the old reading is deleted (`DELETE /api/v1/admin/corporate-actions/{id}`) and added again with the right ratio (`POST /api/v1/admin/corporate-actions`), both `SUPER_USER`, before any rebuild. Then rebuild each listed user with §2.12, which replays demergers through the fixed code | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("corporate_action")).map(n => { const d = db.getSiblingDB(n); const demergers = d.corporate_action.find({ type: "DEMERGER", "demerger_detail.demerger_ratio": { $ne: "1:1" } }, { _id: 0, stock_code: 1, record_date: 1, "demerger_detail.demerger_ratio": 1, "demerger_detail.demerger_stocks.stock_code": 1 }).toArray(); const created = demergers.flatMap(a => (a.demerger_detail.demerger_stocks || []).map(s => s.stock_code)); const users = created.length === 0 ? [] : d.assets.distinct("email", { corporate_action: "DEMERGER", stock_code: { $in: created } }); return { database: n, demergers_not_one_for_one: demergers.map(a => ({ stock: a.stock_code, ratio: a.demerger_detail.demerger_ratio, record_date: a.record_date, creates: (a.demerger_detail.demerger_stocks || []).map(s => s.stock_code) })), users_to_rebuild: users }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: a `1:10` and a `1:1` demerger, lots from each → the `1:10` one only, with its two users, as worked by hand. Log the lists in the run log; each §2.12 run is logged as §2.12 **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
 | 3.23 | **W-312** (D-638 C3a) | A bonus is now allotted per account holder. Until W-312 it pooled every holder at the broker into one bonus lot **and one bonus transaction** for the first holder. The transaction is the record, so §2.12 cannot repair it. The query lists, per database, each bonus transaction whose stock, broker and user had buys (not held `TEMPORARY`) from more than one holder before it; a non-empty list gets a correction row with its own plan | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("transactions")).map(n => { const rows = db.getSiblingDB(n).transactions.aggregate([{ $match: { corporate_action: "BONUS" } }, { $lookup: { from: "transactions", let: { e: "$email", s: "$stock_code", b: "$broker_name", t: "$transaction_date" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$email", "$$e"] }, { $eq: ["$stock_code", "$$s"] }, { $eq: ["$broker_name", "$$b"] }, { $lt: ["$transaction_date", "$$t"] }, { $eq: ["$transaction_type", "BUY"] }, { $ne: ["$corporate_action", "BONUS"] }, { $ne: ["$status", "TEMPORARY"] }] } } }, { $group: { _id: { type: "$account_type", holder: "$account_holder" } } }], as: "holders" } }, { $match: { "holders.1": { $exists: true } } }, { $project: { _id: 0, email: 1, stock_code: 1, broker_name: 1, allotted_on: "$transaction_date", quantity: 1, holders: "$holders._id" } }]).toArray(); return { database: n, pooled_bonuses: rows }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: a pooled bonus, a holder buying after the bonus, and a held trade → the pooled one only, as worked by hand. Log the list in the run log |
-| 3.24 | **W-316** (D-640) | A rights issue or buyback no longer holds a trade: the app records them but cannot apply them, so until W-316 a trade on such a stock after its record date was held `TEMPORARY` for good, and the quarter's run stopped at the action with 400. Trades already held that way are recorded by a redrive. The query lists, per database, the users and stocks with `TEMPORARY` trades on a stock that has a rights issue or buyback. **Then**, for each user listed: `curl -sS -X POST "$BASE/temporary-transactions/user/<email>/redrive" -H "Authorization: Bearer $ADMIN_TOKEN"` (`SUPER_USER`). Redrive is the normal route and safe to run again; a trade still held by a bonus, split or demerger stays held | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("corporate_action")).map(n => { const d = db.getSiblingDB(n); const stocks = d.corporate_action.distinct("stock_code", { type: { $in: ["RIGHTS_ISSUANCE", "BUYBACK"] } }); const held = stocks.length === 0 ? [] : d.transactions.aggregate([{ $match: { status: "TEMPORARY", stock_code: { $in: stocks } } }, { $group: { _id: { email: "$email", stock: "$stock_code" }, held_trades: { $sum: 1 } } }, { $project: { _id: 0, email: "$_id.email", stock: "$_id.stock", held_trades: 1 } }]).toArray(); return { database: n, stocks_with_rights_or_buyback: stocks, held_to_redrive: held }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: held trades on a rights-issue and a buyback stock, one held by a bonus, one processed → the first two only, as worked by hand. Log the list and each redrive's result in the run log **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
+| 3.24 | **W-316** (D-640) | A rights issue or buyback no longer holds a trade: the app records them but cannot apply them, so until W-316 a trade on such a stock after its record date was held `TEMPORARY` for good, and the quarter's run stopped at the action with 400. Trades already held that way are recorded by a redrive. The query lists, per database, the users and stocks with `TEMPORARY` trades on a stock that has a rights issue or buyback. **Then**, for each user listed: `curl -sS -X POST "$BASE/api/v1/me/portfolio/temporary-transactions/redrive" -H "Authorization: Bearer $ADMIN_TOKEN"` (`SUPER_USER`). Redrive is the normal route and safe to run again; a trade still held by a bonus, split or demerger stays held | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("corporate_action")).map(n => { const d = db.getSiblingDB(n); const stocks = d.corporate_action.distinct("stock_code", { type: { $in: ["RIGHTS_ISSUANCE", "BUYBACK"] } }); const held = stocks.length === 0 ? [] : d.transactions.aggregate([{ $match: { status: "TEMPORARY", stock_code: { $in: stocks } } }, { $group: { _id: { email: "$email", stock: "$stock_code" }, held_trades: { $sum: 1 } } }, { $project: { _id: 0, email: "$_id.email", stock: "$_id.stock", held_trades: 1 } }]).toArray(); return { database: n, stocks_with_rights_or_buyback: stocks, held_to_redrive: held }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: held trades on a rights-issue and a buyback stock, one held by a bonus, one processed → the first two only, as worked by hand. Log the list and each redrive's result in the run log **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
 | 3.25 | **W-342** (D-798 C1a) | The startup rebuild once put a lot's whole buy charge on each later sale of it (W-088u5); §2.1 was to correct those rows by replaying the transactions, but the replay orders same-day sales by date only, so it pairs neither prod user and corrects nothing. **Accepted, not corrected:** on prod (rehearsed on its copy, 2026-11-20) the rows on lots sold more than once carry ₹68.99 of buy charges where ₹53.00 is the lot's own shared by quantity — **₹15.99 over** on nine lots, so those sales' cost is overstated and their gain understated by that much. Reported per lot with no email | `~/wealthlens-runs/w334c/c4-w342-overcharge.js` (W-342 row 3) — per lot: rows, quantity sold, lot quantity, the lot's buy charges, carried, fair, over; owner, `mongosh`, any time; read-only; safe to run again; nothing to undo. Expected on prod: 12 lots, 29 rows, carried 68.99, over 15.99 |
 | 3.26 | **W-344** (D-799 C1a) | A stock code is matched exactly everywhere — lots, sales, corporate actions, rate cards — so one stored with a leading or trailing space (`MOTHERSON `, seen on prod's copy by W-342 row 3) is a different stock from the clean one: its sales cannot reach the clean code's lots, and a corporate action entered under the clean code never reaches it. Reported, not corrected: a correction is its own row, placed once each database is sized. **Prod (rehearsed on its copy, 2026-11-20):** one code, `"MOTHERSON "` — one user's closed position (3 transactions, 2 outcome rows, no lot, no clean `MOTHERSON` anywhere): nothing split, **not corrected** (D-799 C1a). New entries are refused from W-345 | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).flatMap(n => { const d = db.getSiblingDB(n); return d.getCollectionNames().filter(c => !c.startsWith("system.")).flatMap(c => ["stock_code", "to_stock_code"].map(f => { const m = { [f]: { $type: "string", $regex: /^\s\|\s$/ } }; const k = d.getCollection(c).countDocuments(m); return k === 0 ? null : { database: n, collection: c, field: f, documents: k, codes: d.getCollection(c).distinct(f, m).map(s => JSON.stringify(s)) }; })).filter(x => x); }) }])` — one row per database, collection and field (`stock_code`, `to_stock_code`) with the count and the codes as stored (quoted, so the space shows); owner, console, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: two `MOTHERSON ` and one ` TCS` in `transactions`, an `ITCHOTELS` + tab in `corporate_action.to_stock_code` → 3 and 1, as worked by hand; an inner space (`A B`), `null` and a number not counted. Log the rows in the run log |
-| 3.27 | **W-353** (D-826, D-828, D-829, D-830) | A trade must now name an exchange its asset type lists in `app.portfolio.trade-exchanges` (EQUITY / MUTUAL_FUND `NSE` or `BSE`; BOND / GOLD_BOND also `OFF_EXCHANGE`; FD / INSURANCE `OFF_EXCHANGE` only), exactly as written, and an asset type; anything else is refused with a 400 on V1, V2, the upload and redrive. **Stored trades are not changed** (`outside`, informational): on prod (owner's count, 2026-11-20) 183 — 178 `MUTUAL_FUND`/`BMF` and 5 with no asset type (W-354). A **held** trade (`status: TEMPORARY`) is checked again at redrive from its stored request, so one outside the table now fails its redrive item (`held`, expected 0; a non-zero count is reported to the owner, not corrected) | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin", "local", "config"].includes(n) && db.getSiblingDB(n).getCollectionNames().includes("transactions")).map(n => { const d = db.getSiblingDB(n); const listed = { EQUITY: ["NSE", "BSE"], MUTUAL_FUND: ["NSE", "BSE"], BOND: ["NSE", "BSE", "OFF_EXCHANGE"], GOLD_BOND: ["NSE", "BSE", "OFF_EXCHANGE"], FD: ["OFF_EXCHANGE"], INSURANCE: ["OFF_EXCHANGE"] }; const outside = (t, e) => ({ $nor: Object.entries(listed).map(([k, v]) => ({ [t]: k, [e]: { $in: v } })) }); return { database: n, outside: d.transactions.countDocuments(outside("asset_type", "exchange_name")), held: d.transactions.countDocuments({ status: "TEMPORARY", ...outside("asset_request.assetType", "asset_request.exchangeName") }) }; }) }])` — one row per database; owner, console, on each cluster, after the deploy that carries W-353; read-only; safe to run again; nothing to undo. The lists in it copy the yaml's; if the yaml changes, change them too. Tried on a throwaway `mongo:8.0.4`: 12 trades (`nse`, `NSE `, `BMF`, none, FD/`NSE`, a GOLD_BOND with no exchange, a held `BMF`, a processed one whose request says `bse`, and four listed) → outside 7, held 1, as worked by hand. Log the rows in the run log |
+| 3.27 | **W-353** (D-826, D-828, D-829, D-830) | A trade must now name an exchange its asset type lists in `app.portfolio.trade-exchanges` (EQUITY / MUTUAL_FUND `NSE` or `BSE`; BOND / GOLD_BOND also `OFF_EXCHANGE`; FD / INSURANCE `OFF_EXCHANGE` only), exactly as written, and an asset type; anything else is refused with a 400 on V1, V2, the upload and redrive. **Stored trades are not changed** (`outside`, informational): on prod (owner's count, 2026-11-20) 183 — 178 `MUTUAL_FUND`/`BMF` and 5 with no asset type, test entries removed by §2.16 and §2.17 (W-354), so 178 after the prod run. A **held** trade (`status: TEMPORARY`) is checked again at redrive from its stored request, so one outside the table now fails its redrive item (`held`, expected 0; a non-zero count is reported to the owner, not corrected) | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin", "local", "config"].includes(n) && db.getSiblingDB(n).getCollectionNames().includes("transactions")).map(n => { const d = db.getSiblingDB(n); const listed = { EQUITY: ["NSE", "BSE"], MUTUAL_FUND: ["NSE", "BSE"], BOND: ["NSE", "BSE", "OFF_EXCHANGE"], GOLD_BOND: ["NSE", "BSE", "OFF_EXCHANGE"], FD: ["OFF_EXCHANGE"], INSURANCE: ["OFF_EXCHANGE"] }; const outside = (t, e) => ({ $nor: Object.entries(listed).map(([k, v]) => ({ [t]: k, [e]: { $in: v } })) }); return { database: n, outside: d.transactions.countDocuments(outside("asset_type", "exchange_name")), held: d.transactions.countDocuments({ status: "TEMPORARY", ...outside("asset_request.assetType", "asset_request.exchangeName") }) }; }) }])` — one row per database; owner, console, on each cluster, after the deploy that carries W-353; read-only; safe to run again; nothing to undo. The lists in it copy the yaml's; if the yaml changes, change them too. Tried on a throwaway `mongo:8.0.4`: 12 trades (`nse`, `NSE `, `BMF`, none, FD/`NSE`, a GOLD_BOND with no exchange, a held `BMF`, a processed one whose request says `bse`, and four listed) → outside 7, held 1, as worked by hand. Log the rows in the run log |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
@@ -1848,7 +1930,7 @@ AMC is **not** billed for an account that is not registered: with no account the
 says so.
 
 ```bash
-curl -sS -X POST "$BASE/charge-accounts/user/$USER_EMAIL" -H "Authorization: Bearer $TOKEN" \
+curl -sS -X POST "$BASE/api/v1/me/charges/charge-accounts" -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' -d '{
     "brokerName":"ZERODHA","dematAccountId":"1208160000000001","accountHolder":"self",
     "amcFrequency":"ANNUALLY","openedOn":"2024-01-01"
@@ -1859,11 +1941,11 @@ curl -sS -X POST "$BASE/charge-accounts/user/$USER_EMAIL" -H "Authorization: Bea
 
 | Operation | Command | Cadence | If it is never run |
 |---|---|---|---|
-| **AMC cycle** | `POST /charges/amc/impose` | quarterly / annually, per account frequency | No maintenance charge is billed. Idempotent per account and period: running it twice bills once |
-| **Rate verification** | `GET /charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
-| **Drift check** | `GET /charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
-| **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/tax-planning/admin/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.data'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
-| **Publishing a rate change** | `POST /charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. Rehearsal: `staging-runbook.md` §7 |
+| **AMC cycle** | `POST /api/v1/admin/charges/amc/impose` | quarterly / annually, per account frequency | No maintenance charge is billed. Idempotent per account and period: running it twice bills once |
+| **Rate verification** | `GET /api/v1/me/charges/charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
+| **Drift check** | `GET /api/v1/admin/charges/charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
+| **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.data'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
+| **Publishing a rate change** | `POST /api/v1/admin/charges/charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. Rehearsal: `staging-runbook.md` §7 |
 
 ### 5.3 History before the engine is not priced
 
@@ -1884,10 +1966,10 @@ nothing rewrites a stored `AssetEntity`.
 
 | Symptom | Where to look |
 |---|---|
-| Charges are zero | `GET /user-charges/user/{email}/gaps`: it names the reason per trade |
+| Charges are zero | `GET /api/v1/admin/charges/user-charges/users/{email}/gaps`: it names the reason per trade |
 | Startup warned about rate cards | §1B; grep the log for `NO RATE CARDS` |
-| A charge looks wrong | `GET /user-charges/user/{email}/transaction/{id}`: the contract note, line by line, with the `scheduleCode` that priced it |
-| Figures disagree with the client's | `GET /user-charges/user/{email}/reconciliation` |
+| A charge looks wrong | `GET /api/v1/admin/charges/user-charges/users/{email}/transaction/{id}`: the contract note, line by line, with the `scheduleCode` that priced it |
+| Figures disagree with the client's | `GET /api/v1/admin/charges/user-charges/users/{email}/reconciliation` |
 
 ### 5.5 Known limits — recorded, not defects
 
@@ -1897,13 +1979,13 @@ Full list in `docs/charges-engine/README.md` §10.
 - **Only two mutual-fund schemes have exit-load profiles.** Every other fund resolves `NO_INSTRUMENT_PROFILE` and
   accrues no exit load; recorded, never fatal (ADR-24).
 - **A rate card written directly to MongoDB is invisible** until the resolver cache is evicted. `POST
-  /charge-schedules`, the close endpoint and `POST /charges/seed` evict it. Go through the API.
+  /api/v1/admin/charges/charge-schedules`, the close endpoint and `POST /api/v1/admin/charges/seed` evict it. Go through the API.
 - **Scheme profiles have no publishing endpoint:** they arrive by seeding, and a profile added by hand needs a
   restart or a seed run.
 - **No `POST /charges/recompute`.** Amending a card that has already priced charges has no safe mechanism; designed in
   tech-spec §14.4, not built.
 - **V1 `buyStock` / `sellStock` do not use the engine.** They are in live use and deliberately untouched. Only the V2
-  endpoints (`/portfolio/user/{email}/transaction/v2`) are priced.
+  endpoints (`/api/v1/me/portfolio/transaction/v2`) are priced.
 
 ### 5.6 The trade idempotency window (TL-7)
 
@@ -1922,7 +2004,7 @@ first. Steps, in order (`$BASE`, `$TOKEN` as a `SUPER_USER`; times UTC, `yyyy-MM
    the privacy contact, (e). `scope` is `EVERY_REGISTERED_USER` or `LISTED` with `emails`:
 
    ```bash
-   curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" "$BASE/privacy/breach-notices" \
+   curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" "$BASE/api/v1/admin/privacy/breach-notices" \
      -d '{"text": {"description": "<what, how much, when>", "consequences": "<what may follow for them>",
           "mitigation": "<done and being done>", "safetyMeasures": "<what they can do>"},
           "becameAwareAt": "<UTC>", "scope": "EVERY_REGISTERED_USER"}'
@@ -1931,9 +2013,9 @@ first. Steps, in order (`$BASE`, `$TOKEN` as a `SUPER_USER`; times UTC, `yyyy-MM
    `201` with `id`, `affected` and `board.reportDueAt` (awareness + `app.privacy.breach.board-report-hours`, 72).
 2. **Without delay: tell the Board** the description, nature, extent, timing, location and likely impact (r.7(2)(a)),
    through **the channel the Board publishes** (not stated in the Gazette copies read for W-237c; owner to fill in
-   here). Then record it: `POST $BASE/privacy/breach-notices/<id>/board-intimated` → `board.firstIntimatedAt`.
+   here). Then record it: `POST $BASE/api/v1/admin/privacy/breach-notices/<id>/board-intimated` → `board.firstIntimatedAt`.
 3. **Without delay: email each affected user** the same text from the privacy contact's mailbox (the account email is
-   the only mode of communication users register). The text and addresses: `GET $BASE/privacy/breach-notices/<id>/report`.
+   the only mode of communication users register). The text and addresses: `GET $BASE/api/v1/admin/privacy/breach-notices/<id>/report`.
    Record who was emailed: `POST …/<id>/emailed` with `{"emails": [...]}`. A user already recorded keeps their first
    time, so a repeat changes nothing.
 4. **Within 72 hours of awareness, or by the later time the Board allows on a written request:** send the Board the
@@ -2065,8 +2147,8 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 11 | §1.r steps 2 – 7 | run | Backup, check, encrypt, check; step 7's `staleness-sweep` on request (6.0.8) |
 | 12 | §1A | run | Clears configuration 12 / 11 / 2 and per-user `user_charges` 328, `charge_accounts` 1, P&L charge side 2 (2026-10-27 counts) |
 | 13 | §1B | run | Seed, drift, unverified, one simulate |
-| 14 | §2.1 | skip | Staging has no rebuild rows (run log 2026-10-20) |
-| 15 | §2.2 – §2.15 | per step, in order | 2.0 retired; 2.16 prod only (staging's test entries, if any, sized at its run); 2.3 prod only (staging's `FY` rows 0); 2.2, 2.11, 2.12 only where their checks say; 2.7 drops 11 policies |
+| 14 | §2.1 | count only | **Done on staging (W-334d3a, 2026-11-21):** 56 rebuild rows on 47 lots, counted and not run (C1a, as prod D-798) — its correction skips the owner on EMAMILTD's same-day sales (W-343, D-840); W-348b's rebuild (row 15) removed the over-count. The note "staging has no rebuild rows" (2026-10-20) no longer held after d1 (D-839) |
+| 15 | §2.2 – §2.17, then W-348a / W-348b | per step, in order | **Done on staging (W-334d3a, W-334d3b, 2026-11-21):** 2.3 56 `FY` rows rewritten (not prod only); 2.4 four allotment dates (staging's own action ids); 2.5 201; 2.6 7 sides; 2.7 11 dropped; 2.8 1 unplaced (a V2 row with no `createdAt`, folded by 2.11); 2.9 1; 2.13 6; 2.15 57 dropped; 2.10, 2.14, 2.16, 2.17 nothing; 2.16 step 5 removed both test logins and their documents (owner, D-842); `ITS-22`'s four collections exported and dropped; W-348a 649 trades `DELIVERY` (staging's assumption, C3a); W-348b for the 3 users with rows: 2.2 130 rows, 2.12 the owner's 224 lots, 2.11 3 users, each compared and ruled by the owner (D-843) |
 | 16 | §3 | check | Record the counts |
 
 ### 6.3 prod (`Cluster0`) · owner · **after 6.1 is logged and compared**
@@ -2086,289 +2168,29 @@ against a copy of prod in the dev cluster, so the counts are known before prod i
 | 10 | §1.r steps 2 – 7 | run | As 6.2 |
 | 11 | §1A | count only | Configuration 0 / 0 / 0 (2026-10-27): a no-op; per-user data is never cleared on prod |
 | 12 | §1B | run | Seed, drift, unverified, one simulate |
-| 13 | §2.1 | count only | **Not run** (W-342, D-798): step 1's count (163 / 146 / 12 / 29 / 68.99) logged, then "not run" — the ₹15.99 over-count is accepted (§3.25) |
-| 14 | §2.2 – §2.16 | per step, in order | 2.3 prod only: 163 `FY` rows (2026-10-20); 2.4 where bonus actions exist; 2.2, 2.11, 2.12 only where their checks say; 2.7 expects 0 Rehearsed on prod's copy (W-334c4a – c4d, D-797 – D-809): §2.13 step 5 lists one user (the owner): §2.12 changes 12 lots (6 bonus lots' charges, 3 sales' allocated misc charges, 3 same-day prices to their weighted average), §2.11 fills 3 years whose stored realised figures were zero (90 sales) |
-| 15 | §3 | check | Record the counts |
+| 13 | §2.1 | count only | **Not run** (W-342, D-798): step 1's count (163 / 146 / 12 / 29 / 68.99) logged, then "not run" — the ₹15.99 over-count is accepted (§3.25). **Done on prod (W-334e2, 2026-11-21):** counted 163 / 146 / 12 / 29 / 68.99166666666666, not run; W-348b's rebuild (row 15) removed the over-count (−16.00, D-822) |
+| 14 | §2.2 – §2.17 | per step, in order | 2.17 prod only, after 2.16 (W-354); 2.3 prod only: 163 `FY` rows (2026-10-20); 2.4 where bonus actions exist; 2.2, 2.11, 2.12 only where their checks say; 2.7 expects 0 Rehearsed on prod's copy (W-334c4a – c4d, D-797 – D-809): §2.13 step 5 lists one user (the owner): §2.12 changes 12 lots (6 bonus lots' charges, 3 sales' allocated misc charges, 3 same-day prices to their weighted average), §2.11 fills 3 years whose stored realised figures were zero (90 sales). **Done on prod (W-334e2, 2026-11-21, D-847):** 2.3 163; 2.4 four dates; 2.5 163; 2.6 3; 2.7 the empty collection dropped; 2.8 – 2.10, 2.14 nothing; 2.13 10; 2.15 163 dropped; 2.16 9 / 8 and one login; 2.17 2 / 1 / 1; W-350's test account 19 / 1 / 1 (the owner confirmed); then W-348a 787 trades `DELIVERY` and W-348b for the 3 users with rows (W-334e3): 163 rows rebuilt and compared, the owner's 12 lots, 3 users' P&L — every figure as rehearsed |
+| 15 | §3 | check | Record the counts. **Done on prod (W-334e3, 2026-11-21):** as D-837 — 3.1 2 / 61 (left, D-821), 3.2 / 3.4 0, 3.10 0 / 0, 3.11 0, 3.14 21, 3.25 over 0, W-344 `MOTHERSON ` only, 3.27 178 (all `BMF`), held 0 |
 
 ### 6.4 dev (`wealthlens-dev`), fresh · owner · **not taken (D-786): kept for the record; a fresh dev comes on W-337's database**
 
 Empty, so nothing is cleared or corrected: §0.2, §0.3, §0.5, §0.8, §1.o, §1.r, §1A and §2 have nothing to act on.
 1. §0.1 with dev's own keys; start `m1` jobs off (6.0.8); §1's checks, §1.x, §1.y, §1.n, §1.l — every `Ensured the indexes of`
    line present; `NO RATE CARDS` expected.
-2. A `SUPER_USER`: `GET /privacy/rights` for the `version`; `POST /auth/register` with it (§1.p); then §0.1.3's update
+2. A `SUPER_USER`: `GET /api/v1/public/privacy/rights` for the `version`; `POST /api/v1/public/auth/register` with it (§1.p); then §0.1.3's update
    with the stored email form (§0.7); sign in again.
 3. §1B: seed, drift, unverified, one simulate.
-4. Smoke (read-only): `GET /tax/user/<email>/declarations/2026` lists 14 questions, `NET_AGRICULTURAL_INCOME` among them.
+4. Smoke (read-only): `GET /api/v1/me/tax/declarations/2026` lists 14 questions, `NET_AGRICULTURAL_INCOME` among them.
 
 **Run log:** one line per numbered step per database, as for every section. When every database is logged, the
 one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 
 ## Run log — one line per run, per database
 
+The run log up to 2026-11-21 — every row of W-334 (prod, staging and dev, D-788 – D-849) and the earlier runs — was removed by
+W-357a (D-852); it is in git tag `docs-history-m1` (`git show docs-history-m1:docs/taxplanning-build/post-deployment-runbook.md`),
+and each run's outcome is in its D-row in `DECISIONS.md`. **As of that date:** prod `Cluster0` and staging `it-staging` are on `m1.4`,
+every step of §0 – §3 run or recorded as not needed for each (D-845 – D-849, D-840 – D-843); dev is empty (D-837). New runs append below.
+
 | Date | Database | Step | Run by | Result |
 |---|---|---|---|---|
-| 2026-09-12 | prod | trade ledger: trades dated 31 March (§4) | owner | `0` |
-| 2026-10-20 | prod `Cluster0` | 2.1 count | owner | `rebuildRows` 163, `lots` 146, `lotsSoldMoreThanOnce` 12, `rowsOnThoseLots` 29, `chargedOnThoseLots` 68.99166666666666 |
-| 2026-10-20 | staging | 2.1 count | owner | no rebuild rows, so 2.1 not needed |
-| 2026-10-20 | staging | W-088u8c checks | owner | `FY` rows 0; `temporary_transactions` absent |
-| 2026-10-20 | prod `Cluster0` | W-088u8c checks | owner | `FY` rows **163** (W-086a's rewrite never ran here: prod predates `91359d35`); `temporary_transactions` absent |
-| 2026-10-27 | prod `Cluster0` | W-176 counts (one query) | owner | `charge_catalogue` 0 (with the old flag 0); `charge_schedules` 0, `charge_instruments` 0; `user_charges` 0, `charge_accounts` 0; `transactions` 817, `assets` 529; `trade_outcomes` 163 (engine-priced 0, with a term 163, with `deductible_*` 0); `profit_and_loss` 7 (with a charge side 0, without `version` 0); `holding_period_policies` 0 |
-| 2026-10-27 | staging `it-staging` | W-176 counts (one query) | owner | `charge_catalogue` 12 (with the old flag 12); `charge_schedules` 11, `charge_instruments` 2; `user_charges` 328, `charge_accounts` 1; `transactions` 1009, `assets` 649; `trade_outcomes` 201 (engine-priced 1, with a term 201, with `deductible_*` 1); `profit_and_loss` 12 (with a charge side 2, without `version` 0); `holding_period_policies` 11 |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 1, preconditions (read-only), 14:54 UTC | session, at the owner's request | `master` `ec85b188b4d3…`; no `m1` tag; PR #64 `OPEN 172dbc5a9fc6… MERGEABLE CLEAN`; run 44547500820 `172dbc5a9fc6… success` — **go** |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 2, the merge, 14:55 UTC | session, at the owner's request | refused by GitHub: `Pull Request is still a draft`; nothing changed (`origin/master` still `ec85b188…`) — **stop**: row 1 did not check `isDraft` |
-| 2026-11-19 | — (W-334a) | PR #64 marked ready for review (`gh pr ready 64`), 14:55 UTC | session, at the owner's word | `✓ … marked as "ready for review"`; no new pipeline run |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 1 again, with `isDraft`, 14:56 UTC | session, at the owner's request | `master` `ec85b188…`; no `m1` tag; `OPEN false 172dbc5a9fc6… MERGEABLE CLEAN`; run 44547500820 `success` — **go** |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 2, the merge, 14:56 UTC | session, at the owner's request | merged 14:56:48Z as `ed4707ac17fd…`; parents `ec85b188…` and `172dbc5a…`; empty diff against `172dbc5a` — **go** |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 3, the `master` pipeline, 15:03 UTC | session, at the owner's request | run 44549311322, `push`, `ed4707ac…`, `completed success` 15:02:52Z; `Image tags: ***/wealthlens:latest, ***/wealthlens:sha-ed4707ac17fd` (the Docker Hub user is masked as a secret) — **go** |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 4, tag `m1`, 15:05 UTC | session, at the owner's request | `refs/tags/m1` `f085c6179192…` (annotated), `refs/tags/m1^{}` `ed4707ac17fd…`; no workflow run for the tag — **go** |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 5, Docker Hub (read-only, anonymous API), 15:05 UTC | session | `tperamasani/wealthlens` `is_private: False`, `pull_count` 14873; tags `latest` 15:02:43Z and `sha-ed4707ac17fd` 15:02:45Z present — **stop**: public, D-780 says private |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 5, ruled | owner | "image public fine" (D-784): the image stays public — **go** |
-| 2026-11-19 | — (W-334a) | 6.0.1 row 6, the `m1` worktree, 15:07 UTC | session, at the owner's request | `../wealthlens-m1` at `ed4707ac17fd…` (detached), status empty — **go**; W-334a's rows all logged |
-| 2026-11-19 | — (W-334b) | row 1, tools, 15:17 UTC | session, at the owner's request | `mongosh` 2.14.2 installed; `brew tap mongodb/brew` done; `brew install mongodb-database-tools` refused: `Refusing to load formula … from untrusted tap mongodb/brew` (no core formula) — **stop**: trusting the tap is the owner's call |
-| 2026-11-19 | — (W-334b) | row 1, tools, again, 15:23 UTC | session, at the owner's word | `brew trust --formula mongodb/brew/mongodb-database-tools` (that formula only); installed 100.16.1; `mongosh` 2.14.2, `mongodump` / `mongorestore` / `mongoexport` / `mongoimport` 100.16.1 — **go**; all removed at W-334e's sign-off (D-786) |
-| 2026-11-19 | dev, staging, prod (W-334b) | row 2, tier and backup (Atlas UI) | owner | all three M0 free, no Cloud Backup — **go**: 6.1 step 2 and 6.2 / 6.3 row 1 take the `.archive` path; no copies outside Atlas (owner) |
-| 2026-11-19 | dev, staging (W-334b) | row 3, reach (first run) | owner | dev: `set` `atlas-qx4tq2-shard-0`, databases `wealthlens-dev`, `admin`, `local` — **stop**: `wealthlens-dev` exists though dev was recorded empty; staging: `MongoParseError: Invalid connection string` (a password character not URL-safe). Two cluster passwords were pasted into the session in plain text: **rotate both** before going on; prod not run |
-| 2026-11-19 | dev, staging (W-334b) | row 3 follow-up | owner | both passwords changed, letters and digits only; dev's `wealthlens-dev` is the owner's test data and may be emptied (owner: "we can empty, not a problem") — dropped by the owner before W-334c, read-only check before and after |
-| 2026-11-19 | dev `wealthlens-dev` (W-334b) | row 3: before, drop, after | owner | before: 15 collections — `allowance_catalogue` 39, `allowance_limits` 14, `assets` 2, `perquisite_policies` 1, `profit_and_loss` 1, `tax_slab_policies` 2, `trade_outcomes` 1, `transactions` 3, `user_charges` 2, `user_details` 1, five charge / policy collections 0; drop `{"ok":1,"dropped":"wealthlens-dev"}`; after `set` `atlas-qx4tq2-shard-0`, databases `admin`, `local` — **go** (dev) |
-| 2026-11-19 | staging `it-staging`, prod `Cluster0` (W-334b) | row 3, reach | owner | staging `set` `atlas-12c0g5-shard-0`, databases `it-staging`, `admin`, `local`; prod `set` `atlas-24ynrh-shard-0`, databases `Cluster0`, `admin`, `local` (prod's login is its own user) — **go**; row 3 complete |
-| 2026-11-19 | staging, prod (W-334b) | row 4, keys already used (first run) | owner | `Cluster0` `k1Emails` 0, `loginsWithEmail` 0; `it-staging` 0, 0 — **held**: a database that does not exist on the host also counts 0, so the rerun adds `transactions`' total to prove the right cluster was read |
-| 2026-11-19 | staging, prod (W-334b) | row 4, rerun with the total | owner | prod `atlas-24ynrh-shard-0` `Cluster0`: `transactions` 817, `k1Emails` 0, `loginsWithEmail` 0; staging `atlas-12c0g5-shard-0` `it-staging`: 1009, 0, 0 — **go**: no key has written either; totals equal 2026-10-27's |
-| 2026-11-19 | dev, staging, prod (W-334b) | row 5, keys generated and stored (store and its backup) | owner | every key 32 bytes; SHA-256 prefixes — dev 9dbe9c7018bd / 55b28ef39f76 / 886cb3703540, staging bbf4a26647f6 / c59064f277a6 / 5524e829976b, prod 8d910c6ebabf / f9bf756780af / af38366a5db3 (TAX_DATA / TAX_DIGEST / JWT; 9 distinct); PRIVACY_CONTACT lengths 4 / 25 / 25 — **go** |
-| 2026-11-19 | dev, staging, prod (W-334b) | row 6, keys read back from the backup (first run) | owner | all nine 32 bytes, but every prefix differs from row 5's — **held, a defect in the session's command**: row 5 hashed `printenv` output (the key and a newline), row 6 hashed the key without one (shown by a local test: the same key gives two prefixes); rerun hashing with the newline |
-| 2026-11-19 | dev, staging, prod (W-334b) | row 6 again, hashed as row 5 | owner | all nine 32 bytes, every prefix equal to row 5's — **go**: the backup restores every key |
-| 2026-11-19 | — (W-334b) | rows 7 – 8, the previous build and both builds, 16:13 UTC | session, at the owner's request | `../wealthlens-m0` at `ec85b188b4d3…`; `clean package -pl backend -DskipTests` built `wealthlens.jar` in each (m1 87,810,651 bytes, m0 74,739,166), no error printed — **go** |
-| 2026-11-19 | dev, prod (W-334b) | row 9, the fingerprint (6.0.6), first use | owner | dev `{"collections":0}`; prod twice, `diff` → `IDENTICAL` — the checksum is stable; prod `Cluster0` 8 collections, only `_id_` indexes: `assets` 529 `67aac762`, `corporate_action` 6 `88dfcf3c`, `lastly_performed_corporate_action` 11 `57fbed4a`, `profit_and_loss` 7 `8987a1d5`, `reports` 163 `f94df936`, `trade_outcomes` 163 `2008f9e4`, `transactions` 817 `3e522880`, `user_details` 15 `a811bda6` (counts equal 2026-10-27's where counted) — **go**; W-334c takes its own fresh reference |
-| 2026-11-19 | dev, staging, prod (W-334b) | row 10, nothing else scheduled | owner and session | session: no crontab, LaunchAgents only Google's updater, no `schedule:` in `.github/workflows/`, no session cron; owner: no Atlas trigger on any cluster, no other copy of the app pointed at any — **go**; W-334b's rows all logged |
-| 2026-11-19 | prod `Cluster0` (W-334c1) | row 1, the rehearsal's reference (read-only) | owner | MongoDB 8.0.39; the eight lines equal W-334b row 9's, `{"collections":8}`; kept as `prod-reference.txt` — **go** |
-| 2026-11-19 | prod `Cluster0` (W-334c1) | row 2, the dump (reads prod) | owner | eight `done dumping` lines, counts equal row 1's (1711 documents); `prod-before-m1.archive` 1,271,309 bytes, `-rw-------` — **go**; the file is prod's backup for W-334e |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 3, the restore | owner | 22:01 and 22:05 IST: `mongorestore` could not resolve dev's hosts (`lookup … i/o timeout`, the router's DNS), nothing written (dev `{"collections":0}`); the session's probe resolved them both ways; 22:08 with `GODEBUG=netdns=cgo`: dev empty first, `1711 document(s) restored successfully. 0 document(s) failed`, eight `wealthlens-dev` lines, `{"collections":8}` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 4, the gate | owner | `sed … prod-reference.txt \| diff - dev-after-restore.txt` → `IDENTICAL` — **go**: dev is prod's copy |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 5, §0.2 duplicates (read-only) | owner | `{"transactions":[],"profit_and_loss":[]}` — **go**: prod's data has no duplicate to block TL-7's unique indexes |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 6, §0.3 `version` (read-only) | owner | `{"withoutVersion":0}` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 7A, §0.5 step 2 count (read-only) | owner | all eleven `n` 0, `plainPan` 0 — **go**: no backup needed |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 7B, §0.5 step 4 drop + count | owner | eleven `"dropped":true` (MongoDB 8: true for an absent collection too); recount all eleven `n` 0 — **go** (on prod: a no-op) |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 8A, §0.8 step 1 count (read-only) | owner | `present` `[]`, all seven 0, `disabled` 0, `sourceText` 0, `accounts` `[]` — **go**: no backup needed |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 8B, §0.8 steps 3 – 4 drop + count | owner | seven `"dropped":true`; recount `present` `[]`, all 0 — **go** (on prod: a no-op) |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, §1.o roles (read-only) | owner | 15 accounts: `USER` 4, `USER,TEST_USER` 7, `ADMIN,USER,TEST_USER` 3, `ADMIN,USER,SUPER_USER,` 1 (the owner); `aboveUser` 11 — **held for the owner**: roles are comma lists, split on `,` by `UserDetailsImpl.java:24`; only `SUPER_USER` gates anything (34 `hasRole('SUPER_USER')`, 1 `hasAnyRole('SUPER_USER')`; `ADMIN` and `TEST_USER` gate nothing), and only the owner holds it; §1.o's `$ne: "USER"` match counts every list. Emails not recorded |
-| 2026-11-19 | dev (prod rehearsal) (W-334c1) | row 9, ruled | owner | roles left as they are (D-788): only the owner holds `SUPER_USER`; §1.o now checks that — **go**; W-334c1's rows all logged |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 1, §0.1 environment | owner | dev's three keys 32 bytes, prefixes `9dbe9c7018bd` / `55b28ef39f76` / `886cb3703540` (= W-334b row 5); `APP_TAX_JOBS_ENABLED=false`; port 8080 free — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 2, token from the previous build (twice) | owner | the previous build started (6.4 s, 3.8 s); sign-in `BadCredentialsException: Bad credentials` both times (`m0.log:52`: the login was found, the password did not match prod's); stopped again, nothing written — **stop**: prod's password is not known; row 2a added (owner: reset, on prod too in W-334e) |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | rows 2a – 2, password set, token from the previous build | owner | 2a's output not pasted; row 2 signed in with it (proof enough): `sub` the owner, `authorities` `ROLE_ADMIN`, `ROLE_USER`, `ROLE_SUPER_USER`, `FACTOR_PASSWORD`, `exp` 2026-11-19T17:33:34.000Z; the previous build stopped — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 3, `m1`'s first start, jobs off; §1 checks | owner | `APP_TAX_JOBS_ENABLED=false`; started in 41.8 s; 0 ERROR lines; WARN only `NO RATE CARDS` (§1.5, expected) and Spring's `AuthenticationProvider bean` notice; `Ensured the indexes of` 19 entities (§1.x, §1.n, §1.y and the login, consent, processing-log, Gazette ones); `Charge indexes ensured` for 5; `multi-document transactions are ENABLED` (§1.7); `PDFs are read in a child process … heap 256 MiB, CPU 30 s` (§1.l); no `Could not create index`; no `Job` line — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 4, backup before §1.r | owner | `before-1r/`: 35 collections — prod's eight with their counts, `m1`'s new ones empty, and **four legacy policy collections back** (`allowance_catalogue` 39, `allowance_limits` 14, `tax_slab_policies` 2, `perquisite_policies` 1): seeded by the previous build's start in row 2 (`PolicySeederService` `@PostConstruct`) — **go** for the backup; row 4a (§0.8 again) added, and 6.2 row 9 / 6.3 row 8 now say so |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 4a, §0.8 again | owner | seven `"dropped":true`; `present` `[]`, all 0 — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 5, §1.r step 3 (read-only) | owner | identifiers plain: `transactions` 817, `assets` 529, `profit_and_loss` 7, `trade_outcomes` 163, `lastly_performed_corporate_action` 11; actors plain: `trade_outcomes` 163, `corporate_action` 6, `lastly_performed_corporate_action` 11, `profit_and_loss` 7, `assets` 529, `transactions` 817, `reports` 73 (of 163); `loginsToRekey` 15; grievances, processing log, insurances 0 — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2) | row 6, §1.r step 4 | owner | dry run: `plainRows` equal row 5 (`reports` not listed: no entity reads it since `4c6c92e0`); real run: `user_details` 15 re-keyed, **every other collection `encryptedRows` 0** with 0 conflicts and no error (`m1-start-1.log:151`) — **stop**; `m1` stopped; every `_id` in the six portfolio collections is stored as a `string` (owner's query) — `StoredFieldEncryption`'s `updateFirst(where("_id").is(…))` matched nothing; the defect is W-338 |
-| 2026-11-19 | — (W-334a1) | row 1, preconditions (read-only) | session, at the owner's request | ed4707ac17fdb1f5250352a2348937eccf6df1cc; b4ef2edd0d94413abdb8bc3917f2dd21a9ed0740; open PRs from branch: 0 — **go** |
-| 2026-11-19 | — (W-334a1) | row 2, PR opened | session, at the owner's request | PR #66, not a draft, head `b4ef2edd…`, base `master`; pipeline run 44577661959 started — **go** |
-| 2026-11-19 | — (W-334a1) | row 3, PR #66 pipeline | session | run 44577661959 `failure`: `StoredFieldEncryptionTest` (unit) pinned the update's query as `{"_id"="g1", …}`; W-338 makes it `BsonString` — an expected mover not run before the commit — **stop**; the test's expectation updated, every test naming the changed classes 38 / 0 locally; nothing merged |
-| 2026-11-19 | — (W-334a1) | the fix pushed | session, at the owner's word | `2f53253e`; PR #66 head `2f53253e…`, not a draft; run 44579651993 started; rows 1 – 3 are re-read against this head |
-| 2026-11-19 | — (W-334a1) | rows 1 and 3 again, 17:46 UTC | session, at the owner's request | `master` `ed4707ac…`, head `2f53253e…`, no `m1.1` tag; run 44579651993 `success` on `2f53253e` (17:45:38Z); PR #66 `MERGEABLE CLEAN` — **go** |
-| 2026-11-19 | — (W-334a1) | row 4, the merge | session, at the owner's request | PR #66 merged 17:46:59Z as `6b5412db…`; parents `ed4707ac…`, `2f53253e…`; empty diff against `2f53253e` — **go** |
-| 2026-11-19 | — (W-334a1) | row 5, the `master` pipeline | session, at the owner's request | run 44580857756, `push`, `6b5412db`, `completed success` 17:51:22Z; `Image tags: ***/wealthlens:latest, ***/wealthlens:sha-6b5412dbef1e` — **go** |
-| 2026-11-19 | — (W-334a1) | rows 6 – 7, tag `m1.1`, worktree | session, at the owner's request | `refs/tags/m1.1` `81508ba5…` (annotated), `m1.1^{}` `6b5412db…`; no workflow for the tag; `../wealthlens-m1.1` at `6b5412db…`, `wealthlens.jar` built (87,811,501 bytes) — **go**; W-334a1's rows all logged |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun, `m1.1`) | row 1, §0.1 environment | owner | dev's three keys 32 bytes, prefixes equal W-334b row 5's; jobs off; port free — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 1a, reset dev's copy | owner | dropped (`{"ok":1,…}`), empty; the restore's lookup timed out once more (router DNS, even with `GODEBUG=netdns=cgo`); with a lookup check, `--drop` and three tries: attempt 1 `1711 document(s) restored successfully. 0 … failed`; gate `IDENTICAL` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 2a, password on the copy | owner | `passwords match`; `{"matched":1,"modified":1,"storedIsNewHash":true}` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 2, token from the previous build | owner | started 6.3 s; `sub` the owner, `ROLE_SUPER_USER`; `exp` 2026-11-19T18:31:03.000Z; stopped — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 3, `m1.1`'s first start, jobs off | owner (log read by the session) | jobs off; started in 6.3 s; ERROR lines 0; WARN only `NO RATE CARDS` and Spring's notice; 19 `Ensured the indexes of`; transactions ENABLED; PDF child process; no `Could not create index`, no `Job` line — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 4, fresh backup | owner | attempt 1; 35 collections — prod's eight with their counts, the four re-seeded legacy policies (39, 14, 2, 1), the rest empty — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 4a, §0.8 again | owner | seven `"dropped":true`; `present` `[]`, all 0 — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 5 + dry run | owner | plain: identifiers 817 / 529 / 7 / 163 / 11, actors + `corporate_action` 6, `reports` 73, logins 15 (= first run); dry run `plainRows` 817, 529, 7, 163, 11, 6, 15, `encryptedRows` 0, conflicts 0 — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 6, real encryption on `m1.1` | owner | `encryptedRows` = `plainRows`: 817, 529, 7, 163, 11, 6, logins 15; conflicts 0 — **go**: W-338's fix works on prod's data |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 7, check after + sign-in on `m1.1` | owner | identifiers `[]`, logins 0, grievances / log / insurances 0; actors only `reports` 73 (read by no code; W-339); sign-in on `m1.1`: `sub` the owner, `ROLE_SUPER_USER` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 8, staleness sweep on request | owner | `{"job":"staleness-sweep","ran":true}`; `Job staleness-sweep run on request`, `flagged 0 draft(s)` — **go** (W-336's endpoint, first use on real-shaped data) |
-| 2026-11-19 | dev (prod rehearsal) (W-334c2 rerun) | row 9, stop and fingerprint | owner | `m1.1` stopped; counts unchanged (529, 6, 11, 7, 163, 163, 817, 15); new checksums but `reports` `f94df936` (untouched); new indexes on `profit_and_loss`, `trade_outcomes`, `transactions`, `user_details`; 31 collections; kept as `dev-after-c2.txt` — **go**; W-334c2's rows all logged |
-| 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 1, environment, `m1.1` started, token | owner | dev's prefixes; port free; started 5.8 s; ERROR 0; `NO RATE CARDS` 1; sign-in on `m1.1`: the owner, `ROLE_SUPER_USER` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 2, §1A count (read-only) | owner | all six 0; `user_charges` indexes `_id_`, `user_charge_dedupe_idx`, `user_charge_history_idx`, `user_charge_txn_idx` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 3, §1A clear + count | owner | `configuration` 0 / 0 / 0; `perUser` refused (`only it-staging clears per-user data`); count again all 0, four indexes — **go** (a stray pasted word, `it-staging:`, ran as a command and failed; nothing else) |
-| 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 4, §1B seed | owner | `seededBy` the owner; catalogue 13, schedules 39 (0 skipped), instruments 2 (0 skipped), drift 0 — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 5, drift and unverified | owner | `[]`, `[]` — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 6, one simulate | owner | `ZERODHA_EQ_DELIVERY_2025_04`, `RESOLVED`; BROKERAGE 0.0, STT 100.0, EXCHANGE_TXN 2.97, SEBI_FEE 0.1, IPFT 0.1, DP 13.5, GST 3.0; total 119.67 (= staging-runbook §4.1) — **go** |
-| 2026-11-19 | dev (prod rehearsal) (W-334c3) | row 7, stop and fingerprint | owner | `Charges engine ready` 0 (logged only at start, before the seed); `m1.1` stopped; charge collections 13 / 39 / 2; portfolio 529, 163, 817, 7, 15 unchanged; kept as `dev-after-c3.txt` — **go**; W-334c3's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 1, environment, `m1.1` started, token | owner | dev's prefixes `9dbe9c7018bd` / `55b28ef39f76` / `886cb3703540`, each 32; jobs off; port free; started 5.9 s; ERROR 0; `NO RATE CARDS` 0 (seeded in W-334c3); sign-in on `m1.1`: the owner, `ROLE_SUPER_USER` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 2, §2.1 count before (read-only) | owner | `tradeOutcomes` 163; `rebuildRows` 163, `lots` 146, `lotsSoldMoreThanOnce` 12, `rowsOnThoseLots` 29, `chargedOnThoseLots` 68.99166666666666 (= prod 2026-10-20; the encrypted identifiers group as the plain ones did) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 3, §2.1 backup of the rebuild rows | owner | lookup resolved; attempt 1 `exported 163 records`; `c4a/trade_outcomes-rebuild-rows-backup.json` 163 lines, mode 600 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 4, §2.1 dry run | owner | HTTP 500 `A stored field is not encrypted under a known key`; nothing written (it failed reading, `RebuildBuyChargeCorrection.java:50`). Cause read from `m1-start-4.log`: `SearchableIdentifier.read` on an `AuditMetadata` actor inside a `trade_outcomes.applied_corporate_actions[]` copy of a corporate action — §1.r's `StoredFieldEncryption.storedFields()` seals only top-level `AuditMetadata`, never the copies embedded in `trade_outcomes.applied_corporate_actions`, `assets.corporate_actions`, `transactions.corporate_actions` — **stop** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a) | row 4a, embedded corporate-action copies (read-only) | owner | plain actor in a copy: `trade_outcomes` 11 of 163 (11 with copies), `assets` 39 of 529 (41 with copies), `transactions` 43 of 817 (44 with copies); `corporate_action` top level plain 0 — **stop** stands: 93 rows unreadable on `m1.1`; W-341 proposed |
-| 2026-11-20 | — (W-334a2) | row 1, preconditions (read-only) | session, at the owner's request | tree clean; `master` `6b5412db…`; `H` = `HEAD` = `f85e7bd2…`; no `m1.2` tag; open PRs from the branch 0 — **go** |
-| 2026-11-20 | — (W-334a2) | row 2, the PR | session, at the owner's request | PR #67 `false` (ready) head `f85e7bd2…` base `master` — **go** |
-| 2026-11-20 | — (W-334a2) | row 3, the PR's pipeline | session, at the owner's request | run 44668840263 `pull_request` `f85e7bd2…` `completed success`; `MERGEABLE CLEAN` — **go** |
-| 2026-11-20 | — (W-334a2) | row 4, the merge | session, at the owner's request | merged as `d6f2b3af…`; parents `6b5412db…` and `f85e7bd2…`; empty diff against `f85e7bd2` — **go** |
-| 2026-11-20 | — (W-334a2) | row 5, the `master` pipeline | session, at the owner's request | run 44669461334, `push`, `d6f2b3af…`, `completed success`; `Image tags: ***/wealthlens:latest, ***/wealthlens:sha-d6f2b3afee30` — **go** |
-| 2026-11-20 | — (W-334a2) | row 6, tag `m1.2` | session, at the owner's request | `refs/tags/m1.2` `8e1f8f47…` (annotated), `refs/tags/m1.2^{}` `d6f2b3af…` — **go** |
-| 2026-11-20 | — (W-334a2) | row 7, the `m1.2` worktree | session, at the owner's request | `../wealthlens-m1.2` at `d6f2b3af…`; `clean package -pl backend -DskipTests` built `wealthlens.jar` (87,813,391 bytes), no error printed — **go**; W-334a2's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 1, environment (first try) | owner | `TAX_DATA_KEY` 32 `9dbe9c7018bd`, `JWT_SECURITY_KEY` 32 `886cb3703540`; **`TAX_DIGEST_KEY` 0 bytes** (`01ba4719c80b` is the hash of an empty line: nothing pasted at its prompt); port 8080 held by `java` 2399 (W-334c4a's `m1.1`, never stopped); jar 87,813,391, `d6f2b3af…` — **stop**: the key read again and `m1.1` stopped |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 1 again | owner | `m1.1` (2399) stopped (exit 143); all three keys 32 bytes, `9dbe9c7018bd` / `55b28ef39f76` / `886cb3703540`; jobs off; port 8080 free; jar and `d6f2b3af…` as the first try — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 2, reset dev's copy | owner | dropped, `{"collections":0}`; lookup resolved; attempt 1 timed out on the router's DNS (nothing restored), attempt 2 `1711 document(s) restored successfully. 0 … failed`; gate `IDENTICAL` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 3, password on the copy (first try) | owner | `MISMATCH - stop` printed, yet the update ran: `{"matched":1,"modified":1,"storedIsNewHash":true}` — the copy now holds the hash of the first entry, and `APP_PASSWORD` is that entry — **stop**: a defect in the session's command (the check printed but did not guard the write; W-334c2 row 2a's too); the row is rerun with the write inside the check |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 3 again, write guarded by the check | owner | `passwords match`; `{"matched":1,"modified":1,"storedIsNewHash":true}` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 4, token from the previous build | owner | started 6.3 s; `sub` the owner, `ROLE_SUPER_USER`; `exp` 2026-11-20T04:39:51.000Z (30 min after 04:09:52Z); `m0 stopped` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 5, `m1.2`'s first start, jobs off | owner | jobs off; started 6.2 s; WARN only `NO RATE CARDS` and Spring's `AuthenticationProvider bean` notice, no ERROR; 19 `Ensured the indexes of`; PDF child process; no `Could not create index`, `DISABLED` or `Job` line — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 6, §1.r backup | owner | attempt 1; 35 collections; non-empty: prod's eight (817, 529, 163, 163, 15, 11, 6, 7) and the four legacy policies re-seeded by row 4 (39, 14, 2, 1) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 7, §0.8 again | owner | seven `"dropped":true`; `present` `[]`, all seven 0, `disabled` 0, `sourceText` 0, `accounts` `[]` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 8, §1.r step 3 (read-only, W-341's check) | owner | identifiers 817 / 529 / 7 / 163 / 11; actors `corporate_action` 6, `trade_outcomes` 163, `transactions` 817, `profit_and_loss` 7, `assets` 529, `reports` 73, `lastly_performed_corporate_action` 11; **`embeddedActors` 11 / 39 / 43** (= W-334c4a row 4a); logins 15; grievances, log, insurances 0 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 9, §1.r step 4 on `m1.2` | owner | dry run `plainRows` 817 / 529 / 7 / 163 / 11, `corporate_action` 6, `user_details` 15, `encryptedRows` 0; real run `encryptedRows` = `plainRows` for each, conflicts 0 everywhere — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 10, §1.r step 6 + sign-in on `m1.2` | owner | identifiers `[]`, **`embeddedActors` `[]`**, actors only `reports` 73 (W-339), logins 0, grievances / log / insurances 0; sign-in on `m1.2`: the owner, `ROLE_SUPER_USER` — **go**: W-341 seals what `m1.1` left |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 11, the rows that failed on `m1.1` read | owner | §2.1 dry run answered (no 500): `rowsExamined` 0, `rowsCorrected` 0, `skipped` 2; `not encrypted under a known key` 0 in the log — **go** for the read. **Noted for W-334c4a row 4:** two users skipped and nothing examined, so §2.1 would correct none of prod's 29 rows — their reasons are read there before any write |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 12, the sweep on request | owner | `{"job":"staleness-sweep","ran":true}`; `Job staleness-sweep run on request`, `flagged 0 draft(s)` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 13, §1A count, clear, count | owner | all six 0 and the four `user_charges` indexes; `configuration` 0 / 0 / 0, `perUser` refused (`only it-staging clears per-user data`); all 0 again (a pasted `- Expect:` line ran as a command and failed; nothing else) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 14, §1B seed, drift, unverified, simulate | owner | `seededBy` the owner; 13 / 39 (0 skipped) / 2 (0 skipped), drift 0; `[]`, `[]`; `ZERODHA_EQ_DELIVERY_2025_04` `RESOLVED`, BROKERAGE 0.0, STT 100.0, EXCHANGE_TXN 2.97, SEBI_FEE 0.1, IPFT 0.1, DP 13.5, GST 3.0, total 119.67 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c6) | row 15, stop and fingerprint | owner | `m1.2` stopped; `charge_catalogue` 13, `charge_schedules` 39, `charge_instruments` 2; `assets` 529, `profit_and_loss` 7, `trade_outcomes` 163, `transactions` 817, `user_details` 15; kept as `dev-after-c6.txt` — **go**; W-334c6's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun, `m1.2`) | row 1, environment, `m1.2` started, token | owner | dev's prefixes, each 32; jobs off; port free; started 5.9 s; ERROR 0; `NO RATE CARDS` 0; sign-in: the owner, `ROLE_SUPER_USER` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 2, §2.1 count before | owner | 163; 163 / 146 / 12 / 29 / 68.99166666666666 (= the first run and prod 2026-10-20) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 3, §2.1 backup | owner | lookup resolved; attempt 1 `exported 163 records`; 163 lines, mode 600 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 4, §2.1 dry run | owner | `rowsExamined` 0, `rowsCorrected` 0, charges 0.0 / 0.0; two users skipped, each `the stored row for <user>|<broker>|null|<lot>|<sell> has no single rebuilt row of the same quantity; the transactions changed since the rebuild` — one at FYERS on `lot-JIOFIN-2024-01-18`, the owner at UPSTOX on `lot-MSUMI-2023-05-02`; both stored rows hold no account holder (`null`). The reason text carries the user's email (the masking covered only the `email` field) — **stop**: §2.1 corrects none of the 29 rows today; cause not yet known |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | rows 5 – 6, §2.1 write and check | — | **not taken** (owner, "next?" on the recommendation): row 4 examined 0 rows, so a write would change none; §2.1's refusal is diagnosed by W-342 before W-334e — the run goes on at row 7 |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 7, §2.2 dry run only | owner | `usersExamined` 8, `usersRebuilt` 5, `rowsWritten` 0; skipped 3 users holding all 163 rows — **go**: nothing to rebuild (the five never sold); no §2.2 write on prod |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 8, §2.3 count before | owner | `tradeOutcomes` 163, `fyRows` 163, `fyRowsWithoutSellDate` 0 (= prod 2026-10-20) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 9, §2.3 dry run | owner | `{"dryRun":true,"rows":163}` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 10, §2.3 backup of the `FY` rows | owner | lookup resolved; attempt 1 `exported 163 records`; 163 lines, mode 600 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 11, §2.3 write | owner | `{"dryRun":false,"rows":163}` (= the dry run) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 12, §2.3 verify + second dry run | owner | `fyRows` 0, 163 rows; years `2023-2024` 53, `2024-2025` 67, `2025-2026` 43 (= 163); `_id` type `string` 163; second dry run `rows` 0 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 13, §2.4 step 1, the bonus actions | owner | `actions` 6; four bonuses, none with an allotment date: `HDFCBANK` record / ex 2025-08-27, `ASHOKLEY` 2025-07-17, `MSUMI` 2025-07-19, `RELIANCE` 2024-10-28 (ids strings) — **go**; the owner looks up each allotment date in the company's announcement for W-334c4b |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4a rerun) | row 14, stop and fingerprint | owner | `m1.2` stopped; changed against `dev-after-c6.txt`: `trade_outcomes` (163, new checksum — §2.3), and two the plan did not name: `privacy_processing_log` 12 → 23 (`ProcessingLogFilter` appends one record per request that reaches personal data — this run's sign-ins and calls) and `user_details` (15, new checksum: `last_signed_in_at` set at each sign-in). Both are the app's own writes on any use, not §2's; the same will happen on prod — **go**; kept as `dev-after-c4a.txt`, W-334c4b's starting point |
-| 2026-11-20 | dev (prod rehearsal) (W-342) | row 1, the refused users' rows and transactions (read-only) | owner | no email printed. U1 (UPSTOX, MSUMI): buys 2023-05-02 49, 2023-06-15 36; two sales on 2024-08-22 (…02 qty 56, …05 qty 29); stored rows …02 → 05-02 lot 49 + 06-15 lot 7, …05 → 06-15 lot 29. U2 (FYERS, JIOFIN): buys 2024-01-16 2 and four on 2024-01-18 (2, 1, 2, 2 → one lot of 7); six sales all on 2024-01-18 (2, 2, 2, 1, 1, 1 = 9); stored: …7ff9 took the 01-16 lot. `transactionsAddedSinceTheRows` `[]` for both: no transaction added or changed since the rows were written (2026-06-14) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-342) | row 2, the reading | session | no transaction added since the rows (bonus lead disproved); cause: the replay orders sales by date only (`TransactionBasedTradeOutcomeMigration.java:140`, `:107`), so same-day sales come in an unfixed order and FIFO gives a different one the oldest lot. U2 reproduced by hand from row 1 (…8001 before …7ffd leaves …7ffd's 01-18 row at 1, stored 2); U1 consistent (…05 before …02 leaves …02 20 on the 05-02 lot, stored 49). Both allocations valid FIFO; only the stored buy charges are in question; §2.1 can pair neither user — row 3 sizes the over-count |
-| 2026-11-20 | dev (prod rehearsal) (W-342) | row 3, the exact over-count (read-only) | owner | 12 lots, 29 rows, carried 68.99, **over 15.99** (lots without buys 0): MOTHERSON 2023-03-16 6.72, MSUMI 2023-06-15 4.28, MOLDTECH 1.06, EMAMILTD 0.83, HDFCBANK 0.83, PAYTM 0.67, MEDPLUS 0.67, VEDL 0.60, SYMPHONY 0.33; MIDCAPETF, ALOKINDS, JIOFIN 0 (no buy charges). One stock code is stored as `MOTHERSON ` (a trailing space) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-344) | row 1, §3.26 (read-only; numbered 3.25 until renumbered the same day) | owner | one spaced code only, `"MOTHERSON "`: `trade_outcomes` 2, `transactions` 3, `reports` 2 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-344) | row 2, spaced against clean `MOTHERSON` (read-only, emails counted not printed) | owner | `transactions` 3 spaced (BUY and SELL), 0 clean; `trade_outcomes` 2 spaced, 0 clean; `assets`, `corporate_action`, `lastly_performed_corporate_action` 0 / 0; one user, `sharedUsers` 0 everywhere — **go**: a closed, self-contained position, no holding split |
-| 2026-11-20 | dev (prod rehearsal) (W-339) | row 1, §2.15 step 1 count (read-only) | owner | `present` true, `reports` 163 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-339) | row 2, §2.15 step 2 backup | owner | lookup resolved; attempt 1 `exported 163 records`; 163 lines (`umask 077`) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-339) | row 3, §2.15 steps 3 – 4 drop and verify | owner | `{"dropped":true}`; `present` false, `reports` 0 — **go**; W-339's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-346) | row 1, holdings across the candidate record dates (read-only, no email printed) | owner | ASHOKLEY (stored 2025-07-17, filing 2025-07-16): 1 holder, `differs` `[]`, 1 bonus transaction, 2 performed rows; MSUMI (stored 2025-07-19; 17 – 19 July): 2 holders, `[]`, 2, 2; HDFCBANK: 1, `[]`, 1, 1; RELIANCE: 2, `[]`, 2, 2 — **go**: no holding changes and no trade on any candidate date, so the stored dates give the same holders as the filings |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 1, environment, `m1.2` started, token | owner | dev's prefixes, each 32; jobs off; port free; started 5.8 s; ERROR 0; `NO RATE CARDS` 0; the owner, `ROLE_SUPER_USER` — **go** (owner ran the plan's row 1: approval taken, C1a) |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 2, §2.4 step 1 (read-only) | owner | four actions, `allotment` null; HDFCBANK assets 1, transactions 1, tradeOutcomes 0; ASHOKLEY 1, 1, 0; MSUMI 2, 2, 0; RELIANCE 2, 2, 0 — **held**: `tradeOutcomes` counts only rows tagged `acquisition_corporate_action` BONUS, which prod's rebuild rows may not carry (§3.2); row 2a checks for sales of the bonus lots by lot id |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 2a, sales of the bonus lots by lot id (read-only, no email) | owner | `rowsOnTheLot` 0 for all four (no row on `lot-<stock>-<ex-date>` and none bought on the ex-date); bonus lots still held: HDFCBANK [5], ASHOKLEY [16], MSUMI [7, 50], RELIANCE [2, 1] — **go**: no bonus share was ever sold, so §2.4's `tradeOutcomes` 0 is right |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 3, §2.4 dry run | owner | HDFCBANK 2025-08-27 → 2025-08-28: assets 1, transactions 1, tradeOutcomes 0; ASHOKLEY 2025-07-17 → 2025-07-17: **1, 1, 0** (the plan expected 0 — wrong: it counts the bonus documents still at the ex-date, `BonusAllotmentDateCorrection.bonusDocuments`, and for ASHOKLEY the ex-date is the allotment date, so its write sets the same date and only stamps the audit); MSUMI → 2025-07-21: 2, 2, 0; RELIANCE → 2024-10-29: 2, 2, 0 — **go**; row 6's second dry run therefore expects ASHOKLEY 1, 1, 0 and the others 0 |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 4, §2.4 backup of the four stocks | owner | attempt 1 each: `corporate_action` 4, `assets` 23, `transactions` 49, `trade_outcomes` 16 (records = lines) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 5, §2.4 write | owner | `dryRun` false; HDFCBANK 1 / 1 / 0, ASHOKLEY 1 / 1 / 0, MSUMI 2 / 2 / 0, RELIANCE 2 / 2 / 0 (= the dry run) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 6, §2.4 verify + second dry run | owner | allotment set: HDFCBANK 2025-08-28, ASHOKLEY 2025-07-17, MSUMI 2025-07-21, RELIANCE 2024-10-29; counts as row 2; second dry run `[[0,0,0],[1,1,0],[0,0,0],[0,0,0]]` (ASHOKLEY at its ex-date = allotment) — **go**; §2.4 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 7, §2.5 count | owner | `withTerm` 163 (= prod 2026-10-27) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 8, §2.5 dry run | owner | `{"dryRun":true,"rows":163}` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 9, §2.5 backup of the two fields | owner | attempt 1 `exported 163 records`; 163 lines; kept (W-195) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 10, §2.5 write | owner | `{"dryRun":false,"rows":163}` (= the dry run) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 11, §2.5 verify + second call | owner | `withTerm` 0; second dry run `rows` 0 — **go**; §2.5 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 12, §2.6 count | owner | `profitAndLoss` 7, `withPair` 3 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 13, §2.6 dry run (no email shown) | owner | `placed` 3, `unplaced` 0: 2023-2024 realised EQUITY DELIVERY, 2024-2025 realised EQUITY DELIVERY, 2025-2026 realised MUTUAL_FUND DELIVERY — one side per document of row 12's 3 — **go**; no unplaced list to bring back |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 14, §2.6 backup of `profit_and_loss` | owner | attempt 1 `exported 7 records`; 7 lines — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 15, §2.6 write | owner | `{"dryRun":false,"placed":3,"unplaced":0}` (= the dry run) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 16, §2.6 verify + second dry run | owner | `profitAndLoss` 7, `withPair` 0; second dry run `placed` 0, `unplaced` 0 — **go**; §2.6 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 17, §2.7 count, backup, drop, verify | owner | `present` true, `n` 0; `exported 0 records`; `dropped` true, `presentAfter` false — **go**; §2.7 done. The empty collection is not prod's (absent from `prod-reference.txt`): the previous build (`ec85b188`, `HoldingPeriodPolicyEntity`) creates it when it starts for §1.r step 1's token — on prod too, so §2.7 finds it empty there and drops it |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 18, §2.8 count + dry run | owner | `recorderRows` 0; dry run (`recordedBefore` 2026-11-20T11:21:42) `placed` 0, `unplaced` 0, `alreadyCounted` 0, `writtenAfter` 0 — **go**; steps 3 – 4 not taken (C1a): nothing to write; §2.8 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4b) | row 19, stop and fingerprint | owner | `m1.2` stopped; same counts, new checksums: `assets` 529, `corporate_action` 6, `profit_and_loss` 7, `trade_outcomes` 163, `transactions` 817; the app's own `privacy_processing_log` 23 → 44 and `user_details` 15; gone: `reports` (W-339) and `holding_period_policies` (§2.7); 31 → 29 collections — **go**; kept as `dev-after-c4b.txt`; W-334c4b's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 1, environment, `m1.2` started, token | owner | dev's prefixes, each 32; jobs off; port free; started 6.0 s; ERROR 0; `NO RATE CARDS` 0; the owner, `ROLE_SUPER_USER` — **go** (approval taken, C1a, C2a) |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 2, §2.9 count + dry run | owner | `withDeductible` 0; dry run `rows` 0 (= prod 2026-10-27) — **go**; nothing to write (C1a); §2.9 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 3, §2.10 count | owner | `catalogue` 13, `withFlag` 0 — **go**; nothing to write (C1a); §2.10 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 4, §2.13 step 1 and §3.17 (read-only) | owner | `bonusTransactions` **10** (the plan expected 6 — wrong: 6 are the four stored actions' bonus documents, W-334c4b row 2); `copied` 10; users with charged bonus lots: U1 1, U2 3, U3 6 (10 lots) — **held**: row 4a lists the bonus transactions and lots by stock, to see which belong to no stored action |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 4a, bonus transactions and lots by stock (read-only, no email) | owner | ASHOKLEY 1 txn / 1 lot (action 2025-07-17); HDFCBANK 1 / 1 (action 2025-08-27; dated 2025-08-28 by §2.4); MSUMI 2 / 2 (2025-07-21); RELIANCE 2 / 2 (2024-10-29) — the four stored actions' 6; and two stocks with **no stored action**: `DUMMY` (1 txn 2025-07-26 ×1, its lot ×3) and `LAVANYA` (3 txns 2025-08-13 / 14 / 15, ×1, ×1, ×2, and 3 lots) — 10 in all; every lot carries charges; one user per stock — **held** for the owner: whether `DUMMY` and `LAVANYA` are real holdings or test entries; §2.13's correction (all bonus transactions) is safe either way |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 5, §2.13 backup | owner | attempt 1 `exported 10 records`; 10 lines — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 6, §2.13 correction | owner | `{"matched":10,"modified":10}` (= row 4's `copied`) — **go**. Owner: "DUMMY and LAVANYA are test" — test entries on prod; W-347 placed to size and remove them; the per-user rebuilds (C2a) cover the real bonus stocks only |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 7, §2.13 verify | owner | `bonusTransactions` 10, `copied` 0; charged bonus lots 6 / 1 / 3 per user — the same three users as row 4 (labels follow MongoDB's group order, not fixed between runs) — **go**; §2.13's correction done; its per-user step (§2.12 → §2.11) waits for C2a |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 8, §3.18, §3.19, stored segments (read-only) | owner | `s3_18` `[]`, `s3_19` `[]`; all 163 rows hold neither `segment` nor `sell_segment` — **go**: no stored fact records a non-delivery segment, so §2.14 should find nothing |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 9, §2.14 dry run | owner | 0 transactions, 0 rows, no users, no mixed buys — **go**; nothing to write (C1a), rows 10 – 12 not taken; §2.14 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4c) | row 13, stop and fingerprint | owner | `m1.2` stopped; changed: `transactions` 817 (new checksum — §2.13), the app's own `privacy_processing_log` 44 → 49 and `user_details` 15; nothing else — **go**; kept as `dev-after-c4c.txt`; W-334c4c's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-347) | row 1, documents naming DUMMY or LAVANYA (read-only, no email) | owner | `assets` 8 (U1 DUMMY 3 bought + 1 bonus; U2 LAVANYA 1 bought + 3 bonus), `transactions` 9 (U1 DUMMY 5, U2 LAVANYA 4); nothing in `trade_outcomes`, `profit_and_loss`, `corporate_action` or elsewhere; 2 users, each with **no other transaction and no P&L year** — **go**: the test entries stand alone, so removing them needs no rebuild |
-| 2026-11-20 | dev (prod rehearsal) (W-347) | row 2, backup of the test documents | owner | attempt 1 each: `transactions` 9, `assets` 8 (records = lines) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-347) | row 3, delete | owner | `{"transactions":9,"assets":8}` (= row 1) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-347) | row 4, verify | owner | `{"collections":[],"usersInvolved":0,"theirOtherHoldings":[]}` — **go**; W-347's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 1, environment, `m1.2` started, token | owner | dev's prefixes, each 32; jobs off; port free; started 5.9 s; ERROR 0; `NO RATE CARDS` 0; the owner, `ROLE_SUPER_USER` — **go** (approval taken) |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 2, users holding a charged bonus lot (stored form to a local file) | owner | 1 user — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 3, stored → plain (owner's terminal) | owner | `storedUsers` 1, `matched` 1 — the owner's own account holds all six charged bonus lots — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 4, backup of `assets` and `profit_and_loss` | owner | attempt 1 each: `assets` 521, `profit_and_loss` 7 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 5, §2.12 dry run (U1, the owner) | owner | `lotsDiffering` 12, kept by id 298, new 0, shapes read from stored lots 293 / not found 83, demergers replayed 3 (HINDUNILVR FYERS and ZERODHA 2025-12-05, TATAMOTORS ZERODHA 2025-10-14), pending 0. Differing: the six bonus lots' charges (expected); and six others — `allocatedBuyMiscCharges` on NIFT_IT_ICIC and MID150_NIPPON 2023-12-14 and BARBEQUE 2024-03-22, `price` on ITBEES 2024-09-19 and NIFTYBEES 2024-12-17 and 2025-06-03 — **held**: row 5a prints stored against rebuilt for those six before any write |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 5a, stored against rebuilt (first try) | owner | the six lots printed, but every figure `null`: the session's jq named the fields `price`, `allocatedBuyMiscCharges`, …; `LotFigures` names them `priceRupees`, `allocatedBuyMiscChargesRupees`, … (`AssetsRebuildReport.java:56 – 58`) — **held**, row 5a again with the right names |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 5a again, stored against rebuilt (read-only, no email) | owner | NIFT_IT_ICIC and MID150_NIPPON 2023-12-14 (0.34 and 0.52 units left, misc ₹2.00 each): allocated buy misc 0 → 2.00; BARBEQUE 2024-03-22 (2 left, misc ₹1.00): 0 → 0.33; ITBEES 2024-09-19 (2 buys, 143): price 45.523 → 45.52307692…; NIFTYBEES 2024-12-17 (2 buys, 19): 271.90 → 272.4684…; NIFTYBEES 2025-06-03 (2 buys, 8): 275.73 → 276.115 — **held**: the three price changes are checked by hand against the two buys of each lot (row 5b) |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 5b, the buys behind the three re-priced lots (read-only) | owner | by hand: ITBEES (110 × 45.74 + 33 × 44.80) / 143 = 6,509.80 / 143 = 45.523077 (stored 45.523, rounded); NIFTYBEES 2024-12-17 (12 × 272.80 + 7 × 271.90) / 19 = 5,176.90 / 19 = 272.4684 (stored 271.90 = the second buy's price); NIFTYBEES 2025-06-03 (4 × 276.50 + 4 × 275.73) / 8 = 2,208.92 / 8 = 276.115 (stored 275.73 = the second buy's price) — each rebuilt price is the weighted average; the stored lots kept the last same-day buy's price. The three allocated-charge changes are the sales' recorded shares (W-293). Row 5's twelve differences are all corrections — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 6, §2.12 write (U1) | owner | `lotsWritten` 298, `lotsKeptById` 298, `newLots` 0 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 7, §2.12 second dry run | owner | `lotsDiffering` 0, `newLots` 0, `differing` `[]` — **go**; §2.12 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 8, §2.11 dry run (U1) | owner | 90 sales folded, 0 charge rows; every stored year 2023-2024 / 2024-2025 / 2025-2026 holds **zero** realised figures, rebuilt: purchase 85,498.75 / 106,838.55 / 23,883.77, sale 92,958.85 / 156,314.09 / 21,054.08, profit 6,756.55 / 48,521.22 / −2,999.63, brokerage 360.00 / 367.60 / 6.07, misc 343.57 / 586.74 / 163.87 — **held**: a large change (the stored P&L never received the old rebuild's sales); row 8a sums the user's `trade_outcomes` per year independently before any write |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 8a, the user's outcome rows summed per year (read-only, independent of the rebuild) | owner | rows 27 + 45 + 18 = 90 (= `salesFolded`); profit 6,756.54 / 48,521.23 / −2,999.62 (rebuilt to the paisa, ± 0.01 per-row rounding); brokerage 360.00 / 367.58 / 6.05 and misc 343.56 / 586.73 / 163.88 (± 0.02). Purchase and sale differ by the charges, exactly: the rows' `total_buy_value` includes buy charges and `total_sell_value` is net of sell charges, the P&L keeps both gross — 2023-24 (85,759.31 − 85,498.75) + (92,958.85 − 92,515.85) = 260.56 + 443.00 = 703.56 = 360.00 + 343.56; 2024-25 257.73 + 696.57 = 954.30 ≈ 954.31; 2025-26 24.29 + 145.64 = 169.93 = 169.93 — **go**: the rebuild reconciles with the stored rows |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 9, §2.11 write (U1) | owner | `salesFolded` 90, `chargesFolded` 0, 3 years (= the dry run) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 10, verify | owner | second §2.11 dry run: every year stored = rebuilt; profit 6,756.55 / 48,521.22 / −2,999.63; §3.17: `bonusTransactions` 6 (10 less W-347's 4), `copied` 0, `usersWithChargedBonusLots` `[]` — **go**; §2.13 step 5 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c4d) | row 11, stop, fingerprint, email files removed | owner | `m1.2` stopped; changed: `assets` 529 → 521 and `transactions` 817 → 808 (W-347), `profit_and_loss` 7 (new checksum), the app's own log 49 → 66 and sign-ins; `c4d/` holds only the two backups and `export.out` — **go**; kept as `dev-after-c4d.txt`; W-334c4d's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 1, `m1.2` start (first try) | owner | exit 1: `app.personal-data.digest-key is not set` (`KeyBytes.decode`, `FieldCipher.java:37`) — `TAX_DIGEST_KEY` was empty at its prompt; row 1 had no key check (the session left it out of this plan) — **stop**: rerun with the key check, nothing written |
-| 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 1 again, `m1.2` start (6.0.7) | owner | dev's three prefixes, each 32; started 5.8 s; the only WARN Spring's `AuthenticationProvider bean` notice — no `NO RATE CARDS` (seeded), no ERROR; `m1.2 stopped` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 2, §3 on prod's corrected copy (read-only, counts only) | owner | 3.1 **2 users / 61 rows** whose capital-gains summary is refused (broker charges, no breakdown); 3.2 163 without acquisition mode; 3.3 2 / 65 (upper bound); 3.4 **163 without a sale venue**, transaction venues NSE 494, BSE 136, BMF 178 (segment null throughout); 3.5 0 — **stale**: it counts rows carrying `capital_gains_type`, which §2.5 removed, so it can no longer find anything (3.3's long-term arm too); 3.6 0; 3.7 0; 3.8 0 / 0; 3.9 none; 3.10 assets 2, transactions 1 without an asset type; 3.11 **18** held trades with no recorded flow; 3.12 0; 3.13 0; 3.14 21; 3.15 – 3.24 0 / empty; 3.25 12 lots, 29 rows, 68.99, over 15.99; 3.26 `MOTHERSON ` only — read; findings to the owner before the sign-off |
-| 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 3, compare and sign-off (6.1 step 6, 6.0.7) | owner | session summary: W-334c1 – c6, c4a – c4d, W-339, W-342, W-344, W-346, W-347 run on prod's copy, every row logged; stops and their outcomes: plain embedded actors (W-341, `m1.2`), §2.1's same-day order (W-342/W-343, ₹15.99 accepted), test stocks (W-347), two blind §3 checks fixed (§3.22, §3.24) and two found stale (§3.3, §3.5, W-349); open before prod: W-348 (the old outcome rows), W-350 (18 held trades), W-345 / W-343 in the next release; owner: "yes to all your recommendations, go ahead" — **signed off** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 4, wipe dev (6.1 step 7) | owner | `{"ok":1,"dropped":"wealthlens-dev"}`; `{"collections":0}` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c5) | row 5, the rehearsal's files deleted | owner | left: `prod-before-m1.archive` (mode 600), `prod-reference.txt`, `allotment-dates.json`, the query files (`.js`, `.sh`) — **go**; W-334c5's rows all logged; the prod rehearsal (W-334c) is complete |
-| 2026-11-20 | — (W-334a3) | row 1, preconditions | session, at the owner's request | tree clean; `master` `d6f2b3af…`; `H` = `HEAD` = `2618d1a0…`; no `m1.3`; open PRs 0 — **go** |
-| 2026-11-20 | — (W-334a3) | row 2, the PR | session, at the owner's request | PR #68 ready, head `2618d1a0…`, base `master` — **go** |
-| 2026-11-20 | — (W-334a3) | row 3, the PR's pipeline | session, at the owner's request | run 44694391485 `pull_request` `2618d1a0…` `completed success` (every tier on W-340, W-343, W-345); `MERGEABLE CLEAN` — **go** |
-| 2026-11-20 | — (W-334a3) | row 4, the merge | session, at the owner's request | merged as `72d7fd4e…`; parents `d6f2b3af…`, `2618d1a0…`; empty diff against `2618d1a0` — **go** |
-| 2026-11-20 | — (W-334a3) | row 5, the `master` pipeline | session, at the owner's request | run 44695255307, `push`, `72d7fd4e…`, `completed success`; image `sha-72d7fd4e7461` — **go** |
-| 2026-11-20 | — (W-334a3) | row 6, tag `m1.3` | session, at the owner's request | `refs/tags/m1.3` `4d9b3ef4…`, `^{}` `72d7fd4e…` — **go** |
-| 2026-11-20 | — (W-334a3) | row 7, the `m1.3` worktree | session, at the owner's request | `../wealthlens-m1.3` at `72d7fd4e…`; `wealthlens.jar` 87,813,931 bytes, no error printed — **go**; W-334a3's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 1, environment | owner | dev's three prefixes, each 32; jobs off; port free; `m1.3` jar 87,813,931 bytes at `72d7fd4e…` — **go** (approval taken) |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 2, reset dev's copy | owner | dropped, `{"collections":0}`; attempt 1 `1711 document(s) restored successfully. 0 … failed`; `IDENTICAL` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 3, password on the copy (guarded) | owner | `passwords match`; `{"matched":1,"modified":1,"storedIsNewHash":true}` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 4, token from the previous build | owner | started 6.3 s; the owner, `ROLE_SUPER_USER`; `exp` 2026-11-20T08:25:04.000Z; `m0 stopped` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 5, `m1.3`'s first start, jobs off | owner | jobs off; started 6.7 s; WARN only `NO RATE CARDS` and Spring's notice, no ERROR; 19 `Ensured the indexes of`; PDF child process; no index failure, `DISABLED` or `Job` line — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 6, §1.r backup | owner | attempt 1 failed (DNS), attempt 2: 35 collections; prod's eight (817, 163, 529, 163, 15, 11, 6, 7) and the four re-seeded legacy policies (39, 14, 2, 1) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 7, §0.8 again | owner | seven `"dropped":true`; `present` `[]`, all 0 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 8, §1.r step 3 (read-only) | owner | identifiers 817 / 529 / 7 / 163 / 11; actors incl. `reports` 73; `embeddedActors` 11 / 39 / 43; logins 15; grievances, log, insurances 0 (= W-334c6 row 8) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 9, §1.r step 4 on `m1.3` | owner | dry run plain 817 / 529 / 7 / 163 / 11 / 6 / logins 15, encrypted 0; real run encrypted = plain for each, conflicts 0 (W-340's re-key path included) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 10, §1.r step 6 + sign-in on `m1.3` | owner | identifiers `[]`, `embeddedActors` `[]`, actors only `reports` 73 (§2.15 drops it), logins 0; sign-in: the owner, `ROLE_SUPER_USER` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 11, read test and §2.1 recheck on `m1.3` | owner | answered (no 500), `not encrypted` 0 — the read **go**. §2.1 now pairs one user: `rowsExamined` 9, `rowsCorrected` 5, buy charges 0.00 → 0.00 (those rows carry none), the other user still skipped. So W-343 did not make both pair, and the 5 rows it would change differ in figures other than the double-counted charge (`totalBuyValue`, `netProfit` or `profitPercentage`) — not explained. D-798 stands: §2.1 not run; W-348b, which rebuilds every row of the 3 users, must compare each old row with its rebuilt one before any delete |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 12, the sweep on request (W-340's lease path) | owner | `{"job":"staleness-sweep","ran":true}`; `flagged 0 draft(s)` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 13, §1A count, clear, count | owner | all six 0, four indexes; configuration 0 / 0 / 0, per-user refused; all 0 again — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 14, §1B seed, drift, unverified, simulate | owner | 13 / 39 (0) / 2 (0), drift 0; `[]`, `[]`; `ZERODHA_EQ_DELIVERY_2025_04` `RESOLVED`, total 119.67 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7a) | row 15, stop and fingerprint | owner | `m1.3` stopped; 13 / 39 / 2; 529, 7, 163, 817, 15 — **go**; kept as `dev-after-c7a.txt`; W-334c7a's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row 1, environment, `m1.3` started, token | owner | dev's prefixes, each 32; port free; started 6.0 s; ERROR 0; `NO RATE CARDS` 0; the owner, `ROLE_SUPER_USER` — **go** (approval taken) |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A2, §2.1 count (count only, D-798) | owner | 163; 163 / 146 / 12 / 29 / 68.99166666666666 — **go**; §2.1 logged "not run" |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A7, §2.2 dry run | owner | 8 examined, 5 rebuilt, 0 rows, 3 skipped holding 163 — **go**; no write |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A8, §2.3 count | owner | 163 / 163 / 0 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A9, §2.3 dry run | owner | `rows` 163 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A10, §2.3 backup | owner | attempts 1 – 2 timed out on the router's DNS, attempt 3 `exported 163 records`; 163 lines — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A11, §2.3 write | owner | `rows` 163 (= dry run) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row A12, §2.3 verify | owner | `fyRows` 0; 53 / 67 / 43; second dry run 0 — **go**; §2.3 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows A13 + B2, the bonus actions (read-only) | owner | 6 actions; four bonuses, `allotment` null; assets / transactions / tradeOutcomes 1/1/0, 1/1/0, 2/2/0, 2/2/0 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row B3, §2.4 dry run | owner | 1/1/0 → 2025-08-28, 1/1/0 → 2025-07-17, 2/2/0 → 2025-07-21, 2/2/0 → 2024-10-29 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row B4, §2.4 backup | owner | 4 / 23 / 49 / 16, attempt 1 each — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row B5, §2.4 write | owner | = dry run — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B6 + B7, §2.4 verify, §2.5 count | owner | allotment 2025-08-28 / 2025-07-17 / 2025-07-21 / 2024-10-29; second dry run `[[0,0,0],[1,1,0],[0,0,0],[0,0,0]]`; `withTerm` 163 — **go**; §2.4 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B8 + B9, §2.5 dry run and backup | owner | `rows` 163; attempts 1 – 2 DNS timeouts, attempt 3 `exported 163 records`, 163 lines — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B10 + B11, §2.5 write and verify | owner | `rows` 163; `withTerm` 0; second dry run 0 — **go**; §2.5 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B12 + B13, §2.6 count and dry run | owner | 7 / 3; placed 3 (EQUITY ×2, MUTUAL_FUND ×1), unplaced 0 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B14 – B16, §2.6 backup (guarded write), write, verify | owner | attempt 3 `exported 7 records`; placed 3, unplaced 0; `withPair` 0; second dry run 0 / 0 — **go**; §2.6 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows B17 + B18, §2.7 drop, §2.8 count + dry run | owner | `holding_period_policies` present, 0; exported 0 (attempt 3); dropped, absent after; `recorderRows` 0; backfill dry run 0 / 0 / 0 / 0 — **go**; §2.7 done, §2.8 nothing to write |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows C2 – C4, §2.9, §2.10, §2.13 step 1 (read-only) | owner | deductible 0, dry run 0; catalogue 13, flag 0; bonus transactions 10, copied 10, charged bonus lots 1 / 3 / 6 — **go**; §2.9 and §2.10 nothing to write |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows C5 – C7, §2.13 backup (guarded), correction, verify | owner | exported 10; matched 10, modified 10; copied 0, charged lots 6 / 1 / 3 (W-348b / c7b2) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows C8 + C9, §2.14 checks and dry run | owner | §3.18 / §3.19 empty; 163 rows null / null; dry run 0 / 0 / none / 0 — **go**; §2.14 nothing to write |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows D1 – D3, §2.15 (guarded drop) | owner | 163 counted; attempt 3 `exported 163 records`; dropped; absent, 0 — **go**; §2.15 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows E0 + E1, the test users captured; the test stocks sized | owner | 2 stored emails to a local file; `assets` 8, `transactions` 9, 2 users holding nothing else — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows E2 – E4, test stocks backup (guarded), delete, verify | owner | exported 9 (attempt 2) and 8; deleted 9 / 8; none left — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row E5, the test users' own documents (read-only, no email) | owner | `users` 2; `before` only `user_details` 1 — one of the two test users has a login, the other none (no login, consent or log row anywhere); `writtenByThem` none — **go**: one login to remove |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | rows E6 + E7, §2.16 step 5 backup (guarded) and delete | owner | exported 1; deleted `user_details` 1; after `{}`; the email file removed — **go**; §2.16 done |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b1) | row F1, stop and fingerprint | owner | `m1.3` stopped; `assets` 529 → 521, `transactions` 817 → 808, `user_details` 15 → 14, `corporate_action` 6, `profit_and_loss` 7, `trade_outcomes` 163 (new checksums), the app's own log 12 → 43; `reports` and `holding_period_policies` gone; 31 → 29 collections — **go**; kept as `dev-after-c7b1.txt`; W-334c7b1's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row 1, environment (dev's keys, no app) | owner | `TAX_DATA_KEY` 32 `9dbe9c7018bd`, `TAX_DIGEST_KEY` 32 `55b28ef39f76` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row 2, the owner's outcome rows per year (read-only, `c7b2-01-owner-unbroken.js`) | owner | `ownerLogins` 1; 2023-2024 rows 27, refused now 10, with a broker charge 10, with a breakdown 0, brokerage 360.00 (all on refused rows); 2024-2025 45 / 34 / 34 / 0 / 367.58; 2025-2026 18 / 16 / 16 / 0 / 6.05; all users refused now 2 users / 61 rows (unchanged since W-334c5) — so the owner is W-334c4d's U1 (brokerage equal to row 8a's), the owner holds **60 of the 61** refused rows, the other user 1; every charged row of the owner's is already refused, so the rebuild adds none; the owner's transactions with a charge: BUY 160, SELL 45 — **go**; to the owner for C3 |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S1, environment, `m1.3` started jobs off, token | owner | `TAX_DATA_KEY` 32 `9dbe9c7018bd`, `TAX_DIGEST_KEY` 32 `55b28ef39f76`, `JWT_SECURITY_KEY` 32 `886cb3703540`; port free; started 6.1 s; ERROR 0; `NO RATE CARDS` 0; the owner, `ROLE_SUPER_USER` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S2, the owner's documents counted (read-only) | owner | `ownerLogins` 1; transactions 448, every one with no segment (448); `trade_outcomes` 90 (all users 163); lots 298; P&L documents 3 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S3, W-348a backup of the owner's transactions with no segment | owner | exported 448 records; 448 lines (= S2) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S4, W-348a write: `segment: "DELIVERY"` on the owner's transactions with none (guarded by S3's 448) | owner | before 448, matched 448, modified 448, after 0 — **go**; the owner's declaration (D-815) set |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S5, W-348b backups of the owner's `trade_outcomes`, `assets`, `profit_and_loss` | owner | exported 90 / 298 / 3 (= S2) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S6, W-348b delete of the owner's `trade_outcomes` (guarded by S5's 90) | owner | before 90, deleted 90, after 0, all users 73 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S7, §2.2 dry run | owner | `dryRun` true; users examined 6, rebuilt 4 (the owner and three users with no sales, 0 rows — W-334c7b1 row A7); `rowsWritten` 90; skipped 2 users / 73 rows — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S8, §2.2 write and count | owner | `dryRun` false, rebuilt 4, `rowsWritten` 90 (= S7), skipped 2; then the owner's `trade_outcomes` 90, all users 163, transactions 448 all `DELIVERY`, lots 298, P&L 3 — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S9, the compare: old 90 rows (S5 backup) with the rebuilt 90 (read-only) | owner | paired 88, only-old 2 / only-new 2 (EMAMILTD 2025-05-05), 88 differing. **Fields written now:** `segment`, `buy_segment`, `sell_segment` `DELIVERY` (88); `acquisition_mode` `PURCHASE` (88); venues buy NSE 74 / BSE 1 / BMF 13, sale NSE 68 / BSE 7 / BMF 13; empty breakdowns (read as absent). **Figures:** sale values unchanged in every year; buy charges 260.56 → 258.67, 257.75 → 244.48, 24.29 → 23.45 (−16.00 in all; net profit up by exactly the same per year) — the double-counted buy charges removed (MSUMI 20 → 16.11 + 3.89, MOTHERSON 20 → 13.89 + 6.11, and misc on PAYTM, VEDL, SYMPHONY, MEDPLUS, HDFCBANK, MOLDTECH; `LotChargeAllocator.java:67`), = §3.25's ₹15.99 + 0.01; the rest buy-charge shares to the paisa (`LotChargeAllocator.java:71`; sell shares are not rounded, `TradeMatchingService.java:219`); EMAMILTD's two same-day sales take the lots the other way round (W-343), year totals unchanged. Every difference of a kind explained; to the owner to accept |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S9, accepted | owner | the owner ran S10 on it — S9 **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S10, §2.12 dry run (the owner) | owner | `lotsDiffering` 12, kept by id 298, new 0, shapes from stored lots 293 / not found 83, demergers replayed 3 (HINDUNILVR FYERS and ZERODHA 2025-12-05, TATAMOTORS ZERODHA 2025-10-14), pending 0 — **the same twelve lots and counts as W-334c4d row 5**, whose six non-bonus lots were checked by hand in rows 5a – 5b (weighted prices, the sales' recorded shares) and the six bonus lots' charges are §2.13's; no `segment` difference (the plan expected one; not a stop) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S11, §2.12 write, count, second dry run | owner | `lotsWritten` 298, kept by id 298, new 0; lots 298, the rest as S8; second dry run `lotsDiffering` 0, `newLots` 0 — **go**; §2.12 done for the owner |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S12, §2.11 dry run (the owner) | owner | `salesFolded` 90, `chargesFolded` 0 (no charge rows, as W-334c4d row 8); stored years all zero (as before); rebuilt 2023-24 / 2024-25 / 2025-26: purchase 85,498.75 / 106,838.55 / 23,883.77, sale 92,958.85 / 156,314.09 / 21,054.08, profit 6,758.43 / 48,534.48 / −2,998.79, brokerage 360.00 / 357.60 / 6.06, misc 341.68 / 583.48 / 163.04. **Reconciled with S9's new rows:** purchase = rows' total buy − buy charges (85,757.42 − 258.67 = 85,498.75; 107,083.01 − 244.48 = 106,838.53; 23,907.22 − 23.45 = 23,883.77), sale = total sell + sell charges (92,515.85 + 443.00; 155,617.52 + 696.57; 20,908.44 + 145.64 — exact), profit equal (± 0.02), brokerage + misc = buy + sell charges (± 0.03); against W-334c4d row 8: brokerage 2024-25 −10.00 (MSUMI 3.89, MOTHERSON 6.11) and misc −1.88 / −3.25 / −0.83 — the double count removed. The plan's "367.58 − 13.27" lumped misc into brokerage; wrong in the plan, not in the data — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | row S13, §2.11 write and verify | owner | written: sales 90, charges 0, years 3; second dry run every year `same` true; P&L documents 3 — **go**; §2.11 done for the owner |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b2) | rows S14 + S15, §3.1 recount; `m1.3` stopped; fingerprint | owner | owner's rows 27 / 45 / 18, refused 10 / 34 / 16 (= with a broker charge), none with a breakdown, brokerage 360.00 / 357.58 / 6.05; all users 2 / 61 — unchanged, as D-821 expects; `m1.3` stopped; changed against `dev-after-c7b1.txt`: `assets` 521, `profit_and_loss` 7, `trade_outcomes` 163, `transactions` 808 (counts equal, content changed), the app's own log 43 → 60, `user_details` 14 (content: each sign-in sets `last_signed_in_at`, `RegisteredUserDirectory.java:37`); nothing else — **go**; kept as `dev-after-c7b2.txt`; `owner.stored` removed; W-334c7b2's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b3) | rows 1 – 2, environment; the held trades (read-only, `c7b3-01-held-trades.js`) | owner | keys `9dbe9c7018bd` / `55b28ef39f76`, each 32; `heldWithoutFlow` 18, with a flow 0 — **all 18 one user's (U2, not the owner)**: buys of stock codes `A`, `B` and `C` at FYERS, the same quantity and price for the three codes on each of six dates (2025-07-05 17 @ 81; 08-09 13 @ 73.15; 08-30 13 @ 74.34; 09-10 4 @ 72.25; 09-11 5 @ 65.32; 09-21 9 @ 65.75), all stored 2025-10-13 (V1 — before V2 existed); **no request kept on any** (redrive lists each "No asset request stored" and leaves it held, `PortfolioService.java` redrive loop); no bonus, split or demerger on those codes; none already recorded; no later trades — **go**; they read as test entries; row 3 asks who holds them |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b3) | row 3, who holds the 18 (read-only, `c7b3-02-holder.js`) | owner | U2's login roles `USER,TEST_USER` (`TEST_USER` is a role the app defines, `AuthHelper.java:24`), never signed in since W-249 recorded it, no creation date; U2's documents: `transactions` 19 (18 `TEMPORARY`, 1 with no status), `assets` 1, `user_details` 1; one other stock; codes `A` / `B` / `C` nowhere but these 18 transactions, no other user — **go**; U2 is a test account; to the owner: remove the 18, or the whole account |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b3) | rows 4 – 5, the test account's stored email to a file; its documents counted (read-only) | owner | `written` 1, roles `USER,TEST_USER`; the plain email shown in the owner's terminal (not recorded here); `users` 1, before `assets` 1, `transactions` 19, `user_details` 1; `writtenByThem` assets 1, transactions 19 (the same, their own documents) — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b3) | rows 6 – 7, backups; delete guarded by them, the login last | owner | `assets` exported on the third attempt (two DNS timeouts, the known network trap; the retry loop held), then 1 / 19 / 1 exported; each backup equal to the count; deleted `assets` 1, `transactions` 19, `user_details` 1, after `{}` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7b3) | row 8, verify, fingerprint, clean up (read-only) | owner | `heldWithoutFlow` 0, codes `A`/`B`/`C` 0; changed against `dev-after-c7b2.txt`: `assets` 521 → 520, `transactions` 808 → 789, `user_details` 14 → 13, nothing else — **go**; kept as `dev-after-c7b3.txt`; the email file removed; W-334c7b3's rows all logged |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7c) | row 1, `m1.3` start once more, then stop (6.0.7) | owner | prefixes `9dbe9c7018bd` / `55b28ef39f76` / `886cb3703540`, each 32; port free; started 5.9 s; WARN only Spring's `AuthenticationProvider bean` notice; no ERROR; `m1.3 stopped` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7c) | row 2, §3 on prod's copy after c7a – c7b3 (read-only, no email) | owner | 3.1 2 / 61 (as expected, D-821); 3.2 **73** (163 → 73, the owner's 90 rebuilt — as expected); 3.3 **1 user / 48** (was 2 / 65 — the owner's rows now carry venues, an upper bound as before); 3.4 `withoutSellVenue` **73** (as expected), transaction venues NSE/DELIVERY 246, BSE/DELIVERY 103, BMF/DELIVERY 99 (= the owner's 448), NSE/null 229, BSE/null 33, BMF/null 79 (the other users', 341; 789 in all = 808 − 19); 3.5 **2 users / 49** — counted now that W-349 fixed the check (0 in W-334c5 was the stale form): equity sales whose exchange is not NSE / BSE, i.e. the other users' rows without a sale venue plus any of the owner's `BMF` sales (13 rows sold on BMF, D-822); remedy for the other users is their W-348b; 3.6 0; 3.7 0; 3.8 0 / 0; 3.9 none; 3.10 assets 2, transactions 1 (as before); 3.11 **0** (W-334c7b3); 3.12 0; 3.13 0; 3.14 21 (as before); 3.15 – 3.24 0 / empty; 3.25 lots 12, rows 29, carried **53.00**, over **0** (68.99 − 15.99 = 53.00 exactly — the double count gone, D-822); 3.26 `MOTHERSON ` only (3 transactions, 2 rows) — every count expected or explained — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7c) | row 3, compare and sign-off (6.1 step 6, 6.0.7) | owner | session summary: c7a – c7c on `m1.3`, every row logged; stops and outcomes: C3 re-ruled (D-821, the 61 rows left as they are), one DNS retry, two plan expectations wrong (no lot segment difference; brokerage lumped with misc) — no data fault; what W-334e adds: W-348a + W-348b for the owner (c7b2 S1 – S15), the test account's removal (c7b3 rows 4 – 8), §2.16 step 5; open: the other two users' declarations and their W-348a / W-348b, §3.5 2 / 49, W-337, the runner token; owner: "sure" — **signed off**; dev wiped now, a fresh copy when the other users declare |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7c) | row 4, wipe dev (6.1 step 7) | owner | `{"ok":1,"dropped":"wealthlens-dev"}`; `{"collections":0}` — **go** |
-| 2026-11-20 | dev (prod rehearsal) (W-334c7c) | row 5, the rehearsal's files deleted (6.1 step 7) | owner | first try deleted nothing (zsh refuses a whole command when one glob matches nothing: `no matches found: m1-start-*.log`; the plan's line now runs with `null_glob`); second: only `prod-before-m1.archive`, `prod-reference.txt`, `allotment-dates.json` and the `.js` / `.sh` query files remain; `c7b/` (personal-data backups) gone — **go**; W-334c7c's rows all logged |
-
-**Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
-present), 1.3's 0 and the section 3 counts, for each database.

@@ -77,7 +77,7 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
         }
     }
 
-    /** The notice published at {@code GET /privacy/rights} and {@code GET /privacy}. */
+    /** The notice published at {@code GET /api/v1/public/privacy/rights} and {@code GET /privacy}. */
     public PrivacyNotice notice() {
         String wording = TJsonMapper.writeValueAsString(List.of(rights, identifier, contact, grievance.responseDays(),
                 purposeLapse.toString(), consent));

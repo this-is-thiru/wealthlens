@@ -50,7 +50,7 @@ public class GazetteWatch implements TaxJob {
     public void run(JobContext context) {
         Optional<GazetteCursor> found = cursors.findById(GazetteCursor.ID);
         if (found.isEmpty()) {
-            context.refuse("tax_gazette_cursor", "no cursor: seed it with PUT /tax-planning/admin/gazette-cursor");
+            context.refuse("tax_gazette_cursor", "no cursor: seed it with PUT /api/v1/admin/tax/gazette-cursor");
             return;
         }
         GazetteCursor cursor = found.get();

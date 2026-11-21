@@ -2,13 +2,17 @@ package com.thiru.wealthlens.brokercharges.controller;
 
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeReconciliationResponse;
-import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.brokercharges.dto.response.UserChargeResponse;
 import com.thiru.wealthlens.brokercharges.service.ChargeReconciliationService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.shared.web.CallerEmail;
+import com.thiru.wealthlens.shared.web.MeApi;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
  * and this one lets the two be compared before anything is cut over.
  */
 @RequiredArgsConstructor
-@RequestMapping("/user-charges/user/{email}")
+@MeApi
+@RequestMapping("/user-charges")
 @RestController
 public class UserChargesController {
 
@@ -38,17 +43,18 @@ public class UserChargesController {
      * because guessing which end was meant returns a short list that looks like missing charges.
      */
     @GetMapping
-    public List<UserChargeEntity> history(
-            @PathVariable String email,
+    public PagedModel<UserChargeResponse> history(
+            @CallerEmail String email,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to,
-            @RequestParam(required = false) AssetType assetType) {
-        return userChargeService.findHistory(email, from, to, assetType);
+            @RequestParam(required = false) AssetType assetType,
+            Pageable pageable) {
+        return new PagedModel<>(userChargeService.findHistory(email, from, to, assetType, pageable).map(UserChargeResponse::from));
     }
 
     /** The contract note for one trade, line by line. */
     @GetMapping("/transaction/{transactionId}")
-    public ChargeBreakdownResponse contractNote(@PathVariable String email, @PathVariable String transactionId) {
+    public ChargeBreakdownResponse contractNote(@CallerEmail String email, @PathVariable String transactionId) {
         return ChargeBreakdownResponse.from(userChargeService.findForTransaction(email, transactionId));
     }
 
@@ -60,8 +66,8 @@ public class UserChargesController {
      * card on file, and a warning that scrolls away leaves a portfolio quietly under-costed.
      */
     @GetMapping("/gaps")
-    public List<UserChargeEntity> gaps(@PathVariable String email) {
-        return userChargeService.findGaps(email);
+    public List<UserChargeResponse> gaps(@CallerEmail String email) {
+        return userChargeService.findGaps(email).stream().map(UserChargeResponse::from).toList();
     }
 
     /**
@@ -76,7 +82,7 @@ public class UserChargesController {
      * not one.
      */
     @GetMapping("/reconciliation")
-    public ChargeReconciliationResponse reconciliation(@PathVariable String email) {
+    public ChargeReconciliationResponse reconciliation(@CallerEmail String email) {
         return chargeReconciliationService.reconcile(email);
     }
 }

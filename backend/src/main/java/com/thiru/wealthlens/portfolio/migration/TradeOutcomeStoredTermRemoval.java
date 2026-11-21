@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
  *
  * <p>The field names are literals because the entity no longer maps them. Idempotent: only rows still carrying either
  * field are matched, so a second run — including after one that failed part-way — finishes what is left or changes
- * nothing. Run when a {@code SUPER_USER} asks ({@code POST /trade-outcomes/stored-terms/remove}), never at startup
+ * nothing. Run when a {@code SUPER_USER} asks ({@code POST /api/v1/admin/portfolio/trade-outcomes/stored-terms/remove}), never at startup
  * (D-280); the caller is recorded on each row changed. One-time: removed once its run is logged for every database
  * (W-168).
  */

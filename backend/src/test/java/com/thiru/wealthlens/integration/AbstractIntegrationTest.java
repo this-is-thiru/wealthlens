@@ -3,18 +3,16 @@ package com.thiru.wealthlens.integration;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.thiru.wealthlens.auth.config.AccessTokenConfig;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.testsupport.FakeClamd;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import io.restassured.RestAssured;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
 import java.util.Set;
-import javax.crypto.SecretKey;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -26,6 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -37,8 +40,6 @@ import org.testcontainers.mongodb.MongoDBContainer;
 @ActiveProfiles("integration-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractIntegrationTest {
-
-    private static final int JWT_EXPIRATION_SECONDS = 60 * 30;
 
     /**
      * Reference data shared read-only by every test. Everything else is per-test state and is cleared after each test. Anything not listed here is wiped, so a new collection needs no
@@ -100,6 +101,13 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     private FieldCipher fieldCipher;
 
+    /** The application's own encoder and clock (W-358b), so a test token is signed and timed as a real one is. */
+    @Autowired
+    private JwtEncoder jwtEncoder;
+
+    @Autowired
+    private Clock clock;
+
     @BeforeAll
     void setUpRestAssured() {
         RestAssured.baseURI = "http://localhost";
@@ -139,42 +147,18 @@ public abstract class AbstractIntegrationTest {
     }
 
     protected String generateToken(String email, String role) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("authorities", java.util.List.of("ROLE_" + role));
-
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + 1000L * JWT_EXPIRATION_SECONDS);
-
-        String base64Key = "dGVzdC1zZWNyZXQta2V5LWZvci1pbnRlZ3JhdGlvbi10ZXN0cy1vbmx5";
-        byte[] keyBytes = Base64.getDecoder().decode(base64Key);
-        SecretKey secretKey = Keys.hmacShaKeyFor(keyBytes);
-
-        return Jwts.builder()
-                .claims(claims)
-                .subject(email)
-                .issuedAt(now)
-                .expiration(expiration)
-                .signWith(secretKey)
-                .compact();
+        Instant now = clock.instant();
+        return token(email, role, now, now.plus(Duration.ofMinutes(15)));
     }
 
     protected String generateExpiredToken(String email, String role) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("authorities", java.util.List.of("ROLE_" + role));
+        Instant issued = clock.instant().minus(Duration.ofHours(1));
+        return token(email, role, issued, issued.plus(Duration.ofMinutes(15)));
+    }
 
-        Date now = new Date(System.currentTimeMillis() - 1000L * 60 * 60);
-        Date expiration = new Date(now.getTime() - 1000L);
-
-        String base64Key = "dGVzdC1zZWNyZXQta2V5LWZvci1pbnRlZ3JhdGlvbi10ZXN0cy1vbmx5";
-        byte[] keyBytes = Base64.getDecoder().decode(base64Key);
-        SecretKey secretKey = Keys.hmacShaKeyFor(keyBytes);
-
-        return Jwts.builder()
-                .claims(claims)
-                .subject(email)
-                .issuedAt(now)
-                .expiration(expiration)
-                .signWith(secretKey)
-                .compact();
+    private String token(String email, String role, Instant issuedAt, Instant expiresAt) {
+        JwtClaimsSet claims = JwtClaimsSet.builder().subject(email).issuedAt(issuedAt).expiresAt(expiresAt)
+                .claim(AccessTokenConfig.AUTHORITIES_CLAIM, List.of("ROLE_" + role)).build();
+        return jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
     }
 }

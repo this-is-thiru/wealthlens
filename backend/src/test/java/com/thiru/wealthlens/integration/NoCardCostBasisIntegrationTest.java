@@ -61,7 +61,7 @@ class NoCardCostBasisIntegrationTest extends AbstractIntegrationTest {
         headers.setBearerAuth(generateToken(EMAIL));
         headers.setContentType(MediaType.APPLICATION_JSON);
         var response = new RestTemplate().exchange(
-                URI.create("http://localhost:" + RestAssured.port + "/portfolio/user/" + EMAIL + "/transaction/v2"),
+                URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/portfolio/transaction/v2"),
                 HttpMethod.POST, new HttpEntity<>(request, headers), String.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }

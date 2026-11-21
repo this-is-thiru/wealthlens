@@ -20,7 +20,6 @@
 
     <properties>
         <java.version>25</java.version>
-        <jjwt.version>0.13.0</jjwt.version>
         <spring-modulith.version>2.1.0</spring-modulith.version>
         <poi-ooxml.version>5.5.1</poi-ooxml.version>
         <itextpdf.version>5.5.13.4</itextpdf.version>
@@ -48,25 +47,6 @@
                 <version>${spring-modulith.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-
-            <!-- JWT (not managed by Spring Boot parent) -->
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-api</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-impl</artifactId>
-                <version>${jjwt.version}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-jackson</artifactId>
-                <version>${jjwt.version}</version>
-                <scope>runtime</scope>
             </dependency>
 
             <!-- Apache POI (not managed by Spring Boot parent) -->

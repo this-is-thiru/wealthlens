@@ -182,8 +182,7 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // When
-        new RestTemplate().exchange(URI.create("http://localhost:" + RestAssured.port + "/portfolio/user/" + EMAIL
-                + "/transaction/v2"), HttpMethod.POST, new HttpEntity<>(sale, headers), String.class);
+        new RestTemplate().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/portfolio/transaction/v2"), HttpMethod.POST, new HttpEntity<>(sale, headers), String.class);
 
         // Then — 50 × 500 = 25,000, and the lot's own date, so the holding period starts where it did
         TradeOutcomeEntity row = mongoTemplate.findOne(new Query(Criteria.where("email").is(EMAIL)),

@@ -161,7 +161,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
     }
 
     private PrivacyNotice publishedNotice() {
-        return JsonMapper.builder().build().readValue(get("/privacy/rights"), PrivacyNotice.class);
+        return JsonMapper.builder().build().readValue(get("/api/v1/public/privacy/rights"), PrivacyNotice.class);
     }
 
     private String publishedVersion() {
@@ -189,14 +189,14 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         request.setEmail(ANU);
         request.setPassword(PASSWORD);
         request.setPrivacyNoticeVersion(version);
-        return given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then();
+        return given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/register").then();
     }
 
     private JsonPath signIn() {
         LoginRequest request = new LoginRequest();
         request.setEmail(ANU);
         request.setPassword(PASSWORD);
-        return given().contentType(ContentType.JSON).body(request).when().post("/auth/login").then().statusCode(200)
+        return given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/login").then().statusCode(200)
                 .extract().jsonPath();
     }
 

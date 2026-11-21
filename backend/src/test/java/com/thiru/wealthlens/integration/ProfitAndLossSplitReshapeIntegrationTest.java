@@ -264,7 +264,7 @@ class ProfitAndLossSplitReshapeIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "SUPER_USER"))
-                .when().post("/profit-and-loss/split/reshape?dryRun=false")
+                .when().post("/api/v1/admin/portfolio/profit-and-loss/split/reshape?dryRun=false")
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("placed.size()", equalTo(1));
         assertThat(carriesOldFields(side("p1", "realised_profits"))).isFalse();
         assertThat(mongoTemplate.getCollection("profit_and_loss").find(new Document("_id", "p1")).first()
@@ -278,7 +278,7 @@ class ProfitAndLossSplitReshapeIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "USER"))
-                .when().post("/profit-and-loss/split/reshape?dryRun=false").then().statusCode(403);
+                .when().post("/api/v1/admin/portfolio/profit-and-loss/split/reshape?dryRun=false").then().statusCode(403);
         assertThat(carriesOldFields(side("p1", "realised_profits"))).isTrue();
     }
 }

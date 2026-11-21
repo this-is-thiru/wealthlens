@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
  *
  * <p>The year is recomputed from the row's sell date — the fact it was derived from — rather than by reshaping the
  * string. Idempotent: once no {@code FY} row remains there is nothing to rewrite. Run when a {@code SUPER_USER} asks
- * ({@code POST /trade-outcomes/financial-years/rewrite}), never at startup (D-280, D-285); the caller is recorded on
+ * ({@code POST /api/v1/admin/portfolio/trade-outcomes/financial-years/rewrite}), never at startup (D-280, D-285); the caller is recorded on
  * each row rewritten, since a bulk update passes no auditing.
  */
 @Service

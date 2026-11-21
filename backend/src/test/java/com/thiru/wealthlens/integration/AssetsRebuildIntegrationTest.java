@@ -194,12 +194,12 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
     @Test
     void rebuild_whenAUserAsksForTheirOwn_isForbidden() {
         given().header("Authorization", "Bearer " + generateToken(MIXED, "USER"))
-                .post("/portfolio/user/" + MIXED + "/assets/rebuild").then().statusCode(403);
+                .post("/api/v1/admin/portfolio/users/" + MIXED + "/assets/rebuild").then().statusCode(403);
     }
 
     private void post(String email, String path, Map<String, Object> body) {
         given().header("Authorization", "Bearer " + generateToken(email)).contentType(ContentType.JSON).body(body)
-                .post("/portfolio/user/" + email + path).then().statusCode(200);
+                .post("/api/v1/me/portfolio" + path).then().statusCode(200);
     }
 
     private ValidatableResponse rebuild(String email, String role) {
@@ -208,7 +208,7 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse rebuild(String email, String query, String role) {
         return given().header("Authorization", "Bearer " + generateToken(ADMIN, role))
-                .post("/portfolio/user/" + email + "/assets/rebuild" + query).then();
+                .post("/api/v1/admin/portfolio/users/" + email + "/assets/rebuild" + query).then();
     }
 
     private static Map<String, Object> trade(TransactionType type, double quantity, double price, LocalDate date) {

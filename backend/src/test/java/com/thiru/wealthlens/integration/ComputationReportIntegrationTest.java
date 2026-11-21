@@ -54,7 +54,7 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
         if (ifMatch != null) {
             headers.set(HttpHeaders.IF_MATCH, ifMatch);
         }
-        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + path), method,
+        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), method,
                 new HttpEntity<>(body, headers), type);
     }
 
@@ -149,7 +149,7 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
-        JsonNode rows = JsonMapper.builder().build().readTree(response.getBody());
+        JsonNode rows = JsonMapper.builder().build().readTree(response.getBody()).get("content");
         assertThat(rows.findValuesAsString("receipt")).containsExactly(newest, older, receipt).doesNotContain(spouses);
         assertThat(rows.at("/0/draftLabel").asString()).isEqualTo("Second");
         assertThat(rows.at("/0/taxYear").asString()).isEqualTo("2026-27");

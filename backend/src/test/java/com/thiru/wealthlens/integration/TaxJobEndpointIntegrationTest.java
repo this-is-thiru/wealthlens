@@ -23,7 +23,7 @@ class TaxJobEndpointIntegrationTest extends AbstractIntegrationTest {
     @Test
     void run_whenTheOwnerAsksForAKnownJob_runsItAndReleasesTheLease() throws IOException, InterruptedException {
         // When
-        HttpResponse<String> response = send(post("/tax-planning/admin/jobs/log-retention/run", "SUPER_USER"));
+        HttpResponse<String> response = send(post("/api/v1/admin/tax/jobs/log-retention/run", "SUPER_USER"));
 
         // Then
         assertThat(response.statusCode()).isEqualTo(200);
@@ -34,7 +34,7 @@ class TaxJobEndpointIntegrationTest extends AbstractIntegrationTest {
     @Test
     void run_whenAskedByAUser_isForbidden() throws IOException, InterruptedException {
         // When
-        HttpResponse<String> response = send(post("/tax-planning/admin/jobs/log-retention/run", "USER"));
+        HttpResponse<String> response = send(post("/api/v1/admin/tax/jobs/log-retention/run", "USER"));
 
         // Then
         assertThat(response.statusCode()).isEqualTo(403);
@@ -43,7 +43,7 @@ class TaxJobEndpointIntegrationTest extends AbstractIntegrationTest {
     @Test
     void run_whenNoJobHasTheName_isRefusedNamingTheJobs() throws IOException, InterruptedException {
         // When
-        HttpResponse<String> response = send(post("/tax-planning/admin/jobs/nightly-cleanup/run", "SUPER_USER"));
+        HttpResponse<String> response = send(post("/api/v1/admin/tax/jobs/nightly-cleanup/run", "SUPER_USER"));
 
         // Then
         assertThat(response.statusCode()).isEqualTo(400);

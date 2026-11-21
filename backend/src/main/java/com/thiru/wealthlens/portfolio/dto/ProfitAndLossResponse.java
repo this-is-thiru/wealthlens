@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.portfolio.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.thiru.wealthlens.shared.dto.model.AuditMetadataDto;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,5 +18,4 @@ public class ProfitAndLossResponse {
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime lastUpdatedTime;
 
-	private AuditMetadataDto auditMetadata;
 }

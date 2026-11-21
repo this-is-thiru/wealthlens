@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * What a rate card is allowed to do.
  *
- * <p>A rate card is data — it arrives through {@code POST /charge-schedules} or straight into
+ * <p>A rate card is data — it arrives through {@code POST /api/v1/admin/charges/charge-schedules} or straight into
  * Mongo — and its formulas are evaluated inside this application's JVM, which holds the database
  * credentials and the JWT signing key. Evaluating them with SpEL's unrestricted context turned
  * "may edit rate cards" into "may run code", silently: the validator inspects {@code #variable}

@@ -51,7 +51,7 @@ class StoredActorEncryptionIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse run(boolean dryRun) {
         return given().header("Authorization", "Bearer " + generateToken(OWNER, "SUPER_USER")).contentType(ContentType.JSON)
-                .when().post("/privacy/stored-fields/encrypt?dryRun=" + dryRun).then().statusCode(200);
+                .when().post("/api/v1/admin/privacy/stored-fields/encrypt?dryRun=" + dryRun).then().statusCode(200);
     }
 
     private static String counted(String collection, String count) {

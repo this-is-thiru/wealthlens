@@ -1,14 +1,14 @@
 package com.thiru.wealthlens.shared.exception;
 
 
-import com.thiru.wealthlens.shared.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Instant;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,9 +33,9 @@ import tools.jackson.databind.exc.UnrecognizedPropertyException;
 public class ControllerAdviser {
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleBadRequest(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request);
+        return problem(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request);
     }
 
     /**
@@ -43,98 +43,95 @@ public class ControllerAdviser {
      * parser's own text, which names library settings and controller signatures (W-305).
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleUnreadableBody(HttpMessageNotReadableException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleUnreadableBody(HttpMessageNotReadableException ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), unreadable(ex), request);
+        return problem(HttpStatus.BAD_REQUEST.value(), unreadable(ex), request);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ErrorResponse> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex, HttpServletRequest request) {
         log(ex);
         String message = "Required request parameter '" + ex.getParameterName() + "' is not present";
-        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), message, request);
+        return problem(HttpStatus.BAD_REQUEST.value(), message, request);
     }
 
     /** A value that is not of its parameter's type is the caller's to correct, so the answer names what is accepted (W-263). */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         log(ex);
         Class<?> type = ex.getParameter().nestedIfOptional().getNestedParameterType();
         String message = "Parameter '" + ex.getName() + "' must be " + accepted(type) + ", but was '" + ex.getValue() + "'";
-        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), message, request);
+        return problem(HttpStatus.BAD_REQUEST.value(), message, request);
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<ErrorResponse> handleMissingPart(MissingServletRequestPartException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleMissingPart(MissingServletRequestPartException ex, HttpServletRequest request) {
         log(ex);
         String message = "Required part '" + ex.getRequestPartName() + "' is not present";
-        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), message, request);
+        return problem(HttpStatus.BAD_REQUEST.value(), message, request);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleMethodNotAllowed(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED.value(), ex.getMessage(), request);
+        return problem(HttpStatus.METHOD_NOT_ALLOWED.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleUnsupportedMediaType(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), ex.getMessage(), request);
+        return problem(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), ex.getMessage(), request);
     }
 
     /** A file past {@code spring.servlet.multipart.max-file-size}: the caller's to fix, so 400, not a 500 (W-131d1). */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErrorResponse> handleUploadTooLarge(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleUploadTooLarge(MaxUploadSizeExceededException ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), "The file is larger than the " + ex.getMaxUploadSize()
+        return problem(HttpStatus.BAD_REQUEST.value(), "The file is larger than the " + ex.getMaxUploadSize()
                 + " bytes an upload may be", request);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleUnauthorized(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), request);
+        return problem(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleForbidden(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleForbidden(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), request);
+        return problem(HttpStatus.FORBIDDEN.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(ServiceUnavailableException.class)
-    public ResponseEntity<ErrorResponse> handleServiceUnavailable(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleServiceUnavailable(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), request);
+        return problem(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(TradeCollisionException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleConflict(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage(), request);
+        return problem(HttpStatus.CONFLICT.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleNotFound(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage(), request);
+        return problem(HttpStatus.NOT_FOUND.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, HttpServletRequest request) {
         log(ex);
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(), request);
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(), request);
     }
 
-    private static ResponseEntity<ErrorResponse> buildErrorResponse(int status, String message, HttpServletRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setTimestamp(Instant.now().toString());
-        errorResponse.setStatus(status);
-        errorResponse.setError(HttpStatus.valueOf(status).getReasonPhrase());
-        errorResponse.setMessage(message);
-        errorResponse.setPath(request.getRequestURI());
-        return ResponseEntity.status(status).body(errorResponse);
+    /** Every error as RFC 9457 {@code ProblemDetail} (W-359a): the status, its reason as the title, the message, the path. */
+    private static ResponseEntity<ProblemDetail> problem(int status, String message, HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(status), message);
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(status).body(problem);
     }
 
     private static String unreadable(HttpMessageNotReadableException ex) {

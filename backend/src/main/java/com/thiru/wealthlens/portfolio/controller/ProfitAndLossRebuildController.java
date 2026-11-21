@@ -3,6 +3,7 @@ package com.thiru.wealthlens.portfolio.controller;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossRebuildReport;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossRebuild;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,13 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
  * comes first, and {@code dryRun} defaults to true so the call that writes is the one that says so (as D-284).
  */
 @RequiredArgsConstructor
+@AdminApi
 @RestController
 public class ProfitAndLossRebuildController {
 
     private final ProfitAndLossRebuild rebuild;
 
     @PreAuthorize("hasRole('SUPER_USER')")
-    @PostMapping("/portfolio/user/{email}/profit-and-loss/rebuild")
+    @PostMapping("/users/{email}/profit-and-loss/rebuild")
     public ProfitAndLossRebuildReport rebuild(@PathVariable String email,
                                               @RequestParam(defaultValue = "true") boolean dryRun) {
         return rebuild.rebuild(UserMail.from(email), dryRun);

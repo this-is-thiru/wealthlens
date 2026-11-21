@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Rebuilds {@code trade_outcomes} from raw transactions — every SELL matched FIFO against lots built from every BUY —
- * when a {@code SUPER_USER} asks ({@code POST /trade-outcomes/rebuild}).
+ * when a {@code SUPER_USER} asks ({@code POST /api/v1/admin/portfolio/trade-outcomes/rebuild}).
  *
  * <p>An operation, not a startup hook (D-280): at boot it rebuilt whenever the collection was empty, as nobody, and a
  * user who failed was only logged. It stays because it is how {@code trade_outcomes} is recomputed after a correction

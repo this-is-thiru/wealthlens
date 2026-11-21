@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.taxplanning.workspace.controller;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.shared.web.CallerEmail;
+import com.thiru.wealthlens.shared.web.MeApi;
 import com.thiru.wealthlens.taxengine.api.DeclarationQuestion;
 import com.thiru.wealthlens.taxplanning.workspace.DraftConflictException;
 import com.thiru.wealthlens.taxplanning.workspace.DraftSaveRetry;
@@ -14,6 +16,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +27,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.JsonNode;
 
 /** Workspaces and drafts (TS T8), with {@code ETag} and {@code If-Match} on a save ({@code DR 11} F5). */
 @RequiredArgsConstructor
-@RequestMapping("/tax/user/{email}")
+@MeApi
 @RestController
 public class DraftController {
 
@@ -39,34 +42,34 @@ public class DraftController {
     private final DraftSaveRetry draftSaveRetry;
 
     @GetMapping("/profiles/{profileId}/workspaces/{taxYear}")
-    public WorkspaceResponse workspace(@PathVariable String email, @PathVariable String profileId, @PathVariable int taxYear) {
+    public WorkspaceResponse workspace(@CallerEmail String email, @PathVariable String profileId, @PathVariable int taxYear) {
         return WorkspaceResponse.of(draftService.workspace(email, profileId, taxYear));
     }
 
     @GetMapping("/profiles/{profileId}/workspaces/{taxYear}/drafts")
-    public List<DraftView> drafts(@PathVariable String email, @PathVariable String profileId, @PathVariable int taxYear) {
+    public List<DraftView> drafts(@CallerEmail String email, @PathVariable String profileId, @PathVariable int taxYear) {
         return draftService.drafts(email, profileId, taxYear);
     }
 
     @PostMapping("/profiles/{profileId}/workspaces/{taxYear}/drafts")
-    public ResponseEntity<DraftView> create(@PathVariable String email, @PathVariable String profileId,
+    public ResponseEntity<DraftView> create(@CallerEmail String email, @PathVariable String profileId,
             @PathVariable int taxYear, @RequestBody Map<String, String> body) {
         return tagged(draftService.createDraft(email, profileId, taxYear, body.get("label")));
     }
 
     /** The questions the year's return asks that the engine cannot compute, for a draft's {@code /filing/declarations} (W-090a2). */
     @GetMapping("/declarations/{taxYear}")
-    public List<DeclarationQuestion> declarations(@PathVariable String email, @PathVariable int taxYear) {
+    public List<DeclarationQuestion> declarations(@CallerEmail String email, @PathVariable int taxYear) {
         return draftService.declarations(taxYear);
     }
 
     @GetMapping("/drafts/{draftId}")
-    public ResponseEntity<DraftView> draft(@PathVariable String email, @PathVariable String draftId) {
+    public ResponseEntity<DraftView> draft(@CallerEmail String email, @PathVariable String draftId) {
         return tagged(draftService.draft(email, draftId));
     }
 
     @PatchMapping("/drafts/{draftId}")
-    public ResponseEntity<?> patch(@PathVariable String email, @PathVariable String draftId,
+    public ResponseEntity<?> patch(@CallerEmail String email, @PathVariable String draftId,
             @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch, @RequestBody JsonNode patch) {
         try {
             return tagged(draftSaveRetry.patch(email, draftId, revisionIn(ifMatch), patch));
@@ -76,23 +79,23 @@ public class DraftController {
     }
 
     @PostMapping("/drafts/{draftId}/status")
-    public ResponseEntity<DraftView> status(@PathVariable String email, @PathVariable String draftId,
+    public ResponseEntity<DraftView> status(@CallerEmail String email, @PathVariable String draftId,
             @RequestBody DraftStatusRequest request) {
         return tagged(draftService.changeStatus(email, draftId, request));
     }
 
     @PostMapping("/drafts/{draftId}/primary")
-    public WorkspaceResponse primary(@PathVariable String email, @PathVariable String draftId) {
+    public WorkspaceResponse primary(@CallerEmail String email, @PathVariable String draftId) {
         return WorkspaceResponse.of(draftService.makePrimary(email, draftId));
     }
 
     @GetMapping("/drafts/{draftId}/revisions")
-    public List<RevisionResponse> revisions(@PathVariable String email, @PathVariable String draftId) {
-        return draftService.revisions(email, draftId).stream().map(RevisionResponse::of).toList();
+    public PagedModel<RevisionResponse> revisions(@CallerEmail String email, @PathVariable String draftId, Pageable pageable) {
+        return new PagedModel<>(draftService.revisions(email, draftId, pageable).map(RevisionResponse::of));
     }
 
     @GetMapping("/drafts/{draftId}/revisions/{number}")
-    public JsonNode inputsAt(@PathVariable String email, @PathVariable String draftId, @PathVariable int number) {
+    public JsonNode inputsAt(@CallerEmail String email, @PathVariable String draftId, @PathVariable int number) {
         return draftService.inputsAt(email, draftId, number);
     }
 

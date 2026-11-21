@@ -6,14 +6,14 @@ import com.thiru.wealthlens.finance.dto.InterestRateResponse;
 import com.thiru.wealthlens.finance.dto.StepUpSIPRequest;
 import com.thiru.wealthlens.finance.service.FinancesService;
 import com.thiru.wealthlens.finance.service.StepUpSIPCalculator;
+import com.thiru.wealthlens.shared.web.PublicApi;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PublicApi
 @RestController
-@RequestMapping("/finances")
 @AllArgsConstructor
 public class FinancesController {
 

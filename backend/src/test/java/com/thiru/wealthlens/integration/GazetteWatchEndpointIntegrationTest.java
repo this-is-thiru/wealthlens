@@ -28,7 +28,7 @@ class GazetteWatchEndpointIntegrationTest extends AbstractIntegrationTest {
     @Test
     void leads_whenAskedByAUser_isForbidden() throws IOException, InterruptedException {
         // When
-        HttpResponse<String> response = send(get("/tax-planning/admin/gazette-leads", "USER"));
+        HttpResponse<String> response = send(get("/api/v1/admin/tax/gazette-leads", "USER"));
 
         // Then
         assertThat(response.statusCode()).isEqualTo(403);
@@ -37,7 +37,7 @@ class GazetteWatchEndpointIntegrationTest extends AbstractIntegrationTest {
     @Test
     void seedCursor_whenTheOwnerSetsIt_isStoredWithTheCaller() throws IOException, InterruptedException {
         // When
-        HttpResponse<String> response = send(put("/tax-planning/admin/gazette-cursor",
+        HttpResponse<String> response = send(put("/api/v1/admin/tax/gazette-cursor",
                 "{\"year\":2026,\"lastNumber\":271439}"));
 
         // Then
@@ -47,13 +47,13 @@ class GazetteWatchEndpointIntegrationTest extends AbstractIntegrationTest {
             assertThat(cursor.getYear()).isEqualTo(2026);
             assertThat(cursor.getUpdatedBy()).isEqualTo("admin@example.com");
         });
-        assertThat(send(get("/tax-planning/admin/gazette-leads", "SUPER_USER")).statusCode()).isEqualTo(200);
+        assertThat(send(get("/api/v1/admin/tax/gazette-leads", "SUPER_USER")).statusCode()).isEqualTo(200);
     }
 
     @Test
     void seedCursor_whenTheYearPrecedesTheEGazette_isRefused() throws IOException, InterruptedException {
         // When
-        HttpResponse<String> response = send(put("/tax-planning/admin/gazette-cursor", "{\"year\":2008,\"lastNumber\":1}"));
+        HttpResponse<String> response = send(put("/api/v1/admin/tax/gazette-cursor", "{\"year\":2008,\"lastNumber\":1}"));
 
         // Then
         assertThat(response.statusCode()).isEqualTo(400);

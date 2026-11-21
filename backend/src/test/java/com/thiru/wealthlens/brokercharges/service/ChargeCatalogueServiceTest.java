@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * The registry of charge codes a rate card is allowed to name.
  *
- * <p>Read-only and small, but it is what makes {@code GET /charge-catalogue} answerable without a
+ * <p>Read-only and small, but it is what makes {@code GET /api/v1/me/charges/charge-catalogue} answerable without a
  * controller reaching for a repository. Its one judgement is that the listing offers active codes
  * only: a retired code still has to resolve for the historical rows that carry it, but offering it
  * to somebody authoring a new rate card would invite a card nobody can explain later.

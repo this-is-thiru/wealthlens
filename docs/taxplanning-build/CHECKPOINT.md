@@ -4,19 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-353 done (D-830); next W-354
-Stage           : W-353 committed and closed (board D); WL-A-2 republished, read back equal; not pushed
-Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
-Board           : W-353 D, W-354 ·, W-348a · / W-348b ·, W-351 ·, W-334d ·, W-334e ·, W-337 ·
-Next step       : on 'resume': resume check; plan W-354 (prod's 5 trades with no asset_type: read who / what / how, no email printed; owner runs the query), §2 template; then W-348a / W-348b on a fresh copy; then W-334d (staging)
-Open to owner   : push (W-353 committed, unpushed); api-collection Buy Stock.yml:68 doc proposal
-Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive (mode 600), prod-reference.txt, allotment-dates.json and the query scripts only; zsh: wrap globs in (setopt null_glob; …); DNS timeouts — 3-try loops; never cd inside a $ command
-Last verify     : targeted: PortfolioServiceTest 36/0/0, TradeExchangePropertiesTest 3/0/0, TradeExchangeRefusalIntegrationTest 2/0/0, CostBasis 9/0/0, CollisionRetry 7/0/0, Idempotency 12/0/0, Modulith 1/0/0, Architecture 26/0/0; validate green; tiers on the pipeline after push
-Last item commit: taxplanning W-353: refuse a trade whose exchange its asset type does not list — BMF, nse, NSE and none reached the tax side, which refused the term or settled no STT
-Files touched   : none
-Updated         : 2026-11-20, session 111
+Item            : W-358c3b DONE (D-862), committed and pushed to PR #70 with the W-358c3a fix; W-358c complete
+Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED; kept: ~/wealthlens-runs/archives/ (delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js
+Done session 113: W-358b built — resource server, 15-min access, 14-day rotating refresh tokens (fixed from sign-in), cross-user path now 403
+Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-359 E, W-359b E; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·
+Next step       : check PR #70's run for this push (fix if red); then next by board order: W-359b (OpenAPI + Swagger UI in the admin zone, plans/W-359.md commit 4) — plan first
+Open to owner   : PR #70 not to merge until the owner says; refresh expiry fixed 14 d from sign-in (D-854, owner may prefer sliding); httpBasic still on (proposal in D-854); 5 Dependabot alerts on master; api-collection Buy Stock.yml:68 doc proposal
+Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
+Last verify     : W-358c3b — Pagination red 8/8 → green 8/8, probe bites; 27 classes green; validate clean; every api-collection file parses
+Last item commit: taxplanning W-358c3b: answer a page for the seven lists that grow — Spring's PagedModel, 50 by default, at most 200
+Files touched   : (none) (plus this file)
+Updated         : 2026-11-21, session 113 (W-358c3b committed and pushed)
 ```
-
 ## Resume check (run these, compare, then act on "Next step")
 
 ```

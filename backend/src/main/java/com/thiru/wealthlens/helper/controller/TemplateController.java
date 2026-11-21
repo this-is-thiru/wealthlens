@@ -1,19 +1,19 @@
 package com.thiru.wealthlens.helper.controller;
 
 import com.thiru.wealthlens.shared.dto.ShippingLabel;
+import com.thiru.wealthlens.shared.web.PublicApi;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import org.springframework.http.*;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
+@PublicApi
 @RestController
-@RequestMapping("/template")
 public class TemplateController {
 
     private final TemplateEngine templateEngine;
