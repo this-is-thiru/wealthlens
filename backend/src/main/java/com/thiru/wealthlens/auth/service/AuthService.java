@@ -42,15 +42,13 @@ public class AuthService {
 
     public String addUser(RegistrationRequest request) {
 
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findByEmail(request.getEmail());
-        if (optionalUserDetails.isPresent()) {
-            throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists");
-        }
-        // The login is erased last; until the erasure is recorded done, the email is not free (W-237d).
-        if (heldAccounts.contains(request.getEmail())) {
-            throw new IllegalArgumentException("The account " + request.getEmail() + " is being erased");
-        }
+        // The notice first, and one answer for a taken and a held address naming neither (W-358d2, D-884 C2a): registration should not
+        // tell a stranger whether an address has an account. Without mail to confirm an address (W-363) a free one still succeeds.
         privacyConsents.requireCurrent(request.getPrivacyNoticeVersion());
+        // The login is erased last; until the erasure is recorded done, the email is not free (W-237d).
+        if (userDetailsRepo.findByEmail(request.getEmail()).isPresent() || heldAccounts.contains(request.getEmail())) {
+            throw new IllegalArgumentException("This email cannot be registered");
+        }
 
         UserDetail userEntity = new UserDetail();
         userEntity.setEmail(request.getEmail());

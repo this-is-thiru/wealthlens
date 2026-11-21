@@ -6,6 +6,11 @@ spring:
     allow-bean-definition-overriding: true
 
 app:
+  auth:
+    # Every integration class calls from 127.0.0.1 into one shared app, so the per-client count would refuse unrelated tests;
+    # SignInLimitIntegrationTest sets the shipped 30 back for itself (W-358d2)
+    sign-in-limit:
+      calls-per-client: 100000
   security:
     key-secret: dGVzdC1zZWNyZXQta2V5LWZvci1pbnRlZ3JhdGlvbi10ZXN0cy1vbmx5
   privacy:

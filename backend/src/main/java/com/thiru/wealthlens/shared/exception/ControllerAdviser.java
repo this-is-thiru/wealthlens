@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -95,6 +96,15 @@ public class ControllerAdviser {
     public ResponseEntity<ProblemDetail> handleUnauthorized(Exception ex, HttpServletRequest request) {
         log(ex);
         return problem(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), request);
+    }
+
+    /** Over a limit on attempts (W-358d2): 429, with how long to wait. */
+    @ExceptionHandler(TooManyAttemptsException.class)
+    public ResponseEntity<ProblemDetail> handleTooManyAttempts(TooManyAttemptsException ex, HttpServletRequest request) {
+        log(ex);
+        ResponseEntity<ProblemDetail> answer = problem(HttpStatus.TOO_MANY_REQUESTS.value(), ex.getMessage(), request);
+        return ResponseEntity.status(answer.getStatusCode()).header(HttpHeaders.RETRY_AFTER, String.valueOf(Math.max(1, ex.getRetryAfter().toSeconds())))
+                .body(answer.getBody());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

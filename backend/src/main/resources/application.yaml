@@ -29,6 +29,12 @@ spring:
         max-page-size: 200
 
 app:
+  auth:
+    # W-358d2 (D-884 C1a): failed sign-ins per address and client, and calls per client to /api/v1/public/auth/**, within the window
+    sign-in-limit:
+      failures-per-address: 5
+      calls-per-client: 30
+      window: 15m
   security:
     key-secret: ${JWT_SECURITY_KEY}
   privacy:

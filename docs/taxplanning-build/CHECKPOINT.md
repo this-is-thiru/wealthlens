@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : Phase 15 batch DONE (D-874 – D-883): ten item commits + close-out pushed to PR #71; YouTrack 10 issues Done; WL-A-2 republished
+Item            : W-358d2 DONE (D-884) — committed and pushed to PR #71; W-363 parked
 Stage           : prod and staging on m1.5 (e832b56a), signed off 2026-11-21; app stopped; worktrees m1.4 (way back) and m1.5 on disk; MongoDB tools REMOVED (reads via IntelliJ console); archives ~/wealthlens-runs/archives (delete by 2027-11-21 or after W-337)
 Done session 113: W-358b (D-854) + 401→403 fix; W-358c split (D-855); W-358c1 (D-856); W-358c2 (D-857, D-858); W-358c3 split (D-859); W-358c3a (D-860) + fix; W-358c3b (D-861, D-862); runbook "Next deploy" list
-Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d P, W-358d1 D, W-358d2 ·, W-358d3 ·, W-358d4 ·, W-355 ·, W-356 ·, W-337 ·, W-362 —, W-362a D, W-362b D, W-362c D; Phase 15: W-147/149/150/168/170/171/174/175/331/335 D, W-173 B, W-254 B
-Next step       : check PR #71's pipeline for the push (fix if red); then plan W-358d2 (sign-in hardening), or the next batch (W-173 needs a data step, W-254 its own plan)
+Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d P, W-358d1 D, W-358d2 D, W-358d3 ·, W-358d4 ·, W-355 ·, W-356 ·, W-337 ·, W-362 —, W-362a D, W-362b D, W-362c D; Phase 15: W-147/149/150/168/170/171/174/175/331/335 D, W-173 B, W-254 B
+Next step       : check PR #71's run for the push; then plan W-358d3 (delegating encoder, hashes upgraded at sign-in; a runbook entry with a read-only count)
 Open to owner   : PR #70 merge after W-359b and a green run (owner proposal); after W-359b by board order W-358d, W-357b, W-355, W-356, W-351 (M2 review), W-337 (SQL, after deploying everything); past commits keep Claude co-author lines
 Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
-Last verify     : batch — 6 removals red → 404, guards per item; retired-route cases folded into RetiredTestRoutesIntegrationTest (9/9) at the owner's word; validate clean
-Last item commit: taxplanning W-335: remove runbook §6, the interim run — signed off on every database
+Last verify     : W-358d2 — red 5 of 7 → green 7/7, unit 6/6, probe bites, 17 classes green, validate clean; PR #71 run 44926366256 success (batch)
+Last item commit: taxplanning W-358d2: limit sign-in guessing by address and client, and stop registration naming an account — attempts were unlimited and a taken address was named
 Files touched   : (none) (plus this file)
 Updated         : 2026-11-21, session 114
 ```

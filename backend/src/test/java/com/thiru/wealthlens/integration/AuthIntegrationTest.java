@@ -198,19 +198,16 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         existingUser.setRoles("USER");
         mongoTemplate.save(existingUser);
 
-        RegistrationRequest request = new RegistrationRequest();
-        request.setEmail(email);
-        request.setPassword("password123");
-
-        // WHEN / THEN
+        // WHEN / THEN — with the current notice version, so the address is what is refused; named nowhere (W-358d2, D-884 C2a)
         given()
                 .contentType(ContentType.JSON)
-                .body(request)
+                .body(registration(email))
                 .when()
                 .post("/api/v1/public/auth/register")
                 .then()
                 .statusCode(400)
-                .body(containsString("already exists"));
+                .body(containsString("This email cannot be registered"))
+                .body(not(containsString(email)));
     }
 
     @Test

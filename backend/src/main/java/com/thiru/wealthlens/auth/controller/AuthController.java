@@ -6,13 +6,16 @@ import com.thiru.wealthlens.auth.dto.RefreshRequest;
 import com.thiru.wealthlens.auth.dto.RefreshResponse;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.service.AuthService;
+import com.thiru.wealthlens.auth.service.SignInAttempts;
 import com.thiru.wealthlens.shared.privacy.ProcessingLogFilter;
 import com.thiru.wealthlens.shared.web.PublicApi;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,15 +29,25 @@ public class AuthController {
 
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
+    private final SignInAttempts signInAttempts;
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
+    public LoginResponse login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         ProcessingLogFilter.nameLoginAttempt(loginRequest.getEmail());
+        String client = request.getRemoteAddr();
+        signInAttempts.requireAllowed(loginRequest.getEmail(), client);
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
                 loginRequest.getPassword());
-        Authentication authentication = authenticationManager.authenticate(auth);
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(auth);
+        } catch (AuthenticationException refused) {
+            signInAttempts.recordFailure(loginRequest.getEmail(), client);
+            throw refused;
+        }
         if (authentication.isAuthenticated()) {
+            signInAttempts.clear(loginRequest.getEmail(), client);
             return authService.generateToken(loginRequest.getEmail(), authentication);
         } else {
             throw new UsernameNotFoundException("Invalid user request");
