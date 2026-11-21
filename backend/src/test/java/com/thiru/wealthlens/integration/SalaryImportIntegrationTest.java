@@ -51,7 +51,7 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(caller));
         headers.setContentType(type);
-        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + path), method,
+        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), method,
                 new HttpEntity<>(body, headers), String.class);
     }
 
@@ -122,8 +122,7 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
         headers.setBearerAuth(generateToken(caller));
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.setIfMatch(ifMatch);
-        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + "/drafts/" + draftId
-                + "/salary-import/apply"), HttpMethod.POST, new HttpEntity<>(form, headers), String.class);
+        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax/drafts/" + draftId + "/salary-import/apply"), HttpMethod.POST, new HttpEntity<>(form, headers), String.class);
     }
 
     private static final String DECISIONS = """

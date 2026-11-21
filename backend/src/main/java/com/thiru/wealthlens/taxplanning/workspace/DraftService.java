@@ -20,6 +20,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
@@ -209,6 +213,13 @@ public class DraftService {
     public List<DraftRevision> revisions(String email, String draftId) {
         owned(email, draftId);
         return revisionRepository.findByDraftIdOrderByRevisionNumber(draftId);
+    }
+
+    /** A page of the draft's revisions, oldest first as they were made (W-358c3b, D-861). */
+    public Page<DraftRevision> revisions(String email, String draftId, Pageable pageable) {
+        owned(email, draftId);
+        return revisionRepository.findByDraftId(draftId,
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("revisionNumber").and(Sort.by("id"))));
     }
 
     /** The inputs as they stood at {@code number}, by replay from revision nil. */

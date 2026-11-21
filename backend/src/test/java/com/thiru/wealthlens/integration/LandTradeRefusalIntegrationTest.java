@@ -50,7 +50,7 @@ class LandTradeRefusalIntegrationTest extends AbstractIntegrationTest {
             "BROKER CHARGES", "MISC CHARGES", "COMMENTS"};
 
     private static URI uri(String path) {
-        return URI.create("http://localhost:" + RestAssured.port + "/portfolio/user/" + EMAIL + path);
+        return URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/portfolio" + path);
     }
 
     private static RestTemplate restTemplate() {
@@ -177,7 +177,7 @@ class LandTradeRefusalIntegrationTest extends AbstractIntegrationTest {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         // When
-        ResponseEntity<String> response = restTemplate().exchange(uri("/upload-transactions?quarter=" + quarter),
+        ResponseEntity<String> response = restTemplate().exchange(uri("/transactions/uploads?quarter=" + quarter),
                 HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
 
         // Then

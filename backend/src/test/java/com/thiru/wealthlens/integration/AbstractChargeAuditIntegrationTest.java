@@ -22,7 +22,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * The W-264b audit's scenarios run against the <b>shipped</b> rate cards, seeded the way a deployment is seeded
- * ({@code POST /charges/seed}), where {@link ChargesIntegrationTest} writes its own cards. Expected amounts are
+ * ({@code POST /api/v1/admin/charges/seed}), where {@link ChargesIntegrationTest} writes its own cards. Expected amounts are
  * worked by hand from the card files (D-611); this class holds the requests both the plain and the flag classes make.
  */
 abstract class AbstractChargeAuditIntegrationTest extends AbstractIntegrationTest {
@@ -36,22 +36,22 @@ abstract class AbstractChargeAuditIntegrationTest extends AbstractIntegrationTes
 
     @BeforeEach
     void seedTheShippedCards() {
-        ResponseEntity<String> seeded = call(HttpMethod.POST, "/charges/seed", admin(), null);
+        ResponseEntity<String> seeded = call(HttpMethod.POST, "/api/v1/admin/charges/seed", admin(), null);
         if (seeded.getStatusCode().value() != 200) {
             throw new IllegalStateException("Seeding failed: " + seeded.getBody());
         }
     }
 
     protected ResponseEntity<String> simulate(Map<String, Object> body) {
-        return call(HttpMethod.POST, "/charges/simulate", generateToken(EMAIL), body);
+        return call(HttpMethod.POST, "/api/v1/me/charges/simulate", generateToken(EMAIL), body);
     }
 
     protected ResponseEntity<String> tradeV2(Map<String, Object> body) {
-        return call(HttpMethod.POST, "/portfolio/user/" + EMAIL + "/transaction/v2", generateToken(EMAIL), body);
+        return call(HttpMethod.POST, "/api/v1/me/portfolio/transaction/v2", generateToken(EMAIL), body);
     }
 
     protected ResponseEntity<String> tradeV1(Map<String, Object> body) {
-        return call(HttpMethod.POST, "/portfolio/user/" + EMAIL + "/transaction", generateToken(EMAIL), body);
+        return call(HttpMethod.POST, "/api/v1/me/portfolio/transaction", generateToken(EMAIL), body);
     }
 
     protected ResponseEntity<String> get(String path) {

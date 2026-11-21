@@ -8,11 +8,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface TransactionRepository extends MongoRepository<TransactionEntity, String> {
 
     List<TransactionEntity> findByEmail(String email);
+
+    Page<TransactionEntity> findByEmail(String email, Pageable pageable);
 
     List<TransactionEntity> findByEmailAndStockCodeAndTransactionDateBefore(String email, String stockCode, LocalDate transactionDate);
 

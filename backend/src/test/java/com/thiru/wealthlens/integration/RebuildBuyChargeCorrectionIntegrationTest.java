@@ -117,7 +117,7 @@ class RebuildBuyChargeCorrectionIntegrationTest extends AbstractIntegrationTest 
     @Test
     void endpoint_whenCalledWithoutDryRun_isADryRun() {
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "SUPER_USER"))
-                .when().post("/trade-outcomes/rebuild-charges/correct")
+                .when().post("/api/v1/admin/portfolio/trade-outcomes/rebuild-charges/correct")
                 .then().statusCode(200).body("dryRun", equalTo(true)).body("rowsCorrected", equalTo(1));
         MoneyAssert.assertMoney(10.0, row("second").getBuyBrokerCharges());
     }
@@ -125,7 +125,7 @@ class RebuildBuyChargeCorrectionIntegrationTest extends AbstractIntegrationTest 
     @Test
     void endpoint_whenNotASuperUser_isForbidden() {
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "USER"))
-                .when().post("/trade-outcomes/rebuild-charges/correct?dryRun=false")
+                .when().post("/api/v1/admin/portfolio/trade-outcomes/rebuild-charges/correct?dryRun=false")
                 .then().statusCode(403);
         MoneyAssert.assertMoney(10.0, row("second").getBuyBrokerCharges());
     }

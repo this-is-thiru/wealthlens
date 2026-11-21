@@ -4,19 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-353 done (D-830); next W-354
-Stage           : W-353 committed and closed (board D); WL-A-2 republished, read back equal; not pushed
-Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
-Board           : W-353 D, W-354 ·, W-348a · / W-348b ·, W-351 ·, W-334d ·, W-334e ·, W-337 ·
-Next step       : on 'resume': resume check; plan W-354 (prod's 5 trades with no asset_type: read who / what / how, no email printed; owner runs the query), §2 template; then W-348a / W-348b on a fresh copy; then W-334d (staging)
-Open to owner   : push (W-353 committed, unpushed); api-collection Buy Stock.yml:68 doc proposal
-Env notes       : jars in ../wealthlens-m1.3 and ../wealthlens-m0; ~/wealthlens-runs/w334c holds prod-before-m1.archive (mode 600), prod-reference.txt, allotment-dates.json and the query scripts only; zsh: wrap globs in (setopt null_glob; …); DNS timeouts — 3-try loops; never cd inside a $ command
-Last verify     : targeted: PortfolioServiceTest 36/0/0, TradeExchangePropertiesTest 3/0/0, TradeExchangeRefusalIntegrationTest 2/0/0, CostBasis 9/0/0, CollisionRetry 7/0/0, Idempotency 12/0/0, Modulith 1/0/0, Architecture 26/0/0; validate green; tiers on the pipeline after push
-Last item commit: taxplanning W-353: refuse a trade whose exchange its asset type does not list — BMF, nse, NSE and none reached the tax side, which refused the term or settled no STT
-Files touched   : none
-Updated         : 2026-11-20, session 111
+Item            : W-362 P (D-868) — the next deploy; plan committed on PR #70; W-362a row 1 waits for this push's run
+Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED; kept: ~/wealthlens-runs/archives/ (delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js
+Done session 113: W-358b (D-854) + 401→403 fix; W-358c split (D-855); W-358c1 (D-856); W-358c2 (D-857, D-858); W-358c3 split (D-859); W-358c3a (D-860) + fix; W-358c3b (D-861, D-862); runbook "Next deploy" list
+Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d ·, W-355 ·, W-356 ·, W-337 ·, W-362 P, W-362a ·, W-362b ·, W-362c ·
+Next step       : when this push's run is green: give W-362a row 1 with <H> = this commit and <R> = its run; owner runs rows, session answers go/stop and logs in the runbook run log
+Open to owner   : PR #70 merge after W-359b and a green run (owner proposal); after W-359b by board order W-358d, W-357b, W-355, W-356, W-351 (M2 review), W-337 (SQL, after deploying everything); past commits keep Claude co-author lines
+Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
+Last verify     : pipeline 44918976061 green: 505 reports, the collection check and the spec tests ran on CI
+Last item commit: taxplanning W-359b: generate the API spec for an admin and check the api-collection against it — the only client had drifted from the code
+Files touched   : (none) (plus this file)
+Updated         : 2026-11-21, session 114
 ```
-
 ## Resume check (run these, compare, then act on "Next step")
 
 ```

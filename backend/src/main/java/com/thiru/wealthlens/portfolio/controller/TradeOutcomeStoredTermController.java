@@ -2,6 +2,7 @@ package com.thiru.wealthlens.portfolio.controller;
 
 import com.thiru.wealthlens.portfolio.dto.StoredTermRemovalReport;
 import com.thiru.wealthlens.portfolio.migration.TradeOutcomeStoredTermRemoval;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  * records who called. One-time: removed once its run is logged for every database (W-168).
  */
 @RequiredArgsConstructor
+@AdminApi
 @RestController
 public class TradeOutcomeStoredTermController {
 

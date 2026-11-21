@@ -40,7 +40,7 @@ class StoredIdentifierEncryptionIntegrationTest extends AbstractIntegrationTest 
 
     private ValidatableResponse run(boolean dryRun) {
         return given().header("Authorization", "Bearer " + generateToken(OWNER, "SUPER_USER")).contentType(ContentType.JSON)
-                .when().post("/privacy/stored-fields/encrypt?dryRun=" + dryRun).then().statusCode(200);
+                .when().post("/api/v1/admin/privacy/stored-fields/encrypt?dryRun=" + dryRun).then().statusCode(200);
     }
 
     private static String counted(String collection, String count) {
@@ -102,7 +102,7 @@ class StoredIdentifierEncryptionIntegrationTest extends AbstractIntegrationTest 
         LoginRequest login = new LoginRequest();
         login.setEmail(USER);
         login.setPassword(PASSWORD);
-        given().contentType(ContentType.JSON).body(login).when().post("/auth/login").then().statusCode(200);
+        given().contentType(ContentType.JSON).body(login).when().post("/api/v1/public/auth/login").then().statusCode(200);
         run(false).body(counted("user_details", "plainRows"), equalTo(0));
         assertThat(mongoTemplate.getCollection("user_details").countDocuments()).isEqualTo(1);
     }

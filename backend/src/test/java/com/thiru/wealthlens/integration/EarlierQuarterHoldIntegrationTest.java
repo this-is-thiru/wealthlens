@@ -69,7 +69,7 @@ class EarlierQuarterHoldIntegrationTest extends AbstractIntegrationTest {
         corporateActionService.performPendingCorporateActions(OWNER,
                 new CorporateActionPerformDto("JANUARY", 2026, BrokerName.ZERODHA), false);
         given().header("Authorization", "Bearer " + generateToken(OWNER))
-                .post("/temporary-transactions/user/" + OWNER + "/redrive").then().statusCode(200);
+                .post("/api/v1/me/portfolio/temporary-transactions/redrive").then().statusCode(200);
         assertThat(portfolioRepository.findByEmail(OWNER)).extracting(AssetEntity::getQuantity).containsExactly(16.0);
     }
 
@@ -85,7 +85,7 @@ class EarlierQuarterHoldIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse post(Map<String, Object> body) {
         return given().header("Authorization", "Bearer " + generateToken(OWNER)).contentType(ContentType.JSON).body(body)
-                .post("/portfolio/user/" + OWNER + "/transaction/v2").then().statusCode(200);
+                .post("/api/v1/me/portfolio/transaction/v2").then().statusCode(200);
     }
 
     private static Map<String, Object> trade(TransactionType type, double quantity, double price, LocalDate date) {

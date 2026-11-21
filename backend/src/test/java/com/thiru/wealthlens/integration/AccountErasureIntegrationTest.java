@@ -10,7 +10,9 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.shared.privacy.AccountErasureReceipt;
 import com.thiru.wealthlens.shared.privacy.AccountErasureRequest;
+import com.thiru.wealthlens.shared.privacy.AccountErasureService;
 import com.thiru.wealthlens.shared.privacy.BreachNotice;
 import com.thiru.wealthlens.shared.privacy.PersonalDataHolder;
 import com.thiru.wealthlens.taxplanning.jobs.AccountErasure;
@@ -126,6 +128,9 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AccountErasureService accountErasureService;
+
     @BeforeEach
     void twoAccountsOnTheDayAnuAsks() {
         clock.set(ASKED);
@@ -139,7 +144,7 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     }
 
     private ValidatableResponse requestErasure() {
-        return given().header("Authorization", "Bearer " + generateToken(ANU)).when().post("/privacy/erasure/user/" + ANU)
+        return given().header("Authorization", "Bearer " + generateToken(ANU)).when().post("/api/v1/me/privacy/erasure")
                 .then();
     }
 
@@ -147,13 +152,13 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
         LoginRequest request = new LoginRequest();
         request.setEmail(ANU);
         request.setPassword(PASSWORD);
-        return given().contentType(ContentType.JSON).body(request).when().post("/auth/login").then();
+        return given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/login").then();
     }
 
     /** RestAssured's GET throws inside Groovy here, so reads go through the JDK client (as in W-237b). */
     private HttpResponse<String> receiptAsOwner() throws IOException, InterruptedException {
         return HttpClient.newHttpClient().send(HttpRequest.newBuilder(
-                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/privacy/erasure/user/" + ANU))
+                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/admin/privacy/erasure/users/" + ANU))
                 .header("Authorization", "Bearer " + generateToken(OWNER, "SUPER_USER")).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
     }
@@ -234,12 +239,13 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
         requestErasure().statusCode(202);
         clock.set("2027-06-11T08:00:00Z");
 
-        // When — the owner asks again on Anu's path, since Anu's token no longer works
-        given().header("Authorization", "Bearer " + generateToken(OWNER, "SUPER_USER")).when()
-                .post("/privacy/erasure/user/" + ANU).then().statusCode(202)
-                .body("requestedAt", equalTo("2027-06-10T08:00:00"));
+        // When — asked again a day later; Anu's token no longer works, and since W-358c1 no route asks for another user
+        // (D-855 C3a), so the second request reaches the service directly
+        AccountErasureReceipt again = accountErasureService.request(ANU);
 
-        // Then
+        // Then — the first request's time stands
+        assertThat(again.requestedAt()).isEqualTo(LocalDateTime.parse("2027-06-10T08:00:00"));
+
         assertThat(mongoTemplate.count(query(where("email").is(ANU)), AccountErasureRequest.class)).isEqualTo(1);
     }
 
@@ -254,9 +260,9 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then — the token was issued before the request and has not expired
         given().header("Authorization", "Bearer " + generateToken(ANU)).contentType(ContentType.JSON)
-                .body("{\"text\": \"Where is my data?\"}").when().post("/privacy/grievances/user/" + ANU).then().statusCode(401);
+                .body("{\"text\": \"Where is my data?\"}").when().post("/api/v1/me/privacy/grievances").then().statusCode(401);
         login().statusCode(401);
-        given().contentType(ContentType.JSON).body(again).when().post("/auth/register").then().statusCode(400);
+        given().contentType(ContentType.JSON).body(again).when().post("/api/v1/public/auth/register").then().statusCode(400);
     }
 
     @Test

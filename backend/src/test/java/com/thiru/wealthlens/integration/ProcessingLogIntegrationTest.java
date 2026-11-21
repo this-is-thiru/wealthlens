@@ -53,7 +53,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     private static final LocalDateTime PROCESSED_UTC = LocalDateTime.parse("2027-06-10T08:00:00");
     private static final String A_SECOND_BEFORE_THE_YEAR = "2028-06-10T07:59:59Z";
     private static final String THE_YEAR_ENDS = "2028-06-10T08:00:00Z";
-    private static final String GRIEVANCES_ROUTE = "/privacy/grievances/user/{email}";
+    private static final String GRIEVANCES_ROUTE = "/api/v1/me/privacy/grievances";
 
     @TestConfiguration
     static class SetDay {
@@ -116,13 +116,13 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         LoginRequest request = new LoginRequest();
         request.setEmail(ANU);
         request.setPassword(password);
-        given().contentType(ContentType.JSON).body(request).when().post("/auth/login").then().statusCode(expectedStatus);
+        given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/login").then().statusCode(expectedStatus);
     }
 
     @Test
     void request_whenAnuReadsHerOwnData_recordsWhoWhoseRouteResultAddressAndTime() throws IOException, InterruptedException {
         // Given / When
-        assertThat(read("/privacy/grievances/user/" + ANU, generateToken(ANU))).isEqualTo(200);
+        assertThat(read("/api/v1/me/privacy/grievances", generateToken(ANU))).isEqualTo(200);
 
         // Then
         assertThat(recordsOnceWritten(1)).singleElement().satisfies(record -> {
@@ -139,7 +139,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     @Test
     void request_whenAQueryCarriesAValue_storesTheRouteAndNeverTheValue() throws IOException, InterruptedException {
         // Given / When
-        assertThat(read("/privacy/grievances/user/" + ANU + "?pan=ABCPE1234F", generateToken(ANU))).isEqualTo(200);
+        assertThat(read("/api/v1/me/privacy/grievances?pan=ABCPE1234F", generateToken(ANU))).isEqualTo(200);
 
         // Then
         recordsOnceWritten(1);
@@ -151,7 +151,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     @Test
     void request_whenTheOwnerReadsBalasData_recordsTheOwnerAsPrincipalAndBalaAsSubject() throws IOException, InterruptedException {
         // Given / When
-        assertThat(read("/privacy/grievances/user/" + BALA, generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
+        assertThat(read("/api/v1/admin/portfolio/users/" + BALA + "/stocks", generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
 
         // Then
         assertThat(recordsOnceWritten(1)).singleElement().satisfies(record -> {
@@ -170,7 +170,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
             assertThat(record.getPrincipal()).isEqualTo(ANU);
             assertThat(record.getSubjectEmail()).isEqualTo(ANU);
             assertThat(record.getMethod()).isEqualTo("POST");
-            assertThat(record.getRoute()).isEqualTo("/auth/login");
+            assertThat(record.getRoute()).isEqualTo("/api/v1/public/auth/login");
             assertThat(record.getStatus()).isEqualTo(401);
         });
     }
@@ -190,7 +190,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     @Test
     void request_whenNobodyIsNamed_recordsNothing() throws IOException, InterruptedException {
         // Given / When — no token: refused, and there is nobody whose access it shows
-        assertThat(HttpClient.newHttpClient().send(HttpRequest.newBuilder(uri("/privacy/grievances/user/" + ANU)).GET().build(),
+        assertThat(HttpClient.newHttpClient().send(HttpRequest.newBuilder(uri("/api/v1/me/privacy/grievances")).GET().build(),
                 HttpResponse.BodyHandlers.ofString()).statusCode()).isEqualTo(401);
 
         // Then — still nothing after ten times the slowest write measured (W-328)
@@ -251,8 +251,8 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     @Test
     void erase_whenAnusAccountGoes_takesHerOwnRequestsAndKeepsTheOwnersAboutHer() throws IOException, InterruptedException {
         // Given
-        assertThat(read("/privacy/grievances/user/" + ANU, generateToken(ANU))).isEqualTo(200);
-        assertThat(read("/privacy/grievances/user/" + ANU, generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
+        assertThat(read("/api/v1/me/privacy/grievances", generateToken(ANU))).isEqualTo(200);
+        assertThat(read("/api/v1/admin/portfolio/users/" + ANU + "/stocks", generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
         recordsOnceWritten(2);
 
         // When — both written first, or a late one would survive the erasure

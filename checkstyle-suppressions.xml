@@ -15,9 +15,7 @@
     <suppress checks="ConstantName" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]dto[\\/]AuthHelper\.java$"/>
     <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]dto[\\/]AuthHelper\.java$"/>
     <suppress checks="MemberName" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]dto[\\/]LoginResponse\.java$"/>
-    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]filter[\\/]AuthFilter\.java$"/>
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]service[\\/]AuthService\.java$"/>
-    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]auth[\\/]service[\\/]UserValidator\.java$"/>
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]config[\\/]ChargeIndexInitializer\.java$"/>
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]engine[\\/]ChargeFormulaEvaluator\.java$"/>
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]brokercharges[\\/]service[\\/]ChargeRecordingGatewayImpl\.java$"/>

@@ -3,6 +3,7 @@ package com.thiru.wealthlens.shared.exception;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -99,12 +100,12 @@ class ControllerAdviserTest {
 
     private void expectBodyRefusal(String uri, String body, String message) throws Exception {
         mvc.perform(post(uri).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400)).andExpect(jsonPath("$.message").value(message));
+                .andExpect(jsonPath("$.status").value(400)).andExpect(jsonPath("$.detail").value(message));
     }
 
     private void expectRefusal(String uri, String message) throws Exception {
         mvc.perform(get(uri)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message").value(message));
+                .andExpect(jsonPath("$.detail").value(message));
     }
 
     @Test
@@ -154,25 +155,25 @@ class ControllerAdviserTest {
     @Test
     void handleMissingPart_whenTheUploadHasNoFile_answers400NamingThePart() throws Exception {
         mvc.perform(multipart("/upload")).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Required part 'file' is not present"));
+                .andExpect(jsonPath("$.detail").value("Required part 'file' is not present"));
     }
 
     @Test
     void handleMethodNotAllowed_whenTheMethodIsNotServed_answers405() throws Exception {
         mvc.perform(post("/years/2026")).andExpect(status().isMethodNotAllowed())
-                .andExpect(jsonPath("$.status").value(405)).andExpect(jsonPath("$.error").value("Method Not Allowed"));
+                .andExpect(jsonPath("$.status").value(405)).andExpect(jsonPath("$.title").value("Method Not Allowed"));
     }
 
     @Test
     void handleUnsupportedMediaType_whenTheBodyIsOfATypeNotRead_answers415() throws Exception {
         mvc.perform(post("/body").contentType(MediaType.APPLICATION_PDF).content("x")).andExpect(status().isUnsupportedMediaType())
-                .andExpect(jsonPath("$.status").value(415)).andExpect(jsonPath("$.error").value("Unsupported Media Type"));
+                .andExpect(jsonPath("$.status").value(415)).andExpect(jsonPath("$.title").value("Unsupported Media Type"));
     }
 
     @Test
     void handleUnreadableBody_whenThereIsNoBody_answers400SayingSo() throws Exception {
         mvc.perform(post("/order").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("The request body is missing"));
+                .andExpect(jsonPath("$.detail").value("The request body is missing"));
     }
 
     @Test
@@ -228,5 +229,15 @@ class ControllerAdviserTest {
     void handleUploadTooLarge_whenAFileIsPastTheMultipartLimit_answers400NamingTheLimit() throws Exception {
         // 21 MB = 21 × 1,048,576 = 22,020,096 bytes
         expectRefusal("/too-large", "The file is larger than the 22020096 bytes an upload may be");
+    }
+
+    /** RFC 9457 (W-359a): every error is a {@code ProblemDetail} — its media type, status, title, detail and the path it answered. */
+    @Test
+    void anError_whenAnswered_isAProblemDetail() throws Exception {
+        // When / Then — the 405 route the test above uses
+        mvc.perform(post("/years/2026")).andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(405)).andExpect(jsonPath("$.title").value("Method Not Allowed"))
+                .andExpect(jsonPath("$.detail").exists()).andExpect(jsonPath("$.instance").value("/years/2026"));
     }
 }

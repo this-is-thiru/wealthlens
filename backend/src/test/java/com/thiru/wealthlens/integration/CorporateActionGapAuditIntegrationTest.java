@@ -36,7 +36,7 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(generateToken(EMAIL, role));
-        RestTemplate client = new RestTemplate();
+        RestTemplate client = new RestTemplate(new org.springframework.http.client.JdkClientHttpRequestFactory());
         client.setErrorHandler(new DefaultResponseErrorHandler() {
             @Override
             public boolean hasError(ClientHttpResponse response) {
@@ -61,7 +61,7 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         body.put("accountType", "Self".equals(holder) ? "SELF" : "OUTSOURCED");
         body.put("accountHolder", holder);
         body.put("transactionDate", date);
-        ResponseEntity<String> response = call(HttpMethod.POST, "/portfolio/user/" + EMAIL + "/transaction/v2", "USER", body);
+        ResponseEntity<String> response = call(HttpMethod.POST, "/api/v1/me/portfolio/transaction/v2", "USER", body);
         assertThat(response.getStatusCode().value()).as(response.getBody()).isEqualTo(200);
     }
 
@@ -79,7 +79,7 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         body.put("accountType", "SELF");
         body.put("accountHolder", "Self");
         body.put("transactionDate", date);
-        return call(HttpMethod.POST, "/portfolio/user/" + EMAIL + "/transaction/v2", "USER", body);
+        return call(HttpMethod.POST, "/api/v1/me/portfolio/transaction/v2", "USER", body);
     }
 
     private ResponseEntity<String> addAction(String stockCode, String type, String ratio, String recordDate, String allotmentDate) {
@@ -93,7 +93,7 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         body.put("recordDate", recordDate);
         body.put("exDate", recordDate);
         body.put("allotmentDate", allotmentDate);
-        return call(HttpMethod.POST, "/corporate-action/add", "SUPER_USER", body);
+        return call(HttpMethod.POST, "/api/v1/admin/corporate-actions", "SUPER_USER", body);
     }
 
     private void addDemerger(String main, String spun, String ratio, String priceRatio, String recordDate) {
@@ -112,22 +112,22 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         body.put("recordDate", recordDate);
         body.put("exDate", recordDate);
         body.put("demergerDetail", detail);
-        ResponseEntity<String> response = call(HttpMethod.POST, "/corporate-action/add", "SUPER_USER", body);
+        ResponseEntity<String> response = call(HttpMethod.POST, "/api/v1/admin/corporate-actions", "SUPER_USER", body);
         assertThat(response.getStatusCode().value()).as(response.getBody()).isEqualTo(200);
     }
 
     private ResponseEntity<String> perform(String month, int year) {
-        return call(HttpMethod.PUT, "/corporate-action/user/" + EMAIL + "/perform", "USER",
+        return call(HttpMethod.PUT, "/api/v1/me/corporate-actions/perform", "USER",
                 Map.of("month", month, "year", year, "brokerName", "ZERODHA"));
     }
 
     private ResponseEntity<String> redrive() {
-        return call(HttpMethod.POST, "/temporary-transactions/user/" + EMAIL + "/redrive", "USER", null);
+        return call(HttpMethod.POST, "/api/v1/me/portfolio/temporary-transactions/redrive", "USER", null);
     }
 
     private List<JsonNode> lots(String stockCode) {
         List<JsonNode> lots = new ArrayList<>();
-        JSON.readTree(call(HttpMethod.GET, "/portfolio/user/" + EMAIL + "/stocks/all", "USER", null).getBody())
+        JSON.readTree(call(HttpMethod.GET, "/api/v1/me/portfolio/stocks", "USER", null).getBody())
                 .forEach(lot -> {
                     if (stockCode.equals(lot.get("stockCode").asString())) {
                         lots.add(lot);
@@ -247,9 +247,9 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(quantity("TCS")).isEqualTo(20.0);
     }
 
-    // Scenario 16: refused, with 401 (noted in the report: a signed-in caller on another user's path)
+    // Scenario 16: refused, with 403. Since W-358c1 another user is named only on an admin route (D-855 C3a); was 401, then 403 (D-854)
     @Test
-    void userRoutes_whenThePathNamesAnotherUser_areRefused() {
+    void routes_whenAUserNamesAnotherUserOrActsForEveryone_areRefused() {
         // Given -- another user's holding
         String other = "corporate-audit-other@example.com";
         HttpHeaders headers = new HttpHeaders();
@@ -263,16 +263,16 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
             }
         });
 
-        // When -- this user's token on the other user's paths
+        // When -- this user's token on the admin routes: the perform for every user, and the other user's holdings
         ResponseEntity<String> performed = client.exchange(URI.create("http://localhost:" + RestAssured.port
-                        + "/corporate-action/user/" + other + "/perform"), HttpMethod.PUT,
+                        + "/api/v1/admin/corporate-actions/perform"), HttpMethod.PUT,
                 new HttpEntity<>(Map.of("month", "JANUARY", "year", 2026, "brokerName", "ZERODHA"), headers), String.class);
         ResponseEntity<String> read = client.exchange(URI.create("http://localhost:" + RestAssured.port
-                + "/portfolio/user/" + other + "/stocks/all"), HttpMethod.GET, new HttpEntity<>(headers), String.class);
+                + "/api/v1/admin/portfolio/users/" + other + "/stocks"), HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
         // Then
-        assertThat(performed.getStatusCode().value()).as(performed.getBody()).isEqualTo(401);
-        assertThat(read.getStatusCode().value()).as(read.getBody()).isEqualTo(401);
+        assertThat(performed.getStatusCode().value()).as(performed.getBody()).isEqualTo(403);
+        assertThat(read.getStatusCode().value()).as(read.getBody()).isEqualTo(403);
     }
 
     // Scenario 8 (W-314)
@@ -300,10 +300,10 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then -- the caller is told the four months a quarter starts in
         assertThat(lowercase.getStatusCode().value()).isEqualTo(400);
-        assertThat(JSON.readTree(lowercase.getBody()).get("message").asString())
+        assertThat(JSON.readTree(lowercase.getBody()).get("detail").asString())
                 .isEqualTo("A quarter starts in one of [JANUARY, APRIL, JULY, OCTOBER], but the month was 'april'");
         assertThat(february.getStatusCode().value()).isEqualTo(400);
-        assertThat(JSON.readTree(february.getBody()).get("message").asString())
+        assertThat(JSON.readTree(february.getBody()).get("detail").asString())
                 .isEqualTo("A quarter starts in one of [JANUARY, APRIL, JULY, OCTOBER], but the month was 'FEBRUARY'");
     }
 
@@ -311,18 +311,15 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void adminRoutes_whenTheCallerIsNotASuperUser_answer403() {
         // When
-        ResponseEntity<String> added = call(HttpMethod.POST, "/corporate-action/add", "USER",
+        ResponseEntity<String> added = call(HttpMethod.POST, "/api/v1/admin/corporate-actions", "USER",
                 Map.of("stockCode", "X", "type", "BONUS", "ratio", "1:1", "recordDate", "2026-01-15", "exDate", "2026-01-15"));
-        ResponseEntity<String> performedForAll = call(HttpMethod.PUT, "/corporate-action/perform", "USER",
+        ResponseEntity<String> performedForAll = call(HttpMethod.PUT, "/api/v1/admin/corporate-actions/perform", "USER",
                 Map.of("stockCode", "X", "type", "NAME_OR_SYMBOL_CHANGE", "toStockCode", "Y"));
-        ResponseEntity<String> tested = call(HttpMethod.PUT, "/corporate-action/perform/test", "USER",
-                Map.of("stockCode", "X", "recordDate", "2026-01-15"));
-        ResponseEntity<String> reprioritised = call(HttpMethod.PUT, "/corporate-action/update/priority/abc/2", "USER", null);
+        ResponseEntity<String> reprioritised = call(HttpMethod.PATCH, "/api/v1/admin/corporate-actions/abc", "USER", Map.of("priority", 2));
 
         // Then
         assertThat(added.getStatusCode().value()).isEqualTo(403);
         assertThat(performedForAll.getStatusCode().value()).isEqualTo(403);
-        assertThat(tested.getStatusCode().value()).isEqualTo(403);
         assertThat(reprioritised.getStatusCode().value()).isEqualTo(403);
     }
 
@@ -395,11 +392,11 @@ class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
         body.put("demergerDetail", detail);
 
         // When
-        ResponseEntity<String> added = call(HttpMethod.POST, "/corporate-action/add", "SUPER_USER", body);
+        ResponseEntity<String> added = call(HttpMethod.POST, "/api/v1/admin/corporate-actions", "SUPER_USER", body);
 
         // Then
         assertThat(added.getStatusCode().value()).isEqualTo(400);
-        assertThat(JSON.readTree(added.getBody()).get("message").asString()).isEqualTo(
+        assertThat(JSON.readTree(added.getBody()).get("detail").asString()).isEqualTo(
                 "A demerger's ratio is new shares to shares held, two whole numbers above nil such as 1:10, but it was 1.5:10");
     }
 

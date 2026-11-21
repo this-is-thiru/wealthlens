@@ -31,6 +31,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 /** That a transaction response carries its own id, and the charges recorded against it. */
 @Tag("unit")
@@ -59,12 +62,12 @@ class TransactionServiceChargesTest {
     @DisplayName("getAllUserTransactions: carries the transaction id across the JSON copy")
     void getAllUserTransactions_whenMapped_carriesTheTransactionId() {
         // Given
-        when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(transaction("txn-1")));
+        when(transactionRepository.findByEmail(eq(EMAIL), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(transaction("txn-1"))));
         when(chargeViewAssembler.forTransactions(anyString(), any()))
                 .thenReturn(ChargeViewAssembler.ChargeLookup.empty());
 
         // When
-        List<TransactionResponse> responses = service().getAllUserTransactions(USER);
+        List<TransactionResponse> responses = service().getAllUserTransactions(USER, PageRequest.of(0, 50)).getContent();
 
         // Then
         assertEquals("txn-1", responses.getFirst().getTransactionId());
@@ -74,13 +77,13 @@ class TransactionServiceChargesTest {
     @DisplayName("getAllUserTransactions: hangs the recorded charges off the trade")
     void getAllUserTransactions_whenChargesWereRecorded_attachesThem() {
         // Given
-        when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(transaction("txn-1")));
+        when(transactionRepository.findByEmail(eq(EMAIL), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(transaction("txn-1"))));
         when(chargeViewAssembler.forTransactions(anyString(), any()))
                 .thenReturn(ChargeViewAssembler.ChargeLookup.empty());
         when(chargeViewAssembler.transactionNote(any(), eq("txn-1"))).thenReturn(note(23.60));
 
         // When
-        List<TransactionResponse> responses = service().getAllUserTransactions(USER);
+        List<TransactionResponse> responses = service().getAllUserTransactions(USER, PageRequest.of(0, 50)).getContent();
 
         // Then
         assertMoney(23.60, responses.getFirst().getCharges().getTotal());
@@ -91,13 +94,13 @@ class TransactionServiceChargesTest {
     @DisplayName("getAllUserTransactions: an unpriced trade reports null rather than zero")
     void getAllUserTransactions_whenNeverPriced_leavesChargesNull() {
         // Given
-        when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(transaction("txn-1")));
+        when(transactionRepository.findByEmail(eq(EMAIL), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(transaction("txn-1"))));
         when(chargeViewAssembler.forTransactions(anyString(), any()))
                 .thenReturn(ChargeViewAssembler.ChargeLookup.empty());
         when(chargeViewAssembler.transactionNote(any(), anyString())).thenReturn(null);
 
         // When
-        List<TransactionResponse> responses = service().getAllUserTransactions(USER);
+        List<TransactionResponse> responses = service().getAllUserTransactions(USER, PageRequest.of(0, 50)).getContent();
 
         // Then
         assertNull(responses.getFirst().getCharges());
@@ -108,13 +111,13 @@ class TransactionServiceChargesTest {
     @DisplayName("getAllUserTransactions: looks the charges up once for the whole page")
     void getAllUserTransactions_whenManyTrades_looksChargesUpOnce() {
         // Given
-        when(transactionRepository.findByEmail(EMAIL)).thenReturn(
-                List.of(transaction("txn-1"), transaction("txn-2"), transaction("txn-3")));
+        when(transactionRepository.findByEmail(eq(EMAIL), any(Pageable.class))).thenReturn(
+                new PageImpl<>(List.of(transaction("txn-1"), transaction("txn-2"), transaction("txn-3"))));
         when(chargeViewAssembler.forTransactions(anyString(), any()))
                 .thenReturn(ChargeViewAssembler.ChargeLookup.empty());
 
         // When
-        service().getAllUserTransactions(USER);
+        service().getAllUserTransactions(USER, PageRequest.of(0, 50));
 
         // Then
         verify(chargeViewAssembler, times(1)).forTransactions(eq(EMAIL), any());
@@ -150,13 +153,13 @@ class TransactionServiceChargesTest {
     void userTransactions_whenFiltered_mapsTheMatchingTrades() {
         // Given (W-287)
         List<QueryFilter> filters = List.of();
-        when(mongoTemplateService.getDocuments(USER, filters, TransactionEntity.class))
-                .thenReturn(List.of(transaction("txn-1")));
+        when(mongoTemplateService.getDocuments(eq(USER), eq(filters), eq(TransactionEntity.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(transaction("txn-1"))));
         when(chargeViewAssembler.forTransactions(anyString(), any()))
                 .thenReturn(ChargeViewAssembler.ChargeLookup.empty());
 
         // When
-        List<TransactionResponse> responses = service().userTransactions(USER, filters);
+        List<TransactionResponse> responses = service().userTransactions(USER, filters, PageRequest.of(0, 50)).getContent();
 
         // Then
         assertEquals(1, responses.size());

@@ -2,6 +2,7 @@ package com.thiru.wealthlens.portfolio.controller;
 
 import com.thiru.wealthlens.portfolio.dto.V2BackfillReport;
 import com.thiru.wealthlens.portfolio.migration.ProfitAndLossV2Backfill;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * changed records who called. One-time: removed once its run is logged for every database (W-173).
  */
 @RequiredArgsConstructor
+@AdminApi
 @RestController
 public class ProfitAndLossV2BackfillController {
 

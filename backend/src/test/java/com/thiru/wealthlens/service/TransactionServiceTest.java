@@ -10,7 +10,6 @@ import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
-import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,17 +36,6 @@ class TransactionServiceTest {
     @BeforeEach
     void setUp() {
         userMail = UserMail.from("test@example.com");
-    }
-
-    @Test
-    void getUserTransactions_whenFiltered_returnsTheMatchingDocuments() {
-        // Given (W-287)
-        List<QueryFilter> filters = List.of();
-        List<TransactionEntity> found = List.of(transaction("t-1"));
-        when(mongoTemplateService.getDocuments(userMail, filters, TransactionEntity.class)).thenReturn(found);
-
-        // When / Then
-        assertEquals(found, transactionService.getUserTransactions(userMail, filters));
     }
 
     @Test

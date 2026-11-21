@@ -56,11 +56,20 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse post(String body) {
         return given().auth().oauth2(generateToken(EMAIL)).contentType(ContentType.JSON).body(body)
-                .post("/properties/user/" + EMAIL + "/sales").then();
+                .post("/api/v1/me/portfolio/properties/sales").then();
     }
 
     private List<TradeOutcomeEntity> rows() {
         return mongoTemplate.find(new Query(Criteria.where("email").is(EMAIL)), TradeOutcomeEntity.class);
+    }
+
+    @Test
+    void recordSale_whenNoToken_expected401AndNothingWritten() {
+        // When — no Authorization header at all (W-358a: the route was public while AuthConfig's fallback was permitAll)
+        given().contentType(ContentType.JSON).body(SALE).post("/api/v1/me/portfolio/properties/sales").then().statusCode(401);
+
+        // Then
+        assertTrue(rows().isEmpty());
     }
 
     @Test
@@ -149,19 +158,22 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(EMAIL));
         ResponseEntity<String> response = new RestTemplate().exchange(URI.create("http://localhost:" + RestAssured.port
-                + "/analytics/user/" + EMAIL + "/performance-metrics"), HttpMethod.GET, new HttpEntity<>(headers),
+                + "/api/v1/me/portfolio/analytics/performance-metrics"), HttpMethod.GET, new HttpEntity<>(headers),
                 String.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
-    void clearAll_whenAPropertySaleIsStored_clearsIt() {
+    void clearAll_whenAPropertySaleIsStored_clearsIt() throws java.io.IOException, InterruptedException {
         // Given
         post(SALE).statusCode(200);
 
         // When
-        given().auth().oauth2(generateToken(EMAIL)).post("/portfolio/user/" + EMAIL + "/clear/all").then()
-                .statusCode(200);
+        // Over java.net.http: RestAssured's DELETE throws an NPE in this suite's Groovy dispatch, as its GET does (session 59)
+        java.net.http.HttpResponse<Void> cleared = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(
+                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/me/portfolio"))
+                .header("Authorization", "Bearer " + generateToken(EMAIL)).DELETE().build(), java.net.http.HttpResponse.BodyHandlers.discarding());
+        assertEquals(200, cleared.statusCode());
 
         // Then
         assertEquals(0, rows().size());

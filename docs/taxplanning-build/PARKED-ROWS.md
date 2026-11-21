@@ -31,7 +31,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-089d | PARKED | Salary TDS | The deploy gate | No figure yet; Form 130 needs it |
 | W-089e | PARKED | The un-limited rebate with special-rate income | When a source settles it, else waived at the deploy gate | Refused (row) |
 | W-078j7c | PARKED | The r.280 watch, next run | The deploy gate | A source watch; run before the deploy |
-| W-206 | PARKED | Request DTOs at the five entity-bound endpoints | The deploy gate | No figure at risk (row read, D-445) |
+| W-206 | NOW (D-863: before W-359b) | Request DTOs at the five entity-bound endpoints | The deploy gate | Done (D-866) |
 | W-207 | PARKED | A non-premium's multi-year sum and the spreading row | The deploy gate | Refused (row) |
 | W-208 | PARKED | BSE rate cards | The deploy gate | **Wrong, small:** BSE undercharged about ₹68 per ₹1 crore per side |
 | W-209 | PARKED | The Zerodha AMC tiers and the first-year waiver | The deploy gate | **Wrong, small:** AMC flat ₹300 |
@@ -74,6 +74,12 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 ## Noted
 
 Findings that did not earn a row (D-435).
+
+- **Ideas, not scheduled (owner, 2026-11-21, D-850)** — none earns a row until the owner picks it:
+  - **TOTP MFA** (authenticator app): no extra hosting or frontend; added as a provider on W-358b's standard pieces.
+  - **Passkeys** (WebAuthn): wait for a frontend login page and the final domain (a passkey is bound to its domain).
+  - **Live market prices** and the unrealised P&L they allow; **sector allocation** (needs a sector fact per asset);
+    **benchmark comparison** (e.g. Nifty 50); **charge analytics**; **notifications**; **multi-currency**; **a frontend**.
 
 - 2025 s.266(2)(c) – (g) (s.157 relief, foreign relief, s.206 credit, s.391(2)) are not entered, so the balance can only be too high, never too low (W-089b, D-436); W-089a owns (c).
 - A sold lot no card priced refuses the summary until charges can be entered by code for such assets (W-223 C2a, D-437). A refusal, not a wrong figure, so no row; it needs a decision before the deploy gate.

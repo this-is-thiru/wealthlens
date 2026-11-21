@@ -5,15 +5,13 @@ import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.corporate.entity.model.DemergerDetail;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.shared.dto.model.AuditMetadataDto;
-import com.thiru.wealthlens.shared.dto.model.AuditableResponse;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.Data;
 
 @Data
-public class CorporateActionDto implements AuditableResponse {
+public class CorporateActionDto {
     private String id;
     private String stockCode;
     private String stockName;
@@ -35,8 +33,6 @@ public class CorporateActionDto implements AuditableResponse {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
     private LocalDate allotmentDate;
-
-    private AuditMetadataDto auditMetadata;
 
     @JsonIgnore
     public CorporateActionEntity getAsEntity() {

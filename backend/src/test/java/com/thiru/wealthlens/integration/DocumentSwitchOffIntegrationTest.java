@@ -38,7 +38,7 @@ class DocumentSwitchOffIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(OWNER));
         headers.setContentType(type);
-        return HttpStatus.valueOf(client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + OWNER + path), method,
+        return HttpStatus.valueOf(client.exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), method,
                 new HttpEntity<>(body, headers), String.class).getStatusCode().value());
     }
 

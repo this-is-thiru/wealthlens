@@ -1,0 +1,33 @@
+# WealthLens docs — index
+
+Start here. Every kept doc is listed with what it is for. Anything removed is in git tag **`docs-history-m1`**:
+`git show docs-history-m1:<path>` prints a removed file, `git ls-tree -r --name-only docs-history-m1 docs/` lists them.
+
+## Working on the build (`docs/taxplanning-build/`)
+
+| Doc | What it is |
+|---|---|
+| [`00-START-HERE.md`](taxplanning-build/00-START-HERE.md) | the process: how an item is planned, built, verified and closed |
+| [`CHECKPOINT.md`](taxplanning-build/CHECKPOINT.md) | where the work stands now — read first when resuming |
+| [`STATE.md`](taxplanning-build/STATE.md) | the status board (every item's status), the current position, open owner questions, rules not fully verified |
+| [`DECISIONS.md`](taxplanning-build/DECISIONS.md) | every decision (D-001 …) and blocker (B-001 – B-004); the code cites these rows |
+| [`03-WORK-ITEMS.md`](taxplanning-build/03-WORK-ITEMS.md) | every work item (W-…), done or open; the code cites these ids |
+| [`PARKED-ROWS.md`](taxplanning-build/PARKED-ROWS.md) | parked items with when each comes back, and noted ideas |
+| [`plans/`](taxplanning-build/plans/) | plans of items not yet finished (and two the rule packs cite) |
+| [`01-PRD.md`](taxplanning-build/01-PRD.md), [`02-TECH-SPEC.md`](taxplanning-build/02-TECH-SPEC.md) | product requirements and the tax-planning technical spec |
+| [`04-PROMPTS.md`](taxplanning-build/04-PROMPTS.md) | the session prompts |
+| [`post-deployment-runbook.md`](taxplanning-build/post-deployment-runbook.md) | the deploy runbook for every module (also YouTrack WL-A-2); its run log starts fresh after W-334 |
+| [`sources/`](taxplanning-build/sources/) | the Gazette and official sources every legal figure is taken from (cited by the rule packs) |
+| [`reviews/`](taxplanning-build/reviews/) | the pack review `PackReviewTest` checks, and the law-in-code audit CLAUDE.md §4 refers to |
+| [`tools/`](taxplanning-build/tools/) | scripts: rule-pack relock, Act parsers, the WL-A-2 publisher |
+
+## Design
+
+| Doc | What it is |
+|---|---|
+| [`taxplanning-design/`](taxplanning-design/) | the tax design — the cited source for figures and structure (rule R1); `00-BRIEF.md` first |
+| [`charges-engine/`](charges-engine/), [`trade-ledger/`](trade-ledger/) | the charge engine's and trade ledger's design notes; replaced by module docs in W-357b |
+
+## Coming next
+
+One current doc per module (`docs/modules/…`), written from the code against the final API — W-357b, after the API rebuild (W-358c).

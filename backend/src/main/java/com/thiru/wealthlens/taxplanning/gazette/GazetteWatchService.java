@@ -3,9 +3,12 @@ package com.thiru.wealthlens.taxplanning.gazette;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 /** The owner's side of the Gazette watch: reading its leads and saying where it starts (W-236 C3a, D1a). */
@@ -23,8 +26,10 @@ public class GazetteWatchService {
 
     private final Clock clock;
 
-    public List<GazetteLead> leads() {
-        return leads.findAllByOrderByFoundAtDesc();
+    /** Newest first, the id breaking a tie, a page at a time (W-358c3b, D-861). */
+    public Page<GazetteLead> leads(Pageable pageable) {
+        return leads.findAll(PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "foundAt").and(Sort.by("id"))));
     }
 
     /**

@@ -3,6 +3,7 @@ package com.thiru.wealthlens.portfolio.controller;
 import com.thiru.wealthlens.portfolio.dto.BonusAllotmentCorrectionReport;
 import com.thiru.wealthlens.portfolio.dto.BonusAllotmentDate;
 import com.thiru.wealthlens.portfolio.migration.BonusAllotmentDateCorrection;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * written records who called. One-time: removed once its run is logged for every database (W-150).
  */
 @RequiredArgsConstructor
+@AdminApi
 @RestController
 public class BonusAllotmentDateCorrectionController {
 

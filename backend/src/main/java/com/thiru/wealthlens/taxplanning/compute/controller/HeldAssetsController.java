@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxplanning.compute.controller;
 
+import com.thiru.wealthlens.shared.web.CallerEmail;
+import com.thiru.wealthlens.shared.web.MeApi;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxplanning.compute.HeldAssetsView;
 import com.thiru.wealthlens.taxplanning.compute.HeldAssetsViewService;
@@ -20,7 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** The held lots by term, as JSON and as a workbook (W-262). */
 @RequiredArgsConstructor
-@RequestMapping("/tax/user/{email}/profiles/{profileId}/held-assets")
+@MeApi
+@RequestMapping("/profiles/{profileId}/held-assets")
 @RestController
 public class HeldAssetsController {
 
@@ -30,14 +33,14 @@ public class HeldAssetsController {
     private final HeldAssetsViewService service;
 
     @GetMapping
-    public HeldAssetsView heldAssets(@PathVariable String email, @PathVariable String profileId,
+    public HeldAssetsView heldAssets(@CallerEmail String email, @PathVariable String profileId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Optional<LocalDate> asOf,
             @RequestParam Optional<CapitalGainsInput.Term> term) {
         return service.view(email, profileId, asOf, term);
     }
 
     @GetMapping("/excel")
-    public ResponseEntity<InputStreamResource> heldAssetsWorkbook(@PathVariable String email, @PathVariable String profileId,
+    public ResponseEntity<InputStreamResource> heldAssetsWorkbook(@CallerEmail String email, @PathVariable String profileId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Optional<LocalDate> asOf,
             @RequestParam Optional<CapitalGainsInput.Term> term) {
         HeldAssetsView view = service.view(email, profileId, asOf, term);

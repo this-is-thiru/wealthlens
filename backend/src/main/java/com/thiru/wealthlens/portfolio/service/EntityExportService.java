@@ -24,7 +24,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 
 /**
- * The selective downloads behind {@code POST /portfolio/user/{email}/stocks/download}.
+ * The selective downloads behind {@code POST /api/v1/me/portfolio/stocks/download}.
  *
  * <p>This was three processor classes over an abstract base, each pairing a filename with an
  * entity fetch and a writer. With the writers gone the base class had nothing left to abstract, so

@@ -51,16 +51,16 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
         clock.set("2027-06-01T10:00:00Z");
     }
 
-    private ValidatableResponse raise(String tokenFor, String pathEmail, String text) {
+    private ValidatableResponse raise(String tokenFor, String text) {
         return given().header("Authorization", "Bearer " + generateToken(tokenFor, "USER")).contentType(ContentType.JSON)
                 .body("{\"text\": \"" + text + "\"}")
-                .when().post("/privacy/grievances/user/" + pathEmail).then();
+                .when().post("/api/v1/me/privacy/grievances").then();
     }
 
     private ValidatableResponse answer(String grievanceId, String role, String text) {
         return given().header("Authorization", "Bearer " + generateToken(OWNER, role)).contentType(ContentType.JSON)
                 .body("{\"text\": \"" + text + "\"}")
-                .when().post("/privacy/grievances/" + grievanceId + "/answer").then();
+                .when().post("/api/v1/admin/privacy/grievances/" + grievanceId + "/answer").then();
     }
 
     /** RestAssured's GET fails inside Groovy here, so reads go through the JDK client, as PrivacyNoticeIntegrationTest's do. */
@@ -77,7 +77,7 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
     @Test
     void raise_whenAUserRaisesAGrievance_answersWithTheDatePromisedAndTheContact() {
         // When / Then
-        raise(USER, USER, "My old address is still shown").statusCode(201)
+        raise(USER, "My old address is still shown").statusCode(201)
                 .body("email", equalTo(USER))
                 .body("text", equalTo("My old address is still shown"))
                 .body("receivedAt", equalTo("2027-06-01T10:00:00"))
@@ -87,10 +87,10 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void raise_whenTheTokenIsAnotherUsers_isRefusedAndNothingIsStored() throws IOException, InterruptedException {
-        // When / Then
-        raise(OTHER, USER, "Not mine to raise").statusCode(401);
-        HttpResponse<String> mine = read("/privacy/grievances/user/" + USER, USER, "USER");
+    void raise_whenAnotherUserRaisesOne_storesItAsTheirsAndNotThisUsers() throws IOException, InterruptedException {
+        // When / Then — since W-358c1 the user is the token's (D-855 C4a), so another user's grievance is theirs
+        raise(OTHER, "Not mine to raise").statusCode(201);
+        HttpResponse<String> mine = read("/api/v1/me/privacy/grievances", USER, "USER");
         assertThat(mine.statusCode()).isEqualTo(200);
         assertThat(json(mine).size()).isZero();
     }
@@ -99,27 +99,27 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
     void raise_whenThereIsNoToken_isRefused() {
         // When / Then — only the notice is public
         given().contentType(ContentType.JSON).body("{\"text\": \"anonymous\"}")
-                .when().post("/privacy/grievances/user/" + USER).then().statusCode(401);
+                .when().post("/api/v1/me/privacy/grievances").then().statusCode(401);
     }
 
     @Test
     void raise_whenTheTextIsBlank_isABadRequest() {
         // When / Then
-        raise(USER, USER, " ").statusCode(400);
+        raise(USER, " ").statusCode(400);
     }
 
     @Test
     void unanswered_whenTwoAreOpenAndOneAnswered_listsTheOpenOnesDueSoonestFirst() throws IOException, InterruptedException {
         // Given — received 06-01, 06-02 and 06-03; the first is answered
-        String first = raise(USER, USER, "first").statusCode(201).extract().path("id");
+        String first = raise(USER, "first").statusCode(201).extract().path("id");
         clock.set("2027-06-03T10:00:00Z");
-        raise(OTHER, OTHER, "third").statusCode(201);
+        raise(OTHER, "third").statusCode(201);
         clock.set("2027-06-02T10:00:00Z");
-        raise(USER, USER, "second").statusCode(201);
+        raise(USER, "second").statusCode(201);
         answer(first, "SUPER_USER", "Corrected").statusCode(200);
 
         // When / Then
-        HttpResponse<String> queue = read("/privacy/grievances", OWNER, "SUPER_USER");
+        HttpResponse<String> queue = read("/api/v1/admin/privacy/grievances", OWNER, "SUPER_USER");
         assertThat(queue.statusCode()).isEqualTo(200);
         assertThat(json(queue).findValuesAsString("text")).containsExactly("second", "third");
         assertThat(json(queue).findValuesAsString("respondBy")).containsExactly("2027-07-02T10:00:00", "2027-07-03T10:00:00");
@@ -128,13 +128,13 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
     @Test
     void unanswered_whenNotASuperUser_isForbidden() throws IOException, InterruptedException {
         // When / Then
-        assertThat(read("/privacy/grievances", USER, "USER").statusCode()).isEqualTo(403);
+        assertThat(read("/api/v1/admin/privacy/grievances", USER, "USER").statusCode()).isEqualTo(403);
     }
 
     @Test
     void answer_whenGiven_isReadByItsAuthorWithItsTimeAndASecondAnswerIsRefused() throws IOException, InterruptedException {
         // Given
-        String id = raise(USER, USER, "Please correct my name").statusCode(201).extract().path("id");
+        String id = raise(USER, "Please correct my name").statusCode(201).extract().path("id");
         clock.set("2027-06-20T09:30:00Z");
 
         // When
@@ -144,7 +144,7 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
                 .body("contact", equalTo("privacy@example.com"));
 
         // Then
-        HttpResponse<String> mine = read("/privacy/grievances/user/" + USER, USER, "USER");
+        HttpResponse<String> mine = read("/api/v1/me/privacy/grievances", USER, "USER");
         assertThat(mine.statusCode()).isEqualTo(200);
         assertThat(json(mine).get(0).get("answer").get("text").asString()).isEqualTo("Corrected on 20 June");
         assertThat(json(mine).get(0).get("respondBy").asString()).isEqualTo("2027-07-01T10:00:00");
@@ -155,7 +155,7 @@ class GrievanceIntegrationTest extends AbstractIntegrationTest {
     @Test
     void answer_whenNotASuperUser_isForbidden() {
         // Given
-        String id = raise(USER, USER, "Mine").statusCode(201).extract().path("id");
+        String id = raise(USER, "Mine").statusCode(201).extract().path("id");
 
         // When / Then
         answer(id, "USER", "I answer myself").statusCode(403);

@@ -60,7 +60,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
-                .post("/auth/register")
+                .post("/api/v1/public/auth/register")
                 .then()
                 .statusCode(200)
                 .body(containsString("newuser@test.com"));
@@ -77,7 +77,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .body(body)
                 .when()
-                .post("/auth/register")
+                .post("/api/v1/public/auth/register")
                 .then()
                 .statusCode(400)
                 .body(containsString("role"));
@@ -90,7 +90,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         RegistrationRequest request = registration("plain@test.com");
 
         // WHEN
-        given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then().statusCode(200);
+        given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/register").then().statusCode(200);
 
         // THEN
         assertEquals("USER", storedLogin("plain@test.com").getRoles());
@@ -100,13 +100,13 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
     void login_whenRegistered_tokenCarriesOnlyTheUserRoleAndCannotSeed() {
         // GIVEN
         RegistrationRequest request = registration("signed@test.com");
-        given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then().statusCode(200);
+        given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/register").then().statusCode(200);
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail("signed@test.com");
         loginRequest.setPassword("password123");
 
         // WHEN
-        String token = given().contentType(ContentType.JSON).body(loginRequest).when().post("/auth/login")
+        String token = given().contentType(ContentType.JSON).body(loginRequest).when().post("/api/v1/public/auth/login")
                 .then().statusCode(200).extract().path("access_token");
 
         // THEN — the claims part of the JWT, read without the app's own parser; Spring Security adds FACTOR_PASSWORD,
@@ -114,7 +114,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         String claims = new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), StandardCharsets.UTF_8);
         assertTrue(claims.contains("\"ROLE_USER\""), claims);
         assertEquals(1, claims.split("ROLE_", -1).length - 1, claims);
-        given().header("Authorization", "Bearer " + token).when().post("/charges/seed").then().statusCode(403);
+        given().header("Authorization", "Bearer " + token).when().post("/api/v1/admin/charges/seed").then().statusCode(403);
     }
 
     private RegistrationRequest registration(String email) {
@@ -145,7 +145,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .body(loginRequest)
                 .when()
-                .post("/auth/login")
+                .post("/api/v1/public/auth/login")
                 .then()
                 .statusCode(200)
                 .body("access_token", notNullValue())
@@ -177,7 +177,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword(newPassword);
 
         // WHEN / THEN
-        String url = baseUrl() + "/auth/user/" + email + "/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -207,7 +207,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
-                .post("/auth/register")
+                .post("/api/v1/public/auth/register")
                 .then()
                 .statusCode(400)
                 .body(containsString("already exists"));
@@ -237,7 +237,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .body(loginRequest)
                 .when()
-                .post("/auth/login")
+                .post("/api/v1/public/auth/login")
                 .then()
                 .statusCode(401);
     }
@@ -254,7 +254,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .contentType(ContentType.JSON)
                 .body(loginRequest)
                 .when()
-                .post("/auth/login")
+                .post("/api/v1/public/auth/login")
                 .then()
                 .statusCode(401);
     }
@@ -277,7 +277,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword("newpassword");
 
         // WHEN / THEN
-        String url = baseUrl() + "/auth/user/" + email + "/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -309,7 +309,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword(password);
 
         // WHEN / THEN
-        String url = baseUrl() + "/auth/user/" + email + "/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -339,7 +339,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword("newpassword");
 
         // WHEN / THEN
-        String url = baseUrl() + "/auth/user/" + email + "/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -363,7 +363,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword("newpassword");
 
         // WHEN / THEN
-        String url = baseUrl() + "/auth/user/" + email + "/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -381,7 +381,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         String expiredToken = generateExpiredToken(email, "USER");
 
         // WHEN / THEN
-        String url = baseUrl() + "/transactions/user/" + email;
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(expiredToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -397,7 +397,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         String email = "malformed@test.com";
 
         // WHEN / THEN
-        String url = baseUrl() + "/transactions/user/" + email;
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth("invalid.malformed.token");
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -408,7 +408,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void protectedEndpoint_withWrongUserPath_returns401() {
+    void protectedEndpoint_whenAUserNamesAnotherUser_returns403() {
         // GIVEN
         String email1 = "user1@test.com";
         String email2 = "user2@test.com";
@@ -421,14 +421,30 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
 
         String token = generateToken(email1);
 
-        // WHEN / THEN - user1 tries to access user2's transactions
-        String url = baseUrl() + "/transactions/user/" + email2;
+        // WHEN / THEN - since W-358c1 another user is named only on an admin route (D-855 C3a), which a user's token cannot pass
+        String url = baseUrl() + "/api/v1/admin/portfolio/users/" + email2 + "/stocks";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         RestTemplate rt = createNoErrorRestTemplate();
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
+        assertEquals(403, response.getStatusCode().value());
+    }
+
+    @Test
+    void protectedEndpoint_whenBasicCredentials_returns401() {
+        // Given — a registered user's right password, sent as HTTP Basic instead of signing in (W-361)
+        String email = "basic@test.com";
+        given().contentType(ContentType.JSON).body(registration(email)).when().post("/api/v1/public/auth/register").then().statusCode(200);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(email, "password123");
+
+        // When
+        ResponseEntity<String> response = createNoErrorRestTemplate().exchange(URI.create(baseUrl() + "/api/v1/me/portfolio/transactions"),
+                HttpMethod.GET, new HttpEntity<Void>(headers), String.class);
+
+        // Then
         assertEquals(401, response.getStatusCode().value());
     }
 }

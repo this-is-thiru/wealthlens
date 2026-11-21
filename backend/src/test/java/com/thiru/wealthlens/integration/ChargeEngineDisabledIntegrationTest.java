@@ -42,7 +42,7 @@ class ChargeEngineDisabledIntegrationTest extends AbstractIntegrationTest {
     @Test
     void simulate_whenTheEngineIsDisabled_answers503RatherThan400Or500() {
         // When
-        ResponseEntity<String> response = exchange("/charges/simulate", HttpMethod.POST,
+        ResponseEntity<String> response = exchange("/api/v1/me/charges/simulate", HttpMethod.POST,
                 generateToken(EMAIL), """
                         {"brokerName":"ZERODHA","assetType":"EQUITY","event":"SELL",
                          "transactionDate":"2025-06-10","quantity":100,"price":1000,"exchange":"NSE"}
@@ -62,7 +62,7 @@ class ChargeEngineDisabledIntegrationTest extends AbstractIntegrationTest {
     void readingRecordedChargesStillWorksWhileTheEngineIsDisabled() {
         // When
         ResponseEntity<String> response =
-                exchange("/user-charges/user/" + EMAIL, HttpMethod.GET, generateToken(EMAIL), null);
+                exchange("/api/v1/me/charges/user-charges", HttpMethod.GET, generateToken(EMAIL), null);
 
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());

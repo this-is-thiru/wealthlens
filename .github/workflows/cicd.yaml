@@ -24,6 +24,9 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
+        # The api-collection is checked against the generated spec (ApiCollectionContractIntegrationTest, W-359b)
+        with:
+          submodules: true
 
       - name: Set up JDK 25
         uses: actions/setup-java@v6

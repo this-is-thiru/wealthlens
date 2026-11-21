@@ -50,7 +50,7 @@ public class FinancesIntegrationTest extends AbstractIntegrationTest {
         request.setTimePeriod(12);
 
         // WHEN
-        String url = baseUrl() + "/finances/calculate";
+        String url = baseUrl() + "/api/v1/public/finances/calculate";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -77,7 +77,7 @@ public class FinancesIntegrationTest extends AbstractIntegrationTest {
         request.setTimePeriod(6);
 
         // WHEN
-        String url = baseUrl() + "/finances/calculate";
+        String url = baseUrl() + "/api/v1/public/finances/calculate";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -103,7 +103,7 @@ public class FinancesIntegrationTest extends AbstractIntegrationTest {
         request.setRateOfInterest(8.5);
 
         // WHEN
-        String url = baseUrl() + "/finances/calculate";
+        String url = baseUrl() + "/api/v1/public/finances/calculate";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -127,7 +127,7 @@ public class FinancesIntegrationTest extends AbstractIntegrationTest {
         request.setCalculationType(CalculationType.NONE);
 
         // WHEN
-        String url = baseUrl() + "/finances/calculate";
+        String url = baseUrl() + "/api/v1/public/finances/calculate";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -152,7 +152,7 @@ public class FinancesIntegrationTest extends AbstractIntegrationTest {
         request.setTimePeriod(12);
 
         // WHEN
-        String url = baseUrl() + "/finances/calculate";
+        String url = baseUrl() + "/api/v1/public/finances/calculate";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);

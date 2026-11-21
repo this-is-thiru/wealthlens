@@ -3,6 +3,7 @@ package com.thiru.wealthlens.portfolio.controller;
 import com.thiru.wealthlens.portfolio.dto.AssetsRebuildReport;
 import com.thiru.wealthlens.portfolio.service.AssetsRebuild;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,13 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
  * writes is the one that says so (as D-284, D-575).
  */
 @RequiredArgsConstructor
+@AdminApi
 @RestController
 public class AssetsRebuildController {
 
     private final AssetsRebuild rebuild;
 
     @PreAuthorize("hasRole('SUPER_USER')")
-    @PostMapping("/portfolio/user/{email}/assets/rebuild")
+    @PostMapping("/users/{email}/assets/rebuild")
     public AssetsRebuildReport rebuild(@PathVariable String email,
                                        @RequestParam(defaultValue = "true") boolean dryRun) {
         return rebuild.rebuild(UserMail.from(email), dryRun);

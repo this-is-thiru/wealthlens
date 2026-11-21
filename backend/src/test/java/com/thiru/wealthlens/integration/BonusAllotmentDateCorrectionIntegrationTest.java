@@ -206,7 +206,7 @@ class BonusAllotmentDateCorrectionIntegrationTest extends AbstractIntegrationTes
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "SUPER_USER"))
                 .contentType("application/json")
                 .body("[{\"corporateActionId\": \"" + id + "\", \"allotmentDate\": \"2024-01-22\"}]")
-                .when().post("/corporate-actions/bonus/allotment-dates/correct?dryRun=false")
+                .when().post("/api/v1/admin/portfolio/corporate-actions/bonus/allotment-dates/correct?dryRun=false")
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("actions[0].assets", equalTo(1));
         assertThat(lotDate("bonus")).isEqualTo(ALLOTTED);
         assertThat(mongoTemplate.getCollection("trade_outcomes").find(new Document("_id", "sale")).first()
@@ -222,7 +222,7 @@ class BonusAllotmentDateCorrectionIntegrationTest extends AbstractIntegrationTes
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "USER"))
                 .contentType("application/json")
                 .body("[{\"corporateActionId\": \"" + id + "\", \"allotmentDate\": \"2024-01-22\"}]")
-                .when().post("/corporate-actions/bonus/allotment-dates/correct?dryRun=false")
+                .when().post("/api/v1/admin/portfolio/corporate-actions/bonus/allotment-dates/correct?dryRun=false")
                 .then().statusCode(403);
         assertThat(lotDate("bonus")).isEqualTo(EX_DATE);
     }

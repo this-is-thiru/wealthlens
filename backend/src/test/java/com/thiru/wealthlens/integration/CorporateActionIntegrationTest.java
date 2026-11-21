@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -75,7 +75,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .contentType("application/json")
                 .body("null")
                 .when()
-                .post("/corporate-action/add")
+                .post("/api/v1/admin/corporate-actions")
                 .then()
                 .statusCode(HttpStatus.BAD_REQUEST.value());
     }
@@ -355,10 +355,10 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .contentType("application/json")
                 .body(body)
                 .when()
-                .post("/corporate-action/add")
+                .post("/api/v1/admin/corporate-actions")
                 .then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("message", containsString("'date'"));
+                .body("detail", containsString("'date'"));
 
         assertEquals(0, mongoTemplate.getCollection("corporate_action").countDocuments());
     }
@@ -381,15 +381,15 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         headers.setBearerAuth(token);
 
         // WHEN
-        ResponseEntity<List<Map<String, Object>>> response = createNoErrorRestTemplate().exchange(
-                URI.create(baseUrl() + "/corporate-action/list?ids=" + id), HttpMethod.GET, new HttpEntity<>(headers),
-                new ParameterizedTypeReference<>() {});
+        ResponseEntity<String> response = createNoErrorRestTemplate().exchange(
+                URI.create(baseUrl() + "/api/v1/me/corporate-actions?ids=" + id), HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
-        // THEN
+        // THEN — a page since W-358c3b: the rows are under content
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        Map<String, Object> action = response.getBody().get(0);
-        assertEquals("RELIANCE", action.get("stockCode"));
-        assertFalse(action.containsKey("date"));
+        tools.jackson.databind.JsonNode action = tools.jackson.databind.json.JsonMapper.builder().build().readTree(response.getBody())
+                .get("content").get(0);
+        assertEquals("RELIANCE", action.get("stockCode").asString());
+        assertFalse(action.has("date"));
     }
 
     // ========== HAPPY: addCorporateAction DEMERGER success ==========
@@ -607,10 +607,10 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         CorporateActionEntity saved2 = mongoTemplate.save(existing2);
 
         // WHEN
-        var result = corporateActionService.getCorporateActions(List.of(saved1.getId(), saved2.getId()));
+        var result = corporateActionService.getCorporateActions(List.of(saved1.getId(), saved2.getId()), PageRequest.of(0, 50));
 
         // THEN
-        assertEquals(2, result.size());
+        assertEquals(2, result.getTotalElements());
     }
 
     // ========== HAPPY: getAllCorporateActions ==========
@@ -637,7 +637,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(existing2);
 
         // WHEN
-        List<CorporateActionEntity> result = corporateActionService.getAllCorporateActions();
+        List<CorporateActionEntity> result = corporateActionService.getAllCorporateActions(PageRequest.of(0, 50)).getContent();
 
         // THEN
         assertEquals(2, result.size());
@@ -652,7 +652,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         String id = "some-id";
 
         // WHEN / THEN
-        String url = baseUrl() + "/corporate-action/delete/" + id;
+        String url = baseUrl() + "/api/v1/admin/corporate-actions/" + id;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -679,7 +679,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken("test@example.com", "SUPER_USER");
 
         // WHEN / THEN
-        String url = baseUrl() + "/corporate-action/delete/" + saved.getId();
+        String url = baseUrl() + "/api/v1/admin/corporate-actions/" + saved.getId();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -731,7 +731,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         // WHEN / THEN — a split applies per user and broker (W-213, D-438): this path changed every user's lots
         IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
                 () -> corporateActionService.performCorporateAction(dto));
-        assertTrue(refusal.getMessage().contains("/corporate-action/user/{email}/perform"));
+        assertTrue(refusal.getMessage().contains("/api/v1/me/corporate-actions/perform"));
         assertEquals(100.0, mongoTemplate.findAll(AssetEntity.class).getFirst().getQuantity());
     }
 

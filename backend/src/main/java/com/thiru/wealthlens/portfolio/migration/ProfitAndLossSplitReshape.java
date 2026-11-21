@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
  * entity no longer maps the old ones.
  *
  * <p>Idempotent: a placed side keeps no old field, so a second run — including after one that failed part-way —
- * places only what is left. Run when a {@code SUPER_USER} asks ({@code POST /profit-and-loss/split/reshape}), never at
+ * places only what is left. Run when a {@code SUPER_USER} asks ({@code POST /api/v1/admin/portfolio/profit-and-loss/split/reshape}), never at
  * startup (D-280); the caller is recorded on each document changed. One-time: removed once its run is logged for every
  * database (W-170).
  */

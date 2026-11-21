@@ -74,7 +74,7 @@ public class EntityExportIntegrationTest extends AbstractIntegrationTest {
         request.setSelectedColumns(List.of("stockCode", "stockName", "price", "quantity"));
 
         // WHEN
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/download";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/download";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -116,7 +116,7 @@ public class EntityExportIntegrationTest extends AbstractIntegrationTest {
         request.setSelectedColumns(List.of("stockCode", "stockName", "price", "quantity"));
 
         // WHEN
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/download";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/download";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -145,7 +145,7 @@ public class EntityExportIntegrationTest extends AbstractIntegrationTest {
         request.setSelectedColumns(List.of("stockCode", "stockName", "price", "quantity"));
 
         // WHEN
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/download";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/download";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -174,7 +174,7 @@ public class EntityExportIntegrationTest extends AbstractIntegrationTest {
         request.setSelectedColumns(new ArrayList<>());
 
         // WHEN
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/download";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/download";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -200,7 +200,7 @@ public class EntityExportIntegrationTest extends AbstractIntegrationTest {
         ));
 
         // WHEN
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/download";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/download";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -223,7 +223,7 @@ public class EntityExportIntegrationTest extends AbstractIntegrationTest {
         request.setSelectedColumns(List.of("stockCode", "stockName", "price", "quantity"));
 
         // WHEN
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/download";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/download";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
