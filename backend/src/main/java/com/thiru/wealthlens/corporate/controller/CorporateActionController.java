@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.corporate.controller;
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
-import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
+import com.thiru.wealthlens.corporate.dto.CorporateActionResponse;
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.shared.web.MeApi;
 import java.util.List;
@@ -19,8 +19,8 @@ public class CorporateActionController {
     private final CorporateActionService corporateActionService;
 
     @GetMapping("/{id}")
-    public CorporateActionEntity getCorporateAction(@PathVariable String id) {
-        return corporateActionService.getCorporateActionDetails(id);
+    public CorporateActionResponse getCorporateAction(@PathVariable String id) {
+        return CorporateActionResponse.from(corporateActionService.getCorporateActionDetails(id));
     }
 
     @GetMapping("/list")
@@ -31,7 +31,7 @@ public class CorporateActionController {
     }
 
     @GetMapping("/all")
-    public List<CorporateActionEntity> getAllCorporateActions() {
-        return corporateActionService.getAllCorporateActions();
+    public List<CorporateActionResponse> getAllCorporateActions() {
+        return corporateActionService.getAllCorporateActions().stream().map(CorporateActionResponse::from).toList();
     }
 }

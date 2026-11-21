@@ -2,7 +2,7 @@ package com.thiru.wealthlens.brokercharges.controller;
 
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeReconciliationResponse;
-import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.brokercharges.dto.response.UserChargeResponse;
 import com.thiru.wealthlens.brokercharges.service.ChargeReconciliationService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.shared.web.AdminApi;
@@ -35,8 +35,8 @@ public class UserChargesAdminController {
 
     @PreAuthorize("hasRole('SUPER_USER')")
     @GetMapping("/gaps")
-    public List<UserChargeEntity> gaps(@PathVariable String email) {
-        return userChargeService.findGaps(email);
+    public List<UserChargeResponse> gaps(@PathVariable String email) {
+        return userChargeService.findGaps(email).stream().map(UserChargeResponse::from).toList();
     }
 
     @PreAuthorize("hasRole('SUPER_USER')")

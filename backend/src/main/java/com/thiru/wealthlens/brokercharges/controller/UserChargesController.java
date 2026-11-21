@@ -2,7 +2,7 @@ package com.thiru.wealthlens.brokercharges.controller;
 
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeReconciliationResponse;
-import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.brokercharges.dto.response.UserChargeResponse;
 import com.thiru.wealthlens.brokercharges.service.ChargeReconciliationService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -41,12 +41,12 @@ public class UserChargesController {
      * because guessing which end was meant returns a short list that looks like missing charges.
      */
     @GetMapping
-    public List<UserChargeEntity> history(
+    public List<UserChargeResponse> history(
             @CallerEmail String email,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to,
             @RequestParam(required = false) AssetType assetType) {
-        return userChargeService.findHistory(email, from, to, assetType);
+        return userChargeService.findHistory(email, from, to, assetType).stream().map(UserChargeResponse::from).toList();
     }
 
     /** The contract note for one trade, line by line. */
@@ -63,8 +63,8 @@ public class UserChargesController {
      * card on file, and a warning that scrolls away leaves a portfolio quietly under-costed.
      */
     @GetMapping("/gaps")
-    public List<UserChargeEntity> gaps(@CallerEmail String email) {
-        return userChargeService.findGaps(email);
+    public List<UserChargeResponse> gaps(@CallerEmail String email) {
+        return userChargeService.findGaps(email).stream().map(UserChargeResponse::from).toList();
     }
 
     /**

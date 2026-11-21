@@ -4,14 +4,14 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.ErasureReport;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
-import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
 import com.thiru.wealthlens.portfolio.service.PortfolioQueryService;
 import com.thiru.wealthlens.portfolio.service.TradeCollisionRetry;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.portfolio.service.UserRecordsErasureService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
 import java.util.List;
@@ -97,13 +97,14 @@ public class PortfolioController {
     }
 
     @GetMapping("/all/transactions")
-    public List<TransactionEntity> allTransactions(@CallerEmail String email) {
-        return transactionService.getUserTransactions(UserMail.from(email));
+    public List<TransactionResponse> allTransactions(@CallerEmail String email) {
+        return transactionService.getAllUserTransactions(UserMail.from(email));
     }
 
     @PostMapping("/assets/search")
-    public List<AssetEntity> searchAssets(@CallerEmail String email, @RequestBody BulkGetRequest bulkGetRequest) {
-        return portfolioQueryService.searchAssets(UserMail.from(email), bulkGetRequest.getQueryFilters());
+    public List<AssetResponse> searchAssets(@CallerEmail String email, @RequestBody BulkGetRequest bulkGetRequest) {
+        return portfolioQueryService.searchAssets(UserMail.from(email), bulkGetRequest.getQueryFilters()).stream()
+                .map(asset -> TJsonMapper.copy(asset, AssetResponse.class)).toList();
     }
 
 }

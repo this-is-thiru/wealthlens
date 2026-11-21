@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.brokercharges.controller;
 
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeScheduleDrift;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeScheduleResponse;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeSeedReport;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
@@ -38,16 +39,16 @@ public class ChargeSchedulePublishingController {
      */
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/charge-schedules")
-    public ChargeScheduleEntity publish(@RequestBody ChargeScheduleEntity schedule) {
-        return chargeScheduleService.publish(schedule);
+    public ChargeScheduleResponse publish(@RequestBody ChargeScheduleEntity schedule) {
+        return ChargeScheduleResponse.from(chargeScheduleService.publish(schedule));
     }
 
     /** Withdraws a card without replacing it. Past dates still resolve against it. */
     @PreAuthorize("hasRole('SUPER_USER')")
     @PatchMapping("/charge-schedules/{scheduleCode}/close")
-    public ChargeScheduleEntity close(@PathVariable String scheduleCode,
+    public ChargeScheduleResponse close(@PathVariable String scheduleCode,
                                       @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
-        return chargeScheduleService.close(scheduleCode, endDate);
+        return ChargeScheduleResponse.from(chargeScheduleService.close(scheduleCode, endDate));
     }
 
     /**

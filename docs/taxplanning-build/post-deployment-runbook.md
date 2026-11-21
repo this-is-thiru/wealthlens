@@ -83,6 +83,7 @@ when its run is logged for both. Everything below is the full sequence for a fre
 
 1. §1.j W-358b — refresh tokens; callers sign in again.
 2. §1.i W-358c1 — every route moves under `/api/v1/…`; the notice's version changes.
+3. W-358c2 (D-858) — nothing to run: responses no longer carry `auditMetadata` (and transactions not `idempotencyKey`, `tradeFingerprint`, `submittedAt`, `assetRequest`, `tradeFlow`); a client reading those moves off them.
 
 ## 0. Before deploying
 

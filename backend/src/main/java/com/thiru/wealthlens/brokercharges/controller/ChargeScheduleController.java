@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.brokercharges.controller;
 
-import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
-import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeCatalogueResponse;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeScheduleResponse;
 import com.thiru.wealthlens.brokercharges.service.ChargeCatalogueService;
 import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
@@ -32,13 +32,13 @@ public class ChargeScheduleController {
     private final ChargeCatalogueService chargeCatalogueService;
 
     @GetMapping("/charge-schedules/{scheduleCode}")
-    public ChargeScheduleEntity findByCode(@PathVariable String scheduleCode) {
-        return chargeScheduleService.findByCode(scheduleCode);
+    public ChargeScheduleResponse findByCode(@PathVariable String scheduleCode) {
+        return ChargeScheduleResponse.from(chargeScheduleService.findByCode(scheduleCode));
     }
 
     @GetMapping("/charge-schedules")
-    public List<ChargeScheduleEntity> findByBroker(@RequestParam BrokerName broker) {
-        return chargeScheduleService.findByBroker(broker);
+    public List<ChargeScheduleResponse> findByBroker(@RequestParam BrokerName broker) {
+        return chargeScheduleService.findByBroker(broker).stream().map(ChargeScheduleResponse::from).toList();
     }
 
     /**
@@ -49,12 +49,12 @@ public class ChargeScheduleController {
      * do the checking, rather than leaving it in a document.
      */
     @GetMapping("/charge-schedules/unverified")
-    public List<ChargeScheduleEntity> findUnverified() {
-        return chargeScheduleService.findUnverified();
+    public List<ChargeScheduleResponse> findUnverified() {
+        return chargeScheduleService.findUnverified().stream().map(ChargeScheduleResponse::from).toList();
     }
 
     @GetMapping("/charge-catalogue")
-    public List<ChargeCatalogueEntity> catalogue() {
-        return chargeCatalogueService.findActive();
+    public List<ChargeCatalogueResponse> catalogue() {
+        return chargeCatalogueService.findActive().stream().map(ChargeCatalogueResponse::from).toList();
     }
 }

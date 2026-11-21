@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.brokercharges.controller;
 
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
-import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeAccountResponse;
 import com.thiru.wealthlens.brokercharges.service.AmcChargeService;
 import com.thiru.wealthlens.shared.web.AdminApi;
 import java.time.LocalDate;
@@ -39,10 +39,10 @@ public class AmcCycleController {
      */
     @PreAuthorize("hasRole('SUPER_USER')")
     @GetMapping("/charge-accounts/due")
-    public List<ChargeAccountEntity> amcDue(
+    public List<ChargeAccountResponse> amcDue(
             @RequestParam AmcChargeFrequency frequency,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate billedThrough) {
-        return amcChargeService.findDue(frequency, billedThrough);
+        return amcChargeService.findDue(frequency, billedThrough).stream().map(ChargeAccountResponse::from).toList();
     }
 
     /**
@@ -55,9 +55,9 @@ public class AmcCycleController {
      */
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/amc/impose")
-    public List<ChargeAccountEntity> imposeAmc(
+    public List<ChargeAccountResponse> imposeAmc(
             @RequestParam AmcChargeFrequency frequency,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate billedThrough) {
-        return amcChargeService.runCycle(frequency, billedThrough);
+        return amcChargeService.runCycle(frequency, billedThrough).stream().map(ChargeAccountResponse::from).toList();
     }
 }

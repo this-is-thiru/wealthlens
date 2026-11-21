@@ -173,6 +173,7 @@ Within every module: `controller/` (no business logic) → `service/` (`@Transac
 ## Conventions
 
 - `@RequiredArgsConstructor` for DI; injected fields are `private final`. No hand-written constructors.
+- **No route answers with a stored `@Document`** (W-358c2, `ResponseContractTest`): a response type names its fields, so nothing stored only for the app — `auditMetadata`, internal keys — reaches a caller.
 - Services: `@Service @Log4j2 @Transactional @RequiredArgsConstructor`. Entities: `@Data @AllArgsConstructor @NoArgsConstructor @Document @Field`. DTOs: `@Data @NoArgsConstructor @ToString`; avoid `@Builder` on request DTOs.
 - MongoDB: collections and fields are `snake_case` (`@Document(value = "transactions")`, `@Field("stock_code")`), id via `@MongoId`, entities implement `AuditableEntity` for `AuditMetadata`. Prefer Spring Data derived queries (`findByEmailAndStatus`).
 - REST paths lowercase-hyphenated, under a zone and module (`/api/v1/me/portfolio/…`); a user's own data is reached through `/me`, never an email in the path. Dates `yyyy-MM-dd`, datetimes `yyyy-MM-dd'T'HH:mm:ss` via `@JsonFormat`. All times stored UTC via `TLocalDateTime.atUtc()`.

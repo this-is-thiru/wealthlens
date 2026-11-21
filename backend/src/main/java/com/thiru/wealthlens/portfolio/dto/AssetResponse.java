@@ -6,9 +6,8 @@ import com.thiru.wealthlens.portfolio.dto.charges.AssetCharges;
 import com.thiru.wealthlens.portfolio.dto.charges.ChargeNote;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
-import com.thiru.wealthlens.shared.dto.model.AuditMetadataDto;
-import com.thiru.wealthlens.shared.dto.model.AuditableResponse;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.Instant;
@@ -25,7 +24,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class AssetResponse implements AuditableResponse {
+public class AssetResponse {
 	private String email;
 	private String stockCode;
 	private String stockName;
@@ -65,7 +64,10 @@ public class AssetResponse implements AuditableResponse {
 	 */
 	private Map<String, Long> daysHeld;
 
-	private AuditMetadataDto auditMetadata;
+	private TradeSegment segment;
+	/** This lot's share of its buy's charges, as stored on the lot (W-358c2: kept from the stored shape, C1a). */
+	private double allocatedBuyCharges;
+	private double allocatedBuyMiscCharges;
 
 	/**
 	 * What this holding has cost in charges, on the way in and on the way out.
