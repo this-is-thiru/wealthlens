@@ -76,6 +76,14 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ---
 
+## Next deploy — what prod and staging still need
+
+Both are on `m1.4` (D-849); the app runs locally, nothing is hosted. The next deploy needs only these, in this order; each line goes
+when its run is logged for both. Everything below is the full sequence for a fresh database (W-337).
+
+1. §1.j W-358b — refresh tokens; callers sign in again.
+2. §1.i W-358c1 — every route moves under `/api/v1/…`; the notice's version changes.
+
 ## 0. Before deploying
 
 ### 0.1 Environment · owner · **every deploy**
@@ -876,7 +884,7 @@ From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored 
 
 **A second run** is safe: step 2 reports the network and volume exist, and step 3 reports the name in use — `docker start clamd` instead. `freshclam` inside the container updates the signatures once a day; nothing to run. **Way back:** turn the switch off first (§1.n), then `docker rm -f clamd` and `docker volume rm clam_db`; the scanner stores nothing of ours.
 
-### 1.i W-358c1 (D-855) — every route moves under `/api/v1/{public|me|admin}/{module}` · owner · **first deploy carrying W-358c1**
+### 1.i W-358c1 (D-855, D-856) — every route moves under `/api/v1/{public|me|admin}/{module}` · owner · **first deploy carrying W-358c1**
 
 Nothing in a database changes and nothing runs. **For callers:** every URL moved (the old → new table is `plans/W-358c.md`); an old URL
 answers 403 with a token and 401 without one. A user's own routes take the user from the token and name nobody
