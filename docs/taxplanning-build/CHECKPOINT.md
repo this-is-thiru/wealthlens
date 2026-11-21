@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334d3b done (D-843), close-out written, NOT committed (awaiting owner's "commit it"); then WL-A-2 republish
-Stage           : staging FINISHED and signed off on m1.4 (660 transactions / 431 lots / 130 rows / 8 P&L / 14 logins); m1.4 stopped; staging copies deleted; kept: ~/wealthlens-runs/staging-after-d3b.txt (final fingerprint), prod-before-m14.archive + prod-reference-m14.txt (W-334e), s-*.js scripts
-Done session 112: W-334d3a (D-842, 4d0a67a0) and W-334d3b (D-843): §2, test logins, ITS-22, W-348a/b, §3, compare, owner's look, sign-off, clean-up
-Board           : W-334d —, W-334d1 D, W-334d2 D, W-334d3 —, W-334d3a D, W-334d3b D, W-348a · / W-348b · (done at W-334e), W-334e ·, W-337 ·
-Next step       : on "commit it": stage the four named files, commit, push if asked, publish WL-A-2; then plan W-334e (prod) — carry D-843's three findings for prod
-Open to owner   : "commit it" for W-334d3b; api-collection Buy Stock.yml:68 doc proposal
-Env notes       : jars ../wealthlens-m1.4 (87,816,823) and ../wealthlens-m0 (74,739,166); staging host it-staging.6fu8nvy.mongodb.net; router DNS flaky (6 tries, 30 s apart; grep "records\?"); zsh
-Last verify     : FinishedPlanTest + ./mvnw validate exit 0 (session 112, before 4d0a67a0)
-Last item commit: taxplanning W-334d3a: run §2 on staging and remove its test logins and ITS-22 collections — every write after a backup equal to its count
-Files touched   : docs/taxplanning-build/STATE.md, docs/taxplanning-build/post-deployment-runbook.md, docs/taxplanning-build/plans/W-334d3.md (plus this file)
-Updated         : 2026-11-21, session 112 (W-334d3b run and closed out, uncommitted)
+Item            : W-334e1 done (D-845), close-out written, NOT committed (awaiting owner's "commit it"); then WL-A-2; then plan W-334e2
+Stage           : prod on m1.4 up to the charge engine: encrypted under its own keys, legacy dropped, 13/39/2 cards seeded, owner's password set; m1.4 STOPPED; only reports 73 plain (§2.15, e2); kept in ~/wealthlens-runs/w334c: prod-before-m14.archive + prod-reference-m14.txt (the way back), e1/ (baseline-owner-*, before-1r dump, fingerprints, logs; mode 600), p-*.js (9, prod-guarded)
+Done session 112: staging finished (D-842, D-843); W-334e split (D-844); W-334e1 rows 1 – 15 all go (D-845)
+Board           : W-334e —, W-334e1 D, W-334e2 ·, W-334e3 ·, W-348a · / W-348b ·, W-337 ·
+Next step       : on "commit it": stage the four named files, commit, push if asked, WL-A-2; then plan W-334e2: §2 on prod (W-334c8b Part A / G / H rows with p- copies), first a read of the ten TEST_USER logins (roles ADMIN,USER,TEST_USER 3 + USER,TEST_USER 7) and the test-like codes (s-d3-x1 as p-)
+Open to owner   : "commit it" for W-334e1; api-collection Buy Stock.yml:68 doc proposal
+Env notes       : jars ../wealthlens-m1.4 (87,816,823), ../wealthlens-m0 (74,739,166); prod host cluster0.x6trgen.mongodb.net, db Cluster0, set atlas-24ynrh-shard-0, profile --spring.profiles.active=prod, keys 8d910c6ebabf / f9bf756780af / af38366a5db3; prod WARN malware scan off expected; router DNS flaky (6 tries; grep "records\?"); zsh
+Last verify     : FinishedPlanTest + ./mvnw validate exit 0 (session 112, before 92a51d23)
+Last item commit: taxplanning W-334d3b: finish staging with W-348, §3 and the owner's sign-off — every user's rows rebuilt and ruled, the staging copies deleted
+Files touched   : docs/taxplanning-build/STATE.md, docs/taxplanning-build/post-deployment-runbook.md, docs/taxplanning-build/plans/W-334e1.md (new) (plus this file)
+Updated         : 2026-11-21, session 112 (W-334e1 run and closed out, uncommitted)
 ```
 ## Resume check (run these, compare, then act on "Next step")
 
