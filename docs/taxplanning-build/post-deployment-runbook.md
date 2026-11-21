@@ -78,9 +78,11 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ## Next deploy — what prod and staging still need
 
-Both are on `m1.5` (W-362, D-870, D-871); the app runs locally, nothing is hosted. **Nothing is pending.** An item that needs
+Both are on `m1.5` (W-362, D-870, D-871); the app runs locally, nothing is hosted. An item that needs
 something at the next deploy adds its line here when it is committed; each line goes when its run is logged for both. Everything
 below is the full sequence for a fresh database (W-337).
+
+1. W-358d1 (D-873) — nothing to run: every answer carries `X-Request-Id` (quote it when asking about a request); log lines print it and write emails as `[email]`; new `privacy_processing_log` rows store `request_id` (older rows have none).
 
 ## 0. Before deploying
 

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.privacy;
 
+import com.thiru.wealthlens.shared.web.RequestIdFilter;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -65,6 +66,7 @@ public class ProcessingLogFilter extends OncePerRequestFilter {
         record.setStatus(response.getStatus());
         record.setRemoteAddress(request.getRemoteAddr());
         record.setRecordedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
+        RequestIdFilter.current().ifPresent(record::setRequestId);
         return record;
     }
 

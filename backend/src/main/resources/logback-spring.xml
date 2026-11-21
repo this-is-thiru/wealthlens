@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Spring Boot's console logging, with one change: every PAN-shaped token in a message or a stack trace is written masked, the
-  way Pan.masked() shows it (DR 14 O1.1, O7; D-447 C4a). %nopex stops Logback appending the trace a second time, unmasked.
+  Spring Boot's console logging, with two changes: every PAN-shaped token in a message or a stack trace is written masked, the
+  way Pan.masked() shows it (DR 14 O1.1, O7; D-447 C4a), and every email as [email] (W-358d1, D-873 C1a); the request id
+  (logging.pattern.correlation) ties a line to whom it concerned. %nopex stops Logback appending the trace a second time, unmasked.
   The regex spells its repeats out because Logback's option parser reads braces.
 -->
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}){} %clr(${PID:-}){magenta} %clr(--- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%15.15t] ${LOG_CORRELATION_PATTERN:-}){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %replace(%m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}){'\b([A-Z][A-Z][A-Z])[A-Z][A-Z][0-9][0-9][0-9]([0-9][A-Z])\b', '$1XXXXX$2'}%nopex"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}){} %clr(${PID:-}){magenta} %clr(--- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%15.15t] ${LOG_CORRELATION_PATTERN:-}){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %replace(%replace(%m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}){'\b([A-Z][A-Z][A-Z])[A-Z][A-Z][0-9][0-9][0-9]([0-9][A-Z])\b', '$1XXXXX$2'}){'[A-Za-z0-9._+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z][A-Za-z]+', '[email]'}%nopex"/>
     <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>

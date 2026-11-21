@@ -223,3 +223,8 @@ springdoc:
   model-converters:
     pageable-converter:
       enabled: false
+
+# W-358d1 (D-873): each line served for a request names it by the id its answer carries (RequestIdFilter); a line outside a request names none
+logging:
+  pattern:
+    correlation: "%replace([%X{requestId}] ){'\\[\\] ', ''}"
