@@ -6,7 +6,6 @@ import com.thiru.wealthlens.portfolio.dto.ErasureReport;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.service.PortfolioQueryService;
 import com.thiru.wealthlens.portfolio.service.TradeCollisionRetry;
-import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.portfolio.service.UserRecordsErasureService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -32,7 +31,6 @@ public class PortfolioController {
 
     private final PortfolioQueryService portfolioQueryService;
     private final UserRecordsErasureService userRecordsErasureService;
-    private final TransactionService transactionService;
     private final TradeCollisionRetry tradeCollisionRetry;
 
     @PostMapping("/transaction")
