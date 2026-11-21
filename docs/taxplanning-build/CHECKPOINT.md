@@ -4,19 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : PAUSED by the owner (2026-11-20, late). W-334d3 split (D-841); W-334d3a approved, scripts built and tried, no row run yet
-Stage           : staging consistent after d2 (m1.4, encrypted, cards seeded, app stopped); nothing running; d3a row 1 not run (it creates d3/); kept in ~/wealthlens-runs/w334c: staging-before-m14.archive + staging-reference-m14.txt (the way back), d1/ (owner baseline), d2/, s-*.js (45 staging copies) + s-d3-*.js (5, tried), staging-allotment-dates.json
-Done session 110: session 111: D-828 (table), D-829 (list in yaml, no asset type refused, §3.27, W-354), D-830 (W-353 built); prod counts (owner) in D-829 / plan
-Board           : W-334c8 D, W-334d —, W-334d1 D, W-334d2 D, W-334d3 —, W-334d3a P, W-334d3b ·, W-348a · / W-348b · (done at W-334e), W-334e ·, W-337 ·
-Next step       : on 'resume': resume check; then give W-334d3a row 1 (in the last session's message: env + m1.4 staging start + wl_token, files in d3/); then Part A batched — each step's read-only checks in one block, each write alone after its backup check and a go; plan plans/W-334d3.md, rows from plans/W-334c7b1.md A2 – E4 with s-*.js
-Open to owner   : resume at W-334d3a row 1 (batched); api-collection Buy Stock.yml:68 doc proposal
-Env notes       : jars ../wealthlens-m1.4 (87,816,823) and ../wealthlens-m0 (74,739,166); staging host it-staging.6fu8nvy.mongodb.net, set atlas-12c0g5-shard-0, profile --spring.profiles.active=staging, keys bbf4a26647f6 / c59064f277a6 / 5524e829976b; staging WARN `malware scan is off` expected; prod archives + references kept for W-334e; dev wiped; zsh (setopt null_glob; …); DNS: rerun the line
+Item            : W-334d3a done (D-842), close-out written, NOT committed (awaiting owner's "commit it"); then WL-A-2 republish (runbook changed)
+Stage           : staging after d3a (m1.4 STOPPED; fingerprint d3/staging-after-d3a.txt: transactions 660, assets 431, trade_outcomes 129, P&L 9, user_details 14); kept in ~/wealthlens-runs/w334c: staging-before-m14.archive + staging-reference-m14.txt (the way back), d1/ (owner baseline), d2/, d3/ (backups, mode 600), s-*.js, s-d3-*.js (incl. new read-only s-d3-x1-dummy-stocks.js), staging-allotment-dates.json
+Done session 112: FinishedPlanTest was red on HEAD (W-334d3 '—' + open step 4) — step 4 marked 'not taken under W-334d3', test + validate exit 0; W-334d3a rows 1 – Stop, all go; owner "i" (both test logins removed) and "a" (ASHOKLEYDUMMY left; its §2.8-unplaced sale folded by that user's W-348b + §2.11 in d3b)
+Board           : W-334d3 —, W-334d3a D, W-334d3b ·, W-348a · / W-348b ·, W-334e ·, W-337 ·
+Next step       : on "commit it": stage the four named files + this one, commit, publish WL-A-2; then W-334d3b: give its row 1 (env + m1.4 staging start + wl_token, files in d3/), then Part W (W-334c8b W1 – W11 with s-d3-w*.js; users from W1, test logins gone; expect 129 rows), X, Y, Z
+Open to owner   : "commit it" for W-334d3a; api-collection Buy Stock.yml:68 doc proposal
+Env notes       : jars ../wealthlens-m1.4 (87,816,823) and ../wealthlens-m0 (74,739,166); staging host it-staging.6fu8nvy.mongodb.net, set atlas-12c0g5-shard-0, profile --spring.profiles.active=staging, keys bbf4a26647f6 / c59064f277a6 / 5524e829976b; staging WARN `malware scan is off` expected; router DNS flaky (6 tries, 30 s apart; grep "records\?" — singular "record" for 1); zsh
 Last verify     : W-354: rehearsal x2 on throwaway mongo:8.0.4 (results in D-832); docs only
 Last item commit: taxplanning W-334d3: plan staging's last part and split it into d3a / d3b — §2, the test logins, the held trade and the ITS-22 collections, then W-348, §3 and the sign-off
-Files touched   : none
-Updated         : 2026-11-20 late, session 111 (paused: session limit, owner shutting down)
+Files touched   : docs/taxplanning-build/STATE.md, docs/taxplanning-build/post-deployment-runbook.md, docs/taxplanning-build/plans/W-334d3.md (plus this file)
+Updated         : 2026-11-21, session 112 (W-334d3a run and closed out, uncommitted)
 ```
-
 ## Resume check (run these, compare, then act on "Next step")
 
 ```
