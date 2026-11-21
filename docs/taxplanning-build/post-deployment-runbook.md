@@ -1276,7 +1276,9 @@ an equal allotment date is a no-op. **Way back:** `mongoimport --mode upsert` of
 
 **Removed after use:** W-150 / WL-34, once this is logged for every database with bonus actions.
 
-### 2.5 W-160c (D-365) — remove the term `portfolio` stored on `trade_outcomes` · `SUPER_USER` · **every database · once · outstanding**
+### 2.5 W-160c (D-365) — remove the term `portfolio` stored on `trade_outcomes` · `SUPER_USER` · **retired by W-168 (D-877) · do not run**
+
+> **Retired.** Run on prod (W-334e2: 163, after 0) and staging (W-334d3a: 201, after 0); W-168 removed its route and code. Kept below as the record of what it did.
 
 **Why.** `portfolio` stored a short-term / long-term label (`capital_gains_type`) and its reason
 (`classification_reason`) on each disposal, decided from its own copy of the holding-period law. The term is the tax

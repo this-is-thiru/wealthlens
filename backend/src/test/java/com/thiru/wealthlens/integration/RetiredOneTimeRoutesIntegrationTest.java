@@ -32,6 +32,12 @@ class RetiredOneTimeRoutesIntegrationTest extends AbstractIntegrationTest {
         refuses("/api/v1/admin/portfolio/corporate-actions/bonus/allotment-dates/correct");
     }
 
+    @Test
+    void storedTermRemoval_whenAnAdminPosts_answers404() {
+        // Given / When / Then — W-168, runbook §2.5: the stored term removed on prod (W-334e2, 163) and staging (W-334d3a, 201)
+        refuses("/api/v1/admin/portfolio/trade-outcomes/stored-terms/remove");
+    }
+
     private void refuses(String route) {
         given().header("Authorization", "Bearer " + generateToken(ADMIN, "SUPER_USER")).contentType(ContentType.JSON).body("{}")
                 .when().post(route)
