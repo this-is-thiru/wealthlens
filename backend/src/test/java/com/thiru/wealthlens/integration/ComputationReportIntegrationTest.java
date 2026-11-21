@@ -54,7 +54,7 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
         if (ifMatch != null) {
             headers.set(HttpHeaders.IF_MATCH, ifMatch);
         }
-        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + path), method,
+        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), method,
                 new HttpEntity<>(body, headers), type);
     }
 

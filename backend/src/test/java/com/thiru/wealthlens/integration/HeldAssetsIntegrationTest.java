@@ -54,7 +54,7 @@ class HeldAssetsIntegrationTest extends AbstractIntegrationTest {
         });
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(OWNER));
-        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + OWNER + path), HttpMethod.GET,
+        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), HttpMethod.GET,
                 new HttpEntity<>(null, headers), as);
     }
 
@@ -63,7 +63,7 @@ class HeldAssetsIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(OWNER));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + OWNER + "/profiles"), HttpMethod.POST,
+        client.exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax/profiles"), HttpMethod.POST,
                 new HttpEntity<>("""
                         {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                          "residentialStatus": "RESIDENT", "holdsPortfolio": %s}""".formatted(holdsPortfolio), headers), String.class);

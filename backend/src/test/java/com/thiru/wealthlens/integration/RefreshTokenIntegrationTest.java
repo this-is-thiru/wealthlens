@@ -52,7 +52,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         LoginRequest request = new LoginRequest();
         request.setEmail(EMAIL);
         request.setPassword(PASSWORD);
-        return given().contentType(ContentType.JSON).body(request).when().post("/auth/login").then().extract();
+        return given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/login").then().extract();
     }
 
     private static String body(String refreshToken) {
@@ -60,13 +60,13 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
     }
 
     private ExtractableResponse<Response> refresh(String refreshToken) {
-        return given().contentType(ContentType.JSON).body(body(refreshToken)).when().post("/auth/token/refresh").then().extract();
+        return given().contentType(ContentType.JSON).body(body(refreshToken)).when().post("/api/v1/public/auth/token/refresh").then().extract();
     }
 
     /** Over {@code java.net.http}: RestAssured's GET throws an NPE in this suite's Groovy dispatch (session 59). */
     private static int transactions(String accessToken) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + io.restassured.RestAssured.port
-                + "/transactions/user/" + EMAIL)).header("Authorization", "Bearer " + accessToken).GET().build();
+                + "/api/v1/me/portfolio/transactions")).header("Authorization", "Bearer " + accessToken).GET().build();
         return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
     }
 
@@ -117,7 +117,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
 
         // When
         int status = given().header("Authorization", "Bearer " + generateExpiredToken(EMAIL, "USER")).contentType(ContentType.JSON)
-                .body(body(first)).when().post("/auth/token/refresh").then().extract().statusCode();
+                .body(body(first)).when().post("/api/v1/public/auth/token/refresh").then().extract().statusCode();
 
         // Then
         assertThat(status).isEqualTo(200);
@@ -208,7 +208,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         String first = login().path("refresh_token");
 
         // When
-        int status = given().contentType(ContentType.JSON).body(body(first)).when().post("/auth/logout").then().extract().statusCode();
+        int status = given().contentType(ContentType.JSON).body(body(first)).when().post("/api/v1/public/auth/logout").then().extract().statusCode();
 
         // Then
         assertThat(status).isEqualTo(204);
@@ -223,8 +223,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         String body = "{\"email\":\"" + EMAIL + "\",\"password\":\"" + PASSWORD + "\",\"newPassword\":\"another-password\"}";
 
         // When
-        HttpRequest change = HttpRequest.newBuilder(URI.create("http://localhost:" + io.restassured.RestAssured.port + "/auth/user/" + EMAIL
-                        + "/change/password")).header("Authorization", "Bearer " + signedIn.<String>path("access_token"))
+        HttpRequest change = HttpRequest.newBuilder(URI.create("http://localhost:" + io.restassured.RestAssured.port + "/api/v1/me/auth/change/password")).header("Authorization", "Bearer " + signedIn.<String>path("access_token"))
                 .header("Content-Type", "application/json").PUT(HttpRequest.BodyPublishers.ofString(body)).build();
         int status = HttpClient.newHttpClient().send(change, HttpResponse.BodyHandlers.discarding()).statusCode();
 
@@ -240,7 +239,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         ExtractableResponse<Response> signedIn = login();
         assertThat(signedIn.<String>path("refresh_token")).isNotBlank();
         given().header("Authorization", "Bearer " + signedIn.<String>path("access_token")).when()
-                .post("/privacy/erasure/user/" + EMAIL).then().statusCode(202);
+                .post("/api/v1/me/privacy/erasure").then().statusCode(202);
 
         // When / Then
         assertThat(refresh(signedIn.path("refresh_token")).statusCode()).isEqualTo(401);

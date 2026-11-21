@@ -56,7 +56,7 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse post(String body) {
         return given().auth().oauth2(generateToken(EMAIL)).contentType(ContentType.JSON).body(body)
-                .post("/properties/user/" + EMAIL + "/sales").then();
+                .post("/api/v1/me/portfolio/properties/sales").then();
     }
 
     private List<TradeOutcomeEntity> rows() {
@@ -66,7 +66,7 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
     @Test
     void recordSale_whenNoToken_expected401AndNothingWritten() {
         // When — no Authorization header at all (W-358a: the route was public while AuthConfig's fallback was permitAll)
-        given().contentType(ContentType.JSON).body(SALE).post("/properties/user/" + EMAIL + "/sales").then().statusCode(401);
+        given().contentType(ContentType.JSON).body(SALE).post("/api/v1/me/portfolio/properties/sales").then().statusCode(401);
 
         // Then
         assertTrue(rows().isEmpty());
@@ -158,7 +158,7 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(EMAIL));
         ResponseEntity<String> response = new RestTemplate().exchange(URI.create("http://localhost:" + RestAssured.port
-                + "/analytics/user/" + EMAIL + "/performance-metrics"), HttpMethod.GET, new HttpEntity<>(headers),
+                + "/api/v1/me/portfolio/analytics/performance-metrics"), HttpMethod.GET, new HttpEntity<>(headers),
                 String.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -169,7 +169,7 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
         post(SALE).statusCode(200);
 
         // When
-        given().auth().oauth2(generateToken(EMAIL)).post("/portfolio/user/" + EMAIL + "/clear/all").then()
+        given().auth().oauth2(generateToken(EMAIL)).post("/api/v1/me/portfolio/clear/all").then()
                 .statusCode(200);
 
         // Then

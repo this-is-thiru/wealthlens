@@ -113,7 +113,7 @@ class TradeOutcomeFinancialYearMigrationIntegrationTest extends AbstractIntegrat
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "SUPER_USER"))
-                .when().post("/trade-outcomes/financial-years/rewrite?dryRun=false")
+                .when().post("/api/v1/admin/portfolio/trade-outcomes/financial-years/rewrite?dryRun=false")
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("rows", equalTo(1));
         assertThat(yearOf("june")).isEqualTo("2024-2025");
         assertThat(mongoTemplate.getCollection("trade_outcomes").find(new Document("_id", "june")).first()
@@ -127,7 +127,7 @@ class TradeOutcomeFinancialYearMigrationIntegrationTest extends AbstractIntegrat
 
         // When / Then
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "USER"))
-                .when().post("/trade-outcomes/financial-years/rewrite?dryRun=false").then().statusCode(403);
+                .when().post("/api/v1/admin/portfolio/trade-outcomes/financial-years/rewrite?dryRun=false").then().statusCode(403);
         assertThat(yearOf("june")).isEqualTo("FY2024-25");
     }
 }

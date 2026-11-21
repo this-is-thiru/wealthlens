@@ -50,7 +50,7 @@ class DocumentScanOffIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String aProfile() {
-        client().exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + OWNER + "/profiles"), HttpMethod.POST,
+        client().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax/profiles"), HttpMethod.POST,
                 new HttpEntity<>("""
                         {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                          "residentialStatus": "RESIDENT"}""", headers(MediaType.APPLICATION_JSON)), String.class);
@@ -68,7 +68,7 @@ class DocumentScanOffIntegrationTest extends AbstractIntegrationTest {
         form.add("profileId", profileId);
         form.add("taxYear", "2026");
         form.add("documentType", "FORM_130");
-        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + OWNER + "/documents"), HttpMethod.POST,
+        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax/documents"), HttpMethod.POST,
                 new HttpEntity<>(form, headers(MediaType.MULTIPART_FORM_DATA)), String.class);
     }
 

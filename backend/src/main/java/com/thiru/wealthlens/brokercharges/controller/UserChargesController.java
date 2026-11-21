@@ -6,6 +6,8 @@ import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.service.ChargeReconciliationService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.shared.web.CallerEmail;
+import com.thiru.wealthlens.shared.web.MeApi;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
  * and this one lets the two be compared before anything is cut over.
  */
 @RequiredArgsConstructor
-@RequestMapping("/user-charges/user/{email}")
+@MeApi
+@RequestMapping("/user-charges")
 @RestController
 public class UserChargesController {
 
@@ -39,7 +42,7 @@ public class UserChargesController {
      */
     @GetMapping
     public List<UserChargeEntity> history(
-            @PathVariable String email,
+            @CallerEmail String email,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate to,
             @RequestParam(required = false) AssetType assetType) {
@@ -48,7 +51,7 @@ public class UserChargesController {
 
     /** The contract note for one trade, line by line. */
     @GetMapping("/transaction/{transactionId}")
-    public ChargeBreakdownResponse contractNote(@PathVariable String email, @PathVariable String transactionId) {
+    public ChargeBreakdownResponse contractNote(@CallerEmail String email, @PathVariable String transactionId) {
         return ChargeBreakdownResponse.from(userChargeService.findForTransaction(email, transactionId));
     }
 
@@ -60,7 +63,7 @@ public class UserChargesController {
      * card on file, and a warning that scrolls away leaves a portfolio quietly under-costed.
      */
     @GetMapping("/gaps")
-    public List<UserChargeEntity> gaps(@PathVariable String email) {
+    public List<UserChargeEntity> gaps(@CallerEmail String email) {
         return userChargeService.findGaps(email);
     }
 
@@ -76,7 +79,7 @@ public class UserChargesController {
      * not one.
      */
     @GetMapping("/reconciliation")
-    public ChargeReconciliationResponse reconciliation(@PathVariable String email) {
+    public ChargeReconciliationResponse reconciliation(@CallerEmail String email) {
         return chargeReconciliationService.reconcile(email);
     }
 }

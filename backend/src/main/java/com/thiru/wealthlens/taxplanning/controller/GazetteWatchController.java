@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxplanning.controller;
 
+import com.thiru.wealthlens.shared.web.AdminApi;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteCursor;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteCursorRequest;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteLead;
@@ -12,12 +13,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /** The Gazette watch's leads, and where it starts — the owner's, so {@code SUPER_USER} only (W-236). */
+@AdminApi
 @RestController
-@RequestMapping("/tax-planning/admin")
 @RequiredArgsConstructor
 public class GazetteWatchController {
 

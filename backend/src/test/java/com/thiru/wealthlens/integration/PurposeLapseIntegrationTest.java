@@ -116,7 +116,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         LoginRequest request = new LoginRequest();
         request.setEmail(ANU);
         request.setPassword(PASSWORD);
-        given().contentType(ContentType.JSON).body(request).when().post("/auth/login").then().statusCode(200);
+        given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/login").then().statusCode(200);
     }
 
     private LocalDateTime lastSignedInAt(String email) {
@@ -137,7 +137,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         request.setPrivacyNoticeVersion(privacy.notice().version());
 
         // When
-        given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then().statusCode(200);
+        given().contentType(ContentType.JSON).body(request).when().post("/api/v1/public/auth/register").then().statusCode(200);
 
         // Then
         assertThat(lastSignedInAt(ANU)).isEqualTo(LocalDateTime.parse("2027-06-10T08:00:00"));
@@ -254,7 +254,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         // Given — Anu asked on the day of the lapse; the hold ends a year later
         anAccount(ANU, LocalDateTime.parse("2027-06-10T08:00:00"));
         clock.set("2030-06-10T07:00:00Z");
-        given().header("Authorization", "Bearer " + generateToken(ANU)).when().post("/privacy/erasure/user/" + ANU).then()
+        given().header("Authorization", "Bearer " + generateToken(ANU)).when().post("/api/v1/me/privacy/erasure").then()
                 .statusCode(202);
         clock.set(LAPSES);
 

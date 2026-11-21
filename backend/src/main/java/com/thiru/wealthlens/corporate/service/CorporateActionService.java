@@ -224,7 +224,7 @@ public class CorporateActionService {
         CorporateActionType action = actionWrapper.getType();
         switch (action) {
             case STOCK_SPLIT -> throw new IllegalArgumentException("A stock split applies per user and broker, through"
-                    + " PUT /corporate-action/user/{email}/perform");
+                    + " PUT /api/v1/me/corporate-actions/perform");
             case NAME_OR_SYMBOL_CHANGE -> processNameOrSymbolChange(actionWrapper);
             default -> throw new IllegalArgumentException("Invalid action type" + action);
         }

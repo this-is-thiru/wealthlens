@@ -49,7 +49,7 @@ class TradeExchangeRefusalIntegrationTest extends AbstractIntegrationTest {
             "BROKER CHARGES", "MISC CHARGES", "COMMENTS"};
 
     private static URI uri(String path) {
-        return URI.create("http://localhost:" + RestAssured.port + "/portfolio/user/" + EMAIL + path);
+        return URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/portfolio" + path);
     }
 
     private static RestTemplate restTemplate() {

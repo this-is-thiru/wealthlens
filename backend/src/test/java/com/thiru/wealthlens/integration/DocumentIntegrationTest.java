@@ -68,7 +68,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(caller));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + path), method,
+        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), method,
                 new HttpEntity<>(body, headers), String.class);
     }
 
@@ -86,7 +86,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         form.add("profileId", profile);
         form.add("taxYear", String.valueOf(taxYear));
         form.add("documentType", type);
-        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + caller + "/documents"), HttpMethod.POST,
+        return client().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax/documents"), HttpMethod.POST,
                 new HttpEntity<>(form, headers), String.class);
     }
 

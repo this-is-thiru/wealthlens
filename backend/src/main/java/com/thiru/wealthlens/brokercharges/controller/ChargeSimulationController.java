@@ -3,10 +3,10 @@ package com.thiru.wealthlens.brokercharges.controller;
 import com.thiru.wealthlens.brokercharges.dto.request.ChargeSimulationRequest;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
 import com.thiru.wealthlens.brokercharges.service.ChargeSimulationService;
+import com.thiru.wealthlens.shared.web.MeApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * plenty that was wrong.
  */
 @RequiredArgsConstructor
-@RequestMapping("/charges")
+@MeApi
 @RestController
 public class ChargeSimulationController {
 

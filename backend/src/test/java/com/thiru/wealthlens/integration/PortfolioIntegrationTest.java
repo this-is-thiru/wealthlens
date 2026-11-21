@@ -81,7 +81,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -121,7 +121,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest second = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 3000.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -151,7 +151,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest sell = buildSellRequest(TEST_STOCK_CODE, 5.0, 2600.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -180,7 +180,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest sell = buildSellRequest(TEST_STOCK_CODE, 10.0, 2600.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -219,7 +219,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -252,7 +252,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest request = buildBuyRequest("TEMP_STOCK", "Temp Stock", 5.0, 100.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -274,7 +274,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
         AssetRequest sell = buildSellRequest("NONEXISTENT", 5.0, 100.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -299,7 +299,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // Try to SELL 10 shares
         AssetRequest sell = buildSellRequest(TEST_STOCK_CODE, 10.0, 2100.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -322,7 +322,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
         request.setEmail(TEST_EMAIL_2); // mismatched email
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -342,7 +342,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         request.setTransactionType(TransactionType.BUY);
         // missing stockCode, quantity, price, etc.
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -362,7 +362,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
         request.setAssetType(AssetType.GOLD_BOND);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -387,7 +387,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         request.setAssetType(AssetType.GOLD_BOND);
         request.setMaturityDate(maturityDate);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -415,7 +415,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "RELIANCE", "Reliance Industries",
                 "NSE", "ZERODHA", "EQUITY", 2500.0, 10.0, "BUY");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -450,7 +450,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "not a real xlsx".getBytes());
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -490,7 +490,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "VALID_STOCK", "Valid Stock Corp",
                 "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -528,7 +528,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "SOME_STOCK", "Some Stock Corp",
                 "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -571,7 +571,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setAssetRequest(buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0));
         mongoTemplate.save(temp, "transactions");
 
-        String url = baseUrl() + "/temporary-transactions/user/" + TEST_EMAIL + "/redrive";
+        String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -588,7 +588,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void redriveTemporaryTransactions_noneToRedrive_whenNoTemps_expectedMessage() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/temporary-transactions/user/" + TEST_EMAIL + "/redrive";
+        String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -613,7 +613,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setAssetRequest(null);
         mongoTemplate.save(temp, "transactions");
 
-        String url = baseUrl() + "/temporary-transactions/user/" + TEST_EMAIL + "/redrive";
+        String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -651,7 +651,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setAssetRequest(buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0));
         mongoTemplate.save(temp, "transactions");
 
-        String url = baseUrl() + "/temporary-transactions/user/" + TEST_EMAIL + "/redrive";
+        String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -687,7 +687,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp2.setAssetRequest(null);
         mongoTemplate.save(temp2, "transactions");
 
-        String url = baseUrl() + "/temporary-transactions/user/" + TEST_EMAIL + "/redrive";
+        String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -713,7 +713,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setAssetRequest(buildBuyRequest("REFILTER", "ReFilter Corp", 10.0, 1000.0));
         mongoTemplate.save(temp, "transactions");
 
-        String url = baseUrl() + "/temporary-transactions/user/" + TEST_EMAIL + "/redrive";
+        String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -728,7 +728,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void redriveTemporaryTransactions_unauthenticated_whenNoToken_expected401() {
-        String url = baseUrl() + "/temporary-transactions/user/" + TEST_EMAIL + "/redrive";
+        String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -752,7 +752,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetEntity asset = buildAssetEntity();
         mongoTemplate.save(asset, "assets");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -778,7 +778,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(older, "assets");
         mongoTemplate.save(newer, "assets");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         RestTemplate rt = createRestTemplate();
@@ -796,7 +796,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void getAllStocks_empty_whenNoAssets_expected200AndEmptyList() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -815,7 +815,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetEntity asset = buildAssetEntity();
         mongoTemplate.save(asset, "assets");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stock/" + TEST_STOCK_CODE + "/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stock/" + TEST_STOCK_CODE + "/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -832,7 +832,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void getStockQuantity_stockNotFound_whenNoSuchStock_expected400() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stock/NONEXISTENT/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stock/NONEXISTENT/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -861,7 +861,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         range.setEndDate(LocalDate.now().plusDays(10));
         request.setDateRange(range);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -882,7 +882,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mf.setAssetType(AssetType.MUTUAL_FUND);
         mongoTemplate.save(mf, "assets");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/mfs";
+        String url = baseUrl() + "/api/v1/me/portfolio/mfs";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -912,7 +912,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         txn.setStatus(TransactionStatus.PROCESSED);
         mongoTemplate.save(txn, "transactions");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/clear/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/clear/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -964,7 +964,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(emailOnly(), "charge_accounts");
         mongoTemplate.save(emailOnly(), "lastly_performed_corporate_action");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/clear/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/clear/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -997,7 +997,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetEntity asset = buildAssetEntity();
         mongoTemplate.save(asset, "assets");
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/clear/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/clear/all";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1018,7 +1018,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void getProfitAndLoss_whenCalled_expected200() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/profit-and-loss?financialYear=2025-2026"; // the stored form; another is refused (W-320)
+        String url = baseUrl() + "/api/v1/me/portfolio/profit-and-loss?financialYear=2025-2026"; // the stored form; another is refused (W-320)
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -1045,7 +1045,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // Try a SELL that would consume the entire position
         AssetRequest sell = buildSellRequest(TEST_STOCK_CODE, 10.0, 2600.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1086,7 +1086,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // Sell 15 — should consume all 10 from lot1 + 5 from lot2
         AssetRequest sell = buildSellRequest(TEST_STOCK_CODE, 15.0, 250.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1123,7 +1123,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // Sell exactly 10
         AssetRequest sell = buildSellRequest(TEST_STOCK_CODE, 10.0, 200.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1158,7 +1158,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         range.setEndDate(LocalDate.now().plusYears(1));
         request.setDateRange(range);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1185,7 +1185,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
             excelContent = out.toByteArray();
         }
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -1214,7 +1214,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction/v2";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1246,7 +1246,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         // First BUY some stock via v2
         AssetRequest buyRequest = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
-        String buyUrl = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        String buyUrl = baseUrl() + "/api/v1/me/portfolio/transaction/v2";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1258,7 +1258,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         // Then SELL via v2
         AssetRequest sellRequest = buildSellRequest(TEST_STOCK_CODE, 5.0, 2600.0);
-        String sellUrl = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        String sellUrl = baseUrl() + "/api/v1/me/portfolio/transaction/v2";
         HttpHeaders sellHeaders = new HttpHeaders();
         sellHeaders.setBearerAuth(token);
         sellHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -1287,7 +1287,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
         request.setAssetType(AssetType.GOLD_BOND);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction/v2";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1312,7 +1312,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         request.setAssetType(AssetType.GOLD_BOND);
         request.setMaturityDate(maturityDate);
 
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        String url = baseUrl() + "/api/v1/me/portfolio/transaction/v2";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);

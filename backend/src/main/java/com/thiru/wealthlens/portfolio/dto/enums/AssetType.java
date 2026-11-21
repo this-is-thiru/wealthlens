@@ -17,5 +17,5 @@ public enum AssetType {
      */
     public static final String NOT_A_BROKER_TRADE = "A LAND_OR_BUILDING cannot be recorded as a broker trade: no"
             + " broker card prices it, so its stamp duty, registration and brokerage would be lost from its cost; enter its sale at"
-            + " POST /properties/user/{email}/sales";
+            + " POST /api/v1/me/portfolio/properties/sales";
 }

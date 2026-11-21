@@ -51,7 +51,7 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse rebuild(String query, String role) {
         return given().header("Authorization", "Bearer " + generateToken(ADMIN, role))
-                .when().post("/trade-outcomes/rebuild" + query).then();
+                .when().post("/api/v1/admin/portfolio/trade-outcomes/rebuild" + query).then();
     }
 
     @Test

@@ -91,7 +91,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         card.put("status", "ACTIVE");
         card.put("requiresInstrumentProfile", false);
         card.put("rules", List.of(flatBrokerage(5.0)));
-        assertEquals(200, call(HttpMethod.POST, "/charge-schedules", admin(), card).getStatusCode().value());
+        assertEquals(200, call(HttpMethod.POST, "/api/v1/admin/charges/charge-schedules", admin(), card).getStatusCode().value());
         Map<String, Object> onNse = simulation("DELIVERY", "BUY", 10, 1000, "2025-06-10");
         onNse.put("exchange", "NSE");
         Map<String, Object> onBse = new HashMap<>(onNse);
@@ -115,8 +115,8 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         assertEquals(200, tradeV2(trade("TCS", "INTRADAY", "BUY", 10, 1000, "2025-06-10")).getStatusCode().value());
 
         // When
-        JsonNode recorded = json(get("/user-charges/user/" + EMAIL)).get(0);
-        JsonNode lot = json(get("/portfolio/user/" + EMAIL + "/stocks/all")).get(0);
+        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get(0);
+        JsonNode lot = json(get("/api/v1/me/portfolio/stocks/all")).get(0);
 
         // Then -- recorded on the intraday card, and with authoritative on the lot costs the computed ₹3.92
         assertEquals("ZERODHA_EQ_INTRADAY_2025_04", recorded.get("scheduleCode").asString());
@@ -130,7 +130,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         assertEquals(200, tradeV1(trade("TCS", "INTRADAY", "BUY", 10, 1000, "2025-06-10")).getStatusCode().value());
 
         // When
-        JsonNode recorded = json(get("/user-charges/user/" + EMAIL)).get(0);
+        JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get(0);
 
         // Then -- priced and recorded as intraday; V1 records, but only V2 makes it the cost (W-264b G4)
         assertEquals("ZERODHA_EQ_INTRADAY_2025_04", recorded.get("scheduleCode").asString());
@@ -147,16 +147,16 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         account.put("openedOn", "2025-04-01");
         account.put("amcFrequency", "ANNUALLY");
         account.put("status", "ACTIVE");
-        assertEquals(200, call(HttpMethod.POST, "/charge-accounts/user/" + EMAIL, generateToken(EMAIL), account)
+        assertEquals(200, call(HttpMethod.POST, "/api/v1/me/charges/charge-accounts", generateToken(EMAIL), account)
                 .getStatusCode().value());
-        String cycle = "/charges/amc/impose?frequency=ANNUALLY&billedThrough=2026-03-31";
+        String cycle = "/api/v1/admin/charges/amc/impose?frequency=ANNUALLY&billedThrough=2026-03-31";
 
         // When
         int billed = json(call(HttpMethod.POST, cycle, admin(), null)).size();
         int billedAgain = json(call(HttpMethod.POST, cycle, admin(), null)).size();
 
         // Then -- 300 + 54 = ₹354, and the second run bills nobody
-        JsonNode charge = json(get("/user-charges/user/" + EMAIL)).get(0);
+        JsonNode charge = json(get("/api/v1/me/charges/user-charges")).get(0);
         assertEquals(1, billed);
         assertEquals(0, billedAgain);
         assertMoney(354.0, charge.get("totalCharges").asDouble());
@@ -165,7 +165,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
     @Test
     void simulate_whenNoBrokerCardCoversTheDate_isNotReportedAsResolved() {
         // Given -- the open Zerodha delivery card closed on 1 Jul 2026 with no successor
-        call(HttpMethod.PATCH, "/charge-schedules/ZERODHA_EQ_DELIVERY_2026_06/close?endDate=2026-07-01", admin(), null);
+        call(HttpMethod.PATCH, "/api/v1/admin/charges/charge-schedules/ZERODHA_EQ_DELIVERY_2026_06/close?endDate=2026-07-01", admin(), null);
 
         // When -- a delivery buy on 1 Aug 2026
         JsonNode breakdown = json(simulate(simulation("DELIVERY", "BUY", 10, 1000, "2026-08-01")));
@@ -178,11 +178,11 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
     @Test
     void tradeV2_whenNoBrokerCardCoversTheDate_isListedAsAGap() {
         // Given -- the open Zerodha delivery card closed on 1 Jul 2026 with no successor
-        call(HttpMethod.PATCH, "/charge-schedules/ZERODHA_EQ_DELIVERY_2026_06/close?endDate=2026-07-01", admin(), null);
+        call(HttpMethod.PATCH, "/api/v1/admin/charges/charge-schedules/ZERODHA_EQ_DELIVERY_2026_06/close?endDate=2026-07-01", admin(), null);
         assertEquals(200, tradeV2(trade("TCS", "DELIVERY", "BUY", 10, 1000, "2026-08-01")).getStatusCode().value());
 
         // When
-        JsonNode gaps = json(get("/user-charges/user/" + EMAIL + "/gaps"));
+        JsonNode gaps = json(get("/api/v1/me/charges/user-charges/gaps"));
 
         // Then
         assertEquals(1, gaps.size(), gaps.toString());
@@ -193,7 +193,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
     void simulate_whenNoStatutoryCardCoversTheDate_isReportedAsMissingTheLaw() {
         // Given -- the statutory delivery card closed on 1 Jul 2026 with no successor; the account card, GST on AMC
         // cycles only, is still open
-        call(HttpMethod.PATCH, "/charge-schedules/STATUTORY_EQ_DELIVERY_2025_04/close?endDate=2026-07-01", admin(),
+        call(HttpMethod.PATCH, "/api/v1/admin/charges/charge-schedules/STATUTORY_EQ_DELIVERY_2025_04/close?endDate=2026-07-01", admin(),
                 null);
 
         // When -- a delivery buy on 1 Aug 2026
@@ -208,7 +208,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
     @Test
     void history_whenTheRangeStartsAfterItEnds_answers400NamingBothDates() {
         // When
-        ResponseEntity<String> response = get("/user-charges/user/" + EMAIL + "?from=2026-01-01&to=2025-01-01");
+        ResponseEntity<String> response = get("/api/v1/me/charges/user-charges?from=2026-01-01&to=2025-01-01");
 
         // Then
         assertEquals(400, response.getStatusCode().value());
@@ -226,7 +226,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
 
         // When
         JsonNode sale = null;
-        for (JsonNode row : json(get("/user-charges/user/" + EMAIL))) {
+        for (JsonNode row : json(get("/api/v1/me/charges/user-charges"))) {
             if ("SELL".equals(row.get("event").asString())) {
                 sale = row;
             }

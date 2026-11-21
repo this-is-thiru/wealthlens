@@ -135,8 +135,7 @@ class ProfitAndLossRebuildIntegrationTest extends AbstractIntegrationTest {
 
         // When -- the one-time backfill (§2.8) for every row written before tomorrow
         given().header("Authorization", "Bearer " + generateToken(ADMIN, "SUPER_USER"))
-                .post("/profit-and-loss/v2-figures/backfill?dryRun=false&recordedBefore="
-                        + LocalDateTime.now().plusDays(1).withNano(0))
+                .post("/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?dryRun=false&recordedBefore=" + LocalDateTime.now().plusDays(1).withNano(0))
                 .then().statusCode(200).body("placed", hasSize(0)).body("alreadyCounted", equalTo(2));
 
         // Then -- both sale rows were already in the rebuilt figures (C3a), so nothing moved
@@ -227,7 +226,7 @@ class ProfitAndLossRebuildIntegrationTest extends AbstractIntegrationTest {
     void rebuild_whenAUserAsksForTheirOwn_isForbidden() {
         // When / Then -- the role, not the path, refuses: the user owns the path but is no SUPER_USER
         given().header("Authorization", "Bearer " + generateToken(V2_USER, "USER"))
-                .post("/portfolio/user/" + V2_USER + "/profit-and-loss/rebuild?dryRun=false").then().statusCode(403);
+                .post("/api/v1/admin/portfolio/users/" + V2_USER + "/profit-and-loss/rebuild?dryRun=false").then().statusCode(403);
     }
 
     private void tradeV2Scenario() {
@@ -238,12 +237,12 @@ class ProfitAndLossRebuildIntegrationTest extends AbstractIntegrationTest {
 
     private void post(String email, String path, Map<String, Object> body) {
         given().header("Authorization", "Bearer " + generateToken(email)).contentType(ContentType.JSON).body(body)
-                .post("/portfolio/user/" + email + path).then().statusCode(200);
+                .post("/api/v1/me/portfolio" + path).then().statusCode(200);
     }
 
     private ValidatableResponse rebuild(String email, String query, String role) {
         return given().header("Authorization", "Bearer " + generateToken(ADMIN, role))
-                .post("/portfolio/user/" + email + "/profit-and-loss/rebuild" + query).then();
+                .post("/api/v1/admin/portfolio/users/" + email + "/profit-and-loss/rebuild" + query).then();
     }
 
     private static Map<String, Object> trade(TransactionType type, double quantity, double price, LocalDate date) {

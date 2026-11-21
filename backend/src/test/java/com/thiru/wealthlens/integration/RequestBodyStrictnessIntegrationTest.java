@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class RequestBodyStrictnessIntegrationTest extends AbstractIntegrationTest {
 
     private static final String EMAIL = "strictness@test.com";
-    private static final String EXPORT = "/portfolio/user/" + EMAIL + "/stocks/download";
+    private static final String EXPORT = "/api/v1/me/portfolio/stocks/download";
 
     @Test
     void post_whenTheBodyHasAPropertyTheRequestDoesNotHave_answers400NamingIt() {

@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxplanning.workspace.controller;
 
+import com.thiru.wealthlens.shared.web.CallerEmail;
+import com.thiru.wealthlens.shared.web.MeApi;
 import com.thiru.wealthlens.taxplanning.workspace.DraftConflictException;
 import com.thiru.wealthlens.taxplanning.workspace.importing.SalaryImportDecisions;
 import com.thiru.wealthlens.taxplanning.workspace.importing.SalaryImportPreview;
@@ -20,20 +22,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 /** A salary workbook previewed against a draft (F28; W-133a), then applied as one employment with {@code If-Match} (W-133b). */
 @RequiredArgsConstructor
-@RequestMapping("/tax/user/{email}")
+@MeApi
+@RequestMapping("/drafts/{draftId}/salary-import")
 @RestController
 public class SalaryImportController {
 
     private final SalaryImportService salaryImports;
 
-    @PostMapping(path = "/drafts/{draftId}/salary-import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public SalaryImportPreview preview(@PathVariable String email, @PathVariable String draftId, @RequestParam("file") MultipartFile file)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public SalaryImportPreview preview(@CallerEmail String email, @PathVariable String draftId, @RequestParam("file") MultipartFile file)
             throws IOException {
         return salaryImports.preview(email, draftId, file.getBytes());
     }
 
-    @PostMapping(path = "/drafts/{draftId}/salary-import/apply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> apply(@PathVariable String email, @PathVariable String draftId,
+    @PostMapping(path = "/apply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> apply(@CallerEmail String email, @PathVariable String draftId,
             @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch, @RequestPart("file") MultipartFile file,
             @RequestPart("decisions") SalaryImportDecisions decisions) throws IOException {
         try {

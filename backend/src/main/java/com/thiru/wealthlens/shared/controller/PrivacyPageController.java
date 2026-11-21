@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 /**
  * The privacy notice as a page, public, for a person with a browser and no client: no website or app exists apart from
  * this one, and DPDP Rules r.14(1) and r.9 ask the notice published on one (W-247 C1a). Built from the same settings as
- * {@code GET /privacy/rights}, so the page and the JSON cannot differ. A view, not a response body, so the JSON wrapper
+ * {@code GET /api/v1/public/privacy/rights}, so the page and the JSON cannot differ. A view, not a response body, so the JSON wrapper
  * leaves it alone.
  */
 @Controller

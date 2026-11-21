@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxplanning.erasure.controller;
 
+import com.thiru.wealthlens.shared.web.CallerEmail;
+import com.thiru.wealthlens.shared.web.MeApi;
 import com.thiru.wealthlens.taxplanning.erasure.ErasureReceipt;
 import com.thiru.wealthlens.taxplanning.erasure.ErasureService;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
  * …/computations/{receipt}/report} gives each one's PDF (D-477 C1a, W-123b).
  */
 @RequiredArgsConstructor
+@MeApi
 @RestController
 public class ErasureController {
 
     private final ErasureService service;
 
-    @PostMapping("/tax/user/{email}/profiles/{profileId}/erasure")
+    @PostMapping("/profiles/{profileId}/erasure")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public ErasureReceipt request(@PathVariable String email, @PathVariable String profileId) {
+    public ErasureReceipt request(@CallerEmail String email, @PathVariable String profileId) {
         return service.request(email, profileId);
     }
 }

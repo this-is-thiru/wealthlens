@@ -15,7 +15,7 @@ import org.mockito.quality.Strictness;
 /**
  * Says so at startup when the engine is switched on but has nothing to price with.
  *
- * <p>This is the one deployment mistake that is silent by construction. {@code POST /charges/seed}
+ * <p>This is the one deployment mistake that is silent by construction. {@code POST /api/v1/admin/charges/seed}
  * is a deliberate act since ADR-27, so a fresh database holds no rate cards until somebody asks.
  * Deploy with {@code shadow-recording} or {@code authoritative} on before seeding and every trade
  * resolves {@code NO_SCHEDULE}: nothing errors, nothing fails, the charge is simply zero, and the
@@ -42,7 +42,7 @@ class ChargeReadinessAuditorTest {
 
         try (LogCapture logs = LogCapture.on(ChargeReadinessAuditor.class)) {
             auditor(true, true, false).audit();
-            assertThat(logs.warnings()).anyMatch(m -> m.contains("POST /charges/seed"));
+            assertThat(logs.warnings()).anyMatch(m -> m.contains("POST /api/v1/admin/charges/seed"));
         }
     }
 

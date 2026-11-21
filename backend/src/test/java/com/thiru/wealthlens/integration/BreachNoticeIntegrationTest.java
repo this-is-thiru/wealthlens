@@ -67,7 +67,7 @@ class BreachNoticeIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse superUser(String path, String body) {
         return given().header("Authorization", "Bearer " + generateToken(OWNER, "SUPER_USER")).contentType(ContentType.JSON)
-                .body(body).when().post("/privacy/breach-notices" + path).then();
+                .body(body).when().post("/api/v1/admin/privacy/breach-notices" + path).then();
     }
 
     private String postedToEveryone() {
@@ -78,8 +78,15 @@ class BreachNoticeIntegrationTest extends AbstractIntegrationTest {
     /** RestAssured's GET throws inside Groovy here, so reads go through the JDK client (as in W-237b). */
     private HttpResponse<String> read(String path, String email, String role) throws IOException, InterruptedException {
         return HttpClient.newHttpClient().send(HttpRequest.newBuilder(
-                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/privacy/breach-notices" + path))
+                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/admin/privacy/breach-notices" + path))
                 .header("Authorization", "Bearer " + generateToken(email, role)).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> readOwn(String email) throws IOException, InterruptedException {
+        return HttpClient.newHttpClient().send(HttpRequest.newBuilder(
+                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/me/privacy/breach-notices"))
+                .header("Authorization", "Bearer " + generateToken(email)).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
     }
 
@@ -127,7 +134,7 @@ class BreachNoticeIntegrationTest extends AbstractIntegrationTest {
         given().header("Authorization", "Bearer " + generateToken(ANU)).contentType(ContentType.JSON)
                 .body("{\"text\": " + TEXT + ", \"becameAwareAt\": \"2027-06-10T08:00:00\", \"scope\": \"LISTED\","
                         + " \"emails\": [\"" + ANU + "\"]}")
-                .when().post("/privacy/breach-notices").then().statusCode(403);
+                .when().post("/api/v1/admin/privacy/breach-notices").then().statusCode(403);
     }
 
     @Test
@@ -138,7 +145,7 @@ class BreachNoticeIntegrationTest extends AbstractIntegrationTest {
         clock.set("2027-06-10T12:00:00Z");
 
         // When
-        HttpResponse<String> mine = read("/user/" + ANU, ANU, "USER");
+        HttpResponse<String> mine = readOwn(ANU);
 
         // Then — r.7(1)(a) – (e)
         assertThat(mine.statusCode()).isEqualTo(200);
@@ -154,12 +161,12 @@ class BreachNoticeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void noticesFor_whenTheTokenIsAnotherUsers_isRefused() throws IOException, InterruptedException {
-        // Given
-        postedToEveryone();
+    void report_whenAUserAsks_isRefused() throws IOException, InterruptedException {
+        // Given — since W-358c1 a user reads only their own notices (/me, D-855 C4a); the owner's report is an admin route
+        String id = postedToEveryone();
 
         // When / Then
-        assertThat(read("/user/" + ANU, BALA, "USER").statusCode()).isEqualTo(403);
+        assertThat(read("/" + id + "/report", BALA, "USER").statusCode()).isEqualTo(403);
     }
 
     @Test

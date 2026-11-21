@@ -105,7 +105,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, trade(TransactionType.SELL, 15.0, 150.0, MAR_5));
 
         // When
-        AssetResponse[] rows = get(OWNER, "/portfolio/user/" + OWNER + "/stocks/all", AssetResponse[].class).getBody();
+        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/stocks/all", AssetResponse[].class).getBody();
 
         // Then — one row: quantity 5, average price 5 × 120 / 5 = ₹120
         assertEquals(1, rows.length);
@@ -169,8 +169,8 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         // Given — OTHER holds a lot
         postV2(OTHER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
 
-        // When — OWNER's token on OTHER's path
-        ResponseEntity<String> answer = rest.exchange(URI.create(url("/portfolio/user/" + OTHER + "/stocks/all")),
+        // When — OWNER's token on the admin route that names OTHER (since W-358c1 a user's own route names nobody, D-855)
+        ResponseEntity<String> answer = rest.exchange(URI.create(url("/api/v1/admin/portfolio/users/" + OTHER + "/stocks/all")),
                 HttpMethod.GET, new HttpEntity<>(headers(OWNER)), String.class);
 
         // Then — refused (401 or 403), nothing of OTHER's shown
@@ -187,7 +187,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
 
         // When
-        TransactionResponse[] listed = get(OWNER, "/transactions/user/" + OWNER, TransactionResponse[].class).getBody();
+        TransactionResponse[] listed = get(OWNER, "/api/v1/me/portfolio/transactions", TransactionResponse[].class).getBody();
 
         // Then — three rows, three distinct ids, all OWNER's
         assertEquals(3, listed.length);
@@ -203,7 +203,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, trade(TransactionType.SELL, 15.0, 150.0, MAR_5));
 
         // When
-        ResponseEntity<byte[]> file = rest.exchange(URI.create(url("/portfolio/user/" + OWNER + "/stocks/download")),
+        ResponseEntity<byte[]> file = rest.exchange(URI.create(url("/api/v1/me/portfolio/stocks/download")),
                 HttpMethod.POST, new HttpEntity<>(Map.of("entityName", "assets"), headers(OWNER)), byte[].class);
 
         // Then — one data row whose QUANTITY is 5, as /stocks/all says
@@ -219,7 +219,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void downloadPortfolio_whenAColumnIsUnknown_answers400() {
         // When
-        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/stocks/download",
+        ResponseEntity<String> answer = post(OWNER, "/api/v1/me/portfolio/stocks/download",
                 Map.of("entityName", "assets", "selectedColumns", List.of("quantity", "notAColumn")));
 
         // Then
@@ -280,7 +280,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
 
         // When
-        ResponseEntity<String> cleared = post(OWNER, "/portfolio/user/" + OWNER + "/clear/all", null);
+        ResponseEntity<String> cleared = post(OWNER, "/api/v1/me/portfolio/clear/all", null);
 
         // Then — OWNER has nothing; OTHER keeps the lot of 7 and its transaction
         assertEquals(200, cleared.getStatusCode().value(), cleared.getBody());
@@ -299,7 +299,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         unknownType.put("transactionType", "HOLD");
 
         // When
-        int notJson = post(OWNER, "/portfolio/user/" + OWNER + "/transaction/v2", "{not json").getStatusCode().value();
+        int notJson = post(OWNER, "/api/v1/me/portfolio/transaction/v2", "{not json").getStatusCode().value();
         int word = postV2(OWNER, wordQuantity).getStatusCode().value();
         int unknown = postV2(OWNER, unknownType).getStatusCode().value();
 
@@ -310,7 +310,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void getStockQuantity_whenNothingIsHeld_answers400() {
         // When
-        ResponseEntity<String> answer = get(OWNER, "/portfolio/user/" + OWNER + "/stock/NOPE/all", String.class);
+        ResponseEntity<String> answer = get(OWNER, "/api/v1/me/portfolio/stock/NOPE/all", String.class);
 
         // Then
         assertEquals(400, answer.getStatusCode().value(), answer.getBody());
@@ -319,7 +319,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void searchAssets_whenAFilterNamesAFieldNotAllowed_answers400() {
         // When
-        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/assets/search",
+        ResponseEntity<String> answer = post(OWNER, "/api/v1/me/portfolio/assets/search",
                 Map.of("queryFilters", List.of(Map.of("filterKey", "password", "operation", "EQUALS", "value", "x"))));
 
         // Then
@@ -339,7 +339,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                 return "trades.xlsx";
             }
         });
-        int missing = rest.exchange(URI.create(url("/portfolio/user/" + OWNER + "/upload-transactions")), HttpMethod.POST,
+        int missing = rest.exchange(URI.create(url("/api/v1/me/portfolio/upload-transactions")), HttpMethod.POST,
                 new HttpEntity<>(body, headers), String.class).getStatusCode().value();
 
         // Then
@@ -359,7 +359,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(temp, "transactions");
 
         // When
-        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+        ResponseEntity<String> redriven = post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
 
         // Then — the item failed, and the only transaction is still the temporary one
         assertTrue(redriven.getBody().contains("Failed: 1"), redriven.getBody());
@@ -389,7 +389,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(bad, "transactions");
 
         // When
-        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+        ResponseEntity<String> redriven = post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
 
         // Then — reported as one succeeded, one failed; the buy's 10 are held and its temporary is PROCESSED
         assertTrue(redriven.getBody().contains("Succeeded: 1") && redriven.getBody().contains("Failed: 1"),
@@ -409,7 +409,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(lot, "assets");
 
         // When — OWNER, an ordinary user, calls the former backfill on OWNER's own path
-        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/update", null);
+        ResponseEntity<String> answer = post(OWNER, "/api/v1/me/portfolio/update", null);
 
         // Then — no such route, and OTHER's lot is not rewritten
         assertEquals(404, answer.getStatusCode().value(), answer.getBody());
@@ -423,7 +423,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
 
         // When
-        TransactionEntity[] listed = get(OWNER, "/portfolio/user/" + OWNER + "/all/transactions", TransactionEntity[].class)
+        TransactionEntity[] listed = get(OWNER, "/api/v1/me/portfolio/all/transactions", TransactionEntity[].class)
                 .getBody();
 
         // Then — OWNER's one trade, none of OTHER's
@@ -436,7 +436,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         // Given — ten V1 buys on 5 Jan of 1, 2, … 10 units, posted at once (PS-7): 55 units in all
         ExecutorService pool = Executors.newFixedThreadPool(10);
         List<Callable<Integer>> buys = IntStream.rangeClosed(1, 10)
-                .mapToObj(units -> (Callable<Integer>) () -> post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+                .mapToObj(units -> (Callable<Integer>) () -> post(OWNER, "/api/v1/me/portfolio/transaction",
                         trade(TransactionType.BUY, units, 100.0, JAN_5)).getStatusCode().value())
                 .toList();
 
@@ -495,7 +495,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         bonusRecordedOn(JAN_5);
 
         // When — a V1 buy dated 5 Jan
-        ResponseEntity<String> held = post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+        ResponseEntity<String> held = post(OWNER, "/api/v1/me/portfolio/transaction",
                 trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
 
         // Then
@@ -510,7 +510,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         waiting(trade(TransactionType.BUY, 10.0, 120.0, JAN_5), TradeFlow.V2);
 
         // When
-        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+        ResponseEntity<String> redriven = post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
 
         // Then — a lot per buy: 10 @ 100 and 10 @ 120
         assertTrue(redriven.getBody().contains("Succeeded: 1"), redriven.getBody());
@@ -528,7 +528,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         waiting(trade(TransactionType.SELL, 5.0, 150.0, JAN_5), TradeFlow.V2);
 
         // When
-        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+        ResponseEntity<String> redriven = post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
 
         // Then — nothing was held on 5 Jan: the item fails and the lot keeps 10
         assertTrue(redriven.getBody().contains("Failed: 1"), redriven.getBody());
@@ -542,7 +542,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         waiting(trade(TransactionType.BUY, 10.0, 120.0, JAN_5), null);
 
         // When
-        post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+        post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
 
         // Then — V1 merges it into the same-day lot: one lot of 20 @ (1000 + 1200) / 20 = ₹110
         List<AssetEntity> lots = lotsOf(OWNER);
@@ -555,10 +555,10 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void addTransaction_whenSaleIsDatedBeforeTheOnlyLot_answers400AndChangesNothing() {
         // Given — a V1 lot bought 5 Feb (W-271, G-3; W-264a scenario 8)
-        post(OWNER, "/portfolio/user/" + OWNER + "/transaction", trade(TransactionType.BUY, 10.0, 100.0, FEB_5));
+        post(OWNER, "/api/v1/me/portfolio/transaction", trade(TransactionType.BUY, 10.0, 100.0, FEB_5));
 
         // When — a V1 sale dated 5 Jan
-        ResponseEntity<String> sold = post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+        ResponseEntity<String> sold = post(OWNER, "/api/v1/me/portfolio/transaction",
                 trade(TransactionType.SELL, 5.0, 150.0, JAN_5));
 
         // Then — nothing was held on 5 Jan: 400, the lot keeps 10
@@ -569,7 +569,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void addTransaction_whenALaterLotExists_sellsOnlyLotsHeldOnTheSaleDate() {
         // Given — V1 lots of 10 on 5 Jan, 10 on 5 Feb and 10 on 5 Apr
-        String path = "/portfolio/user/" + OWNER + "/transaction";
+        String path = "/api/v1/me/portfolio/transaction";
         LocalDate apr5 = LocalDate.of(2026, 4, 5);
         post(OWNER, path, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
         post(OWNER, path, trade(TransactionType.BUY, 10.0, 120.0, FEB_5));
@@ -592,7 +592,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, trade(TransactionType.BUY, 10.0, 140.0, JAN_5));
 
         // When — a V1 buy of 10 @ 120 on 5 Jan
-        ResponseEntity<String> bought = post(OWNER, "/portfolio/user/" + OWNER + "/transaction",
+        ResponseEntity<String> bought = post(OWNER, "/api/v1/me/portfolio/transaction",
                 trade(TransactionType.BUY, 10.0, 120.0, JAN_5));
 
         // Then — recorded into the oldest lot: 20 @ (1000 + 1200) / 20 = ₹110; the other keeps 10 @ ₹140
@@ -612,7 +612,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, spouse);
 
         // When
-        AssetResponse[] rows = get(OWNER, "/portfolio/user/" + OWNER + "/stocks/all", AssetResponse[].class).getBody();
+        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/stocks/all", AssetResponse[].class).getBody();
 
         // Then — a row each: Self 10 @ ₹100, Spouse 10 @ ₹200
         assertEquals(2, rows.length, () -> "rows: " + List.of(rows));
@@ -632,7 +632,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, spouse);
 
         // When
-        ResponseEntity<byte[]> file = rest.exchange(URI.create(url("/portfolio/user/" + OWNER + "/stocks/download")),
+        ResponseEntity<byte[]> file = rest.exchange(URI.create(url("/api/v1/me/portfolio/stocks/download")),
                 HttpMethod.POST, new HttpEntity<>(Map.of("entityName", "assets"), headers(OWNER)), byte[].class);
 
         // Then — two data rows, ACCOUNT HOLDER Self and Spouse
@@ -663,7 +663,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void addTransaction_whenFractionalLotsSumBelowTheirTrueTotal_sellsTheWholeHolding() {
         // Given — the same on V1
-        String path = "/portfolio/user/" + OWNER + "/transaction";
+        String path = "/api/v1/me/portfolio/transaction";
         post(OWNER, path, fundTrade(TransactionType.BUY, 0.1, 100.0, JAN_5));
         post(OWNER, path, fundTrade(TransactionType.BUY, 0.7, 100.0, FEB_5));
 
@@ -678,7 +678,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void addTransaction_whenFractionalSaleEmptiesTheLots_leavesNoHolding() {
         // Given — V1 units 0.1 on 5 Jan and 0.2 on 5 Feb (W-274, G-5, PS-5; scenario 10)
-        String path = "/portfolio/user/" + OWNER + "/transaction";
+        String path = "/api/v1/me/portfolio/transaction";
         post(OWNER, path, fundTrade(TransactionType.BUY, 0.1, 100.0, JAN_5));
         post(OWNER, path, fundTrade(TransactionType.BUY, 0.2, 100.0, FEB_5));
 
@@ -723,7 +723,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(residue, "assets");
 
         // When
-        AssetResponse[] rows = get(OWNER, "/portfolio/user/" + OWNER + "/mfs", AssetResponse[].class).getBody();
+        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/mfs", AssetResponse[].class).getBody();
 
         // Then — only the fund actually held (W-274 C2a, PS-11)
         assertEquals(List.of(STOCK), Arrays.stream(rows).map(AssetResponse::getStockCode).toList());
@@ -947,8 +947,8 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         byte[] sheet = edited(workbook(JAN_5, 1, true), q1 -> q1.getRow(1).getCell(1).setCellValue(" " + STOCK));
 
         // When
-        ResponseEntity<String> v1 = post(OWNER, "/portfolio/user/" + OWNER + "/transaction", spaced);
-        ResponseEntity<String> v2 = post(OWNER, "/portfolio/user/" + OWNER + "/transaction/v2", spaced);
+        ResponseEntity<String> v1 = post(OWNER, "/api/v1/me/portfolio/transaction", spaced);
+        ResponseEntity<String> v2 = post(OWNER, "/api/v1/me/portfolio/transaction/v2", spaced);
         ResponseEntity<String> uploaded = upload(OWNER, sheet, "Q1");
 
         // Then — each refused, naming the code; nothing stored
@@ -991,7 +991,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         waiting(trade(TransactionType.BUY, 0.0, 100.0, JAN_5), TradeFlow.V2);
 
         // When
-        ResponseEntity<String> redriven = post(OWNER, "/temporary-transactions/user/" + OWNER + "/redrive", null);
+        ResponseEntity<String> redriven = post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
 
         // Then — failed with the rule's reason; no lot, the temporary stays
         assertTrue(redriven.getBody().contains("Failed: 1"), redriven.getBody());
@@ -1018,8 +1018,8 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void getStocks_whenTheDateRangeIsMissingOrIncomplete_answers400NamingIt() {
         // When — no dateRange at all (scenario 29), and one without its end date
-        ResponseEntity<String> none = post(OWNER, "/portfolio/user/" + OWNER + "/stocks", Map.of());
-        ResponseEntity<String> noEnd = post(OWNER, "/portfolio/user/" + OWNER + "/stocks",
+        ResponseEntity<String> none = post(OWNER, "/api/v1/me/portfolio/stocks", Map.of());
+        ResponseEntity<String> noEnd = post(OWNER, "/api/v1/me/portfolio/stocks",
                 Map.of("dateRange", Map.of("startDate", "2026-01-01")));
 
         // Then
@@ -1031,7 +1031,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void downloadPortfolio_whenNoEntityIsNamed_answers400NamingTheChoices() {
         // When — the body names no entity (scenario 24)
-        ResponseEntity<String> answer = post(OWNER, "/portfolio/user/" + OWNER + "/stocks/download", Map.of());
+        ResponseEntity<String> answer = post(OWNER, "/api/v1/me/portfolio/stocks/download", Map.of());
 
         // Then
         assertEquals(400, answer.getStatusCode().value(), answer.getBody());
@@ -1041,7 +1041,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void addTransaction_whenTwoBuysMergeOnOneDay_recordsBothOrderTimes() {
         // Given — a V1 buy of 10 @ 100 on 5 Jan (W-279, G-4, PS-3; scenario 9)
-        String path = "/portfolio/user/" + OWNER + "/transaction";
+        String path = "/api/v1/me/portfolio/transaction";
         post(OWNER, path, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
 
         // When — another V1 buy of 10 @ 120 on 5 Jan, merged into the same lot
@@ -1062,7 +1062,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         intraday.put("segment", TradeSegment.INTRADAY.name());
 
         // When — a V1 intraday buy
-        ResponseEntity<String> bought = post(OWNER, "/portfolio/user/" + OWNER + "/transaction", intraday);
+        ResponseEntity<String> bought = post(OWNER, "/api/v1/me/portfolio/transaction", intraday);
 
         // Then — recorded as intraday, on the intraday card, not the delivery one
         assertEquals(200, bought.getStatusCode().value(), bought.getBody());
@@ -1076,7 +1076,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     void addTransaction_whenSameDayBuysWereOfDifferentSegments_keepsThemInTwoLots() {
         // Given -- a V1 delivery buy of 10 @ 100 on 5 Jan (W-296, D-593)
         chargeSeederService.seed("integration-test");
-        String path = "/portfolio/user/" + OWNER + "/transaction";
+        String path = "/api/v1/me/portfolio/transaction";
         post(OWNER, path, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
         Map<String, Object> intraday = trade(TransactionType.BUY, 10.0, 120.0, JAN_5);
         intraday.put("segment", TradeSegment.INTRADAY.name());
@@ -1118,7 +1118,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         intraday.put("segment", TradeSegment.INTRADAY.name());
 
         // When — a V1 intraday buy
-        ResponseEntity<String> bought = post(OWNER, "/portfolio/user/" + OWNER + "/transaction", intraday);
+        ResponseEntity<String> bought = post(OWNER, "/api/v1/me/portfolio/transaction", intraday);
 
         // Then — the transaction and the lot say intraday
         assertEquals(200, bought.getStatusCode().value(), bought.getBody());
@@ -1130,7 +1130,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     void addTransaction_whenAnIntradayLotIsSold_recordsTheSaleSegmentOnTheOutcomeRow() {
         // Given -- a V1 intraday buy of 10 on 5 Jan (W-295, D-592)
         chargeSeederService.seed("integration-test");
-        String path = "/portfolio/user/" + OWNER + "/transaction";
+        String path = "/api/v1/me/portfolio/transaction";
         Map<String, Object> buy = trade(TransactionType.BUY, 10.0, 100.0, JAN_5);
         buy.put("segment", TradeSegment.INTRADAY.name());
         post(OWNER, path, buy);
@@ -1276,7 +1276,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     private ResponseEntity<String> postV2(String email, Map<String, Object> body) {
-        return post(email, "/portfolio/user/" + email + "/transaction/v2", body);
+        return post(email, "/api/v1/me/portfolio/transaction/v2", body);
     }
 
     private <T> ResponseEntity<T> get(String email, String path, Class<T> type) {
@@ -1293,7 +1293,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                 return "trades.xlsx";
             }
         });
-        String path = "/portfolio/user/" + email + "/upload-transactions?quarter=" + quarter;
+        String path = "/api/v1/me/portfolio/upload-transactions?quarter=" + quarter;
         return rest.exchange(URI.create(url(path)), HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
     }
 

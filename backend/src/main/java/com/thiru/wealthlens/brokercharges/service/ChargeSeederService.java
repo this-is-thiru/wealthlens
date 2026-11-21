@@ -37,7 +37,7 @@ import tools.jackson.databind.node.ObjectNode;
  * Loads the shipped charge catalogue and rate cards at startup.
  *
  * <h2>It runs when asked, not at startup</h2>
- * {@code POST /charges/seed} is the only caller. Seeding at {@code @PostConstruct} meant a
+ * {@code POST /api/v1/admin/charges/seed} is the only caller. Seeding at {@code @PostConstruct} meant a
  * deployment wrote rate cards as a side effect of booting, in every environment, with no record of
  * who or when — there is no security context during startup, so not one document could name its
  * author. See ADR-27.
@@ -109,7 +109,7 @@ public class ChargeSeederService {
     /**
      * Applies the shipped catalogue, rate cards and scheme profiles, and says what it did.
      *
-     * <p>Called by {@code POST /charges/seed} and by nothing else. It used to run at startup, which
+     * <p>Called by {@code POST /api/v1/admin/charges/seed} and by nothing else. It used to run at startup, which
      * meant a deployment wrote to the database as a side effect of booting — as nobody, since there
      * is no security context at {@code @PostConstruct}, so not one seeded document could say who
      * had written it. Doing it deliberately and as somebody is the whole point (ADR-27).
@@ -180,7 +180,7 @@ public class ChargeSeederService {
                 List<String> differences = difference(onFile, schedule);
                 if (!differences.isEmpty()) {
                     log.warn("Charge schedule {} on file differs from the shipped file {} in {}; "
-                                    + "leaving the stored card alone. GET /charge-schedules/drift lists this.",
+                                    + "leaving the stored card alone. GET /api/v1/admin/charges/charge-schedules/drift lists this.",
                             schedule.getScheduleCode(), file.getFilename(), differences);
                 }
                 skipped.add(schedule.getScheduleCode());

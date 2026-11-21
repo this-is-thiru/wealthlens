@@ -2,6 +2,7 @@ package com.thiru.wealthlens.shared.controller;
 
 import com.thiru.wealthlens.shared.protection.StoredFieldEncryption;
 import com.thiru.wealthlens.shared.protection.StoredFieldEncryptionReport;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,13 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code SUPER_USER} calls it, a dry run first. One-time: removed once its run is logged for every database (W-254).
  */
 @RequiredArgsConstructor
+@AdminApi
 @RestController
 public class StoredFieldEncryptionController {
 
     private final StoredFieldEncryption encryption;
 
     @PreAuthorize("hasRole('SUPER_USER')")
-    @PostMapping("/privacy/stored-fields/encrypt")
+    @PostMapping("/stored-fields/encrypt")
     public StoredFieldEncryptionReport encrypt(@RequestParam(defaultValue = "true") boolean dryRun, Principal principal) {
         return encryption.encrypt(dryRun, principal.getName());
     }

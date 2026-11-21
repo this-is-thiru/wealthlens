@@ -58,19 +58,19 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(generateToken(caller));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/tax/user/" + path), method,
+        return client.exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax" + path), method,
                 new HttpEntity<>(body, headers), String.class);
     }
 
     private String createdProfileId() {
-        assertThat(call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile(PAN)).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(call(HttpMethod.POST, OWNER, "/profiles", profile(PAN)).getStatusCode()).isEqualTo(HttpStatus.OK);
         return mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
     }
 
     @Test
     void create_whenWellFormed_storesThePanAndShowsItMasked() {
         // When
-        ResponseEntity<String> created = call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile(PAN));
+        ResponseEntity<String> created = call(HttpMethod.POST, OWNER, "/profiles", profile(PAN));
 
         // Then
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -83,22 +83,22 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     @Test
     void create_whenAnAccountHoldsSeveralProfiles_keepsThemAll() {
         // Given — D-046 B2: self, a HUF, family
-        call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile(PAN));
+        call(HttpMethod.POST, OWNER, "/profiles", profile(PAN));
 
         // When
-        call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile("PQRST5678K"));
+        call(HttpMethod.POST, OWNER, "/profiles", profile("PQRST5678K"));
 
         // Then
-        assertThat(call(HttpMethod.GET, OWNER, OWNER + "/profiles", null).getBody()).contains("ABCXXXXX4F", "PQRXXXXX8K");
+        assertThat(call(HttpMethod.GET, OWNER, "/profiles", null).getBody()).contains("ABCXXXXX4F", "PQRXXXXX8K");
     }
 
     @Test
     void create_whenThePanIsTaken_expected400WithItMaskedInTheResponseAndTheLog(CapturedOutput output) {
         // Given
-        call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile(PAN));
+        call(HttpMethod.POST, OWNER, "/profiles", profile(PAN));
 
         // When
-        ResponseEntity<String> again = call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile(PAN));
+        ResponseEntity<String> again = call(HttpMethod.POST, OWNER, "/profiles", profile(PAN));
 
         // Then
         assertThat(again.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -109,7 +109,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     @Test
     void create_whenThePanIsMalformed_expected400AndNothingStored() {
         // When
-        ResponseEntity<String> refused = call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile("abcde1234f"));
+        ResponseEntity<String> refused = call(HttpMethod.POST, OWNER, "/profiles", profile("abcde1234f"));
 
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -129,8 +129,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         });
 
         // When
-        ResponseEntity<String> response = client.getForEntity(URI.create("http://localhost:" + RestAssured.port + "/tax/user/"
-                + OWNER + "/profiles/" + id), String.class);
+        ResponseEntity<String> response = client.getForEntity(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/tax/profiles/" + id), String.class);
 
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(401);
@@ -138,15 +137,17 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void anyRoute_whenAnotherAccountCalls_isRefused() {
+    void anyRoute_whenAnotherAccountCalls_seesNoneOfTheOwnersProfiles() {
         // Given
         String id = createdProfileId();
 
-        // When / Then — their own token, the owner's path
-        assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles", null).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles/" + id, null).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(call(HttpMethod.GET, OTHER, OWNER + "/profiles/" + id + "/employers", null).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
+        // When — their own token; since W-358c1 a /me path names nobody, so the account reads only its own (D-855 C4a)
+        ResponseEntity<String> listed = call(HttpMethod.GET, OTHER, "/profiles", null);
+
+        // Then
+        assertThat(listed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(listed.getBody()).isEqualTo("[]");
+        assertThat(call(HttpMethod.GET, OTHER, "/profiles/" + id + "/employers", null).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -155,8 +156,8 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         String id = createdProfileId();
 
         // When / Then — the path is theirs, the profile is not
-        assertThat(call(HttpMethod.GET, OTHER, OTHER + "/profiles/" + id, null).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(call(HttpMethod.POST, OTHER, OTHER + "/profiles/" + id + "/lenders",
+        assertThat(call(HttpMethod.GET, OTHER, "/profiles/" + id, null).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(call(HttpMethod.POST, OTHER, "/profiles/" + id + "/lenders",
                 "{\"name\": \"HDFC\", \"kind\": \"BANK\"}").getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
@@ -178,7 +179,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     @MethodSource("references")
     void reference_whenCreatedAndReplaced_isReadBack(String kind, String body, String name) {
         // Given
-        String path = OWNER + "/profiles/" + createdProfileId() + "/" + kind;
+        String path = "/profiles/" + createdProfileId() + "/" + kind;
 
         // When
         ResponseEntity<String> created = call(HttpMethod.POST, OWNER, path, body);
@@ -194,7 +195,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     @Test
     void landlord_whenRead_showsItsPanMasked() {
         // Given
-        String path = OWNER + "/profiles/" + createdProfileId() + "/landlords";
+        String path = "/profiles/" + createdProfileId() + "/landlords";
         call(HttpMethod.POST, OWNER, path, "{\"name\": \"Ravi\", \"pan\": \"PQRST5678K\"}");
 
         // When / Then
@@ -205,7 +206,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     @Test
     void lender_whenStoredWithAndWithoutAnAddress_readsItBackOrNone() {
         // Given
-        String path = OWNER + "/profiles/" + createdProfileId() + "/lenders";
+        String path = "/profiles/" + createdProfileId() + "/lenders";
         call(HttpMethod.POST, OWNER, path, "{\"name\": \"HDFC\", \"kind\": \"BANK\"}");
 
         // When
@@ -229,15 +230,15 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     @Test
     void employer_whenTheTanIsTakenInTheProfile_expected400ButAnotherProfileMayHoldIt() {
         // Given
-        String path = OWNER + "/profiles/" + createdProfileId() + "/employers";
+        String path = "/profiles/" + createdProfileId() + "/employers";
         String body = "{\"name\": \"Acme\", \"tan\": \"BLRA12345B\", \"type\": \"PRIVATE\"}";
         call(HttpMethod.POST, OWNER, path, body);
 
         // When
         ResponseEntity<String> again = call(HttpMethod.POST, OWNER, path, body);
-        call(HttpMethod.POST, OWNER, OWNER + "/profiles", profile("PQRST5678K"));
+        call(HttpMethod.POST, OWNER, "/profiles", profile("PQRST5678K"));
         String secondId = mongoTemplate.findAll(TaxpayerProfile.class).get(1).getId();
-        ResponseEntity<String> elsewhere = call(HttpMethod.POST, OWNER, OWNER + "/profiles/" + secondId + "/employers", body);
+        ResponseEntity<String> elsewhere = call(HttpMethod.POST, OWNER, "/profiles/" + secondId + "/employers", body);
 
         // Then — D-046 B5: per account's profile, not shared
         assertThat(again.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -254,7 +255,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     void save_whenAProfileAndItsReferencesAreStored_holdsNoPersonalDataInTheClear() {
         // Given
         String profileId = createdProfileId();
-        String path = OWNER + "/profiles/" + profileId + "/";
+        String path = "/profiles/" + profileId + "/";
 
         // When
         call(HttpMethod.POST, OWNER, path + "family-members", """
@@ -288,9 +289,9 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         String profileId = createdProfileId();
 
         // When
-        call(HttpMethod.GET, OWNER, OWNER + "/profiles/" + profileId, null);
-        call(HttpMethod.GET, OWNER, OWNER + "/profiles/" + profileId + "/family-members", null);
-        call(HttpMethod.GET, OWNER, OWNER + "/profiles/" + profileId + "/employers", null);
+        call(HttpMethod.GET, OWNER, "/profiles/" + profileId, null);
+        call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/family-members", null);
+        call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/employers", null);
 
         // Then — DR 14 O1.1, O4: the two reads that carry special-category data, and only those
         assertThat(mongoTemplate.findAll(AccessRecord.class))

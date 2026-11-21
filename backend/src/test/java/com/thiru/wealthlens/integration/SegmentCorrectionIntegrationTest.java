@@ -140,9 +140,9 @@ class SegmentCorrectionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void correct_whenAskedOverHttp_isForSuperUsersOnly() {
         given().header("Authorization", "Bearer " + generateToken(USER, "USER"))
-                .post("/transactions/segment/correct").then().statusCode(403);
+                .post("/api/v1/admin/portfolio/transactions/segment/correct").then().statusCode(403);
         given().header("Authorization", "Bearer " + generateToken("admin@example.com", "SUPER_USER"))
-                .post("/transactions/segment/correct").then().statusCode(200);
+                .post("/api/v1/admin/portfolio/transactions/segment/correct").then().statusCode(200);
     }
 
     private void intradayRoundTripStoredAsDelivery() {

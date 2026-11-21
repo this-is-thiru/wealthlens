@@ -40,7 +40,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * The dry run behind {@code POST /charges/simulate}.
+ * The dry run behind {@code POST /api/v1/me/charges/simulate}.
  *
  * <p>It exists so the engine can be exercised — from the API collection, from a UI asking "what
  * will this cost?" — without writing a charge to anybody's history. That is the property most worth

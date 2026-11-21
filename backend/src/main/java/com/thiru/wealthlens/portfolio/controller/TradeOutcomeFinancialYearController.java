@@ -2,6 +2,7 @@ package com.thiru.wealthlens.portfolio.controller;
 
 import com.thiru.wealthlens.portfolio.dto.FinancialYearRewriteReport;
 import com.thiru.wealthlens.portfolio.migration.TradeOutcomeFinancialYearMigration;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * records who called. One-time: removed once its prod run is logged (W-088u9d, YouTrack WL-32).
  */
 @RequiredArgsConstructor
+@AdminApi
 @RestController
 public class TradeOutcomeFinancialYearController {
 

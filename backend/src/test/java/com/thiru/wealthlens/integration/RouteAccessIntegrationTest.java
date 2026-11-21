@@ -16,27 +16,25 @@ import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.server.PathContainer;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import org.springframework.web.util.pattern.PathPattern;
-import org.springframework.web.util.pattern.PathPatternParser;
 
 /**
- * Every route the application serves, read from Spring's own route table, against the access rules (W-358a, D-850): a route
- * not named public refuses a caller without a token, and a route naming a user in its path refuses another user's token. A
- * route added later is in the table and so in this test, which is the point — an unlisted path must never open by accident,
- * as {@code POST /properties/user/{email}/sales} did while the fallback was {@code permitAll}.
+ * Every route the application serves, read from Spring's own route table, against the zones (W-358a, D-850, D-855): a route sits in
+ * exactly one of `/api/v1/{public|me|admin}/` (or is the notice page or the error page); outside public it refuses a caller without a
+ * token; an admin route refuses a user's token; a `/me` route never names a user, so it cannot reach another user's data. A route added
+ * later is in the table and so in this test, which is the point — an unlisted path must never open by accident, as
+ * {@code POST /properties/user/{email}/sales} did while the fallback was {@code permitAll}.
  */
 class RouteAccessIntegrationTest extends AbstractIntegrationTest {
 
-    /** Public by name in {@code AuthConfig}; every other route needs a login. */
-    private static final List<PathPattern> PUBLIC = parse("/auth/login", "/auth/register", "/helper/**", "/finances/**",
-            "/template/**", "/privacy/rights", "/privacy", "/error", "/auth/token/refresh", "/auth/logout");
+    private static final String PUBLIC = "/api/v1/public/";
+    private static final String ME = "/api/v1/me/";
+    private static final String ADMIN = "/api/v1/admin/";
 
-    private static final String OWNER = "owner-of-the-path@example.com";
-    private static final String INTRUDER = "someone-else@example.com";
+    /** Outside the zones by D-855 C5a: the notice as a page, and where a refusal is rendered. */
+    private static final Set<String> OUTSIDE_THE_ZONES = Set.of("/privacy", "/error");
 
     @Autowired
     @Qualifier("requestMappingHandlerMapping")
@@ -45,31 +43,25 @@ class RouteAccessIntegrationTest extends AbstractIntegrationTest {
     private record Route(RequestMethod method, String pattern) {
 
         String path() {
-            return path(OWNER);
-        }
-
-        String path(String user) {
-            return pattern.replace("{email}", user).replaceAll("\\{[^}]+}", "x");
-        }
-
-        boolean namesAUser() {
-            return pattern.contains("{email}");
+            return pattern.replaceAll("\\{[^}]+}", "x");
         }
 
         boolean isPublic() {
-            PathContainer path = PathContainer.parsePath(pattern);
-            return PUBLIC.stream().anyMatch(p -> p.matches(path));
+            return pattern.startsWith(PUBLIC) || OUTSIDE_THE_ZONES.contains(pattern);
+        }
+
+        boolean isAdmin() {
+            return pattern.startsWith(ADMIN);
+        }
+
+        boolean isMe() {
+            return pattern.startsWith(ME);
         }
 
         @Override
         public String toString() {
             return method + " " + pattern;
         }
-    }
-
-    private static List<PathPattern> parse(String... patterns) {
-        PathPatternParser parser = new PathPatternParser();
-        return java.util.Arrays.stream(patterns).map(parser::parse).toList();
     }
 
     private List<Route> routes() {
@@ -129,11 +121,32 @@ class RouteAccessIntegrationTest extends AbstractIntegrationTest {
         List<String> names = routes().stream().map(Route::toString).toList();
 
         // Then
-        assertThat(names).contains("POST /properties/user/{email}/sales", "POST /auth/login", "GET /portfolio/user/{email}/stocks/all");
+        assertThat(names).contains("POST /api/v1/me/portfolio/properties/sales", "POST /api/v1/public/auth/login",
+                "GET /api/v1/me/portfolio/stocks/all", "GET /api/v1/admin/portfolio/users/{email}/stocks/all");
     }
 
     @Test
-    void everyRoute_whenCalledWithoutAToken_refusesUnlessNamedPublic() {
+    void everyRoute_whenReadFromTheRouteTable_sitsInOneZone() {
+        // When
+        List<String> outside = routes().stream().filter(route -> !route.isPublic() && !route.isMe() && !route.isAdmin())
+                .map(Route::toString).toList();
+
+        // Then — a controller without a zone annotation, or in a module ApiZones does not name, lands here
+        assertThat(outside).as("routes outside /api/v1/{public|me|admin}/ and not named in D-855 C5a").isEmpty();
+    }
+
+    @Test
+    void everyMeRoute_whenReadFromTheRouteTable_namesNoUser() {
+        // When
+        List<String> naming = routes().stream().filter(Route::isMe).filter(route -> route.pattern().contains("{email}"))
+                .map(Route::toString).toList();
+
+        // Then — the user of a /me route is the token's (D-855 C4a)
+        assertThat(naming).as("/me routes that take a user from the path").isEmpty();
+    }
+
+    @Test
+    void everyRoute_whenCalledWithoutAToken_refusesUnlessPublic() {
         // Given
         List<String> open = new ArrayList<>();
 
@@ -146,7 +159,7 @@ class RouteAccessIntegrationTest extends AbstractIntegrationTest {
         }
 
         // Then
-        assertThat(open).as("routes that answered without a token but are not named public in AuthConfig").isEmpty();
+        assertThat(open).as("routes that answered without a token but are not public").isEmpty();
     }
 
     @Test
@@ -166,27 +179,27 @@ class RouteAccessIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void everyRouteNamingAUser_whenCalledWithAnotherUsersToken_refuses() {
+    void everyAdminRoute_whenCalledWithAUsersToken_isForbidden() {
         // Given
-        String intruder = generateToken(INTRUDER);
+        String user = generateToken("an-ordinary-user@example.com");
         List<String> reached = new ArrayList<>();
 
         // When
         for (Route route : routes()) {
-            if (route.namesAUser()) {
-                Answer answer = call(route, intruder);
-                if (!answer.refusedForTheToken() && answer.status() != 403) {
+            if (route.isAdmin()) {
+                Answer answer = call(route, user);
+                if (answer.status() != 403) {
                     reached.add(route + " answered " + answer.status());
                 }
             }
         }
 
         // Then
-        assertThat(reached).as("routes that let one user's token reach another user's path").isEmpty();
+        assertThat(reached).as("admin routes that a user's token was not refused on").isEmpty();
     }
 
     @Test
-    void everyRouteNamingAUser_whenCalledWithItsOwnUsersToken_isNotRefusedForTheToken() {
+    void everyMeRoute_whenCalledWithAUsersToken_isNotRefusedForTheToken() {
         // Given — a fresh user per route: an erasure route puts its user on hold, after which that user's token is refused
         // by design (W-237d), and would otherwise refuse every route the loop reaches after it
         List<String> refused = new ArrayList<>();
@@ -194,15 +207,39 @@ class RouteAccessIntegrationTest extends AbstractIntegrationTest {
 
         // When
         for (Route route : routes()) {
-            if (route.namesAUser()) {
+            if (route.isMe()) {
                 String user = "owner-" + next++ + "@example.com";
-                if (call(route, route.path(user), generateToken(user)).refusedForTheToken()) {
+                if (call(route, generateToken(user)).refusedForTheToken()) {
                     refused.add(route.toString());
                 }
             }
         }
 
         // Then
-        assertThat(refused).as("routes that refused their own user's token").isEmpty();
+        assertThat(refused).as("/me routes that refused their own user's token").isEmpty();
+    }
+
+    @Test
+    void meRoute_whenTwoUsersHoldData_answersOnlyTheCallersOwn() throws IOException, InterruptedException {
+        // Given — a grievance each
+        raise("anu@example.com", "Anu's");
+        raise("bala@example.com", "Bala's");
+
+        // When
+        HttpResponse<String> anu = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(RestAssured.baseURI + ":"
+                + RestAssured.port + ME + "privacy/grievances")).header("Authorization", "Bearer " + generateToken("anu@example.com"))
+                .GET().build(), HttpResponse.BodyHandlers.ofString());
+
+        // Then
+        assertThat(anu.statusCode()).isEqualTo(200);
+        assertThat(anu.body()).contains("Anu's").doesNotContain("Bala's");
+    }
+
+    private void raise(String email, String text) throws IOException, InterruptedException {
+        HttpResponse<String> raised = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(RestAssured.baseURI + ":"
+                + RestAssured.port + ME + "privacy/grievances")).header("Authorization", "Bearer " + generateToken(email))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("{\"text\": \"" + text + "\"}"))
+                .build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(raised.statusCode()).as(raised.body()).isEqualTo(201);
     }
 }

@@ -6,8 +6,7 @@ import com.thiru.wealthlens.shared.privacy.BreachEmails;
 import com.thiru.wealthlens.shared.privacy.BreachNoticeRequest;
 import com.thiru.wealthlens.shared.privacy.BreachNoticeService;
 import com.thiru.wealthlens.shared.privacy.BreachReport;
-import com.thiru.wealthlens.shared.privacy.UserBreachNotice;
-import java.util.List;
+import com.thiru.wealthlens.shared.web.AdminApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,8 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
  * Breach intimation (Digital Personal Data Protection Act, 2023 s.8(6); Rules r.7; W-237c): a {@code SUPER_USER} posts a
  * notice and records each step; an affected user reads their notices in their account.
  */
+@AdminApi
+@RequestMapping("/breach-notices")
 @RestController
-@RequestMapping("/privacy/breach-notices")
 @RequiredArgsConstructor
 public class BreachNoticeController {
 
@@ -65,10 +65,5 @@ public class BreachNoticeController {
     @PreAuthorize("hasRole('SUPER_USER')")
     public BreachReport report(@PathVariable String noticeId) {
         return service.report(noticeId);
-    }
-
-    @GetMapping("/user/{email}")
-    public List<UserBreachNotice> noticesFor(@PathVariable String email) {
-        return service.noticesFor(email);
     }
 }

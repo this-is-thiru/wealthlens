@@ -36,7 +36,7 @@ class StoredFieldEncryptionIntegrationTest extends AbstractIntegrationTest {
 
     private ValidatableResponse run(boolean dryRun, String role) {
         return given().header("Authorization", "Bearer " + generateToken(OWNER, role)).contentType(ContentType.JSON)
-                .when().post("/privacy/stored-fields/encrypt?dryRun=" + dryRun).then();
+                .when().post("/api/v1/admin/privacy/stored-fields/encrypt?dryRun=" + dryRun).then();
     }
 
     private Document raw(String collection, String id) {
@@ -63,14 +63,14 @@ class StoredFieldEncryptionIntegrationTest extends AbstractIntegrationTest {
         // Given / When
         given().header("Authorization", "Bearer " + generateToken(USER, "USER")).contentType(ContentType.JSON)
                 .body("{\"text\": \"My old address is still shown\"}")
-                .when().post("/privacy/grievances/user/" + USER).then().statusCode(201);
+                .when().post("/api/v1/me/privacy/grievances").then().statusCode(201);
 
         // Then
         Document stored = mongoTemplate.getCollection(GRIEVANCES).find().first();
         assertThat(stored).isNotNull();
         assertThat(stored.getString("text")).startsWith("k1:").doesNotContain("address");
         HttpResponse<String> read = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
-                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/privacy/grievances/user/" + USER))
+                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/me/privacy/grievances"))
                 .header("Authorization", "Bearer " + generateToken(USER, "USER")).GET().build(), HttpResponse.BodyHandlers.ofString());
         assertThat(read.statusCode()).isEqualTo(200);
         assertThat(read.body()).contains("My old address is still shown");

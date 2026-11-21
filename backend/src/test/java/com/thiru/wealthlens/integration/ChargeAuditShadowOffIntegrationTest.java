@@ -22,8 +22,8 @@ class ChargeAuditShadowOffIntegrationTest extends AbstractChargeAuditIntegration
         int status = tradeV2(buy).getStatusCode().value();
 
         // Then -- nothing is recorded and the lot costs the entered ₹15
-        JsonNode lot = json(get("/portfolio/user/" + EMAIL + "/stocks/all")).get(0);
-        JsonNode recorded = json(get("/user-charges/user/" + EMAIL));
+        JsonNode lot = json(get("/api/v1/me/portfolio/stocks/all")).get(0);
+        JsonNode recorded = json(get("/api/v1/me/charges/user-charges"));
         assertEquals(200, status);
         assertEquals(0, recorded.size());
         assertMoney(15.0, lot.get("brokerCharges").asDouble());

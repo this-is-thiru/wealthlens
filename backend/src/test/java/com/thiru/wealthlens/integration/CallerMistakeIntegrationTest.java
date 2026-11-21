@@ -49,14 +49,14 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void due_whenTheFrequencyIsNotOne_expected400ListingTheFrequencies() {
-        assertAnswered(exchange(HttpMethod.GET, "/charge-accounts/due?frequency=WEEKLY&billedThrough=2026-11-01",
+        assertAnswered(exchange(HttpMethod.GET, "/api/v1/admin/charges/charge-accounts/due?frequency=WEEKLY&billedThrough=2026-11-01",
                 MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
                 "Parameter 'frequency' must be one of [ANNUALLY, QUARTERLY], but was 'WEEKLY'");
     }
 
     @Test
     void due_whenBilledThroughIsNotADate_expected400NamingTheDateFormat() {
-        assertAnswered(exchange(HttpMethod.GET, "/charge-accounts/due?frequency=ANNUALLY&billedThrough=01-11-2026",
+        assertAnswered(exchange(HttpMethod.GET, "/api/v1/admin/charges/charge-accounts/due?frequency=ANNUALLY&billedThrough=01-11-2026",
                 MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
                 "Parameter 'billedThrough' must be a date as yyyy-MM-dd, but was '01-11-2026'");
     }
@@ -64,21 +64,21 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
     @Test
     void backfill_whenDryRunIsNeitherTrueNorFalse_expected400() {
         assertAnswered(exchange(HttpMethod.POST,
-                "/profit-and-loss/v2-figures/backfill?dryRun=maybe&recordedBefore=2026-11-01T00:00:00",
+                "/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?dryRun=maybe&recordedBefore=2026-11-01T00:00:00",
                 MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
                 "Parameter 'dryRun' must be true or false, but was 'maybe'");
     }
 
     @Test
     void backfill_whenRecordedBeforeIsNotADateTime_expected400NamingTheFormat() {
-        assertAnswered(exchange(HttpMethod.POST, "/profit-and-loss/v2-figures/backfill?recordedBefore=yesterday",
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?recordedBefore=yesterday",
                 MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
                 "Parameter 'recordedBefore' must be a date and time as yyyy-MM-dd'T'HH:mm:ss, but was 'yesterday'");
     }
 
     @Test
     void updatePriority_whenThePriorityIsNotANumber_expected400NamingAWholeNumber() {
-        assertAnswered(exchange(HttpMethod.PUT, "/corporate-action/update/priority/any-id/high", MediaType.APPLICATION_JSON,
+        assertAnswered(exchange(HttpMethod.PUT, "/api/v1/admin/corporate-actions/update/priority/any-id/high", MediaType.APPLICATION_JSON,
                 null), HttpStatus.BAD_REQUEST, "Parameter 'priority' must be a whole number, but was 'high'");
     }
 
@@ -89,21 +89,21 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         parts.add("quarter", "Q1");
 
         // When / Then
-        assertAnswered(exchange(HttpMethod.POST, "/portfolio/user/" + OPERATOR + "/upload-transactions",
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/portfolio/upload-transactions",
                 MediaType.MULTIPART_FORM_DATA, parts), HttpStatus.BAD_REQUEST, "Required part 'file' is not present");
     }
 
     @Test
     void due_whenTheMethodIsNotServed_expected405() {
         ResponseEntity<String> response = exchange(HttpMethod.DELETE,
-                "/charge-accounts/due?frequency=ANNUALLY&billedThrough=2026-11-01", MediaType.APPLICATION_JSON, null);
+                "/api/v1/admin/charges/charge-accounts/due?frequency=ANNUALLY&billedThrough=2026-11-01", MediaType.APPLICATION_JSON, null);
 
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     @Test
     void addTransactionV2_whenTheBodyIsNotJson_expected415() {
-        ResponseEntity<String> response = exchange(HttpMethod.POST, "/portfolio/user/" + OPERATOR + "/transaction/v2",
+        ResponseEntity<String> response = exchange(HttpMethod.POST, "/api/v1/me/portfolio/transaction/v2",
                 MediaType.APPLICATION_PDF, "not json");
 
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
@@ -111,20 +111,20 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void simulate_whenThereIsNoBody_expected400SayingSo() {
-        assertAnswered(exchange(HttpMethod.POST, "/charges/simulate", MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/charges/simulate", MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
                 "The request body is missing");
     }
 
     @Test
     void simulate_whenThePriceIsNotANumber_expected400NamingTheFieldAndValue() {
-        assertAnswered(exchange(HttpMethod.POST, "/charges/simulate", MediaType.APPLICATION_JSON, "{\"price\":\"abc\"}"),
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/charges/simulate", MediaType.APPLICATION_JSON, "{\"price\":\"abc\"}"),
                 HttpStatus.BAD_REQUEST, "Field 'price' must be a number, but was 'abc'");
     }
 
     @Test
     void publish_whenARuleOmitsAPrimitive_expected400NamingItsPath() {
         // W-264b scenario 4: Jackson's text named DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES
-        assertAnswered(exchange(HttpMethod.POST, "/charge-schedules", MediaType.APPLICATION_JSON,
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/admin/charges/charge-schedules", MediaType.APPLICATION_JSON,
                 "{\"scheduleCode\":\"X\",\"rules\":[{\"code\":\"STT\"}]}"), HttpStatus.BAD_REQUEST,
                 "Field 'rules[0].perLot' must be true or false");
     }

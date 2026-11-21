@@ -21,7 +21,7 @@ class RetiredSalaryFlowIntegrationTest extends AbstractIntegrationTest {
     private static final String EMAIL = "salaried@example.com";
 
     @Test
-    void profiles_whenTheLegacyPathIsAskedWithAToken_isNotFound() throws IOException, InterruptedException {
+    void profiles_whenTheLegacyPathIsAskedWithAToken_isRefused() throws IOException, InterruptedException {
         // Given
         HttpRequest request = request("/tax-planning/user/" + EMAIL + "/profiles")
                 .header("Authorization", "Bearer " + generateToken(EMAIL)).GET().build();
@@ -29,8 +29,8 @@ class RetiredSalaryFlowIntegrationTest extends AbstractIntegrationTest {
         // When
         HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
-        // Then
-        assertThat(response.statusCode()).isEqualTo(404);
+        // Then — outside every zone, so refused before any route is looked up (D-855); before W-358c1 it was a 404
+        assertThat(response.statusCode()).isEqualTo(403);
     }
 
     @Test

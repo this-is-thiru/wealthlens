@@ -26,7 +26,7 @@ public class PrivacyConsents {
      */
     public void requireCurrent(String noticeVersion) {
         if (!privacy.notice().version().equals(noticeVersion)) {
-            throw new IllegalArgumentException("Read the privacy notice at GET " + PrivacyNotice.PAGE + " (or GET /privacy/rights)"
+            throw new IllegalArgumentException("Read the privacy notice at GET " + PrivacyNotice.PAGE + " (or GET /api/v1/public/privacy/rights)"
                     + " and register with its version");
         }
     }

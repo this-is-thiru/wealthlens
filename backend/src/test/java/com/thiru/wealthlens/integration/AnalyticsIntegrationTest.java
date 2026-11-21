@@ -250,7 +250,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         seedData_BuyAndSell();
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/portfolio-summary";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/portfolio-summary";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         var entity = new org.springframework.http.HttpEntity<>(headers);
@@ -278,7 +278,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     void portfolioSummary_emptyUser_returnsZeroValues() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/portfolio-summary";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/portfolio-summary";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         var entity = new org.springframework.http.HttpEntity<>(headers);
@@ -294,7 +294,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void portfolioSummary_unauthenticated_returns401() {
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/portfolio-summary";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/portfolio-summary";
         var headers = new org.springframework.http.HttpHeaders();
         var entity = new org.springframework.http.HttpEntity<>(headers);
 
@@ -313,7 +313,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         seedData_BuyAndSell();
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/asset-allocation";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/asset-allocation";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         var entity = new org.springframework.http.HttpEntity<>(headers);
@@ -334,7 +334,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     void assetAllocation_emptyUser_returnsEmptyArray() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/asset-allocation";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/asset-allocation";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         var entity = new org.springframework.http.HttpEntity<>(headers);
@@ -348,7 +348,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void assetAllocation_unauthenticated_returns401() {
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/asset-allocation";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/asset-allocation";
         var headers = new org.springframework.http.HttpHeaders();
         var entity = new org.springframework.http.HttpEntity<>(headers);
 
@@ -367,7 +367,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         seedData_MultipleTrades();
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/performance-metrics";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/performance-metrics";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         var entity = new org.springframework.http.HttpEntity<>(headers);
@@ -397,7 +397,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     void performanceMetrics_emptyUser_returnsZeroMetrics() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/performance-metrics";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/performance-metrics";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         var entity = new org.springframework.http.HttpEntity<>(headers);
@@ -414,7 +414,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void performanceMetrics_unauthenticated_returns401() {
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/performance-metrics";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/performance-metrics";
         var headers = new org.springframework.http.HttpHeaders();
         var entity = new org.springframework.http.HttpEntity<>(headers);
 
@@ -436,7 +436,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         XirrRequest request = new XirrRequest();
         request.setCurrentPrices(List.of(new MarketPriceEntry("INFY", 160.0)));
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/xirr";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/xirr";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -466,7 +466,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         XirrRequest request = new XirrRequest();
         // No current prices - open positions will be excluded
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/xirr";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/xirr";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -503,7 +503,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
 
         XirrRequest request = new XirrRequest();
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/xirr";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/xirr";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -521,7 +521,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     void xirr_unauthenticated_returns401() {
         XirrRequest request = new XirrRequest();
 
-        String url = baseUrl() + "/analytics/user/" + TEST_EMAIL + "/xirr";
+        String url = baseUrl() + "/api/v1/me/portfolio/analytics/xirr";
         var headers = new org.springframework.http.HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         var entity = new org.springframework.http.HttpEntity<>(request, headers);

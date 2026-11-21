@@ -58,7 +58,7 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         body.put("accountType", "SELF");
         body.put("accountHolder", "Self");
         body.put("transactionDate", date);
-        ResponseEntity<String> response = call(HttpMethod.POST, "/portfolio/user/" + EMAIL + flow, "USER", body);
+        ResponseEntity<String> response = call(HttpMethod.POST, "/api/v1/me/portfolio" + flow, "USER", body);
         assertThat(response.getStatusCode().value()).as(response.getBody()).isEqualTo(200);
     }
 
@@ -77,12 +77,12 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         bonus.put("recordDate", "2026-03-20");
         bonus.put("exDate", "2026-03-20");
         bonus.put("allotmentDate", "2026-03-22");
-        assertThat(call(HttpMethod.POST, "/corporate-action/add", "SUPER_USER", bonus).getStatusCode().value()).isEqualTo(200);
+        assertThat(call(HttpMethod.POST, "/api/v1/admin/corporate-actions/add", "SUPER_USER", bonus).getStatusCode().value()).isEqualTo(200);
         v2(stockCode, "BUY", 3, 100, "2026-03-25");
     }
 
     private JsonNode profitAndLoss(String financialYear) {
-        return JSON.readTree(call(HttpMethod.GET, "/portfolio/user/" + EMAIL + "/profit-and-loss?financialYear=" + financialYear,
+        return JSON.readTree(call(HttpMethod.GET, "/api/v1/me/portfolio/profit-and-loss?financialYear=" + financialYear,
                 "USER", null).getBody());
     }
 
@@ -91,11 +91,11 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     private JsonNode analytics(String what) {
-        return JSON.readTree(call(HttpMethod.GET, "/analytics/user/" + EMAIL + "/" + what, "USER", null).getBody());
+        return JSON.readTree(call(HttpMethod.GET, "/api/v1/me/portfolio/analytics/" + what, "USER", null).getBody());
     }
 
     private ResponseEntity<String> xirr(List<Map<String, Object>> prices) {
-        return call(HttpMethod.POST, "/analytics/user/" + EMAIL + "/xirr", "USER", Map.of("currentPrices", prices));
+        return call(HttpMethod.POST, "/api/v1/me/portfolio/analytics/xirr", "USER", Map.of("currentPrices", prices));
     }
 
     // Scenario 1
@@ -192,9 +192,9 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         v2("TCS", "SELL", 4, 150, "2026-03-05");
 
         // When
-        ResponseEntity<String> shortForm = call(HttpMethod.GET, "/portfolio/user/" + EMAIL + "/profit-and-loss?financialYear=2025-26",
+        ResponseEntity<String> shortForm = call(HttpMethod.GET, "/api/v1/me/portfolio/profit-and-loss?financialYear=2025-26",
                 "USER", null);
-        ResponseEntity<String> untraded = call(HttpMethod.GET, "/portfolio/user/" + EMAIL + "/profit-and-loss?financialYear=2027-2028",
+        ResponseEntity<String> untraded = call(HttpMethod.GET, "/api/v1/me/portfolio/profit-and-loss?financialYear=2027-2028",
                 "USER", null);
 
         // Then -- the short form is refused naming the stored form; a year with nothing traded is simply empty
