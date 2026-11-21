@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-334e2 done (D-847), close-out written, NOT committed (awaiting owner's "commit it"); then WL-A-2; then plan W-334e3
-Stage           : prod after §2, test entries removed (788 / 518 / 12 logins), m1.4 STOPPED; 163 rows still without segments / venues (W-348, e3); kept in ~/wealthlens-runs/w334c: prod-before-m14.archive + prod-reference-m14.txt (the way back), e1/ (baseline-owner-*, before-1r), e2/ (every §2 backup, mode 600), p-*.js (31)
-Done session 112: staging finished (D-842, D-843); W-334e split (D-844); W-334e1 (D-845); W-334e2 (D-846, D-847)
-Board           : W-334e —, W-334e1 D, W-334e2 D, W-334e3 ·, W-348a · / W-348b ·, W-337 ·
-Next step       : on "commit it": stage the four named files, commit, push if asked, WL-A-2; then plan W-334e3: W-348a/b for owner + test6 + test10 (W-334c8b Part W rows with p- copies of s-d3-w1/w3/w5/w8/w8b), §3 (c5-01, w342, w344, c8c-01 as p-), compare with e1 baseline, owner's look, sign-off, clean-up (both prod archives + references, e1/ e2/, MongoDB tools per D-786 C1a)
-Open to owner   : "commit it" for W-334e2; api-collection Buy Stock.yml:68 doc proposal
-Env notes       : prod host cluster0.x6trgen.mongodb.net, db Cluster0, set atlas-24ynrh-shard-0, profile prod, keys 8d910c6ebabf / f9bf756780af / af38366a5db3; WARN malware scan off expected; router DNS flaky (6 tries); zsh
-Last verify     : FinishedPlanTest + ./mvnw validate exit 0 (session 112, before f9f11c67)
-Last item commit: taxplanning W-334e1: bring prod to m1.4 up to the charge engine — unchanged since the rehearsal, encrypted under its own keys, rate cards seeded
-Files touched   : docs/taxplanning-build/STATE.md, docs/taxplanning-build/post-deployment-runbook.md, docs/taxplanning-build/plans/W-334e2.md (new) (plus this file)
-Updated         : 2026-11-21, session 112 (W-334e2 run and closed out, uncommitted)
+Item            : W-334e3 done (D-849), W-334e and W-334 complete; close-out written, NOT committed (awaiting owner's "commit it"); then WL-A-2
+Stage           : prod and staging on m1.4, signed off; m1.4 stopped; MongoDB tools REMOVED (node autoremoved too — owner told); kept: ~/wealthlens-runs/archives/ (prod-after-m14 1,635 / staging-after-m14 1,406 docs, mode 600, delete by 2027-11-21 or after W-337) + ~/wealthlens-runs/fingerprint.js; everything else of the run deleted
+Done session 112: staging finished (D-842, D-843); prod: split (D-844), e1 (D-845), e2 (D-846, D-847), e3 (D-848, D-849); W-355, W-356 placed
+Board           : W-334e —, W-334e1/e2/e3 D, W-348a D, W-348b D, W-355 ·, W-356 ·, W-337 ·
+Next step       : on "commit it": stage the five named files, commit, push if asked, WL-A-2; then next by board order (owner's choice: W-337 MySQL/PostgreSQL move, or another)
+Open to owner   : "commit it" for W-334e3; api-collection Buy Stock.yml:68 doc proposal; the owner's own upload of the trades Y2 listed
+Env notes       : no MongoDB tools on this machine now (reinstall: brew tap mongodb/brew && brew install mongodb-database-tools); prod host cluster0.x6trgen.mongodb.net, staging it-staging.6fu8nvy.mongodb.net
+Last verify     : FinishedPlanTest + ./mvnw validate (session 112, this close-out)
+Last item commit: taxplanning W-334e2: run §2 on prod and remove its test entries — the rehearsal's counts on every row, two TEST_USER portfolios kept by the owner
+Files touched   : docs/taxplanning-build/STATE.md, docs/taxplanning-build/03-WORK-ITEMS.md, docs/taxplanning-build/post-deployment-runbook.md, docs/taxplanning-build/plans/W-334e3.md (new) (plus this file)
+Updated         : 2026-11-21, session 112 (W-334e3 run and closed out, uncommitted)
 ```
 ## Resume check (run these, compare, then act on "Next step")
 
