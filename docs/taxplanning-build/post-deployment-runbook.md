@@ -1105,7 +1105,9 @@ load is an error naming it; the files before it stay seeded.
 
 **Removed after use:** W-148 / WL-30, once this step is logged for every database.
 
-### 2.1 W-088u7 (D-277) — correct the rebuild's double-counted buy charges · **prod only · outstanding**
+### 2.1 W-088u7 (D-277) — correct the rebuild's double-counted buy charges · **retired by W-147 (D-874) · do not run**
+
+> **Retired.** Run on prod (W-334e2: count only, D-798) and staging (W-334d3a: count only); W-147 removed its route and code. Kept below as the record of what it did.
 
 **Why.** The startup rebuild (`TransactionBasedTradeOutcomeMigration`) once charged a lot's buy charge again on
 each later sell (found in W-088u5, fixed in W-088u6). Those rows feed the capital-gains read-model (W-085 / W-086)

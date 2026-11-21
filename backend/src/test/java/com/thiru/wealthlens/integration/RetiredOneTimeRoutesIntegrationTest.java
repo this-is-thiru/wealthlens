@@ -1,0 +1,28 @@
+package com.thiru.wealthlens.integration;
+
+import static io.restassured.RestAssured.given;
+
+import io.restassured.http.ContentType;
+import org.junit.jupiter.api.Test;
+
+/**
+ * The one-time corrections that have run on every database are no longer served (Phase 15, D-286): each was written to put data
+ * written by older code right once, and calling one again could only rewrite rows already correct. Each route answers an admin as
+ * any route the app does not serve does.
+ */
+class RetiredOneTimeRoutesIntegrationTest extends AbstractIntegrationTest {
+
+    private static final String ADMIN = "retired-one-time@example.com";
+
+    @Test
+    void rebuildChargeCorrection_whenAnAdminPosts_answers404() {
+        // Given / When / Then — W-147, runbook §2.1: the rebuild's double-counted buy charges, corrected on prod (W-334e2) and staging (W-334d3a)
+        refuses("/api/v1/admin/portfolio/trade-outcomes/rebuild-charges/correct");
+    }
+
+    private void refuses(String route) {
+        given().header("Authorization", "Bearer " + generateToken(ADMIN, "SUPER_USER")).contentType(ContentType.JSON).body("{}")
+                .when().post(route)
+                .then().statusCode(404);
+    }
+}
