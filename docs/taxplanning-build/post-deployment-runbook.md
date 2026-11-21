@@ -1320,7 +1320,9 @@ fields back; no code reads them.
 
 **Removed after use:** W-168 / WL-35, once this is logged for every database.
 
-### 2.6 W-160d3 (D-369) — move the P&L's stored short / long pair into its split · `SUPER_USER` · **every database · once · outstanding**
+### 2.6 W-160d3 (D-369) — move the P&L's stored short / long pair into its split · `SUPER_USER` · **retired by W-170 (D-878) · do not run**
+
+> **Retired.** Run on prod (W-334e2: 3 sides placed, 0 unplaced) and staging (W-334d3a: 7 placed, 0 unplaced); W-170 removed its route and code (`StoredReport` stays with §2.8's backfill, W-173). Kept below as the record of what it did.
 
 **Needs `m1.1` (W-338, D-789):** on `m1` the rewrite matched no `profit_and_loss` year whose `_id` is a string of 24 hex digits
 (prod's are), and wrote nothing.

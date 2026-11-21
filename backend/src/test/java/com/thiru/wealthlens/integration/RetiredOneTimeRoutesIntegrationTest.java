@@ -38,6 +38,12 @@ class RetiredOneTimeRoutesIntegrationTest extends AbstractIntegrationTest {
         refuses("/api/v1/admin/portfolio/trade-outcomes/stored-terms/remove");
     }
 
+    @Test
+    void profitAndLossSplitReshape_whenAnAdminPosts_answers404() {
+        // Given / When / Then — W-170, runbook §2.6: the stored short / long pair moved into its split on prod (W-334e2) and staging (W-334d3a), 0 sides unplaced on either
+        refuses("/api/v1/admin/portfolio/profit-and-loss/split/reshape");
+    }
+
     private void refuses(String route) {
         given().header("Authorization", "Bearer " + generateToken(ADMIN, "SUPER_USER")).contentType(ContentType.JSON).body("{}")
                 .when().post(route)
