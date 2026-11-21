@@ -54,8 +54,7 @@ The default profile writes the dev cluster since `ec85b188` ("dev db"), no longe
 `$BASE` is the app's base URL, `$ADMIN_TOKEN` a `SUPER_USER` JWT and `$TOKEN` any user's JWT. `mongosh` steps run
 against the named database.
 
-**The order, from a fresh start** (owner, 2026-10-27: "we can run all runbook from starting"). **The interim run on all
-three databases, dev included, is §6 (W-334, D-780):** it orders these steps per database.
+**The order, from a fresh start** (owner, 2026-10-27: "we can run all runbook from starting").
 
 | § | Step | prod `Cluster0` | staging `it-staging` |
 |---|---|---|---|
@@ -194,7 +193,6 @@ grep -oE 'W-[0-9]+[a-z0-9]* K( |$)' docs/taxplanning-build/STATE.md
 
 Expected: empty, or every row printed named in a waiver D-row by the owner.
 
-**Not applied to the interim run (§6, D-780 C1a):** that run is not the one deploy; this gate holds for it unchanged.
 
 ### 0.5 W-134 (D-447) — the tax keys, and the tax-planning collections cleared · owner · **every database · before the first deploy carrying W-134**
 
@@ -2046,161 +2044,6 @@ a repeat (`400`) except `emailed`, which keeps first times. **Way back:** none n
 and change no user data. A notice posted in error stays on record; post a correcting notice.
 
 ---
-
-## 6. The interim run — W-334 (D-780) · owner · **once per database, before Milestone 2**
-
-**What it is.** The app is not hosted anywhere: it runs on the owner's machine, pointed at one database at a time by
-its profile. This run brings each of the three databases to the merged build (`m1`) once, with the charge engine seeded.
-It is **an interim run, not the one deploy** (D-780 C1a): §0.4's gate is **not applied** here and stays for the one
-deploy, so the parked rows stay tracked and none is waived by it. Every step below is a section above, run as written;
-this section only orders them per database and says which apply. A session never runs any of it (CLAUDE.md §6): the
-owner runs it and the results go into the run log.
-
-**Before any database:**
-- **6.0.1 Merge and tag.** PR #64 merged into `master` as a **merge commit** — never squash or rebase: the docs cite
-  hundreds of commit hashes (D-780 C4a). Tag the merge `m1` and push the tag. Run every database below from that tag:
-  `git worktree add ../wealthlens-m1 m1`. The merge also pushes the image to Docker Hub as `latest` (`cicd.yaml`); the
-  repository there is public (owner, D-784, replacing D-780's private). **`m1.1` replaces `m1` for every database** (W-338,
-  D-789; tagged by W-334a1, D-790): `git worktree add ../wealthlens-m1.1 m1.1`; `m1` stays as the record of what W-334c1 – c2 ran. **`m1.2` replaces `m1.1`** (W-341, D-794; tagged by W-334a2): `git worktree add ../wealthlens-m1.2 m1.2`; the rehearsal restarts at W-334c1 row 3 on it. **`m1.3` replaces `m1.2`** (W-340, W-343, W-345; tagged by W-334a3, D-814): `git worktree add ../wealthlens-m1.3 m1.3`; the next rehearsal (W-348a, W-348b, W-350) runs on it.
-- **6.0.2 Keys, once per environment** (§0.5 step 1; D-780 C3a): `openssl rand -base64 32` twice per environment — dev,
-  staging, prod each get their own `TAX_DATA_KEY` and `TAX_DIGEST_KEY`, never shared. Store each pair in the secret store
-  **and** its backup, off the laptop, before the first start: a lost `TAX_DATA_KEY` is data no one can read again. One
-  `JWT_SECURITY_KEY` per environment too; §1.r's token from the previous build is accepted only if both builds start with
-  the same one.
-- **6.0.3 Starting the app.** From the `m1` worktree, with `MONGO_USER`, `MONGO_PASSWORD` (the cluster's),
-  `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` set (§0.1.1):
-  dev `./mvnw spring-boot:run -pl backend`; staging and prod add `-Dspring-boot.run.profiles=staging` / `prod`.
-  **Every start in this run is jobs off** (6.0.8): also `APP_TAX_JOBS_ENABLED=false` (§1.r step 1). §1.k and §1.m are the Docker image's
-  and the scanner's: a local run has neither, so neither is checked here.
-- **6.0.4 The previous build**, for §1.r's token: `git worktree add ../wealthlens-m0 ec85b188` (master before the merge),
-  started the same way. On it a login's `_id` is the plain email and its role is `roles`
-  (`auth/entity/UserDetail.java` at `ec85b188`).
-
-- **6.0.8 No scheduled job runs during this run** (owner, 2026-11-19; D-782), on any database, from the first start in
-  6.1 to the sign-off of 6.4. The app's only scheduler is `TaxJobSchedule`: six cron jobs (`auto-archive`,
-  `retention-purge`, `parse-documents` every minute, `account-erasure`, `log-retention`, `gazette-watch`;
-  `application.yaml:92 – 104`) and the start-time `staleness-sweep`, all created only when `app.tax.jobs.enabled` is true
-  (`TaxJobSchedule.java:18 – 20`). The previous build `ec85b188` has no scheduled job (`git grep @Scheduled ec85b188`: none).
-  - **Every start:** `APP_TAX_JOBS_ENABLED=false` — nothing is scheduled at all. `m1` ships it false (W-336, D-783); set it anyway.
-  - **§1.r step 7** runs `staleness-sweep` on request (W-336), so no start in this run has the jobs on.
-  - **Check, before each start:** `env | grep '^APP_TAX_JOBS_'` shows `APP_TAX_JOBS_ENABLED=false`.
-  - **Deferred:** the checks that wait for a job's first run (§1.y, §1.q, §1.t, §1.u, §1.z) wait for the owner's first
-    run of each on request (§5.2's cadence), after 6.4's sign-off; each is a run-log line.
-- **6.0.5 The gate on every row** (owner, 2026-11-19: "strict executions, verifications … one by one with check lists").
-  For each numbered row, in order, and for nothing else:
-  1. run the row's read-only check **before** and paste the result;
-  2. the session compares it with the row's expectation and answers **go** or **stop**;
-  3. on go, run the step itself, exactly as its section writes it;
-  4. run the read-only check **after** and paste it;
-  5. the session writes the run-log line and answers **go** for the next row, or **stop**.
-  A stop halts that database's run; it resumes only once the cause is understood and the owner says so. The next
-  database starts only when the previous one's sign-off (below) is complete and logged.
-- **6.0.6 The fingerprint**, one read-only query per cluster: every collection of every application database with its
-  document count, a checksum of its documents read in `_id` order, and its index names. Two clusters holding the same
-  data give the same lines, whatever the database is called:
-
-  ```js
-  db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-    .filter(n => !["admin", "local", "config"].includes(n)).flatMap(n => { const d = db.getSiblingDB(n);
-      return d.getCollectionNames().filter(c => !c.startsWith("system.")).sort().map(c => {
-        let h = 0x811c9dc5, k = 0;
-        d.getCollection(c).find().sort({ _id: 1 }).forEach(doc => { const s = JSON.stringify(doc); k++;
-          for (let i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0; } });
-        return { database: n, collection: c, documents: k, fingerprint: (h >>> 0).toString(16),
-          indexes: d.getCollection(c).getIndexes().map(i => i.name).sort().join(",") }; }); }) }])
-  ```
-
-  It reads every document once, so it takes seconds on these databases; it writes nothing. **Not yet run anywhere:** its
-  first use is twice on prod, back to back — the two results must be identical, or the checksum is not stable in the
-  owner's console and 6.1's gate falls back to counts plus a by-hand comparison of each collection's first and last
-  documents.
-- **6.0.7 Sign-off, per database**, before the next one starts: every row logged; the app stopped and started once more
-  with nothing new at ERROR or WARN in its start log; §3's counts recorded; for staging and prod, the owner has opened
-  their own portfolio in the app and seen it as before (holdings, P&L by year) or each difference traced to a logged step.
-
-**The order across databases** (D-780 C2a; D-786): **6.1 prod rehearsed on dev → 6.2 staging → 6.3 prod.** Dev is empty, so
-it holds the rehearsal first and is wiped. **6.4 is not taken** (D-786): MongoDB is to be replaced by MySQL or PostgreSQL
-(W-337), so a fresh dev database comes on the new one. After 6.3's sign-off the MongoDB tools are removed from the
-machine (`brew uninstall mongodb-database-tools mongosh && brew untap mongodb/brew`, then `which mongosh mongodump` finds
-nothing).
-
-### 6.1 Prod rehearsed on dev · owner · **once, before 6.3**
-
-Prod's corrections (§2.1, §2.3 and the rest) have never run against data shaped like prod's. This runs the whole of 6.3
-against a copy of prod in the dev cluster, so the counts are known before prod is touched.
-1. **Fingerprint prod** (6.0.6) and keep the result: it is the reference for this rehearsal and for 6.3 row 0.
-2. **Copy into dev.** The copy is the personal data of everyone on prod.
-   - Where prod has Atlas cloud snapshots, stream it, so no file lands on the machine:
-     `mongodump --uri "<prod uri>" --db Cluster0 --archive | mongorestore --uri "<dev uri>" --archive --nsFrom 'Cluster0.*' --nsTo 'wealthlens-dev.*'`.
-   - Where it has none (a free or shared tier), the dump file **is** 6.3's backup:
-     `mongodump --uri "<prod uri>" --db Cluster0 --archive=prod-before-m1.archive`, kept private, then restored from that file
-     (`mongorestore --uri "<dev uri>" --archive=prod-before-m1.archive --nsFrom 'Cluster0.*' --nsTo 'wealthlens-dev.*'`) — so the
-     rehearsal also proves the backup restores.
-3. **Fingerprint dev** (6.0.6). **Gate:** every collection's `documents`, `fingerprint` and `indexes` equal step 1's;
-   only the database name differs. Any difference stops the rehearsal before anything runs.
-4. **Run 6.3 against dev**, every step, under 6.0.5's gate, with dev's keys and the default profile; read "Cluster0" as `wealthlens-dev`.
-   §1A's per-user part refuses any database but `it-staging`, as on prod.
-5. **Record** each step's before / after counts in the run log as `dev (prod rehearsal)`.
-6. **Stop and compare** with the owner's expectation; anything unexpected is resolved (or the step re-planned) **before**
-   6.3.
-7. **Wipe**: `db.getSiblingDB("wealthlens-dev").dropDatabase()` — dev only, it holds nothing else. Then delete the files the
-   steps' own backups wrote during the rehearsal (§0.5, §0.8, §1.r): they are on the machine, not in dev.
-
-### 6.2 staging (`it-staging`) · owner
-
-| # | Step | Apply | Expected / note |
-|---|---|---|---|
-| 0 | Fingerprint | 6.0.6 on staging | Kept as the run's reference |
-| 1 | Backup | An Atlas snapshot where the tier has them; otherwise `mongodump --archive=staging-before-m1.archive`, restored once into dev and fingerprinted equal to row 0, then dev wiped | The way back for the whole run, proven |
-| 2 | Which key wrote it | Read-only: `db.transactions.countDocuments({ email: /^k1:/ })`, `db.user_details.countDocuments({ email: { $exists: true } })` | Both 0 expected: staging was last written before W-253 re-keyed logins and encrypted emails. If not 0, **stop**: those rows need the key that wrote them |
-| 3 | §0.1 | check | Staging's own keys (6.0.2); replica set; a `SUPER_USER` (on the old build, `db.user_details.updateOne({ _id: "<your email>" }, { $set: { roles: "SUPER_USER" } })`) |
-| 4 | §0.2 | run | Both empty |
-| 5 | §0.3 | done | 0 without `version` (2026-10-27) |
-| 6 | §0.5 steps 2 – 4 | run | Count, back up, drop the eleven tax collections |
-| 7 | §0.8 | run | Count, back up, drop the legacy salary and policy collections |
-| 8 | §1.o | check | No account that chose its own role, or the correction as §1.o says |
-| 9 | §1.r step 1 | run | Token on the previous build (6.0.4); then **§0.8 again** — the previous build seeds the legacy policies at every start (`ec85b188` `PolicySeederService`, W-334c2 row 4a); start `m1` **jobs off** |
-| 10 | §1 (1.1 – 1.7), §1.x, §1.y, §1.n, §1.l | check | Start log; `NO RATE CARDS` absent only if cards exist (they are cleared next) |
-| 11 | §1.r steps 2 – 7 | run | Backup, check, encrypt, check; step 7's `staleness-sweep` on request (6.0.8) |
-| 12 | §1A | run | Clears configuration 12 / 11 / 2 and per-user `user_charges` 328, `charge_accounts` 1, P&L charge side 2 (2026-10-27 counts) |
-| 13 | §1B | run | Seed, drift, unverified, one simulate |
-| 14 | §2.1 | count only | **Done on staging (W-334d3a, 2026-11-21):** 56 rebuild rows on 47 lots, counted and not run (C1a, as prod D-798) — its correction skips the owner on EMAMILTD's same-day sales (W-343, D-840); W-348b's rebuild (row 15) removed the over-count. The note "staging has no rebuild rows" (2026-10-20) no longer held after d1 (D-839) |
-| 15 | §2.2 – §2.17, then W-348a / W-348b | per step, in order | **Done on staging (W-334d3a, W-334d3b, 2026-11-21):** 2.3 56 `FY` rows rewritten (not prod only); 2.4 four allotment dates (staging's own action ids); 2.5 201; 2.6 7 sides; 2.7 11 dropped; 2.8 1 unplaced (a V2 row with no `createdAt`, folded by 2.11); 2.9 1; 2.13 6; 2.15 57 dropped; 2.10, 2.14, 2.16, 2.17 nothing; 2.16 step 5 removed both test logins and their documents (owner, D-842); `ITS-22`'s four collections exported and dropped; W-348a 649 trades `DELIVERY` (staging's assumption, C3a); W-348b for the 3 users with rows: 2.2 130 rows, 2.12 the owner's 224 lots, 2.11 3 users, each compared and ruled by the owner (D-843) |
-| 16 | §3 | check | Record the counts |
-
-### 6.3 prod (`Cluster0`) · owner · **after 6.1 is logged and compared**
-
-| # | Step | Apply | Expected / note |
-|---|---|---|---|
-| 0 | Prod unchanged since the rehearsal | Fingerprint prod (6.0.6) | Identical to 6.1 step 1's, line for line. A difference means the rehearsal's counts no longer hold: stop |
-| 1 | Backup | An Atlas snapshot where the tier has them; otherwise 6.1's `prod-before-m1.archive`, already proven by the rehearsal | The way back for the whole run |
-| 2 | §0.1 | check | Prod's own keys (6.0.2), never staging's or dev's; a `SUPER_USER` (old schema, as 6.2 row 3) |
-| 3 | §0.2 | run | Both empty, or §0.2's options |
-| 4 | §0.3 | done | 0 without `version` (2026-10-27) |
-| 5 | §0.5 steps 2 – 4 | run | Expected no tax-planning rows; drop is then a no-op |
-| 6 | §0.8 | run | Count, back up, drop |
-| 7 | §1.o | check | As 6.2 |
-| 8 | §1.r step 1 | run | Token on the previous build; then **§0.8 again** (as 6.2 row 9); start `m1` **jobs off** |
-| 9 | §1 (1.1 – 1.7), §1.x, §1.y, §1.n, §1.l | check | `NO RATE CARDS` expected until row 12 |
-| 10 | §1.r steps 2 – 7 | run | As 6.2 |
-| 11 | §1A | count only | Configuration 0 / 0 / 0 (2026-10-27): a no-op; per-user data is never cleared on prod |
-| 12 | §1B | run | Seed, drift, unverified, one simulate |
-| 13 | §2.1 | count only | **Not run** (W-342, D-798): step 1's count (163 / 146 / 12 / 29 / 68.99) logged, then "not run" — the ₹15.99 over-count is accepted (§3.25). **Done on prod (W-334e2, 2026-11-21):** counted 163 / 146 / 12 / 29 / 68.99166666666666, not run; W-348b's rebuild (row 15) removed the over-count (−16.00, D-822) |
-| 14 | §2.2 – §2.17 | per step, in order | 2.17 prod only, after 2.16 (W-354); 2.3 prod only: 163 `FY` rows (2026-10-20); 2.4 where bonus actions exist; 2.2, 2.11, 2.12 only where their checks say; 2.7 expects 0 Rehearsed on prod's copy (W-334c4a – c4d, D-797 – D-809): §2.13 step 5 lists one user (the owner): §2.12 changes 12 lots (6 bonus lots' charges, 3 sales' allocated misc charges, 3 same-day prices to their weighted average), §2.11 fills 3 years whose stored realised figures were zero (90 sales). **Done on prod (W-334e2, 2026-11-21, D-847):** 2.3 163; 2.4 four dates; 2.5 163; 2.6 3; 2.7 the empty collection dropped; 2.8 – 2.10, 2.14 nothing; 2.13 10; 2.15 163 dropped; 2.16 9 / 8 and one login; 2.17 2 / 1 / 1; W-350's test account 19 / 1 / 1 (the owner confirmed); then W-348a 787 trades `DELIVERY` and W-348b for the 3 users with rows (W-334e3): 163 rows rebuilt and compared, the owner's 12 lots, 3 users' P&L — every figure as rehearsed |
-| 15 | §3 | check | Record the counts. **Done on prod (W-334e3, 2026-11-21):** as D-837 — 3.1 2 / 61 (left, D-821), 3.2 / 3.4 0, 3.10 0 / 0, 3.11 0, 3.14 21, 3.25 over 0, W-344 `MOTHERSON ` only, 3.27 178 (all `BMF`), held 0 |
-
-### 6.4 dev (`wealthlens-dev`), fresh · owner · **not taken (D-786): kept for the record; a fresh dev comes on W-337's database**
-
-Empty, so nothing is cleared or corrected: §0.2, §0.3, §0.5, §0.8, §1.o, §1.r, §1A and §2 have nothing to act on.
-1. §0.1 with dev's own keys; start `m1` jobs off (6.0.8); §1's checks, §1.x, §1.y, §1.n, §1.l — every `Ensured the indexes of`
-   line present; `NO RATE CARDS` expected.
-2. A `SUPER_USER`: `GET /api/v1/public/privacy/rights` for the `version`; `POST /api/v1/public/auth/register` with it (§1.p); then §0.1.3's update
-   with the stored email form (§0.7); sign in again.
-3. §1B: seed, drift, unverified, one simulate.
-4. Smoke (read-only): `GET /api/v1/me/tax/declarations/2026` lists 14 questions, `NET_AGRICULTURAL_INCOME` among them.
-
-**Run log:** one line per numbered step per database, as for every section. When every database is logged, the
-one-time steps it ran become removable (Phase 15: W-294, W-299 and their peers).
 
 ## Run log — one line per run, per database
 
