@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.brokercharges.controller;
 
+import com.thiru.wealthlens.brokercharges.dto.request.ChargeAccountRequest;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeAccountResponse;
-import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.brokercharges.service.ChargeAccountService;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
@@ -27,9 +27,8 @@ public class ChargeAccountController {
 
     /** Registers a demat account for AMC and account-opening charges. */
     @PostMapping
-    public ChargeAccountResponse register(@CallerEmail String email, @RequestBody ChargeAccountEntity account) {
-        account.setEmail(email);
-        return ChargeAccountResponse.from(chargeAccountService.register(account));
+    public ChargeAccountResponse register(@CallerEmail String email, @RequestBody ChargeAccountRequest account) {
+        return ChargeAccountResponse.from(chargeAccountService.register(account.asAccount(email)));
     }
 
     @GetMapping

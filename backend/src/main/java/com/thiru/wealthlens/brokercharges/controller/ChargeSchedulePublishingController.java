@@ -1,9 +1,9 @@
 package com.thiru.wealthlens.brokercharges.controller;
 
+import com.thiru.wealthlens.brokercharges.dto.request.ChargeScheduleRequest;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeScheduleDrift;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeScheduleResponse;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeSeedReport;
-import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
 import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.shared.web.AdminApi;
@@ -39,8 +39,8 @@ public class ChargeSchedulePublishingController {
      */
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/charge-schedules")
-    public ChargeScheduleResponse publish(@RequestBody ChargeScheduleEntity schedule) {
-        return ChargeScheduleResponse.from(chargeScheduleService.publish(schedule));
+    public ChargeScheduleResponse publish(@RequestBody ChargeScheduleRequest schedule) {
+        return ChargeScheduleResponse.from(chargeScheduleService.publish(schedule.asSchedule()));
     }
 
     /** Withdraws a card without replacing it. Past dates still resolve against it. */

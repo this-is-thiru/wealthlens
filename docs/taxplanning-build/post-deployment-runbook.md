@@ -87,6 +87,11 @@ when its run is logged for both. Everything below is the full sequence for a fre
 4. W-358c3a (D-860) — nothing to run: the paths that named a verb moved (`plans/W-358c3.md` table, e.g. `GET /api/v1/me/portfolio/stocks`, `DELETE /api/v1/me/portfolio`, `PATCH /api/v1/admin/corporate-actions/{id}`); `GET /api/v1/me/portfolio/all/transactions`, `PUT /api/v1/admin/corporate-actions/perform/test` and `GET /api/v1/public/auth/login` are gone.
 5. W-358c3b (D-862) — nothing to run: a user's transactions and their search, charge history, corporate actions, Gazette leads, a profile's computations and a draft's revisions answer a page (`content`, `page`; `?page=`, `&size=` up to 200) instead of a bare list.
 6. W-361 (D-865) — nothing to run: HTTP Basic is off; a request carrying a password instead of a token answers 401 — sign in for a token.
+7. W-206 (D-866) — nothing to write. Registering a demat account and publishing a rate card read request types: a body naming `email`, `lastBilledThrough`, `billingEvents` or `auditMetadata` answers 400 naming the field. **Read-only check, per database, owner, before or after the deploy (safe to repeat):** accounts whose billing date did not come from the AMC run, which writes the date and a billing event together (`AmcChargeService:114-116`):
+   ```
+   db.charge_accounts.countDocuments({last_billed_through: {$ne: null}, $or: [{billing_events: {$exists: false}}, {billing_events: {$size: 0}}]})
+   ```
+   Expected `0`. Anything above 0 is an account whose date came from a request body before W-206: stop and tell the owner; this item corrects nothing.
 
 ## 0. Before deploying
 

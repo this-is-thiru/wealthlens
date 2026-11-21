@@ -19,6 +19,8 @@ import com.thiru.wealthlens.brokercharges.dto.enums.FundCategory;
 import com.thiru.wealthlens.brokercharges.dto.enums.PlanType;
 import com.thiru.wealthlens.brokercharges.dto.enums.RoundingPolicy;
 import com.thiru.wealthlens.brokercharges.dto.enums.SlabBandBasis;
+import com.thiru.wealthlens.brokercharges.dto.request.ChargeAccountRequest;
+import com.thiru.wealthlens.brokercharges.dto.request.ChargeScheduleRequest;
 import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
@@ -188,7 +190,7 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         statutory.setStartDate(LocalDate.of(2025, 1, 1));
         statutory.setStatus(EntityStatus.ACTIVE);
         statutory.setRules(new java.util.ArrayList<>(List.of(flatRule("SEBI_FEE", ChargeCategory.REGULATORY, 1.00, 40))));
-        assertThat(post("/api/v1/admin/charges/charge-schedules", adminToken(), statutory).getStatusCode().value())
+        assertThat(post("/api/v1/admin/charges/charge-schedules", adminToken(), publishing(statutory)).getStatusCode().value())
                 .isEqualTo(HttpStatus.OK.value());
 
         // When
@@ -497,7 +499,7 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         ChargeScheduleEntity successor = equityCard("IT_EQ_2026", LocalDate.of(2026, 1, 1), null, 5.0);
 
         // When
-        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", adminToken(), successor);
+        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", adminToken(), publishing(successor));
 
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
@@ -514,7 +516,7 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
     @Test
     void aSupersededCard_stillPricesTradesInsideItsOwnWindow() {
         // Given — uploading a past quarter long after the rates changed is the normal case
-        post("/api/v1/admin/charges/charge-schedules", adminToken(), equityCard("IT_EQ_2026", LocalDate.of(2026, 1, 1), null, 5.0));
+        post("/api/v1/admin/charges/charge-schedules", adminToken(), publishing(equityCard("IT_EQ_2026", LocalDate.of(2026, 1, 1), null, 5.0)));
 
         // When
         ChargeComputation old = userChargeService.computeAndRecord(sell("txn-old", "INFY", HOLDER, TRADE_DATE));
@@ -530,14 +532,12 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void publishEndpoint_whenTheBodyOmitsAuditMetadata_stampsTheCaller() {
-        // Given — the api-collection body carries no auditMetadata, and the server must still record who
-        // published the card: Spring Data's auditing fills an object, it does not create one (W-205).
+        // Given — a request names no author, and the server must still record who published the card: Spring Data's
+        // auditing fills an object, it does not create one (W-205)
         ChargeScheduleEntity card = equityCard("IT_EQ_AUDIT_2026", LocalDate.of(2026, 1, 1), null, 0.0);
-        ObjectNode body = (ObjectNode) mvcMapper.readTree(mvcMapper.writeValueAsString(card));
-        body.remove("auditMetadata");
 
         // When
-        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", adminToken(), body.toString());
+        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", adminToken(), publishing(card));
 
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
@@ -553,7 +553,7 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         card.getRules().add(flatRule("NOT_A_REAL_CODE", ChargeCategory.EXCHANGE, 1.00, 90));
 
         // When
-        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", adminToken(), card);
+        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", adminToken(), publishing(card));
 
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -655,7 +655,7 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         ChargeScheduleEntity card = equityCard("IT_EQ_2027", LocalDate.of(2027, 1, 1), null, 0.0);
 
         // When
-        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", token(EMAIL), card);
+        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", token(EMAIL), publishing(card));
 
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.FORBIDDEN.value());
@@ -678,10 +678,10 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void registeringAChargeAccount_storesItAgainstTheUserInThePath() {
-        // Given — the path owns the email, so a body claiming another user cannot smuggle one in
-        ChargeAccountEntity account = account();
-        account.setEmail(OTHER_EMAIL);
+    void registeringAChargeAccount_storesItAgainstTheCaller() {
+        // Given — the token owns the email (D-855 C4a); the request carries none
+        ChargeAccountRequest account = new ChargeAccountRequest(HOLDER, BrokerName.ZERODHA, "DEMAT-1", null, LocalDate.of(2024, 1, 1),
+                AmcChargeFrequency.ANNUALLY, EntityStatus.ACTIVE);
 
         // When
         ResponseEntity<String> response = post("/api/v1/me/charges/charge-accounts", token(EMAIL), account);
@@ -689,7 +689,51 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
         assertThat(chargeAccountRepository.findByEmail(EMAIL)).hasSize(1);
+        assertThat(chargeAccountRepository.findByEmail(EMAIL).getFirst().getLastBilledThrough()).isNull();
+    }
+
+    @Test
+    void register_whenTheBodyNamesABilledThroughDate_answers400AndStoresNothing() {
+        // Given — W-206: the AMC run owns an account's billing state; a user who set it would skip every cycle up to it
+        String body = "{\"accountHolder\":\"" + HOLDER + "\",\"brokerName\":\"ZERODHA\",\"dematAccountId\":\"DEMAT-1\",\"openedOn\":\"2024-01-01\",\"amcFrequency\":\"ANNUALLY\",\"status\":\"ACTIVE\",\"lastBilledThrough\":\"2099-12-31\"}";
+
+        // When
+        ResponseEntity<String> response = post("/api/v1/me/charges/charge-accounts", token(EMAIL), body);
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.getBody()).contains("lastBilledThrough");
+        assertThat(chargeAccountRepository.findByEmail(EMAIL)).isEmpty();
+    }
+
+    @Test
+    void register_whenTheBodyNamesAnotherUser_answers400AndStoresNothing() {
+        // Given — the token owns the email (D-855 C4a), so a body naming one is a caller's mistake, said out loud
+        String body = "{\"accountHolder\":\"" + HOLDER + "\",\"brokerName\":\"ZERODHA\",\"dematAccountId\":\"DEMAT-1\",\"openedOn\":\"2024-01-01\",\"amcFrequency\":\"ANNUALLY\",\"status\":\"ACTIVE\",\"email\":\"" + OTHER_EMAIL + "\"}";
+
+        // When
+        ResponseEntity<String> response = post("/api/v1/me/charges/charge-accounts", token(EMAIL), body);
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(chargeAccountRepository.findByEmail(EMAIL)).isEmpty();
         assertThat(chargeAccountRepository.findByEmail(OTHER_EMAIL)).isEmpty();
+    }
+
+    @Test
+    void publishEndpoint_whenTheBodyNamesAuditMetadata_answers400AndStoresNothing() {
+        // Given — the server records who published a card (W-205); a body claiming an author is refused, not ignored
+        ObjectNode body = (ObjectNode) mvcMapper.readTree(mvcMapper.writeValueAsString(
+                publishing(equityCard("IT_EQ_SPOOF_2026", LocalDate.of(2026, 1, 1), null, 0.0))));
+        body.putObject("auditMetadata").put("createdBy", "spoof");
+
+        // When
+        ResponseEntity<String> response = post("/api/v1/admin/charges/charge-schedules", adminToken(), body.toString());
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.getBody()).contains("auditMetadata");
+        assertThat(scheduleRepository.findByScheduleCode("IT_EQ_SPOOF_2026")).isEmpty();
     }
 
 
@@ -1041,5 +1085,12 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         account.setAmcFrequency(AmcChargeFrequency.ANNUALLY);
         account.setStatus(EntityStatus.ACTIVE);
         return account;
+    }
+
+    /** What an admin sends to publish {@code card}. */
+    private static ChargeScheduleRequest publishing(ChargeScheduleEntity card) {
+        return new ChargeScheduleRequest(card.getScheduleCode(), card.getBrokerName(), card.getAssetType(), card.getSegment(),
+                card.getExchange(), card.getPlanCode(), card.getStartDate(), card.getEndDate(), card.getStatus(),
+                card.isRequiresInstrumentProfile(), card.getRules(), card.getSourceUrl(), card.getVerifiedOn());
     }
 }

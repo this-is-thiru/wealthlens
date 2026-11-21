@@ -1,7 +1,11 @@
 package com.thiru.wealthlens.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.corporate.dto.CorporateActionPerformDto;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
@@ -13,10 +17,12 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Update;
 
 /**
  * A bonus allotment carries what a bonus is — a quantity, an allotment date and nil cost — and nothing copied from the
@@ -116,6 +122,27 @@ class BonusAllotmentIntegrationTest extends AbstractIntegrationTest {
 
         // Then -- the bonus is allotted, and its transaction carries no key of its own
         assertNull(bonusTransaction().getIdempotencyKey());
+    }
+
+    @Test
+    void performPendingCorporateActions_whenTheHeldLotWasCreatedEarlier_recordsTheBonusLotsOwnCreation() {
+        // Given -- W-206 C5a: the bonus lot is a JSON copy of the held lot, auditMetadata included, so the held lot's
+        // creation is set far back to tell the two apart
+        mongoTemplate.save(held);
+        mongoTemplate.save(buy);
+        LocalDateTime longAgo = LocalDateTime.of(2020, 1, 1, 0, 0);
+        mongoTemplate.updateFirst(query(where("id").is(held.getId())), new Update().set("auditMetadata.createdAt", longAgo),
+                AssetEntity.class);
+        assertEquals(longAgo, mongoTemplate.findById(held.getId(), AssetEntity.class).getAuditMetadata().getCreatedAt());
+
+        // When
+        perform();
+
+        // Then -- the bonus lot was created now, not when the lot it was copied from was
+        AssetEntity bonusLot = mongoTemplate.findAll(AssetEntity.class).stream()
+                .filter(asset -> asset.getCorporateActionType() == CorporateActionType.BONUS).findFirst().orElseThrow();
+        assertNotNull(bonusLot.getAuditMetadata().getCreatedAt());
+        assertNotEquals(longAgo, bonusLot.getAuditMetadata().getCreatedAt());
     }
 
     private void perform() {

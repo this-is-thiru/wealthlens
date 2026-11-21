@@ -1,8 +1,6 @@
 package com.thiru.wealthlens.brokercharges.entity;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
@@ -36,8 +34,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
  * it is skipped, so an accidental second upload is a no-op rather than a second charge.
  */
 @Data
-// A body binds through the no-arg constructor, so an omitted field keeps its initialiser (W-205).
-@AllArgsConstructor(onConstructor_ = @JsonCreator(mode = JsonCreator.Mode.DISABLED))
+@AllArgsConstructor
 @NoArgsConstructor
 @Document(value = "charge_accounts")
 @CompoundIndexes({
@@ -96,7 +93,6 @@ public class ChargeAccountEntity implements AuditableEntity {
 
     @Field("audit_metadata")
     @Setter(value = AccessLevel.NONE)
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private AuditMetadata auditMetadata = new AuditMetadata();
 
     /** One completed billing cycle. */
