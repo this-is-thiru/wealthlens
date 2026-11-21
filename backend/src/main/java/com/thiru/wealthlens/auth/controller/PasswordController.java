@@ -17,7 +17,7 @@ public class PasswordController {
 
     private final AuthService authService;
 
-    @PutMapping("/change/password")
+    @PutMapping("/password")
     public String changePassword(@CallerEmail String email, @RequestBody RegistrationRequest createUserRequest) {
         return authService.changePassword(email, createUserRequest);
     }

@@ -1,11 +1,11 @@
 package com.thiru.wealthlens.corporate.controller;
-import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.CorporateActionResponse;
+import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.shared.web.MeApi;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,15 +23,11 @@ public class CorporateActionController {
         return CorporateActionResponse.from(corporateActionService.getCorporateActionDetails(id));
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<List<CorporateActionDto>> getCorporateActions(@RequestParam List<String> ids) {
-
-        List<CorporateActionDto> actions = corporateActionService.getCorporateActions(ids);
-        return ResponseEntity.ok(actions);
-    }
-
-    @GetMapping("/all")
-    public List<CorporateActionResponse> getAllCorporateActions() {
-        return corporateActionService.getAllCorporateActions().stream().map(CorporateActionResponse::from).toList();
+    /** Every corporate action, or only those whose ids are given (W-358c3a: was {@code /all} and {@code /list}). */
+    @GetMapping
+    public List<CorporateActionResponse> corporateActions(@RequestParam Optional<List<String>> ids) {
+        List<CorporateActionEntity> actions = ids.map(corporateActionService::getCorporateActions)
+                .orElseGet(corporateActionService::getAllCorporateActions);
+        return actions.stream().map(CorporateActionResponse::from).toList();
     }
 }

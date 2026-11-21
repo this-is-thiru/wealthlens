@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
     private final TransactionService transactionService;
 
-    @PostMapping
+    @PostMapping("/search")
     public List<TransactionResponse> getUserTransaction(@CallerEmail String email, @RequestBody BulkGetRequest bulkGetRequest) {
         return transactionService.userTransactions(UserMail.from(email), bulkGetRequest.getQueryFilters());
     }

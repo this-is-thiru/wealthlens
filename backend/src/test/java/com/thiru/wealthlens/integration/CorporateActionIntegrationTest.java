@@ -75,7 +75,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .contentType("application/json")
                 .body("null")
                 .when()
-                .post("/api/v1/admin/corporate-actions/add")
+                .post("/api/v1/admin/corporate-actions")
                 .then()
                 .statusCode(HttpStatus.BAD_REQUEST.value());
     }
@@ -355,7 +355,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .contentType("application/json")
                 .body(body)
                 .when()
-                .post("/api/v1/admin/corporate-actions/add")
+                .post("/api/v1/admin/corporate-actions")
                 .then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("detail", containsString("'date'"));
@@ -382,7 +382,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
 
         // WHEN
         ResponseEntity<List<Map<String, Object>>> response = createNoErrorRestTemplate().exchange(
-                URI.create(baseUrl() + "/api/v1/me/corporate-actions/list?ids=" + id), HttpMethod.GET, new HttpEntity<>(headers),
+                URI.create(baseUrl() + "/api/v1/me/corporate-actions?ids=" + id), HttpMethod.GET, new HttpEntity<>(headers),
                 new ParameterizedTypeReference<>() {});
 
         // THEN
@@ -652,7 +652,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         String id = "some-id";
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/admin/corporate-actions/delete/" + id;
+        String url = baseUrl() + "/api/v1/admin/corporate-actions/" + id;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -679,7 +679,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken("test@example.com", "SUPER_USER");
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/admin/corporate-actions/delete/" + saved.getId();
+        String url = baseUrl() + "/api/v1/admin/corporate-actions/" + saved.getId();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);

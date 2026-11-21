@@ -160,7 +160,7 @@ class TradeExchangeRefusalIntegrationTest extends AbstractIntegrationTest {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         // When
-        ResponseEntity<String> response = restTemplate().exchange(uri("/upload-transactions?quarter=" + quarter),
+        ResponseEntity<String> response = restTemplate().exchange(uri("/transactions/uploads?quarter=" + quarter),
                 HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
 
         // Then — the JSON body escapes the quotes around the value, so the value and the rule are matched apart

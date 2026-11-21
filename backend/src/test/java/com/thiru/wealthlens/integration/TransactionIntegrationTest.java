@@ -174,7 +174,7 @@ public class TransactionIntegrationTest extends AbstractIntegrationTest {
         bulkGetRequest.setQueryFilters(new ArrayList<>());
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/me/portfolio/transactions";
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions/search";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -282,7 +282,7 @@ public class TransactionIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(email);
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/me/portfolio/all/transactions";
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);

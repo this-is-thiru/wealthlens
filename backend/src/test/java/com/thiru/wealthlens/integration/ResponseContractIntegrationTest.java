@@ -37,7 +37,7 @@ class ResponseContractIntegrationTest extends AbstractIntegrationTest {
         // Given — the owner seeds the rate cards and adds a corporate action, so auditing records the owner as the author
         String owner = generateToken(OWNER, "SUPER_USER");
         assertThat(call("POST", "/api/v1/admin/charges/seed", owner, null).statusCode()).isEqualTo(200);
-        assertThat(call("POST", "/api/v1/admin/corporate-actions/add", owner, """
+        assertThat(call("POST", "/api/v1/admin/corporate-actions", owner, """
                 {"stockCode": "INFY", "stockName": "INFY", "type": "BONUS", "assetType": "EQUITY", "ratio": "1:1", "priority": 1,
                  "recordDate": "2026-01-20", "exDate": "2026-01-20", "allotmentDate": "2026-01-22"}""").statusCode()).isEqualTo(200);
         String user = generateToken(USER);
@@ -45,7 +45,7 @@ class ResponseContractIntegrationTest extends AbstractIntegrationTest {
         // When
         HttpResponse<String> cards = call("GET", "/api/v1/me/charges/charge-schedules?broker=ZERODHA", user, null);
         HttpResponse<String> catalogue = call("GET", "/api/v1/me/charges/charge-catalogue", user, null);
-        HttpResponse<String> actions = call("GET", "/api/v1/me/corporate-actions/all", user, null);
+        HttpResponse<String> actions = call("GET", "/api/v1/me/corporate-actions", user, null);
 
         // Then
         for (HttpResponse<String> read : java.util.List.of(cards, catalogue, actions)) {
@@ -71,9 +71,9 @@ class ResponseContractIntegrationTest extends AbstractIntegrationTest {
         String user = generateToken(USER);
 
         // When
-        HttpResponse<String> all = call("GET", "/api/v1/me/portfolio/all/transactions", user, null);
-        HttpResponse<String> temporary = call("GET", "/api/v1/me/portfolio/temporary-transactions/all", user, null);
-        HttpResponse<String> stocks = call("GET", "/api/v1/me/portfolio/stocks/all", user, null);
+        HttpResponse<String> all = call("GET", "/api/v1/me/portfolio/transactions", user, null);
+        HttpResponse<String> temporary = call("GET", "/api/v1/me/portfolio/temporary-transactions", user, null);
+        HttpResponse<String> stocks = call("GET", "/api/v1/me/portfolio/stocks", user, null);
 
         // Then
         for (HttpResponse<String> read : java.util.List.of(all, temporary, stocks)) {

@@ -105,7 +105,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, trade(TransactionType.SELL, 15.0, 150.0, MAR_5));
 
         // When
-        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/stocks/all", AssetResponse[].class).getBody();
+        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/stocks", AssetResponse[].class).getBody();
 
         // Then — one row: quantity 5, average price 5 × 120 / 5 = ₹120
         assertEquals(1, rows.length);
@@ -170,7 +170,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
 
         // When — OWNER's token on the admin route that names OTHER (since W-358c1 a user's own route names nobody, D-855)
-        ResponseEntity<String> answer = rest.exchange(URI.create(url("/api/v1/admin/portfolio/users/" + OTHER + "/stocks/all")),
+        ResponseEntity<String> answer = rest.exchange(URI.create(url("/api/v1/admin/portfolio/users/" + OTHER + "/stocks")),
                 HttpMethod.GET, new HttpEntity<>(headers(OWNER)), String.class);
 
         // Then — refused (401 or 403), nothing of OTHER's shown
@@ -206,7 +206,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<byte[]> file = rest.exchange(URI.create(url("/api/v1/me/portfolio/stocks/download")),
                 HttpMethod.POST, new HttpEntity<>(Map.of("entityName", "assets"), headers(OWNER)), byte[].class);
 
-        // Then — one data row whose QUANTITY is 5, as /stocks/all says
+        // Then — one data row whose QUANTITY is 5, as /stocks says
         assertEquals(200, file.getStatusCode().value());
         try (Workbook book = new XSSFWorkbook(new ByteArrayInputStream(file.getBody()))) {
             Sheet sheet = book.getSheetAt(0);
@@ -280,7 +280,8 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
 
         // When
-        ResponseEntity<String> cleared = post(OWNER, "/api/v1/me/portfolio/clear/all", null);
+        ResponseEntity<String> cleared = rest.exchange(URI.create(url("/api/v1/me/portfolio")), HttpMethod.DELETE, new HttpEntity<>(headers(OWNER)),
+                String.class);
 
         // Then — OWNER has nothing; OTHER keeps the lot of 7 and its transaction
         assertEquals(200, cleared.getStatusCode().value(), cleared.getBody());
@@ -310,7 +311,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void getStockQuantity_whenNothingIsHeld_answers400() {
         // When
-        ResponseEntity<String> answer = get(OWNER, "/api/v1/me/portfolio/stock/NOPE/all", String.class);
+        ResponseEntity<String> answer = get(OWNER, "/api/v1/me/portfolio/stocks/NOPE", String.class);
 
         // Then
         assertEquals(400, answer.getStatusCode().value(), answer.getBody());
@@ -339,7 +340,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                 return "trades.xlsx";
             }
         });
-        int missing = rest.exchange(URI.create(url("/api/v1/me/portfolio/upload-transactions")), HttpMethod.POST,
+        int missing = rest.exchange(URI.create(url("/api/v1/me/portfolio/transactions/uploads")), HttpMethod.POST,
                 new HttpEntity<>(body, headers), String.class).getStatusCode().value();
 
         // Then
@@ -423,7 +424,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 7.0, 100.0, JAN_5));
 
         // When
-        TransactionEntity[] listed = get(OWNER, "/api/v1/me/portfolio/all/transactions", TransactionEntity[].class)
+        TransactionEntity[] listed = get(OWNER, "/api/v1/me/portfolio/transactions", TransactionEntity[].class)
                 .getBody();
 
         // Then — OWNER's one trade, none of OTHER's
@@ -612,7 +613,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, spouse);
 
         // When
-        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/stocks/all", AssetResponse[].class).getBody();
+        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/stocks", AssetResponse[].class).getBody();
 
         // Then — a row each: Self 10 @ ₹100, Spouse 10 @ ₹200
         assertEquals(2, rows.length, () -> "rows: " + List.of(rows));
@@ -723,7 +724,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(residue, "assets");
 
         // When
-        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/mfs", AssetResponse[].class).getBody();
+        AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/mutual-funds", AssetResponse[].class).getBody();
 
         // Then — only the fund actually held (W-274 C2a, PS-11)
         assertEquals(List.of(STOCK), Arrays.stream(rows).map(AssetResponse::getStockCode).toList());
@@ -1018,8 +1019,8 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     @Test
     void getStocks_whenTheDateRangeIsMissingOrIncomplete_answers400NamingIt() {
         // When — no dateRange at all (scenario 29), and one without its end date
-        ResponseEntity<String> none = post(OWNER, "/api/v1/me/portfolio/stocks", Map.of());
-        ResponseEntity<String> noEnd = post(OWNER, "/api/v1/me/portfolio/stocks",
+        ResponseEntity<String> none = post(OWNER, "/api/v1/me/portfolio/stocks/search", Map.of());
+        ResponseEntity<String> noEnd = post(OWNER, "/api/v1/me/portfolio/stocks/search",
                 Map.of("dateRange", Map.of("startDate", "2026-01-01")));
 
         // Then
@@ -1293,7 +1294,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                 return "trades.xlsx";
             }
         });
-        String path = "/api/v1/me/portfolio/upload-transactions?quarter=" + quarter;
+        String path = "/api/v1/me/portfolio/transactions/uploads?quarter=" + quarter;
         return rest.exchange(URI.create(url(path)), HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
     }
 

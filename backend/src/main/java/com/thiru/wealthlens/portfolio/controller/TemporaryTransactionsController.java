@@ -23,7 +23,7 @@ public class TemporaryTransactionsController {
     private final TradeCollisionRetry tradeCollisionRetry;
     private final TemporaryTransactionService temporaryTransactionService;
 
-    @GetMapping("/all")
+    @GetMapping
     public List<TransactionResponse> getAllTemporaryTransactions(@CallerEmail String email) {
         return temporaryTransactionService.getAllTemporaryTransactions(UserMail.from(email)).stream()
                 .map(TemporaryTransactionsController::response).toList();

@@ -77,7 +77,7 @@ class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
         bonus.put("recordDate", "2026-03-20");
         bonus.put("exDate", "2026-03-20");
         bonus.put("allotmentDate", "2026-03-22");
-        assertThat(call(HttpMethod.POST, "/api/v1/admin/corporate-actions/add", "SUPER_USER", bonus).getStatusCode().value()).isEqualTo(200);
+        assertThat(call(HttpMethod.POST, "/api/v1/admin/corporate-actions", "SUPER_USER", bonus).getStatusCode().value()).isEqualTo(200);
         v2(stockCode, "BUY", 3, 100, "2026-03-25");
     }
 

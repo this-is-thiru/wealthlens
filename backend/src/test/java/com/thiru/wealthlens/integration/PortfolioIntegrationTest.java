@@ -415,7 +415,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "RELIANCE", "Reliance Industries",
                 "NSE", "ZERODHA", "EQUITY", 2500.0, 10.0, "BUY");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -450,7 +450,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "not a real xlsx".getBytes());
 
-        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -490,7 +490,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "VALID_STOCK", "Valid Stock Corp",
                 "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -528,7 +528,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "SOME_STOCK", "Some Stock Corp",
                 "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -752,7 +752,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetEntity asset = buildAssetEntity();
         mongoTemplate.save(asset, "assets");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/stocks/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -778,7 +778,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(older, "assets");
         mongoTemplate.save(newer, "assets");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/stocks/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         RestTemplate rt = createRestTemplate();
@@ -796,7 +796,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void getAllStocks_empty_whenNoAssets_expected200AndEmptyList() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/api/v1/me/portfolio/stocks/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -815,7 +815,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetEntity asset = buildAssetEntity();
         mongoTemplate.save(asset, "assets");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/stock/" + TEST_STOCK_CODE + "/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/" + TEST_STOCK_CODE;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -832,7 +832,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void getStockQuantity_stockNotFound_whenNoSuchStock_expected400() {
         String token = generateToken(TEST_EMAIL);
 
-        String url = baseUrl() + "/api/v1/me/portfolio/stock/NONEXISTENT/all";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/NONEXISTENT";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -861,7 +861,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         range.setEndDate(LocalDate.now().plusDays(10));
         request.setDateRange(range);
 
-        String url = baseUrl() + "/api/v1/me/portfolio/stocks";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/search";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -882,7 +882,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mf.setAssetType(AssetType.MUTUAL_FUND);
         mongoTemplate.save(mf, "assets");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/mfs";
+        String url = baseUrl() + "/api/v1/me/portfolio/mutual-funds";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -912,14 +912,14 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         txn.setStatus(TransactionStatus.PROCESSED);
         mongoTemplate.save(txn, "transactions");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/clear/all";
+        String url = baseUrl() + "/api/v1/me/portfolio";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.DELETE, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertTrue(response.getBody().contains("deleted successfully"));
@@ -964,14 +964,14 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(emailOnly(), "charge_accounts");
         mongoTemplate.save(emailOnly(), "lastly_performed_corporate_action");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/clear/all";
+        String url = baseUrl() + "/api/v1/me/portfolio";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = createRestTemplate()
-                .exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+                .exchange(URI.create(url), HttpMethod.DELETE, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         for (String collection : List.of("assets", "transactions", "trade_outcomes", "profit_and_loss",
@@ -997,14 +997,14 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         AssetEntity asset = buildAssetEntity();
         mongoTemplate.save(asset, "assets");
 
-        String url = baseUrl() + "/api/v1/me/portfolio/clear/all";
+        String url = baseUrl() + "/api/v1/me/portfolio";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.DELETE, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -1158,7 +1158,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         range.setEndDate(LocalDate.now().plusYears(1));
         request.setDateRange(range);
 
-        String url = baseUrl() + "/api/v1/me/portfolio/stocks";
+        String url = baseUrl() + "/api/v1/me/portfolio/stocks/search";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -1185,7 +1185,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
             excelContent = out.toByteArray();
         }
 
-        String url = baseUrl() + "/api/v1/me/portfolio/upload-transactions?quarter=Q1";
+        String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);

@@ -122,7 +122,7 @@ class RouteAccessIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(names).contains("POST /api/v1/me/portfolio/properties/sales", "POST /api/v1/public/auth/login",
-                "GET /api/v1/me/portfolio/stocks/all", "GET /api/v1/admin/portfolio/users/{email}/stocks/all");
+                "GET /api/v1/me/portfolio/stocks", "GET /api/v1/admin/portfolio/users/{email}/stocks");
     }
 
     @Test

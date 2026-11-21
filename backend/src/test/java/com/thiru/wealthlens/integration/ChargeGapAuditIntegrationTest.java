@@ -116,7 +116,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
 
         // When
         JsonNode recorded = json(get("/api/v1/me/charges/user-charges")).get(0);
-        JsonNode lot = json(get("/api/v1/me/portfolio/stocks/all")).get(0);
+        JsonNode lot = json(get("/api/v1/me/portfolio/stocks")).get(0);
 
         // Then -- recorded on the intraday card, and with authoritative on the lot costs the computed ₹3.92
         assertEquals("ZERODHA_EQ_INTRADAY_2025_04", recorded.get("scheduleCode").asString());

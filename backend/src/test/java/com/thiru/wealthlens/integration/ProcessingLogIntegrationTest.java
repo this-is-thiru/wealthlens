@@ -151,7 +151,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     @Test
     void request_whenTheOwnerReadsBalasData_recordsTheOwnerAsPrincipalAndBalaAsSubject() throws IOException, InterruptedException {
         // Given / When
-        assertThat(read("/api/v1/admin/portfolio/users/" + BALA + "/stocks/all", generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
+        assertThat(read("/api/v1/admin/portfolio/users/" + BALA + "/stocks", generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
 
         // Then
         assertThat(recordsOnceWritten(1)).singleElement().satisfies(record -> {
@@ -252,7 +252,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     void erase_whenAnusAccountGoes_takesHerOwnRequestsAndKeepsTheOwnersAboutHer() throws IOException, InterruptedException {
         // Given
         assertThat(read("/api/v1/me/privacy/grievances", generateToken(ANU))).isEqualTo(200);
-        assertThat(read("/api/v1/admin/portfolio/users/" + ANU + "/stocks/all", generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
+        assertThat(read("/api/v1/admin/portfolio/users/" + ANU + "/stocks", generateToken(OWNER, "SUPER_USER"))).isEqualTo(200);
         recordsOnceWritten(2);
 
         // When — both written first, or a late one would survive the erasure

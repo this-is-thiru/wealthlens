@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.restassured.RestAssured;
 import java.net.URI;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +32,7 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(contentType);
         headers.setBearerAuth(generateToken(OPERATOR, "SUPER_USER"));
-        RestTemplate client = new RestTemplate();
+        RestTemplate client = new RestTemplate(new org.springframework.http.client.JdkClientHttpRequestFactory());
         client.setErrorHandler(new DefaultResponseErrorHandler() {
             @Override
             public boolean hasError(ClientHttpResponse response) {
@@ -78,8 +79,9 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void updatePriority_whenThePriorityIsNotANumber_expected400NamingAWholeNumber() {
-        assertAnswered(exchange(HttpMethod.PUT, "/api/v1/admin/corporate-actions/update/priority/any-id/high", MediaType.APPLICATION_JSON,
-                null), HttpStatus.BAD_REQUEST, "Parameter 'priority' must be a whole number, but was 'high'");
+        // Since W-358c3a the priority is a body field, not a path segment (D-859)
+        assertAnswered(exchange(HttpMethod.PATCH, "/api/v1/admin/corporate-actions/any-id", MediaType.APPLICATION_JSON,
+                Map.of("priority", "high")), HttpStatus.BAD_REQUEST, "Field 'priority' must be a whole number, but was 'high'");
     }
 
     @Test
@@ -89,7 +91,7 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         parts.add("quarter", "Q1");
 
         // When / Then
-        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/portfolio/upload-transactions",
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/portfolio/transactions/uploads",
                 MediaType.MULTIPART_FORM_DATA, parts), HttpStatus.BAD_REQUEST, "Required part 'file' is not present");
     }
 

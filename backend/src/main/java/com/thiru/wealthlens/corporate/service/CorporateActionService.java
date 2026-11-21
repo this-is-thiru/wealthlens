@@ -98,9 +98,8 @@ public class CorporateActionService {
         return "Priority has been updated for the action: " + id + " stock: " + entity.getStockCode() + " from: " + existingPriority + " to: " + priority;
     }
 
-    public List<CorporateActionDto> getCorporateActions(List<String> ids) {
-        List<CorporateActionEntity> actions = corporateActionRepository.findAllById(ids);
-        return TCollectionUtil.map(actions, corporateAction -> TJsonMapper.copy(corporateAction, CorporateActionDto.class));
+    public List<CorporateActionEntity> getCorporateActions(List<String> ids) {
+        return corporateActionRepository.findAllById(ids);
     }
 
     @Transactional

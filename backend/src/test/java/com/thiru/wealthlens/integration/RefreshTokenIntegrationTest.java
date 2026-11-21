@@ -223,7 +223,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         String body = "{\"email\":\"" + EMAIL + "\",\"password\":\"" + PASSWORD + "\",\"newPassword\":\"another-password\"}";
 
         // When
-        HttpRequest change = HttpRequest.newBuilder(URI.create("http://localhost:" + io.restassured.RestAssured.port + "/api/v1/me/auth/change/password")).header("Authorization", "Bearer " + signedIn.<String>path("access_token"))
+        HttpRequest change = HttpRequest.newBuilder(URI.create("http://localhost:" + io.restassured.RestAssured.port + "/api/v1/me/auth/password")).header("Authorization", "Bearer " + signedIn.<String>path("access_token"))
                 .header("Content-Type", "application/json").PUT(HttpRequest.BodyPublishers.ofString(body)).build();
         int status = HttpClient.newHttpClient().send(change, HttpResponse.BodyHandlers.discarding()).statusCode();
 

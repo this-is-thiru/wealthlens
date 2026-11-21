@@ -164,13 +164,16 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void clearAll_whenAPropertySaleIsStored_clearsIt() {
+    void clearAll_whenAPropertySaleIsStored_clearsIt() throws java.io.IOException, InterruptedException {
         // Given
         post(SALE).statusCode(200);
 
         // When
-        given().auth().oauth2(generateToken(EMAIL)).post("/api/v1/me/portfolio/clear/all").then()
-                .statusCode(200);
+        // Over java.net.http: RestAssured's DELETE throws an NPE in this suite's Groovy dispatch, as its GET does (session 59)
+        java.net.http.HttpResponse<Void> cleared = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(
+                        URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/me/portfolio"))
+                .header("Authorization", "Bearer " + generateToken(EMAIL)).DELETE().build(), java.net.http.HttpResponse.BodyHandlers.discarding());
+        assertEquals(200, cleared.statusCode());
 
         // Then
         assertEquals(0, rows().size());

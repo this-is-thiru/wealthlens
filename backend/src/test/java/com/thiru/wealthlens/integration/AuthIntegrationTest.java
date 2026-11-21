@@ -177,7 +177,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword(newPassword);
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/me/auth/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -277,7 +277,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword("newpassword");
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/me/auth/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -309,7 +309,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword(password);
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/me/auth/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -339,7 +339,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword("newpassword");
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/me/auth/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -363,7 +363,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         changeRequest.setNewPassword("newpassword");
 
         // WHEN / THEN
-        String url = baseUrl() + "/api/v1/me/auth/change/password";
+        String url = baseUrl() + "/api/v1/me/auth/password";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -422,7 +422,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(email1);
 
         // WHEN / THEN - since W-358c1 another user is named only on an admin route (D-855 C3a), which a user's token cannot pass
-        String url = baseUrl() + "/api/v1/admin/portfolio/users/" + email2 + "/stocks/all";
+        String url = baseUrl() + "/api/v1/admin/portfolio/users/" + email2 + "/stocks";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);

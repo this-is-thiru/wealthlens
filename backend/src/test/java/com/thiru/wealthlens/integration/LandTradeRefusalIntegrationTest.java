@@ -177,7 +177,7 @@ class LandTradeRefusalIntegrationTest extends AbstractIntegrationTest {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         // When
-        ResponseEntity<String> response = restTemplate().exchange(uri("/upload-transactions?quarter=" + quarter),
+        ResponseEntity<String> response = restTemplate().exchange(uri("/transactions/uploads?quarter=" + quarter),
                 HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
 
         // Then

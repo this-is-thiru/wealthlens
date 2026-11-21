@@ -4,7 +4,6 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.ErasureReport;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
-import com.thiru.wealthlens.portfolio.dto.TransactionResponse;
 import com.thiru.wealthlens.portfolio.service.PortfolioQueryService;
 import com.thiru.wealthlens.portfolio.service.TradeCollisionRetry;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
@@ -17,6 +16,7 @@ import com.thiru.wealthlens.shared.web.MeApi;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,7 +45,7 @@ public class PortfolioController {
         return ResponseEntity.ok(tradeCollisionRetry.addTransactionV2(UserMail.from(email), assetRequest));
     }
 
-    @PostMapping("/upload-transactions")
+    @PostMapping("/transactions/uploads")
     public String uploadTransactions(@CallerEmail String email, @RequestParam("quarter") String quarter,
                                                      @RequestParam("file") MultipartFile file) {
         return tradeCollisionRetry.uploadTransactions(UserMail.from(email), quarter, file);
@@ -64,7 +64,7 @@ public class PortfolioController {
      * "deleted successfully" whatever happened, because the service caught each failure and logged
      * it — telling a user their data was gone while it was still there.
      */
-    @PostMapping("/clear/all")
+    @DeleteMapping
     public String deleteAllRecords(@CallerEmail String email) {
         ErasureReport report = userRecordsErasureService.erase(UserMail.from(email));
         if (report.isComplete()) {
@@ -74,32 +74,28 @@ public class PortfolioController {
                 + String.join(", ", report.getFailed());
     }
 
-    @GetMapping("/stocks/all")
+    @GetMapping("/stocks")
     public List<AssetResponse> getAllStocks(@CallerEmail String email) {
         return portfolioQueryService.getAllStocks(UserMail.from(email));
     }
 
-    @GetMapping("/mfs")
+    @GetMapping("/mutual-funds")
     public List<AssetResponse> getAllMutualFunds(@CallerEmail String email) {
         return portfolioQueryService.getMutualFunds(UserMail.from(email));
     }
 
-    @PostMapping("/stocks")
+    @PostMapping("/stocks/search")
     public List<AssetResponse> getStocks(@CallerEmail String email,
                                                          @RequestBody BulkGetRequest bulkGetRequest) {
         return portfolioQueryService.getStocksWithDateRange(UserMail.from(email), bulkGetRequest.getDateRange());
     }
 
-    @GetMapping("/stock/{stockCode}/all")
+    @GetMapping("/stocks/{stockCode}")
     public List<AssetResponse> getAllStocks(@CallerEmail String email,
                                                             @PathVariable String stockCode) {
         return portfolioQueryService.getStockQuantity(UserMail.from(email), stockCode);
     }
 
-    @GetMapping("/all/transactions")
-    public List<TransactionResponse> allTransactions(@CallerEmail String email) {
-        return transactionService.getAllUserTransactions(UserMail.from(email));
-    }
 
     @PostMapping("/assets/search")
     public List<AssetResponse> searchAssets(@CallerEmail String email, @RequestBody BulkGetRequest bulkGetRequest) {

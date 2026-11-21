@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 class ApiZoneTest {
 
+    private static final java.util.Set<String> CRUD_VERBS = java.util.Set.of("add", "delete", "update", "all", "list", "get");
+
     private static final List<Class<?>> CONTROLLERS = new ClassFileImporter().withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
             .importPackages("com.thiru.wealthlens").stream().map(JavaClass::reflect)
             .filter(type -> type.isAnnotationPresent(RestController.class)).toList();
@@ -51,6 +53,19 @@ class ApiZoneTest {
 
         // Then
         assertThat(offending).as("mappings that write /api themselves").isEmpty();
+    }
+
+    @Test
+    void mapping_whenDeclared_namesNoCrudVerb() {
+        // When — a path names a thing; its method says what is done to it (W-358c3a, D-859 C2a)
+        List<String> offending = CONTROLLERS.stream().flatMap(type -> Stream.concat(Stream.of(type), Arrays.stream(type.getDeclaredMethods()))
+                .filter(element -> AnnotatedElementUtils.hasAnnotation(element, RequestMapping.class))
+                .flatMap(element -> Arrays.stream(AnnotatedElementUtils.findMergedAnnotation(element, RequestMapping.class).path())
+                        .filter(path -> Arrays.stream(path.split("/")).anyMatch(CRUD_VERBS::contains))
+                        .map(path -> type.getSimpleName() + " " + path))).toList();
+
+        // Then
+        assertThat(offending).as("mappings that write add, delete, update, all, list or get into the path").isEmpty();
     }
 
     @Test
