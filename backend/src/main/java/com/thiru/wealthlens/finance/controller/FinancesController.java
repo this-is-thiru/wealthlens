@@ -7,6 +7,7 @@ import com.thiru.wealthlens.finance.dto.StepUpSIPRequest;
 import com.thiru.wealthlens.finance.service.FinancesService;
 import com.thiru.wealthlens.finance.service.StepUpSIPCalculator;
 import com.thiru.wealthlens.shared.web.PublicApi;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,12 +22,12 @@ public class FinancesController {
     private final StepUpSIPCalculator sipCalculator;
 
     @PostMapping("/calculate")
-    public FinanceResponse calculate(@RequestBody FinanceRequest financeRequest) {
+    public FinanceResponse calculate(@Valid @RequestBody FinanceRequest financeRequest) {
         return financesService.getFinanceResponse(financeRequest);
     }
 
     @PostMapping("/interest-rate")
-    public InterestRateResponse calculateInterestRate(@RequestBody StepUpSIPRequest financeRequest) {
+    public InterestRateResponse calculateInterestRate(@Valid @RequestBody StepUpSIPRequest financeRequest) {
         return sipCalculator.calculateRate(financeRequest);
     }
 }

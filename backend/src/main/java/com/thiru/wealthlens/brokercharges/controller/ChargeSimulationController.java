@@ -4,6 +4,7 @@ import com.thiru.wealthlens.brokercharges.dto.request.ChargeSimulationRequest;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
 import com.thiru.wealthlens.brokercharges.service.ChargeSimulationService;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +35,7 @@ public class ChargeSimulationController {
     private final ChargeSimulationService chargeSimulationService;
 
     @PostMapping("/simulate")
-    public ChargeBreakdownResponse simulate(@RequestBody ChargeSimulationRequest request) {
+    public ChargeBreakdownResponse simulate(@Valid @RequestBody ChargeSimulationRequest request) {
         return chargeSimulationService.simulate(request);
     }
 }

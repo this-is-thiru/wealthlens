@@ -5,6 +5,7 @@ import com.thiru.wealthlens.shared.privacy.AccountErasureService;
 import com.thiru.wealthlens.shared.privacy.ErasureReapplication;
 import com.thiru.wealthlens.shared.privacy.ReappliedErasures;
 import com.thiru.wealthlens.shared.web.AdminApi;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class AccountErasureAdminController {
 
     @PostMapping("/reapply")
     @PreAuthorize("hasRole('SUPER_USER')")
-    public ReappliedErasures reapply(@RequestBody ErasureReapplication reapplication) {
+    public ReappliedErasures reapply(@Valid @RequestBody ErasureReapplication reapplication) {
         return service.reapply(reapplication);
     }
 

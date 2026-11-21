@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxplanning.workspace.DraftStatusRequest;
 import com.thiru.wealthlens.taxplanning.workspace.DraftView;
 import com.thiru.wealthlens.taxplanning.workspace.RevisionResponse;
 import com.thiru.wealthlens.taxplanning.workspace.WorkspaceResponse;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -53,7 +54,7 @@ public class DraftController {
 
     @PostMapping("/profiles/{profileId}/workspaces/{taxYear}/drafts")
     public ResponseEntity<DraftView> create(@CallerEmail String email, @PathVariable String profileId,
-            @PathVariable int taxYear, @RequestBody Map<String, String> body) {
+            @PathVariable int taxYear, @Valid @RequestBody Map<String, String> body) {
         return tagged(draftService.createDraft(email, profileId, taxYear, body.get("label")));
     }
 
@@ -70,7 +71,7 @@ public class DraftController {
 
     @PatchMapping("/drafts/{draftId}")
     public ResponseEntity<?> patch(@CallerEmail String email, @PathVariable String draftId,
-            @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch, @RequestBody JsonNode patch) {
+            @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch, @Valid @RequestBody JsonNode patch) {
         try {
             return tagged(draftSaveRetry.patch(email, draftId, revisionIn(ifMatch), patch));
         } catch (DraftConflictException e) {
@@ -80,7 +81,7 @@ public class DraftController {
 
     @PostMapping("/drafts/{draftId}/status")
     public ResponseEntity<DraftView> status(@CallerEmail String email, @PathVariable String draftId,
-            @RequestBody DraftStatusRequest request) {
+            @Valid @RequestBody DraftStatusRequest request) {
         return tagged(draftService.changeStatus(email, draftId, request));
     }
 

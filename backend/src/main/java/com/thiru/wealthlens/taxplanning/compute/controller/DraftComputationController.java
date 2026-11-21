@@ -31,6 +31,7 @@ import com.thiru.wealthlens.taxplanning.compute.DraftOptimisationRequest;
 import com.thiru.wealthlens.taxplanning.compute.DraftReconciliation;
 import com.thiru.wealthlens.taxplanning.compute.DraftReconciliationService;
 import com.thiru.wealthlens.taxplanning.compute.DraftRegimeComparison;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
@@ -68,13 +69,13 @@ public class DraftComputationController {
 
     @PostMapping("/drafts/{draftId}/compute")
     public DraftComputationView compute(@CallerEmail String email, @PathVariable String draftId,
-            @RequestBody Map<String, String> body) {
+            @Valid @RequestBody Map<String, String> body) {
         return service.compute(email, draftId, body.get("regime"));
     }
 
     @PostMapping("/profiles/{profileId}/workspaces/{taxYear}/first-figure")
     public DraftFirstFigure firstFigure(@CallerEmail String email, @PathVariable String profileId,
-            @PathVariable int taxYear, @RequestBody DraftFirstFigureRequest request) {
+            @PathVariable int taxYear, @Valid @RequestBody DraftFirstFigureRequest request) {
         return firstFigureService.firstFigure(email, profileId, taxYear, request);
     }
 
@@ -125,13 +126,13 @@ public class DraftComputationController {
 
     @PostMapping("/drafts/{draftId}/itr-form")
     public ItrFormChoice chooseForm(@CallerEmail String email, @PathVariable String draftId,
-            @RequestBody Map<String, String> body) {
+            @Valid @RequestBody Map<String, String> body) {
         return service.chooseForm(email, draftId, body.get("regime"), body.get("returnKind"));
     }
 
     @PostMapping("/drafts/{draftId}/optimise")
     public DraftOptimisation optimise(@CallerEmail String email, @PathVariable String draftId,
-            @RequestBody DraftOptimisationRequest request) {
+            @Valid @RequestBody DraftOptimisationRequest request) {
         return service.optimise(email, draftId, request);
     }
 

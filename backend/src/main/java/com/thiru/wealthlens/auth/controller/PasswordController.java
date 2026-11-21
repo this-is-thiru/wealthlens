@@ -4,6 +4,7 @@ import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.service.AuthService;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +19,7 @@ public class PasswordController {
     private final AuthService authService;
 
     @PutMapping("/password")
-    public String changePassword(@CallerEmail String email, @RequestBody RegistrationRequest createUserRequest) {
+    public String changePassword(@CallerEmail String email, @Valid @RequestBody RegistrationRequest createUserRequest) {
         return authService.changePassword(email, createUserRequest);
     }
 }

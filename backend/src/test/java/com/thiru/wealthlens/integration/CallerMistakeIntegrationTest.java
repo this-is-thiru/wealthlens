@@ -130,4 +130,19 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
                 "{\"scheduleCode\":\"X\",\"rules\":[{\"code\":\"STT\"}]}"), HttpStatus.BAD_REQUEST,
                 "Field 'rules[0].perLot' must be true or false");
     }
+
+    @Test
+    void registerChargeAccount_whenTheBodyNamesNothing_expected400NamingEachRequiredFieldAndStoresNothing() {
+        // W-358d4: an empty body was stored as an account with every field null — no broker, no demat id, no AMC frequency
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/charges/charge-accounts", MediaType.APPLICATION_JSON, "{}"), HttpStatus.BAD_REQUEST,
+                "Field 'amcFrequency' must not be null; field 'brokerName' must not be null; field 'dematAccountId' must not be blank");
+        assertThat(mongoTemplate.getCollection("charge_accounts").countDocuments()).isZero();
+    }
+
+    @Test
+    void performCorporateAction_whenTheActionHasNoType_expected400NamingIt() {
+        // W-358d4: a missing type crashed the perform with a 500 naming the code's insides
+        assertAnswered(exchange(HttpMethod.PUT, "/api/v1/admin/corporate-actions/perform", MediaType.APPLICATION_JSON, "{\"stockCode\": \"RELIANCE\"}"),
+                HttpStatus.BAD_REQUEST, "Field 'type' must not be null");
+    }
 }

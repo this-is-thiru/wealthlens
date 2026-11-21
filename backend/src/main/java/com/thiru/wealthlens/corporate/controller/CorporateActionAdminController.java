@@ -4,6 +4,7 @@ import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.CorporateActionPriority;
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.shared.web.AdminApi;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +26,7 @@ public class CorporateActionAdminController {
 
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping
-    public ResponseEntity<String> addCorporateAction(@RequestBody CorporateActionDto corporateActionRequest) {
+    public ResponseEntity<String> addCorporateAction(@Valid @RequestBody CorporateActionDto corporateActionRequest) {
 
         String message = corporateActionService.addCorporateAction(corporateActionRequest);
         return ResponseEntity.ok(message);
@@ -33,7 +34,7 @@ public class CorporateActionAdminController {
 
     @PreAuthorize("hasRole('SUPER_USER')")
     @PatchMapping("/{id}")
-    public ResponseEntity<String> updateCorporateActionPriority(@PathVariable String id, @RequestBody CorporateActionPriority priority) {
+    public ResponseEntity<String> updateCorporateActionPriority(@PathVariable String id, @Valid @RequestBody CorporateActionPriority priority) {
 
         String message = corporateActionService.updateCorporateActionPriority(id, priority.priority());
         return ResponseEntity.ok(message);
@@ -47,7 +48,7 @@ public class CorporateActionAdminController {
 
     @PreAuthorize("hasRole('SUPER_USER')")
     @PutMapping("/perform")
-    public ResponseEntity<String> updateCorporateAction(@RequestBody CorporateActionDto corporateActionRequest) {
+    public ResponseEntity<String> updateCorporateAction(@Valid @RequestBody CorporateActionDto corporateActionRequest) {
 
         String message = corporateActionService.performCorporateAction(corporateActionRequest);
         return ResponseEntity.ok(message);

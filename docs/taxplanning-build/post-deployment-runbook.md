@@ -85,6 +85,7 @@ below is the full sequence for a fresh database (W-337).
 2. Phase 15 batch (D-874 – D-883) — nothing to run: the six one-time corrections answer 404 (`…/trade-outcomes/rebuild-charges/correct`, `…/financial-years/rewrite`, `…/stored-terms/remove`, `…/deductible-charges/remove`, `…/profit-and-loss/split/reshape`, `…/corporate-actions/bonus/allotment-dates/correct`, all under `/api/v1/admin/portfolio`); runbook §0.6, §0.8, §2.1, §2.3 – §2.7, §2.9, §2.10 retired and §6 removed.
 3. W-358d2 (D-884) — nothing to run: 5 failed sign-ins for one address from one client in 15 minutes, or 30 calls from one client to `/api/v1/public/auth/**`, answer 429 with `Retry-After`; registering a taken or held address answers "This email cannot be registered" (the address named nowhere), and a wrong notice version is now reported first.
 4. §1.h W-358d3 (D-885) — nothing to run: each sign-in rewrites its account's password hash as Argon2id; the read-only count before and a week after; going back to `m1.5` needs a password reset for each upgraded account (§1.h).
+5. W-358d4 (D-886) — nothing to write: a body missing a required field answers 400 naming it. **Read-only, per database (IntelliJ console):** demat accounts stored with a field the request now requires missing — `db.charge_accounts.countDocuments({ $or: [{ broker_name: null }, { demat_account_id: { $in: [null, ""] } }, { amc_frequency: null }] })`; expected `0`; anything above 0 is reported to the owner, corrected by nobody in this item.
 
 ## 0. Before deploying
 

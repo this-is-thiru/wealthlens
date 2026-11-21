@@ -10,6 +10,7 @@ import com.thiru.wealthlens.auth.service.SignInAttempts;
 import com.thiru.wealthlens.shared.privacy.ProcessingLogFilter;
 import com.thiru.wealthlens.shared.web.PublicApi;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,7 +33,7 @@ public class AuthController {
     private final SignInAttempts signInAttempts;
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         ProcessingLogFilter.nameLoginAttempt(loginRequest.getEmail());
         String client = request.getRemoteAddr();
         signInAttempts.requireAllowed(loginRequest.getEmail(), client);
@@ -56,19 +57,19 @@ public class AuthController {
 
     /** Public: the refresh token is the credential, and an expired access token may come with it (W-358b). */
     @PostMapping("/token/refresh")
-    public RefreshResponse refresh(@RequestBody RefreshRequest request) {
+    public RefreshResponse refresh(@Valid @RequestBody RefreshRequest request) {
         return authService.refresh(request.refreshToken());
     }
 
     /** Ends the sign-in the refresh token belongs to; the same answer for a token already ended or unknown. */
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(@RequestBody RefreshRequest request) {
+    public void logout(@Valid @RequestBody RefreshRequest request) {
         authService.logout(request.refreshToken());
     }
 
     @PostMapping("/register")
-    public String addNewUser(@RequestBody RegistrationRequest request) {
+    public String addNewUser(@Valid @RequestBody RegistrationRequest request) {
         return authService.addUser(request);
     }
 

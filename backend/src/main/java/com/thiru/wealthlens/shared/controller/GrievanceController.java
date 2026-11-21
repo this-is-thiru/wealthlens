@@ -5,6 +5,7 @@ import com.thiru.wealthlens.shared.privacy.GrievanceService;
 import com.thiru.wealthlens.shared.privacy.GrievanceStatement;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,7 +30,7 @@ public class GrievanceController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public GrievanceReceipt raise(@CallerEmail String email, @RequestBody GrievanceStatement statement) {
+    public GrievanceReceipt raise(@CallerEmail String email, @Valid @RequestBody GrievanceStatement statement) {
         return service.raise(email, statement);
     }
 

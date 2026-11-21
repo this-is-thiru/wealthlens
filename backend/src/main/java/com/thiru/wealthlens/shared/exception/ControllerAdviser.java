@@ -6,6 +6,8 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -14,8 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -96,6 +100,17 @@ public class ControllerAdviser {
     public ResponseEntity<ProblemDetail> handleUnauthorized(Exception ex, HttpServletRequest request) {
         log(ex);
         return problem(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), request);
+    }
+
+    /** A body missing what its type requires (W-358d4): 400 naming each field, in field order. */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidBody(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        log(ex);
+        String fields = ex.getBindingResult().getFieldErrors().stream()
+                .sorted(Comparator.comparing(FieldError::getField))
+                .map(error -> "field '" + error.getField() + "' " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return problem(HttpStatus.BAD_REQUEST.value(), Character.toUpperCase(fields.charAt(0)) + fields.substring(1), request);
     }
 
     /** Over a limit on attempts (W-358d2): 429, with how long to wait. */

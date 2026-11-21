@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxplanning.gazette.GazetteCursorRequest;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteCursorResponse;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteLeadResponse;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteWatchService;
+import jakarta.validation.Valid;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +35,7 @@ public class GazetteWatchController {
     /** Where the watch starts: it reads the numbers after {@code lastNumber} in {@code year}'s folder. */
     @PutMapping("/gazette-cursor")
     @PreAuthorize("hasRole('SUPER_USER')")
-    public ResponseEntity<GazetteCursorResponse> seedCursor(@RequestBody GazetteCursorRequest request, Principal principal) {
+    public ResponseEntity<GazetteCursorResponse> seedCursor(@Valid @RequestBody GazetteCursorRequest request, Principal principal) {
         return ResponseEntity.ok(GazetteCursorResponse.from(gazetteWatch.seed(request, principal.getName())));
     }
 }

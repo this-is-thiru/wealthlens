@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxplanning.documents.DocumentService;
 import com.thiru.wealthlens.taxplanning.documents.DocumentView;
 import com.thiru.wealthlens.taxplanning.documents.ParseView;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -40,7 +41,7 @@ public class DocumentController {
     }
 
     @PostMapping("/{documentId}/confirm")
-    public ParseView confirm(@CallerEmail String email, @PathVariable String documentId, @RequestBody ConfirmationRequest request) {
+    public ParseView confirm(@CallerEmail String email, @PathVariable String documentId, @Valid @RequestBody ConfirmationRequest request) {
         return service.confirm(email, documentId, request);
     }
 }

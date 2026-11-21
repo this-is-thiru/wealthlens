@@ -5,6 +5,7 @@ import com.thiru.wealthlens.portfolio.service.PropertySaleService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +20,7 @@ public class PropertySaleController {
     private final PropertySaleService propertySaleService;
 
     @PostMapping("/properties/sales")
-    public String recordSale(@CallerEmail String email, @RequestBody PropertySaleRequest request) {
+    public String recordSale(@CallerEmail String email, @Valid @RequestBody PropertySaleRequest request) {
         return propertySaleService.recordSale(UserMail.from(email), request);
     }
 }
