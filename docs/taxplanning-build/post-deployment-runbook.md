@@ -1199,7 +1199,9 @@ collection.
 
 **Way back:** delete the rows this run wrote (`audit_metadata.createdBy` = `<stored caller email>` (§0.7), `createdAt` = the run).
 
-### 2.3 W-088u8c (D-285) — rewrite the `FY`-form financial years · `SUPER_USER` · **prod only · once · outstanding**
+### 2.3 W-088u8c (D-285) — rewrite the `FY`-form financial years · `SUPER_USER` · **retired by W-149 (D-875) · do not run**
+
+> **Retired.** Run on prod (W-334e2: 163 written, after 0) and staging (W-334d3a: 56 written, after 0); W-149 removed its route and code. Kept below as the record of what it did.
 
 **Why.** W-086a (D-239) moved `trade_outcomes` to one financial-year form, `2025-2026`. Its startup rewrite never ran
 on prod: the owner's check (2026-10-20) found **163** `FY2025-26`-form rows there, the rebuild's rows, and none on

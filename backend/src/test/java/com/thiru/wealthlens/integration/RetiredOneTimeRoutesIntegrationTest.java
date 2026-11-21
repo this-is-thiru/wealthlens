@@ -20,6 +20,12 @@ class RetiredOneTimeRoutesIntegrationTest extends AbstractIntegrationTest {
         refuses("/api/v1/admin/portfolio/trade-outcomes/rebuild-charges/correct");
     }
 
+    @Test
+    void financialYearRewrite_whenAnAdminPosts_answers404() {
+        // Given / When / Then — W-149, runbook §2.3: the FY-form financial years, rewritten on prod (W-334e2, 163) and staging (W-334d3a, 56)
+        refuses("/api/v1/admin/portfolio/trade-outcomes/financial-years/rewrite");
+    }
+
     private void refuses(String route) {
         given().header("Authorization", "Bearer " + generateToken(ADMIN, "SUPER_USER")).contentType(ContentType.JSON).body("{}")
                 .when().post(route)
