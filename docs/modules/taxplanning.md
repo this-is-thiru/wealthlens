@@ -4,7 +4,7 @@
 > `backend/src/main/java/com/thiru/wealthlens/taxplanning/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a. The module is
 > written in four parts (D-923): boundary, profiles, workspaces, drafts and salary import (W-357b10a, D-924); assembly, portfolio
 > bridge, computation, advisory views and report (W-357b10b, D-925); documents and isolation (W-357b10c, D-926); protection, erasure,
-> jobs and the Gazette watch (**W-357b10d**, to come).
+> jobs and the Gazette watch (W-357b10d, D-927). The doc is complete.
 
 ## 1. Purpose
 
@@ -52,7 +52,7 @@ All tax calculations are delegated to `taxengine`, which is pure and fetches not
 
 ## 3. Routes
 
-Every route in parts one to three is in the `me` zone (`@MeApi`, prefix `/api/v1/me/tax`), taking the authenticated user from `@CallerEmail`.
+Every route in parts one to three, and the erasure route of part four, is in the `me` zone (`@MeApi`, prefix `/api/v1/me/tax`), taking the authenticated user from `@CallerEmail`; part four's other three are admin routes.
 
 ### Profiles and reference records (`profile/controller/`)
 
@@ -129,7 +129,18 @@ All three answer **503** `"Uploading documents is switched off (app.tax.document
 | `GET /api/v1/me/tax/documents/{documentId}/parse` | → `ParseView(documentId, state WAITING / READ, reading, employeePan MATCHES / DIFFERS / NOT_READ, confirmed)`; `reading` is the latest attempt's `(attemptId, outcome, fields, unmappedText, notes)`; records a `DOCUMENT` read | `documents/controller/DocumentController.java:38` – `:41`; `documents/DocumentService.java:97` – `:102`, `:129` – `:139`; `documents/ParseView.java:16` – `:60` |
 | `POST /api/v1/me/tax/documents/{documentId}/confirm` | `@Valid ConfirmationRequest(attemptId, accepted, corrected, rejected)` (a list or map left out is empty) → `ParseView` with `confirmed = true` | `documents/controller/DocumentController.java:43` – `:46`; `documents/DocumentService.java:104` – `:127`; `documents/ConfirmationRequest.java:12` – `:18` |
 
-### Refusals (parts one to three)
+### Erasure, jobs and the Gazette watch (`erasure/controller/`, `controller/`)
+
+The erasure route is in the `me` zone. The other three are in the `admin` zone (`@AdminApi`, prefix `/api/v1/admin/tax`) and also carry `@PreAuthorize("hasRole('SUPER_USER')")`.
+
+| Method and path | Body / params → answer | Where |
+|---|---|---|
+| `POST /api/v1/me/tax/profiles/{profileId}/erasure` | → **202** `ErasureReceipt(profileId, requestedAt, eraseOn, erased, heldUntilThen, contact)`; the profile is held at once and erased by the retention purge once `app.privacy.erasure-hold` has passed | `erasure/controller/ErasureController.java:27` – `:31`; `erasure/ErasureService.java:30` – `:40`; `erasure/ErasureReceipt.java:12` – `:26` |
+| `GET /api/v1/admin/tax/gazette-leads` | `Pageable` → `PagedModel<GazetteLeadResponse>`, newest `foundAt` first, the id breaking a tie | `controller/GazetteWatchController.java:29` – `:33`; `gazette/GazetteWatchService.java:30` – `:33` |
+| `PUT /api/v1/admin/tax/gazette-cursor` | `@Valid GazetteCursorRequest(year, lastNumber)` → `GazetteCursorResponse` (the cursor, `updatedBy` = the caller) | `controller/GazetteWatchController.java:36` – `:40`; `gazette/GazetteWatchService.java:41` – `:58` |
+| `POST /api/v1/admin/tax/jobs/{name}/run` | → `JobRunReceipt(job, ran)`; `ran = false` when another run holds the job's lease | `controller/TaxJobController.java:21` – `:25`; `jobs/TaxJobDirectory.java:28` – `:37`; `jobs/JobRunReceipt.java:9` |
+
+### Refusals (all parts)
 
 Every `BadRequestException` and `IllegalArgumentException` maps to HTTP **400** (`ProblemDetail`, `shared/exception/ControllerAdviser`). `DraftConflictException` is caught by `DraftController` / `SalaryImportController` and answered as HTTP **409** with a `DraftConflict(message, current, conflictingPaths)` body and the current `ETag` (`workspace/controller/DraftController.java:77` – `:79`, `:103` – `:105`; `workspace/controller/SalaryImportController.java:44` – `:46`).
 
@@ -177,11 +188,15 @@ Every `BadRequestException` and `IllegalArgumentException` maps to HTTP **400** 
 | Confirming an attempt that is not the latest (or no `attemptId`); a `FAILED` reading; one already confirmed | 400 `"Only the latest reading of this document can be confirmed"` / `"A reading that failed has nothing to confirm"` / `"This reading is already confirmed"` | `documents/DocumentService.java:108` – `:115` |
 | Accepting a row not read; a row both accepted and corrected; rejecting a row not read; correcting a path that is no single-value row of the layout; a path both accepted and rejected | 400 `"<path> was not read, so it cannot be accepted: correct it instead"` / `"<path> is both accepted and corrected"` / `"<path> was not read, so it cannot be rejected"` / `"<path> is not a row of FORM_130 that can be written"` / `"A field is accepted or rejected, not both: <path>"` | `documents/ConfirmedRows.java:28` – `:43`, `:47` – `:55`; `documents/ingest/DocumentConfirmation.java:24` – `:28` |
 | A correction that does not read as its row's kind | 400 `"<path>: '<text>' is not an amount in rupees, e.g. 950000 or 950000.50"` / `"… is not yes or no"` / `"… is not a period as yyyy-MM-dd/yyyy-MM-dd"` | `documents/Corrections.java:29` – `:60` |
+| Erasure of a profile absent, of another account, or already held | 400 `"This account holds no such profile"` (`TaxProfileService.owned`) | `profile/TaxProfileService.java:71` – `:72` |
+| A job name no job has; the Gazette watch while `app.tax.gazette-watch.enabled` is false | 400 `"No tax job is named <name>; the jobs are [account-erasure, auto-archive, gazette-watch, log-retention, parse-documents, retention-purge, staleness-sweep]"` / `"The Gazette watch is off (app.tax.gazette-watch.enabled); runbook §1.w turns it on"` | `jobs/TaxJobDirectory.java:29` – `:34` |
+| Cursor year before 2009 or after this year; `lastNumber` not positive | 400 `"The year must be a Gazette folder from 2009 to <this year>, but was <year>"` / `"The last number read must be positive, but was <n>"` | `gazette/GazetteWatchService.java:21`, `:42` – `:49` |
+| A user's token on an admin route | 403 | `controller/GazetteWatchController.java:30`, `:37`; `controller/TaxJobController.java:22` |
 | The confirmed employee PAN is another than the profile's, or is not among the confirmed rows | 400 `"This certificate is for another PAN than the profile's"` / `"The certificate's employee PAN (Part A item 11) is not read: correct it to confirm"` | `documents/DocumentService.java:118` – `:122` |
 
 ## 4. Stored data
 
-Parts one to three cover 15 `@Document` collections: `profile/` (7), `workspace/` (4), `compute/` (1) and `documents/store/` (3), and one GridFS bucket. Every entity implements `AuditableEntity` (`audit_metadata`), and 14 of the 15 implement `CreatedWithId` (`newlyCreated` transient flag so Spring Data Mongo treats a caller-assigned UUID as an insert; `ProfileErasure` does not).
+The module holds 20 `@Document` collections: `profile/` (7), `workspace/` (4), `compute/` (1), `documents/store/` (3), `protection/` (1), `jobs/` (2) and `gazette/` (2), and one GridFS bucket. The 15 of parts one to three implement `AuditableEntity` (`audit_metadata`), and 14 of those implement `CreatedWithId`; part four's five records implement neither (`newlyCreated` transient flag so Spring Data Mongo treats a caller-assigned UUID as an insert; `ProfileErasure` does not).
 
 | Collection | Fields (encrypted: **E** = `EncryptedField`, **S** = `SearchableIdentifier`) | Indexes | Where |
 |---|---|---|---|
@@ -200,11 +215,18 @@ Parts one to three cover 15 `@Document` collections: `profile/` (7), `workspace/
 | `tax_documents` | `_id` (UUID), `profile_id`, `tax_year` (`int`), `document_type`, `sha256`, `uploaded_at` (UTC), `page_count`, `scanned`, `audit_metadata` — nothing encrypted: nothing here says what the form holds | `tax_document_bytes_idx`: `{profile_id: 1, sha256: 1}` (unique); `tax_document_year_idx`: `{profile_id: 1, tax_year: 1}` | `documents/store/StoredDocument.java:21` – `:64` |
 | `tax_parse_attempts` | `_id` (attempt UUID), `document_id`, `parser_id`, `parser_version`, `started_at`, `finished_at` (UTC), `outcome` (`SUCCESS`/`PARTIAL`/`FAILED`), `fields_json` (**E**), `unmapped_text_json` (**E**), `parser_notes_json` (**E**), `audit_metadata` | `tax_parse_attempt_document_idx`: `{document_id: 1, started_at: -1}` | `documents/store/StoredParseAttempt.java:22` – `:67` |
 | `tax_document_confirmations` | `_id` (= the attempt's id, so one confirmation per attempt), `confirmed_by` (**S**), `confirmed_at` (UTC), `accepted_json` (**E**), `rejected_fields` (paths only, sorted), `audit_metadata` | none beyond `_id` | `documents/store/StoredConfirmation.java:21` – `:69` |
+| `tax_access_log` | `_id`, `principal` (**S**), `subject` (`ReadSubject`: `PROFILE`, `FAMILY_MEMBERS`, `DRAFT`, `DRAFT_REVISION`, `COMPUTATION`, `DOCUMENT`), `subject_id`, `read_at` (`Instant`) — never a value; not `AuditableEntity` | none declared | `protection/AccessRecord.java:13` – `:37`; `protection/ReadSubject.java:4` – `:11` |
+| `tax_job_failures` | `_id`, `job`, `subject`, `reason`, `failed_at` (UTC) — the dead letter, never a value | none declared | `jobs/JobFailure.java:10` – `:29` |
+| `tax_job_leases` | `_id` (= the job's name, so at most one lease per job), `holder` (a UUID per run), `expires_at` (`Instant`) | TTL on `expires_at` (`expireAfter = "0s"`) | `jobs/JobLease.java:11` – `:30` |
+| `tax_gazette_cursor` | `_id` (`"egazette"`, the one cursor), `year`, `last_number`, `updated_at`, `updated_by` (**S**) | none beyond `_id` | `gazette/GazetteCursor.java:12` – `:38` |
+| `tax_gazette_leads` | `_id`, `url`, `year`, `number`, `page` (0 for a copy too large to read), `matched_terms`, `possibly_affected`, `note`, `found_at` | `url` (unique) | `gazette/GazetteLead.java:12` – `:49` |
 | `tax_document_bytes` (GridFS bucket: `.files` + `.chunks`) | each file named by its document's id; the bytes sealed by `FieldCipher.encryptBytes` (the personal-data key) | GridFS's own | `documents/store/DocumentBytesConfig.java:17`, `:26`; `documents/store/DocumentBytes.java:27` – `:35`, `:51`, `:58` – `:67` |
 
 `TaxProfileIndexInitializer` (`profile/TaxProfileIndexInitializer.java:20` – `:35`) creates the indexes for the first six profile collections at `@PostConstruct`, `WorkspaceIndexInitializer` (`workspace/WorkspaceIndexInitializer.java:16` – `:31`) creates the indexes for all four workspace collections, and `DraftComputationIndexInitializer` (`compute/DraftComputationIndexInitializer.java:16` – `:30`) creates the indexes for `tax_draft_computations`; none catches errors, so a failure stops startup.
 
 `DocumentIndexInitializer` (`documents/store/DocumentIndexInitializer.java:18` – `:29`) creates the indexes of the three document collections at `@PostConstruct`; a failure stops startup. The `*_json` fields are `ReadingJson`'s own shape, not a mapper's view of the records: each value names its kind (`MONEY` with an exact-text `amount`, `FLAG`, `PERIOD`, `TEXT`), and a kind it never wrote is refused (`documents/store/ReadingJson.java:19` – `:23`, `:80` – `:102`).
+
+`JobIndexInitializer` (`jobs/JobIndexInitializer.java:13` – `:31`) creates the indexes of `tax_job_leases` and `tax_gazette_leads` at `@PostConstruct`; a failure stops startup.
 
 ## 5. Behaviour
 
@@ -314,6 +336,50 @@ Parts one to three cover 15 `@Document` collections: `profile/` (7), `workspace/
 - **`IsolatedPdfRead` and `PdfReadChild` (`documents/parser/IsolatedPdfRead.java:13` – `:84`; `documents/parser/PdfReadChild.java:12` – `:51`):** `PdfReadChild` is the only code that hands untrusted bytes to iText. It has no Spring, rule pack or database, and replies one `PdfText(outcome READ / PASSWORD / UNREADABLE, pages, words, reason)` as JSON. The application parses that strictly (unknown, missing or null properties refused, `IsolatedPdfRead.java:24` – `:27`, `:73` – `:79`), and every child failure becomes an `UNREADABLE` reading with its reason (`:66` – `:71`, `:81` – `:84`). Page count at upload within `upload-read-budget`, words in the parse job within `parse-budget` (`:52` – `:60`).
 - **`ProcessProtection` (`documents/parser/ProcessProtection.java:12` – `:61`):** before the first reader starts (`documents/parser/DocumentParsersConfig.java:20` – `:31`), the application marks itself non-dumpable on Linux through `prctl(PR_SET_DUMPABLE, 0)` and reads it back. A process of its own user, such as the reader, can then not read its `/proc/<pid>/environ`, `mem` or `maps`. Still dumpable after the call is a failed start; off Linux the call is skipped with a log line. The start log states how PDFs are isolated and that the operating system's network is not cut (`DocumentParsersConfig.java:25` – `:30`).
 
+### Protection and erasure (`protection/`, `erasure/`)
+
+- **`TaxAccessLog` (`protection/TaxAccessLog.java:10` – `:27`):** each read of special-category data appends one `AccessRecord` (who, which subject, when, never a value) inside the read's own transaction. Nothing updates one. Only the erasure of what it names (`AccessRecordRepository.deleteBySubjectIdIn`, `protection/AccessRecordRepository.java:8` – `:9`), the erasure of the reader's account, and the log retention job (a year after the read) delete it.
+- **Erasure on request (`erasure/ErasureService.java:15` – `:40`):** `TaxProfileService.holdForErasure` stamps `erasure_requested_at` and clears `pan_digest`, so the PAN can be registered again at once (`profile/TaxProfileService.java:71` – `:78`). From then on the profile reads as absent everywhere. A `ProfileErasure` record is kept apart from the profile, so a restore from an older snapshot cannot undo the request. The receipt names `eraseOn` = request + `app.privacy.erasure-hold`, the five kinds of data erased, why they are held until then, and the privacy contact.
+- **Whole-account erasure (`erasure/TaxAccountErasure.java:22` – `:77`):** `TaxAccountErasure` is the tax module's `PersonalDataHolder` (notice part `tax-planning`). `hold` holds every active profile of the account; `erase` removes each profile through `ProfileRemoval`, then what is kept by email: draft computations, the person's own reads, and their profile-erasure records. `reapply` (after a restore) removes again each profile erased since the snapshot, and holds again each still waiting.
+
+### Jobs (`jobs/`)
+
+- **Framework:**
+  - `TaxJob` is a name, a lease timeout and `run(JobContext)`; every job is idempotent, so a run cut off is completed by the next, and no retry policy is kept (`jobs/TaxJob.java:5` – `:17`).
+  - `TaxJobRunner.run` takes the lease with one `findAndModify`: an upsert on `{_id: name, expires_at < now}`, where a live lease makes the insert collide (`DuplicateKeyException` → skipped). It runs the job as the job's own name for auditing, and removes the lease it holds when done (`jobs/TaxJobRunner.java:34` – `:58`). A failure inside a job is not caught: it reaches the caller, and the lease lapses at its timeout.
+  - `JobContext.holdsLease` checks the run's own holder against an unexpired lease before each change (`jobs/TaxJobRunner.java:60` – `:63`), so a run overtaken while slow stops. `refuse` writes a `tax_job_failures` row and logs at ERROR (`jobs/JobContext.java:30` – `:45`).
+  - **When jobs run:** `TaxJobSchedule` exists only with `app.tax.jobs.enabled=true` (off in all three yamls, W-336). It schedules six jobs by cron, the Gazette watch only while its own switch is on, and runs the staleness sweep at every start (`jobs/TaxJobSchedule.java:13` – `:74`). On request, `TaxJobDirectory` runs any job by name through the same runner and lease (`jobs/TaxJobDirectory.java:10` – `:37`). `ParseRequests` starts a parse run after an upload only where the schedule exists (`jobs/ParseRequests.java:7` – `:20`).
+- **`auto-archive` (`jobs/AutoArchive.java:17` – `:63`, lease 30 min):** archives each `DRAFT` whose `audit_metadata.updated_at` is before now − `archive-after` (in the system's zone, as auditing writes it). It skips its workspace's primary draft and any draft of a profile held for erasure.
+- **`retention-purge` (`jobs/RetentionPurge.java:22` – `:114`, lease 1 h), in order:**
+  1. Erases each profile held for at least `erasure-hold`: its `ProfileErasure` is marked erased first, then `ProfileRemoval` runs (`:87` – `:102`).
+  2. Deletes archived drafts never acted on whose `archived_at` is before now − `purge-archived-after`.
+  3. Deletes drafts ever acted on once today is after the end of tax year (start year + `TaxCalculator.longestCarryForward(year)`), the span read from the rule pack. A year with no such span is refused and kept (`:67` – `:80`).
+  4. Runs `DocumentRetention`.
+  5. Runs `ThirdPartyRetention`.
+
+  Each delete checks the lease first.
+- **`DraftRemoval` (`jobs/DraftRemoval.java:12` – `:35`):** in one transaction, a draft's computations, then its revisions; it unsets the draft as its workspace's primary, then deletes the draft. The access log and the regime election history stay.
+- **`ProfileRemoval` (`jobs/ProfileRemoval.java:31` – `:70`):** in one transaction: every draft (through `DraftRemoval`), then the access records naming the profile, any of its drafts, any of its receipts or any of its documents. Then its documents with what was read from them (`DocumentRemoval`, the bytes after commit), then every `profile_id`-scoped record: family members, employers, landlords, lenders, bank accounts, workspaces and regime election history (`:44` – `:45`). Last, the profile itself.
+- **`DocumentRetention` (`jobs/DocumentRetention.java:21` – `:72`):** for each distinct `tax_year` of `tax_documents`, deletes the year's documents once the same span as filed drafts has ended; a year with no span is refused and kept. Then deletes GridFS bytes older than `orphan-after` that no document names, left by an upload race or a removal cut off part-way (`:63` – `:72`).
+- **`ThirdPartyRetention` (`jobs/ThirdPartyRetention.java:22` – `:100`):** a landlord or lender is deleted once today is after the end of its last supported tax year + `third-party-after`. That year is the later of the latest year of a draft naming it and the year it was last entered or changed (`audit_metadata` updated, else created). A record with neither date is refused and kept.
+- **`parse-documents` (`jobs/ParseDocuments.java:32` – `:132`, lease 10 min):**
+  - A document is due while every attempt at it failed and none was by the current parser version (`:73` – `:84`); a profile held for erasure is not read.
+  - Bytes that cannot be read are refused (a failure row). Bytes whose SHA-256 is not the document's become a `FAILED` attempt.
+  - Otherwise the parse runs on a daemon thread within `parse-budget`. Past it the thread is interrupted and abandoned, and the attempt is `FAILED` with `"The parser took longer than PT30S"`; a parser that throws is `FAILED` with `"The parser stopped: <exception class>"` (`:102` – `:120`). The PDF itself is read in part three's child process.
+- **`account-erasure` (`jobs/AccountErasure.java:12` – `:45`, lease 1 h):** runs `shared.privacy.AccountErasureService` over accounts whose purpose has lapsed, then those whose hold has passed. The work is the shared module's; it runs here for the lease and the dead letter.
+- **`log-retention` (`jobs/LogErasure.java:17` – `:49`, lease 1 h):** `shared.privacy.LogRetention` erases the app-wide logs. This job then deletes `tax_access_log` rows with `read_at` at or before `LogRetention.cutoff`, and `ProfileErasure` records erased by then. Each step is a delete by date.
+- **`staleness-sweep` (`jobs/StalenessSweep.java:24` – `:111`, lease 30 min):** for each `READY` or `ACTED_ON` draft of a profile not held, takes its latest computation (by revision, then `computed_at` with none first, then receipt, `:39` – `:41`). If the law and exec versions it ran under (`law_and_exec`, or for an older one the copy inside `result_json`, `:104` – `:111`) differ from the pack's current versions, it sets `FilingDraft.staleness` with the rules whose checksum changed or which the pack no longer holds. It never recomputes, and a draft already flagged against the same current versions is left alone. A year with no shipped pack is refused.
+
+### Gazette watch (`gazette/`)
+
+- **`gazette-watch` (`gazette/GazetteWatch.java:15` – `:130`, lease 60 min):** with no cursor it refuses ("no cursor: seed it with PUT /api/v1/admin/tax/gazette-cursor"). Otherwise it reads the numbers after the cursor, one request every `pause`, up to `max-numbers-per-run`, while it holds the lease (`:62` – `:79`).
+  - A copy found is matched, recorded as a lead if it is one (a second insert of the same URL is ignored), and the cursor moves to it.
+  - After `misses-to-stop` missing numbers in a row it stops, unless the clock's year is later than the folder's. Then it tries the next year's folder once, continuing the numbers after the cursor, since numbers run on across years (`:68` – `:76`).
+  - A copy larger than `max-document-size` is a lead on page 0, noted "too large to read … open it".
+  - The watch never writes a pack.
+- **Fetching (`gazette/GazetteCopies.java:8` – `:34`; `gazette/GazetteWatchConfig.java:9` – `:23`):** `GET <base-url>/<year>/<number>.pdf` with the watch's own User-Agent and a connect and read timeout. 404 is absence; any other non-2xx throws, so the run fails with the cursor still before that number. The body is read to at most one byte past the size limit.
+- **Matching (`gazette/GazetteMatcher.java:20` – `:118`):** the copy is read page by page with iText's text extractor, whitespace collapsed and typeset hyphens closed ("Income -tax" → "Income-tax", `:96` – `:98`). The first page by which the copy has named any `lead-when-any` term, or all `lead-when-all` terms, makes it a lead (`:54` – `:76`). That page and the next two are then searched for "section N of the Income-tax Act, 1961 / 2025", and each shipped rule citing that section (`TaxCalculator.provisionsCited`) is listed as `possibly_affected`, for triage only (`:30` – `:33`, `:78` – `:89`).
+
 ### Worked examples (by hand)
 
 1. **PAN and TAN masking (`profile/Pan.java:20` – `:22`; `profile/Tan.java:16` – `:18`):**
@@ -351,10 +417,15 @@ Parts one to three cover 15 `@Document` collections: `profile/` (7), `workspace/
    - Row 11: +90,000, beyond ₹10 and higher → `whenHigher` = `DECLARED_NOT_PROVEN` (`backend/src/main/resources/rulepacks/timeline/forms/certificates/FORM_130.json:1498` – `:1502`), an `EXPECTED` reason.
    - Row 12: −90,000, no reason of its own. Row A "Yes" leaves the year's default regime, as computed, so the regime does not differ; no capital gains → it takes the reason above, `DECLARED_NOT_PROVEN` (`documents/reconcile/Reconciliation.java:178` – `:199`).
    - Every differing line explained by `EXPECTED` reasons → **`MINOR_DIFFERENCE`**, as the test asserts.
+10. **Gazette watch, one run (`gazette/GazetteWatch.java:58` – `:79`; `misses-to-stop` 20):**
+    - Cursor `2026/277961`, clock in 2026. The run asks for 277962: found, so it is matched and the cursor moves to `2026/277962`. Then 277963 – 277982 are 20 misses in a row; the clock's year (2026) is not later than the folder's, so it stops with the cursor at `2026/277962`.
+    - The same, clock in 2027. After the 20th miss it rolls once: year `2027`, number reset to the cursor's `277962` and then advanced, so it asks for `2027/277963` next. A further 20 misses stop it, since it has rolled already. The cursor moves to the 2027 folder only when a copy there is found.
+
+The retention and erasure dates are worked by hand in §11 (W-137, W-235).
 
 ## 6. Configuration
 
-Properties read by parts one to three (shipped identically across `application.yaml`, `application-staging.yaml` and `application-prod.yaml` unless noted):
+Properties read by the module (shipped identically across `application.yaml`, `application-staging.yaml` and `application-prod.yaml` unless noted):
 
 | Property / constant | Shipped value | Where |
 |---|---|---|
@@ -373,6 +444,12 @@ Properties read by parts one to three (shipped identically across `application.y
 | `app.tax.documents.max-bytes` / `max-pages` | `20971520` (20 MiB) / `50` | `application.yaml:141` – `:143`; `application-staging.yaml:116` – `:118`; `application-prod.yaml:116` – `:118`; `documents/store/DocumentSettings.java:19` – `:21` |
 | `app.tax.documents.orphan-after` / `parse-budget` | `P1D` / `PT30S` (read by part four's jobs and by the words read) | `application.yaml:144` – `:147`; `application-staging.yaml:119` – `:122`; `application-prod.yaml:119` – `:122` |
 | `app.tax.documents.scan.*` (`enabled` / `host` / `port` / `timeout`) | `true` in `application.yaml`, **`false` in staging and prod** (D-769) / `${CLAMD_HOST:localhost}` / `3310` / `PT60S` | `application.yaml:157` – `:164`; `application-staging.yaml:132` – `:139`; `application-prod.yaml:132` – `:139`; `documents/store/DocumentSettings.java:30` |
+| `app.tax.jobs.enabled` | `false` in all three yamls (W-336): nothing is scheduled, and the owner runs a job through `POST /api/v1/admin/tax/jobs/{name}/run` | `application.yaml:106` – `:109`; `application-staging.yaml:81` – `:84`; `application-prod.yaml:81` – `:84` |
+| `app.tax.jobs.*-cron` | `auto-archive` `0 0 3 * * SUN`; `retention-purge` `0 0 4 1 * *`; `parse-documents` `0 * * * * *`; `account-erasure` `0 30 4 * * *`; `log-retention` `0 45 4 * * *`; `gazette-watch` `0 0 5 * * *` (the staleness sweep runs at start) | `application.yaml:110` – `:118`; `application-staging.yaml:85` – `:93`; `application-prod.yaml:85` – `:93` |
+| `app.tax.gazette-watch.*` | `enabled` `false`; `base-url` `https://egazette.gov.in/WriteReadData`; `user-agent` `WealthLens-GazetteWatch/1.0`; `timeout` `10s`; `pause` `1s`; `max-numbers-per-run` `400`; `misses-to-stop` `20`; `max-document-size` `40MB`; `lead-when-any` `["central board of direct taxes"]`; `lead-when-all` `["income-tax act", "department of revenue"]` | `application.yaml:119` – `:131`; `application-staging.yaml:94` – `:106`; `application-prod.yaml:94` – `:106`; `gazette/GazetteWatchSettings.java:23` – `:26` |
+| `app.tax.retention.*` | `archive-after` `P18M`; `purge-archived-after` `P12M`; `third-party-after` `P2Y` | `application.yaml:135` – `:139`; `application-staging.yaml:110` – `:114`; `application-prod.yaml:110` – `:114`; `jobs/RetentionPeriods.java:13` – `:14` |
+| `app.privacy.erasure-hold` (the shared module's, read here) | `P1Y` | `application.yaml:73`; `application-staging.yaml:48`; `application-prod.yaml:48` |
+| Job leases (Java constants) | `auto-archive` 30 min, `retention-purge` 1 h, `parse-documents` 10 min, `account-erasure` 1 h, `log-retention` 1 h, `staleness-sweep` 30 min, `gazette-watch` 60 min | `jobs/AutoArchive.java:37` – `:39`; `jobs/RetentionPurge.java:53` – `:55`; `jobs/ParseDocuments.java:58` – `:60`; `jobs/AccountErasure.java:30` – `:32`; `jobs/LogErasure.java:36` – `:38`; `jobs/StalenessSweep.java:56` – `:58`; `gazette/GazetteWatch.java:45` – `:47` |
 | Parser constants | label 0.95, read 0.90, inferred 0.80, contradicted 0.50; `COLUMN_GAP` 12 pt; reconciliation `ROUNDING` ₹10; `Form130Parser` id `form-130`, version `4` | `documents/parser/CertificateReading.java:37` – `:39`; `documents/parser/Inference.java:23`; `documents/parser/Contradictions.java:33`; `documents/parser/LabelMatch.java:20`; `documents/reconcile/Reconciliation.java:29`; `documents/parser/Form130Parser.java:29` – `:36` |
 
 ## 7. Tests
@@ -418,7 +495,20 @@ Properties read by parts one to three (shipped identically across `application.y
 - `DocumentIntegrationTest` (11): upload once and again for the same bytes, a year or form refused, malware found, a scanner closing without answering (503), another account's profile and document, waiting then read, confirmation with a corrected row, another person's PAN, a correction that does not read, erasure removing the readings.
 - `DocumentScanOffIntegrationTest` (1): the scan off stores the upload unscanned without calling the scanner.
 
-## 8. Known gaps (W-395 – W-397)
+### Part four (2 plan citations re-homed by W-357b10d; `plans/W-137.md`, `plans/W-235.md` deleted)
+
+**Unit tests** (`backend/src/test/java/com/thiru/wealthlens/taxplanning/`):
+- `jobs/TaxJobDirectoryTest` (5): a job run by name through the runner, a held lease, an unknown name, the Gazette watch off and on.
+- `gazette/GazetteMatcherTest` (5): the Finance Act's page naming the Board, the Rules' English notification, a CBDT amendment of section 10, a Revenue notice naming only a Finance Act and a health-ministry notification.
+- `protection/PanLogMaskTest` (3): the shipped log configuration writes a PAN masked, in messages and stack traces.
+
+**Integration tests** (`backend/src/test/java/com/thiru/wealthlens/integration/`):
+- `TaxJobsIntegrationTest` (21; cites §11 W-137): auto-archive, the retention purge of archived, acted-on and pack-less drafts, documents and orphan bytes, leases, third-party retention and the staleness sweep.
+- `TaxErasureIntegrationTest` (5; cites §11 W-235): the receipt and hold, the PAN registered again, the purge erasing everything under the profile and nothing else, auto-archive leaving a held profile alone.
+- `ParseDocumentsIntegrationTest` (6), `GazetteWatchIntegrationTest` (6), `GazetteWatchEndpointIntegrationTest` (3), `TaxJobEndpointIntegrationTest` (3).
+- Whole-account erasure is exercised through the shared module's `AccountErasureIntegrationTest` (8) and `ErasureReapplicationIntegrationTest` (9).
+
+## 8. Known gaps (W-395 – W-398)
 
 **Boundary, profiles, workspaces, drafts and salary import (W-395):**
 1. **`POST /api/v1/me/tax/profiles/{profileId}/workspaces/{taxYear}/drafts` takes `Map<String, String>`** (`workspace/controller/DraftController.java:56` – `:58`). Because it binds a map rather than a typed request record, `spring.jackson.deserialization.fail-on-unknown-properties` is bypassed (extra keys beside `label` are silently dropped) and `@Valid` validates nothing.
@@ -452,9 +542,18 @@ Properties read by parts one to three (shipped identically across `application.y
 19. **"No parser reads FORM_16 yet"** (`documents/DocumentService.java:73` – `:74`): `DocumentType` keeps `FORM_16`, `FORM_122` and `FORM_123` (`documents/ingest/DocumentType.java:7` – `:19`), none with a parser. "yet" promises a Form 16 parser that D-748 / D-749 ruled out.
 20. **Inline fully qualified names:** `java.util.Map` / `java.util.Set` (`documents/DocumentService.java:117`, `:124`), `java.util.function.Function` (`documents/assembly/EmployerAssembly.java:61`), `java.time.format.DateTimeFormatter` declared after the methods that use it (`documents/parser/Contradictions.java:127`), `java.util.Comparator` / `java.util.stream.Collectors` (`:153`, `:159`), `java.util.TreeMap` (`documents/parser/CertificateReading.java:243`), where every other class imports.
 
+**Protection, erasure, jobs and the Gazette watch (W-398):**
+21. **`ErasureController.java:16`'s Javadoc** still cites `UserValidator` and "the path's email" (gaps 5 and 16 again).
+22. **`tax_access_log` has no index** (`protection/AccessRecord.java:20`). It is deleted by `subject_id` (`jobs/ProfileRemoval.java:66`), by `principal` (`erasure/TaxAccountErasure.java:55`) and by `read_at` (`jobs/LogErasure.java:44` – `:45`), each a full scan of a collection that grows with every read.
+23. **One copy that is not a readable PDF stops the Gazette watch for good.** `GazetteMatcher.open` throws on it (`gazette/GazetteMatcher.java:104` – `:109`), and the run fails with the cursor still before that number (`gazette/GazetteWatch.java:63` – `:66`), so every later run fails on the same number. Only a non-2xx answer is tested (`GazetteWatchIntegrationTest`, `run_whenACopyCannotBeFetched_failsWithTheCursorBeforeIt`).
+24. **Gazette copies are read by iText inside the application's own process** (`gazette/GazetteMatcher.java:54` – `:66`), where an upload's PDF is read only in part three's isolated child. The bytes come from a remote site.
+25. **`GazetteCursorRequest` carries no Bean Validation constraints** though `GazetteWatchController.java:38` annotates it `@Valid`; the checks are in `GazetteWatchService.seed` (`:42` – `:49`).
+26. **No `api-collection` request** for `GET /api/v1/admin/tax/gazette-leads` or `PUT /api/v1/admin/tax/gazette-cursor` (grep finds "gazette" only in `Tax Admin/Run a tax job.yml`).
+27. **Stale Javadoc:** `jobs/StalenessSweep.java:36` – `:37` says "the audit's creation time is never filled for a computation (W-329)", as gap 15 found in `compute/DraftComputation.java`; `CreatedWithId` now marks it new.
+
 ## 9. Not covered here
 
-- **Part four of `taxplanning`** (`W-357b10d`): `protection/`, `erasure/`, `jobs/` (the parse job, document retention and orphan-byte sweep, profile removal), `gazette/` and admin routes.
+- **Whole-account erasure, the privacy notice, log retention and `AccountErasureService`:** `docs/modules/shared.md`; this module holds only `TaxAccountErasure`, the tax part of it.
 - **Tax rules, nodes, inputs, rule packs, filing forms and optimiser:** `docs/modules/taxengine.md`.
 - **Portfolio lots, trade outcomes and capital-gains summary:** `docs/modules/portfolio.md`.
 - **Zones, `@CallerEmail`, `ProblemDetail`, `EncryptedField` / `SearchableIdentifier`, whole-account erasure:** `docs/modules/shared.md`.
@@ -462,7 +561,7 @@ Properties read by parts one to three (shipped identically across `application.y
 
 ## 11. Hand-worked figures the tests cite
 
-Moved verbatim from the plans cited by `taxplanning`'s tests (W-357b10b, C1a; same convention as `docs/modules/taxengine.md` §11). `W-089`'s T13-1 working already lives in `docs/modules/taxengine.md` §11 (W-089), where `DraftCalendarServiceTest`, `DraftForecastServiceTest` and `DraftComputationIntegrationTest` now point. `plans/W-088g9.md` had no other non-history citation and was deleted (readable at `1f5fce4b`); `plans/W-088g.md`, `plans/W-088g2.md` and `plans/W-089.md` stay while other kept plans (`W-088g1/g2/g4/g5`, `W-112b`) still cite them.
+Moved verbatim from the plans cited by `taxplanning`'s tests (W-357b10b, C1a; same convention as `docs/modules/taxengine.md` §11). `W-089`'s T13-1 working already lives in `docs/modules/taxengine.md` §11 (W-089), where `DraftCalendarServiceTest`, `DraftForecastServiceTest` and `DraftComputationIntegrationTest` now point. `plans/W-088g9.md` had no other non-history citation and was deleted (readable at `1f5fce4b`); `plans/W-088g.md`, `plans/W-088g2.md` and `plans/W-089.md` stay while other kept plans (`W-088g1/g2/g4/g5`, `W-112b`) still cite them. W-357b10d moved `W-137`'s and `W-235`'s hand-worked tests here and deleted both plans (readable at `d8ef2aad`).
 
 ### W-088g — land or building acquired before 23-7-2024
 
@@ -527,3 +626,35 @@ Tax charged     the lesser (s.197(3))                               = 6,85,165.3
 
 **Case B, short-term.** Bought 10-1-2025 for 20,00,000 with stamp duty 1,00,000; sold 1-9-2025 for 25,00,000 with
 brokerage 50,000. Gain 25,00,000 − 50,000 − 21,00,000 = **3,50,000**, in `SHORT_TERM_SLAB`.
+
+### W-137 — background jobs, auto-archive and retention purge
+
+Moved verbatim from `plans/W-137.md` "Tests, by hand (as of a fixed `Clock`)" (W-357b10d, C1a); `TaxJobsIntegrationTest` cites it.
+
+- **Archive:** at 2026-11-06, 18 months back is 2025-05-06.
+  - A `DRAFT` last changed 2025-05-05 → archived; one changed 2025-05-07 → kept.
+  - The primary, or a `READY` draft, both changed 2025-05-05 → kept.
+- **Purge, archived:** at 2026-11-06, 12 months back is 2025-11-06. `archived_at` 2025-11-05 → deleted with its
+  revisions and computations; 2025-11-07 → kept.
+- **Purge, acted on, TY 2025-26:** the year ends 31-3-2026, and its 8 succeeding years end 31-3-2034.
+  - At 2034-03-31 → kept; at 2034-04-01 → deleted.
+  - The same, archived by the user 2026-05-01, at 2027-06-01 → kept (12 months passed, 8 years not).
+- **No pack:** an `ACTED_ON` draft for TY 2019-20 → kept, one failure row naming 2019-20.
+- **Lease:** a second runner while a lease is live → does nothing; after expiry → runs. A run on stale data
+  (fencing token moved on) → stops before deleting.
+- **Engine:** `longestCarryForward` for TY 2025-26 and 2026-27 → 8, read from the shipped packs; a fixture pack
+  without the rows → empty.
+- **Probes:** drop the `acted_on_at` check → the archived-after-acting case is deleted, so its test fails; bypass the
+  lease → the second-runner test fails.
+
+### W-235 — erasure on request
+
+Moved verbatim from `plans/W-235.md` "Tests, by hand" (W-357b10d, C1a); `TaxErasureIntegrationTest` cites it.
+
+- Request 2026-11-07T10:00Z, hold P1Y → `eraseOn` 2027-11-07T10:00Z. Purge at 2027-11-07T09:59Z → kept; at 10:00Z →
+  every row with that `profile_id` gone, in all ten collections, and its access records; another profile on the same
+  account untouched.
+- After the request: `GET` profile → 400 "This account holds no such profile"; compute → the same; registering the
+  same PAN on a new profile → 201 (digest freed). A second request → 400 (already held, not reset).
+- Purge run twice → the second changes nothing.
+- **Probes:** purge ignores the hold → the 09:59Z case fails; `pan_digest` kept → the re-register case fails (409/400).
