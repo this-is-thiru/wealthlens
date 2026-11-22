@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 /**
  * How a part's land gains are lowered when the part is (W-088g3 C3a, D-431): each in proportion, the indexed measure by
  * the same rupees and never below nil, and never more than the part between them. Figures by hand in
- * {@code plans/W-088g3.md}.
+ * {@code docs/modules/taxengine.md} §5.
  */
 class IndexedGainTest {
 
