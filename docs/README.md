@@ -42,9 +42,9 @@ One current doc per module, written from the code and citing it (W-357b, D-901; 
 | `portfolio` — trades, holdings, outcomes and reports | [`modules/portfolio.md`](modules/portfolio.md) |
 | `shared` — the privacy duties, and what every module stands on | [`modules/shared.md`](modules/shared.md) |
 | `taxengine` — income tax as data, and the engine | [`modules/taxengine.md`](modules/taxengine.md) |
-| `taxplanning` — profiles, drafts, computations, documents and tax operations (boundary, profiles, workspaces, drafts, salary import, assembly, portfolio bridge, computation, advisory views and report so far; W-357b10c – d to come) | [`modules/taxplanning.md`](modules/taxplanning.md) |
+| `taxplanning` — profiles, drafts, computations, documents and tax operations (boundary, profiles, workspaces, drafts, salary import, assembly, portfolio bridge, computation, advisory views, report, documents and isolation so far; W-357b10d to come) | [`modules/taxplanning.md`](modules/taxplanning.md) |
 
-Still to come: `taxplanning` parts `c` – `d` (W-357b10c – d).
+Still to come: `taxplanning` part `d` (W-357b10d).
 
 `charges-engine/` and `trade-ledger/`, the charge engine's and the trade ledger's design notes, were deleted by W-357b6b (D-909) and
 W-357b7c (D-913): what the code shows is in `modules/brokercharges.md` and `modules/portfolio.md`, each of which also says what the
