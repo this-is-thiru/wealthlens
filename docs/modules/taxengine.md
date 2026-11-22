@@ -273,6 +273,102 @@ carried here and the year the inputs name, never from a clock (`input/Individual
 - born 1966-11-10: 60 completed years at that day;
 - born 1967-04-02: 59, since the sixtieth birthday is 2027-04-02, after the year ends.
 
+### The rules vocabulary (W-357b9d, D-920)
+
+`taxengine.rules` is the language the rule packs are written in: 190 types in twelve packages, which may not depend on the rest of
+`taxengine` (`ArchitectureTest.rules_do_not_depend_on_the_runner`). Each family is **closed**: a sealed interface whose permits list is
+the whole set, so a `switch` that misses a shape does not compile. A new shape is a new record and a new permit, never an edit to an
+existing one.
+
+**A rule** is a stable id with an ordered list of **`RuleVersion`s** (`rules/temporal/RuleVersion.java:45`). A version holds:
+- its `Validity` and the regimes it applies to;
+- at most one each of a cap, a relief, a rounding and a definition;
+- its conditions;
+- its provision in each Act (`Provision`: citation, reference, `PRESENT` or `ABSENT_IN_THIS_ACT`);
+- the amendment that introduced it, and its legal status, publication status and provenance.
+
+A change in the law is a second version under the same id, never a new rule guarded by a date (`rules/condition/Condition.java:26` –
+`:29`).
+
+| Family | Shapes | What it states |
+|---|---|---|
+| **`Validity`** (`rules/temporal/Validity.java:29`, `:60`, `:98`) | `Between`, `Retrospective`, `PendingNotification` | when a version is in force. Each rule declares the clock it is read against, a `TemporalAxis`: `TAX_YEAR`, `EVENT_DATE`, `ACQUISITION_DATE`, `SANCTION_DATE`, `PAYMENT_DATE` (`TemporalAxis.java:18` – `:30`). A date with no version in force is `NoRuleVersionException`; an axis whose date was never supplied is `MissingTemporalCoordinateException` |
+| **`CapShape`** (`rules/cap/CapShape.java:27` – `:29`) | `Fixed`, `PercentOfBase`, `SlabLadder`, `LeastOf`, `AggregateWithCeiling`, `PerUnitPerPeriod`, `AmountInExcess`, `PercentOfBaseByLocation`, `PercentOfBaseByPopulation` (9) | a statutory limit or rate table. It reads named amounts (`BaseId`) from a `CapContext`, never a figure, and answers a `CapResult`: the value, what bound it, the reason and the headroom to the next limit |
+| **`ReliefShape`** (`rules/relief/ReliefShape.java:14`) | `FlatWithCeiling`, `ExcessOverThreshold`, `ThresholdLadderCeiling`, `NoRelief` | an amount taken off tax already computed. `RuleRelief` adds whether the Act limits it to the tax at slab rates, stated per row (`RuleRelief.java:13`) |
+| **`Condition`** (`rules/condition/Condition.java:48` – `:73`) | 25: residence, age, person type, disability; income at most or at least a node's value; a head's income or loss; components and evidence present; an item's facts (`ItemFactIs`, `ItemFactAtMost`, `ItemDateBefore`); declarations; a return's facts; `AllOf`, `AnyOf`, `Not` | a yes/no test a row attaches to itself |
+| **`RuleDefinition`** (`rules/definition/RuleDefinition.java:11`) | 44 | what an amount *is*: a head's total, a salary base, a journey count per block, an index by year, an absorption order, a holding period, an interest calculation, a late fee. `RuleDefinitions` reads the one kind a node expects and refuses any other |
+| **`ProrationBasis`** (`rules/temporal/proration/ProrationBasis.java:19`) | `Days`, `CalendarMonths`, `CompletedMonths` | how a rule measures the part of a year it applies to, named per rule |
+| **`RuleRounding`** (`rules/rounding/RuleRounding.java:18`) | one record: a step and a round-up point, both whole rupees | how a version rounds. `Money.roundToMultiple` does the arithmetic (`rules/money/Money.java:199` – `:206`) |
+
+**How a condition answers:**
+- **Boundaries are inclusive:** `IncomeAtMost` holds at its limit (`rules/condition/IncomeAtMost.java:25` – `:26`). A threshold's
+  "exceeding" is the `Not` of the inclusive form.
+- **A fact never supplied** makes a condition throw, never answer (`AllOf.java:9` – `:10`).
+- **`Not` negates the answer, never the failure** (`rules/condition/Not.java:8` – `:13`). A missing fact is not turned into "true",
+  which would allow a deduction nobody knew the person qualified for.
+- **`AllOf` and `AnyOf` short-circuit,** so a limb after the deciding one is not read (`AllOf.java:35` – `:46`; `AnyOf.java:36`).
+
+**The registries:**
+- **`ComponentDefinition`** (`rules/component/ComponentDefinition.java:52`) is one pay line of the pack's registry, so a new allowance
+  is data. It holds:
+  - its code and head;
+  - its `ComponentKind` (salary, perquisite, employer or employee contribution, statutory deduction);
+  - its `CashNature` and `TaxTreatment`;
+  - the rules it feeds and the salary bases it counts in;
+  - its lifecycle;
+  - its `Liquidity`: when money paid in can come out, dated.
+- **`EmployerFundDefinition`** is the same for an employer's fund.
+- **`DeclarationDefinition`** is one question of the year's declaration catalogue, answered yes/no or as an amount.
+
+**Regimes** are data too. A `RegimeSpec` (`rules/regime/RegimeSpec.java:47`) holds:
+- whom it applies to;
+- its rate table (a rule id) and its disallowance and eligibility sets;
+- its `ElectionProtocol` and `RegimeLifecycle`: entry window, in-force window, continuation and invalidation;
+- whether it is the default;
+- its `PipelineSpec`: the set of nodes it runs, whose order is derived, not listed;
+- optionally a `BehaviourId`, the escape hatch for behaviour that is neither a number nor a node.
+
+A person's standing with a regime is an `ElectionState`: `NEVER_ELECTED`, `IN_EFFECT`, `WITHDRAWN` and `PERMANENTLY_INELIGIBLE`
+among them (`ElectionState.java:21` – `:35`).
+
+**Reasons:**
+- A trace line's "why" is a `Reason`: a `ReasonCode` and named, typed `ReasonFact`s (`rules/reason/Reason.java:14`).
+- `ReasonCodes` lists the 167 codes the engine publishes, with the facts each carries.
+- The words are the pack's content, never the engine's.
+
+**Money and rates:**
+- **`Money`** (`rules/money/Money.java:23`) is an exact `BigDecimal` of rupees at scale 2, rounded half-up once on construction
+  (`:26`, `:42`). Intermediates are carried to 12 significant digits (`:33`), so a percentage is not rounded until it is a `Money`.
+- **`Rate`** (`rules/money/Rate.java:22`) is a fraction, built from a percentage (`Rate.percent("30")` is 0.30; `:39` – `:41`), so
+  30 and 0.30 cannot be confused.
+- `money` is one of the two packages allowed to call `setScale` (`Money.java:20` – `:21`).
+
+**Ids** (`rules/id`, 20 records) are named strings or numbers, never enums, so a new code is pack data. Two read differently:
+- **`TaxYearId(startYear)`**: `TaxYearId(2026)` is TY 2026-27, from 1 April 2026 to 31 March 2027 (`rules/id/TaxYearId.java:17`).
+- **`DateRange`**, the period type, is inclusive at both ends and may be open-ended (`rules/temporal/DateRange.java:18`).
+
+**`HeadCode`** is the five heads (`rules/condition/HeadCode.java:17` – `:23`). `BUSINESS_OR_PROFESSION` exists so that its mere
+presence can change which regime rules apply, not so that it is computed (`:7` – `:15`).
+
+### Worked examples: the vocabulary (by hand)
+
+**Rounding** with a step of ₹10 and a round-up point of ₹5, the values `Money.roundToMultiple`'s Javadoc names (`Money.java:188` –
+`:191`):
+- **₹1,234.99:** paise dropped → 1,234; remainder 4 < 5 → **₹1,230**.
+- **₹1,235.00:** remainder 5 ≥ 5 → **₹1,240**.
+- **−₹1,235.00:** rounded on the magnitude, sign restored → **−₹1,240**.
+
+**A relief** (`ReliefShapeTest`; its figures are in §11, W-048). `ExcessOverThreshold(₹12,00,000)` at a total income of ₹12,10,000
+and tax of ₹61,500:
+- the excess is 12,10,000 − 12,00,000 = 10,000;
+- relief = 61,500 − 10,000 = **₹51,500**, never below nil;
+- at a total income of ₹12,00,000 the income is not above the threshold, so the relief is **₹0**.
+
+**A part of a year.** `DateRange` 2026-04-15 to 2026-06-10 within TY 2026-27:
+- `CalendarMonths` counts April, May and June: **3**;
+- `CompletedMonths` counts only May, the month lying wholly inside: **1**;
+- `Days` counts 16 + 31 + 10 = **57**, both ends included.
+
 ## 6. Configuration
 
 None of the engine's own. The packs it compiles are the classpath directory `rulepacks`, and the years are `shipped-years.json`'s
@@ -311,6 +407,19 @@ None of the engine's own. The packs it compiles are the classpath directory `rul
 | one test per input record | its refusals, through `InputRefusals` |
 
 No test in this part cites a plan or review (grep).
+
+**The rules vocabulary** (50 files under `taxengine/rules`'s twelve vocabulary packages, 518 cases; the packs, JSON and validation
+tests are W-357b9e's):
+
+| Package | Files | Cases |
+|---|---|---|
+| `cap` | 8 | 134, `CapShapeTest` 40 of them |
+| `condition` | 9 | 116, `ConditionTest` 65 |
+| `regime` | 13 | 73, `RegimeLifecycleTest` 43 |
+| `money`, `definition`, `id`, `temporal`, `component`, `relief`, `declaration` | 2, 10, 2, 2, 2, 1, 1 | 50, 46, 32, 30, 22, 11, 4 |
+
+`rounding` and `reason` have no test class of their own: `MoneyTest`, `RuleJsonRoundingTest` and `RoundingNodesTest` cover the
+rounding, and 44 test files assert reasons. `ReliefShapeTest` cited `plans/W-048.md` for its figures; they are now §11's W-048 block.
 
 Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `taxengine/api`, `pipeline`, `result` and `trace`.
 
@@ -354,19 +463,23 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
      `InputsFingerprint` is "W-038's … next" (`input/EngineInputs.java:39` – `:43`). `InputsFingerprint` exists.
    - `asOfDate()` is documented as "the as-of instant" but returns a date, written `java.time.LocalDate` in full (`:99` – `:102`).
 
+**The rules vocabulary (W-392):**
+9. **`CapShape`'s Javadoc is out of place.** `countsRead`'s comment ("The ids whose counts this cap reads …") sits at
+   `rules/cap/CapShape.java:58` – `:62`, directly above `raisingInput`'s own (`:63` – `:66`). So `countsRead` (`:108`) has none, and
+   a reader of `raisingInput` meets two.
+
 ## 9. Not covered here
 
-- How a rule, a cap or a condition is written: W-357b9d.
 - Packs, the JSON form, locks, validation, the catalogue and the return forms: W-357b9e.
 - The regime election, other elections and the optimiser's search: W-357b9f.
 - What `taxplanning` does with an answer: `docs/modules/taxplanning.md` (W-357b10).
 
-## 11. Hand-worked figures the node and golden tests cite
+## 11. Hand-worked figures the tests cite
 
-Moved here from their plans by W-357b9b1 (D-918), so each test cites this doc rather than a plan file. Each block is the plan's own text,
+Moved here from their plans by W-357b9b1 (D-918) and W-357b9d (D-920, W-048), so each test cites this doc rather than a plan file. Each block is the plan's own text,
 verbatim: its numbers, cases and derivations, as the plan stated them before the build. A build may have departed from a plan; where it
 did, the test's own comments and the D-row say so. The plans' full text, choices and build records stay in git history:
-`git show 88e5bd2d:docs/taxplanning-build/plans/<plan>.md`.
+`git show 88e5bd2d:docs/taxplanning-build/plans/<plan>.md` (W-048: `87e9e60f`).
 
 ### W-046 — TaxByBasisNode + TaxByBasisNodeTest (Phase 5 opens)
 
@@ -380,6 +493,24 @@ Cited by `TaxByBasisNodeTest`.
 | New regime, TI ₹4,00,000 | **₹0** | at the top of the nil band | S2 s.202(1) |
 | New regime, TI ₹24,00,001 | **₹3,00,000.30** | 20,000 + 40,000 + 60,000 + 80,000 + 1,00,000 = 3,00,000; plus 30% of ₹1 = 0.30. No rounding in the node (`RATE-ROUND-003`) | S2 s.202(1) |
 | First Schedule rates, TI ₹10,00,000 | **₹1,12,500** | 2.5L–5L at 5% = 12,500; 5L–10L at 20% = 1,00,000 | FA 2026 First Sched. Part I-B Para A (I): *"₹ 112500 plus 30% of the amount by which the total income exceeds ₹ 1000000"* |
+
+### W-048 — the `ReliefShape` sealed family
+
+Cited by `ReliefShapeTest`.
+
+#### Numbers (each derived by hand; law figures from S2 s.156)
+
+| Case | Expected relief | Derivation |
+|---|---|---|
+| `FlatWithCeiling(60000, 1200000)`, TI ₹12,00,000, tax ₹60,000 | **₹60,000** | TI ≤ ceiling; min(60,000, 60,000) |
+| same, TI ₹12,00,001 | **₹0** | above the ceiling |
+| `FlatWithCeiling(12500, 500000)`, TI ₹4,90,000, tax ₹12,000 | **₹12,000** | min(12,000, 12,500): "100% … or ₹12500, whichever is less" |
+| `ExcessOverThreshold(1200000)`, TI ₹12,10,000, tax ₹61,500 | **₹51,500** | 61,500 − (12,10,000 − 12,00,000) = 51,500. Tax = 60,000 + 15% × 10,000, by the s.202(1) slab |
+| same, TI ₹13,00,000, tax ₹75,000 | **₹0** | the excess 1,00,000 ≥ tax 75,000 |
+| same, TI ₹12,00,000 | **₹0** | not above the threshold |
+| `ThresholdLadderCeiling([5000000])`, TI ₹50,00,100, tax + surcharge **₹11,88,033**, `U` = **₹10,80,000** | **₹1,07,933** | ceiling = 10,80,000 + 100 = 10,80,100; 11,88,033 − 10,80,100. **Constructed inputs:** U is the new-regime tax at ₹50L (`RulePackLoadTest`'s pinned figure); 11,88,033 = (10,80,000 + 30% × 100) × 1.10. The 10% rate is illustrative, since surcharge ladders are `W-054`'s |
+| same, no `unrelievedAt` | **refused** | A2 |
+| `NoRelief` | **₹0** + reason | |
 
 ### W-050 — `RoundTotalIncomeNode` and `RoundNetPayableNode`
 

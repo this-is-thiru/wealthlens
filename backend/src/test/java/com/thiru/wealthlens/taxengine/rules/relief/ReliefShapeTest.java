@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The relief family ({@code DR 10} E5, D-073). Law figures are S2 s.156's; every expected amount is
- * worked by hand in {@code plans/W-048.md}, not taken from a run.
+ * worked by hand in {@code docs/modules/taxengine.md} §11 (W-048), not taken from a run.
  */
 class ReliefShapeTest {
 
