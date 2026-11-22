@@ -28,6 +28,13 @@ Start here. Every kept doc is listed with what it is for. Anything removed is in
 | [`taxplanning-design/`](taxplanning-design/) | the tax design — the cited source for figures and structure (rule R1); `00-BRIEF.md` first |
 | [`charges-engine/`](charges-engine/), [`trade-ledger/`](trade-ledger/) | the charge engine's and trade ledger's design notes; replaced by module docs in W-357b |
 
-## Coming next
+## Modules (`docs/modules/`)
 
-One current doc per module (`docs/modules/…`), written from the code against the final API — W-357b, after the API rebuild (W-358c).
+One current doc per module, written from the code and citing it (W-357b, D-901; the template is `plans/W-357b.md` C2a). Written so far:
+
+| Module | Doc |
+|---|---|
+| `finance` — loan and SIP calculators | [`modules/finance.md`](modules/finance.md) |
+
+Still to come, in order (W-357b2 – b10): `insurance`, `helper`, `auth`, `corporate`, `brokercharges` (replacing `charges-engine/`),
+`portfolio` (replacing `trade-ledger/`), `shared`, `taxengine`, `taxplanning`.
