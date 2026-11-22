@@ -26,7 +26,6 @@ Start here. Every kept doc is listed with what it is for. Anything removed is in
 | Doc | What it is |
 |---|---|
 | [`taxplanning-design/`](taxplanning-design/) | the tax design — the cited source for figures and structure (rule R1); `00-BRIEF.md` first |
-| [`trade-ledger/`](trade-ledger/) | the trade ledger's design notes; replaced by `modules/portfolio.md` in W-357b7 |
 
 ## Modules (`docs/modules/`)
 
@@ -42,8 +41,9 @@ One current doc per module, written from the code and citing it (W-357b, D-901; 
 | `brokercharges` — rate cards, the charge engine, what each trade cost | [`modules/brokercharges.md`](modules/brokercharges.md) |
 | `portfolio` — trades, holdings, outcomes and reports | [`modules/portfolio.md`](modules/portfolio.md) |
 
-Still to come, in order (W-357b7 – b10): `portfolio` (replacing `trade-ledger/`), `shared`, `taxengine`, `taxplanning`.
+Still to come, in order (W-357b8 – b10): `shared`, `taxengine`, `taxplanning`.
 
-`charges-engine/`, the charge engine's design notes, was deleted by W-357b6b (D-909): what the code shows is in
-`modules/brokercharges.md`, which also says what each design name the code cites means (§10). Plans, reviews and D-rows that
-cite the folder read it at tag `docs-history-m1`: `git show docs-history-m1:docs/charges-engine/<file>`.
+`charges-engine/` and `trade-ledger/`, the charge engine's and the trade ledger's design notes, were deleted by W-357b6b (D-909) and
+W-357b7c (D-913): what the code shows is in `modules/brokercharges.md` and `modules/portfolio.md`, each of which also says what the
+design names the code cites mean (§10). Plans, reviews and D-rows that cite either folder read it at tag `docs-history-m1`:
+`git show docs-history-m1:docs/charges-engine/<file>` (or `…/trade-ledger/<file>`).

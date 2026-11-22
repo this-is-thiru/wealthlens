@@ -6,8 +6,8 @@
 - **tax planning** (`taxplanning`, `taxengine`), and any other module touched because of it, such as `portfolio`
   (W-085 – W-088u7) and `shared`.
 
-`docs/trade-ledger/migration.md` is a pointer to the sections here (W-176, D-379). The charge engine's old runbooks in
-`docs/charges-engine/` were deleted by W-357b6b (D-909); §1B now states its own check figure, and what the engine does is
+The trade ledger's and the charge engine's old runbooks (`docs/trade-ledger/migration.md`, `docs/charges-engine/`) moved here
+(W-176, D-379) and were deleted by W-357b7c and W-357b6b (D-913, D-909); §1B now states its own check figure, and what the engine does is
 `docs/modules/brokercharges.md`.
 
 Each entry is keyed to the work item and decision that introduced it, and says:
@@ -1610,7 +1610,7 @@ documents with the same fold, so a second run writes the same documents (`Profit
 ### 2.12 W-283a3 (D-586) — rebuild one user's `assets` from `transactions` · `SUPER_USER` · **when needed, not once**
 
 **Why.** `assets` (the lots) is derived. This replays one user's transactions into lots
-(`docs/trade-ledger/assets-rebuild.md`; W-283a2, D-582) and replaces the stored ones, instead of hand-editing quantities
+(`docs/modules/portfolio.md` §5; W-283a2, D-582) and replaces the stored ones, instead of hand-editing quantities
 and charges after a correction (B-4). A **standing operation**, not removed after use; never automatic.
 
 **When:** after a correction to a user's `transactions`, or when a dry run shows drift. Run order with the other two

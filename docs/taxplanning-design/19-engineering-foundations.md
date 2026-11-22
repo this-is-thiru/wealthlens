@@ -42,7 +42,7 @@ I had not read.
 ### Does `taxplanning` actually need `BigDecimal`?
 
 The decision document is careful and anticipates this. `FACT`
-(`docs/trade-ledger/money-representation-analysis.md`, §7, read this session) lists five triggers that
+(`docs/trade-ledger/money-representation-analysis.md`, §7, read this session; the triggers are now carried in `docs/modules/portfolio.md` §10) lists five triggers that
 would make `BigDecimal` the answer. **Two of them fire here, and one of them names this case:**
 
 | Trigger (§7, verbatim) | Fires? |

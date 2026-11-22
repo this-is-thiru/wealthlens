@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Replays one user's transactions into lots, compares them with the stored {@code assets} and, unless a dry run,
- * replaces the stored lots with them (W-283a2, D-582; W-283a3, D-586; {@code docs/trade-ledger/assets-rebuild.md}).
+ * replaces the stored lots with them (W-283a2, D-582; W-283a3, D-586; {@code docs/modules/portfolio.md} §5).
  *
  * <p>Events run by date; on one date the corporate actions come first, because a trade dated on a record date is held
  * until the action is performed. A buy takes the flow it recorded (W-283a1); one stored before that is shaped from

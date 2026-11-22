@@ -33,7 +33,7 @@ import org.springframework.stereotype.Service;
  *
  * <p>An operation, not a startup hook (D-280): at boot it rebuilt whenever the collection was empty, as nobody, and a
  * user who failed was only logged. It stays because it is how {@code trade_outcomes} is recomputed after a correction
- * to {@code transactions} ({@code docs/trade-ledger/migration.md} §3a; D-284, so not one-time).
+ * to {@code transactions} ({@code docs/taxplanning-build/post-deployment-runbook.md} §0.2; D-284, so not one-time).
  *
  * <p>Idempotent per user (D-282): a user with any row, whichever writer made it, is skipped and listed, so V1 and V2
  * rows are never duplicated, a run after one that failed part-way completes the rest, and a run after a complete one

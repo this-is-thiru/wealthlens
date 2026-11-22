@@ -5,7 +5,9 @@
 > doc was written in two parts (D-910): **trades and holdings** (W-357b7a, D-911) and **outcomes and reports** — `profit_and_loss`,
 > `trade_outcomes`, analytics, the export, the property sale and their rebuilds (W-357b7b, D-912). It also holds the hand-worked
 > figures `ProfitAndLossGapAuditIntegrationTest` asserts (§5), moved here from W-264d's plan, which W-357b7b removed with its review
-> (both readable in git history, e.g. `git show a382d351:docs/taxplanning-build/plans/W-264d.md`).
+> (both readable in git history, e.g. `git show a382d351:docs/taxplanning-build/plans/W-264d.md`). The trade ledger's design notes,
+> `docs/trade-ledger/`, were deleted by W-357b7c (D-913) and are readable at tag `docs-history-m1` (their last form at `b72507b9`); the
+> code cites that design by name (TL-6 – TL-8, B-4 – B-8), and §10 says what each name means.
 
 ## 1. Purpose
 
@@ -403,4 +405,30 @@ these routes too.
 
 - Which charges reduce a gain, the term and the tax: the tax side, `taxengine` and `taxplanning` (W-357b9, W-357b10).
 - What a corporate action does to a lot: `docs/modules/corporate.md`. What a trade is charged: `docs/modules/brokercharges.md`.
-- The trade ledger's design notes, `docs/trade-ledger/`: retired by W-357b7c.
+
+## 10. Names the code cites from the retired trade-ledger design
+
+The trade ledger's notes (`docs-history-m1:docs/trade-ledger/`) numbered their work TL-n and their findings B-n. These are the ones the
+code still cites, each as the notes stated it, with what holds today.
+
+| Name | What it says | Today |
+|---|---|---|
+| TL-6 | The trade-outcome rework: segment on each row, V2 writing itemised outcome rows, gains split by classification | rows carry `segment`; the P&L files gains by asset type and segment, facts only (`RealisedProfits.java:30` – `:37`) |
+| TL-7 | Trade idempotency: a client key, unique-indexed; a fingerprint inside a short window when none; a repeat returns the first result; two identical trades on one day both accepted | as decided (§5 "Recording a trade") |
+| TL-8 | Money stays `double`, and every stored amount is canonicalised to paise through `TMoney` (Option B); `BigDecimal` end to end (Option C) waits for a trigger | as decided (`shared/util/money/TMoney.java`). The five triggers, verbatim below |
+| B-4 | `profit_and_loss` and `assets` could not be rebuilt from `transactions` | closed: both rebuilds (§5; W-283, D-575; W-283a3, D-586) |
+| B-5 | V1 accumulated with raw `+=` | marked closed 2026-09-12, but the V1 fortnight's misc and profit still add raw doubles (gap 12, W-386) |
+| B-6 | Pro-rating lost a paisa across lots | fixed: each code allocated cumulatively, the parts summing to the whole (`TradeOutcomeRecorder.java:105` – `:123`) |
+| B-7 | A lot's buy charge was charged again on every partial sale (₹18.33 for ₹10 paid) | fixed for the rupee total (`LotChargeAllocator`); not for V2's breakdown by code (gap 10, W-386) |
+| B-8 | V1 had the same over-allocation | fixed in code; **the stored rows written before the fix** were left as a data question (W-387) |
+
+**TL-8's triggers** ("What would make Option C the answer"; any one of them, and the calculus changes):
+- Sub-paise amounts ever need storing — a per-unit rate, an unrounded intermediate, a foreign currency.
+- Multi-currency, which brings its own scale and rounding rules per currency.
+- A regulator or auditor requires exact decimal storage. For a personal tracker this is remote; for anything filed on someone else's
+  behalf it is not.
+- Aggregation moves into MongoDB: database-side `$sum` over BSON `Double` reintroduces drift outside application control.
+- Option B is tried and decays anyway: if the ArchUnit rule is fought rather than followed, the type should carry the guarantee instead.
+
+`taxengine` and `taxplanning` compute money as `Money`, not `double`, because two of these triggers fire for a tax computation
+(`docs/taxplanning-design/19-engineering-foundations.md`).

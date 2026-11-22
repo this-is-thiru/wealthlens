@@ -8,7 +8,7 @@ import java.util.Optional;
 
 /**
  * One user's lots as stored and as a replay of their transactions rebuilds them, lot against lot, and what a real run
- * wrote (W-283a2, D-582; W-283a3, D-586; {@code docs/trade-ledger/assets-rebuild.md}). Each list names what the replay
+ * wrote (W-283a2, D-582; W-283a3, D-586; {@code docs/modules/portfolio.md} §5). Each list names what the replay
  * had to read from somewhere other than the trade itself, so a difference can be traced.
  *
  * @param dryRun whether nothing was written
