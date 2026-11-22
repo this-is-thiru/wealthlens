@@ -60,7 +60,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * rows class them by side, and the land cap's indexed measure lifts a purchase expense with the price, since by the
  * owner's ruling it is cost of acquisition (2025 s.72(8)(b); 1961 s.48 Explanation (iii)).
  *
- * <p>Every figure is worked by hand in {@code plans/W-088g9.md}, not taken from a run.
+ * <p>Every figure is worked by hand in {@code docs/modules/taxplanning.md} §11 (W-088g9), not taken from a run.
  */
 @ExtendWith(MockitoExtension.class)
 class PropertySaleCapitalGainsTest {

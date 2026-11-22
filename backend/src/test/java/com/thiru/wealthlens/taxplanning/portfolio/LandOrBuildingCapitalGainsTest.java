@@ -51,7 +51,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * months decides the term (1961 s.2(42A) after the Finance (No. 2) Act, 2024 s.3(b); 2025 s.2(101)(a)), the part is
  * the one that provision's gain goes to, and the rate is s.112(1)(a)(ii)(B)'s twelve and one-half per cent.
  *
- * <p>Every figure is worked by hand in {@code plans/W-088g2.md}, not taken from a run.
+ * <p>Every figure is worked by hand in {@code docs/modules/taxplanning.md} §11 (W-088g2), not taken from a run.
  */
 @ExtendWith(MockitoExtension.class)
 class LandOrBuildingCapitalGainsTest {

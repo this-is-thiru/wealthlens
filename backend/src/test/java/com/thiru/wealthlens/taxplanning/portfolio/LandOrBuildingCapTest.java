@@ -58,7 +58,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * the cost lifted by the Cost Inflation Index — for a resident individual or HUF only, and with the divisor never taken
  * earlier than 1-4-2001.
  *
- * <p>Every figure is worked by hand in {@code plans/W-088g.md} — the indexed cost as {@code cost × index(sale year) ÷
+ * <p>Every figure is worked by hand in {@code docs/modules/taxplanning.md} §11 (W-088g) — the indexed cost as {@code cost × index(sale year) ÷
  * index(later of the acquisition year and 2001-02)}, rounded once to paise — and never taken from a run.
  */
 @ExtendWith(MockitoExtension.class)

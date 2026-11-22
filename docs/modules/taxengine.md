@@ -707,8 +707,9 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
    - "The Chapter VIII deductions built so far: the s.123 family … and the pension scheme" (`ChapterEightNode.java:43`): the node also
      runs health insurance, disability, donations, the loans, rent paid, deposit interest and the Agniveer fund.
    - `PerquisiteNode`'s "Built so far" list (`PerquisiteNode.java:46`) likewise.
-7. **Two plans stay** after W-357b9b1 moved the nodes' hand-worked figures into §11 (D-918): `plans/W-089.md`, cited by three
-   `taxplanning` tests (W-357b10 re-homes them), and `plans/W-112b.md`, cited by two pack files and a synthetic pack (kept by W-357b9e; see gap 13, W-393 (4)).
+7. **Two plans stay** after W-357b9b1 moved the nodes' hand-worked figures into §11 (D-918) and W-357b10b re-homed the three
+   `taxplanning` tests: `plans/W-112b.md`, cited by two pack files and a synthetic pack (kept by W-357b9e; see gap 13, W-393 (4)), and
+   `plans/W-089.md`, still cited by `plans/W-112b.md:58`.
 
 **The inputs (W-391):**
 8. **Javadoc that is no longer true:**

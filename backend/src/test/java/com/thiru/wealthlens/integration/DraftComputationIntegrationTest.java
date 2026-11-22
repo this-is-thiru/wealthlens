@@ -48,7 +48,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 /**
  * The first tax figure over HTTP: a stored draft, through the assembler and the shipped pipeline (W-103, W-104, W-107, W-109;
- * D-442). The case is {@code DR 13} T13-1, worked by hand in {@code plans/W-089.md}: 1,00,000 of salary, 11,00,000 of listed-equity
+ * D-442). The case is {@code DR 13} T13-1, worked by hand in {@code docs/modules/taxengine.md} §11 (W-089): 1,00,000 of salary, 11,00,000 of listed-equity
  * gains, 84,375 at 12.5 %, nil rebate, 3,375 of cess, a bill of 87,750. Computed on a fixed day, 6-11-2026, because interest for
  * deferring advance tax runs to the day of computation (W-112, D-446): by then 15 June and 15 September have passed.
  */
