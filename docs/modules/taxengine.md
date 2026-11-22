@@ -211,6 +211,68 @@ At ₹12,70,590:
 
 Both are `DR 08`'s figures.
 
+### The inputs (W-357b9c, D-919)
+
+**`EngineInputs`** (`input/EngineInputs.java:57` – `:103`) is the complete input to a computation, assembled by `taxplanning`. Every
+component is mandatory, and the year it names must equal its temporal context's (`:69` – `:88`):
+
+| Component | Type | What it holds |
+|---|---|---|
+| `taxYear`, `regime` | `TaxYearId`, `RegimeCode` | the year and the regime computed under |
+| `temporal` | `TemporalContext` | the year's start and end, the **as-of date** (the engine reads no clock) and a date per temporal axis (`rules/temporal/TemporalContext.java:25` – `:30`) |
+| `entered` | `EnteredFacts` | what the person entered: 40 lists and optionals, one per kind of fact (`input/EnteredFacts.java:105` – `:145`) |
+| `assessee` | `Assessee`: `Individual` (date of birth, residence, disability, date of death) or `Huf` (residence) | who is assessed, one record per type, and **no PAN**: no rule computes on one (`input/Assessee.java:22` – `:37`; `input/Individual.java:32` – `:37`) |
+| `family` | `FamilySnapshot` | the other people whose facts a rule reads (`input/FamilySnapshot.java:25`) |
+| `ledgers` | `LedgerSnapshot` | the cross-year state one year cannot hold: leave-travel blocks, retirement deductions allowed earlier, house-property and capital losses carried forward, the education loan's first year (`input/LedgerSnapshot.java:45` – `:51`) |
+| `elections` | `RegimeElectionSnapshot` | where the person stands with each regime, passed in, never fetched |
+| `capitalGains` | `CapitalGainsInput` | the portfolio's gross buckets, never tax, pinned to an `asOf` and the portfolio's computation reference (`input/CapitalGainsInput.java:42` – `:177`) |
+| `filing` | `FilingFacts` | the due date, when furnished, advance tax and self-assessment payments with dates, tax at source, the declarations' answers, and when a refund was granted (`input/FilingFacts.java:38`) |
+
+**`EnteredFacts`' kinds, by head:**
+- **Salary:** `Employment` (pay lines by registry code; dearness allowance terms; the employer's kind and, for a company, director or
+  substantial interest).
+- **Exemptions:** `Tenancy`, `Journey` and `JourneyTraveller`, `AllowanceUse`, `DisabledTransportClaim`.
+- **Retirement:** `RetirementPayment` with `Separation`, `LeaveAtRetirement`, `StatutoryEntitlement`.
+- **Perquisites:** `EmployerAccommodation` and `Furniture`, `EmployerVehicle` and `CarEngine`, meals, gifts, loans, expense benefits,
+  asset use and transfer, household benefits, child education, share allotments with `FairMarketValueBasis`, and medical treatment abroad.
+- **Employer funds:** `EmployerFundContribution`, `RetirementFundHistory`, `RecognisedFundInterest`.
+- **Chapter VIII:** qualifying payments, life policies, health payments, a disabled dependant, specified disease, education and purpose
+  loans, the Agniveer fund, the rent declaration, donations.
+- **House property:** `HouseProperty` with `HousingLoan`.
+- **Other sources:** `OtherSourceItem` by `OtherSourceKind`, `ProvidentFundAccount`, `GiftReceived`, `BusinessTrustUnits`,
+  `LifePolicyReceipt`, `ClaimedPolicy`.
+- **Capital gains:** `HouseReinvestment`.
+- **Set-off:** an `absorptionOrder`.
+
+A fact is entered as the person knows it, never as a rule's column. A car is "electric, or its cubic capacity", not Table II's band
+(`input/CarEngine.java:16`), and which band applies is the rule's.
+
+**Each record refuses a bad part** at construction, naming the record and the component: "`<Record>.<component>` may not be null". A
+nil-or-more amount refuses a negative. `InputRefusals.eachComponentNulled` proves the null contract for every component, a component added
+later included.
+
+**`InputsFingerprint`** (`input/InputsFingerprint.java:70` – `:199`) is the input half of the cache key: a SHA-256 of the inputs'
+**canonical form**, walked by reflection, so a component added anywhere enters the key with no one remembering (`:33` – `:38`):
+- **A record** is `T:Name{a=…,b=…}`, its components sorted by name, so reordering a declaration invalidates nothing (`:130` – `:146`).
+- **Sets and maps** are sorted by their canonical form; **lists** keep their order (`:51` – `:60`, `:160` – `:188`).
+- **The leaves:** an enum is `E:NAME`, an Optional `O:` then its value, an absent value `~`, any other leaf `V:Type:value`
+  (`:105` – `:124`).
+
+The pack is not in it: `RulePack.computationCacheKey()` covers the law and exec layers, and leaves the editorial ones out (`:40` – `:47`).
+
+**A person's age** for a rule is their completed years at the **tax year's end** (`pipeline/NodeContext.java:370`), from the date of birth
+carried here and the year the inputs name, never from a clock (`input/Individual.java:12` – `:24`).
+
+### Worked examples: the inputs (by hand)
+
+**A canonical form.** `new Huf(ResidentialStatus.RESIDENT)` has one component, `residence`, an enum, so its canonical form is
+**`T:Huf{residence=E:RESIDENT}`**. An `Optional.empty()` component would read `O:~`. A list of two enums `[A, B]` would read
+`L[E:A,E:B]` in that order, but as a set `S[E:A,E:B]` whatever its order.
+
+**An age at the year's end.** For TY 2026-27 the year ends 2027-03-31:
+- born 1966-11-10: 60 completed years at that day;
+- born 1967-04-02: 59, since the sixtieth birthday is 2027-04-02, after the year ends.
+
 ## 6. Configuration
 
 None of the engine's own. The packs it compiles are the classpath directory `rulepacks`, and the years are `shipped-years.json`'s
@@ -239,6 +301,16 @@ None of the engine's own. The packs it compiles are the classpath directory `rul
 | `LeaveTravelExemptionTest`, `HousePropertyInterestTest`, `HealthInsuranceDeductionTest`, `TaxByBasisNodeTest`, `SalaryHeadPipelineTest` | 22, 22, 22, 21, 21 |
 | the goldens `T1` – `T6` (`T1SlabAndRebateTest` and the rest) | `DR 08`'s figures, copied into the case files, never computed |
 | about fifty more | per node and per helper |
+
+**The inputs** (49 files under `taxengine/input`, 206 cases):
+
+| Class | Cases |
+|---|---|
+| `InputsFingerprintTest`, `AssesseeTest` | 25 each |
+| `RegimeElectionSnapshotTest`, `EngineInputsTest` | 19, 8 |
+| one test per input record | its refusals, through `InputRefusals` |
+
+No test in this part cites a plan or review (grep).
 
 Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `taxengine/api`, `pipeline`, `result` and `trace`.
 
@@ -274,9 +346,16 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
 7. **Two plans stay** after W-357b9b1 moved the nodes' hand-worked figures into §11 (D-918): `plans/W-089.md`, cited by three
    `taxplanning` tests (W-357b10 re-homes them), and `plans/W-112b.md`, cited by two pack files and a synthetic pack (W-357b9e).
 
+**The inputs (W-391):**
+8. **Javadoc that is no longer true:**
+   - `InputsFingerprint` says "today `EnteredFacts` is empty and the income side fills it over Phases 5 to 9"
+     (`input/InputsFingerprint.java:35` – `:38`), where it has 40 components.
+   - `EngineInputs` says `EnteredFacts` is "declared and empty", and that there is no `fingerprint()` method because
+     `InputsFingerprint` is "W-038's … next" (`input/EngineInputs.java:39` – `:43`). `InputsFingerprint` exists.
+   - `asOfDate()` is documented as "the as-of instant" but returns a date, written `java.time.LocalDate` in full (`:99` – `:102`).
+
 ## 9. Not covered here
 
-- What `EngineInputs` holds: W-357b9c.
 - How a rule, a cap or a condition is written: W-357b9d.
 - Packs, the JSON form, locks, validation, the catalogue and the return forms: W-357b9e.
 - The regime election, other elections and the optimiser's search: W-357b9f.
