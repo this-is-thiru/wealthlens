@@ -12,6 +12,7 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,12 +35,12 @@ public class PortfolioController {
     private final TradeCollisionRetry tradeCollisionRetry;
 
     @PostMapping("/transaction")
-    public String addTransaction(@CallerEmail String email, @RequestBody AssetRequest assetRequest) {
+    public String addTransaction(@CallerEmail String email, @Valid @RequestBody AssetRequest assetRequest) {
         return tradeCollisionRetry.addTransaction(UserMail.from(email), assetRequest);
     }
 
     @PostMapping("/transaction/v2")
-    public ResponseEntity<String> addTransactionV2(@CallerEmail String email, @RequestBody AssetRequest assetRequest) {
+    public ResponseEntity<String> addTransactionV2(@CallerEmail String email, @Valid @RequestBody AssetRequest assetRequest) {
         return ResponseEntity.ok(tradeCollisionRetry.addTransactionV2(UserMail.from(email), assetRequest));
     }
 
@@ -84,7 +85,7 @@ public class PortfolioController {
 
     @PostMapping("/stocks/search")
     public List<AssetResponse> getStocks(@CallerEmail String email,
-                                                         @RequestBody BulkGetRequest bulkGetRequest) {
+                                                         @Valid @RequestBody BulkGetRequest bulkGetRequest) {
         return portfolioQueryService.getStocksWithDateRange(UserMail.from(email), bulkGetRequest.getDateRange());
     }
 
@@ -96,7 +97,7 @@ public class PortfolioController {
 
 
     @PostMapping("/assets/search")
-    public List<AssetResponse> searchAssets(@CallerEmail String email, @RequestBody BulkGetRequest bulkGetRequest) {
+    public List<AssetResponse> searchAssets(@CallerEmail String email, @Valid @RequestBody BulkGetRequest bulkGetRequest) {
         return portfolioQueryService.searchAssets(UserMail.from(email), bulkGetRequest.getQueryFilters()).stream()
                 .map(asset -> TJsonMapper.copy(asset, AssetResponse.class)).toList();
     }

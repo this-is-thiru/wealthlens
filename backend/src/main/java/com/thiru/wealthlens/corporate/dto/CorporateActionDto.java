@@ -6,6 +6,7 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.corporate.entity.model.DemergerDetail;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.Data;
@@ -17,6 +18,8 @@ public class CorporateActionDto {
     private String stockName;
     private String toStockCode;
     private String toStockName;
+    /** What the action is; every perform and every record of one turns on it (W-358d4). */
+    @NotNull
     private CorporateActionType type;
     private AssetType assetType = AssetType.EQUITY;
     private String description;

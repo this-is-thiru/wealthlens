@@ -137,6 +137,18 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void request_whenRecorded_storesTheRequestIdItsAnswerCarries() throws IOException, InterruptedException {
+        // Given / When — W-358d1 (D-873 C3a): a log line names its request by this id and never the person, so the record keeps it
+        HttpResponse<String> answer = HttpClient.newHttpClient().send(HttpRequest.newBuilder(uri(GRIEVANCES_ROUTE))
+                .header("Authorization", "Bearer " + generateToken(ANU)).GET().build(), HttpResponse.BodyHandlers.ofString());
+
+        // Then
+        assertThat(answer.statusCode()).isEqualTo(200);
+        assertThat(recordsOnceWritten(1)).singleElement().extracting(ProcessingRecord::getRequestId)
+                .isEqualTo(answer.headers().firstValue("X-Request-Id").orElseThrow());
+    }
+
+    @Test
     void request_whenAQueryCarriesAValue_storesTheRouteAndNeverTheValue() throws IOException, InterruptedException {
         // Given / When
         assertThat(read("/api/v1/me/privacy/grievances?pan=ABCPE1234F", generateToken(ANU))).isEqualTo(200);

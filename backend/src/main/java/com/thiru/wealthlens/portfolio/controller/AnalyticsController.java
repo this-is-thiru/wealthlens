@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.service.AnalyticsService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +43,7 @@ public class AnalyticsController {
     }
 
     @PostMapping("/xirr")
-    public ResponseEntity<XirrResponse> calculateXirr(@CallerEmail String email, @RequestBody XirrRequest request) {
+    public ResponseEntity<XirrResponse> calculateXirr(@CallerEmail String email, @Valid @RequestBody XirrRequest request) {
         return ResponseEntity.ok(analyticsService.calculateXirr(UserMail.from(email), request));
     }
 }

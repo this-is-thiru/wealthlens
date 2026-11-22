@@ -85,10 +85,9 @@ public class TransactionBasedTradeOutcomeMigration {
 
     /**
      * The rows the rebuild makes for one user from their transactions, unsaved: every SELL matched FIFO against lots
-     * built from every BUY. Also how {@link RebuildBuyChargeCorrection} recomputes rows the rebuild once wrote, so the
-     * two cannot disagree on how a row is made.
+     * built from every BUY.
      */
-    public List<TradeOutcomeEntity> rebuiltRows(String email) {
+    private List<TradeOutcomeEntity> rebuiltRows(String email) {
         // Step 2a: Read all BUY transactions for this user
         List<TransactionEntity> buyTransactions = findByEmailAndTransactionType(email, TransactionType.BUY);
         if (buyTransactions.isEmpty()) {

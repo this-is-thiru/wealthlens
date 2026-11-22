@@ -5,6 +5,7 @@ import com.thiru.wealthlens.shared.web.MeApi;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRequest;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileResponse;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class TaxProfileController {
     private final TaxProfileService service;
 
     @PostMapping
-    public TaxpayerProfileResponse create(@CallerEmail String email, @RequestBody TaxpayerProfileRequest request) {
+    public TaxpayerProfileResponse create(@CallerEmail String email, @Valid @RequestBody TaxpayerProfileRequest request) {
         return TaxpayerProfileResponse.of(service.create(email, request));
     }
 
@@ -41,7 +42,7 @@ public class TaxProfileController {
 
     @PutMapping("/{profileId}")
     public TaxpayerProfileResponse replace(@CallerEmail String email, @PathVariable String profileId,
-            @RequestBody TaxpayerProfileRequest request) {
+            @Valid @RequestBody TaxpayerProfileRequest request) {
         return TaxpayerProfileResponse.of(service.replace(email, profileId, request));
     }
 }

@@ -7,6 +7,7 @@ import com.thiru.wealthlens.shared.privacy.BreachNoticeRequest;
 import com.thiru.wealthlens.shared.privacy.BreachNoticeService;
 import com.thiru.wealthlens.shared.privacy.BreachReport;
 import com.thiru.wealthlens.shared.web.AdminApi;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +34,7 @@ public class BreachNoticeController {
     @PostMapping
     @PreAuthorize("hasRole('SUPER_USER')")
     @ResponseStatus(HttpStatus.CREATED)
-    public BreachCase post(@RequestBody BreachNoticeRequest request) {
+    public BreachCase post(@Valid @RequestBody BreachNoticeRequest request) {
         return service.post(request);
     }
 
@@ -51,13 +52,13 @@ public class BreachNoticeController {
 
     @PostMapping("/{noticeId}/board-extension")
     @PreAuthorize("hasRole('SUPER_USER')")
-    public BreachCase boardExtension(@PathVariable String noticeId, @RequestBody BoardExtension extension) {
+    public BreachCase boardExtension(@PathVariable String noticeId, @Valid @RequestBody BoardExtension extension) {
         return service.boardExtension(noticeId, extension);
     }
 
     @PostMapping("/{noticeId}/emailed")
     @PreAuthorize("hasRole('SUPER_USER')")
-    public BreachReport emailed(@PathVariable String noticeId, @RequestBody BreachEmails emailed) {
+    public BreachReport emailed(@PathVariable String noticeId, @Valid @RequestBody BreachEmails emailed) {
         return service.emailed(noticeId, emailed);
     }
 

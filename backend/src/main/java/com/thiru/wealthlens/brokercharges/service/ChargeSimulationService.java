@@ -5,6 +5,7 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.request.ChargeSimulationRequest;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
 import com.thiru.wealthlens.brokercharges.engine.ChargeEngine;
@@ -84,8 +85,21 @@ public class ChargeSimulationService {
                 "transactionDate is required: it selects the rate card in force, and defaulting it "
                         + "would price a backfilled trade against today's rates");
         require(request.getQuantity() > 0, "quantity must be greater than zero");
+        require(request.getPrice() != null, "price is required; it may be 0 for a free allotment");
         require(request.getPrice() >= 0, "price must not be negative");
+        requireStockOnATrade(request);
         validateLots(request);
+    }
+
+    /**
+     * A buy or a sell names its scrip: without it no instrument is found, so a scheme's own charge, such as an exit load,
+     * would be silently absent (W-365). An account event such as an AMC cycle names none.
+     */
+    private static void requireStockOnATrade(ChargeSimulationRequest request) {
+        boolean isTrade = request.getEvent() == ChargeEvent.BUY || request.getEvent() == ChargeEvent.SELL;
+        boolean namesStock = request.getStockCode() != null && !request.getStockCode().isBlank();
+        require(!isTrade || namesStock,
+                "stockCode is required on a BUY or a SELL: it finds the scheme's own charges, such as an exit load");
     }
 
     /**

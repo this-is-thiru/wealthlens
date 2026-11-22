@@ -64,7 +64,8 @@ public class ChargeSimulationRequest {
 
     private double quantity;
 
-    private double price;
+    /** Required, and 0 is a real price: bonus shares and split allotments are issued free (W-365). */
+    private Double price;
 
     /** 1 for cash-segment instruments; unset is read as 1 rather than as zero. */
     private int lotSize;

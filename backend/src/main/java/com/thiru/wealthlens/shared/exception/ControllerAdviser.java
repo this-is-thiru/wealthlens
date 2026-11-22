@@ -1,20 +1,25 @@
 package com.thiru.wealthlens.shared.exception;
 
-
+import com.thiru.wealthlens.shared.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -97,6 +102,26 @@ public class ControllerAdviser {
         return problem(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), request);
     }
 
+    /** A body missing what its type requires (W-358d4): 400 naming each field, in field order. */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidBody(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        log(ex);
+        String fields = ex.getBindingResult().getFieldErrors().stream()
+                .sorted(Comparator.comparing(FieldError::getField))
+                .map(error -> "field '" + error.getField() + "' " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return problem(HttpStatus.BAD_REQUEST.value(), Character.toUpperCase(fields.charAt(0)) + fields.substring(1), request);
+    }
+
+    /** Over a limit on attempts (W-358d2): 429, with how long to wait. */
+    @ExceptionHandler(TooManyAttemptsException.class)
+    public ResponseEntity<ProblemDetail> handleTooManyAttempts(TooManyAttemptsException ex, HttpServletRequest request) {
+        log(ex);
+        ResponseEntity<ProblemDetail> answer = problem(HttpStatus.TOO_MANY_REQUESTS.value(), ex.getMessage(), request);
+        return ResponseEntity.status(answer.getStatusCode()).header(HttpHeaders.RETRY_AFTER, String.valueOf(Math.max(1, ex.getRetryAfter().toSeconds())))
+                .body(answer.getBody());
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleForbidden(Exception ex, HttpServletRequest request) {
         log(ex);
@@ -121,10 +146,16 @@ public class ControllerAdviser {
         return problem(HttpStatus.NOT_FOUND.value(), ex.getMessage(), request);
     }
 
+    /**
+     * An unexpected failure (W-364): its message names the code's insides — classes, nulls — so it goes only to the log, and the caller
+     * is told it failed and given the request's id to quote (W-358d1).
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, HttpServletRequest request) {
         log(ex);
-        return problem(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(), request);
+        String detail = RequestIdFilter.current().map(id -> "Something went wrong. Quote " + RequestIdFilter.HEADER + " " + id + " when you report it.")
+                .orElse("Something went wrong.");
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR.value(), detail, request);
     }
 
     /** Every error as RFC 9457 {@code ProblemDetail} (W-359a): the status, its reason as the title, the message, the path. */

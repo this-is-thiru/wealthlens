@@ -7,6 +7,7 @@ import com.thiru.wealthlens.brokercharges.dto.response.ChargeSeedReport;
 import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
 import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.shared.web.AdminApi;
+import jakarta.validation.Valid;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
@@ -39,7 +40,7 @@ public class ChargeSchedulePublishingController {
      */
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/charge-schedules")
-    public ChargeScheduleResponse publish(@RequestBody ChargeScheduleRequest schedule) {
+    public ChargeScheduleResponse publish(@Valid @RequestBody ChargeScheduleRequest schedule) {
         return ChargeScheduleResponse.from(chargeScheduleService.publish(schedule.asSchedule()));
     }
 

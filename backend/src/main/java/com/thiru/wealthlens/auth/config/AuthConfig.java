@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -43,6 +44,7 @@ public class AuthConfig {
     private final ProcessingLogFilter processingLogFilter;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
+    private final UserDetailsPasswordService userDetailsPasswordService;
     private final JwtDecoder accessTokenDecoder;
     private final JwtAuthenticationConverter accessTokenAuthentication;
 
@@ -79,6 +81,8 @@ public class AuthConfig {
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
+        // Rewrites an older stored hash as Argon2id when its owner signs in (W-358d3)
+        authProvider.setUserDetailsPasswordService(userDetailsPasswordService);
         return new ProviderManager(authProvider);
     }
 

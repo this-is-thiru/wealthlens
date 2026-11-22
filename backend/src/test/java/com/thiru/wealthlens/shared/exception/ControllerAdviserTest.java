@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -42,6 +43,12 @@ class ControllerAdviserTest {
 
     @RestController
     static class Stub {
+
+        /** An unexpected failure whose message names the code's insides, as the perform's did before W-358d4. */
+        @GetMapping("/fails")
+        String fails() {
+            throw new IllegalStateException("Cannot invoke \"com.thiru.wealthlens.corporate.dto.enums.CorporateActionType.ordinal()\"");
+        }
 
         @GetMapping("/years/{taxYear}")
         String year(@PathVariable int taxYear) {
@@ -239,5 +246,28 @@ class ControllerAdviserTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.status").value(405)).andExpect(jsonPath("$.title").value("Method Not Allowed"))
                 .andExpect(jsonPath("$.detail").exists()).andExpect(jsonPath("$.instance").value("/years/2026"));
+    }
+
+    @Test
+    void unexpectedFailure_whenAnswered_namesNoInternals() throws Exception {
+        // When / Then — W-364: the message stays in the log; the caller is told only that it failed
+        mvc.perform(get("/fails"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.detail").value("Something went wrong."));
+    }
+
+    @Test
+    void unexpectedFailure_whenTheRequestHasAnId_namesItToQuote() throws Exception {
+        // Given — the id RequestIdFilter puts on every request (W-358d1)
+        MDC.put("requestId", "0b7c2f4e-0000-4000-8000-000000000001");
+
+        // When / Then
+        try {
+            mvc.perform(get("/fails"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.detail").value("Something went wrong. Quote X-Request-Id 0b7c2f4e-0000-4000-8000-000000000001 when you report it."));
+        } finally {
+            MDC.remove("requestId");
+        }
     }
 }

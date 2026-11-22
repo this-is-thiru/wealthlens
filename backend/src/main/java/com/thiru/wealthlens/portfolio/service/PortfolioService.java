@@ -89,7 +89,6 @@ public class PortfolioService {
     /** V1's processing of one trade: the V1 route, every upload row and a V1 redrive pass here, so it checks the trade (W-277). */
     private String processTransaction(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
         validateAssetRequest(userMail, assetRequest);
-        sanitizeAssetRequest(assetRequest);
 
         String filteredOutTransactionId = temporaryTransactionService.filterOutTransaction(userMail, assetRequest, TradeFlow.V1);
         if (filteredOutTransactionId != null) {
@@ -129,7 +128,6 @@ public class PortfolioService {
     /** V2's twin of {@link #processTransaction}: shared by the V2 route and the redrive of a trade V2 received (W-270). */
     private String processTransactionV2(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
         validateAssetRequest(userMail, assetRequest);
-        sanitizeAssetRequest(assetRequest);
 
         String filteredOutTransaction = temporaryTransactionService.filterOutTransaction(userMail, assetRequest, TradeFlow.V2);
         if (filteredOutTransaction != null) {
@@ -194,6 +192,8 @@ public class PortfolioService {
             throw new BadRequestException("Email does not match");
         }
 
+        checkNamedFacts(assetRequest);
+
         Double quantity = assetRequest.getQuantity();
         if (quantity == null || quantity <= 0) {
             throw new BadRequestException("Quantity must be greater than zero, but was: " + quantity);
@@ -233,6 +233,25 @@ public class PortfolioService {
         checkExchange(assetRequest);
     }
 
+    /**
+     * What a trade cannot be recorded without (W-365, D-889). A missing date is refused rather than taken to be today: it
+     * picks the rate card, the financial year of a gain and the holding term, so today would be a confident wrong figure.
+     */
+    private static void checkNamedFacts(AssetRequest assetRequest) {
+        if (assetRequest.getStockCode() == null || assetRequest.getStockCode().isBlank()) {
+            throw new BadRequestException("A trade must name its stock code");
+        }
+        if (assetRequest.getBrokerName() == null) {
+            throw new BadRequestException("A trade must name its broker");
+        }
+        if (assetRequest.getTransactionType() == null) {
+            throw new BadRequestException("A trade must say whether it is a BUY or a SELL");
+        }
+        if (assetRequest.getTransactionDate() == null) {
+            throw new BadRequestException("A trade must carry its transaction date; it is not taken to be today");
+        }
+    }
+
     private void checkExchange(AssetRequest assetRequest) {
         AssetType assetType = assetRequest.getAssetType();
         if (assetType == null) {
@@ -246,12 +265,6 @@ public class PortfolioService {
         if (!accepted.contains(exchange)) {
             throw new BadRequestException("Exchange \"" + exchange + "\" is not accepted for a trade of type " + assetType
                     + "; name one of " + accepted);
-        }
-    }
-
-    private static void sanitizeAssetRequest(AssetRequest assetRequest) {
-        if (assetRequest.getTransactionDate() == null) {
-            assetRequest.setTransactionDate(LocalDate.now());
         }
     }
 

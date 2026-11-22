@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxplanning.profile.LandlordResponse;
 import com.thiru.wealthlens.taxplanning.profile.LenderRequest;
 import com.thiru.wealthlens.taxplanning.profile.LenderResponse;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileReferenceService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +34,7 @@ public class TaxProfileReferenceController {
     private final TaxProfileReferenceService service;
 
     @PostMapping("/family-members")
-    public FamilyMemberResponse createFamilyMember(@CallerEmail String email, @PathVariable String profileId, @RequestBody FamilyMemberRequest request) {
+    public FamilyMemberResponse createFamilyMember(@CallerEmail String email, @PathVariable String profileId, @Valid @RequestBody FamilyMemberRequest request) {
         return FamilyMemberResponse.of(service.createFamilyMember(email, profileId, request));
     }
 
@@ -44,12 +45,12 @@ public class TaxProfileReferenceController {
 
     @PutMapping("/family-members/{id}")
     public FamilyMemberResponse replaceFamilyMember(@CallerEmail String email, @PathVariable String profileId, @PathVariable String id,
-            @RequestBody FamilyMemberRequest request) {
+            @Valid @RequestBody FamilyMemberRequest request) {
         return FamilyMemberResponse.of(service.replaceFamilyMember(email, profileId, id, request));
     }
 
     @PostMapping("/employers")
-    public EmployerResponse createEmployer(@CallerEmail String email, @PathVariable String profileId, @RequestBody EmployerRequest request) {
+    public EmployerResponse createEmployer(@CallerEmail String email, @PathVariable String profileId, @Valid @RequestBody EmployerRequest request) {
         return EmployerResponse.of(service.createEmployer(email, profileId, request));
     }
 
@@ -60,12 +61,12 @@ public class TaxProfileReferenceController {
 
     @PutMapping("/employers/{id}")
     public EmployerResponse replaceEmployer(@CallerEmail String email, @PathVariable String profileId, @PathVariable String id,
-            @RequestBody EmployerRequest request) {
+            @Valid @RequestBody EmployerRequest request) {
         return EmployerResponse.of(service.replaceEmployer(email, profileId, id, request));
     }
 
     @PostMapping("/landlords")
-    public LandlordResponse createLandlord(@CallerEmail String email, @PathVariable String profileId, @RequestBody LandlordRequest request) {
+    public LandlordResponse createLandlord(@CallerEmail String email, @PathVariable String profileId, @Valid @RequestBody LandlordRequest request) {
         return LandlordResponse.of(service.createLandlord(email, profileId, request));
     }
 
@@ -76,12 +77,12 @@ public class TaxProfileReferenceController {
 
     @PutMapping("/landlords/{id}")
     public LandlordResponse replaceLandlord(@CallerEmail String email, @PathVariable String profileId, @PathVariable String id,
-            @RequestBody LandlordRequest request) {
+            @Valid @RequestBody LandlordRequest request) {
         return LandlordResponse.of(service.replaceLandlord(email, profileId, id, request));
     }
 
     @PostMapping("/lenders")
-    public LenderResponse createLender(@CallerEmail String email, @PathVariable String profileId, @RequestBody LenderRequest request) {
+    public LenderResponse createLender(@CallerEmail String email, @PathVariable String profileId, @Valid @RequestBody LenderRequest request) {
         return LenderResponse.of(service.createLender(email, profileId, request));
     }
 
@@ -92,12 +93,12 @@ public class TaxProfileReferenceController {
 
     @PutMapping("/lenders/{id}")
     public LenderResponse replaceLender(@CallerEmail String email, @PathVariable String profileId, @PathVariable String id,
-            @RequestBody LenderRequest request) {
+            @Valid @RequestBody LenderRequest request) {
         return LenderResponse.of(service.replaceLender(email, profileId, id, request));
     }
 
     @PostMapping("/bank-accounts")
-    public BankAccountResponse createBankAccount(@CallerEmail String email, @PathVariable String profileId, @RequestBody BankAccountRequest request) {
+    public BankAccountResponse createBankAccount(@CallerEmail String email, @PathVariable String profileId, @Valid @RequestBody BankAccountRequest request) {
         return BankAccountResponse.of(service.createBankAccount(email, profileId, request));
     }
 
@@ -108,7 +109,7 @@ public class TaxProfileReferenceController {
 
     @PutMapping("/bank-accounts/{id}")
     public BankAccountResponse replaceBankAccount(@CallerEmail String email, @PathVariable String profileId, @PathVariable String id,
-            @RequestBody BankAccountRequest request) {
+            @Valid @RequestBody BankAccountRequest request) {
         return BankAccountResponse.of(service.replaceBankAccount(email, profileId, id, request));
     }
 }

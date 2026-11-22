@@ -4,6 +4,8 @@ import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 /**
@@ -11,8 +13,9 @@ import java.time.LocalDate;
  * the token, and the billing state ({@code lastBilledThrough}, {@code billingEvents}) is the AMC run's, so a body carrying either is
  * refused as an unknown field rather than stored — a user who set it would skip every cycle up to it.
  */
-public record ChargeAccountRequest(String accountHolder, BrokerName brokerName, String dematAccountId, String planCode, LocalDate openedOn,
-        AmcChargeFrequency amcFrequency, EntityStatus status) {
+// The broker and demat id key the account and name its AMC charge; the frequency picks the cycle that bills it (W-358d4)
+public record ChargeAccountRequest(String accountHolder, @NotNull BrokerName brokerName, @NotBlank String dematAccountId, String planCode,
+        LocalDate openedOn, @NotNull AmcChargeFrequency amcFrequency, EntityStatus status) {
 
     /** The account to register for {@code email}, the caller. */
     public ChargeAccountEntity asAccount(String email) {

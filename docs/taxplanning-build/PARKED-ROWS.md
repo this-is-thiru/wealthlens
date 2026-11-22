@@ -70,6 +70,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-307 | PARKED | Bound the schedule resolver cache and give it a TTL (CE-3) | Before a second app instance or a multi-year backfill, else waived at the deploy gate (D-622) | Correct as deployed: one instance, and the cache is evicted on every card write |
 | W-308 | PARKED | `UserChargeService.record` under concurrent pricing of one transaction (CE-4) | When a recompute route runs beside live trades, else waived at the deploy gate (D-622) | Row says not reachable by a current caller |
 | W-126e4 | PARKED | Telling a Form 16 from a Form No. 130 on upload (D-744) | If TY 2025-26 documents return to scope (D-748), else waived at the deploy gate | Out of scope: documents are read for TY 2026-27 on, where only Form No. 130 is prescribed (D-748) |
+| W-363 | PARKED | Registration confirmed by email | When the app can send mail | Registration still tells whether an address has an account (a taken and a held address answered alike, naming neither, D-884); sign-in tells nothing |
 
 ## Noted
 

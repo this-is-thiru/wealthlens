@@ -54,4 +54,11 @@ public class ProcessingRecord {
     @Indexed
     @Field("recorded_at")
     private LocalDateTime recordedAt;
+
+    /**
+     * The id its answer carried as `X-Request-Id`, which every log line written while serving it names (W-358d1): the logs mask
+     * emails, so this is what ties a line to whom it concerned. Rows written before W-358d1 have none.
+     */
+    @Field("request_id")
+    private String requestId;
 }

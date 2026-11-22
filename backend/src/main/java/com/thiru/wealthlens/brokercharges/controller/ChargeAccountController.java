@@ -5,6 +5,7 @@ import com.thiru.wealthlens.brokercharges.dto.response.ChargeAccountResponse;
 import com.thiru.wealthlens.brokercharges.service.ChargeAccountService;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,7 @@ public class ChargeAccountController {
 
     /** Registers a demat account for AMC and account-opening charges. */
     @PostMapping
-    public ChargeAccountResponse register(@CallerEmail String email, @RequestBody ChargeAccountRequest account) {
+    public ChargeAccountResponse register(@CallerEmail String email, @Valid @RequestBody ChargeAccountRequest account) {
         return ChargeAccountResponse.from(chargeAccountService.register(account.asAccount(email)));
     }
 

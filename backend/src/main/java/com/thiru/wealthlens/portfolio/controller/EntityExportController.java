@@ -7,6 +7,7 @@ import com.thiru.wealthlens.shared.dto.EntityExportRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.web.CallerEmail;
 import com.thiru.wealthlens.shared.web.MeApi;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class EntityExportController {
     private final EntityExportService entityExportService;
 
     @PostMapping("/stocks/download")
-    public ResponseEntity<InputStreamResource> downloadPortfolio(@CallerEmail String email, @RequestBody EntityExportRequest entityExportRequest) {
+    public ResponseEntity<InputStreamResource> downloadPortfolio(@CallerEmail String email, @Valid @RequestBody EntityExportRequest entityExportRequest) {
 
         FileStream fileStream = entityExportService.export(UserMail.from(email), entityExportRequest);
         return FileHelper.sendFileAsAttachment(fileStream);
