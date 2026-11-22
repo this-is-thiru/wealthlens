@@ -66,18 +66,10 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void backfill_whenDryRunIsNeitherTrueNorFalse_expected400() {
-        assertAnswered(exchange(HttpMethod.POST,
-                "/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?dryRun=maybe&recordedBefore=2026-11-01T00:00:00",
-                MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
-                "Parameter 'dryRun' must be true or false, but was 'maybe'");
-    }
-
-    @Test
-    void backfill_whenRecordedBeforeIsNotADateTime_expected400NamingTheFormat() {
-        assertAnswered(exchange(HttpMethod.POST, "/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?recordedBefore=yesterday",
-                MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST,
-                "Parameter 'recordedBefore' must be a date and time as yyyy-MM-dd'T'HH:mm:ss, but was 'yesterday'");
+    void rebuildProfitAndLoss_whenDryRunIsNeitherTrueNorFalse_expected400() {
+        // On the V2 backfill's route until W-173 removed it; the date-time wording stays in ControllerAdviserTest
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/admin/portfolio/users/someone@example.com/profit-and-loss/rebuild?dryRun=maybe",
+                MediaType.APPLICATION_JSON, null), HttpStatus.BAD_REQUEST, "Parameter 'dryRun' must be true or false, but was 'maybe'");
     }
 
     @Test

@@ -65,7 +65,7 @@ against the named database.
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.1 – 2.14 | Tax planning, by hand, in order (retired: 2.0 by W-159; 2.1, 2.3 – 2.7, 2.9, 2.10 by Phase 15, D-874 – D-881; 2.13 by W-294, D-890; 2.14 by W-299, D-891) | per step | per step |
+| 2.1 – 2.14 | Tax planning, by hand, in order (retired: 2.0 by W-159; 2.1, 2.3 – 2.7, 2.9, 2.10 by Phase 15, D-874 – D-881; 2.13 by W-294, D-890; 2.14 by W-299, D-891; 2.8 by W-173, D-892) | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -90,6 +90,7 @@ below is the full sequence for a fresh database (W-337).
 7. W-365 (D-889) — nothing to write: a trade without `stockCode`, `brokerName`, `transactionType` or `transactionDate` answers 400 naming it (a missing date is no longer taken to be today), on V1, V2, the upload and redrive; `/finances/calculate` without `calculationType` and `/finances/interest-rate` without `stepUpFrequency` answer 400; `/charges/simulate` needs `price` (0 allowed) and, on a BUY or SELL, `stockCode`. **Read-only, per database (IntelliJ console):** stored trades missing a field now required — `db.transactions.countDocuments({ $or: [{ stock_code: { $in: [null, ""] } }, { broker_name: null }, { transaction_type: null }, { transaction_date: null }] })`; expected `0`. A temporary trade among them would be refused at every redrive and, under V1, block new trades; anything above 0 is reported to the owner, corrected by nobody in this item.
 8. W-294 (D-890) — nothing to run: §2.13 is retired (run on prod and staging).
 9. W-299 (D-891) — nothing to run: §2.14 is retired and `POST /api/v1/admin/portfolio/transactions/segment/correct` is no longer served.
+10. §2.18 W-173 (D-892) — **a write, per database, after the deploy (owner, IntelliJ console):** the V2 backfill is removed (`POST /api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill` no longer served, §2.8 retired); §2.18 backs up and unsets `pnl_backfilled_outcome_ids` on `profit_and_loss` — before N, backup N, after 0, P&L by year unchanged.
 
 ## 0. Before deploying
 
@@ -1357,7 +1358,7 @@ fields back; no code reads them.
 
 ### 2.6 W-160d3 (D-369) — move the P&L's stored short / long pair into its split · `SUPER_USER` · **retired by W-170 (D-878) · do not run**
 
-> **Retired.** Run on prod (W-334e2: 3 sides placed, 0 unplaced) and staging (W-334d3a: 7 placed, 0 unplaced); W-170 removed its route and code (`StoredReport` stays with §2.8's backfill, W-173). Kept below as the record of what it did.
+> **Retired.** Run on prod (W-334e2: 3 sides placed, 0 unplaced) and staging (W-334d3a: 7 placed, 0 unplaced); W-170 removed its route and code (`StoredReport` stayed with §2.8's backfill until W-173 removed both). Kept below as the record of what it did.
 
 **Needs `m1.1` (W-338, D-789):** on `m1` the rewrite matched no `profit_and_loss` year whose `_id` is a string of 24 hex digits
 (prod's are), and wrote nothing.
@@ -1440,7 +1441,9 @@ it.
 
 **Retired after use:** W-171 / WL-37, once this is logged for every database. There is no code to remove.
 
-### 2.8 W-172 (D-373) — add the V2 sales' profit, brokerage and misc to the P&L · `SUPER_USER` · **every database · once · outstanding**
+### 2.8 W-172 (D-373) — add the V2 sales' profit, brokerage and misc to the P&L · `SUPER_USER` · **retired by W-173 (D-892) · do not run**
+
+> **Retired.** Run on prod (W-334e2: 0 recorder rows, dry run 0 / 0 / 0 / 0 — nothing to write) and staging (W-334d3a B18: 1 row, unplaced — owner "(a) left"; folded by that user's §2.11 in W-334d3b W10). W-173 removed its route and code; §2.18 clears the list it kept. Kept below as the record of what it did.
 
 **Needs `m1.1` (W-338, D-789):** on `m1` the backfill matched no `profit_and_loss` year whose `_id` is a string of 24 hex digits
 (prod's are), and added nothing.
@@ -1583,7 +1586,7 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
 - An AMC cycle and the other account events are not folded, as the live P&L does not fold them.
 - A charge row naming a transaction that is not stored refuses the whole call (400, naming it): delete that
   `user_charges` row or restore the transaction.
-- The rebuilt documents list every folded row in `pnl_backfilled_outcome_ids`, so §2.8 never adds them again.
+- Until W-173 the rebuilt documents listed every folded row in `pnl_backfilled_outcome_ids`, so §2.8 never added them again; W-173 removed both (§2.18 clears the stored lists).
 - A row is filed under its own `segment`. A V1 or §2.2-rebuilt row stored before W-295 has none and is filed under
   delivery, even when its sale was intraday. **Run §3.19 first, and do not rebuild a user it lists until W-297 has
   corrected their rows** (W-295, D-595). W-297's §2.14 was that correction (retired by W-299, D-891: nothing to correct on prod or staging).
@@ -1829,6 +1832,49 @@ unset MONGO_PASSWORD
 restore again 0; remove with a backup present refused.
 
 **Retired after use:** W-354, once logged for prod. There is no code to remove.
+
+---
+
+### 2.18 W-173 (D-892) — unset `pnl_backfilled_outcome_ids` on `profit_and_loss` · owner, IntelliJ console · **every database · once · outstanding**
+
+**Why.** §2.8's one-time V2 backfill kept, on each P&L document, the list of `trade_outcomes` rows already in its figures, and a §2.11
+rebuild filled it too (D-575). W-173 removed the backfill and the field's mapping, so nothing reads or writes the list any more. A
+document the new build saves loses it anyway (a save replaces the whole document); this clears the rest, so no stored document carries a
+field no code knows. It holds row ids only, never a figure: no P&L amount changes.
+
+**When:** after the deploy that carries W-173 (`m1.6`, W-366), on each database (prod `Cluster0`, staging `it-staging`). Before it,
+the old build would write the list again. Until it runs, the new build reads such a document without complaint
+(`ProfitAndLossIntegrationTest.save_whenTheStoredYearStillCarriesTheBackfillsList_readsItAndDropsTheList`).
+
+In the IntelliJ console, with the database chosen (check the console's database field):
+
+1. **Before (read-only):**
+   ```js
+   db.profit_and_loss.countDocuments({ pnl_backfilled_outcome_ids: { $exists: true } })
+   ```
+   Note the number, N. A 0 means nothing to do: stop here and log it.
+2. **Backup** into a collection (the MongoDB tools were removed, D-849):
+   ```js
+   db.profit_and_loss.aggregate([{ $match: { pnl_backfilled_outcome_ids: { $exists: true } } }, { $project: { pnl_backfilled_outcome_ids: 1 } }, { $out: "profit_and_loss_backfill_ids_w173" }])
+   ```
+   then `db.profit_and_loss_backfill_ids_w173.countDocuments({})` must equal N. If not, stop.
+3. **Write:**
+   ```js
+   db.profit_and_loss.updateMany({ pnl_backfilled_outcome_ids: { $exists: true } }, { $unset: { pnl_backfilled_outcome_ids: "" } })
+   ```
+   `matchedCount` and `modifiedCount` equal N.
+4. **After (read-only):** step 1's count is 0. Then sign in and read the P&L by year in the app: the same figures as before.
+5. **Drop the backup** once step 4 is checked: `db.profit_and_loss_backfill_ids_w173.drop()`.
+
+**Second run:** safe, including after a run that stopped part-way: step 3 matches only documents that still carry the field, and a second
+run matches 0. **Way back** (until step 5):
+`db.profit_and_loss_backfill_ids_w173.find().forEach(b => db.profit_and_loss.updateOne({ _id: b._id }, { $set: { pnl_backfilled_outcome_ids: b.pnl_backfilled_outcome_ids } }))`.
+
+**Rehearsed** on a throwaway `mongo:8.0.4` (W-173's build): three documents — one with a list and a 24-hex string `_id`, one with an empty
+list, one without — before 2, backup 2, write 2 / 2, after 0, second run 0 / 0, the third untouched; the way back restored both lists
+(`["r1","r2"]` on the string id); the backup dropped.
+
+**Retired after use:** W-368 / WL-49, once this is logged for every database. There is no code to remove.
 
 ---
 

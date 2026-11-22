@@ -4,8 +4,6 @@ import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
 
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
@@ -18,7 +16,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
-import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
@@ -27,7 +24,6 @@ import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,43 +117,6 @@ class ProfitAndLossRebuildIntegrationTest extends AbstractIntegrationTest {
         List<ProfitAndLossEntity> documents = profitAndLossRepository.findAllByEmail(V2_USER);
         assertThat(documents).hasSize(1);
         assertSameFigures(first.getRealisedProfits(), documents.getFirst().getRealisedProfits());
-    }
-
-    @Test
-    void rebuild_whenTheV2BackfillRunsAfterIt_addsNoSaleAgain() {
-        // Given -- the V2 trades, their sale rows dated before the deploy as the backfill needs, then rebuilt
-        tradeV2Scenario();
-        List<TradeOutcomeEntity> rows = tradeOutcomeRepository.findByEmail(V2_USER);
-        rows.forEach(row -> row.getAuditMetadata().setCreatedAt(LocalDateTime.now().minusHours(1)));
-        tradeOutcomeRepository.saveAll(rows);
-        rebuild(V2_USER, "?dryRun=false", "SUPER_USER").statusCode(200);
-        ProfitAndLossEntity rebuilt = profitAndLossRepository.findByEmailAndFinancialYear(V2_USER, YEAR).orElseThrow();
-
-        // When -- the one-time backfill (§2.8) for every row written before tomorrow
-        given().header("Authorization", "Bearer " + generateToken(ADMIN, "SUPER_USER"))
-                .post("/api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill?dryRun=false&recordedBefore=" + LocalDateTime.now().plusDays(1).withNano(0))
-                .then().statusCode(200).body("placed", hasSize(0)).body("alreadyCounted", equalTo(2));
-
-        // Then -- both sale rows were already in the rebuilt figures (C3a), so nothing moved
-        ProfitAndLossEntity after = profitAndLossRepository.findByEmailAndFinancialYear(V2_USER, YEAR).orElseThrow();
-        assertSameFigures(rebuilt.getRealisedProfits(), after.getRealisedProfits());
-    }
-
-    @Test
-    void rebuild_whenALiveTradeSavesTheYearAfterIt_keepsTheBackfillsList() {
-        // Given -- the V2 trades, rebuilt, so the year's document lists both sale rows
-        tradeV2Scenario();
-        rebuild(V2_USER, "?dryRun=false", "SUPER_USER").statusCode(200);
-        List<String> listed = profitAndLossRepository.findByEmailAndFinancialYear(V2_USER, YEAR).orElseThrow()
-                .getBackfilledOutcomeIds();
-
-        // When -- a later buy in the same year saves the document
-        post(V2_USER, "/transaction/v2", trade(TransactionType.BUY, 1.0, 100.0, LocalDate.of(2026, 3, 10)));
-
-        // Then -- a save replaces the whole document; the list survives it
-        assertThat(listed).hasSize(2);
-        assertThat(profitAndLossRepository.findByEmailAndFinancialYear(V2_USER, YEAR).orElseThrow()
-                .getBackfilledOutcomeIds()).containsExactlyInAnyOrderElementsOf(listed);
     }
 
     @Test

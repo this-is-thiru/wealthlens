@@ -83,8 +83,6 @@ public class ProfitAndLossRebuild {
             TradeOutcomeContext row = TJsonMapper.copy(sale, TradeOutcomeContext.class);
             ProfitAndLossEntity document = documentFor(rebuilt, email, row.getSellDate());
             ProfitAndLossService.foldSale(document, row);
-            // Folded here, so the V2 backfill (§2.8) must not add it again (C3a).
-            document.getBackfilledOutcomeIds().add(sale.getId());
         }
 
         List<UserChargeEntity> charges = userChargeService.findHistory(email).stream()
