@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class UserDetailsServiceImpl implements UserDetailsService, UserDetailsPasswordService {
     private final UserDetailsRepository userDetailsRepo;
     private final HeldAccounts heldAccounts;
+    private final RegisteredUserDirectory directory;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -35,7 +36,8 @@ public class UserDetailsServiceImpl implements UserDetailsService, UserDetailsPa
     public UserDetails updatePassword(UserDetails user, String newPassword) {
         UserDetail login = userDetailsRepo.findByEmail(user.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("user not found " + user.getUsername()));
+        directory.storePassword(login.getEmail(), newPassword);
         login.setPassword(newPassword);
-        return new UserDetailsImpl(userDetailsRepo.save(login));
+        return new UserDetailsImpl(login);
     }
 }

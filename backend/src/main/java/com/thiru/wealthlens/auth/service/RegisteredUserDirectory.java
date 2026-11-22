@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class RegisteredUserDirectory implements RegisteredUsers {
 
     private static final String LAST_SIGNED_IN_AT = "last_signed_in_at";
+    private static final String PASSWORD = "password";
 
     private final UserDetailsRepository repository;
     private final MongoTemplate mongoTemplate;
@@ -35,6 +36,18 @@ public class RegisteredUserDirectory implements RegisteredUsers {
     /** A targeted update, so a sign-in never overwrites a password changed at the same moment. */
     public void recordSignIn(String email, LocalDateTime atUtc) {
         mongoTemplate.updateFirst(query(where("email").is(email)), new Update().set(LAST_SIGNED_IN_AT, atUtc), UserDetail.class);
+    }
+
+    /**
+     * A targeted update by email, never a save (W-369): a login re-keyed by runbook §1.r holds an {@code ObjectId} {@code _id} while
+     * {@code UserDetail} writes a string, so a save matched no row and inserted a second login, refused by the unique email index.
+     */
+    public void storePassword(String email, String hash) {
+        long matched = mongoTemplate.updateFirst(query(where("email").is(email)), new Update().set(PASSWORD, hash), UserDetail.class)
+                .getMatchedCount();
+        if (matched != 1) {
+            throw new IllegalStateException("No login holds this email to store its password");
+        }
     }
 
     @Override

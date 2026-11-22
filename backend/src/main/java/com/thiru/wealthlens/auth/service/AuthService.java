@@ -82,8 +82,7 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), userEntity.getPassword())) {
             throw new IllegalArgumentException("Invalid old password");
         }
-        userEntity.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userDetailsRepo.save(userEntity);
+        signIns.storePassword(email, passwordEncoder.encode(request.getNewPassword()));
         // Whoever held a refresh token signs in again with the new password (W-358b).
         refreshTokens.endAll(email);
         return email + "'s password changed successfully";
