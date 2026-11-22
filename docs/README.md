@@ -35,6 +35,7 @@ One current doc per module, written from the code and citing it (W-357b, D-901; 
 | Module | Doc |
 |---|---|
 | `finance` — loan and SIP calculators | [`modules/finance.md`](modules/finance.md) |
+| `insurance` — stored policies, no routes | [`modules/insurance.md`](modules/insurance.md) |
 
-Still to come, in order (W-357b2 – b10): `insurance`, `helper`, `auth`, `corporate`, `brokercharges` (replacing `charges-engine/`),
+Still to come, in order (W-357b3 – b10): `helper`, `auth`, `corporate`, `brokercharges` (replacing `charges-engine/`),
 `portfolio` (replacing `trade-ledger/`), `shared`, `taxengine`, `taxplanning`.
