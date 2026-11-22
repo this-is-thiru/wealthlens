@@ -128,6 +128,89 @@ are 31, 26, 1, 4, 11, 30, which read in `ABCDEFGHIJKLMNOPQRSTUVWXYZ234567` as 7,
 - **Rounding:** two gains of ₹0.50 in a part of ₹1.00 lowered to ₹0.03 each round to ₹0.02, which would hold ₹0.04. The last gives up a
   paisa: ₹0.02 and ₹0.01.
 
+### The nodes (W-357b9b, D-917)
+
+Thirty nodes ship (`node/ShippedNodes.java:9` – `:39`), each writing one slot. Their order is the regime's pipeline, as the edges allow
+(§5). Every legal figure a node applies is a row of the year's pack, never a Java constant. Where a node "has no rule", it is untraced: it
+adds or reshapes figures whose own lines explain them.
+
+| Slot | Node | Reads | What it computes |
+|---|---|---|---|
+| `inputs.components` | `ComponentPartitionNode` | — | The pay lines partitioned into heads by the year's component registry; an unknown or not-live code stops the run (D-090; `ComponentPartitionNode.java:31`) |
+| `salary.base` | `SalaryBaseNode` | components | The narrow "salary" (basic, and dearness allowance where the terms provide) that HRA, gratuity, leave encashment and the pension limits are measured on (D-092) |
+| `employer.contrib.charges` | `EmployerContributionNode` | base | The employer's provident fund, NPS and superannuation contributions beyond the yearly aggregate limit, and the accretion on the excess (D-126) |
+| `salary.exemptions` | `ExemptionNode` | components, base | House rent allowance per period of occupation, the leave travel concession, the salary allowances (D-099 – D-102) |
+| `salary.retirement` | `RetirementNode` | components | Gratuity, leave encashment, commuted pension and the other retirement and termination deductions, each under the entry the person names (D-103, D-106, D-109) |
+| `salary.monetaryincome` | `MonetarySalaryIncomeNode` | components, base, exemptions, retirement | Salary income without perquisites: the measure of a "specified employee" (D-113) |
+| `salary.perquisites` | `PerquisiteNode` | base, exemptions, monetary income | Accommodation, vehicles, meals and gifts, loans, holidays and cards, assets, household benefits, specified securities (D-111 – D-118) |
+| `salary.gross` | `GrossSalaryNode` | components, perquisites, contribution charges | What "salary includes": the head's lines that feed the definition, plus perquisites and the contribution charges (D-091) |
+| `salary.deductions` | `SalaryDeductionNode` | components, gross, base | The tax on employment, the standard deduction (the regime's amount or the salary, whichever is less), and for TY 2025-26 an entertainment allowance (D-093, D-105) |
+| `salary.incomebeforetravel` | `SalaryIncomeBeforeTravelNode` | gross, exemptions, retirement, deductions | Gross less exemptions, retirement and other deductions: the income the medical-travel test reads (D-112) |
+| `salary.medicaltravel` | `MedicalTreatmentAbroadNode` | income before travel | The part of an employer's spending on treatment abroad that is a perquisite (D-112) |
+| `salary.income` | `SalaryIncomeNode` | before travel, medical travel | Income under "Salaries" |
+| `houseproperty.income` | `HousePropertyNode` | — | Per property: annual value (nil for an own residence), less 30 %, arrears, the owner's share, less interest; the head less the own residences' interest within limits (D-155, D-156) |
+| `othersources.income` | `OtherSourcesNode` | — | Interest, dividends, unit income, compensation interest, gifts, life-policy sums and the rest, each less what may be deducted against it (D-194 – D-207) |
+| `capitalgains.income` | `CapitalGainsNode` | — | Each bucket's gain (consideration less cost less the charges the law deducts), the reinvestment exemption, its part, term and STT reading, the head's own losses (D-243, D-289, D-305, W-162a, W-088i) |
+| `setoff` | `SetOffNode` | the four heads | A head's loss against the others in the elected or declared order, the house-property limit, the regime's bar, and losses carried in from earlier years (D-217) |
+| `gti` | `GrossTotalIncomeNode` | set-off | Gross total income (D-132) |
+| `chapterviii` | `ChapterEightNode` | gti, set-off, components, base | The Chapter VIII deductions, in order, each within its own limit and all within s.122(2)'s (D-130 – D-142, D-195) |
+| `totalincome` | `TotalIncomeNode` | gti, Chapter VIII | Total income |
+| `round.totalincome` | `RoundTotalIncomeNode` | total income | Rounded to the nearest ₹10: the first rounding point (s.516; `RATE-ROUND-003`) |
+| `tax.bybasis` | `TaxByBasisNode` | rounded TI, set-off | Special-rate capital gains at their rows' rates; the rest through the regime's ladder; partial integration of agricultural income (D-071, D-244, D-778) |
+| `tax.afterrebate` | `RebateNode` | by basis, rounded TI | Each rebate row of the regime, limited to slab-rate tax where its row says (D-074) |
+| `tax.surcharge` | `SurchargeNode` | after rebate, rounded TI, set-off | One rate on the whole tax from the band the income falls in, the greater of the two incomes' ladders, less marginal relief by re-entry (D-084 – D-086) |
+| `tax.cess` | `CessNode` | after rebate, surcharge | The Health and Education Cess on tax and surcharge (D-079) |
+| `tax.netpayable` | `NetPayableNode` | after rebate, surcharge, cess | The bill before filing effects: what elections compare (D-080, D-436) |
+| `credits` | `CreditsNode` | — | Tax already paid: at source, in advance, self-assessment (D-436) |
+| `tax.balance` | `BalanceNode` | net payable, credits | Payable above nil, refundable below |
+| `advance.tax` | `AdvanceTaxNode` | net payable | Liability, and what each instalment still asks (D-446) |
+| `interest.and.fees` | `InterestAndFeeNode` | net payable, advance tax, rounded TI | Interest for a late return, an advance-tax shortfall and deferment (with its relief), the late-return fee, and interest added to a refund (D-446, D-660, D-663) |
+| `round.netpayable` | `RoundNetPayableNode` | balance, interest and fees | The final amount rounded to ₹10, a refund on its magnitude: the second and last rounding point (`ROUND-NEG-001`) |
+
+The slots' names are `NodeIds`. Each node's rule sets are its `ruleSets()`, and I3 checks that they reach every row of the pack (§5).
+
+**What the order guarantees, by what the nodes read:**
+- **Cess** reads `tax.afterrebate` and `tax.surcharge` and nothing earlier, so it cannot be charged on tax before the rebate
+  (`CessNode.java:31`).
+- **Rebate before surcharge.** A rebate limited to slab-rate tax keeps special-rate tax: ₹12,00,000 that is mostly capital gains keeps
+  its special-rate tax (`RebateNode.java:46`; `DR 13` T13-1).
+- **The bill stays the comparison.** Credits reach `tax.balance`, not `tax.netpayable` (`NetPayableNode.java:24`; `BalanceNode.java:18`).
+- **Two rounding points, exactly:** total income, then the final amount (`RoundTotalIncomeNode`, `RoundNetPayableNode`; asserted by
+  `T1SlabAndRebateTest.run_whenTheCaseIsComputed_roundsInExactlyTwoPlaces`).
+
+### Worked examples: the nodes (by hand, from the shipped rows)
+
+The rows, as TY 2026-27 ships them (`rulepacks/timeline/law/rules/`; each row's `introducedBy` names its Gazette copy):
+- `RATE-SLAB-NEW-TAX-REGIME`: 0 up to ₹4,00,000; 5 % to ₹8,00,000; 10 % to ₹12,00,000; 15 % to ₹16,00,000; 20 % to ₹20,00,000; 25 % to
+  ₹24,00,000; 30 % above (s.202(1) Table).
+- `REBATE-NEW-TAX-REGIME`: up to ₹60,000 where total income is no more than ₹12,00,000, limited to slab-rate tax (s.156(2)(a), (3)).
+- `REBATE-NEW-TAX-REGIME-EXCESS`: the tax limited to the income above ₹12,00,000, on slab-rate tax.
+- `RATE-HEALTH-EDUCATION-CESS`: 4 % of tax and surcharge (Finance Act, 2026 s.3(15)).
+- `SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME`: ₹75,000 or the salary, whichever is less (s.19(1) Table Sl. 2(a)).
+
+**A salary through the whole chain** (new regime, a resident individual, TY 2026-27, basic pay ₹13,25,000 and nothing else):
+1. `salary.gross`: 13,25,000.
+2. `salary.deductions`: least of 75,000 and 13,25,000 = 75,000.
+3. `salary.income` = `gti` = `totalincome`: 12,50,000. `round.totalincome`: 12,50,000.
+4. `tax.bybasis`, on the ladder: 4,00,000 × 0 + 4,00,000 × 5 % + 4,00,000 × 10 % + 50,000 × 15 % = 0 + 20,000 + 40,000 + 7,500 = **67,500**.
+5. `tax.afterrebate`: the ₹60,000 rebate does not apply, since 12,50,000 > 12,00,000. The excess rule limits the tax to 12,50,000 −
+   12,00,000 = 50,000, so **50,000**.
+6. `tax.surcharge`: nil, the income being below every band.
+7. `tax.cess`: 4 % × 50,000 = 2,000.
+8. `tax.netpayable` = 52,000. With no credits, `round.netpayable` is **₹52,000**.
+
+This is `DR 08` T1-N3's ₹52,000 for total income ₹12,50,000, which `T1SlabAndRebateTest` asserts (`golden/T1/T1-N3.json`).
+
+**Where the excess rule stops binding** (T1-N4a and T1-N4b). Total income ₹12,70,580:
+- **Ladder:** 60,000 + 15 % × 70,580 = 70,587. The excess rule caps it at 70,580.
+- **Cess:** 4 % × 70,580 = 2,823.20, so 73,403.20, rounded to **₹73,400**.
+
+At ₹12,70,590:
+- **Ladder:** 60,000 + 15 % × 70,590 = 70,588.50. The cap 70,590 no longer binds, so 70,588.50.
+- **Cess:** 2,823.54, so 73,412.04, rounded to **₹73,410**.
+
+Both are `DR 08`'s figures.
+
 ## 6. Configuration
 
 None of the engine's own. The packs it compiles are the classpath directory `rulepacks`, and the years are `shipped-years.json`'s
@@ -147,9 +230,19 @@ None of the engine's own. The packs it compiles are the classpath directory `rul
 | `TaxCalculatorUnshippedYearTest`, `TaxCalculatorDeclarationsTest`, `NodeContextDeclarationsTest` | 6 each |
 | `ReturnFactsProjectionTest`, `TaxCalculatorPackIdentityTest`, `CitedSectionsTest`, `NodeResultTest`, `IndexedGainTest`, `RegimeElectionTest`, and nine more | 1 – 5 each |
 
+**The nodes** (76 files under `taxengine/node` and `taxengine/golden`):
+
+| Class | Cases |
+|---|---|
+| `OtherSourcesNodeTest`, `RetirementNodeTest`, `SetOffNodeTest`, `CapitalGainsNodeTest` | 82, 53, 37, 35 |
+| `MotorCarPerquisiteTest`, `ChapterEightNodeTest`, `SurchargeNodeTest`, `PerquisiteNodeTest` | 28, 27, 24, 22 |
+| `LeaveTravelExemptionTest`, `HousePropertyInterestTest`, `HealthInsuranceDeductionTest`, `TaxByBasisNodeTest`, `SalaryHeadPipelineTest` | 22, 22, 22, 21, 21 |
+| the goldens `T1` – `T6` (`T1SlabAndRebateTest` and the rest) | `DR 08`'s figures, copied into the case files, never computed |
+| about fifty more | per node and per helper |
+
 Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `taxengine/api`, `pipeline`, `result` and `trace`.
 
-## 8. Known gaps (this part: placed as W-389, D-916)
+## 8. Known gaps (boundary and run: W-389, D-916; the nodes: W-390, D-917)
 
 1. **A legal list in Java.** `dueBy` accepts an election deadline only "under" s.263(1) or s.139(1), the return's due date, from a Java
    constant (`api/TaxCalculator.java:310` – `:320`, `:651` – `:652`). CLAUDE.md §4: every qualifying list is tax-year-versioned rule
@@ -170,9 +263,21 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
    words, and auditing (CLAUDE.md §4: one reason per class). It spells `java.util.HashMap` and `java.util.Comparator` in full
    (`TaxCalculator.java:161`, `:171`, `:185`, `:200`, `:218`, `:236`, `:245`, `:467`).
 
+**The nodes (W-390):**
+5. **The business and profession head is not computed.** No node produces it (`GrossTotalIncomeNode.java:17`), and advance tax assumes
+   none in applying s.403(3)(a) / s.207(2)(a) (`AdvanceTaxNode.java:41`). A person with business income gets a bill without it, and no
+   refusal says so. Pack rows already defer to "the business head" (W-078c, W-078j3b).
+6. **Javadoc that is no longer true:**
+   - "The Chapter VIII deductions built so far: the s.123 family … and the pension scheme" (`ChapterEightNode.java:43`): the node also
+     runs health insurance, disability, donations, the loans, rent paid, deposit interest and the Agniveer fund.
+   - `PerquisiteNode`'s "Built so far" list (`PerquisiteNode.java:46`) likewise.
+7. **Twenty plans are cited by seventeen of this part's tests** for their hand-worked figures (`taxengine/node`, `taxengine/golden`;
+   grep). Re-homing them is W-357b9b1 (D-917): read each plan's tables, move what a test relies on into this doc or the test, re-point
+   the test, then delete the plan. Two are cited outside this part too: `plans/W-089.md` by three `taxplanning` tests, and
+   `plans/W-112b.md` by two pack files and a synthetic pack.
+
 ## 9. Not covered here
 
-- What each node computes: W-357b9b.
 - What `EngineInputs` holds: W-357b9c.
 - How a rule, a cap or a condition is written: W-357b9d.
 - Packs, the JSON form, locks, validation, the catalogue and the return forms: W-357b9e.
