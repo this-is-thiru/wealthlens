@@ -40,6 +40,7 @@ One current doc per module, written from the code and citing it (W-357b, D-901; 
 | `auth` — accounts, sign-in, tokens | [`modules/auth.md`](modules/auth.md) |
 | `corporate` — corporate actions, recorded then applied per user and broker | [`modules/corporate.md`](modules/corporate.md) |
 | `brokercharges` — rate cards, the charge engine, what each trade cost | [`modules/brokercharges.md`](modules/brokercharges.md) |
+| `portfolio` — trades and holdings (outcomes and reports to come, W-357b7b) | [`modules/portfolio.md`](modules/portfolio.md) |
 
 Still to come, in order (W-357b7 – b10): `portfolio` (replacing `trade-ledger/`), `shared`, `taxengine`, `taxplanning`.
 
