@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
  * A rebate taken against the whole tax would have made the bill nil, and that answer "looks right, the arithmetic is
  * sound at every step, and [is] wrong by the whole bill" ({@code 13-edge-cases.md} R-5).
  *
- * <p>Every figure is worked by hand in {@code plans/W-089.md} from the pack rows the case's own terms name, never
+ * <p>Every figure is worked by hand in {@code docs/modules/taxengine.md} §11 (W-089) from the pack rows the case's own terms name, never
  * taken from a run: the 4,00,000 nil band leaves 3,00,000 unused, which comes off the gain (11,00,000 → 8,00,000);
  * 12½ per cent above 1,25,000 of it is 84,375; the rebate is nil; cess at 4 per cent is 3,375; net payable 87,750.
  */

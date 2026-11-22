@@ -31,9 +31,9 @@ import org.junit.jupiter.api.Test;
 /**
  * The relief from deferment interest, run end to end (2025 s.425(4); W-112a, D-660), on {@code DR 13} T13-1's figures:
  * ₹1,00,000 of salary after the standard deduction and ₹11,00,000 of long-term listed-equity gains make a bill of 87,750
- * ({@code plans/W-089.md}), and the salary alone is within the 4,00,000 nil band, so the bill without the gain is nil.
+ * ({@code docs/modules/taxengine.md} §11 (W-089)), and the salary alone is within the 4,00,000 nil band, so the bill without the gain is nil.
  *
- * <p>Every figure is worked by hand in {@code plans/W-112a.md}, from {@code INT-DEFERMENT}'s shares and rates and
+ * <p>Every figure is worked by hand in {@code docs/modules/taxengine.md} §11 (W-112a), from {@code INT-DEFERMENT}'s shares and rates and
  * {@code INT-CALCULATION}'s ₹100 base: at 15 June, 15 September and 15 December the shortfall is 15, 45 and 75 per cent of
  * the tax due, bases 13,100, 39,400 and 65,800, interest at 3 per cent 393, 1,182 and 1,974.
  */

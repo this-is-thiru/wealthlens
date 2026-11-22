@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Net agricultural income in the rates — partial integration, FA 2026 s.2(2) (TY 2025-26) and s.3(2) (TY 2026-27).
- * Every figure is worked by hand in {@code plans/W-258.md} from the shipped ladders: Z = X − Y, X the tax on the
+ * Every figure is worked by hand in {@code docs/modules/taxengine.md} §11 (W-258) from the shipped ladders: Z = X − Y, X the tax on the
  * income plus the net agricultural income, Y the tax on the net agricultural income plus column C.
  */
 class AgriculturalIntegrationTest {

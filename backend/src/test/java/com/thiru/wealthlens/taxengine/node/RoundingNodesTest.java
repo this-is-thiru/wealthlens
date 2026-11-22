@@ -40,7 +40,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * The two rounding points of s.516 (D-076). Payable figures are copied from {@code DR 08} and
- * {@code DR 13}; total-income figures are worked by hand from s.516's text in {@code plans/W-050.md},
+ * {@code DR 13}; total-income figures are worked by hand from s.516's text in {@code docs/modules/taxengine.md} §11 (W-050),
  * because every {@code DR 08} total income is already a multiple of ten.
  */
 class RoundingNodesTest {

@@ -271,10 +271,8 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
    - "The Chapter VIII deductions built so far: the s.123 family … and the pension scheme" (`ChapterEightNode.java:43`): the node also
      runs health insurance, disability, donations, the loans, rent paid, deposit interest and the Agniveer fund.
    - `PerquisiteNode`'s "Built so far" list (`PerquisiteNode.java:46`) likewise.
-7. **Twenty plans are cited by seventeen of this part's tests** for their hand-worked figures (`taxengine/node`, `taxengine/golden`;
-   grep). Re-homing them is W-357b9b1 (D-917): read each plan's tables, move what a test relies on into this doc or the test, re-point
-   the test, then delete the plan. Two are cited outside this part too: `plans/W-089.md` by three `taxplanning` tests, and
-   `plans/W-112b.md` by two pack files and a synthetic pack.
+7. **Two plans stay** after W-357b9b1 moved the nodes' hand-worked figures into §11 (D-918): `plans/W-089.md`, cited by three
+   `taxplanning` tests (W-357b10 re-homes them), and `plans/W-112b.md`, cited by two pack files and a synthetic pack (W-357b9e).
 
 ## 9. Not covered here
 
@@ -283,3 +281,613 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
 - Packs, the JSON form, locks, validation, the catalogue and the return forms: W-357b9e.
 - The regime election, other elections and the optimiser's search: W-357b9f.
 - What `taxplanning` does with an answer: `docs/modules/taxplanning.md` (W-357b10).
+
+## 11. Hand-worked figures the node and golden tests cite
+
+Moved here from their plans by W-357b9b1 (D-918), so each test cites this doc rather than a plan file. Each block is the plan's own text,
+verbatim: its numbers, cases and derivations, as the plan stated them before the build. A build may have departed from a plan; where it
+did, the test's own comments and the D-row say so. The plans' full text, choices and build records stay in git history:
+`git show 88e5bd2d:docs/taxplanning-build/plans/<plan>.md`.
+
+### W-046 — TaxByBasisNode + TaxByBasisNodeTest (Phase 5 opens)
+
+Cited by `TaxByBasisNodeTest`.
+
+#### Numbers (each derived by hand here, not by running the code)
+
+| Case | Figure | Derivation | Source |
+|---|---|---|---|
+| New regime, TI ₹12,00,000 | **₹60,000** | 4L–8L at 5% = 20,000; 8L–12L at 10% = 40,000 | S2 s.202(1) Table; `DR 23` A11 |
+| New regime, TI ₹4,00,000 | **₹0** | at the top of the nil band | S2 s.202(1) |
+| New regime, TI ₹24,00,001 | **₹3,00,000.30** | 20,000 + 40,000 + 60,000 + 80,000 + 1,00,000 = 3,00,000; plus 30% of ₹1 = 0.30. No rounding in the node (`RATE-ROUND-003`) | S2 s.202(1) |
+| First Schedule rates, TI ₹10,00,000 | **₹1,12,500** | 2.5L–5L at 5% = 12,500; 5L–10L at 20% = 1,00,000 | FA 2026 First Sched. Part I-B Para A (I): *"₹ 112500 plus 30% of the amount by which the total income exceeds ₹ 1000000"* |
+
+### W-050 — `RoundTotalIncomeNode` and `RoundNetPayableNode`
+
+Cited by `RoundingNodesTest`.
+
+#### Numbers
+
+**Copied from `DR 08` / `DR 13`** (payable → rounded):
+
+| Case | In | Out | Source line |
+|---|---|---|---|
+| T1-N2 | 10.40 | **10** | "RATE-ROUND-002: ignore paise → 10; already a multiple of 10" |
+| T1-N4 (a) | 73,403.20 | **73,400** | "round: → 73,403 → last figure 3 < 5 → down" |
+| T1-N4 (b) | 73,412.04 | **73,410** | "→ 73,412 → last figure 2 < 5 → down" |
+| T1-O2 | 13,002.08 | **13,000** | "→ 13,002 → last figure 2 < 5 → down" |
+| T2-2 (a) | 12,90,837.60 | **12,90,840** | "→ 12,90,837 → last figure 7 ≥ 5 → up" |
+| T2-2 (b) | 12,90,843.84 | **12,90,840** | "→ 12,90,843 → last figure 3 < 5 → down" |
+| T13-14 | refund 1,234.99 | **1,230** (sign restored for −1,234.99) | "Paise ignored → 1,234 → last figure 4 → ₹1,230" |
+
+**Total income, derived by hand from s.516** (`DR 08`'s T1 incomes are all already round):
+
+| In | Out | Derivation |
+|---|---|---|
+| 12,00,004.60 | **12,00,000** | paise ignored → 12,00,004; last figure 4 < 5 → down. Rounding to the rupee first would give 12,00,010 |
+| 12,00,005 | **12,00,010** | last figure 5 ≥ 5 → up |
+| 12,00,000 | **12,00,000** | already a multiple of ten; the line is still emitted |
+
+### W-051 — `CessNode`
+
+Cited by `CessNodeTest`.
+
+#### Numbers (copied from `DR 08`; post-rebate tax → cess, surcharge nil in every case)
+
+| Case | Tax after rebate | Cess | `DR 08` line |
+|---|---|---|---|
+| **T2-1** | 10,80,000 | **43,200** | "cess 4% × 10,80,000 = 43,200" (surcharge 0 at the threshold) |
+| T1-N1 | 0 | **0** | "RATE-CESS-001: 4% × 0 = 0" |
+| T1-N2 | 10.00 | **0.40** | "cess 4% × 10 = 0.40" — charged on 10, not on the pre-rebate 60,001.50 |
+| T1-N3 | 50,000 | **2,000** | "cess 4% = 2,000" |
+| T1-N4 | 70,580.00 / 70,588.50 | **2,823.20 / 2,823.54** | "cess 4% = 2,823.20"; "= 2,823.54" |
+| T1-O2 | 12,502 | **500.08** | "cess 4% = 500.08" |
+
+T1-N2 is the `REBATE-ORDER-001` check: charging the cess before the rebate gives 2,400.06 (4% × 60,001.50),
+not 0.40.
+
+**By hand (finding 3):** after the rebate, slab tax 0 plus special-rate tax 1,00,000 (an arbitrary
+figure) → cess **4,000**: 4% of the whole income-tax, not of the slab part alone.
+
+### W-052 — `NetPayableNode`
+
+Cited by `NetPayableNodeTest`.
+
+#### Numbers (copied from `DR 08`: tax after rebate + cess = "total", before rounding)
+
+| Case | Tax after rebate | Cess | Net payable | `DR 08` line |
+|---|---|---|---|---|
+| **T1-N1** | 0 | 0 | **0** | "tax after rebate = 0 … RATE-CESS-001: 4% × 0 = 0" |
+| **T1-N3** | 50,000 | 2,000 | **52,000** | "total = 52,000" |
+| T1-N2 | 10.00 | 0.40 | **10.40** | "total = 10.40" |
+| T1-N4 | 70,580.00 / 70,588.50 | 2,823.20 / 2,823.54 | **73,403.20 / 73,412.04** | "total = 73,403.20"; "= 73,412.04" |
+| T1-O2 | 12,502 | 500.08 | **13,002.08** | "total = 13,002.08" |
+| T2-1 | 10,80,000 | 43,200 | **11,23,200** | "total = 11,23,200" |
+
+**By hand:** after rebate, slab 0 plus special-rate 1,00,000, with cess 4,000 → **1,04,000** (the whole
+tax, not the slab part).
+
+### W-088b — special-rate tax on capital gains
+
+Cited by `TaxByBasisNodeTest`.
+
+#### Numbers I will use, and where each comes from
+
+| Value | Source |
+|---|---|
+| 20% (s.196 / s.111A part) | S2 s.196(1)(i), Gazette 265620 p.220; 1961 s.111A(1)(i)(b) as substituted by FA (No. 2) 2024 s.29, Gazette 256436 p.26 |
+| 12.5% (s.197 / s.112 part) | S2 s.197(1)(b), p.221; 1961 s.112(1)(a)(ii)(B), (d)(ii)(B), FA (No. 2) 2024 s.30, pp.26–27 |
+| 12.5% above ₹1,25,000 (s.198 / s.112A part) | S2 s.198(2)(a), p.222; 1961 s.112A(2)(i)(b), FA (No. 2) 2024 s.31, pp.27–28 |
+| The maximum amount not chargeable | **Not a new number.** It is the upper bound of the zero-rate band of the ladder `TaxByBasisNode` already chooses (`RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE*`) |
+
+#### How I will verify
+
+`./mvnw test -pl backend -Punit -Dtest='TaxByBasisNodeTest,ChapterEightNodeTest,TotalIncomeNodeTest'`, then the unit
+tier, the integration tier, and `spotless:apply`. Expected values are worked by hand here:
+
+- **A** (TY 2025-26, old regime, resident aged 40):
+  - slab income 1,50,000; s.111A part 50,000; s.112 part 80,000; s.112A part 2,00,000;
+  - basic exemption 2,50,000, so the shortfall is 1,00,000. Taken in order: s.111A to nil (50,000 left), s.112 to
+    30,000;
+  - tax: slab 0; s.111A 0; s.112 3,750; s.112A (2,00,000 − 1,25,000) × 12.5% = 9,375.
+- **B:** the same facts, non-resident. No shift: s.111A 10,000; s.112 10,000; s.112A 9,375; slab 0.
+- **C:** T13-1's facts (TY 2026-27, new regime): slab 0; s.198 part 84,375 (OQ-33 default).
+- **D** (Chapter VIII, TY 2025-26, old regime):
+  - salary income 1,00,000; s.112A part 5,00,000; s.80C claims 1,50,000;
+  - the deduction is limited to 1,00,000 (reduced GTI), not 1,50,000;
+  - total income 5,00,000.
+- **E:** a slab-only case returns exactly what it does today, with no special entries.
+
+**Bite probes** (each predicted to fail, then reverted):
+1. the shift disabled → A fails;
+2. Chapter VIII bounded by plain GTI → D fails;
+3. the ₹1,25,000 band removed → A, B and C fail.
+
+### W-088c — the surcharge split
+
+Cited by `SurchargeNodeTest`.
+
+#### Numbers
+
+| Value | Source |
+|---|---|
+| 15% limit | FA 2026 s.2(4)(b), s.3(4)(b) Table Sl. 10 (v) (pp.7, 14); First Schedule Part I-A, I-B Para F Table 1 Sl. 1 (vi) (pp.83, 87) |
+| Ladders, thresholds | existing `RATE-SUR-*` rows (unchanged) |
+
+#### Cases (worked by hand; each in both years unless marked)
+
+- **S1 — T2-6** (old regime): TI 2,50,00,000 = slab 2,00,00,000 + s.198 / s.112A 50,00,000.
+  - Tax at slab: 12,500 + 1,00,000 + 30% × 1,90,00,000 = 58,12,500. Special: (50,00,000 − 1,25,000) × 12.5% =
+    6,09,375.
+  - Excluding = 2,00,00,000, which does not exceed 2Cr, so nil. Total-income ladder at 2.5Cr: 15%.
+  - Surcharge: 15% × 58,12,500 + 15% × 6,09,375 = 8,71,875 + 91,406.25 = **9,63,281.25**, citing
+    `RATE-SUR-FIRST-SCHEDULE`.
+  - Relief: U at 2Cr = (43,12,500 + 6,09,375) × 1.15 = 56,60,156.25; W = 1,06,60,156.25 ≥ 73,85,156.25, so nil.
+- **S2** (old regime): TI 3,00,00,000 = slab 2,50,00,000 + s.198 50,00,000.
+  - Slab tax: 1,12,500 + 30% × 2,40,00,000 = 73,12,500. Excluding 2,50,00,000, so 25%.
+  - Surcharge: 25% × 73,12,500 + 15% × 6,09,375 = 18,28,125 + 91,406.25 = **19,19,531.25**. Applying 25% to the
+    whole would give 19,80,468.75.
+  - Relief: W = 56,60,156.25 + 1,00,00,000 ≥ 98,41,406.25, so nil.
+- **S3** (new regime, TY 2026-27): TI 3,00,00,000 including 30,00,000 of dividends, no special gains.
+  - Slab tax: 3,00,000 + 30% × 2,76,00,000 = 85,80,000. Excluding 2,70,00,000, so 25%.
+  - Slice: 85,80,000 × 30,00,000 ÷ 3,00,00,000 = 8,58,000.
+  - Surcharge: 25% × 77,22,000 + 15% × 8,58,000 = 19,30,500 + 1,28,700 = **20,59,200**.
+  - Relief at 2Cr: (3,00,000 + 30% × 1,76,00,000) × 1.15 = 64,17,000; W = 1,64,17,000 ≥ 1,06,39,200, so nil.
+- **The five former refusals:** each gets a figure worked the same way in its test comment. Their facts stay as
+  they are.
+
+**Bite probes** (each predicted to fail, then reverted):
+1. Apply the chosen rate to the whole tax (no split): S2 and S3 fail; S1 does not (rates equal).
+2. Leave the special parts in the excluding income: S1 fails (2.5Cr → 25%).
+3. Use total income, not aggregate income, as the slice's denominator: a case with both dividends and special gains
+   fails. I add one: **S4** (old regime, TI 3,00,00,000 = slab 2,50,00,000 incl. dividends 25,00,000 + s.198
+   50,00,000; slice = 73,12,500 × 25,00,000 ÷ 2,50,00,000 = 7,31,250; surcharge = 25% × (73,12,500 − 7,31,250) +
+   15% × (7,31,250 + 6,09,375) = 16,45,312.50 + 2,01,093.75 = **18,46,406.25**).
+
+### W-088f2a — D-241's STT mapping as rule rows
+
+Cited by `CapitalGainsNodeTest`.
+
+#### Numbers I will use
+
+None. The rows carry conditions and a part — no amount, rate or date.
+
+#### Cases (by hand from sources rows 1–4; each equals `CapitalGainsAdapter:79–98` today)
+
+| # | Term | Asset | STT buy | STT sale | Part | Today |
+|---|---|---|---|---|---|---|
+| 1 | short | EQUITY | NOT_PAID | PAID | SHORT_TERM_LISTED_EQUITY | `SPECIAL_RATE_LISTED_EQUITY` |
+| 2 | short | EQUITY | PAID | NOT_PAID | SHORT_TERM_SLAB | `SLAB` |
+| 3 | long | EQUITY | PAID | PAID | LONG_TERM_LISTED_EQUITY | same |
+| 4 | long | EQUITY | PAID | NOT_PAID | LONG_TERM_OTHER | `SPECIAL_RATE_OTHER` |
+| 5 | long | EQUITY | NOT_PAID | NOT_PAID | LONG_TERM_OTHER | `SPECIAL_RATE_OTHER` |
+| 6 | long | EQUITY | NOT_PAID | PAID | refused, naming the facts | refused (W-088f2) |
+| 7 | short | MUTUAL_FUND | any | PAID | refused | refused (`requireMapped`) |
+
+Both tax years for cases 1–4 and 6 (the rows' two versions).
+
+### W-088i — the house-reinvestment exemption (S2 s.86 / 1961 s.54F)
+
+Cited by `ReinvestmentExemptionTest`, `ReinvestmentExemptionTest`.
+
+**Numbers I will use, and where each comes from:**
+
+The legal figures first; the case's own inputs are then derived by hand from them, never from a run.
+
+| Value | Source (file · section) |
+|---|---|
+| bought within **one year before or two years after** the transfer, or built within **three years after** | 2025 s.86(1)(b) (Gazette 265620 p.130); 1961 s.54F(1) (thc p.292) |
+| exempt **in the proportion the cost of the new asset bears to the net consideration**, where the net consideration is more | 2025 s.86(1)(i); 1961 s.54F(1)(b) |
+| the **whole** gain exempt where the cost of the new asset is equal to or more than the net consideration | 2025 s.86(1)(ii); 1961 s.54F(1)(a) |
+| **₹10,00,00,000** cap on the cost of the new asset | 2025 s.86(8); 1961 s.54F(1) second proviso — Finance Act, 2023 s.30, p.28, w.e.f. 1-4-2024 |
+| the bar: more than one other residential house on the transfer date, or another bought within a year or built within three, if its income is chargeable under house property | 2025 s.86(5); 1961 s.54F(1) proviso — Act 10 of 2000, s.28, w.e.f. 1-4-2001 |
+| **net consideration** = full value less expenditure incurred wholly and exclusively in connection with the transfer | 2025 s.86(10) (p.131); 1961 s.54F Explanation (p.293) |
+| individual or Hindu undivided family | 2025 s.86(1); 1961 s.54F(1) |
+| 12½ % above ₹1,25,000 on long-term listed equity | `RATE-CG-LONG-LISTED-EQUITY`, both versions (`SlabLadder`, `SPECIAL_RATE_GAINS`, 0 → 1,25,000, 12.5 above); 2025 s.198(2)(a) |
+| 12 months, the holding period for a listed security | `CG-TERM-LISTED-SECURITY`, both versions (`ShortTermHoldingPeriod`, 12) |
+| rebate nil where total income exceeds ₹12,00,000 | `REBATE-NEW-TAX-REGIME`, both versions (`FlatWithCeiling`, 60,000, ceiling 12,00,000) |
+| surcharge 0 up to ₹50,00,000 | `RATE-SUR-NEW-TAX-REGIME`, both versions (0 → 50,00,000) |
+| cess 4 % of tax and surcharge | `RATE-HEALTH-EDUCATION-CESS`, `PercentOfBase`, 4 |
+
+**The golden case, worked by hand** — a resident individual, TY 2026-27, the default regime, no income but a sale:
+one lot of listed equity bought 2024-05-01 for ₹40,00,000 and sold on NSE 2026-09-01 for ₹1,20,00,000, STT paid both
+sides, no contract-note charges recorded; a house bought 2027-01-15 for ₹60,00,000.
+
+| Step | Figure | Working |
+|---|---|---|
+| gain | ₹80,00,000 | 1,20,00,000 − 40,00,000 |
+| term | LONG_TERM | 2024-05-01 + 12 months = 2025-05-01, before 2026-09-01 |
+| net consideration | ₹1,20,00,000 | the full value; no charge recorded, so nothing is deducted from it |
+| the new house is in the window | yes | bought 2027-01-15, after 2026-09-01 and within two years of it |
+| exemption | **₹40,00,000** | 80,00,000 × 60,00,000 / 1,20,00,000, the cost being less than the net consideration |
+| chargeable gain | ₹40,00,000 | 80,00,000 − 40,00,000 |
+| tax at the special rate | ₹4,84,375 | 12½ % × (40,00,000 − 1,25,000) = 12½ % × 38,75,000 |
+| rebate | ₹0 | total income 40,00,000 is above the row's ₹12,00,000 ceiling |
+| surcharge | ₹0 | 40,00,000 is below ₹50,00,000 |
+| cess | ₹19,375 | 4 % × 4,84,375 |
+| **net payable** | **₹5,03,750** | 4,84,375 + 19,375 |
+
+Every step is exact at paise: 12½ % of 38,75,000 is 4,84,375.00 and 4 % of that is 19,375.00, so no rounding mode is
+in play. The other cases assert at the exemption and the head, not at net payable:
+
+| Case | Figures | Expected |
+|---|---|---|
+| the whole gain, limb (ii) | consideration ₹40,00,000, cost ₹10,00,000, new house ₹45,00,000 | gain ₹30,00,000, exempt ₹30,00,000, chargeable nil |
+| the cap | consideration ₹20,00,00,000, cost ₹5,00,00,000, new house ₹12,00,00,000 | gain ₹15,00,00,000, cost capped to ₹10,00,00,000, exempt ₹7,50,00,000, chargeable ₹7,50,00,000 |
+| the bar | the golden's figures with two other houses owned on 2026-09-01 | no exemption, ₹80,00,000 charged |
+| a window missed | the golden's figures with the house bought 2028-12-01 | no exemption, ₹80,00,000 charged |
+| bought before the sale | the golden's figures with the house bought 2025-12-01 | exempt ₹40,00,000 — the one-year-before limb |
+
+### W-089 — T13-1: the rebate with special-rate income
+
+Cited by `T13RebateAndSpecialRateTest`, `DefermentReliefTest`, `RefundInterestTest`.
+
+**Numbers I will use, and where each comes from:**
+
+The design states the case's inputs and its outcome, not the rupee figure — so the figure below is worked from the
+pack rows the case's own terms name, and every input is the design's.
+
+| Value | Source (file · section) |
+|---|---|
+| salary ₹1,00,000 after standard deduction | `DR 13` T13-1 (`13-edge-cases.md:506`) |
+| long-term capital gain ₹11,00,000 (s.198 — listed equity, STT paid) | the same line |
+| total income ₹12,00,000 | the same line; and 1,00,000 + 11,00,000 |
+| standard deduction ₹75,000, so gross basic pay ₹1,75,000 | `SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME`, both versions: `LeastOf(Fixed 75000, 100 % of SALARY)`; 2025 s.19(1) Table Sl. 2(a) |
+| nil band ₹4,00,000 | `RATE-SLAB-NEW-TAX-REGIME`, both versions, first band 0–4,00,000 at 0; 2025 s.202(1) |
+| shortfall ₹3,00,000 | 4,00,000 − 1,00,000, the reduction of the gain by the unused basic-exemption limit — `TaxByBasisNode:105` and `:189-200`; 2025 s.198(3) / 1961 s.112A(2) proviso, read in `sources/2026-10-18-capital-gains-basis.md` row 19 |
+| chargeable gain ₹8,00,000 | 11,00,000 − 3,00,000 |
+| exemption ₹1,25,000 and rate 12½ % | `RATE-CG-LONG-LISTED-EQUITY`, both versions: 0 up to 1,25,000, 12.5 above; 2025 s.198(2)(a); 1961 s.112A(2)(i)(b) |
+| special-rate tax ₹84,375 | 12½ % × (8,00,000 − 1,25,000) = 12½ % × 6,75,000 |
+| rebate ceiling ₹60,000 at total income ≤ ₹12,00,000 | `REBATE-NEW-TAX-REGIME`, both versions (`FlatWithCeiling`, `limitedToSlabRateTax: true`); 2025 s.156(2)(a), capped by s.156(3) |
+| **rebate ₹0** | s.156(3): the rebate "shall not exceed income-tax payable as per the rates provided in section 202(1)" — and the slab-rate tax on ₹1,00,000 is nil. `RebateNode:99-102` |
+| surcharge ₹0 | `RATE-SUR-NEW-TAX-REGIME` (and its `-CEILING`/`-EXCLUDING`/`-LIMIT` companions), both versions: 0 up to ₹50,00,000 |
+| cess ₹3,375 | 4 % × 84,375 — `RATE-HEALTH-EDUCATION-CESS`; FA 2026 s.2(6) / s.3(15) |
+| **net payable ₹87,750** | 84,375 + 3,375; the design's "naive answer of nil tax" is the failure this guards |
+
+The arithmetic is exact at every step (no rounding is needed: 12½ % of 6,75,000 is 84,375.00, 4 % of that is
+3,375.00), so the golden does not depend on a rounding mode.
+
+### W-089b — `CreditsNode`: tax already paid, credited
+
+Cited by `CreditsAndBalanceTest`.
+
+#### Tests, by hand (T13's bill, 87,750)
+
+| Credits | Balance before rounding | Balance |
+|---|---|---|
+| none | 87,750 | 87,750 (equals `round.netpayable`) |
+| TDS 50,000 + advance 20,000 + self-assessment 5,000 = 75,000 | 12,750 | 12,750 |
+| 74,997 | 12,753 | 12,750 |
+| 74,994 | 12,756 | 12,760 |
+| 1,00,004 | −12,254 | −12,250 (refund) |
+| 1,00,010 | −12,260 | −12,260 |
+| 1,00,005 | −12,255 | −12,260 |
+
+Both years. An election's choice is unchanged by credits. **Bite checks:** a credit left out of the sum; rounding the raw negative;
+the node reading the rounded bill. Targeted run, then each tier once. Existing goldens must not move.
+
+### W-089c — family B, second part — W-089c (advance tax) and W-112 (interest and the late-return fee)
+
+Cited by `AdvanceTaxAndInterestTest`.
+
+#### Worked by hand — TY 2025-26 (1961 Act)
+
+Bill ₹1,00,000; TDS ₹20,000; advance tax ₹30,000 on 15-9-2025 and ₹20,000 on 15-3-2026; due 31-7-2026; filed and paid
+31-8-2026; total income above ₹5,00,000; under 60.
+- **Liable:** 1,00,000 − 20,000 = 80,000 ≥ 10,000. Schedule: 12,000 / 36,000 / 60,000 / 80,000 cumulative.
+- **234B:** assessed 80,000; paid 50,000 < 72,000 (90 %); 30,000 × 1 % × 5 months (April – August) = **1,500**.
+- **234C:** June 12,000 short, below 12 % (9,600) → 12,000 × 3 % = 360; September paid 30,000 ≥ 36 % (28,800) → nil; December
+  30,000 × 3 % = 900; March 30,000 × 1 % = 300 → **1,560**.
+- **234A:** 1,00,000 − 50,000 − 20,000 = 30,000 × 1 % × 1 month (August) = **300**. **234F:** **5,000**.
+- **Payable:** 30,000 + 3,360 + 5,000 = **38,360** (already a multiple of ₹10).
+- **Not filed, as of 6-11-2026 (C2a):** 234A 1-8 to 6-11 = 4 months → 1,200; 234B April to 6-11 = 8 months → 2,400; 234C 1,560;
+  fee 5,000; payable **40,160**.
+- **Edges:** 60 during the year, no business → not liable, 234B and 234C nil, payable **35,300**; bill − TDS ₹9,999 → not
+  liable, ₹10,000 → liable; base ₹30,050 → interest on 30,000; filed on the due date → no 234A, no fee; income ₹5,00,000 →
+  fee 1,000 (TY 2026-27 fixed; TY 2025-26 "at most", shown as that maximum with a notice). **TY 2026-27:** the same facts a year on give the same figures; filed 5-9-2027 → s.423 2 months under C3a.
+
+### W-112a — the s.425(4) / s.234C relief from deferment interest
+
+Cited by `DefermentReliefTest`.
+
+**Numbers I will use:**
+
+| Value | Source |
+|---|---|
+| 15/6, 15/9, 15/12, 15/3; 15 / 45 / 75 / 100 %; 3 % / 1 % | existing `INT-DEFERMENT` data (D-446) |
+| 31 March, the paid-by day | 2025 s.425(4)(b), Gazette 265620 p.448; 1961 s.234C first proviso, thc p.697 |
+| the four kinds; dividend except (e) | s.425(4)(a), (6) p.448; 1961 proviso (a) – (d), FA 2021 s.59 |
+
+### W-112b — interest on a refund, both ways
+
+Cited by `RefundInterestTest`.
+
+**Rule data (facts, not rules):** a new rule `INT-REFUND` (set `RS-INT-REFUND`) in both versions, definition
+`RefundInterest(perMonth 0.5 %, noInterestBelowSharePercent 10)`. The periods' anchors (the due date, furnishing,
+payment, grant) are the section's structure, as `INT-LATE-RETURN`'s are. Before naming, I'll check the id grammar
+(`rules/id` PATTERN).
+
+**Numbers I will use:**
+
+| Value | Source |
+|---|---|
+| 0.5 % per month or part | 2025 s.437(1), 265620 p.451; 1961 s.244A(1)(a), (aa), thc p.704 |
+| 10 % of the tax determined | s.437(2); s.244A(1) proviso |
+| ₹100 base, part month whole | r.269(b), (c), 271092 p.1769 (TY 2026-27); TY 2025-26 as `INT-CALCULATION` holds it (UNVERIFIED, r.119A) |
+
+### W-146 — the synthetic pack test
+
+Cited by `SyntheticPackTest`.
+
+#### Tests, by hand
+- Every expected figure from step 2. **Probes:** change `SYN_FLAT`'s rate to 9 % in the resource → its case fails;
+  make the perturbation reach a rate field → the I27 test fails; both reverted.
+
+#### Revision 1 — the build after D-464 – D-466 (session 50; for approval)
+
+W-243 (lone-row regime test) and W-244 (condition sets in the timeline) are built; W-245 is decided (a): the pack
+carries a row for every set it needs; E8 has no lock-in. Three things the resumed build must settle:
+
+**R1 — how the ~122 other rows are carried.** (a) **Committed test resources under `rulepacks-synthetic/`, written
+once by `tools/w146_synthetic_pack.py`: the TY 2026-27 rows, components and disallowance sets copied with their regime
+references renamed** (`NEW_TAX_REGIME` → `SYN_DEFAULT` and `SYN_FLAT`; `FIRST_SCHEDULE_RATES` → `SYN_CLASSIC`), each
+file's `_note` saying it is a copy; the synthetic year's own rows (rate tables, standard deduction, eligibility) written
+fresh; locks committed; loaded through the production boot path `ShippedRulePacks.compile` with lock verification —
+so the pack is a year of data authored as a real one would be. (b) Generated at test time into a temporary directory —
+always in step with the shipped law, but loaded around the classpath and lock check, which is half of "loads".
+
+**R2 — `SYN_FLAT`'s eligibility.** *"No business income"* (D-466's erratum) cannot fail when offers are made: the
+condition context carries no heads of income (`pipeline/NodeContext.java:335` – `345`), so E8's "2 offers for one who
+fails" cannot be shown. (a) **`SYN_FLAT` open to residents only (`IsResident`)** — a resident is offered three
+regimes, a non-resident two; a second E8 erratum. (b) An age condition — equally decidable, less natural for a regime.
+
+**R3 — "diffs each against `SYN_DEFAULT`".** `compareRegimes` returns each regime's bill (`api/RegimeComparison.java`),
+not a per-rule diff; drivers by rule id are PRD F3's, not in the engine's API. (a) **Assert the ranking and each
+bill's difference from `SYN_DEFAULT`'s**, and say so in the report. (b) Treat the missing per-rule diff as a finding
+under C2.
+
+**Also, forced by W-243:** the standard-deduction set takes exactly one row per regime, so `SYN_FLAT` gets its own
+row of nil (`SYN-STANDARD-DEDUCTION-FLAT`, `Fixed 0`); the 1 July row stays `ExceptIn(SYN_FLAT)` and must be absent
+from `SYN_FLAT`'s trace — E8's `ExceptIn` assertion.
+
+**Hand figures (TY 2099-00, salary ₹20,00,000, resident, computed 2099-04-01, filing due 2100-07-31):**
+
+| Regime | Working | Bill |
+|---|---|---|
+| `SYN_DEFAULT` | standard deduction 50,000 × 91/365 + 80,000 × 274/365 = 12,465.75 + 60,054.79 = 72,520.55; TI 19,27,479.45 → 19,27,480; tax 10 % × 14,27,480 = 1,42,748; rebate nil (TI above 12,00,000 and the tax below the 7,27,480 excess, copied `REBATE-NEW-TAX-REGIME-EXCESS`); cess 4 % 5,709.92 | 1,48,457.92 → **1,48,460** |
+| `SYN_CLASSIC` | TI 19,27,480 (the same deduction); 20 % × 16,27,480 = 3,25,496; rebate nil (above 5,00,000); cess 13,019.84 | 3,38,515.84 → **3,38,520** |
+| `SYN_FLAT` | TI 20,00,000 (deduction nil); 8 % = 1,60,000; rebate nil; cess 6,400 | **1,66,400** |
+
+Ranked `SYN_DEFAULT` < `SYN_FLAT` < `SYN_CLASSIC`; differences from `SYN_DEFAULT`: +17,940 and +1,90,060. TY 2100-01:
+one version of the deduction (80,000), TI 19,20,000; `SYN_DEFAULT` 1,42,000 × 1.04 = **1,47,680**. TY 2101-02:
+`SYN_FLAT` not in the pack; a resident is offered two regimes and the comparison prices two. A non-resident in TY
+2099-00 is offered two (`SYN_FLAT` barred, naming its set). The "bill" here is `ComputedTax.bill` rounded as the copied
+`RATE-ROUND-PAYABLE` rounds the net payable (to ₹10) — the build record confirms which field carries the rounding
+before any test asserts it.
+
+**Build, revised:** step 1 as R1a; step 2 these figures in the build record before any run; step 3 `SyntheticPackTest`
+(load and validate the three years; offers 3 / 2; three bills; ranking and differences; the `ExceptIn` row in two traces
+and absent from the third; the two deduction segments in TY 2099-00 and one in TY 2100-01; TY 2101-02 without
+`SYN_FLAT`); step 4 `ContentPerturbationTest` (I27) unchanged; step 5 rows: E8 erratum (R2), I27, T23-1, PRD P3
+marked, W-146a / W-146b already placed. The probes stand (rate 8 → 9 % fails `SYN_FLAT`'s case; perturbing a rate
+field fails I27).
+
+#### Build record — Revision 1 (session 50)
+
+**Pack:** `backend/src/test/resources/rulepacks-synthetic/` (331 files, three locks), written by
+`tools/w146_synthetic_pack.py`: three regimes, their rate tables, the 1 July standard deduction and `SYN_FLAT`'s nil
+row, `ELIG-RESIDENT`; every other rule, the components, rule sets and disallowance sets copied from TY 2026-27 with
+regimes renamed, each `_note` saying so. Locks written by the spike (`tools/zz_synthetic_spike_test.java.txt`), which
+was then deleted. All three years load through `ShippedRulePacks.compile` (lock verified) and pass `PackValidator`.
+
+**Which field rounds (confirmed before any test):** `ComputedTax.bill` and the comparison's prices are `tax.netpayable`,
+before rounding (`election/ElectionResolver.java:101`, `PricedAlternative`); `finalAmount` is `round.netpayable`
+(`api/TaxCalculator.java:64`). So the bills are 1,48,457.92, 3,38,515.84 and 1,66,400.00, the final amounts 1,48,460,
+3,38,520 and 1,66,400, and the differences from `SYN_DEFAULT` **17,942.08** and **1,90,057.92** (the revision's 17,940 and
+1,90,060 were on rounded figures).
+
+**`SyntheticPackTest` (11 cases), all agreeing with the hand figures on the first run:** three years validate; a
+resident is offered three regimes, a non-resident two (`SYN_FLAT` barred naming *"a resident"*); `SYN_DEFAULT` TI
+19,27,480, bill 1,48,457.92, final 1,48,460, its deduction line naming both segments; `SYN_CLASSIC` 3,38,515.84 /
+3,38,520; `SYN_FLAT` TI 20,00,000, 1,66,400, `SYN-STANDARD-DEDUCTION` absent from its trace and its nil row present; the
+comparison chooses `SYN_DEFAULT` with the two differences; TY 2100-01 TI 19,20,000, 1,47,680; TY 2101-02's pack holds no
+`SYN_FLAT` and the comparison prices two.
+
+**`ContentPerturbationTest` (I27, T23-1; 4 cases):** every text in `content/` rewritten (65 section files, two Acts,
+the register), or `content/` removed — each shipped year compiles to the same files and rule checksums.
+
+**Probes, each reverted:** `SYN_FLAT` at 9 %, pack relocked → exactly its case and the comparison fail; restored
+(`diff -r` identical). One law text (`NEW_TAX_REGIME`'s `displayName`) rewritten alongside content → both I27 rewrite
+cases fail on the compiled files; restored (`cmp`). (A first version of that probe rewrote whole regime files and
+errored on parsing rather than failing — narrowed to one text field.)
+
+**No production source changed** for any of it: `git diff --stat -- backend/src/main` is empty (C4a).
+
+**Not asserted, by R3a:** a per-rule diff between regimes — `compareRegimes` gives bills only; drivers by rule are PRD F3's.
+
+**Rows:** E8 erratum (residents only, R2a); I27 ✅ (`02-TECH-SPEC.md`, Changes logged); PRD P3 ✅; T23-1 is this test.
+
+### W-153b — the deductions' reach within the head by rule data
+
+Cited by `OtherSourcesNodeTest`.
+
+#### Numbers I will use, and where each comes from
+
+None new; no cap changes. The kind lists are copied from today's code (`OtherSourcesNode:148–159`, `:169`, `:192`,
+`:210`, `DividendInterestAllowance:74`) and match the `_note`s quoted above.
+
+#### Cases (by hand)
+
+| # | Input | Expected |
+|---|---|---|
+| 1 | the 125 existing `OtherSourcesNodeTest`, `DepositInterestDeductionTest`, `SurchargeNodeTest` and golden tests | unchanged |
+| 2 | partition, both years: for each of the 15 built kinds, one item received 10,000, commission 100, interest 200, other 400 | table below |
+| 3 | `INTEREST_ON_SECURITIES` received 10,000, commission 100, interest 200, other 400, payable outside India untaxed | as today: both expense lines nil, "payable outside India untaxed" (unchanged path through `lines.deduction`) |
+
+Case 2. "Commission" and "Expenditure" are the out on the `OS-BANKER-COMMISSION` and `OS-OTHER-EXPENDITURE` lines;
+"—" means no line on that row. These figures come from the law in the rows' `_note`s, not from a run. Each kind's
+amounts are distinct (100, 200 and 400 in sums), so a wrong reach changes a figure.
+
+| Kind | Commission | Expenditure | `OS-DIVIDEND-INTEREST` (2025 / 2026) |
+|---|---|---|---|
+| `INTEREST_ON_SECURITIES` | 100 | 600 | — |
+| `SAVINGS_DEPOSIT_INTEREST`, `DEPOSIT_INTEREST`, `OTHER_INTEREST` | 0 (nil) | 600 | — |
+| `FAMILY_PENSION`, `KEYMAN_POLICY`, `FORFEITED_ADVANCE`, `TERMINATION_COMPENSATION`, `OTHER` | 0 (nil) | 600 | — |
+| `DIVIDEND`, `UNIT_INCOME` | — | — | 200 → 200 / 200 → 0 (20% of 10,000 = 2,000 ≥ 200; 0%) |
+| `DEEMED_DIVIDEND` | — | — | — (its 700 a nil line on `OS-DEEMED-DIVIDEND`) |
+| `INTEREST_ON_COMPENSATION`, `COMMUTED_FUND_PENSION`, `DEATH_GRATUITY` | — | — | — (their 700 a nil line on their own row) |
+
+For dividend and unit income, commission and other expenditure (500) are a nil line on `OS-DIVIDEND-INTEREST`, as
+today.
+
+### W-153c1 — income rows by kind (s.92)
+
+Cited by `OtherSourcesNodeTest`.
+
+#### Numbers I will use, and where each comes from
+
+None new. The kind → row assignments come from the statute (`sources/2026-10-22-unit-income.md` U1 – U11, and the
+rows' existing provisions). The new row's 100% and provenance are copied from `OS-COMPENSATION-INTEREST`'s
+`introducedBy` and its s.92(2)(i) / s.56(2)(viii) citations.
+
+#### Cases (by hand)
+
+| # | Input | Expected |
+|---|---|---|
+| 1 | the existing `OtherSourcesNodeTest`, `DepositInterestDeductionTest`, `SurchargeNodeTest` and golden tests | values unchanged; trace changes only those listed in "Trace changes" |
+| 2 | partition, both years, every kind: the `RS-OS-INCOME` row its facts select | interest kinds → `OS-INTEREST`; dividend, deemed → `OS-DIVIDEND`; Keyman, advance, termination → their rows; other, unit, family pension, commuted, gratuity → `OS-RESIDUAL`; interest on compensation → `OS-COMPENSATION-INTEREST-INCOME`; winnings, employee contributions, both lettings → none |
+| 3 | a `WINNINGS` item (and each business-head kind), both years | refused: "no row of RS-OS-INCOME charges WINNINGS in TY 2025-26" (`:351–355`'s "D-202" assertion becomes the kind and the set) |
+| 4 | `UNIT_INCOME` 1,00,000 with interest 10,000, TY 2025-26 | income line on `OS-RESIDUAL` 1,00,000; value 90,000 (20% of 1,00,000 = 20,000 ≥ 10,000), as today |
+
+**Trace changes (D-321's exception, proven by the dump):**
+- unit income's income line moves `OS-DIVIDEND` → `OS-RESIDUAL`;
+- the four in-full kinds' income words become "item n: <KIND>" (from "Keyman policy sums" and the like);
+- the refusal message.
+
+Nothing else moves.
+
+### W-153c2 — share deductions as reach rows (s.93)
+
+Cited by `OtherSourcesNodeTest`.
+
+#### Numbers I will use, and where each comes from
+
+None new. The kinds each share row reaches come from today's arms (`:150–157`) and the rows' `_note`s:
+- s.93(1)(f) interest on compensation;
+- (g) commuted fund pension;
+- (h) death gratuity;
+- (d) family pension.
+
+#### Cases (by hand)
+
+| # | Input | Expected |
+|---|---|---|
+| 1 | every existing test | values unchanged; the trace assertions at `:179`, `:220`, `:237`, `:472`, `:494`, `:527`, `:540`, `:553` rewritten to the new lines (D-321 exception), each value kept |
+| 2 | W-153b's partition (10,000; commission 100, interest 200, other 400), both years, updated | securities: commission 100 → 100, expenditure 600 → 600. Other interest, family pension, in-full: commission 100 → 0, expenditure 600 → 600. Dividend, unit: commission 100 → 0, expenditure 400 → 0, dividend interest 200 → 200 / 200 → 0 (TY 2025-26 / 2026-27). Deemed, interest on compensation, commuted, gratuity: commission 100 → 0, expenditure 600 → 0 |
+| 3 | share partition, both years, each kind | interest on compensation → `OS-COMPENSATION-INTEREST` 10,000 → 5,000 (50%); commuted → `OS-COMMUTED-PENSION` 10,000 → 10,000; gratuity → `OS-DEATH-GRATUITY` 10,000 → 10,000; family pension, old regime → `OS-FAMILY-PENSION`, new regime → `-NEW-TAX-REGIME`, 10,000 → 3,333.33 (one-third, under both limits, ₹15,000 / ₹25,000 per the rows); every other kind → none |
+| 4 | interest on compensation 2,00,000, commission 1,000, both years | income line 2,00,000 on `OS-COMPENSATION-INTEREST-INCOME`; share 1,00,000 on `OS-COMPENSATION-INTEREST`; commission nil on `OS-BANKER-COMMISSION`; value 1,00,000 |
+
+Case 3's one-third: `FamilyPensionShare.deduction` is `min(pension.apportioned(1, 3), limit)`, divided once and
+rounded half-up to paise (`rules/money/Money.java:85–90`). So 10,000 ÷ 3 = 3,333.33, which the existing
+`…FamilyPensionsThirdIsNotWhole_dividesOnceToPaise` (`OtherSourcesNodeTest:508–514`, 10,000 − 3,333.33 = 6,666.67)
+already pins.
+
+### W-153d — dividend income for the surcharge by rule data
+
+Cited by `SurchargeNodeTest`.
+
+#### Numbers I will use, and where each comes from
+
+None new. The kinds come from S2 s.2(40) / 1961 s.2(22) (U3, U5) and D-245. No figure changes.
+
+#### Cases (by hand)
+
+| # | Input | Expected |
+|---|---|---|
+| 1 | every existing `SurchargeNodeTest` case, including `:411` (units stay in the excluding income), `:423` (deemed taken out) and `:462–500` (D-234) | unchanged |
+| 2 | partition, both years × both regimes: for each `OtherSourceKind`, whether the regime's limit row reaches it | `DIVIDEND`, `DEEMED_DIVIDEND`: yes; every other kind, unit income included: no |
+
+### W-162a — the engine nets the gain
+
+Cited by `CapitalGainsChargesTest`.
+
+#### Numbers I will use, and where each comes from
+
+None from the law. The test amounts are my own and are derived by hand above. The 263.00 and 390.00 are W-086's
+fixtures (`CapitalGainsSummaryServiceTest:106–109`).
+
+#### How I will verify
+
+```
+./mvnw clean test -pl backend -Dtest='CapitalGainsChargesTest,CapitalGainsNettingTest,ChargeCatalogueCoverageTest,CapitalGainsNodeTest,CapitalGainsSummaryServiceTest,CapitalGainsSummaryTest,CapitalGainsAdapterTest,InputsFingerprintTest,RegimeElectionSnapshotTest,EngineInputsTest,GeneratedConstantsTest,PackJsonTest,RulePackLoadTest,TaxYear2025RulePackTest,TimelineReaderTest,ArchitectureTest,WealthLensModulithTest'
+./mvnw clean test -pl backend -Punit
+DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock ./mvnw test -pl backend -Pintegration
+grep -rn "getDeductibleBuyCharges\|getDeductibleSellCharges" backend/src/main --include=*.java   # expect only ChargeViewAssembler (W-162b's)
+```
+
+Probes, each restored and checked byte for byte:
+
+1. **Rule data:** `CG-CHARGE-STT`'s limb changed to `COST_OF_ACQUISITION` (`bite_probe_rule_data.py`). Prediction:
+   `CapitalGainsChargesTest`'s gain falls by 180.00 to 19,764.40, and `CapitalGainsNettingTest`'s A + B bucket falls
+   by 1.80 to 261.20, and its C bucket by 1.00 (C's STT) to 389.00. `ChargeCatalogueCoverageTest` still passes.
+2. **Rule data:** `BROKERAGE` removed from `CG-CHARGE-TRANSFER`. Prediction: `ChargeCatalogueCoverageTest` fails for
+   `BROKERAGE` on `TRANSFER`, in both years; `CapitalGainsChargesTest` and `CapitalGainsNettingTest` refuse.
+3. **Code:** `CapitalGainsCharges` deducts regardless of `deducts()`. Prediction: probe 1's same two failures, plus
+   misc — 19,764.40 − 10 = 19,754.40, and 261.20 − 10 = 251.20 (C, with no misc, stays at 389.00).
+
+- **`CapitalGainsNettingTest`** (`taxplanning/portfolio`, the proof that figures are unchanged):
+  - It runs `rowsAtoC` through the real summary service (repository mocked), the adapter and `CapitalGainsNode`.
+  - The bucket gains are W-086's hand-derived **263.00** and **390.00**:
+    - A + B: 1,800 − 1,520 − (5 + 2) − (7 + 3) = 263. STT 1.80 and misc 10 are not deducted.
+    - C: 1,000 − 600 − 4 − 6 = 390.
+- **`ChargeCatalogueCoverageTest`** (`taxplanning/portfolio`):
+  - It reads `data/charges/charge-catalogue.json` as JSON and, for every shipped year, every code not in category
+    `SUBSCRIPTION` (account-level), and both sides, runs the node through `NodeHarness` without a refusal.
+  - It also asserts the catalogue holds no code `MISC`, so the name the adapter uses cannot collide.
+- **Existing tests:**
+  - `CapitalGainsSummaryServiceTest` keeps every case. Its gain assertions become assertions on the amounts, with
+    the same hand arithmetic in each `// Then` (for example A + B: consideration 1,800.00, cost 1,520.00, acquisition
+    `BROKERAGE` 7.00, transfer `BROKERAGE` 10.00 and `STT` 1.80, misc 10.00). The netting itself is proven in
+    `CapitalGainsNettingTest`.
+
+### W-258 — net agricultural income in the rates (partial integration)
+
+Cited by `AgriculturalIntegrationTest`.
+
+#### Numbers I will use, and where each comes from
+
+| Value | Source |
+|---|---|
+| ₹5,000 (exceeding) | FA 2026 s.2(2)(a) p.2 "five thousand rupees"; s.3(2)(a) p.9 "₹ 5000" |
+| ₹2,50,000 / ₹3,00,000 / ₹5,00,000 | FA 2026 s.2(2)(a) Table Sl. 1 – 3 p.2; s.3(2)(a) Table p.10 |
+| ₹4,00,000 | FA 2026 s.2(2)(a) Table Sl. 4 (s.115BAC(1A)) p.2; s.3(2)(a) Table Sl. 4 (s.202) p.10 |
+| Z = X − Y; AI = income + net agricultural income | FA 2026 s.2(2)(b) pp.2 – 3; s.3(2)(b) p.10 |
+| The ladders' bands | existing rows `RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE` (unchanged) |
+
+**Hand-derived cases** (TY 2026-27, resident under sixty, slab income as given, no special-rate income):
+
+| Case | Regime | Slab income | Net agri | Xn | Yn | Zn | Without W-258 |
+|---|---|---|---|---|---|---|---|
+| A | new | 12,00,000 | 10,00,000 | tax(22L) = 20,000 + 40,000 + 60,000 + 80,000 + 50,000 = 2,50,000 | tax(14L) = 20,000 + 40,000 + 30,000 = 90,000 | 1,60,000; 87A ₹60,000 → 1,00,000; cess 4% → **1,04,000** | 0 |
+| B | new | 15,00,000 | 3,00,000 | tax(18L) = 1,60,000 | tax(7L) = 15,000 | 1,45,000; no 87A (over 12L, excess relief nil); cess → **1,50,800** | 1,09,200 |
+| C | old | 8,00,000 | 2,00,000 | tax(10L) = 12,500 + 1,00,000 = 1,12,500 | tax(4.5L) = 10,000 | 1,02,500; cess → **1,06,600** | 75,400 |
+| D | new | 4,00,000 | 5,00,000 | — slab income not above ₹4,00,000 | — | no integration, 0 | 0 |
+| E | new | 15,00,000 | 5,000 | — not above ₹5,000 | — | 1,05,000 (plain) | same |
+| F | new | 15,00,000 | 5,001 | tax(15,05,001) | tax(4,05,001) | the formula applies, by ₹1 over | — |
+
+Case A's 87A: s.156 rebate of up to ₹60,000 where total income ≤ ₹12,00,000 (`REBATE-NEW-TAX-REGIME`,
+FlatWithCeiling 60000 / 1200000). The bands come from the shipped rows.
+
+**Hand-derived cases** (TY 2026-27, resident under sixty, slab income as given, no special-rate income):
+
+| Case | Regime | Slab income | Net agri | Xn | Yn | Zn | Without W-258 |
+|---|---|---|---|---|---|---|---|
+| A | new | 12,00,000 | 10,00,000 | tax(22L) = 20,000 + 40,000 + 60,000 + 80,000 + 50,000 = 2,50,000 | tax(14L) = 20,000 + 40,000 + 30,000 = 90,000 | 1,60,000; 87A ₹60,000 → 1,00,000; cess 4% → **1,04,000** | 0 |
+| B | new | 15,00,000 | 3,00,000 | tax(18L) = 1,60,000 | tax(7L) = 15,000 | 1,45,000; no 87A (over 12L, excess relief nil); cess → **1,50,800** | 1,09,200 |
+| C | old | 8,00,000 | 2,00,000 | tax(10L) = 12,500 + 1,00,000 = 1,12,500 | tax(4.5L) = 10,000 | 1,02,500; cess → **1,06,600** | 75,400 |
+| D | new | 4,00,000 | 5,00,000 | — slab income not above ₹4,00,000 | — | no integration, 0 | 0 |
+| E | new | 15,00,000 | 5,000 | — not above ₹5,000 | — | 1,05,000 (plain) | same |
+| F | new | 15,00,000 | 5,001 | tax(15,05,001) | tax(4,05,001) | the formula applies, by ₹1 over | — |
+
+Case A's 87A: s.156 rebate of up to ₹60,000 where total income ≤ ₹12,00,000 (`REBATE-NEW-TAX-REGIME`,
+FlatWithCeiling 60000 / 1200000). The bands come from the shipped rows.

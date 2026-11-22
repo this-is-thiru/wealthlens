@@ -28,7 +28,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * The gain a bucket's charges leave (2025 s.72; 1961 s.48; W-162a, D-375): the buy's charges are cost, the sale's
  * transfer expenditure, securities transaction tax and a hand-entered charge are not deducted, and a charge no row
- * covers is refused. Expected figures are worked by hand in {@code plans/W-162a.md}.
+ * covers is refused. Expected figures are worked by hand in {@code docs/modules/taxengine.md} §11 (W-162a).
  */
 class CapitalGainsChargesTest {
 

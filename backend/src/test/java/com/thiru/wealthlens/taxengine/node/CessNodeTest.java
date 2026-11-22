@@ -40,7 +40,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * The Health and Education Cess, 4% of the income-tax after rebate (FA 2026 s.3(15); D-079). Every figure
- * is copied from {@code DR 08}, except the special-rate case, worked by hand in {@code plans/W-051.md}.
+ * is copied from {@code DR 08}, except the special-rate case, worked by hand in {@code docs/modules/taxengine.md} §11 (W-051).
  */
 class CessNodeTest {
 

@@ -49,7 +49,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * The surcharge on the tax after rebate, at the greater of the two ladders' rates, less the W = U + V
  * relief (D-084, D-085, D-086), the tax on dividends and the special gains limited to fifteen per cent (D-246). Every
- * expected figure is copied from {@code DR 08} T2 (VERIFIED, both years) or worked by hand in {@code plans/W-088c.md}
+ * expected figure is copied from {@code DR 08} T2 (VERIFIED, both years) or worked by hand in {@code docs/modules/taxengine.md} §11 (W-088c)
  * and the test's comment; none is computed by running the node.
  */
 class SurchargeNodeTest {
@@ -518,7 +518,7 @@ class SurchargeNodeTest {
     }
 
     /**
-     * {@code plans/W-153d.md} case 2, by hand from S2 s.2(40) / 1961 s.2(22) and D-245: the regime's surcharge-limit
+     * {@code docs/modules/taxengine.md} §11 (W-153d) case 2, by hand from S2 s.2(40) / 1961 s.2(22) and D-245: the regime's surcharge-limit
      * row reaches dividends and deemed dividends as "dividend income", and no other kind, unit income included.
      */
     private static Stream<Arguments> dividendIncomeByKind() {

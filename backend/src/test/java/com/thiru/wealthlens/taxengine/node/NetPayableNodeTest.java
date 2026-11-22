@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 /**
  * The amount payable before filing effects: the tax after rebate plus the cess (D-080). Every figure is
  * copied from {@code DR 08}'s "total" lines, except the special-rate case, worked by hand in
- * {@code plans/W-052.md}.
+ * {@code docs/modules/taxengine.md} §11 (W-052).
  */
 class NetPayableNodeTest {
 

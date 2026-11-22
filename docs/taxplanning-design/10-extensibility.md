@@ -446,7 +446,7 @@ A test-resource pack for a fictional TY 2099-00 declaring **three** regimes for 
 | `SYN_FLAT` | **`FlatRate`**, `OPT_IN`, lock-in `ONCE_EXERCISED_APPLIES_TO_SUBSEQUENT_YEARS`, gated by a `ConditionSet` requiring total income below a threshold | a regime with a *different rate shape*, *different election mechanics* and *eligibility conditions* |
 
 > **Erratum (W-146, 2026-11-07):** `SYN_FLAT` names a `FlatRate` shape and a lock-in the vocabulary does not have, and a lock-in cannot be offered until W-082e (`election/RegimeOffers.java:64` – `66`) — `SYN_FLAT` is a one-band `SlabLadder` (8 % from nil) and `OPT_IN` with no lock-in (owner, D-463 C3a, D-464).
-> Verified by: `plans/W-146.md` build record, F2; `docs/taxplanning-build/tools/w146_synthetic_pack.py`.
+> Verified by: W-146's build record, F2 (now `docs/modules/taxengine.md` §11, W-146); `docs/taxplanning-build/tools/w146_synthetic_pack.py`.
 
 > **Erratum (W-244, 2026-11-07):** *"a `ConditionSet` requiring total income below a threshold"* cannot be evaluated: offers are made before any computation, on a `ConditionContext` with no node values, and `IncomeAtMost` throws without one (`election/RegimeOffers.java:62`, `rules/condition/ConditionContext.java:119` – `125`) — `SYN_FLAT`'s set requires *no income under the head "profits and gains of business or profession"* (`Not` of `HasIncomeUnderHead`), decidable before computing; income-based eligibility is W-246 (owner, D-466 C3a).
 > Verified by: `docs/taxplanning-build/plans/W-244.md`, "A second gap".
