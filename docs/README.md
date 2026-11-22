@@ -37,6 +37,7 @@ One current doc per module, written from the code and citing it (W-357b, D-901; 
 | `finance` — loan and SIP calculators | [`modules/finance.md`](modules/finance.md) |
 | `insurance` — stored policies, no routes | [`modules/insurance.md`](modules/insurance.md) |
 | `helper` — the upload template and file answers | [`modules/helper.md`](modules/helper.md) |
+| `auth` — accounts, sign-in, tokens | [`modules/auth.md`](modules/auth.md) |
 
-Still to come, in order (W-357b4 – b10): `auth`, `corporate`, `brokercharges` (replacing `charges-engine/`),
+Still to come, in order (W-357b5 – b10): `corporate`, `brokercharges` (replacing `charges-engine/`),
 `portfolio` (replacing `trade-ledger/`), `shared`, `taxengine`, `taxplanning`.
