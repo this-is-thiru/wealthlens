@@ -79,6 +79,6 @@ Dev has held nothing since D-837. A fresh database (W-337) needs neither step, b
 
 ### Steps
 
-- Approval (owner: "batch approved C1a C2a", 2026-11-22) — a plain bullet until W-299's commit (FinishedPlanTest)
-- W-294 build + commit (D-890)
-- W-299 build + commit
+- [x] 1. Approval (owner: "batch approved C1a C2a", 2026-11-22)
+- [x] 2. W-294 build + commit (D-890)
+- [x] 3. W-299 build + commit (D-891)
