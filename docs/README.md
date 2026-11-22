@@ -41,9 +41,9 @@ One current doc per module, written from the code and citing it (W-357b, D-901; 
 | `brokercharges` — rate cards, the charge engine, what each trade cost | [`modules/brokercharges.md`](modules/brokercharges.md) |
 | `portfolio` — trades, holdings, outcomes and reports | [`modules/portfolio.md`](modules/portfolio.md) |
 | `shared` — the privacy duties, and what every module stands on | [`modules/shared.md`](modules/shared.md) |
-| `taxengine` — income tax as data, and the engine (boundary, run, nodes, inputs, rules vocabulary, rule packs and filing so far; W-357b9f to come) | [`modules/taxengine.md`](modules/taxengine.md) |
+| `taxengine` — income tax as data, and the engine | [`modules/taxengine.md`](modules/taxengine.md) |
 
-Still to come, in order (W-357b9 – b10): `taxengine`, `taxplanning`.
+Still to come: `taxplanning` (W-357b10).
 
 `charges-engine/` and `trade-ledger/`, the charge engine's and the trade ledger's design notes, were deleted by W-357b6b (D-909) and
 W-357b7c (D-913): what the code shows is in `modules/brokercharges.md` and `modules/portfolio.md`, each of which also says what the

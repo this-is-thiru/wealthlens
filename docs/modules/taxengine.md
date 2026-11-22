@@ -2,8 +2,8 @@
 
 > Written from the code at `review/taxplanning`; every claim cites the line it was read from, and a bare path is under
 > `backend/src/main/java/com/thiru/wealthlens/taxengine/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a. The module is
-> written in six parts (D-915): **boundary and run** (W-357b9a, D-916, here), the nodes (W-357b9b), the inputs (W-357b9c), the rules
-> vocabulary (W-357b9d), rule packs and filing (W-357b9e), elections and the optimiser (W-357b9f). A section a later part fills says so.
+> written in six parts (D-915), all now in: boundary and run (W-357b9a, D-916), the nodes (W-357b9b, D-917), the inputs (W-357b9c,
+> D-919), the rules vocabulary (W-357b9d, D-920), rule packs and filing (W-357b9e, D-921), elections and the optimiser (W-357b9f, D-922).
 
 ## 1. Purpose
 
@@ -511,12 +511,102 @@ relock. This is why W-357b9e re-points no pack citation (W-393 (4)).
 If the person had left a question `ITR-1` reads unanswered, `ITR-1` would be `UNDETERMINED` and no form would be chosen, though `ITR-2`
 was open.
 
+### Elections and the optimiser (W-357b9f, D-922)
+
+**An election** is a choice the law leaves to the person that changes the tax (`election/Election.java:22` – `:50`). The family is
+closed: `RegimeElection`, `HouseElection` and `SetOffOrderElection`. Each one says:
+- the rule a choice's priced line cites (`basis`) and the node whose figure it changes;
+- its candidates, the declared default first;
+- the choice the person stated, if any;
+- the inputs with a choice made, and the regime a choice is computed under (the one being computed, unless the choice *is* the regime).
+
+| Election | The choice | Candidates |
+|---|---|---|
+| `RegimeElection` (`election/RegimeElection.java:24`) | the regime the tax is computed under | the regimes `RegimeOffers` makes available, the default first |
+| `HouseElection` (`election/HouseElection.java:34`) | which houses have a nil annual value | every set of at most `HP-OWN-RESIDENCE`'s number of houses not let; the specification as entered first, then larger sets before smaller (`:24` – `:32`) |
+| `SetOffOrderElection` (`election/SetOffOrderElection.java:29`) | the order the other heads absorb a head's loss | every order of the heads in `SETOFF-ACROSS-HEADS`'s `AbsorptionOrder`, that order first. Neither Act prescribes one, and the Tribunal has held the choice the assessee's (`:21` – `:28`) |
+
+**`RegimeOffers`** (`election/RegimeOffers.java:31`) answers each regime as `Available` or `Barred` with its reason (`RegimeOffer.java:19`,
+`:39`), never a silent omission. A regime is offered when all of these hold (`RegimeOffers.java:20` – `:29`):
+- it applies to the person type and is in force in the year;
+- it is open to new entrants, or the person is already in it;
+- every eligibility set is met.
+
+A regime whose binding applies to the person is refused. Its binding needs business income, which nothing computes, so a computable
+person always has the free annual choice.
+
+**Resolving by recomputation** (`election/ElectionResolver.java:27` – `:44`), never by a heuristic:
+- **`resolve`** (`:86` – `:118`): a stated choice is computed once and applied as stated (`ElectionMode.USER_SPECIFIED`). Otherwise
+  every candidate is a whole `PipelineRunner.run`, and the least `tax.netpayable` wins (`AUTO_OPTIMISE`).
+- **Ties** go to the earlier candidate (a strict `isLessThan`), so to the default.
+- **Every alternative is kept** as an `ElectionOutcome`'s `PricedAlternative`s, and written as a MEASURE line of the election's basis rule
+  under its node in the chosen run's trace. The outputs are projections of the trace.
+- **`resolveTogether`** (`:125` – `:154`) prices several elections over every combination of their choices, as whole runs, since they
+  are not independent: the regime changes what a house specification is worth. Combinations are counted in mixed radix, the last
+  election varying fastest (`:193` – `:202`); a tie goes to the earlier combination.
+
+**Where elections run today:**
+- `TaxCalculator.compareRegimes` resolves the regime election (`api/TaxCalculator.java:267` – `:272`).
+- The optimiser resolves it for every allocation it prices (`optimise/AllocationPricing.java:482` – `:490`).
+- `compute` runs one pipeline under the inputs' regime (`api/TaxCalculator.java:100` – `:102`).
+- `HouseElection`, `SetOffOrderElection` and `resolveTogether` have no caller outside tests, so the app computes houses as entered and
+  the declared absorption order (W-394 (1)).
+
+**The salary optimiser** (`optimise/SalaryOptimiser.java:19` – `:26`, `:45` – `:62`) re-divides the movable pay of one employment
+within its cost to company. The caller's `AllocationSpace` states:
+- what may move: pay components, the employer's fund contributions, and the employee's own contributions above what is entered;
+- the residual component that funds the moves;
+- a cash floor;
+- how many components the final exhaustive check covers;
+- the provident fund's terms.
+
+The algorithm:
+1. **Candidates per component:** nil, the amount entered, and its **saturation point** under each regime offered.
+   - `Saturation` finds the least whole-rupee amount past which one more rupee no longer lowers total income. It measures by bisection
+     rather than by a formula, so the law is read only through the pack (`optimise/Saturation.java:8` – `:27`).
+   - An employee's own contribution is measured differently: as the least addition at which total income reaches its level at the
+     ceiling. Its rules need not be convex.
+2. **A greedy fill.** It takes the move that saves the most tax per ₹10,00,000 moved, and re-prices every move after each one, because
+   components interact.
+3. **A bounded exhaustive check** over the `verificationBreadth` components whose first move saved most. It catches a greedy miss.
+4. **A refill.** Each addition is re-measured at the answer, cut where it over-fills, and raised only where the floor still holds.
+
+Every price is a full computation with the regime chosen inside it (`AllocationPricing`): the objective is evaluated, never modelled.
+`Following` moves the provident fund contributions with their base at the ratio the user entered, so no provident fund rate sits in
+Java. An allocation whose cash after tax falls below the floor is not taken; pay that is already below it is refused.
+
+**The pricers**, each a second run against the first:
+
+| Class | Prices | How |
+|---|---|---|
+| `DeductionRoomPricing` (`optimise/DeductionRoomPricing.java:59`, `:94`) | the room left under a deduction's ceiling, and its saving | Schedule XV: the ceiling less what was allowed, paid into the first contributor without a sub-cap. Health (s.126): filled with a premium as large as the largest ceiling, for the assessee and for the living parents. Own NPS: rupee for rupee |
+| `RentRoomPricing` (`optimise/RentRoomPricing.java:60`, `:80`) | what rent could still earn: HRA, or s.134 rent paid | every rented home's rent raised so no rent limb binds, so the other limbs set the figure; with no home, one assumed for the year per location band. The rent needed is read from the row's own rent limb |
+| `ClaimPricing` (`optimise/ClaimPricing.java:27`, `:44`) | each claim's worth | the run with the claim's whole catalogue entry withheld (its rule and the rules it covers), side by side. An entry with no deduction line is served unpriced |
+| `RoomFilling` (`optimise/RoomFilling.java:21`, `:26`) | the bill with every chosen room filled at once | one run, so overlapping rooms (own NPS and the investment ceiling) count once: the low end of a coarse figure's band |
+
+`taxplanning` reaches all of these through `TaxCalculator`: `compareRegimes`, `regimeElection`, `optimise`, `priceDeductionRoom`,
+`priceRentRoom`, `priceClaims` and `billWithRoomsFilled` (see §3).
+
+### Worked examples: elections and the optimiser (by hand)
+
+**A tie.** Suppose `NEW_TAX_REGIME` (the default, offered first) and `FIRST_SCHEDULE_RATES` both give a net payable of ₹50,000.
+`resolve` keeps the first unless a later one is strictly less, so the choice is `NEW_TAX_REGIME`, `AUTO_OPTIMISE`, with both
+alternatives priced.
+
+**Joint combinations.** Two elections, a house election with 2 choices and a set-off order with 3, give a radix of [2, 3] and 2 × 3 = 6
+whole runs:
+- the order is [0,0], [0,1], [0,2], [1,0], [1,1], [1,2];
+- combination 4 is: 4 mod 3 = 1, then 1 mod 2 = 1, so [1, 1].
+
+**A move's rate.** Moving ₹50,000 that saves ₹15,000 is worth 15,000 × 10,00,000 ÷ 50,000 = **₹3,00,000 per ₹10,00,000 moved**. A move
+of ₹1,00,000 saving ₹20,000 is worth ₹2,00,000, so the greedy fill takes the first.
+
 ## 6. Configuration
 
 None of the engine's own. The packs it compiles are the classpath directory `rulepacks`, and the years are `shipped-years.json`'s
 (`config/TaxEngineConfig.java:24`, `:26` – `:29`).
 
-## 7. Tests (this part)
+## 7. Tests
 
 | Class | Cases |
 |---|---|
@@ -576,9 +666,19 @@ rounding, and 44 test files assert reasons. `ReliefShapeTest` cited `plans/W-048
 
 Five tests cited plans; their figures and surveys are now §11's W-052c, W-055, W-079a, W-139 and W-139a blocks.
 
+**Elections and the optimiser** (10 files, 68 cases):
+
+| Package | Files | Cases |
+|---|---|---|
+| `election` | 3 | 25 (`ElectionResolverTest` 15, `RegimeOffersTest` 7, `HouseElectionTest` 3) |
+| `optimise` | 7 | 43 (`RentRoomPricingTest` 12, `DeductionRoomPricingTest` 10, `SaturationTest` 7, `AllocationPricingTest` 5, `ClaimPricingTest` 4, `ClaimFinalAmountTest` 3, `FollowingTest` 2) |
+
+The elections run whole pipelines in `golden/` too: `RegimeElectionPipelineTest`, `HouseElectionPipelineTest`,
+`SetOffOrderElectionPipelineTest`. No test in this part cites a plan or review (grep).
+
 Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `taxengine/api`, `pipeline`, `result` and `trace`.
 
-## 8. Known gaps (boundary and run: W-389, D-916; the nodes: W-390, D-917)
+## 8. Known gaps (W-389 – W-394)
 
 1. **A legal list in Java.** `dueBy` accepts an election deadline only "under" s.263(1) or s.139(1), the return's due date, from a Java
    constant (`api/TaxCalculator.java:310` – `:320`, `:651` – `:652`). CLAUDE.md §4: every qualifying list is tax-year-versioned rule
@@ -641,9 +741,19 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
     and synthetic) cites `plans/W-078f.md`, which `plans/W-156a.md` also cites. Both plans therefore stay. The proposal: move W-112b's
     act-chain record into `sources/` and re-point all four, in one relock.
 
+**Elections and the optimiser (W-394):**
+14. **Two elections are built and never run in the app.** `HouseElection`, `SetOffOrderElection` and
+    `ElectionResolver.resolveTogether` are called only by tests (`golden/HouseElectionPipelineTest`,
+    `SetOffOrderElectionPipelineTest`, `EngineBenchmarkTest`, `GoldenCaseRunner`, `election/`).
+    - `TaxCalculator.compute` runs one pipeline under the inputs' regime (`api/TaxCalculator.java:100` – `:102`).
+    - Only the regime election is resolved: by `compareRegimes` (`:267` – `:272`) and inside the optimiser
+      (`optimise/AllocationPricing.java:482` – `:490`).
+
+    So the app computes a person's houses as entered and the loss absorption order as declared, never priced, though D-230, D-221 and
+    D-236 built both elections to choose the cheaper. The owner decides whether to wire them in or remove them.
+
 ## 9. Not covered here
 
-- The regime election, other elections and the optimiser's search: W-357b9f.
 - What `taxplanning` does with an answer: `docs/modules/taxplanning.md` (W-357b10).
 
 ## 11. Hand-worked figures the tests cite
