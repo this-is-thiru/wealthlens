@@ -2,15 +2,18 @@
 
 > W-357b7a (D-911), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a bare
 > path is under `backend/src/main/java/com/thiru/wealthlens/portfolio/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a. This
-> doc is written in two parts (D-910): **trades and holdings** (here, W-357b7a) and **outcomes and reports** — `profit_and_loss`,
-> `trade_outcomes`, analytics, the export, the property sale and their rebuilds — which W-357b7b adds.
+> doc was written in two parts (D-910): **trades and holdings** (W-357b7a, D-911) and **outcomes and reports** — `profit_and_loss`,
+> `trade_outcomes`, analytics, the export, the property sale and their rebuilds (W-357b7b, D-912). It also holds the hand-worked
+> figures `ProfitAndLossGapAuditIntegrationTest` asserts (§5), moved here from W-264d's plan, which W-357b7b removed with its review
+> (both readable in git history, e.g. `git show a382d351:docs/taxplanning-build/plans/W-264d.md`).
 
 ## 1. Purpose
 
 `portfolio` is the domain centre: a user's trades (`transactions`) and the lots they leave behind (`assets`). A trade enters through one
 of two live flows, V1 or V2, or through a spreadsheet upload. It is checked, held back if a corporate action has to be applied first, and
 de-duplicated, then it changes the user's lots. A buy makes or grows a lot; a sale consumes lots oldest first. The charge engine
-(`brokercharges`) prices it on the way.
+(`brokercharges`) prices it on the way. A sale leaves **outcome rows** (`trade_outcomes`), one per lot it consumed, and folds into the
+user's yearly **P&L** (`profit_and_loss`). The outcome rows are also what the tax side reads, as the capital-gains summary.
 
 ## 2. Boundaries
 
@@ -22,6 +25,8 @@ de-duplicated, then it changes the user's lots. A buy makes or grows a lot; a sa
   (`service/UserRecordsErasureService.java:50` – `:51`).
 - **Called by** `corporate` (it rewrites lots and transactions on a perform), `brokercharges` (it reads `transactions` for the
   reconciliation) and `shared`, which depends back on it for the asset and transaction prototypes (CLAUDE.md's module table).
+- **Read by** `taxplanning`, which takes a year's capital gains from `CapitalGainsSummaryService.summaryFor`
+  (`taxplanning/portfolio/CapitalGainsAdapter.java:46`, `:51`).
 - URL segment `portfolio` (`shared/web/ApiZones.java:26` – `:27`).
 
 ## 3. Routes
@@ -43,10 +48,16 @@ de-duplicated, then it changes the user's lots. A buy makes or grows a lot; a sa
 | `POST /api/v1/me/portfolio/temporary-transactions/redrive` | me | → `RedriveResult` (`succeeded`, `failed`, `stillFiltered`, `filteredOut`, `message`) | `TemporaryTransactionsController.java:39` – `:42`; `PortfolioService.java:334` – `:391` |
 | `GET /api/v1/admin/portfolio/users/{email}/stocks`, `…/mutual-funds` | admin | one user's holdings | `controller/HoldingsAdminController.java:21` – `:37` |
 | `POST /api/v1/admin/portfolio/users/{email}/assets/rebuild?dryRun=true` | admin | → `AssetsRebuildReport`; writes only with `dryRun=false` | `controller/AssetsRebuildController.java:26` – `:31` |
+| `GET /api/v1/me/portfolio/profit-and-loss?financialYear=` | me | → `ProfitAndLossResponse` for that year, empty when none | `PortfolioController.java:53` – `:57`; `service/ProfitAndLossService.java:239` – `:249` |
+| `GET /api/v1/me/portfolio/analytics/portfolio-summary`, `…/asset-allocation`, `…/performance-metrics` | me | → the summary, the split by asset type, the win and loss figures | `controller/AnalyticsController.java:30` – `:43`; `service/AnalyticsService.java:49` – `:200` |
+| `POST /api/v1/me/portfolio/analytics/xirr` | me | `XirrRequest` (`currentPrices`) → `XirrResponse` | `AnalyticsController.java:45` – `:48`; `AnalyticsService.java:207` – `:278` |
+| `POST /api/v1/me/portfolio/stocks/download` | me | `EntityExportRequest` (`entityName`, `selectedColumns`, `queryFilters`) → an `.xlsx` | `controller/EntityExportController.java:25` – `:30`; `service/EntityExportService.java:45` – `:79` |
+| `POST /api/v1/me/portfolio/properties/sales` | me | `PropertySaleRequest` → text "Property sale recorded: …" | `controller/PropertySaleController.java:22` – `:25`; `service/PropertySaleService.java:49` – `:59` |
+| `POST /api/v1/admin/portfolio/users/{email}/profit-and-loss/rebuild?dryRun=true` | admin | → `ProfitAndLossRebuildReport` | `controller/ProfitAndLossRebuildController.java:27` – `:32` |
+| `POST /api/v1/admin/portfolio/trade-outcomes/rebuild?dryRun=true` | admin | → `TradeOutcomeRebuildReport`, for every user with no rows | `controller/TradeOutcomeRebuildController.java:32` – `:36` |
 
-`GET /api/v1/me/portfolio/profit-and-loss` (`PortfolioController.java:53` – `:57`) belongs to the outcomes part (W-357b7b). The admin
-routes carry `@PreAuthorize("hasRole('SUPER_USER')")` on top of the zone's rule (`HoldingsAdminController.java:27`, `:33`;
-`AssetsRebuildController.java:26`).
+The admin routes carry `@PreAuthorize("hasRole('SUPER_USER')")` on top of the zone's rule (`HoldingsAdminController.java:27`, `:33`;
+`AssetsRebuildController.java:26`; `ProfitAndLossRebuildController.java:27`; `TradeOutcomeRebuildController.java:32`).
 
 **Refusals (400 unless said)**, all in `PortfolioService.validateAssetRequest` unless named (`PortfolioService.java:189` – `:269`), so the JSON routes, every
 upload row and a redrive all meet them:
@@ -65,6 +76,13 @@ upload row and a redrive all meet them:
 | An upload row the rules refuse | "Trade n: …", n its place among the sheet's trades; a bad cell "Row n, …: …" | `:311` – `:317`; `service/parser/AssetRequestParser.java:122` – `:155` |
 | A date range missing a bound (`/stocks/search`) | "A date range is required: dateRange with startDate and endDate" | `PortfolioQueryService.java:90` – `:92` |
 | `/stocks/{stockCode}` for a stock with no lot | "Stock not found" | `PortfolioQueryService.java:50` – `:52` |
+| A P&L year not written as stored (`2025-26`) | the form `2025-2026` named (`FinancialYear.parse`) | `ProfitAndLossService.java:243` |
+| A V2 sale whose rows do not match its lots; a sale neither side of which records an asset type | "The sale of … has n trade-outcome rows for m lots"; "Neither the sale of … nor the lot it was sold from records an asset type, …" | `ProfitAndLossService.java:366` – `:369`, `:442` – `:446` |
+| XIRR with one stock priced twice | "currentPrices names … more than once; give one price per stock" | `AnalyticsService.java:243` – `:247` |
+| Export with no entity, or an unknown one | "Name the entity to export: one of assets, transactions, transactions-template"; "Invalid entity name: …" | `EntityExportService.java:48` – `:63` |
+| A property sale: no name; no dates, or sold on or before bought; cost or price ≤ 0; an expense code not a `PropertyExpense`, or negative; posted twice | "A property sale needs the property's name", …, "The expense … is not one of …", "The sale of … is already recorded" | `PropertySaleService.java:52` – `:92` |
+| A capital-gains year with a disposal whose broker charges have no breakdown (read by tax planning) | "n disposal(s) bore broker charges but kept no breakdown of them, …" | `service/CapitalGainsSummaryService.java:81` – `:93` |
+| A P&L rebuild finding a charge row whose transaction is gone | "Charge rows name transactions that are not stored: …" | `service/ProfitAndLossRebuild.java:118` – `:129` |
 | Every attempt collided with another trade | 409 "Another trade was being recorded at the same moment; this one was not recorded — send it again" | `service/TradeCollisionRetry.java:47` – `:48`, `:80` – `:96` |
 
 ## 4. Stored data
@@ -87,6 +105,29 @@ upload row and a redrive all meet them:
   request, on a held trade), and `trade_flow` (`V1` or `V2`, set by the server from the route, `TransactionEntity.java:162` – `:169`).
 - Its indexes are created at start by `PortfolioIndexInitializer`, which logs and carries on when one cannot be built
   (`config/PortfolioIndexInitializer.java:33` – `:74`).
+
+**`profit_and_loss`** (`entity/ProfitAndLossEntity.java:50` – `:96`), one user's financial year:
+- `email` (encrypted, searchable) and `financial_year` (`2025-2026`), unique together (`:51`).
+- **`version`**: optimistic locking, because every trade reads, changes and writes the whole document (`:24` – `:34`, `:77` – `:82`).
+- **`realised_profits`** for the user's own account (`SELF`) and **`out_sourced_realised_profits`** for any other account type. Each is
+  a `RealisedProfits` (`entity/model/RealisedProfits.java:14` – `:42`) holding two hierarchies:
+  - **Capital gains**, `gains_by_asset_and_segment`: per asset type and segment a `FinancialReport` → `capital_gains` per month
+    (`MonthlyReport`) → `first_half_report` (days 1 – 15) and `second_half_report`. Every level carries `purchase_amount`, `sell_amount`,
+    `profit`, `misc_charges` and `brokerage` (`entity/model/ReportModel.java:9` – `:28`; `FinancialReport.java:14` – `:21`;
+    `MonthlyReport.java:12` – `:24`).
+  - **Charges**, `yearly_charge_summary` → months → halves, each `amount_by_code` and `total_charges` (`brokercharges`'
+    `ChargeSummaryReport`).
+
+**`trade_outcomes`** (`entity/TradeOutcomeEntity.java:29` – `:225`), one row per lot a sale consumed, or one per property sale:
+- **Who and what:** `email` and `account_holder` (encrypted), `account_type`, `stock_code`, `stock_name`, `exchange_name`, `broker_name`,
+  `asset_type`, `segment`, `instrument_sub_class` (null until an instrument registry exists).
+- **The buy side:** `original_buy_price`, `ca_adjusted_buy_price`, `buy_quantity`, `buy_date`, `buy_broker_charges`, `buy_misc_charges`,
+  and `buy_charge_breakup` by charge code.
+- **The sell side:** `sell_price`, `sell_quantity`, `sell_date`, the same charges, and `sell_charge_breakup`.
+- **Figures:** `total_buy_value`, `total_sell_value`, `net_profit`, `profit_percentage`, `holding_period_days`, `financial_year`.
+- **Lineage:** `source_sell_transaction_id`, `source_buy_lot_id`, `is_ca_derived`, `applied_corporate_actions`, `acquisition_mode`,
+  `acquisition_corporate_action`, `buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`, `audit_metadata`.
+- **Indexes:** `{email, sell_date: -1}` and `{email, source_buy_lot_id}` (`:35` – `:42`).
 
 ## 5. Behaviour
 
@@ -149,6 +190,60 @@ Only `dryRun=false` replaces them: a paired lot keeps its id, order times, corpo
 Each delete runs even when an earlier one failed, and the report names what failed. Account erasure (W-237d) calls it and fails if
 anything is left (`service/PortfolioRecordErasure.java:25` – `:31`).
 
+**A V2 sale's outcome rows** (`service/TradeOutcomeRecorder.java:60` – `:177`), one per matched lot:
+- **The sale's charges** are split across the lots by quantity, per charge code. Each lot takes the running total up to it, less
+  what earlier lots took, so the parts sum exactly to the sale's charge (`:105` – `:123`). With no engine figure, the entered
+  `brokerCharges` is split the same way, outside the breakdown (`:72` – `:75`).
+- **The lot's buy charge** is taken once (`LotChargeAllocator`, `:166` – `:167`). The buy charges by code come from the engine's row for
+  the lot's first buy, pro-rated (`:129` – `:131`, `:239` – `:255`; gap 10).
+- **Figures:** total buy = price × quantity + buy charges; total sell = sale price × quantity − sell charges; net = sell − buy; each
+  to paise (`:162` – `:177`).
+
+V1 writes its rows in `PortfolioService` with no breakdown by code (`PortfolioService.java:690` – `:762`).
+
+**The P&L** (`ProfitAndLossService.java:85` – `:609`):
+- **A V2 sale** folds its outcome rows into its sale date's year, under the sale's asset type (else the lot's) and segment (delivery
+  when absent). Each row adds its cost, sale value, net profit, brokerage and misc to the year, the month and the half
+  (`:363` – `:387`, `:415` – `:511`).
+- **A V1 sale** folds its own figures per lot. The fortnight's profit is the price gain less charges, and the levels above add
+  what it added (`:85` – `:223`).
+- **A V2 trade's computed charges**, buy or sale, fold into the charge hierarchy by code (`:551` – `:609`). V1 writes none
+  (`:537` – `:539`).
+
+**The capital-gains summary** (`CapitalGainsSummaryService.java:60` – `:179`) is what tax planning reads.
+- **Rows:** those sold within the year (by sell date), grouped into buckets of equal asset type, sub-class, STT evidence on each side,
+  venue on each side, acquisition, buy date and sell date.
+- **What a bucket publishes:** consideration, cost and each side's charges by code plus misc, never a gain.
+- **STT evidence:** `PAID` when the breakdown has STT, `NOT_PAID` when the breakdown has none, `UNKNOWN` when there is no breakdown.
+- **Refusal:** a year with a disposal that bore broker charges but kept no breakdown is refused.
+
+**Analytics** (`AnalyticsService.java:49` – `:283`), from the stored rows, held trades left out:
+- **The summary:** invested (price × quantity of lots), realised profit (the own account's capital gains), and trade counts.
+- **The allocation:** invested by asset type and its share.
+- **Performance:** wins, losses and break-evens from `trade_outcomes`; their averages; the ratio, absent with no loss; average holding
+  days; sell ÷ buy value; the best and worst stock.
+- **XIRR:** over buy and sale cash flows with charges. Open lots are valued at the caller's `currentPrices` today. A stock without a
+  price is left out whole and named.
+
+**The export** writes `assets` (grouped as the views group them, filtered), every transaction, or a one-row template, as `.xlsx`
+(`EntityExportService.java:45` – `:102`).
+
+**A property sale** is one `trade_outcomes` row (`PropertySaleService.java:49` – `:151`):
+- quantity 1, the cost and price to paise, and the expenses by `PropertyExpense` code on each side;
+- `LAND_OR_BUILDING`, `PURCHASE`, the account `SELF`;
+- no lot, transaction or P&L entry;
+- its id a digest of user, name and both dates, so the same sale is refused a second time.
+
+**The P&L rebuild** (`ProfitAndLossRebuild.java:75` – `:181`) folds the user's `trade_outcomes` and trade `user_charges` through the live
+fold steps (`foldSale`, `foldCharges`) into fresh documents. It compares them, year by year, with the stored ones; with
+`dryRun=false` it replaces them all.
+
+**The trade-outcome rebuild** (`migration/TransactionBasedTradeOutcomeMigration.java:53` – `:142`) works for each user with
+transactions and **no** outcome row:
+- buys of one stock, broker, holder, segment and date merge into one lot at the weighted price (`TradeMatchingService.java:36` – `:132`);
+- every sale, by date then id, is matched oldest lot first;
+- a user with any row is skipped and listed.
+
 ### Worked examples (by hand)
 
 **A V2 sale across two lots.** V2 buys of 10 at ₹100 on 2 Jun 2025 (lot A) and 5 at ₹120 on 3 Jun 2025 (lot B); a sale of 12 on 4 Jun 2025.
@@ -170,6 +265,27 @@ at a time:
 | 3 | 1 | 3.33 | 3.33 × 1 ÷ 1 = 3.33 | 10.00 |
 
 Before B-7 / B-8 the full ₹10 was divided by what remained each time: 3.33 + 5.00 + 10.00 = ₹18.33.
+
+**One sale from outcome row to P&L** (V2, ₹0 charges). Buy 10 at ₹100 on 10 Jan 2026; sell 4 at ₹150 on 5 Mar 2026.
+- **The row:** cost 4 × 100 = ₹400, sale value 4 × 150 = ₹600, net ₹200, 54 days held, year `2025-2026`.
+- **The P&L:** `2025-2026` → EQUITY → DELIVERY → March → first half each gain purchase 400, sale 600, profit **₹200**. The lot keeps 6.
+
+**The P&L and analytics scenarios** `ProfitAndLossGapAuditIntegrationTest` asserts (W-264d's table; Zerodha equity delivery, ₹0 charges):
+
+| Scenario | Expected |
+|---|---|
+| V2: 10 @ ₹100 (10 Jan 2026), sell 4 @ ₹150 (5 Mar 2026) | ₹200 for `2025-2026`, in March's first half |
+| Sales on 31 Mar 2026 and 1 Apr 2026, ₹50 gain each | ₹50 in `2025-2026`, ₹50 in `2026-2027` |
+| Sales on 15 and 16 Mar | ₹50 in each half |
+| The first scenario through V1 | the same ₹200 |
+| The P&L read as `2025-26`; as `2027-2028` with nothing traded | 400 naming `2025-2026`; 200, empty |
+| The summary after the first scenario plus a buy held by a pending bonus | `totalTrades` 2; invested 6 × ₹100 = ₹600 |
+| The allocation after the first scenario | EQUITY ₹600, 100 % |
+| One win of ₹200, no loss | `winLossRatio` absent, not 0.0 |
+| XIRR: buy 10 @ ₹100 on 1 Jan 2025, sell 10 @ ₹110 on 1 Jan 2026 | 10 % (1,100 ÷ 1,000 − 1 over 365 days) |
+| The same plus a held buy | still 10 %: the held buy is no cash flow |
+| TCS and INFY held, a price for TCS only | INFY left out whole and named |
+| TCS priced twice | 400 naming TCS |
 
 ## 6. Configuration
 
@@ -196,11 +312,20 @@ A multi-document trade is all-or-nothing only on a replica set with `app.mongodb
 | `TransactionServiceTest`, `TransactionServiceChargesTest`, `TradeFingerprintTest`, `AssetsRebuildTest` | 5 each |
 | `UserRecordsErasureServiceTest`, `NoCardCostBasisIntegrationTest` | 4 each |
 | `LotChargeAllocatorTest`, `EarlierQuarterHoldIntegrationTest` | the allocation; the earlier-quarter hold |
+| `ProfitAndLossServiceTest` | 40 |
+| `TradeOutcomeRecorderTest` | 29 |
+| `CapitalGainsSummaryServiceTest`, `CapitalGainsSummaryTest` | 23, 17 |
+| `TradeMatchingServiceTest` | 20 |
+| `AnalyticsServiceTest`, `AnalyticsIntegrationTest` | 14, 13 |
+| `ProfitAndLossGapAuditIntegrationTest` | 12 (§5) |
+| `ProfitAndLossIntegrationTest`, `PropertySaleIntegrationTest` | 10, 9 |
+| `ProfitAndLossRebuildIntegrationTest`, `TradeOutcomeRebuildIntegrationTest`, `EntityExportIntegrationTest`, `PropertySaleServiceTest` | 7, 6, 6, 6 |
+| others | `taxplanning`'s capital-gains adapter tests read the summary |
 
 Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not executions. `corporate`'s and `brokercharges`' tests drive
 these routes too.
 
-## 8. Known gaps (placed as W-385, D-911)
+## 8. Known gaps (1 – 9 placed as W-385, D-911; 10 – 17 as W-386, D-912)
 
 1. **A caller can overwrite any stored transaction, another user's included.**
    - **How:** `AssetRequest.tempTransactionId` binds from the request body (`dto/AssetRequest.java:28` – `:33`). `asTransaction` makes it the
@@ -243,9 +368,39 @@ these routes too.
 9. **Four routes have no request in `api-collection/`** (grep at `41a7123`): `GET …/mutual-funds`, `POST …/stocks/search`, and the two
    admin holdings reads.
 
+10. **A V2 sale's buy charges by code are pro-rated against what is left of the lot, not what was bought.**
+    - **How:** `share = quantity sold ÷ quantity before this sale` is applied to the **whole** buy breakdown each time
+      (`TradeOutcomeRecorder.java:129` – `:131`, `:248` – `:255`; the second figure is the lot before the sale, `PortfolioService.java:645`,
+      `:652`). That is the B-7 mistake the rupee total no longer makes.
+    - **Shown at the build** (a throwaway integration test, deleted): a V2 buy of 3 TCS at ₹1,000 cost ₹3.11 (STT 3, exchange 0.09,
+      GST 0.02). Three one-share V2 sales recorded `buy_broker_charges` 1.04 + 1.04 + 1.03 = ₹3.11, which is right, but buy STT of
+      **1.00 + 1.50 + 3.00 = ₹5.50** and exchange 0.03 + 0.05 + 0.09 = ₹0.17.
+    - **Consequence:** the capital-gains summary hands the tax side acquisition charges by code that exceed what was paid
+      (`CapitalGainsSummaryService.java:100` – `:109`). A lot sold whole in one sale is unaffected.
+11. **The trade-outcome rebuild's rows differ from the live ones.**
+    - **Lots:** it merges same-day **V2** buys too (`TradeMatchingService.java:36` – `:49`, "exactly like PortfolioService.buyStock()"),
+      names lots `lot-{stock}-{date}` rather than the stored lot's id (`:62`), and writes no charge breakdown. So the per-holding
+      charge view cannot find its rows, and a year whose rows bore charges is refused by the capital-gains summary.
+    - **Matching:** it has no "bought on or before the sale" bound (`:165` – `:172`), and ignores segment as the live sale does (gap 2).
+12. **The V1 P&L still adds raw doubles** at the fortnight (`ProfitAndLossService.java:212`, `:215`), the drift B-5 names. A V1 sale's
+    method is `@Deprecated(forRemoval = true)` though V1 is live (`:84`).
+13. **Silent branches:** a SELL with a corporate-action type, and an unknown side, reach no figure, the second with only an error log
+    (`ProfitAndLossService.java:321` – `:330`).
+14. **The transactions export ignores the request's filters and includes held trades** (`EntityExportService.java:55` – `:56`;
+    `TransactionService.java:124` – `:126`), where the assets export applies them.
+15. **Javadoc that is no longer true:** `ProfitAndLossService` links `com.thiru.wealthlens.entity.ProfitAndLossEntity`, an old package
+    (`ProfitAndLossService.java:67`, `:277`); "an EQUITY gate below … nothing here may touch cost basis until Phase C" (`:343` – `:347`), where no gate follows
+    and `authoritative` sets the cost; `RealisedProfits` describes a `yearlyBrokerCharges` hierarchy "deleted in Chunk 11" beside it
+    (`RealisedProfits.java:18` – `:26`).
+16. **The wall clock:** `calculateXirr` values open lots and dates the answer at `LocalDate.now()` (`AnalyticsService.java:230`, `:264`),
+    and the summary at `LocalDateTime.now()` (`:83`); the export's file name and template rows likewise
+    (`EntityExportService.java:76`, `:93`, `:99`).
+17. **Conventions:** `@AllArgsConstructor` on `ProfitAndLossService.java:49`, `EntityExportService.java:34` and
+    `EntityExportController.java:18`; `PropertySaleRequest` carries no constraint, so its `@Valid` checks nothing
+    (`dto/PropertySaleRequest.java:17` – `:37`).
+
 ## 9. Not covered here
 
-- `profit_and_loss`, `trade_outcomes`, the capital-gains summary, analytics, the export, the property sale and their rebuilds:
-  W-357b7b, in this doc.
+- Which charges reduce a gain, the term and the tax: the tax side, `taxengine` and `taxplanning` (W-357b9, W-357b10).
 - What a corporate action does to a lot: `docs/modules/corporate.md`. What a trade is charged: `docs/modules/brokercharges.md`.
 - The trade ledger's design notes, `docs/trade-ledger/`: retired by W-357b7c.

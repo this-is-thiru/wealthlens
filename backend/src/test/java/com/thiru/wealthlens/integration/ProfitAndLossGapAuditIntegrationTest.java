@@ -22,7 +22,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * The W-264d scenarios: the P&amp;L read and the analytics driven through the HTTP API, each expected value worked by
- * hand in {@code docs/taxplanning-build/plans/W-264d.md} before the first run. Zerodha equity delivery, ₹0 charges.
+ * hand in {@code docs/modules/portfolio.md} §5 (moved there from W-264d's plan). Zerodha equity delivery, ₹0 charges.
  */
 class ProfitAndLossGapAuditIntegrationTest extends AbstractIntegrationTest {
 
