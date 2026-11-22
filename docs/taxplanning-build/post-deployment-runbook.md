@@ -82,6 +82,7 @@ something at the next deploy adds its line here when it is committed; each line 
 below is the full sequence for a fresh database (W-337).
 
 1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
+2. W-370 (D-900) — nothing to run: a caller's mistake (every 4xx), the 409 and the 503 are logged at WARN with the message only; only a 500 is logged at ERROR with its trace. A deploy's `grep -c " ERROR "` after the routes check expects **0** again (at `m1.6.1` it counted row 4's four refusals).
 
 ## 0. Before deploying
 

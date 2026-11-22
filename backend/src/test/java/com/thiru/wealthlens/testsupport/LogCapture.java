@@ -54,6 +54,13 @@ public final class LogCapture implements AutoCloseable {
         return messages().stream().filter(message -> message.startsWith("ERROR ")).toList();
     }
 
+    /** Each captured line that carries an exception, as {@code "LEVEL formatted message"}: the lines a stack trace is written for. */
+    public List<String> withTrace() {
+        return appender.list.stream().filter(event -> event.getThrowableProxy() != null)
+                .map(event -> event.getLevel() + " " + event.getFormattedMessage())
+                .toList();
+    }
+
     @Override
     public void close() {
         logger.detachAppender(appender);
