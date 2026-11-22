@@ -22,8 +22,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The W-264c scenarios: corporate actions driven through the HTTP API, each expected value worked by hand in
- * {@code docs/taxplanning-build/plans/W-264c.md} before the first run. Zerodha equity delivery lots, bought through V2.
+ * The W-264c scenarios: corporate actions driven through the HTTP API, each expected value worked by hand before the first run;
+ * the table is {@code docs/modules/corporate.md} §5 (moved from W-264c's plan, W-357b5). Zerodha equity delivery lots, bought through V2.
  */
 class CorporateActionGapAuditIntegrationTest extends AbstractIntegrationTest {
 

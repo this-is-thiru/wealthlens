@@ -38,6 +38,7 @@ One current doc per module, written from the code and citing it (W-357b, D-901; 
 | `insurance` — stored policies, no routes | [`modules/insurance.md`](modules/insurance.md) |
 | `helper` — the upload template and file answers | [`modules/helper.md`](modules/helper.md) |
 | `auth` — accounts, sign-in, tokens | [`modules/auth.md`](modules/auth.md) |
+| `corporate` — corporate actions, recorded then applied per user and broker | [`modules/corporate.md`](modules/corporate.md) |
 
-Still to come, in order (W-357b5 – b10): `corporate`, `brokercharges` (replacing `charges-engine/`),
+Still to come, in order (W-357b6 – b10): `brokercharges` (replacing `charges-engine/`),
 `portfolio` (replacing `trade-ledger/`), `shared`, `taxengine`, `taxplanning`.

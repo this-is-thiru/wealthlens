@@ -31,7 +31,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * A stock split changes the lots it reaches and nothing else, and a malformed one is refused (W-213, W-216, D-438). Every figure
- * is the table in {@code plans/W-213.md}, by hand.
+ * is the hand-worked table in {@code docs/modules/corporate.md} §5 (moved from W-213's plan, W-357b5).
  */
 class StockSplitIntegrationTest extends AbstractIntegrationTest {
 
