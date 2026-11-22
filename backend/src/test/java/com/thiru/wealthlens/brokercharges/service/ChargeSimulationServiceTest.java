@@ -167,7 +167,7 @@ class ChargeSimulationServiceTest {
         // perLot rule evaluates zero times and exit load silently prices at nothing.
         when(chargeEngine.compute(any())).thenReturn(computation());
         ChargeSimulationRequest request = sellRequest();
-        request.setPrice(100);
+        request.setPrice(100.0);
         request.setQuantity(1000);
         request.setLots(List.of(
                 new LotSlice(600, LocalDate.of(2024, 2, 1), 100),
@@ -423,6 +423,45 @@ class ChargeSimulationServiceTest {
         // Then
         assertMoney(13.50, response.getTotalCharges());
         assertMoney(0.00, capturedContext().amount(AmountBasis.TURNOVER));
+    }
+
+    @Test
+    void simulate_whenPriceIsMissing_isRejectedNamingTheField() {
+        // Given — W-365: a primitive price read an absent one as 0, a turnover of nothing
+        ChargeSimulationRequest request = sellRequest();
+        request.setPrice(null);
+
+        // When / Then
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("price is required");
+    }
+
+    @Test
+    void simulate_whenASellNamesNoStock_isRejectedNamingTheField() {
+        // Given — W-365: with no stock code no instrument is found, so a fund's exit load would be silently absent
+        ChargeSimulationRequest request = sellRequest();
+        request.setStockCode(" ");
+
+        // When / Then
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("stockCode");
+    }
+
+    @Test
+    void simulate_whenAnAccountEventNamesNoStock_isPriced() {
+        // Given — an annual maintenance cycle concerns the account, not a scrip
+        when(chargeEngine.compute(any())).thenReturn(computation(line("AMC", 300.00)));
+        ChargeSimulationRequest request = sellRequest();
+        request.setEvent(ChargeEvent.AMC_CYCLE);
+        request.setStockCode(null);
+
+        // When
+        ChargeBreakdownResponse response = chargeSimulationService.simulate(request);
+
+        // Then
+        assertMoney(300.00, response.getTotalCharges());
     }
 
     @Test

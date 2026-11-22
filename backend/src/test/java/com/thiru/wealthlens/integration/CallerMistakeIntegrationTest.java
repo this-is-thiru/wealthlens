@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.restassured.RestAssured;
 import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -144,5 +147,53 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         // W-358d4: a missing type crashed the perform with a 500 naming the code's insides
         assertAnswered(exchange(HttpMethod.PUT, "/api/v1/admin/corporate-actions/perform", MediaType.APPLICATION_JSON, "{\"stockCode\": \"RELIANCE\"}"),
                 HttpStatus.BAD_REQUEST, "Field 'type' must not be null");
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+        "/api/v1/me/portfolio/transaction    | stockCode       | A trade must name its stock code",
+        "/api/v1/me/portfolio/transaction    | brokerName      | A trade must name its broker",
+        "/api/v1/me/portfolio/transaction    | transactionType | A trade must say whether it is a BUY or a SELL",
+        "/api/v1/me/portfolio/transaction    | transactionDate | A trade must carry its transaction date; it is not taken to be today",
+        "/api/v1/me/portfolio/transaction/v2 | stockCode       | A trade must name its stock code",
+        "/api/v1/me/portfolio/transaction/v2 | brokerName      | A trade must name its broker",
+        "/api/v1/me/portfolio/transaction/v2 | transactionType | A trade must say whether it is a BUY or a SELL",
+        "/api/v1/me/portfolio/transaction/v2 | transactionDate | A trade must carry its transaction date; it is not taken to be today"})
+    void addTransaction_whenARequiredFieldIsMissing_expected400NamingItAndStoresNothing(String route, String missing, String message) {
+        // W-365: without a stock, broker or date the trade was stored; without a type it crashed with a 500
+        Map<String, Object> trade = new LinkedHashMap<>(Map.of("stockCode", "RELIANCE", "brokerName", "ZERODHA", "assetType", "EQUITY",
+                "exchangeName", "NSE", "transactionType", "BUY", "price", 1000.0, "quantity", 10.0, "transactionDate", "2025-06-10"));
+        trade.remove(missing);
+
+        assertAnswered(exchange(HttpMethod.POST, route, MediaType.APPLICATION_JSON, trade), HttpStatus.BAD_REQUEST, message);
+        assertThat(mongoTemplate.getCollection("transactions").countDocuments()).isZero();
+    }
+
+    @Test
+    void calculate_whenTheCalculationTypeIsMissing_expected400NamingIt() {
+        // W-365: the service switched on a null type, a 500
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/public/finances/calculate", MediaType.APPLICATION_JSON,
+                "{\"principalAmount\": 100000, \"rateOfInterest\": 9, \"timePeriod\": 12, \"finalAmount\": 0, \"emiAmount\": 0}"), HttpStatus.BAD_REQUEST, "Field 'calculationType' must not be null");
+    }
+
+    @Test
+    void calculateInterestRate_whenTheStepUpFrequencyIsMissing_expected400NamingIt() {
+        // W-365: the calculator read a null frequency's months, a 500
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/public/finances/interest-rate", MediaType.APPLICATION_JSON,
+                "{\"initialAmount\": 5000, \"stepUpRate\": 10, \"months\": 12, \"targetAmount\": 100000}"), HttpStatus.BAD_REQUEST, "Field 'stepUpFrequency' must not be null");
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+        "price     | price is required; it may be 0 for a free allotment",
+        "stockCode | stockCode is required on a BUY or a SELL: it finds the scheme's own charges, such as an exit load"})
+    void simulate_whenATradeLeavesOutWhatPricesIt_expected400NamingIt(String missing, String message) {
+        // W-365: a missing price was read as 0 and a missing stock code priced no instrument charge, both answered 200
+        Map<String, Object> trade = new LinkedHashMap<>(Map.of("brokerName", "ZERODHA", "assetType", "EQUITY", "event", "SELL",
+                "transactionDate", "2025-06-02", "stockCode", "INFY", "price", 1000.0, "quantity", 10));
+        trade.remove(missing);
+
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/charges/simulate", MediaType.APPLICATION_JSON, trade),
+                HttpStatus.BAD_REQUEST, message);
     }
 }

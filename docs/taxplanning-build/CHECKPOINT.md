@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-358d4 DONE (D-886, W-358d complete) and W-364 DONE (D-887) — committed and pushed to PR #71
-Stage           : prod and staging on m1.5 (e832b56a), signed off 2026-11-21; app stopped; worktrees m1.4 (way back) and m1.5 on disk; MongoDB tools REMOVED (reads via IntelliJ console); archives ~/wealthlens-runs/archives (delete by 2027-11-21 or after W-337)
-Done session 113: W-358b (D-854) + 401→403 fix; W-358c split (D-855); W-358c1 (D-856); W-358c2 (D-857, D-858); W-358c3 split (D-859); W-358c3a (D-860) + fix; W-358c3b (D-861, D-862); runbook "Next deploy" list
-Board           : W-358a D, W-357a D, W-359a D, W-358b D, W-358c —, W-358c1 D, W-358c2 D, W-358c3 —, W-358c3a D, W-358c3b D; W-360 D, W-361 D, W-206 D, W-359b D, W-359 —, W-359b D; W-357b ·, W-358d P, W-358d1 D, W-358d2 D, W-358d3 D, W-358d4 ·, W-355 ·, W-356 ·, W-337 ·, W-362 —, W-362a D, W-362b D, W-362c D; Phase 15: W-147/149/150/168/170/171/174/175/331/335 D, W-173 B, W-254 B; W-358d4 D, W-364 D, W-365 ·
-Next step       : check PR #71's run for the push; then plan W-365 (required fields on the trade, finance and simulation bodies — the trade routes store a trade without stockCode/brokerName/transactionDate)
-Open to owner   : PR #70 merge after W-359b and a green run (owner proposal); after W-359b by board order W-358d, W-357b, W-355, W-356, W-351 (M2 review), W-337 (SQL, after deploying everything); past commits keep Claude co-author lines
-Env notes       : NO Claude attribution anywhere; no MongoDB tools on this machine; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock
-Last verify     : W-358d4 + W-364 green locally; commit 1 rebuilt after a truncated staged copy (DECISIONS) — amended before push
-Last item commit: taxplanning W-364: answer an unexpected failure without the code's insides — a 500 named classes and nulls to the caller
-Files touched   : (none) (plus this file)
-Updated         : 2026-11-21, session 114
+Item            : W-365 DONE (D-889), committed and pushed to PR #71 — check its pipeline run first
+Stage           : prod and staging on m1.5 (e832b56a, W-362, D-869 – D-871), signed off; app stopped; worktrees m1.4 (way back) and m1.5 on disk; MongoDB tools REMOVED (reads via the owner's IntelliJ console, one $documents query; check the "database" field)
+Done session 114: W-360, W-361, W-206, W-359b, W-362 (m1.5 deployed), W-358d split + d1 – d4, W-364, Phase 15 batch of ten (D-864 – D-887); W-363 parked, W-365 placed; D-888 three deployments
+Board           : W-358d —, W-364 D, W-365 D, W-366 ·, W-367 ·, W-173 B, W-254 B, W-294 ·, W-299 ·, W-357b ·, W-351 ·, W-355 ·, W-356 ·, W-337 ·
+Next step       : check the pipeline run for the W-365 commit (fix if red); then plan the batch W-294 + W-299 (check §2.13 / §2.14 in the run log at tag docs-history-m1 first), then W-173, W-254 → merge PR #71 on the owner's word → W-366 deploy m1.6. Each item: plan first, probe first
+Open to owner   : none. PR #71 not to merge before the owner says so
+Env notes       : NO Claude attribution anywhere; integration tier needs OrbStack (orb start) + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; a full tier only on the pipeline
+Last verify     : W-365 green locally (CallerMistake 25, PortfolioService 37, ChargeSimulationService 31, FinancesIntegration 5, ApiCollectionContract 1, ArchitectureTest 26, Modulith 1, validate)
+Last item commit: taxplanning W-365: refuse a trade, finance or preview body missing what it cannot do without — trades were stored half-empty or dated today, and three routes crashed
+Files touched   : none — all committed (this file is in the item commit)
+Updated         : 2026-11-22, session 115 (W-365 committed and pushed)
 ```
 ## Resume check (run these, compare, then act on "Next step")
 
@@ -24,11 +24,3 @@ git status --short                              # must list exactly "Files touch
 ```
 
 Mismatch → stop and report both outputs. Match → do **Next step** and nothing else.
-
-*Known false mismatch:* once a post-commit state line exists, the grep returns **that** commit rather than the
-item commit named above, because state lines carry the item prefix too. Compare the **item** commit; the tree,
-not the grep, is what decides. It has fired for W-179's planning (`f461363c` against `866f3dd2`), W-181's
-(`c620ba99` against `c76dad9a`), W-182's (`592ff6a6` against `e494326f`), W-183's (`ac3a9fce` against
-`ecf681cd`), W-184's (`235d2566` against `f511544a`, then `a0fe2665`), W-088g's (`c59d8223` against
-`c030e04f`), W-088g1's (`1f975262` against `f3027724`), W-088g2's (`09ed07b7` against `927b2581`) and
-W-089's (`f7140cfe` against the post-commit line `1b62fe5a`); W-131d2's (`d7a5b146` pointer against `86035a1c`).

@@ -345,6 +345,24 @@ class PortfolioServiceTest {
     }
 
     @Test
+    void redriveTemporaryTransactions_whenAStoredTradeNamesNoStock_failsItWithTheReason() {
+        // Given -- W-365: a temporary stored before the check, with no stock code
+        TransactionEntity unnamed = new TransactionEntity();
+        unnamed.setId("temp-unnamed");
+        unnamed.setAssetRequest(createAssetRequest(null));
+        when(temporaryTransactionService.getAllTemporaryTransactions(userMail)).thenReturn(List.of(unnamed));
+        when(temporaryTransactionService.filterOutTransaction(any(), any(), eq(true))).thenReturn(false);
+
+        // When
+        RedriveResult result = portfolioService.redriveTemporaryTransactions(userMail);
+
+        // Then -- reported, not applied
+        assertEquals("A trade must name its stock code", result.getFailed().get("temp-unnamed"));
+        assertTrue(result.getSucceeded().isEmpty());
+        verify(transactionService, never()).recordTransaction(any(), any(), any());
+    }
+
+    @Test
     void redriveTemporaryTransactions_whenTheDatabaseFails_abortsTheRedrive() {
         // Given -- one temporary, and the transaction store failing (W-281 C2a)
         TransactionEntity waiting = new TransactionEntity();
