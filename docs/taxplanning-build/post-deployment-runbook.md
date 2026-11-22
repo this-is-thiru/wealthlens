@@ -91,6 +91,7 @@ below is the full sequence for a fresh database (W-337).
 8. W-294 (D-890) — nothing to run: §2.13 is retired (run on prod and staging).
 9. W-299 (D-891) — nothing to run: §2.14 is retired and `POST /api/v1/admin/portfolio/transactions/segment/correct` is no longer served.
 10. §2.18 W-173 (D-892) — **a write, per database, after the deploy (owner, IntelliJ console):** the V2 backfill is removed (`POST /api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill` no longer served, §2.8 retired); §2.18 backs up and unsets `pnl_backfilled_outcome_ids` on `profit_and_loss` — before N, backup N, after 0, P&L by year unchanged.
+11. W-254 (D-893) — **read-only precheck, per database, before switching to `m1.6`** (IntelliJ console): §1.r step 3's query. Expected: `grievances`, `processingLog`, `insurances` 0; `identifiers` and `embeddedActors` `[]`; `loginsToRekey` 0; `actors` listing only collections no code reads (staging: the two ITS-22 test collections). Anything else: stop, stay on `m1.5` (which still serves `POST /api/v1/admin/privacy/stored-fields/encrypt`) and run §1.r steps 4 – 6 there first. After the switch, §1.r is retired and the route is no longer served.
 
 ## 0. Before deploying
 
@@ -631,7 +632,7 @@ the snapshot, and its email may since belong to a new account, which must not be
    ```
 
    Note the snapshot's time in UTC (`yyyy-MM-ddTHH:mm:ss`) as `S`.
-2. **Restore** the snapshot in Atlas.
+2. **Restore** the snapshot in Atlas. A snapshot from before §1.r (prod before 2026-11-21, staging before 2026-11-20) holds plain rows that no build from `m1.6` on can read or seal (W-254, D-893): restore such a one only on `m1.5`, and run §1.r there before moving on.
 3. **Put the records back** (an upsert by `_id`: a record the snapshot already holds is replaced by its later state):
 
    ```bash
@@ -672,7 +673,9 @@ import was wrong, import the exports again and repeat step 4. **Profile-erasure 
 `email`, `profile_id`, `requested_at`, `erased_at`) are new with W-237f. They are written by each single-profile request
 from that deploy on, and erased a year after `erased_at` by §1.t's `log-retention` job. Nothing to seed.
 
-### 1.r W-248 (D-479), W-253 (D-485), W-256 (D-486) — personal data, identifiers and actors stored before them, encrypted · owner, `SUPER_USER` · **every database · right after the first start carrying W-253 and W-256, with the tax jobs off, before users**
+### 1.r W-248 (D-479), W-253 (D-485), W-256 (D-486) — personal data, identifiers and actors stored before them, encrypted · owner, `SUPER_USER` · **retired by W-254 (D-893) · do not run**
+
+> **Retired.** Run on prod (W-334e1 row 10b: `encryptedRows` = `plainRows`, conflicts 0; rows 11 – 13: nothing plain but `reports`, dropped by §2.15) and staging (W-334d2 rows 9b – 10: the same; plain actors only in collections no code reads). W-254 removed its route and code, so nothing in the app seals a plain row any more: step 3's query stays below as the record and as the read-only precheck before a deploy ("Next deploy" item 11). Kept below as the record of what it did.
 
 From W-248 these fields are stored encrypted under `TAX_DATA_KEY` (§0.5): `privacy_grievances` `text` and `answer`;
 `privacy_processing_log` `remote_address`; `insurances` `insurance_id`, `agent_name`, `agent_email`, `agent_contact`,
@@ -850,7 +853,7 @@ db.user_details.updateMany({ _id: { $in: ["<email>", "<email>"] }, roles: { $ne:
 Then run the read-only query again: `aboveUser` is your account alone. A second run of the update matches nothing. A
 token issued before keeps its old role until it expires (30 minutes at most); the next sign-in carries `USER`. **Way
 back:** set each account's old role from the kept output with `updateOne({ _id: "<email>" }, { $set: { roles: "<old>" } })`;
-once §1.r has re-keyed the logins (W-253), match `{ email: "<stored email>" }` (§0.7) instead of the `_id`.
+since §1.r re-keyed the logins (W-253), match `{ email: "<stored email>" }` (§0.7) instead of the `_id`.
 The dump is the fallback; restoring it whole would also undo later sign-ins' `last_signed_in_at`.
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**

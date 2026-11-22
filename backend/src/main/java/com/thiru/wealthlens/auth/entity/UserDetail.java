@@ -18,7 +18,7 @@ public class UserDetail {
 
     /**
      * Generated, because Spring Data writes an id without its value converter, so the email cannot be the id and be stored encrypted
-     * (W-253 C2a). A row from before W-253 has its email as the id until the stored-field encryption re-keys it (runbook §1.r).
+     * (W-253 C2a). A row from before W-253 had its email as the id until the one-time stored-field encryption re-keyed it (runbook §1.r, retired by W-254).
      */
     @JsonIgnore
     @MongoId
