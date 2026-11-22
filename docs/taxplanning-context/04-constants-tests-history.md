@@ -434,7 +434,7 @@ Most-changed files in the module:
 - `4f4962d` and `d3e098c`/`75e8a64` are charges-engine work that brushed the module incidentally.
 - **`5eaeb98` is the only commit whose message names a defect**, and it is a security fix, not a tax
   logic fix. Its subject: *"stop stored formulas from reaching outside their vocabulary."* The
-  context is recorded at length in `docs/charges-engine/backlog.md` under **CE-1**, which states
+  context is recorded at length in `docs-history-m1:docs/charges-engine/backlog.md` under **CE-1** (closed), which states
   that `taxplanning/engine/FormulaEvaluator` had the identical `StandardEvaluationContext` hole as
   the charges engine's evaluator, reachable through `PUT /tax-planning/admin/allowances/{code}`
   because that endpoint's request body carries `limitFormula`; and that an

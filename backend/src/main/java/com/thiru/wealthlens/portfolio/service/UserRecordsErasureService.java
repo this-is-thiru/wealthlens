@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Insurance policies, salary profiles and tax computations carry this user's email too. They live
  * in modules {@code portfolio} may not depend on, so reaching them needs an application event
  * rather than a call, and each module would own its own erasure. Out of scope deliberately —
- * recorded as CE-5 in {@code docs/charges-engine/backlog.md} rather than left to be rediscovered.
+ * recorded as CE-5 ({@code docs/modules/brokercharges.md} §10) rather than left to be rediscovered.
  * The login credential in {@code auth} is also untouched: this clears a user's records, it does not
  * close their account.
  */

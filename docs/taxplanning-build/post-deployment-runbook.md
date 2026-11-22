@@ -6,9 +6,9 @@
 - **tax planning** (`taxplanning`, `taxengine`), and any other module touched because of it, such as `portfolio`
   (W-085 – W-088u7) and `shared`.
 
-`docs/charges-engine/production-runbook.md` and `docs/trade-ledger/migration.md` are pointers to the sections here
-(W-176, D-379). `docs/charges-engine/staging-runbook.md` stays the charge engine's **test guide**: §1B uses its §4.1
-figure, and its §5, §5b and §7 are optional testing, not deploy steps.
+`docs/trade-ledger/migration.md` is a pointer to the sections here (W-176, D-379). The charge engine's old runbooks in
+`docs/charges-engine/` were deleted by W-357b6b (D-909); §1B now states its own check figure, and what the engine does is
+`docs/modules/brokercharges.md`.
 
 Each entry is keyed to the work item and decision that introduced it, and says:
 - when it runs, and who runs it;
@@ -1063,9 +1063,11 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
      }' | jq '.data'
    ```
 
-   Compare with the expected figure in [`../charges-engine/staging-runbook.md`](../charges-engine/staging-runbook.md)
-   §4.1. Its §4 holds every shipped card's figure, and §4.7b the three card generations: the same trade prices
-   differently by date, which is correct.
+   Expect `scheduleCode` `ZERODHA_EQ_DELIVERY_2025_04`, `resolution` `RESOLVED`, and, on turnover ₹1,00,000: BROKERAGE 0,
+   STT 100 (0.1 %, to the rupee), EXCHANGE_TXN 2.97 (0.00297 %), SEBI_FEE 0.10, IPFT 0.10 (0.0001 % each), DP 13.50,
+   GST 3.00 (18 % of 0 + 2.97 + 0.10 + 0.10 + 13.50 = 16.67), **total ₹119.67**; no STAMP_DUTY on a sale. Worked by
+   hand from `zerodha-equity-delivery-2025-04-01.json` and `statutory-equity-delivery-2025-04-01.json`; the same
+   method is shown in `docs/modules/brokercharges.md` §5. A later date prices on a later card, which is correct.
 
 **Second run:** safe; the seed skips what is on file. **Way back:** §1A clears what this wrote.
 
@@ -2039,14 +2041,14 @@ curl -sS -X POST "$BASE/api/v1/me/charges/charge-accounts" -H "Authorization: Be
 | **Rate verification** | `GET /api/v1/me/charges/charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
 | **Drift check** | `GET /api/v1/admin/charges/charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
 | **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.data'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
-| **Publishing a rate change** | `POST /api/v1/admin/charges/charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. Rehearsal: `staging-runbook.md` §7 |
+| **Publishing a rate change** | `POST /api/v1/admin/charges/charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. How publishing supersedes: `docs/modules/brokercharges.md` §5 |
 
 ### 5.3 History before the engine is not priced
 
 Trades made before the engine priced them carry no computed charge, and **there is no way to give them one**. ADR-32
 applies the cutover forward only; the endpoint that could re-price history was removed for that reason. A charge
 report over an earlier period is sparse, which is correct. Pricing history, if wanted, is the
-[priced-portfolio epic](../epics/priced-portfolio.md), and needs historical rate cards first.
+work of W-383, and needs historical rate cards first.
 
 ### 5.4 If something goes wrong
 
@@ -2067,7 +2069,7 @@ nothing rewrites a stored `AssetEntity`.
 
 ### 5.5 Known limits — recorded, not defects
 
-Full list in `docs/charges-engine/README.md` §10.
+Full list in `docs/modules/brokercharges.md` §8.
 - **A database with no cards prices nothing until §1B runs.**
 - **Nothing before 2025-04-01 can be priced:** no card covers it.
 - **Only two mutual-fund schemes have exit-load profiles.** Every other fund resolves `NO_INSTRUMENT_PROFILE` and

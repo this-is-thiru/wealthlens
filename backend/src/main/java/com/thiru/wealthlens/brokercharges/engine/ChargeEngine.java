@@ -397,7 +397,7 @@ public class ChargeEngine {
      * The trade as one lot sees it.
      *
      * <p>Turnover is restated as what the lot's units fetched — its quantity at the sale's price — because a
-     * holding-period charge such as an exit load is a percentage of the redemption value (PRD §3), not of what the
+     * holding-period charge such as an exit load is a percentage of the redemption value (PRD §4.4), not of what the
      * lot cost; the lot's own price, its cost, stays on the lot (W-303, D-619). {@code holdingDays} is published so
      * an eligibility predicate can ask how long <em>this</em> lot was held. The other amount bases are carried
      * through unchanged; none of them is per-lot in the cash segment, which is the only segment Phase A prices.

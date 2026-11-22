@@ -233,7 +233,7 @@ class ChargeGapAuditIntegrationTest extends AbstractChargeAuditIntegrationTest {
         }
 
         // Then -- the 386-day lot pays nothing; the 325-day lot pays 1 % of its redemption value, 40 × ₹110 = ₹44.00
-        // (prd.md:89 "% of redemption value"; was ₹40.00, 1 % of its cost)
+        // (PRD §4.4 "% of redemption value", docs/modules/brokercharges.md §10; was ₹40.00, 1 % of its cost)
         assertMoney(44.0, amounts(sale).get("EXIT_LOAD"));
     }
 

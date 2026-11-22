@@ -3,7 +3,9 @@
 > W-357b6a (D-908), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a bare
 > path is under `backend/src/main/java/com/thiru/wealthlens/brokercharges/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a.
 > This doc also holds the hand-worked figures `ChargeGapAuditIntegrationTest` asserts (§5), moved here from W-264b's review
-> (`reviews/2026-11-13-charge-engine-gap-audit.md` §2). The design history in `docs/charges-engine/` is retired by W-357b6b.
+> (`reviews/2026-11-13-charge-engine-gap-audit.md` §2, deleted by W-357b6b and readable at tag `docs-history-m1`). The design notes it replaces, `docs/charges-engine/`, were deleted by W-357b6b
+> (D-909) and are still readable at tag `docs-history-m1`, e.g. `git show docs-history-m1:docs/charges-engine/decisions.md`. The code
+> cites that design by name (ADR-n, AC-n, FR-8, OD-8, CE-5, D1 – D10, the PRD, the tech spec); §10 says what each name it cites means.
 
 ## 1. Purpose
 
@@ -298,6 +300,18 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not execu
    `GET …/charge-accounts/due` and the three `…/user-charges/users/{email}/…` reads. A manual tester cannot call them from the collection,
    and `ApiCollectionContractIntegrationTest` checks only the requests that exist.
 
+**Limits by design**, carried from the retired design's list and checked against today's code (the ones no longer true are in D-909):
+- **A charge levied once per window is not a cap on a sum.** `DedupeScope` suppresses a repeat; a "most ₹X a day across all trades"
+  rule cannot be written (`dto/enums/DedupeScope.java:6` – `:8`). Nor can a charge on cumulative monthly turnover, or one that accrues
+  daily on an open position (MTF interest): every charge is priced at an event.
+- **A card or profile written straight to the repository is not seen** until the caches are evicted: only publishing, closing and
+  seeding evict (`ChargeScheduleService.java:77`, `:99`; `ChargeSeederService.java:137` – `:138`), and nothing but the seeder writes a
+  profile (grep for `ChargeInstrumentRepository`: the resolver, the seeder, the repository).
+- **Two schemes have profiles** (`data/charges/instruments/`), keyed on a short `stock_code` (`ChargeInstrumentEntity.java:58` – `:60`);
+  every other fund is `NO_INSTRUMENT_PROFILE`. **No card starts before 2025-04-01** (the file names), so an earlier trade is
+  `NO_SCHEDULE`. Both are W-383.
+- **Trades stored before the engine priced them keep their charges** and are never re-priced (ADR-32, §10).
+
 Already placed, not repeated: the unbounded resolver caches (W-307) and the read-modify-write in `UserChargeService.record` (W-308), both
 parked (`K`).
 
@@ -307,3 +321,36 @@ parked (`K`).
 - What each shipped rate means and where it came from: the card's own `notes` and `source_url`, and
   `docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md` for the statutory rates.
 - Seeding a database at deploy: `docs/taxplanning-build/post-deployment-runbook.md` §1B.
+
+## 10. Names the code cites from the retired design
+
+The design (`docs-history-m1:docs/charges-engine/`) numbered its decisions, criteria and defects. These are the ones the code still
+cites, each as the design stated it, with what holds today where that differs.
+
+| Name | What it says | Today |
+|---|---|---|
+| ADR-12 | Superseding a card closes its date window; it never changes its status. `INACTIVE` means entered in error; a closed card still prices a trade dated inside its window | as decided (`ChargeScheduleEntity.java:30` – `:38`) |
+| ADR-15 | Engine arithmetic is `BigDecimal`; amounts are `double` only where stored | as decided (§5) |
+| ADR-18 | Phase A shipped placeholder rates, so AC-2 waited until they were real | superseded: every shipped card carries `verifiedOn` and its sources in `notes` |
+| ADR-24 | A missing instrument profile is recorded (`NO_INSTRUMENT_PROFILE`), never fatal; expression variables are checked against an allow-list | as decided (`ChargeEngine.java:117` – `:132`; `ChargeScheduleValidator.java:341` – `:349`) |
+| ADR-27 | Seeding is an authenticated call, `SUPER_USER`, never a start-up side effect; every document names who wrote it | as decided (§5) |
+| ADR-29 | One registry of every instrument the application recognises; uploads are checked against it, and charge profiles key off its canonical code | not built: profiles key on `stock_code`; W-383 |
+| ADR-32 | Turning on `authoritative` changes new trades only; stored transactions keep their charges and are never re-driven (owner, 2026-09-09) | as decided |
+| AC-1 | A new charge type is added by editing seed JSON only, no `.java` change | `ChargeExtensibilityTest` |
+| AC-2 | A delivery trade on a seeded card matches a real contract note within ₹0.01 | the rates' sources are in each card's `notes`; re-checking is the 90-day `unverified` list (§3) |
+| AC-4 | A second sale of the same scrip on the same day charges no second DP; a different scrip does | `ChargesIntegrationTest` |
+| AC-6 | A fund redeemed within 365 days attracts exit load; held longer, it does not | the 1 % band in `instruments/parag-parikh-flexi-cap-2025-04-01.json`; §5's example |
+| AC-8 | Publishing over an open card of the same scope closes it; both stay readable, the older for earlier dates | §5 |
+| AC-9 | A card whose GST rule names an unknown base code is refused at seeding, readably | §5 |
+| AC-10 | A buy's lot cost is the engine's total, not the number the user typed | `authoritative`, V2 only (§6) |
+| AC-12 | No card matching is no charge and no exception, with a warning logged | `NO_SCHEDULE` (§5) |
+| FR-8 | Every asset type goes through the engine; one with no card produces no lines | as stated (`ChargeRecordingGatewayImpl.java:35` – `:40`) |
+| OD-8 | Run the shadow phase before the cutover, to compare computed with typed charges | ran; the typed figures held almost nothing to compare (ADR-31), so the engine was checked by other means |
+| CE-5 | "Clear all records" did not erase everything a user owns | closed by the account erasure (W-237d; W-264b, D-611) |
+| D1 | GST was charged on a sum that included STT and stamp duty | fixed: GST names its base codes (`DerivedChargeCalculator.java:37` – `:49`) |
+| D6 | Publishing a new card threw unless the old one was closed first | fixed: publishing supersedes (§5) |
+| D7 | A rule with a rate and a flat amount and no aggregator charged 0 | fixed: refused (§3) |
+| D10 | The DP charge was keyed without the account holder, so two holders' debits were charged once | fixed: the holder is in every scoped key (§5) |
+| PRD §4.4 | Exit load is a "% of redemption value, conditional on holding period (e.g. 1% if held < 365 days)" | as stated (W-303; §5) |
+| tech-spec §4.6.2 | When a card and a profile declare one code, the profile's rule wins and the card's is skipped | as stated (`ChargeEngine.java:269` – `:291`) |
+| tech-spec §5.5 | Modifiers in one order: aggregator, minimum, maximum, then rounding, applied by the engine, not the calculators | as stated (`ChargeEngine.java:351` – `:373`) |

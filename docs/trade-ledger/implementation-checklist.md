@@ -4,7 +4,7 @@
 lost, resume from the first unticked box.
 
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
-complete — see `../charges-engine/README.md`).
+complete — see `../modules/brokercharges.md`).
 **Status:** 8 of 8 done. Remaining work is in [`backlog.md`](backlog.md).
 **Last updated:** 2026-09-12 — 929 tests green (unit + integration), both JaCoCo gates passing,
 surefire XML gate clean, spotless clean.
