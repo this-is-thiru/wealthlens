@@ -369,6 +369,148 @@ and tax of ₹61,500:
 - `CompletedMonths` counts only May, the month lying wholly inside: **1**;
 - `Days` counts 16 + 31 + 10 = **57**, both ends included.
 
+### Rule packs and filing (W-357b9e, D-921)
+
+**The timeline is the source.** The law is written once, across every year, under `rulepacks/timeline/`. Each year's pack is
+compiled from it, so a regime that lives ten years is one file, not ten copies (`rules/timeline/Timeline.java:25` – `:26`).
+`TimelineReader` reads one file per identity, its layer given by its directory. It refuses the whole timeline, naming the file, when a
+file sits in a directory it does not know (`rules/timeline/TimelineReader.java:43` – `:55`; the directories `:59` – `:91`).
+
+| Directory | Holds | Shipped files |
+|---|---|---|
+| `law/rules/` | one rule per file, every version | 248 |
+| `law/rule-sets.json` | the sets nodes evaluate, each row naming its own | 1 |
+| `law/regimes/`, `law/disallowances/` | `NEW_TAX_REGIME`, `FIRST_SCHEDULE_RATES`; their two shared disallowance sets | 2, 2 |
+| `exec/pipelines/`, `exec/components/`, `exec/funds/`, `exec/declarations/` | nodes, pay components, employer funds, declarations | 30, 52, 3, 16 |
+| `forms/itr-forms/`, `forms/itr-cells/`, `forms/certificates/` | `ITR-1`, `ITR-2`; the schedule cells; `FORM_130` | 2, 240, 1 |
+| `content/` | explanations, the claim catalogue, the coverage register, the section catalogue (`sections/`), the Acts' section lists (`acts/`) | 1, 1, 1, 66, 2 |
+
+**A pack has four layers** (`rules/pack/RulePackLayer.java:23` – `:48`), split by how often and on whose authority each changes:
+
+| Layer | Holds | Changes a figure? |
+|---|---|---|
+| `LAW` | rates, caps, conditions, regimes, disallowance sets, versions | yes: the only layer that may change a number |
+| `EXEC` | pipelines, components, funds, declarations | yes, by choosing which law applies |
+| `FORMS` | return forms, schedules, cells, certificates | no |
+| `CONTENT` | explanations, the claim catalogue | no |
+
+The computation cache keys on `LAW` and `EXEC` alone (`RulePack.computationCacheKey()`, `rules/pack/RulePack.java:231`). An edit to
+the claim catalogue therefore invalidates nothing.
+
+**Compiling a year** (`rules/timeline/RulePackCompiler.java:70`):
+- **What a year holds:** every `PUBLISHED` version whose validity overlaps the year, plus every published pending-notification version.
+  A rule left with no version is omitted.
+- **Projected components:** a component keeps only the rules the year holds, but a reference to a rule the timeline states in *no* year
+  is refused first.
+- **Canonical output:** keys sorted, no whitespace, `_`-prefixed note fields dropped. So a checksum moves when the law moves, not when a
+  note does (`:56` – `:68`).
+
+**The lock** is `rulepacks/<year>.lock.json`: each layer's version and checksum, a checksum per rule, and the year's governing
+instruments (`rules/timeline/RulePackLock.java:37`). `verify` refuses a compiled year that differs from it, naming each rule that
+moved (`:97` – `:121`). A rule can move three ways:
+- "`X` changed: lock says …, timeline compiles to …";
+- "`X` is in the timeline … but not in its lock";
+- a layer's own checksum.
+
+| Lock | law | exec | forms | content | rules |
+|---|---|---|---|---|---|
+| `2025-26.lock.json` | `2025-26.law.129` | `.exec.35` | `.forms.9` | `.content.30` | 244 |
+| `2026-27.lock.json` | `2026-27.law.132` | `.exec.38` | `.forms.18` | `.content.31` | 241 |
+
+**Loading.** `shipped-years.json` declares the years (`2025-26`, `2026-27`): declared, not scanned, because a year that silently
+fails to appear is worse than one that fails to load. At startup `ShippedRulePacks.compile` does three things for each year
+(`rules/timeline/ShippedRulePacks.java:39` – `:51`):
+- compiles it;
+- verifies it against its lock (`ClasspathRulePackProvider.load`, `rules/timeline/ClasspathRulePackProvider.java:85` – `:94`);
+- assembles it into a `RulePack` with the instruments its own lock names (`JsonPackAssembler`).
+
+A mismatch stops the boot. The timeline is read from a directory in the build, or from the JAR when shipped (`:112` – `:134`).
+
+**Reading JSON** (`rules/json`): one reader per family, each a tagged union keyed on `"type"` (`ShapeJson`, `ConditionJson`,
+`DefinitionJson`). Every failure is a `PackValidationException` naming the file and field (`PackJson`).
+
+**Validation** has three layers:
+- **Each record refuses itself** at construction.
+- **The lock** refuses an unreviewed change at load.
+- **`PackValidator`** (`rules/validate/PackValidator.java:59`) refuses a pack whose references do not resolve, and reports every
+  failure together. Examples: a rule naming a missing component, a regime's missing disallowance set, two default regimes. It runs in
+  the build (`RulePackLoadTest`, `TaxYear2025RulePackTest` and the synthetic pack's test), not on the load path; see W-393 (1).
+
+**A rule's three status axes** (`rules/registry`):
+- **`LegalStatus`:** `BILL`, `ENACTED`, `NOTIFIED`, `PENDING_NOTIFICATION`, `IN_FORCE` or `WITHDRAWN`.
+- **`VerificationLevel`:** `UNVERIFIED` or `SOURCE_CHECKED`. This one reaches the person.
+- **`PublicationStatus`:** `DRAFT`, `IN_REVIEW` or `PUBLISHED`. Only `PUBLISHED` enters a pack.
+
+A rule's `Provenance` carries its source and how far it is confirmed, and is inside the rule's checksum. The `_note` fields are outside
+it.
+
+**Changing a year's law** passes three guards, each a test:
+- the lock, rewritten by `docs/taxplanning-build/tools/run_relock.sh`, with a layer's version bumped once per item;
+- the review file `reviews/pack-review-2025-26-to-2026-27.md`, written by `PackReview` and checked by `PackReviewTest`
+  (`-Dpack.review.write=true` rewrites it). It lists `PackLint`'s findings, then each rule whose law changed at the boundary, then
+  those only re-sourced;
+- the generated constants `RuleIds`, `RuleSetIds`, `ComponentCodes` and `NodeIds` (`rules/generated`), regenerated from the
+  timeline and checked by `GeneratedConstantsTest`. A code Java names is a constant, so a renamed code breaks its caller at compile
+  time.
+
+**Coverage** (`rules/coverage`): `content/coverage.json` classifies every section of each Act exactly once as `Modelled`,
+`Planned`, `Deferred`, `NotComputational` or `OutOfScope` (`Coverage.java:15` – `:75`). The Act is part of a section's identity,
+since the two Acts reuse numbers (`SectionRef.java:19`).
+
+| Act | Modelled | Planned | Deferred | Not computational | Out of scope | Total |
+|---|---|---|---|---|---|---|
+| 1961 | 60 | 6 | 370 | 368 | 16 | 820 |
+| 2025 | 57 | 6 | 233 | 236 | 3 | 535 |
+
+**The catalogues** (`rules/catalogue`):
+- **The section catalogue** (`content/sections/`, 66 entries) explains a section to a person: what it is, the routes that qualify, and
+  what disqualifies, each linked to what enforces it (`EnforcedBy`).
+- **The claim catalogue** (`content/claim-catalogue.json`) says how a deduction or exemption is claimed:
+  - its channel, and what its absence from Form 16 means;
+  - the steps, by whom and by when;
+  - the evidence and what settles it.
+
+  A rule that is not a claim says why (`NotAClaim`).
+
+**Filing** (`rules/filing`):
+- **`ItrFormSpec`** (`ItrFormSpec.java:33`): one form as a year's law defines it. It holds whom it is for, the kinds of return, its
+  positive conditions and bars, the forms it excludes, how it may be furnished, and its schedules.
+- **`ItrFormSelector`** (`ItrFormSelector.java:27`) runs the year's cascade:
+  - the candidates are the forms serving the person and the kind of return, in `cascadeOrder`;
+  - a form is excluded when an earlier form open to the return is one it excludes;
+  - the first open form is chosen, unless an earlier one waits on an unanswered question, when none is.
+
+  Each form gets a `FormVerdict`: `ELIGIBLE`, `INELIGIBLE`, `EXCLUDED` or `UNDETERMINED` (`FormVerdict.java:30`). No form name is
+  in Java.
+- **`ScheduleMapper`** (`ScheduleMapper.java:37`) fills a form's cells in one fold. Each `ScheduleCell` says where its figure comes from,
+  as a `FieldSource` (`FieldSource.java:16`). A source can be:
+  - nodes, the tax basis, rules or a declaration;
+  - capital-gains parts or buckets, an item's figure, other-source kinds, set-off or an accrual;
+  - a sum;
+  - a manual entry.
+
+  A cell the run cannot fill carries its reason, never a blank or a zero.
+- **`CertificateSpec`** (`CertificateSpec.java:18`): a certificate's printed layout (Form No. 130). It lists parts by heading, lines by
+  label and tables by column. It also states the sums the form prints, the amounts that should be near each other, and the amounts the
+  engine also computes.
+
+**The synthetic pack** (`backend/src/test/resources/rulepacks-synthetic/`): three made-up years, 2099-00 to 2101-02, each with a lock. It
+is not law and never shipped; it proves the engine computes a law no shipped year has (§11, W-146).
+
+### Worked examples: rule packs (by hand)
+
+**A note does not move a checksum.** A rule file's `_note` is dropped from the canonical form, so rewording it leaves the rule's checksum,
+the `LAW` layer's and the lock as they were. Its `provenance.sourceDescription` is kept, so rewording that moves all three and needs a
+relock. This is why W-357b9e re-points no pack citation (W-393 (4)).
+
+**The cascade.** Take a resident individual who has answered every question and who is open to both forms, `ITR-1` coming first in
+`cascadeOrder`. If `ITR-2` lists `ITR-1` in its `excludes`:
+- `ITR-1` is `ELIGIBLE` and chosen;
+- `ITR-2` is `EXCLUDED` by `ITR-1`, without its conditions being tested.
+
+If the person had left a question `ITR-1` reads unanswered, `ITR-1` would be `UNDETERMINED` and no form would be chosen, though `ITR-2`
+was open.
+
 ## 6. Configuration
 
 None of the engine's own. The packs it compiles are the classpath directory `rulepacks`, and the years are `shipped-years.json`'s
@@ -421,6 +563,19 @@ tests are W-357b9e's):
 `rounding` and `reason` have no test class of their own: `MoneyTest`, `RuleJsonRoundingTest` and `RoundingNodesTest` cover the
 rounding, and 44 test files assert reasons. `ReliefShapeTest` cited `plans/W-048.md` for its figures; they are now §11's W-048 block.
 
+**Rule packs and filing** (59 files, 705 cases):
+
+| Package | Files | Cases |
+|---|---|---|
+| `json` | 11 | 182 (`PackJsonTest` 56, `RuleJsonDefinitionTest` 42) |
+| `timeline` | 14 | 111 (`PackReviewTest` checks the committed review file) |
+| `pack` | 10 | 108 (`RulePackLoadTest`, `TaxYear2025RulePackTest` load both shipped years and run `PackValidator`) |
+| `filing` | 7 | 106 |
+| `validate` | 8 | 82 (`PackValidatorTest` 44) |
+| `catalogue`, `coverage`, `registry`, `generated` | 2, 3, 2, 2 | 60, 23, 18, 15 |
+
+Five tests cited plans; their figures and surveys are now §11's W-052c, W-055, W-079a, W-139 and W-139a blocks.
+
 Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `taxengine/api`, `pipeline`, `result` and `trace`.
 
 ## 8. Known gaps (boundary and run: W-389, D-916; the nodes: W-390, D-917)
@@ -453,7 +608,7 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
      runs health insurance, disability, donations, the loans, rent paid, deposit interest and the Agniveer fund.
    - `PerquisiteNode`'s "Built so far" list (`PerquisiteNode.java:46`) likewise.
 7. **Two plans stay** after W-357b9b1 moved the nodes' hand-worked figures into §11 (D-918): `plans/W-089.md`, cited by three
-   `taxplanning` tests (W-357b10 re-homes them), and `plans/W-112b.md`, cited by two pack files and a synthetic pack (W-357b9e).
+   `taxplanning` tests (W-357b10 re-homes them), and `plans/W-112b.md`, cited by two pack files and a synthetic pack (kept by W-357b9e; see gap 13, W-393 (4)).
 
 **The inputs (W-391):**
 8. **Javadoc that is no longer true:**
@@ -468,18 +623,35 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
    `rules/cap/CapShape.java:58` – `:62`, directly above `raisingInput`'s own (`:63` – `:66`). So `countsRead` (`:108`) has none, and
    a reader of `raisingInput` meets two.
 
+**Rule packs and filing (W-393):**
+10. **`PackValidator` runs only in the build,** in `RulePackLoadTest`, `TaxYear2025RulePackTest` and the synthetic pack's test.
+    `ShippedRulePacks.compile` verifies the lock and assembles, and never validates. Yet three comments speak of load or startup:
+    - `PackValidator`'s Javadoc: "none of these throws at load unless something looks", "one startup at a time"
+      (`rules/validate/PackValidator.java:39`, `:42` – `:43`);
+    - `PackValidationException`'s: "Thrown at load time" (`rules/validate/PackValidationException.java:6`).
+11. **Every compiled pack writes an empty `axes.bindings`** into `exec/pipelines.json` (`rules/timeline/RulePackCompiler.java:108`),
+    which nothing reads. `RulePackLayer` lists "temporal-axis bindings" as `EXEC`'s (`rules/pack/RulePackLayer.java:33`), but each rule
+    declares its own axis. Removing the field moves both years' `EXEC` checksums.
+12. **`Timeline`'s Javadoc on `pipelineNodes` is stale** (`rules/timeline/Timeline.java:48` – `:49`). It says the item that generates
+    node ids from the catalogue "gives it a type". `NodeIds` is generated from it (`ConstantGenerator.java:48`, under `test`), and it
+    is still each node's file verbatim.
+13. **Pack data still cites two plans** (a proposal). `INT-REFUND`'s `provenance.sourceDescription` cites `plans/W-112b.md`, and that
+    field is inside the rule's checksum, so re-pointing it needs a relock and a `LAW` bump in both years. Its `_note`,
+    `SEC-INTEREST-REFUND`'s `_sources` and the synthetic pack's copy cite the same plan. `DED-DONATION-UNREPORTED`'s `_note` (shipped
+    and synthetic) cites `plans/W-078f.md`, which `plans/W-156a.md` also cites. Both plans therefore stay. The proposal: move W-112b's
+    act-chain record into `sources/` and re-point all four, in one relock.
+
 ## 9. Not covered here
 
-- Packs, the JSON form, locks, validation, the catalogue and the return forms: W-357b9e.
 - The regime election, other elections and the optimiser's search: W-357b9f.
 - What `taxplanning` does with an answer: `docs/modules/taxplanning.md` (W-357b10).
 
 ## 11. Hand-worked figures the tests cite
 
-Moved here from their plans by W-357b9b1 (D-918) and W-357b9d (D-920, W-048), so each test cites this doc rather than a plan file. Each block is the plan's own text,
+Moved here from their plans by W-357b9b1 (D-918), W-357b9d (D-920, W-048) and W-357b9e (D-921: W-052c, W-055, W-079a, W-139, W-139a), so each test cites this doc rather than a plan file. Each block is the plan's own text,
 verbatim: its numbers, cases and derivations, as the plan stated them before the build. A build may have departed from a plan; where it
 did, the test's own comments and the D-row say so. The plans' full text, choices and build records stay in git history:
-`git show 88e5bd2d:docs/taxplanning-build/plans/<plan>.md` (W-048: `87e9e60f`).
+`git show 88e5bd2d:docs/taxplanning-build/plans/<plan>.md` (W-048: `87e9e60f`; W-357b9e's five: `79f8111b`).
 
 ### W-046 — TaxByBasisNode + TaxByBasisNodeTest (Phase 5 opens)
 
@@ -576,6 +748,92 @@ Cited by `NetPayableNodeTest`.
 
 **By hand:** after rebate, slab 0 plus special-rate 1,00,000, with cess 4,000 → **1,04,000** (the whole
 tax, not the slab part).
+
+### W-052c — TY 2025-26 on the timeline for the Phase 5 rules
+
+Cited by `TaxYear2025RulePackTest`.
+
+- **Sources read this session:**
+
+  | Rule(s) | TY 2025-26 law | Same figures as 2026-27? |
+  |---|---|---|
+  | `RATE-SLAB-NEW-TAX-REGIME` | **FA 2025 s.25** (p.25) inserts s.115BAC(1A)(iii), "for any previous year relevant to the assessment year beginning on or after the 1st April, 2026": the same seven bands | yes |
+  | `RATE-SLAB-FIRST-SCHEDULE`, `-AGE-60TO79`, `-AGE-80` | **FA 2026 First Schedule Part I-A Para A (I)–(III)** (p.80): the same bands; the age test says "previous year" where Part I-B says "tax year" | yes |
+  | `REBATE-NEW-TAX-REGIME`, `-EXCESS` | **FA 2025 s.20** (p.23–24), w.e.f. 1-4-2026: 1961 s.87A first proviso (a)/(b) → 12 lakh / ₹60,000; the second proviso limits it to s.115BAC(1A) rates | yes |
+  | `REBATE-RESIDENT-INDIVIDUAL` | **1961 s.87A** main text (thc.nic.in copy): "individual resident in India … does not exceed five hundred thousand … twelve thousand and five hundred … whichever is less". The figures were set by FA 2019 s.8 and are unamended since (`W-045n` Q1) | yes |
+  | `RATE-ROUND-TOTAL-INCOME`, `-PAYABLE` | **1961 ss.288A, 288B** (thc.nic.in p.822, SOURCE_CHECKED at `W-050`) | yes |
+  | `RATE-HEALTH-EDUCATION-CESS` | **FA 2026 s.2(6)** (p.9), "four per cent." | yes |
+
+- **The 1961 Act instrument** (thc.nic.in copy): *"ACT NO. 43 OF 1961 [13th September, 1961.]"*; s.1(3)
+  *"it shall come into force on the 1st day of April, 1962"*. No gazette reference was read. **FA 2025:**
+  *"[29th March, 2025.]"*, CG-DL-E-29032025-262125.
+
+#### Numbers (copied from `DR 08`, which runs T1 in both years; node-level, TY 2025-26)
+
+| Case | Node | Expected |
+|---|---|---|
+| T1-N1 new, TI 12,00,000 | tax by basis → rebate | 60,000 → **0** |
+| T1-N3 new, TI 12,50,000 | tax by basis → rebate | 67,500 → **50,000** |
+| T1-O2 First Schedule, TI 5,00,010 | tax by basis → rebate | 12,502 → **12,502** |
+| T1-N3 | cess on 50,000 | **2,000** |
+| T1-N2 | round 10.40 | **10** |
+
+### W-055 — surcharge marginal relief as pack rows, both regimes, both years
+
+Cited by `SurchargeReliefTest`.
+
+#### Numbers
+
+**Thresholds, copied from FA 2026 (data, not computed):**
+
+| Row | `thresholds` | `limitedToSlabRateTax` |
+|---|---|---|
+| `RATE-SUR-FIRST-SCHEDULE-CEILING` | 5000000, 10000000, 20000000, 50000000 | false |
+| `RATE-SUR-NEW-TAX-REGIME-CEILING` | 5000000, 10000000, 20000000 — **no 5Cr** | false |
+
+**Test expectations, derived by hand here (never from the code).** U is supplied by hand, as the node
+will in `W-056`.
+
+- **First schedule, TY 2026-27, TI ₹1,00,05,000** (slabs FA 2026 Part I-B Para A (I), p.84: nil to
+  2.5L, 5% to 5L, ₹12,500 + 20% to 10L, ₹1,12,500 + 30% above):
+  - tax = 1,12,500 + 0.30 × 90,05,000 = 28,14,000;
+  - surcharge 15% (band > 1Cr) = 4,22,100; unrelieved = **32,36,100**;
+  - U at 1,00,00,000 = tax (1,12,500 + 0.30 × 90,00,000 =) 28,12,500 + surcharge 10% (band
+    (50L, 1Cr]) 2,81,250 = 30,93,750;
+  - V = 5,000; W = 30,98,750; **relief = 32,36,100 − 30,98,750 = 1,37,350**.
+  - This proves it picks 1Cr, not 50L. At 50L, U = 13,12,500 and V = 50,05,000, so W = 63,17,500 and
+    the relief would be 0.
+- **New regime, TY 2026-27, TI ₹2,00,10,000, no special income** (slabs from the shipped
+  `RATE-SLAB-NEW-TAX-REGIME`, the same in both versions, and rulebook `:381-389`: ₹3,00,000 at 24L,
+  30% above):
+  - tax = 3,00,000 + 0.30 × 1,76,10,000 = 55,83,000;
+  - surcharge 25% (the greater of the ladders' rates: excluding > 2Cr → 25%) = 13,95,750;
+    unrelieved = **69,78,750**;
+  - U at 2,00,00,000 = tax 55,80,000 + surcharge 15% 8,37,000 = 64,17,000;
+  - V = 10,000; W = 64,27,000; **relief = 5,51,750**.
+- **New regime, TI ₹5,00,10,000:** the greatest threshold exceeded is **2Cr** (there's no 5Cr), so U is
+  asked for at 2,00,00,000. The test asserts U's argument, not an amount.
+- Each case runs in **both years**: the same row, since the version spans them.
+
+### W-079a — startup wiring (the Boot JAR probe)
+
+Cited by `ClasspathRulePackProviderTest`.
+
+#### A probe I ran (scratch only, nothing in the repo)
+
+I packaged the JAR (`./mvnw package -pl backend -am -DskipTests`) and ran a 20-line class inside it through
+`PropertiesLauncher` (`-Dloader.path`):
+
+```
+url=jar:nested:/Users/…/backend/target/wealthlens.jar/!BOOT-INF/classes/!/rulepacks/timeline
+Path.of worked: class jdk.nio.zipfs.ZipPath
+files=288                      (288 files under src/main/resources/rulepacks/timeline — equal)
+coverage bytes=163195 rel=content/coverage.json sep=/
+```
+
+So inside the Boot JAR, `Path.of(url.toURI())` already gives a walkable zip path, and the reader needs no change.
+A plain (non-Boot) JAR has no filesystem open for its `jar:file:` URI, so there `Path.of` throws
+`FileSystemNotFoundException` until `FileSystems.newFileSystem(uri, Map.of())` opens one.
 
 ### W-088b — special-rate tax on capital gains
 
@@ -824,6 +1082,76 @@ payment, grant) are the section's structure, as `INT-LATE-RETURN`'s are. Before 
 | 0.5 % per month or part | 2025 s.437(1), 265620 p.451; 1961 s.244A(1)(a), (aa), thc p.704 |
 | 10 % of the tax determined | s.437(2); s.244A(1) proviso |
 | ₹100 base, part month whole | r.269(b), (c), 271092 p.1769 (TY 2026-27); TY 2025-26 as `INT-CALCULATION` holds it (UNVERIFIED, r.119A) |
+
+### W-139 — pack linter and cross-year review
+
+Cited by `PackLintTest`.
+
+#### What I read (session 48)
+
+- **`DR 15` C4** (`taxplanning-design/15-review-findings.md:405`): `PackDiff` plus lint findings; eight lints; "run the
+  diff as a build step that writes a human-readable review file … require a reviewer to sign that file off".
+  **`DR 18` V7** (`18-temporal-versioning.md:356`) adds seven shape lints.
+- **W-045h erratum** (`03-WORK-ITEMS.md:514`): `PackDiff` (`taxengine/rules/timeline/PackDiff.java`) has `RuleAdded`,
+  `RuleRemoved`, `VersionAdded`, `VersionRemoved`, `ValueChanged`, reading only compiled `law/rates.json`; W-139 adds
+  the lint findings, the magnitude, and **regimes** (not diffed today). `PackDiff` has no caller in `main`, only
+  `PackDiffTest`.
+- **Already enforced, so not rebuilt** (`validate/PackValidator.java`, build-time per memory): reachability (D-252,
+  :103) = C4's I3 lint; I6 (:207); I7 (:258); I13 gap/overlap (:324) = V7's last two; I14 mid-year declared (:380) =
+  V7's `UNDETERMINED` lint. The slab contiguity lint (H-5) is a `SlabLadder` construction rule, not a pack check.
+- **The design moved under C4.** C4 assumed a year is `cp -r` of the last; packs are now compiled from **one timeline**
+  of versioned rules (`rulepacks/timeline/law/rules/*.json`, 243 files; `shipped-years.json`: 2025-26, 2026-27). So the
+  H-2 copy lint becomes: a version that repeats its predecessor's `introducedBy` and `provenance.sourceUrl`.
+- **Survey of the shipped timeline today** (a script over the JSON, run once, not committed):
+  - copied versions: **3** — `STT-PURCHASE-DELIVERY`, `STT-SALE-DELIVERY`, `STT-SALE-NONDELIVERY` (2025-04-01 →
+    2026-04-01, same definition, same instrument);
+  - rules valid in 2025-26 and absent in 2026-27: **7**; 5 say `provision2025.presence = ABSENT_IN_THIS_ACT`; **2 do
+    not**: `PERQ-CLUB-BUSINESS`, `PERQ-CLUB-UNIFORM` (their 2026-27 successor is `PERQ-CLUB-BUSINESS-UNIFORM`);
+  - verification older than its instrument (`accessedOn` < `introducedBy.notifiedOn`, level not `UNVERIFIED`): **0**;
+  - definition type or list length changed between consecutive versions: **0**.
+- **No law is involved:** no figure, rate or date is read or changed.
+
+#### Tests, by hand
+- `TenfoldChange`: 250000 → 2500000 flagged; 250000 → 300000 not; 0.04 → 0.4 flagged; 0 → 5 not; "NEW" → "OLD" not.
+- `UnexplainedDrop` on the shipped pair → exactly `PERQ-CLUB-BUSINESS`, `PERQ-CLUB-UNIFORM`; the 5 `ABSENT_IN_THIS_ACT`
+  rows not listed.
+- `CopiedVersion` on the shipped timeline → exactly the 3 STT rows.
+- `ShapeChanged`: a copy with one band added to a 2026 slab version → one finding; the shipped timeline → none.
+- Regimes: a copy with `NEW_TAX_REGIME`'s first band rate edited → one `ValueChanged` naming the regime.
+- Guard: a copy with `accessedOn` set to the day before `notifiedOn` → refused; shipped packs → pass.
+- **Probes:** drop the ≤ 1/10 side → the 0.04 case fails; ignore `ABSENT_IN_THIS_ACT` → 7 drops, test fails; edit one
+  shipped rule's value without regenerating → `PackReviewTest` fails.
+
+### W-139a — succession detail in the pack review
+
+Cited by `PackReviewTest`.
+
+#### What I read (session 48)
+
+- **The row** (`03-WORK-ITEMS.md`, W-139a) and **D-452**: 220 of the review's 235 change lines read "version 2025-04-01
+  removed; version 2026-04-01 added". `PackLint` already pairs each new version with its predecessor
+  (`lintVersions` → `lintSuccession`); `PackDiff.compare` already walks two nodes leaf by leaf.
+- **Survey of the 220 successions at 2026-04-01** (a script over `rulepacks/timeline/law/rules/*.json`, run once,
+  not committed), changed leaves by top-level field:
+
+| Field | Changes | Characters |
+|---|---|---|
+| `introducedBy` | 1072 | 133,016 |
+| `provenance` | 594 | 176,991 |
+| `validity` | 440 | 11,880 |
+| `cap`, `definition`, `conditions`, `provision2025`, `regimes`, `provision1961` | 70 | ≈ 2,700 |
+
+  **31** successions change a law field; **189** change only `validity`, `introducedBy` and `provenance`
+  (re-sourced: the same law read from the 2025 Act).
+- **No law is involved:** no figure or rate is read or changed; this is the review's presentation.
+
+#### Tests, by hand
+- Shipped pair: 31 rules under "Law changed", 189 ids under "Re-sourced only" (the survey's counts).
+- `PERQ-LOAN-PETTY`: its line holds `cap.amount 20000 → 200000` (W-139's tenfold finding, same leaf) and its 2026
+  `introducedBy.instrumentCitation`, copied from the rule file by hand at build time.
+- A re-sourced rule picked from the survey's 189 appears there and nowhere under "Law changed".
+- `PackReviewTest` fails until the file is regenerated (the guard W-139 built).
+- **Probe:** count `introducedBy` as law → the 189 / 31 split test fails.
 
 ### W-146 — the synthetic pack test
 

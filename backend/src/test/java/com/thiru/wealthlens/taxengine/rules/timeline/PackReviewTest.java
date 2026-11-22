@@ -58,7 +58,7 @@ class PackReviewTest {
 
     @Test
     void render_whenTheShippedYearsAreCompared_splitsTheirSuccessionsIntoThirtyOneLawChangesAndOneHundredNinetyResourced() {
-        // When — the counts a script over every rule file found (plans/W-139a.md), and INT-REFUND's two versions, which
+        // When — the counts a script over every rule file found (docs/modules/taxengine.md §11, W-139a), and INT-REFUND's two versions, which
         // state the same rate and share and differ only in instrument and source (W-112b)
         String review = shippedReview();
 

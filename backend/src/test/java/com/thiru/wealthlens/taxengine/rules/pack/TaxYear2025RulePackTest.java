@@ -53,7 +53,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 /**
  * TY 2025-26 — the 1961 Act, AY 2026-27 — on the timeline for the Phase 5 rules (D-041, D-082). The
  * instruments are read from the 2025-26 lock, which is this year's registry entry; the expected
- * provisions are the ones read in {@code plans/W-052c.md}, and the figures are {@code DR 08}'s T1 cases,
+ * provisions are the ones read in {@code docs/modules/taxengine.md} §11 (W-052c), and the figures are {@code DR 08}'s T1 cases,
  * which it runs in both years.
  */
 class TaxYear2025RulePackTest {
