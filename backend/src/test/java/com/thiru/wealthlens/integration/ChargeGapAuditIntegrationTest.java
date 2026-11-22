@@ -16,7 +16,7 @@ import tools.jackson.databind.JsonNode;
 
 /**
  * The W-264b scenarios that passed and that {@link ChargesIntegrationTest} does not already show (D-611 C2a). Every
- * expected amount is worked by hand in {@code reviews/2026-11-13-charge-engine-gap-audit.md} §2 from the shipped
+ * expected amount is worked by hand in {@code docs/modules/brokercharges.md} §5 from the shipped
  * cards: Zerodha's equity cards (brokerage, exchange, IPFT, DP) and the statutory ones (STT, SEBI fee, stamp duty,
  * GST on the taxable lines after each is rounded).
  */
