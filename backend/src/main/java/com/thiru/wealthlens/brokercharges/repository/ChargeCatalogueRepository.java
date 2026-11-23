@@ -4,18 +4,11 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ChargeCatalogueRepository extends MongoRepository<ChargeCatalogueEntity, String> {
+public interface ChargeCatalogueRepository extends JpaRepository<ChargeCatalogueEntity, String> {
 
-    /**
-     * The stored row for a code, or empty.
-     *
-     * <p>Seeding skips a code already stored, so a catalogue entry that has priced something is
-     * never rewritten.
-     */
     Optional<ChargeCatalogueEntity> findByCode(String code);
 
-    /** Loaded once by the validator, which checks every rule's code against it. */
     List<ChargeCatalogueEntity> findByStatus(EntityStatus status);
 }

@@ -4,116 +4,122 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
- * A demat account, for charges that attach to the account rather than to a trade.
- *
- * <p>Annual maintenance and account opening are billed per demat account, so a user holding
- * accounts for more than one person is billed once for each. The same reasoning puts
- * {@code accountHolder} in the depository-charge deduplication key.
- *
- * <p>{@code lastBilledThrough} is what makes re-running a quarter safe: a cycle already covered by
- * it is skipped, so an accidental second upload is a no-op rather than a second charge.
+ * A demat account, for charges that attach to the account rather than to a trade
+ * (ported to PostgreSQL in W-337d2, D-947; Flyway {@code V8__brokercharges.sql}).
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(value = "charge_accounts")
-@CompoundIndexes({
-    @CompoundIndex(name = "charge_account_idx",
-            def = "{'email': 1, 'broker_name': 1, 'demat_account_id': 1}", unique = true),
-    /**
-     * The AMC cycle's selection, and the only query in the charges module that spans users rather
-     * than sitting under one email. Without this it collection-scans every account on every run —
-     * cheap while there are tens, the worst query in the system once there are thousands.
-     */
-    @CompoundIndex(name = "charge_account_amc_due_idx",
-            def = "{'amc_frequency': 1, 'status': 1, 'last_billed_through': 1}")
-})
-public class ChargeAccountEntity implements AuditableEntity {
+@Entity
+@Table(name = "charge_accounts")
+@EntityListeners(AuditingEntityListener.class)
+public class ChargeAccountEntity {
 
     @JsonIgnore
-    @MongoId
+    @Id
     private String id;
 
-    @Field("email")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "email", nullable = false)
+    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** Whose account this is. Matches the value carried on transactions. */
-    @Field("account_holder")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "account_holder")
+    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
-    @Field(name = "broker_name", targetType = FieldType.STRING)
+    @Column(name = "broker_name")
+    @Enumerated(EnumType.STRING)
     private BrokerName brokerName;
 
-    @Field("demat_account_id")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "demat_account_id")
+    @Convert(converter = SearchableColumn.class)
     private String dematAccountId;
 
     /** Rate variant this account is on, where the broker offers more than one. */
-    @Field("plan_code")
+    @Column(name = "plan_code")
     private String planCode;
 
-    @Field("opened_on")
+    @Column(name = "opened_on")
     private LocalDate openedOn;
 
-    @Field(name = "amc_frequency", targetType = FieldType.STRING)
+    @Column(name = "amc_frequency")
+    @Enumerated(EnumType.STRING)
     private AmcChargeFrequency amcFrequency;
 
     /** The last date covered by an annual-maintenance charge. Cycles up to it are not billed again. */
-    @Field("last_billed_through")
+    @Column(name = "last_billed_through")
     private LocalDate lastBilledThrough;
 
     /** One entry per billing cycle, each pointing at the {@code user_charges} row it produced. */
-    @Field("billing_events")
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "charge_account_billing_events", joinColumns = @JoinColumn(name = "account_id"))
     private List<BillingEvent> billingEvents = new ArrayList<>();
 
-    @Field(name = "status", targetType = FieldType.STRING)
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private EntityStatus status;
 
-    @Field("audit_metadata")
+    @Embedded
     @Setter(value = AccessLevel.NONE)
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 
     /** One completed billing cycle. */
+    @Embeddable
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     public static class BillingEvent {
 
-        @Field("user_charge_id")
+        @Column(name = "user_charge_id")
         private String userChargeId;
 
-        @Field("period_from")
+        @Column(name = "period_from")
         private LocalDate periodFrom;
 
-        @Field("period_to")
+        @Column(name = "period_to")
         private LocalDate periodTo;
 
-        @Field("charged_on")
+        @Column(name = "charged_on")
         private LocalDate chargedOn;
 
-        @Field("amount")
+        @Column(name = "amount")
         private double amount;
     }
 }

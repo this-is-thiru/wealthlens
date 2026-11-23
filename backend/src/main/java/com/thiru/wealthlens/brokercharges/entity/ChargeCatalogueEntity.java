@@ -3,58 +3,68 @@ package com.thiru.wealthlens.brokercharges.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeCategory;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
- * The registry of valid charge codes.
- *
- * <p>Charge codes are strings rather than an enum, so that adding a charge stays a data change. The
- * cost of that choice is that no compiler checks them, and this collection is what replaces the
- * compiler: a rule naming a code absent from here is rejected when the rate card is written, not
- * when a trade is priced.
+ * The registry of valid charge codes (ported to PostgreSQL in W-337d2, D-947; Flyway {@code V4__charge_catalogue.sql}).
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(value = "charge_catalogue")
-public class ChargeCatalogueEntity implements AuditableEntity {
+@Entity
+@Table(name = "charge_catalogue")
+@EntityListeners(AuditingEntityListener.class)
+public class ChargeCatalogueEntity {
 
     @JsonIgnore
-    @MongoId
+    @Id
     private String id;
 
-    @Indexed(unique = true)
-    @Field("code")
+    @Column(name = "code", unique = true, nullable = false)
     private String code;
 
-    @Field("display_name")
+    @Column(name = "display_name")
     private String displayName;
 
-    @Field(name = "category", targetType = FieldType.STRING)
+    @Column(name = "category")
+    @Enumerated(EnumType.STRING)
     private ChargeCategory category;
 
-    @Field("description")
+    @Column(name = "description")
     private String description;
 
     /** The statute, circular or exchange notice the charge derives from. */
-    @Field("statutory_reference")
+    @Column(name = "statutory_reference")
     private String statutoryReference;
 
-    @Field(name = "status", targetType = FieldType.STRING)
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private EntityStatus status;
 
-    @Field("audit_metadata")
+    @Embedded
     @Setter(value = AccessLevel.NONE)
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

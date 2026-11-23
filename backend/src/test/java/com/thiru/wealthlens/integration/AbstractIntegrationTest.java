@@ -3,6 +3,11 @@ package com.thiru.wealthlens.integration;
 import com.thiru.wealthlens.auth.config.AccessTokenConfig;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
+import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.corporate.repository.CorporateActionRepository;
 import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionRepo;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
@@ -121,6 +126,21 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
+
+    @Autowired
+    protected ChargeCatalogueRepository chargeCatalogueRepository;
+
+    @Autowired
+    protected ChargeScheduleRepository chargeScheduleRepository;
+
+    @Autowired
+    protected ChargeInstrumentRepository chargeInstrumentRepository;
+
+    @Autowired
+    protected ChargeAccountRepository chargeAccountRepository;
+
+    @Autowired
+    protected UserChargeRepository userChargeRepository;
 
     @Autowired
     private FieldCipher fieldCipher;

@@ -5,112 +5,101 @@ import com.thiru.wealthlens.brokercharges.dto.enums.FundCategory;
 import com.thiru.wealthlens.brokercharges.dto.enums.PlanType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
- * Charges belonging to an instrument rather than to a broker, plus the scheme attributes rules
- * need in order to decide whether they apply.
- *
- * <p>Exit load is the motivating case: two mutual funds bought through the same broker on the same
- * day carry different exit loads, and an index fund may carry none. Holding that on the broker's
- * rate card would mean one card per fund.
- *
- * <p>This is also the only home for {@code equityOriented}. Without it the rule "securities
- * transaction tax applies to equity-oriented funds but not debt funds" cannot be expressed at all.
- *
- * <p>Versioned exactly like {@code ChargeScheduleEntity}: an asset management company revising an
- * exit load closes the previous profile's window, and a redemption backdated into that window uses
- * the load that was in force then.
+ * Charges belonging to an instrument rather than to a broker, plus scheme attributes rules need
+ * (ported to PostgreSQL in W-337d2, D-947; Flyway {@code V8__brokercharges.sql}).
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(value = "charge_instruments")
-/**
- * Seeding is idempotent by scheme and start date. That was enforced only in
- * {@code ChargeSeederService}, so two concurrent seeds could each check, each miss, and each write.
- * The uniqueness is a property of the data, so it belongs in the database.
- */
-@CompoundIndex(name = "charge_instrument_scheme_idx",
-        def = "{'stock_code': 1, 'start_date': 1}", unique = true)
-public class ChargeInstrumentEntity implements AuditableEntity {
+@Entity
+@Table(name = "charge_instruments")
+@EntityListeners(AuditingEntityListener.class)
+public class ChargeInstrumentEntity {
 
     @JsonIgnore
-    @MongoId
+    @Id
     private String id;
 
-    /** The identifier transactions actually carry today. */
-    @Indexed
-    @Field("stock_code")
+    @Column(name = "stock_code")
     private String stockCode;
 
-    /** Stored now so profiles can be re-keyed on it later without a migration. */
-    /** Indexed because ADR-29 makes it the join key to the instrument registry. */
-    @Indexed(sparse = true)
-    @Field("isin")
+    @Column(name = "isin")
     private String isin;
 
-    @Field("name")
+    @Column(name = "name")
     private String name;
 
-    @Field(name = "asset_type", targetType = FieldType.STRING)
+    @Column(name = "asset_type")
+    @Enumerated(EnumType.STRING)
     private AssetType assetType;
 
-    @Field(name = "fund_category", targetType = FieldType.STRING)
+    @Column(name = "fund_category")
+    @Enumerated(EnumType.STRING)
     private FundCategory fundCategory;
 
-    /**
-     * Whether the scheme is equity-oriented for securities transaction tax.
-     *
-     * <p>Explicit rather than derived from {@code fundCategory}: the determination rests on actual
-     * equity allocation, and an index fund, an ELSS and a plain equity fund can all qualify.
-     */
-    @Field("equity_oriented")
+    @Column(name = "equity_oriented")
     private Boolean equityOriented;
 
-    /** Direct or regular. Decides whether a distributor transaction fee can apply at all. */
-    @Field(name = "plan_type", targetType = FieldType.STRING)
+    @Column(name = "plan_type")
+    @Enumerated(EnumType.STRING)
     private PlanType planType;
 
-    @Field("amc")
+    @Column(name = "amc")
     private String amc;
 
-    @Field("start_date")
+    @Column(name = "start_date")
     private LocalDate startDate;
 
     /** Null means open-ended. See {@link ChargeScheduleEntity} on validity versus status. */
-    @Field("end_date")
+    @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Field(name = "status", targetType = FieldType.STRING)
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private EntityStatus status;
 
     /** Scheme-level charges: exit load, and any fee the fund rather than the broker levies. */
-    @Field("rules")
+    @Column(name = "rules_json")
+    @Convert(converter = ChargeRuleListConverter.class)
     private List<ChargeRule> rules = new ArrayList<>();
 
-    @Field("source_url")
+    @Column(name = "source_url")
     private String sourceUrl;
 
-    @Field("verified_on")
+    @Column(name = "verified_on")
     private LocalDate verifiedOn;
 
-    @Field("audit_metadata")
+    @Embedded
     @Setter(value = AccessLevel.NONE)
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

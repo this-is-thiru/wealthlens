@@ -117,7 +117,7 @@ class PaginationIntegrationTest extends AbstractIntegrationTest {
             charge.setStockCode("INFY");
             charge.setAssetType(AssetType.EQUITY);
             charge.setTransactionDate(LocalDate.of(2026, 1, day));
-            mongoTemplate.save(charge);
+            userChargeRepository.save(charge);
         }
 
         // When / Then

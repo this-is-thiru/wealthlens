@@ -108,7 +108,7 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
         assertEquals(0, mongoTemplate.count(mine, TransactionEntity.class));
         assertEquals(0, mongoTemplate.count(mine, AssetEntity.class));
         assertEquals(0, mongoTemplate.count(mine, "profit_and_loss"));
-        assertEquals(0, mongoTemplate.count(mine, "user_charges"));
+        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL).size());
     }
 
     @Test

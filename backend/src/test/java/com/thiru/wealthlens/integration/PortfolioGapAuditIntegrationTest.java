@@ -1066,7 +1066,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then — recorded as intraday, on the intraday card, not the delivery one
         assertEquals(200, bought.getStatusCode().value(), bought.getBody());
-        UserChargeEntity charge = mongoTemplate.findAll(UserChargeEntity.class, "user_charges").stream()
+        UserChargeEntity charge = userChargeRepository.findAll().stream()
                 .filter(row -> OWNER.equals(row.getEmail())).findFirst().orElseThrow();
         assertEquals(TradeSegment.INTRADAY, charge.getSegment());
         assertEquals("ZERODHA_EQ_INTRADAY_2025_04", charge.getScheduleCode());

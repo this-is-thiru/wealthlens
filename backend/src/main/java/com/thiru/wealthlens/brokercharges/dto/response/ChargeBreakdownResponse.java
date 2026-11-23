@@ -4,6 +4,7 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -63,8 +64,26 @@ public class ChargeBreakdownResponse {
         response.instrumentId = charge.getInstrumentId();
         response.resolution = charge.getResolution();
         response.lines = charge.getLines();
-        response.amountByCode = charge.getAmountByCode();
+        response.amountByCode = orderedAmountByCode(charge);
         response.totalCharges = charge.getTotalCharges();
         return response;
+    }
+
+    /** Preserves {@code lines} evaluation order in {@code amountByCode} (relational map rows have no inherent order). */
+    private static Map<String, Double> orderedAmountByCode(UserChargeEntity charge) {
+        Map<String, Double> stored = charge.getAmountByCode();
+        if (stored == null || stored.isEmpty()) {
+            return stored;
+        }
+        Map<String, Double> ordered = new LinkedHashMap<>();
+        if (charge.getLines() != null) {
+            for (ChargeLine line : charge.getLines()) {
+                if (stored.containsKey(line.getCode())) {
+                    ordered.putIfAbsent(line.getCode(), stored.get(line.getCode()));
+                }
+            }
+        }
+        stored.forEach(ordered::putIfAbsent);
+        return ordered;
     }
 }

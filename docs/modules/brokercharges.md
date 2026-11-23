@@ -77,51 +77,30 @@ Every admin route also carries `@PreAuthorize("hasRole('SUPER_USER')")` on top o
 
 ## 4. Stored data
 
-`ChargeIndexInitializer` creates these collections' declared indexes at start, since auto-index creation is off
-(`config/ChargeIndexInitializer.java:39` – `:65`).
+PostgreSQL tables (W-337d2, D-947; Flyway `db/migration/brokercharges/V4__charge_catalogue.sql` and `V8__brokercharges.sql`). Primary keys are caller-assigned `VARCHAR(255)` with `@PrePersist` UUID default; all 5 tables embed `AuditColumns` (`created_by`, `updated_by`, `created_at`, `updated_at`).
 
-**`charge_schedules`** (`entity/ChargeScheduleEntity.java:43` – `:110`), one rate card:
-- **Key:** `schedule_code`, unique (`:51` – `:53`).
-- **Scope:** `broker_name` (indexed; absent on a statutory card), `asset_type`, `segment`, `exchange`, `plan_code`. Each left null matches
-  anything (`:55` – `:73`).
-- **Window:** `start_date` and `end_date`, both inclusive; a null end is the current card (`:75` – `:81`).
-- **`status`:** `INACTIVE` means entered in error and unusable for any date; closing a card sets its end date and never its status
-  (`:30` – `:38`).
-- **`requires_instrument_profile`**, **`rules[]`** (below), **`source_url`**, **`verified_on`** and `audit_metadata` (`:86` – `:110`).
+**`charge_schedules`** (`entity/ChargeScheduleEntity.java:36` – `:111`), one rate card:
+- **Key:** `schedule_code`, unique (`charge_schedules_schedule_code_idx`, `:44` – `:45`).
+- **Scope:** `broker_name` (indexed; null on a statutory card), `asset_type`, `segment`, `exchange`, `plan_code`. Each left null matches anything (`:47` – `:66`).
+- **Window:** `start_date` and `end_date`, both inclusive; a null end is the current card (`:68` – `:74`).
+- **`status`:** `INACTIVE` means entered in error and unusable for any date; closing a card sets its end date and never its status (`:76` – `:78`).
+- **`requires_instrument_profile`**, **`rules_json`** (`TEXT` via `ChargeRuleListConverter`, D-947 C1a), **`source_url`**, **`verified_on`**, and `AuditColumns` (`:80` – `:104`).
 
-**A rule** (`entity/ChargeRule.java:32` – `:149`), embedded in a card or an instrument profile: `code` (in the catalogue), `display_name`,
-`category`, `basis`, `side` (`BUY`, `SELL` or `BOTH`), `events`, `amount_basis` (turnover if absent, `:159` – `:161`), `rate` (a
-percentage), `flat_amount`, `per_unit_amount`, `slabs[]` (`from_value` inclusive, `to_value` exclusive, `rate` or `flat_amount`;
-`entity/ChargeSlab.java:20` – `:34`), `slab_band_basis`, `base_codes`, `formula`, `eligibility`, `min_amount`, `max_amount`,
-`aggregator` (`MIN` or `MAX`), `dedupe_scope`, `rounding`, `per_lot`, `applies_to_corporate_actions`, `order`, `taxable`, `active`, `notes`.
+**A rule** (`entity/ChargeRule.java:32` – `:149`), serialized inside `rules_json` on a card or instrument profile: `code` (in the catalogue), `display_name`, `category`, `basis`, `side` (`BUY`, `SELL` or `BOTH`), `events`, `amount_basis` (turnover if absent, `:159` – `:161`), `rate`, `flat_amount`, `per_unit_amount`, `slabs[]` (`from_value` inclusive, `to_value` exclusive, `rate` or `flat_amount`; `entity/ChargeSlab.java:20` – `:34`), `slab_band_basis`, `base_codes`, `formula`, `eligibility`, `min_amount`, `max_amount`, `aggregator` (`MIN` or `MAX`), `dedupe_scope`, `rounding`, `per_lot`, `applies_to_corporate_actions`, `order`, `taxable`, `active`, `notes`.
 
-**`charge_instruments`** (`entity/ChargeInstrumentEntity.java:43` – `:115`), a scheme's own charges and facts: `stock_code` and
-`start_date` unique together (`:49` – `:50`), `isin`, `name`, `asset_type`, `fund_category`, `equity_oriented`, `plan_type`, `amc`,
-`end_date`, `status`, `rules[]`, `source_url`, `verified_on`, `audit_metadata`.
+**`charge_instruments`** (`entity/ChargeInstrumentEntity.java:37` – `:107`), a scheme's own charges and facts: `stock_code` and `start_date` unique together (`charge_instrument_scheme_idx`), `isin` (partial index where non-null), `name`, `asset_type`, `fund_category`, `equity_oriented`, `plan_type`, `amc`, `end_date`, `status`, `rules_json` (`ChargeRuleListConverter`), `source_url`, `verified_on`, `AuditColumns`.
 
-**`charge_catalogue`** (`entity/ChargeCatalogueEntity.java:30` – `:59`): `code` (unique), `display_name`, `category`, `description`,
-`statutory_reference`, `status`, `audit_metadata`. A code becomes a Mongo field name, so it must match `[A-Z][A-Z0-9_]*`
-(`service/ChargeCodes.java:25`, `:34` – `:48`).
+**`charge_catalogue`** (`entity/ChargeCatalogueEntity.java:30` – `:69`): `code` (unique `charge_catalogue_code_idx`), `display_name`, `category`, `description`, `statutory_reference`, `status`, `AuditColumns`. Codes match `[A-Z][A-Z0-9_]*` (`service/ChargeCodes.java:25`, `:34` – `:48`).
 
-**`user_charges`** (`entity/UserChargeEntity.java:46` – `:148`), one row per priced event:
-- **Who:** `email` and `account_holder`, both encrypted and searchable (`SearchableIdentifier`, `:66` – `:73`).
-- **The trade:** `broker_name`, `asset_type`, `segment`, `exchange`, `stock_code`, `transaction_id`, `order_id`, `event`,
-  `transaction_date`, `turnover`, `quantity`.
-- **The pricing:** `computed_on`, `resolution`, `schedule_id` / `schedule_code`, `statutory_schedule_id` / `statutory_schedule_code`,
-  `instrument_id`, `lines[]` (`code`, `display_name`, `category`, `basis`, `source`, `rate`, `base_amount`, `amount`, `taxable`;
-  `entity/ChargeLine.java:21` – `:52`), `amount_by_code`, `total_charges`, `audit_metadata`.
-- **Indexes:** `{email, transaction_id}` unique, so a re-priced trade rewrites its row; `{email, account_holder, broker_name, stock_code,
-  transaction_date}` for the scoped charges; `{email, transaction_date: -1}` for history (`UserChargeEntity.java:47` – `:59`).
+**`user_charges`** + child tables **`user_charge_lines`** and **`user_charge_amounts`** (`entity/UserChargeEntity.java:46` – `:161`), one row per priced event:
+- **Who:** `email` and `account_holder`, both encrypted and searchable (`SearchableColumn`, `:53` – `:61`).
+- **The trade:** `broker_name`, `asset_type`, `segment`, `exchange`, `stock_code`, `transaction_id`, `order_id`, `event`, `transaction_date`, `turnover`, `quantity`.
+- **The pricing:** `computed_on`, `resolution`, `schedule_id` / `schedule_code`, `statutory_schedule_id` / `statutory_schedule_code`, `instrument_id`, `lines` (eager `@ElementCollection` in `user_charge_lines`; `entity/ChargeLine.java:21` – `:56`), `amount_by_code` (eager `@ElementCollection` map in `user_charge_amounts`, D-947 C2a), `total_charges`, `AuditColumns`.
+- **Indexes:** `user_charge_txn_idx (email, transaction_id)` unique; `user_charge_dedupe_idx (email, account_holder, broker_name, stock_code, transaction_date)`; `user_charge_history_idx (email, transaction_date DESC)` (`V8__brokercharges.sql:92` – `:94`).
 
-**`charge_accounts`** (`entity/ChargeAccountEntity.java:39` – `:118`), one demat account: `email`, `account_holder` and
-`demat_account_id` (all three encrypted and searchable), `broker_name`, `plan_code`, `opened_on`, `amc_frequency` (`ANNUALLY` or
-`QUARTERLY`), `last_billed_through`, `billing_events[]` (`user_charge_id`, `period_from`, `period_to`, `charged_on`, `amount`),
-`status`, `audit_metadata`. Unique on `{email, broker_name, demat_account_id}`; `{amc_frequency, status, last_billed_through}` serves the
-cycle (`:40` – `:50`).
+**`charge_accounts`** + child table **`charge_account_billing_events`** (`entity/ChargeAccountEntity.java:42` – `:129`), one demat account: `email`, `account_holder` and `demat_account_id` (all three encrypted and searchable via `SearchableColumn`), `broker_name`, `plan_code`, `opened_on`, `amc_frequency` (`ANNUALLY` or `QUARTERLY`), `last_billed_through`, `billing_events` (eager `@ElementCollection` in `charge_account_billing_events`), `status`, `AuditColumns`. Unique index `charge_account_idx (email, broker_name, demat_account_id)`; `charge_account_amc_due_idx (amc_frequency, status, last_billed_through)` (`V8__brokercharges.sql:57` – `:58`).
 
-**Embedded elsewhere:** `ChargeSummaryReport` (`amount_by_code`, `total_charges`, `last_updated_time`) sits in `portfolio`'s P&L
-document; `merge` folds one trade's amounts in and recomputes the total from the per-code amounts (`entity/model/ChargeSummaryReport.java:28`
-– `:72`).
+**Embedded elsewhere:** `ChargeSummaryReport` (`amount_by_code`, `total_charges`, `last_updated_time`) sits in `portfolio`'s P&L document; `merge` folds one trade's amounts in and recomputes the total from the per-code amounts (`entity/model/ChargeSummaryReport.java:28` – `:72`).
 
 ## 5. Behaviour
 

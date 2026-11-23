@@ -52,7 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,8 +126,8 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         // Then the shipped cards and profiles go, because this class asserts over the ones it
         // writes and shipped data in the same collections would make those assertions depend on
         // ordering. charge_catalogue survives — it is reference data, and every card needs it.
-        mongoTemplate.getCollection("charge_schedules").deleteMany(new Document());
-        mongoTemplate.getCollection("charge_instruments").deleteMany(new Document());
+        chargeScheduleRepository.deleteAll();
+        chargeInstrumentRepository.deleteAll();
         scheduleRepository.save(equityCard("IT_EQ_2025", LocalDate.of(2025, 1, 1), null, 0.0));
 
         // Every shipped scope has a statutory card (D-382), and a trade without one is a gap. This

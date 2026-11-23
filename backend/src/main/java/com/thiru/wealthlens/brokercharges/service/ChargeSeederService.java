@@ -120,7 +120,7 @@ public class ChargeSeederService {
      * @param auditor recorded on the report. The documents themselves are stamped by Spring Data's
      *                auditing, which reads the authenticated caller through {@code SecurityAuditorAware}
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public ChargeSeedReport seed(String auditor) {
         log.info("Seeding charge catalogue, rate cards and scheme profiles, requested by {}", auditor);
         List<String> catalogue = seedCatalogue();

@@ -960,8 +960,14 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         mongoTemplate.save(emailOnly(), "trade_outcomes");
         mongoTemplate.save(emailOnly(), "profit_and_loss");
-        mongoTemplate.save(emailOnly(), "user_charges");
-        mongoTemplate.save(emailOnly(), "charge_accounts");
+        com.thiru.wealthlens.brokercharges.entity.UserChargeEntity charge =
+                new com.thiru.wealthlens.brokercharges.entity.UserChargeEntity();
+        charge.setEmail(TEST_EMAIL);
+        userChargeRepository.save(charge);
+        com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity account =
+                new com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity();
+        account.setEmail(TEST_EMAIL);
+        chargeAccountRepository.save(account);
         lastlyPerformedCorporateActionRepo.save(
                 com.thiru.wealthlens.corporate.entity.LastlyPerformedCorporateAction.builder().email(TEST_EMAIL).build());
 
@@ -975,10 +981,13 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 .exchange(URI.create(url), HttpMethod.DELETE, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        for (String collection : List.of("assets", "transactions", "trade_outcomes", "profit_and_loss",
-                "user_charges", "charge_accounts")) {
+        for (String collection : List.of("assets", "transactions", "trade_outcomes", "profit_and_loss")) {
             assertEquals(0, countFor(collection), collection + " still holds rows for the cleared user");
         }
+        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDesc(TEST_EMAIL).size(),
+                "user_charges still holds rows for the cleared user");
+        assertEquals(0, chargeAccountRepository.findByEmail(TEST_EMAIL).size(),
+                "charge_accounts still holds rows for the cleared user");
         assertEquals(0, lastlyPerformedCorporateActionRepo.findAll().stream()
                 .filter(r -> TEST_EMAIL.equals(r.getEmail())).count(),
                 "lastly_performed_corporate_action still holds rows for the cleared user");
