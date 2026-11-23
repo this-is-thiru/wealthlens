@@ -94,6 +94,12 @@
                 <version>2.0.5</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-postgresql</artifactId>
+                <version>2.0.5</version>
+                <scope>test</scope>
+            </dependency>
 
             <!-- REST Assured (not managed by Spring Boot parent) -->
             <dependency>
