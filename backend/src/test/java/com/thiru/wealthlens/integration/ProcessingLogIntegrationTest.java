@@ -3,16 +3,18 @@ package com.thiru.wealthlens.integration;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.privacy.AccountErasureRequest;
+import com.thiru.wealthlens.shared.privacy.AccountErasureRequestRepository;
 import com.thiru.wealthlens.shared.privacy.BreachIntimation;
+import com.thiru.wealthlens.shared.privacy.BreachIntimationRepository;
 import com.thiru.wealthlens.shared.privacy.Grievance;
+import com.thiru.wealthlens.shared.privacy.GrievanceRepository;
 import com.thiru.wealthlens.shared.privacy.PrivacyRecordErasure;
 import com.thiru.wealthlens.shared.privacy.ProcessingRecord;
+import com.thiru.wealthlens.shared.privacy.ProcessingRecordRepository;
 import com.thiru.wealthlens.taxplanning.jobs.LogErasure;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
@@ -28,14 +30,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -80,6 +83,18 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ProcessingRecordRepository processingRecordRepository;
+
+    @Autowired
+    private GrievanceRepository grievanceRepository;
+
+    @Autowired
+    private BreachIntimationRepository breachIntimationRepository;
+
+    @Autowired
+    private AccountErasureRequestRepository accountErasureRequestRepository;
+
     @BeforeEach
     void anuHasAnAccountOnTheDay() {
         clock.set(PROCESSED);
@@ -91,7 +106,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
     }
 
     private List<ProcessingRecord> records() {
-        return mongoTemplate.findAll(ProcessingRecord.class);
+        return processingRecordRepository.findAll();
     }
 
     /**
@@ -155,9 +170,9 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         recordsOnceWritten(1);
-        Document stored = mongoTemplate.getCollection("privacy_processing_log").find().first();
+        Map<String, Object> stored = new JdbcTemplate(postgresDataSource).queryForMap("SELECT * FROM privacy_processing_log LIMIT 1");
         assertThat(stored).isNotNull();
-        assertThat(stored.toJson()).doesNotContain("ABCPE1234F").contains(GRIEVANCES_ROUTE);
+        assertThat(stored.toString()).doesNotContain("ABCPE1234F").contains(GRIEVANCES_ROUTE);
     }
 
     @Test
@@ -221,9 +236,9 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(records()).hasSize(1);
         assertThat(mongoTemplate.findAll(AccessRecord.class)).hasSize(1);
-        assertThat(mongoTemplate.findAll(Grievance.class)).hasSize(2);
-        assertThat(mongoTemplate.findAll(BreachIntimation.class)).hasSize(2);
-        assertThat(mongoTemplate.findAll(AccountErasureRequest.class)).hasSize(1);
+        assertThat(grievanceRepository.findAll()).hasSize(2);
+        assertThat(breachIntimationRepository.findAll()).hasSize(2);
+        assertThat(accountErasureRequestRepository.findAll()).hasSize(1);
     }
 
     @Test
@@ -238,10 +253,10 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         // Then — kept: the unanswered grievance, and the intimation emailed a day after the day
         assertThat(records()).isEmpty();
         assertThat(mongoTemplate.findAll(AccessRecord.class)).isEmpty();
-        assertThat(mongoTemplate.findAll(Grievance.class)).extracting(Grievance::getId).containsExactly("unanswered");
-        assertThat(mongoTemplate.findAll(BreachIntimation.class)).extracting(BreachIntimation::getId)
+        assertThat(grievanceRepository.findAll()).extracting(Grievance::getId).containsExactly("unanswered");
+        assertThat(breachIntimationRepository.findAll()).extracting(BreachIntimation::getId)
                 .containsExactly("emailed-later");
-        assertThat(mongoTemplate.findAll(AccountErasureRequest.class)).isEmpty();
+        assertThat(accountErasureRequestRepository.findAll()).isEmpty();
     }
 
     @Test
@@ -255,8 +270,8 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         runner.run(logErasure);
 
         // Then
-        assertThat(mongoTemplate.findAll(Grievance.class)).extracting(Grievance::getId).containsExactly("unanswered");
-        assertThat(mongoTemplate.findAll(BreachIntimation.class)).extracting(BreachIntimation::getId)
+        assertThat(grievanceRepository.findAll()).extracting(Grievance::getId).containsExactly("unanswered");
+        assertThat(breachIntimationRepository.findAll()).extracting(BreachIntimation::getId)
                 .containsExactly("emailed-later");
     }
 
@@ -275,7 +290,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
             assertThat(record.getPrincipal()).isEqualTo(OWNER);
             assertThat(record.getSubjectEmail()).isEqualTo(ANU);
         });
-        assertThat(mongoTemplate.find(query(where("principal").is(ANU)), ProcessingRecord.class)).isEmpty();
+        assertThat(processingRecordRepository.findByPrincipal(ANU)).isEmpty();
     }
 
     /** One of each kind whose last processing was the day, plus the two that must outlast it. */
@@ -285,7 +300,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         record.setPrincipal(ANU);
         record.setSubjectEmail(ANU);
         record.setRecordedAt(PROCESSED_UTC);
-        mongoTemplate.insert(record);
+        processingRecordRepository.save(record);
 
         AccessRecord read = new AccessRecord();
         read.setId(UUID.randomUUID().toString());
@@ -294,18 +309,18 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         read.setReadAt(Instant.parse(PROCESSED));
         mongoTemplate.insert(read);
 
-        mongoTemplate.insert(grievance("answered", PROCESSED_UTC.minusDays(10), PROCESSED_UTC));
-        mongoTemplate.insert(grievance("unanswered", LocalDateTime.parse("2026-12-01T00:00:00"), null));
+        grievanceRepository.save(grievance("answered", PROCESSED_UTC.minusDays(10), PROCESSED_UTC));
+        grievanceRepository.save(grievance("unanswered", LocalDateTime.parse("2026-12-01T00:00:00"), null));
 
-        mongoTemplate.insert(intimation("read-on-the-day", PROCESSED_UTC.minusDays(2), PROCESSED_UTC, null));
-        mongoTemplate.insert(intimation("emailed-later", PROCESSED_UTC.minusDays(2), null, PROCESSED_UTC.plusDays(1)));
+        breachIntimationRepository.save(intimation("read-on-the-day", PROCESSED_UTC.minusDays(2), PROCESSED_UTC, null));
+        breachIntimationRepository.save(intimation("emailed-later", PROCESSED_UTC.minusDays(2), null, PROCESSED_UTC.plusDays(1)));
 
         AccountErasureRequest erased = new AccountErasureRequest();
         erased.setId(UUID.randomUUID().toString());
         erased.setEmail(BALA);
         erased.setRequestedAt(PROCESSED_UTC.minusYears(1));
         erased.setErasedAt(PROCESSED_UTC);
-        mongoTemplate.insert(erased);
+        accountErasureRequestRepository.save(erased);
     }
 
     private static Grievance grievance(String id, LocalDateTime receivedAt, LocalDateTime answeredAt) {

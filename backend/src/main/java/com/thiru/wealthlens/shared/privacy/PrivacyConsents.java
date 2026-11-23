@@ -3,7 +3,7 @@ package com.thiru.wealthlens.shared.privacy;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -62,7 +62,7 @@ public class PrivacyConsents {
     private void saveOnce(PrivacyConsent notice) {
         try {
             consents.save(notice);
-        } catch (DuplicateKeyException alreadyRecorded) {
+        } catch (DataIntegrityViolationException alreadyRecorded) {
             log.info("The notice to an earlier account was recorded by a concurrent sign-in");
         }
     }

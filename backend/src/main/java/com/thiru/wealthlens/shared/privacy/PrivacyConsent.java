@@ -1,47 +1,59 @@
 package com.thiru.wealthlens.shared.privacy;
 
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * The proof that a person was given the notice, and, where they registered after it existed, that they consented against it
- * (Digital Personal Data Protection Act, 2023 s.6(10); W-250). One per account; erased with it. Withdrawal is the account's
- * erasure request (W-250 C3a), which {@link AccountErasureRequest} records.
+ * (Digital Personal Data Protection Act, 2023 s.6(10); W-250; ported to PostgreSQL in W-337c2, D-943). One per account;
+ * erased with it. Withdrawal is the account's erasure request (W-250 C3a), which {@link AccountErasureRequest} records.
  */
 @Data
 @NoArgsConstructor
-@Document("privacy_consents")
-public class PrivacyConsent implements AuditableEntity {
+@Entity
+@Table(name = "privacy_consents")
+@EntityListeners(AuditingEntityListener.class)
+public class PrivacyConsent {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Indexed(unique = true)
-    @Field("email")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "email", unique = true, nullable = false)
+    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** The {@link PrivacyNotice#version()} the person was shown. */
-    @Field("notice_version")
+    @Column(name = "notice_version")
     private String noticeVersion;
 
     /** UTC; when the person consented at registration (s.5(1)). Absent for an account registered before W-250. */
-    @Field("given_at")
+    @Column(name = "given_at")
     private LocalDateTime givenAt;
 
     /** UTC; when an account registered before W-250 was first given the notice, at a sign-in (s.5(2)(a)). */
-    @Field("noticed_at")
+    @Column(name = "noticed_at")
     private LocalDateTime noticedAt;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

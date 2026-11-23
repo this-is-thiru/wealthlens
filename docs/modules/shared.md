@@ -70,18 +70,18 @@ Every admin route carries `@PreAuthorize("hasRole('SUPER_USER')")` too (`Account
 
 ## 4. Stored data
 
-Each collection's `email`-like field is encrypted and searchable (`SearchableIdentifier`); free text is encrypted (`EncryptedField`).
+PostgreSQL tables (W-337c2, D-943; Flyway `db/migration/shared/V3__privacy.sql:4` – `:98`). Each table's `email`-like column is encrypted and searchable (`SearchableColumn`); free text is encrypted (`EncryptedColumn`). Primary keys are caller-assigned `VARCHAR(255)` with `@PrePersist` UUID default.
 
-| Collection | Fields | Where |
+| Table | Columns | Where |
 |---|---|---|
-| `privacy_erasure_requests` | `email` (indexed), `requested_at`, `cause` (`REQUESTED`, `PURPOSE_LAPSED`; absent reads as requested), `erased_at`, `audit_metadata`; kept after the erasure as its record | `privacy/AccountErasureRequest.java:16` – `:52`; `privacy/ErasureCause.java:4` – `:11` |
-| `privacy_grievances` | `email` (indexed), `text` and `answer` (encrypted), `received_at`, `respond_by` (the date promised at receipt), `answered_at` | `privacy/Grievance.java:23` – `:56` |
-| `privacy_breach_notices` | `description`, `consequences`, `mitigation`, `safety_measures`, `became_aware_at`, `scope`, `affected` (a list of emails), `posted_at`, `board_report_due_at`, `board_extension_reference`, `board_first_intimated_at`, `board_report_sent_at` | `privacy/BreachNotice.java:23` – `:75` |
-| `privacy_breach_intimations` | `notice_id` and `email` (indexed), `posted_at`, `read_at`, `emailed_at` | `privacy/BreachIntimation.java:21` – `:50` |
-| `privacy_consents` | `email` (unique), `notice_version`, `given_at` (consent at registration), `noticed_at` (an older account first shown the notice) | `privacy/PrivacyConsent.java:22` – `:47` |
-| `privacy_processing_log` | `principal` (indexed) and `subject_email`, `method`, `route` (the pattern, never the path), `status`, `remote_address` (encrypted), `recorded_at` (indexed), `request_id` | `privacy/ProcessingRecord.java:22` – `:64` |
+| `privacy_erasure_requests` | `email` (indexed), `requested_at`, `cause` (`REQUESTED`, `PURPOSE_LAPSED`; absent reads as requested), `erased_at`, `created_by`/`updated_by`/`created_at`/`updated_at` (`AuditColumns`); kept after the erasure as its record | `privacy/AccountErasureRequest.java:25` – `:66`; `privacy/ErasureCause.java:4` – `:11` |
+| `privacy_grievances` | `email` (indexed), `text` and `answer` (encrypted), `received_at`, `respond_by` (the date promised at receipt), `answered_at`, `AuditColumns` | `privacy/Grievance.java:24` – `:66` |
+| `privacy_breach_notices` + `privacy_breach_notice_affected` | `description`, `consequences`, `mitigation`, `safety_measures`, `became_aware_at`, `scope`, `affected` (eager `@ElementCollection` in `privacy_breach_notice_affected`, `notice_id` FK), `posted_at`, `board_report_due_at`, `board_extension_reference`, `board_first_intimated_at`, `board_report_sent_at`, `AuditColumns` | `privacy/BreachNotice.java:29` – `:90` |
+| `privacy_breach_intimations` | `notice_id` and `email` (indexed), `posted_at`, `read_at`, `emailed_at`, `AuditColumns` | `privacy/BreachIntimation.java:22` – `:60` |
+| `privacy_consents` | `email` (unique `privacy_consents_email_idx`), `notice_version`, `given_at` (consent at registration), `noticed_at` (an older account first shown the notice), `AuditColumns` | `privacy/PrivacyConsent.java:24` – `:57` |
+| `privacy_processing_log` | `principal` (indexed) and `subject_email`, `method`, `route` (the pattern, never the path), `status`, `remote_address` (encrypted), `recorded_at` (indexed), `request_id`; append-only, no audit columns | `privacy/ProcessingRecord.java:22` – `:72` |
 
-The log's and the consents' indexes are made at start, and a failure stops the start (`privacy/PrivacyIndexInitializer.java:21` – `:32`).
+Schema and indexes are managed by Flyway (`V3__privacy.sql:4` – `:98`).
 
 ## 5. Behaviour
 

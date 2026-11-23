@@ -3,13 +3,12 @@ package com.thiru.wealthlens.integration;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.privacy.AccountErasureRequest;
+import com.thiru.wealthlens.shared.privacy.AccountErasureRequestRepository;
 import com.thiru.wealthlens.shared.privacy.AccountErasureService;
 import com.thiru.wealthlens.shared.privacy.ErasureCause;
 import com.thiru.wealthlens.shared.privacy.ErasureReapplication;
@@ -103,6 +102,9 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PrivacySettings privacy;
 
+    @Autowired
+    private AccountErasureRequestRepository accountErasureRequestRepository;
+
     private void anAccount(String email, LocalDateTime lastSignedInAt) {
         UserDetail user = new UserDetail();
         user.setEmail(email);
@@ -124,7 +126,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
     }
 
     private List<AccountErasureRequest> requestsOf(String email) {
-        return mongoTemplate.find(query(where("email").is(email)), AccountErasureRequest.class);
+        return accountErasureRequestRepository.findAll().stream().filter(r -> email.equals(r.getEmail())).toList();
     }
 
     @Test

@@ -1,50 +1,61 @@
 package com.thiru.wealthlens.shared.privacy;
 
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
- * One affected user told of one breach, by each mode and when (W-237c): the facts the Board's report on intimations
- * needs (DPDP Rules r.7(2)(b)(vi)).
+ * One affected user told of one breach, by each mode and when (W-237c; ported to PostgreSQL in W-337c2, D-943): the
+ * facts the Board's report on intimations needs (DPDP Rules r.7(2)(b)(vi)).
  */
 @Data
 @NoArgsConstructor
-@Document("privacy_breach_intimations")
-public class BreachIntimation implements AuditableEntity {
+@Entity
+@Table(name = "privacy_breach_intimations")
+@EntityListeners(AuditingEntityListener.class)
+public class BreachIntimation {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Indexed
-    @Field("notice_id")
+    @Column(name = "notice_id")
     private String noticeId;
 
-    @Indexed
-    @Field("email")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "email")
+    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** UTC; when the notice appeared in the user's account. */
-    @Field("posted_at")
+    @Column(name = "posted_at")
     private LocalDateTime postedAt;
 
     /** UTC; when the user first read it, absent until then. */
-    @Field("read_at")
+    @Column(name = "read_at")
     private LocalDateTime readAt;
 
     /** UTC; when the owner recorded sending it by email, absent until then. */
-    @Field("emailed_at")
+    @Column(name = "emailed_at")
     private LocalDateTime emailedAt;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

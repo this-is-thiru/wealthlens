@@ -29,7 +29,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 @ConditionalOnProperty(prefix = "app.postgres", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableJpaAuditing(auditorAwareRef = "securityAuditorAware")
 @EnableJpaRepositories(
-        basePackages = {"com.thiru.wealthlens.auth.repository", "com.thiru.wealthlens.insurance.repository"},
+        basePackages = {"com.thiru.wealthlens.auth.repository", "com.thiru.wealthlens.insurance.repository",
+                "com.thiru.wealthlens.shared.privacy"},
         entityManagerFactoryRef = "postgresEntityManagerFactory",
         transactionManagerRef = "postgresTransactionManager")
 public class PostgresJpaConfig {
@@ -54,7 +55,8 @@ public class PostgresJpaConfig {
     LocalContainerEntityManagerFactoryBean postgresEntityManagerFactory(EntityManagerFactoryBuilder builder,
             DataSource postgresDataSource, ConfigurableListableBeanFactory beanFactory) {
         return builder.dataSource(postgresDataSource)
-                .packages("com.thiru.wealthlens.auth.entity", "com.thiru.wealthlens.insurance.entity")
+                .packages("com.thiru.wealthlens.auth.entity", "com.thiru.wealthlens.insurance.entity",
+                        "com.thiru.wealthlens.shared.privacy")
                 .persistenceUnit("postgres")
                 .properties(Map.of("hibernate.resource.beans.container", new SpringBeanContainer(beanFactory)))
                 .build();

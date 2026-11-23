@@ -9,6 +9,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.privacy.AccountErasureRequest;
+import com.thiru.wealthlens.shared.privacy.AccountErasureRequestRepository;
 import com.thiru.wealthlens.taxplanning.jobs.AccountErasure;
 import com.thiru.wealthlens.taxplanning.jobs.LogErasure;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
@@ -71,6 +72,9 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private LogErasure logErasure;
 
+    @Autowired
+    private AccountErasureRequestRepository accountErasureRequestRepository;
+
     @BeforeEach
     void theDayAnuAsks() {
         clock.set(ASKED);
@@ -122,7 +126,7 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
     }
 
     private AccountErasureRequest requestOf(String email) {
-        return mongoTemplate.findOne(query(where("email").is(email)), AccountErasureRequest.class);
+        return accountErasureRequestRepository.findFirstByEmailOrderByRequestedAtDesc(email).orElse(null);
     }
 
     @Test
