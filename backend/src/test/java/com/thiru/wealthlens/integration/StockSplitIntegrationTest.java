@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
-import com.thiru.wealthlens.corporate.entity.LastlyPerformedCorporateAction;
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -77,7 +76,7 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
     }
 
     private long performedRows() {
-        return mongoTemplate.count(new Query(Criteria.where("email").is(EMAIL)), LastlyPerformedCorporateAction.class);
+        return lastlyPerformedCorporateActionRepo.findAll().stream().filter(r -> EMAIL.equals(r.getEmail())).count();
     }
 
     @Test
@@ -206,6 +205,6 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> corporateActionService.addCorporateAction(dto));
-        assertEquals(0, mongoTemplate.count(new Query(), CorporateActionEntity.class));
+        assertEquals(0, corporateActionRepository.count());
     }
 }

@@ -360,7 +360,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("detail", containsString("'date'"));
 
-        assertEquals(0, mongoTemplate.getCollection("corporate_action").countDocuments());
+        assertEquals(0, corporateActionRepository.count());
     }
 
     @Test
@@ -437,7 +437,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing.setExDate(LocalDate.of(2024, 1, 20));
         existing.setRatio("1:1");
         existing.setPriority(1);
-        mongoTemplate.save(existing);
+        corporateActionRepository.save(existing);
 
         CorporateActionDto dto = new CorporateActionDto();
         dto.setStockCode("RELIANCE");
@@ -466,7 +466,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing.setExDate(LocalDate.of(2024, 1, 20));
         existing.setRatio("1:1");
         existing.setPriority(1);
-        mongoTemplate.save(existing);
+        corporateActionRepository.save(existing);
 
         CorporateActionDto dto = new CorporateActionDto();
         dto.setStockCode("RELIANCE");
@@ -498,7 +498,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing.setExDate(LocalDate.of(2024, 1, 20));
         existing.setRatio("1:1");
         existing.setPriority(1);
-        CorporateActionEntity saved = mongoTemplate.save(existing);
+        CorporateActionEntity saved = corporateActionRepository.save(existing);
 
         // WHEN
         CorporateActionEntity result = corporateActionService.getCorporateActionDetails(saved.getId());
@@ -535,7 +535,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing.setExDate(LocalDate.of(2024, 1, 20));
         existing.setRatio("1:1");
         existing.setPriority(1);
-        CorporateActionEntity saved = mongoTemplate.save(existing);
+        CorporateActionEntity saved = corporateActionRepository.save(existing);
 
         // WHEN
         String result = corporateActionService.updateCorporateActionPriority(saved.getId(), 5);
@@ -574,7 +574,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing.setExDate(LocalDate.of(2024, 1, 20));
         existing.setRatio("1:1");
         existing.setPriority(1);
-        CorporateActionEntity saved = mongoTemplate.save(existing);
+        CorporateActionEntity saved = corporateActionRepository.save(existing);
 
         // WHEN / THEN
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -595,7 +595,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing1.setExDate(LocalDate.of(2024, 1, 20));
         existing1.setRatio("1:1");
         existing1.setPriority(1);
-        CorporateActionEntity saved1 = mongoTemplate.save(existing1);
+        CorporateActionEntity saved1 = corporateActionRepository.save(existing1);
 
         CorporateActionEntity existing2 = new CorporateActionEntity();
         existing2.setStockCode("TCS");
@@ -604,7 +604,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing2.setExDate(LocalDate.of(2024, 2, 20));
         existing2.setRatio("2:1");
         existing2.setPriority(1);
-        CorporateActionEntity saved2 = mongoTemplate.save(existing2);
+        CorporateActionEntity saved2 = corporateActionRepository.save(existing2);
 
         // WHEN
         var result = corporateActionService.getCorporateActions(List.of(saved1.getId(), saved2.getId()), PageRequest.of(0, 50));
@@ -625,7 +625,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing1.setExDate(LocalDate.of(2024, 1, 20));
         existing1.setRatio("1:1");
         existing1.setPriority(1);
-        mongoTemplate.save(existing1);
+        corporateActionRepository.save(existing1);
 
         CorporateActionEntity existing2 = new CorporateActionEntity();
         existing2.setStockCode("TCS");
@@ -634,7 +634,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing2.setExDate(LocalDate.of(2024, 2, 20));
         existing2.setRatio("1:10");
         existing2.setPriority(1);
-        mongoTemplate.save(existing2);
+        corporateActionRepository.save(existing2);
 
         // WHEN
         List<CorporateActionEntity> result = corporateActionService.getAllCorporateActions(PageRequest.of(0, 50)).getContent();
@@ -674,7 +674,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         existing.setExDate(LocalDate.of(2024, 1, 20));
         existing.setRatio("1:1");
         existing.setPriority(1);
-        CorporateActionEntity saved = mongoTemplate.save(existing);
+        CorporateActionEntity saved = corporateActionRepository.save(existing);
 
         String token = generateToken("test@example.com", "SUPER_USER");
 
@@ -813,7 +813,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -894,7 +894,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void performPendingCorporateActions_whenABonusHasItsAllotmentDate_datesTheLotAndItsTransactionByIt() {
         // GIVEN -- W-088k4a case 1: allotted 17-1-2024, ex-date 20-1-2024 (test values)
-        mongoTemplate.save(bonus(LocalDate.of(2024, 1, 17)));
+        corporateActionRepository.save(bonus(LocalDate.of(2024, 1, 17)));
         saveHolding();
         CorporateActionPerformDto performDto = new CorporateActionPerformDto("JANUARY", 2024, BrokerName.UPSTOX);
 
@@ -915,7 +915,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void performPendingCorporateActions_whenABonusCopiesAV1Buy_recordsNoFlowOnTheBonus() {
         // GIVEN -- the holding's buy came through V1; the bonus transaction is a copy of it (W-283a1 C1a, D-580)
-        mongoTemplate.save(bonus(LocalDate.of(2024, 1, 17)));
+        corporateActionRepository.save(bonus(LocalDate.of(2024, 1, 17)));
         saveHolding();
         TransactionEntity buy = mongoTemplate.findAll(TransactionEntity.class).getFirst();
         buy.setTradeFlow(TradeFlow.V1);
@@ -936,7 +936,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void performPendingCorporateActions_whenABonusHasNoAllotmentDate_isRefusedWritingNothing() {
         // GIVEN -- W-088k4a case 2
-        mongoTemplate.save(bonus(null));
+        corporateActionRepository.save(bonus(null));
         saveHolding();
         CorporateActionPerformDto performDto = new CorporateActionPerformDto("JANUARY", 2024, BrokerName.UPSTOX);
 
@@ -1005,7 +1005,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         CorporateActionPerformDto performDto = new CorporateActionPerformDto("JANUARY", 2024, null);
 
@@ -1043,7 +1043,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.of(2024, 1, 20));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         TransactionEntity tempTransaction = new TransactionEntity();
         tempTransaction.setEmail("test@example.com");
@@ -1083,7 +1083,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -1132,7 +1132,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         // No assets seeded
 
@@ -1168,7 +1168,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.of(2024, 1, 20));
         ca.setDemergerDetail(demergerDetail);
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -1214,7 +1214,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.of(2024, 1, 20));
         ca.setDemergerDetail(demergerDetail);
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         // No assets seeded
 
@@ -1240,7 +1240,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.of(2024, 1, 20));
         ca.setRatio("1:10");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -1276,7 +1276,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.of(2024, 1, 20));
         ca.setRatio("1:10");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         // No assets seeded
 
@@ -1303,7 +1303,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -1354,7 +1354,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -1390,7 +1390,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.of(2024, 1, 20));
         ca.setRatio("1:1");
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset1 = new AssetEntity();
         asset1.setEmail("test@example.com");
@@ -1471,7 +1471,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.of(2024, 1, 20));
         ca.setDemergerDetail(demergerDetail);
         ca.setPriority(1);
-        mongoTemplate.save(ca);
+        corporateActionRepository.save(ca);
 
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");

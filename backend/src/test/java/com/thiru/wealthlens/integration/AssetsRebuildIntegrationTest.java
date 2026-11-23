@@ -82,7 +82,7 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
         split.setExDate(LocalDate.of(2026, 2, 10));
         split.setRatio("2:1");
         split.setPriority(1);
-        mongoTemplate.save(split);
+        corporateActionRepository.save(split);
         corporateActionService.performPendingCorporateActions(SPLIT,
                 new CorporateActionPerformDto("JANUARY", 2026, BrokerName.ZERODHA), false);
         post(SPLIT, "/transaction/v2", trade(TransactionType.SELL, 4, 60, LocalDate.of(2026, 2, 15)));
@@ -166,7 +166,7 @@ class AssetsRebuildIntegrationTest extends AbstractIntegrationTest {
         bonus.setAllotmentDate(LocalDate.of(2026, 1, 17));
         bonus.setRatio("1:1");
         bonus.setPriority(1);
-        mongoTemplate.save(bonus);
+        corporateActionRepository.save(bonus);
         corporateActionService.performPendingCorporateActions(FIXED,
                 new CorporateActionPerformDto("JANUARY", 2026, BrokerName.ZERODHA), false);
 

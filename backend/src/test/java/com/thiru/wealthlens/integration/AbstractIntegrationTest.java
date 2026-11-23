@@ -3,6 +3,8 @@ package com.thiru.wealthlens.integration;
 import com.thiru.wealthlens.auth.config.AccessTokenConfig;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
+import com.thiru.wealthlens.corporate.repository.CorporateActionRepository;
+import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionRepo;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.testsupport.FakeClamd;
 import io.restassured.RestAssured;
@@ -113,6 +115,12 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected UserDetailsRepository userDetailsRepository;
+
+    @Autowired
+    protected CorporateActionRepository corporateActionRepository;
+
+    @Autowired
+    protected LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
 
     @Autowired
     private FieldCipher fieldCipher;

@@ -44,7 +44,7 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
         LocalDate txnDate = LocalDate.of(2024, 4, 15);
 
         CorporateActionEntity ca = createCorporateAction(stockCode, CorporateActionType.BONUS, LocalDate.of(2024, 4, 10));
-        mongoTemplate.save(ca, "corporate_action");
+        corporateActionRepository.save(ca);
 
         AssetRequest request = createBuyRequest(email, stockCode, txnDate);
 
@@ -141,7 +141,7 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
         LocalDate txnDate = LocalDate.of(2024, 4, 20);
 
         CorporateActionEntity ca = createCorporateAction(stockCode, CorporateActionType.STOCK_SPLIT, LocalDate.of(2024, 4, 15));
-        mongoTemplate.save(ca, "corporate_action");
+        corporateActionRepository.save(ca);
 
         AssetRequest request = createBuyRequest(email, stockCode, txnDate);
         boolean checkCorporateAction = true;
@@ -162,7 +162,7 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
         LocalDate txnDate = LocalDate.of(2024, 4, 25);
 
         CorporateActionEntity ca = createCorporateAction(stockCode, CorporateActionType.BONUS, LocalDate.of(2024, 4, 20));
-        mongoTemplate.save(ca, "corporate_action");
+        corporateActionRepository.save(ca);
 
         // No lastly performed CA exists
 
@@ -183,10 +183,10 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
 
         LocalDate performedDate = LocalDate.of(2024, 4, 20);
         LastlyPerformedCorporateAction performedCa = createLastlyPerformedCa(email, stockCode, CorporateActionType.BONUS, performedDate);
-        mongoTemplate.save(performedCa, "lastly_performed_corporate_action");
+        lastlyPerformedCorporateActionRepo.save(performedCa);
 
         CorporateActionEntity ca = createCorporateAction(stockCode, CorporateActionType.BONUS, performedDate);
-        mongoTemplate.save(ca, "corporate_action");
+        corporateActionRepository.save(ca);
 
         // WHEN
         boolean result = temporaryTransactionService.anyCorporateActionToPerform(userMail, stockCode, txnDate, BrokerName.ZERODHA);
@@ -226,20 +226,20 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
         mongoTemplate.save(tempTxn, "transactions");
 
         LastlyPerformedCorporateAction performedCa = createLastlyPerformedCa(email, "DELTEST", CorporateActionType.BONUS, LocalDate.now());
-        mongoTemplate.save(performedCa, "lastly_performed_corporate_action");
+        lastlyPerformedCorporateActionRepo.save(performedCa);
 
         UserMail userMail = UserMail.from(email);
 
         // Verify exists before delete
         assertTrue(mongoTemplate.exists(Query.query(Criteria.where("email").is(email)), TransactionEntity.class, "transactions"));
-        assertTrue(mongoTemplate.exists(Query.query(Criteria.where("email").is(email)), LastlyPerformedCorporateAction.class, "lastly_performed_corporate_action"));
+        assertTrue(lastlyPerformedCorporateActionRepo.findAll().stream().anyMatch(r -> email.equals(r.getEmail())));
 
         // WHEN
         temporaryTransactionService.deleteTemporaryTransaction(userMail);
 
         // THEN
         assertFalse(mongoTemplate.exists(Query.query(Criteria.where("email").is(email).and("status").is(TransactionStatus.TEMPORARY)), TransactionEntity.class, "transactions"));
-        assertFalse(mongoTemplate.exists(Query.query(Criteria.where("email").is(email)), LastlyPerformedCorporateAction.class, "lastly_performed_corporate_action"));
+        assertFalse(lastlyPerformedCorporateActionRepo.findAll().stream().anyMatch(r -> email.equals(r.getEmail())));
     }
 
     @Test

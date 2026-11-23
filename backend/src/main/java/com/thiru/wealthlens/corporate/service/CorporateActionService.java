@@ -40,7 +40,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class CorporateActionService {
 
@@ -54,6 +53,7 @@ public class CorporateActionService {
     private final LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
 
 
+    @Transactional("postgresTransactionManager")
     public String addCorporateAction(CorporateActionDto actionWrapper) {
         validateCorporateActionData(actionWrapper);
         if (actionWrapper.getType() == CorporateActionType.STOCK_SPLIT) {
@@ -86,6 +86,7 @@ public class CorporateActionService {
         return corporateAction.get();
     }
 
+    @Transactional("postgresTransactionManager")
     public String updateCorporateActionPriority(String id, int priority) {
 
         Optional<CorporateActionEntity> existingAction = corporateActionRepository.findById(id);
@@ -106,7 +107,7 @@ public class CorporateActionService {
         return corporateActionRepository.findByIdIn(ids, latestRecordFirst(pageable));
     }
 
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public void deleteCorporateActions(String id) {
         corporateActionRepository.deleteById(id);
     }

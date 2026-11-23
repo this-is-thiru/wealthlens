@@ -215,7 +215,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.now().plusDays(6));
         ca.setPriority(1);
         ca.setAssetType(AssetType.EQUITY);
-        mongoTemplate.save(ca, "corporate_action");
+        corporateActionRepository.save(ca);
 
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
 
@@ -484,7 +484,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ca.setRecordDate(LocalDate.now().plusDays(10));
         ca.setExDate(LocalDate.now().plusDays(11));
         ca.setPriority(1);
-        mongoTemplate.save(ca, "corporate_action");
+        corporateActionRepository.save(ca);
 
         // Excel with a blocked stock
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "VALID_STOCK", "Valid Stock Corp",
@@ -640,7 +640,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ca.setExDate(LocalDate.now().plusDays(5));
         ca.setPriority(1);
         ca.setAssetType(AssetType.EQUITY);
-        mongoTemplate.save(ca, "corporate_action");
+        corporateActionRepository.save(ca);
 
         TransactionEntity temp = new TransactionEntity();
         temp.setEmail(TEST_EMAIL);
@@ -962,7 +962,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(emailOnly(), "profit_and_loss");
         mongoTemplate.save(emailOnly(), "user_charges");
         mongoTemplate.save(emailOnly(), "charge_accounts");
-        mongoTemplate.save(emailOnly(), "lastly_performed_corporate_action");
+        lastlyPerformedCorporateActionRepo.save(
+                com.thiru.wealthlens.corporate.entity.LastlyPerformedCorporateAction.builder().email(TEST_EMAIL).build());
 
         String url = baseUrl() + "/api/v1/me/portfolio";
         HttpHeaders headers = new HttpHeaders();
@@ -975,9 +976,12 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         for (String collection : List.of("assets", "transactions", "trade_outcomes", "profit_and_loss",
-                "user_charges", "charge_accounts", "lastly_performed_corporate_action")) {
+                "user_charges", "charge_accounts")) {
             assertEquals(0, countFor(collection), collection + " still holds rows for the cleared user");
         }
+        assertEquals(0, lastlyPerformedCorporateActionRepo.findAll().stream()
+                .filter(r -> TEST_EMAIL.equals(r.getEmail())).count(),
+                "lastly_performed_corporate_action still holds rows for the cleared user");
     }
 
     /** A document carrying nothing but the email, which is all the wipe keys on. */

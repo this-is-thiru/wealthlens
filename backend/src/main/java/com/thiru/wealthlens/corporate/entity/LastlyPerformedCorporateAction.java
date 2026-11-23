@@ -1,52 +1,79 @@
 package com.thiru.wealthlens.corporate.entity;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+/**
+ * Tracks the latest corporate action date performed per user, stock, asset type, action type, and broker
+ * (ported to PostgreSQL in W-337d1, D-945).
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(value = "lastly_performed_corporate_action")
-public class LastlyPerformedCorporateAction implements AuditableEntity {
+@Entity
+@Table(name = "lastly_performed_corporate_action")
+@EntityListeners(AuditingEntityListener.class)
+public class LastlyPerformedCorporateAction {
+
     @JsonIgnore
-    @MongoId
+    @Id
     private String id;
 
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "email", nullable = false)
+    @Convert(converter = SearchableColumn.class)
     private String email;
 
-    @Field("stock_code")
+    @Column(name = "stock_code")
     private String stockCode;
 
-    @Field("asset_type")
+    @Column(name = "asset_type")
+    @Enumerated(EnumType.STRING)
     private AssetType assetType;
 
-    @Field("action_type")
+    @Column(name = "action_type")
+    @Enumerated(EnumType.STRING)
     private CorporateActionType actionType;
 
-    @Field("action_date")
+    @Column(name = "action_date")
     private LocalDate actionDate;
 
-    @Field("broker_name")
+    @Column(name = "broker_name")
+    @Enumerated(EnumType.STRING)
     private BrokerName brokerName;
 
-    @Field("audit_metadata")
+    @Embedded
     @Setter(value = AccessLevel.NONE)
-    private final AuditMetadata auditMetadata = new AuditMetadata();
+    @Builder.Default
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

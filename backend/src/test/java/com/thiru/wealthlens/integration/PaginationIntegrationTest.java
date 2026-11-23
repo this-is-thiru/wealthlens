@@ -136,7 +136,7 @@ class PaginationIntegrationTest extends AbstractIntegrationTest {
             action.setRatio("1:1");
             action.setPriority(day);
             action.setRecordDate(LocalDate.of(2026, 1, day));
-            mongoTemplate.save(action);
+            corporateActionRepository.save(action);
         }
 
         // When / Then

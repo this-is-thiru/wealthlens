@@ -53,7 +53,7 @@ class BonusAllotmentIntegrationTest extends AbstractIntegrationTest {
         bonus.setAllotmentDate(LocalDate.of(2024, 1, 17));
         bonus.setRatio("1:1");
         bonus.setPriority(1);
-        mongoTemplate.save(bonus);
+        corporateActionRepository.save(bonus);
 
         held = new AssetEntity();
         held.setEmail(EMAIL);

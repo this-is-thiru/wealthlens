@@ -23,7 +23,7 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning", "insurances audit");
+                "taxplanning", "insurances audit", "corporate action");
     }
 
     @Test
@@ -35,7 +35,8 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
                 String.class);
 
         // Then — one per module, main tables and their child tables
-        assertThat(tables).contains("lastly_performed_corporate_action", "privacy_erasure_requests", "privacy_consents",
+        assertThat(tables).contains("lastly_performed_corporate_action", "corporate_action",
+                "corporate_action_demerger_stocks", "privacy_erasure_requests", "privacy_consents",
                 "privacy_breach_intimations", "privacy_processing_log", "privacy_grievances", "privacy_breach_notices",
                 "privacy_breach_notice_affected", "charge_catalogue", "tax_gazette_cursor", "tax_gazette_leads",
                 "tax_gazette_lead_matched_terms", "tax_gazette_lead_possibly_affected", "tax_regime_election_history",

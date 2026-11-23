@@ -1186,7 +1186,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         bonus.setExDate(recordDate);
         bonus.setPriority(1);
         bonus.setAssetType(AssetType.EQUITY);
-        mongoTemplate.save(bonus, "corporate_action");
+        corporateActionRepository.save(bonus);
     }
 
     /** The flow on each transaction a redrive stored, told apart from its temporary by the link back to it. */

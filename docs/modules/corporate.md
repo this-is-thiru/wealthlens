@@ -55,20 +55,20 @@ The admin routes also carry `@PreAuthorize` for `SUPER_USER`, on top of the zone
 
 ## 4. Stored data
 
-**`corporate_action`** (`entity/CorporateActionEntity.java:19` – `:56`), one document per recorded action:
-- **Plain fields:** `stock_code`, `stock_name`, `to_stock_code`, `to_stock_name`, `description`, `action_price` and `ratio` (strings).
-- **`type` and `asset_type`:** stored as strings (`:31` – `:34`).
-- **Dates:** `record_date`, `ex_date` and `allotment_date` (`:37` – `:43`).
-- **`priority`.**
-- **`demerger_detail`:** `demerger_ratio`, `demerger_price_ratio`, `main_stock_code`, `main_stock_name` and `demerger_stocks[]` (code,
-  name) (`entity/model/DemergerDetail.java:10` – `:35`).
-- **`audit_metadata`.**
+PostgreSQL tables (W-337d1, D-945; Flyway `db/migration/corporate/V2__corporate.sql` and `V7__corporate_action.sql`). Primary keys are caller-assigned `VARCHAR(255)` with `@PrePersist` UUID default.
 
-Every email in it is an actor's, inside `audit_metadata`.
+**`corporate_action`** + child table **`corporate_action_demerger_stocks`** (`entity/CorporateActionEntity.java:29` – `:98`), one row per recorded action:
+- **Plain columns:** `stock_code`, `stock_name`, `to_stock_code`, `to_stock_name`, `description`, `action_price`, `ratio` (`TEXT`).
+- **`type` and `asset_type`:** `@Enumerated(EnumType.STRING)` (`:52` – `:58`).
+- **Dates:** `record_date`, `ex_date`, `allotment_date` (`DATE`, `:63` – `:72`).
+- **`priority`** (`INT`, `:74` – `:75`).
+- **`demerger_detail`** (`entity/model/DemergerDetail.java:14` – `:45`): `demerger_ratio`, `demerger_price_ratio`, `main_stock_code`, `main_stock_name` embedded on `corporate_action`, and `demerger_stocks` (`stock_code`, `stock_name`) as an eager `@ElementCollection` in `corporate_action_demerger_stocks` (`corporate_action_id` FK).
+- **`created_by`, `updated_by`, `created_at`, `updated_at`** (`AuditColumns`, `:87` – `:89`).
+- **Indexes:** `corporate_action_stock_record_idx (stock_code, record_date)`, `corporate_action_type_record_idx (type, record_date)`, `corporate_action_demerger_stocks_ca_idx (corporate_action_id)`.
 
-**`lastly_performed_corporate_action`** (`entity/LastlyPerformedCorporateAction.java:25` – `:52`) has one row per user, stock, asset type,
-action type and broker: `email` (encrypted, searchable), `stock_code`, `asset_type`, `action_type`, `action_date`, `broker_name` and
-`audit_metadata`. It is the duplicate guard (§5), read by `findLastPerformedCA` (`repository/LastlyPerformedCorporateActionRepo.java:11` – `:12`).
+Every email in it is an actor's, inside `AuditColumns`.
+
+**`lastly_performed_corporate_action`** (`entity/LastlyPerformedCorporateAction.java:36` – `:79`) has one row per user, stock, asset type, action type and broker: `email` (encrypted, searchable via `SearchableColumn`, indexed `lastly_performed_corporate_action_email_idx`), `stock_code`, `asset_type`, `action_type`, `action_date`, `broker_name`, and `AuditColumns`. It is the duplicate guard (§5), read by `findLastPerformedCA` (`repository/LastlyPerformedCorporateActionRepo.java:16` – `:21`).
 
 A performed action is also copied into each lot's `corporate_actions` and each touched transaction's (`portfolio`).
 
