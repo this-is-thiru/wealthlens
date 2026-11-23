@@ -109,7 +109,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         user.setPassword(passwordEncoder.encode(PASSWORD));
         user.setRoles("USER");
         user.setLastSignedInAt(lastSignedInAt);
-        mongoTemplate.save(user);
+        saveLogin(user);
     }
 
     private void anuSignsIn() {

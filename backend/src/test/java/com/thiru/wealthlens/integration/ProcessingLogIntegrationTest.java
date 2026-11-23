@@ -87,7 +87,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(ANU);
         user.setPassword(passwordEncoder.encode(PASSWORD));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
     }
 
     private List<ProcessingRecord> records() {

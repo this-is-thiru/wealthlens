@@ -2,13 +2,12 @@ package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.thiru.wealthlens.auth.entity.RefreshTokenJpa;
-import com.thiru.wealthlens.auth.entity.UserDetailJpa;
-import com.thiru.wealthlens.auth.repository.RefreshTokenJpaRepository;
-import com.thiru.wealthlens.auth.repository.UserDetailJpaRepository;
-import com.thiru.wealthlens.insurance.entity.InsuranceJpa;
-import com.thiru.wealthlens.insurance.entity.model.PolicyDetailsJpa;
-import com.thiru.wealthlens.insurance.repository.InsuranceJpaRepository;
+import com.thiru.wealthlens.auth.entity.RefreshToken;
+import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.auth.repository.RefreshTokenRepository;
+import com.thiru.wealthlens.insurance.entity.InsuranceEntity;
+import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
+import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,23 +23,17 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Proves W-337a's mapping (D-937): the encrypted and searchable columns, an embedded list, an atomic conditional update
- * (the refresh-token spend), an expiry swept with no TTL index, a transaction, money as {@code double} and times exact,
- * and a ciphertext written by {@code SearchableIdentifier}/{@code EncryptedField} (Mongo) read by {@code SearchableColumn}/
- * {@code EncryptedColumn} (JPA) — the copier's premise (D-928 C3a). Against {@link AbstractPostgresIntegrationTest}'s
- * Postgres 18 container, not against the live Mongo-backed entities, which this probe leaves untouched.
+ * Proves the PostgreSQL 18 JPA mapping (W-337a D-937; re-pointed to the live entities in W-337c1 D-941): encrypted and
+ * searchable columns, an embedded list, an atomic conditional update (refresh-token spend), expiry swept with no TTL
+ * index, transaction rollback, money as {@code double} and exact times, and ciphertext compatibility between Mongo's
+ * {@code SearchableIdentifier}/{@code EncryptedField} and JPA's {@code SearchableColumn}/{@code EncryptedColumn}.
  */
-class PostgresMappingProbeIntegrationTest extends AbstractPostgresIntegrationTest {
+class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private UserDetailJpaRepository userDetailJpaRepository;
+    private RefreshTokenRepository refreshTokenRepository;
     @Autowired
-    private RefreshTokenJpaRepository refreshTokenJpaRepository;
-    @Autowired
-    private InsuranceJpaRepository insuranceJpaRepository;
-    @Autowired
-    @Qualifier("postgresDataSource")
-    private DataSource postgresDataSource;
+    private InsuranceRepository insuranceRepository;
     @Autowired
     @Qualifier("postgresTransactionManager")
     private PlatformTransactionManager postgresTransactionManager;
@@ -50,100 +42,99 @@ class PostgresMappingProbeIntegrationTest extends AbstractPostgresIntegrationTes
     void save_whenAUserIsStored_holdsItsEmailEncryptedAndFindsItByDerivedQuery() {
         // Given
         String email = "probe.one@example.com";
-        UserDetailJpa user = new UserDetailJpa();
+        UserDetail user = new UserDetail();
         user.setId(UUID.randomUUID().toString());
         user.setEmail(email);
         user.setPassword("a-hash");
 
         // When
-        userDetailJpaRepository.save(user);
+        userDetailsRepository.save(user);
         String raw = new JdbcTemplate(postgresDataSource).queryForObject("SELECT email FROM user_details WHERE id = ?",
                 String.class, user.getId());
 
         // Then — stored encrypted, exactly as Mongo's SearchableIdentifier would store it (the copier's premise)
         assertThat(raw).startsWith("k1:").doesNotContain("probe.one").isEqualTo(storedIdentifier(email));
-        assertThat(userDetailJpaRepository.findByEmail(email)).isPresent().get()
-                .extracting(UserDetailJpa::getEmail).isEqualTo(email);
+        assertThat(userDetailsRepository.findByEmail(email)).isPresent().get()
+                .extracting(UserDetail::getEmail).isEqualTo(email);
     }
 
     @Test
     void readByJpa_whenWrittenByMongosConverter_decryptsTheSameCiphertext() {
         // Given — a value sealed exactly as Mongo's SearchableIdentifier/FieldCipher would seal it
         String email = "probe.two@example.com";
-        UserDetailJpa user = new UserDetailJpa();
+        UserDetail user = new UserDetail();
         user.setId(UUID.randomUUID().toString());
         user.setEmail("placeholder@example.com");
-        userDetailJpaRepository.save(user);
+        userDetailsRepository.save(user);
         new JdbcTemplate(postgresDataSource).update("UPDATE user_details SET email = ? WHERE id = ?",
                 storedIdentifier(email), user.getId());
 
         // When / Then — the JPA converter reads it back unchanged
-        assertThat(userDetailJpaRepository.findByEmail(email)).isPresent().get().extracting(UserDetailJpa::getEmail)
+        assertThat(userDetailsRepository.findByEmail(email)).isPresent().get().extracting(UserDetail::getEmail)
                 .isEqualTo(email);
     }
 
     @Test
     void spend_whenCalledTwiceConcurrently_succeedsExactlyOnce() {
         // Given
-        RefreshTokenJpa token = refreshToken("tok-concurrent");
-        refreshTokenJpaRepository.save(token);
+        RefreshToken token = refreshToken("tok-concurrent");
+        refreshTokenRepository.save(token);
         Instant now = Instant.now();
         AtomicInteger totalRowsChanged = new AtomicInteger();
 
-        // When — two threads race the same compare-and-set update, each its own transaction (a @Modifying
-        // query runs only inside one -- Spring Data does not open one for a custom query method by itself)
+        // When — two threads race the same compare-and-set update, each its own transaction
         TransactionTemplate transactionTemplate = new TransactionTemplate(postgresTransactionManager);
         CompletableFuture<Integer> first = CompletableFuture
-                .supplyAsync(() -> transactionTemplate.execute(status -> refreshTokenJpaRepository.spend(token.getTokenHash(), now)));
+                .supplyAsync(() -> transactionTemplate.execute(status -> refreshTokenRepository.spend(token.getTokenHash(), now)));
         CompletableFuture<Integer> second = CompletableFuture
-                .supplyAsync(() -> transactionTemplate.execute(status -> refreshTokenJpaRepository.spend(token.getTokenHash(), now)));
+                .supplyAsync(() -> transactionTemplate.execute(status -> refreshTokenRepository.spend(token.getTokenHash(), now)));
         totalRowsChanged.addAndGet(first.join());
         totalRowsChanged.addAndGet(second.join());
 
         // Then — exactly one of the two changed a row, never both, never neither
         assertThat(totalRowsChanged.get()).isEqualTo(1);
-        assertThat(refreshTokenJpaRepository.findByTokenHash(token.getTokenHash())).isPresent().get()
-                .extracting(RefreshTokenJpa::getUsedAt).isNotNull();
+        assertThat(refreshTokenRepository.findByTokenHash(token.getTokenHash())).isPresent().get()
+                .extracting(RefreshToken::getUsedAt).isNotNull();
     }
 
     @Test
     void deleteExpired_whenPastItsExpiry_isRemovedWithNoTtlIndex() {
         // Given
-        RefreshTokenJpa expired = refreshToken("tok-expired");
+        RefreshToken expired = refreshToken("tok-expired");
         expired.setExpiresAt(Instant.now().minus(1, ChronoUnit.DAYS));
-        refreshTokenJpaRepository.save(expired);
-        RefreshTokenJpa live = refreshToken("tok-live");
-        refreshTokenJpaRepository.save(live);
+        refreshTokenRepository.save(expired);
+        RefreshToken live = refreshToken("tok-live");
+        refreshTokenRepository.save(live);
 
         // When
         int removed = new TransactionTemplate(postgresTransactionManager)
-                .execute(status -> refreshTokenJpaRepository.deleteExpired(Instant.now()));
+                .execute(status -> refreshTokenRepository.deleteExpired(Instant.now()));
 
         // Then
         assertThat(removed).isEqualTo(1);
-        assertThat(refreshTokenJpaRepository.findByTokenHash(expired.getTokenHash())).isEmpty();
-        assertThat(refreshTokenJpaRepository.findByTokenHash(live.getTokenHash())).isPresent();
+        assertThat(refreshTokenRepository.findByTokenHash(expired.getTokenHash())).isEmpty();
+        assertThat(refreshTokenRepository.findByTokenHash(live.getTokenHash())).isPresent();
     }
 
     @Test
     void save_whenAnInsuranceHasEmbeddedPolicyDetails_roundTripsMoneyDatesAndEncryptedTextExactly() {
         // Given
-        PolicyDetailsJpa policy = new PolicyDetailsJpa();
+        PolicyDetails policy = new PolicyDetails();
         policy.setPolicyId("POL-1");
         policy.setPremium(0.1 + 0.2);
         policy.setStartDate(LocalDate.of(2026, 4, 1));
         policy.setEndDate(LocalDate.of(2027, 3, 31));
         policy.setAgentName("Agent Name");
 
-        InsuranceJpa insurance = new InsuranceJpa();
+        InsuranceEntity insurance = new InsuranceEntity();
         insurance.setId(UUID.randomUUID().toString());
         insurance.setEmail("probe.three@example.com");
         insurance.setPremium(0.3 + 0.3);
         insurance.setPolicyDetails(List.of(policy));
 
         // When
-        insuranceJpaRepository.save(insurance);
-        InsuranceJpa read = insuranceJpaRepository.findByEmail("probe.three@example.com").getFirst();
+        insuranceRepository.save(insurance);
+        InsuranceEntity read = insuranceRepository.findByEmail("probe.three@example.com").getFirst();
 
         // Then
         assertThat(read.getPremium()).isEqualTo(0.6);
@@ -160,15 +151,15 @@ class PostgresMappingProbeIntegrationTest extends AbstractPostgresIntegrationTes
     void transaction_whenItRollsBack_leavesNothingStored() {
         // Given
         TransactionTemplate transactionTemplate = new TransactionTemplate(postgresTransactionManager);
-        UserDetailJpa user = new UserDetailJpa();
+        UserDetail user = new UserDetail();
         user.setId(UUID.randomUUID().toString());
         user.setEmail("probe.rollback@example.com");
 
         // When
         try {
             transactionTemplate.executeWithoutResult(status -> {
-                userDetailJpaRepository.save(user);
-                userDetailJpaRepository.flush();
+                userDetailsRepository.save(user);
+                userDetailsRepository.flush();
                 throw new IllegalStateException("force a rollback");
             });
         } catch (IllegalStateException expected) {
@@ -176,11 +167,11 @@ class PostgresMappingProbeIntegrationTest extends AbstractPostgresIntegrationTes
         }
 
         // Then
-        assertThat(userDetailJpaRepository.findByEmail("probe.rollback@example.com")).isEmpty();
+        assertThat(userDetailsRepository.findByEmail("probe.rollback@example.com")).isEmpty();
     }
 
-    private static RefreshTokenJpa refreshToken(String rawToken) {
-        RefreshTokenJpa token = new RefreshTokenJpa();
+    private static RefreshToken refreshToken(String rawToken) {
+        RefreshToken token = new RefreshToken();
         token.setId(UUID.randomUUID().toString());
         token.setTokenHash("hash-" + rawToken);
         token.setFamilyId(UUID.randomUUID().toString());

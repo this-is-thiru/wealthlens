@@ -3,10 +3,7 @@ package com.thiru.wealthlens.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -15,11 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * 25 tables yet — that is the port items' job (W-337c - f) — so this checks the DDL itself, not round-tripping data
  * through it.
  */
-class FlywaySchemaBaselineIntegrationTest extends AbstractPostgresIntegrationTest {
-
-    @Autowired
-    @Qualifier("postgresDataSource")
-    private DataSource postgresDataSource;
+class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void flyway_whenTheAppStarts_appliesEveryModuleScriptExactlyOnce() {
@@ -30,7 +23,7 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractPostgresIntegrationTes
 
         // Then
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning");
+                "taxplanning", "insurances audit");
     }
 
     @Test

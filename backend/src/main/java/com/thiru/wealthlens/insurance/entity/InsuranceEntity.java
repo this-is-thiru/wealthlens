@@ -4,80 +4,126 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.insurance.dto.enums.InsuranceType;
 import com.thiru.wealthlens.insurance.dto.enums.PolicyType;
 import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.EncryptedField;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.EncryptedColumn;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.util.List;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Document(value = "insurances")
+/**
+ * Insurance policies on PostgreSQL (W-337c1, D-941). {@code policyDetails} is stored in {@code insurance_policy_details}
+ * as an eager element collection matching Mongo's embedded list.
+ */
+@Entity
+@Table(name = "insurances")
+@EntityListeners(AuditingEntityListener.class)
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class InsuranceEntity implements AuditableEntity {
+public class InsuranceEntity {
 
-	@JsonIgnore
-	@MongoId
-	private String id;
+    @JsonIgnore
+    @Id
+    private String id;
 
-	@Field("email")
-	@ValueConverter(SearchableIdentifier.class)
-	private String email;
-	@Field("port_from")
-	private String portFrom;
-	@Field("port_to")
-	private String portTo;
-	@ValueConverter(EncryptedField.class)
-	@Field("insurance_id")
-	private String insuranceId;
-	@Field("insurance_type")
-	private InsuranceType insuranceType;
-	@Field("policy_type")
-	private PolicyType policyType;
-	@Field("premium")
-	private double premium;
-	@Field("start_date")
-	private String startDate;
-	@Field("end_date")
-	private String endDate;
-	@Field("maturity_date")
-	private String maturityDate;
-	@Field("renewal_date")
-	private String renewalDate;
-	@Field("maturity_amount")
-	private String maturityAmount;
-	@Field("broker")
-	private String broker;
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_name")
-	private String agentName;
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_email")
-	private String agentEmail;
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_contact")
-	private String agentContact;
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_address")
-	private String agentAddress;
-	@Field("insurance_status")
-	private String insuranceStatus;
-	@ValueConverter(EncryptedField.class)
-	@Field("notes")
-	private String notes;
+    @Column(name = "email", nullable = false)
+    @Convert(converter = SearchableColumn.class)
+    private String email;
 
-	private List<PolicyDetails> policyDetails;
+    @Column(name = "port_from")
+    private String portFrom;
 
-	@Field("audit_metadata")
-	@Setter(value = AccessLevel.NONE)
-	private AuditMetadata auditMetadata = new AuditMetadata();
+    @Column(name = "port_to")
+    private String portTo;
+
+    @Column(name = "insurance_id")
+    @Convert(converter = EncryptedColumn.class)
+    private String insuranceId;
+
+    @Column(name = "insurance_type")
+    @Enumerated(EnumType.STRING)
+    private InsuranceType insuranceType;
+
+    @Column(name = "policy_type")
+    @Enumerated(EnumType.STRING)
+    private PolicyType policyType;
+
+    @Column(name = "premium")
+    private double premium;
+
+    @Column(name = "start_date")
+    private String startDate;
+
+    @Column(name = "end_date")
+    private String endDate;
+
+    @Column(name = "maturity_date")
+    private String maturityDate;
+
+    @Column(name = "renewal_date")
+    private String renewalDate;
+
+    @Column(name = "maturity_amount")
+    private String maturityAmount;
+
+    @Column(name = "broker")
+    private String broker;
+
+    @Column(name = "agent_name")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentName;
+
+    @Column(name = "agent_email")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentEmail;
+
+    @Column(name = "agent_contact")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentContact;
+
+    @Column(name = "agent_address")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentAddress;
+
+    @Column(name = "insurance_status")
+    private String insuranceStatus;
+
+    @Column(name = "notes")
+    @Convert(converter = EncryptedColumn.class)
+    private String notes;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "insurance_policy_details", joinColumns = @JoinColumn(name = "insurance_id_fk"))
+    private List<PolicyDetails> policyDetails;
+
+    @Embedded
+    @Setter(value = AccessLevel.NONE)
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

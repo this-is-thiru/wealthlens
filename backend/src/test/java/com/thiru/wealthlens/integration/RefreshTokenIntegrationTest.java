@@ -15,24 +15,26 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
-import org.bson.Document;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Refresh tokens (W-358b, D-853 C3a): a 15-minute access token and a refresh token that is rotated on each use, stored only as a
- * hash, refused when used twice (and then its whole family is), and ended by logout, a password change, a hold and erasure.
+ * Refresh tokens (W-358b, D-853 C3a; ported to PostgreSQL in W-337c1, D-941): a 15-minute access token and a refresh token
+ * that is rotated on each use, stored only as a hash, refused when used twice (and then its whole family is), and ended by
+ * logout, a password change, a hold and erasure.
  */
 class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
 
     private static final String EMAIL = "refresher@example.com";
     private static final String PASSWORD = "password123";
-    private static final String REFRESH_TOKENS = "refresh_tokens";
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -45,7 +47,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(EMAIL);
         user.setPassword(passwordEncoder.encode(PASSWORD));
         user.setRoles(roles);
-        mongoTemplate.save(user);
+        saveLogin(user);
     }
 
     private ExtractableResponse<Response> login() {
@@ -74,8 +76,8 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         return new String(Base64.getUrlDecoder().decode(jwt.split("\\.")[index]), StandardCharsets.UTF_8);
     }
 
-    private List<Document> storedRefreshTokens() {
-        return mongoTemplate.getCollection(REFRESH_TOKENS).find().into(new java.util.ArrayList<>());
+    private List<Map<String, Object>> storedRefreshTokens() {
+        return new JdbcTemplate(postgresDataSource).queryForList("SELECT * FROM refresh_tokens ORDER BY issued_at ASC");
     }
 
     @Test
@@ -150,11 +152,11 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         refresh(first);
 
         // Then — 14 days from the sign-in, the same on both; a refresh never extends it (a password sign-in at least every 14 days)
-        List<Document> stored = storedRefreshTokens();
+        List<Map<String, Object>> stored = storedRefreshTokens();
         assertThat(stored).hasSize(2);
-        Date issued = stored.get(0).getDate("issued_at");
-        assertThat(stored).allSatisfy(token -> assertThat(token.getDate("expires_at"))
-                .isEqualTo(new Date(issued.getTime() + Duration.ofDays(14).toMillis())));
+        Instant issued = ((Timestamp) stored.get(0).get("issued_at")).toInstant();
+        assertThat(stored).allSatisfy(token -> assertThat(((Timestamp) token.get("expires_at")).toInstant())
+                .isEqualTo(issued.plus(Duration.ofDays(14))));
     }
 
     @Test
@@ -163,8 +165,8 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         registered("USER");
         String first = login().path("refresh_token");
         assertThat(storedRefreshTokens()).hasSize(1);
-        mongoTemplate.getCollection(REFRESH_TOKENS).updateMany(new Document(),
-                new Document("$set", new Document("expires_at", new Date(System.currentTimeMillis() - 1000))));
+        new JdbcTemplate(postgresDataSource).update("UPDATE refresh_tokens SET expires_at = ?",
+                Timestamp.from(Instant.now().minusSeconds(1)));
 
         // When / Then
         assertThat(refresh(first).statusCode()).isEqualTo(401);
@@ -177,7 +179,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         String first = login().path("refresh_token");
         UserDetail login = storedLogin(EMAIL);
         login.setRoles("SUPER_USER");
-        mongoTemplate.save(login);
+        saveLogin(login);
 
         // When
         String access = refresh(first).path("access_token");
@@ -195,10 +197,10 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         String first = login().path("refresh_token");
 
         // Then
-        List<Document> stored = storedRefreshTokens();
+        List<Map<String, Object>> stored = storedRefreshTokens();
         assertThat(stored).hasSize(1);
-        assertThat(stored.get(0).toJson()).doesNotContain(first).doesNotContain(EMAIL);
-        assertThat(stored.get(0).getString("email")).isEqualTo(storedIdentifier(EMAIL));
+        assertThat(stored.get(0).toString()).doesNotContain(first).doesNotContain(EMAIL);
+        assertThat(stored.get(0).get("email")).isEqualTo(storedIdentifier(EMAIL));
     }
 
     @Test

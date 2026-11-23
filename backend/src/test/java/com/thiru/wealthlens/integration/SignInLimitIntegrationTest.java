@@ -180,7 +180,7 @@ class SignInLimitIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(KNOWN);
         user.setPassword(passwordEncoder.encode(RIGHT));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
     }
 
     private static Response login(String email, String password) {

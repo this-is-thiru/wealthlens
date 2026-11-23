@@ -9,7 +9,11 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
+import com.thiru.wealthlens.auth.entity.RefreshToken;
 import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.auth.repository.RefreshTokenRepository;
+import com.thiru.wealthlens.insurance.entity.InsuranceEntity;
+import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import com.thiru.wealthlens.shared.privacy.AccountErasureReceipt;
 import com.thiru.wealthlens.shared.privacy.AccountErasureRequest;
 import com.thiru.wealthlens.shared.privacy.AccountErasureService;
@@ -21,11 +25,16 @@ import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +55,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -131,6 +141,12 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private AccountErasureService accountErasureService;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private InsuranceRepository insuranceRepository;
+
     @BeforeEach
     void twoAccountsOnTheDayAnuAsks() {
         clock.set(ASKED);
@@ -139,7 +155,7 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
             user.setEmail(email);
             user.setPassword(passwordEncoder.encode(PASSWORD));
             user.setRoles("USER");
-            mongoTemplate.save(user);
+            saveLogin(user);
         }
     }
 
@@ -179,6 +195,32 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
         return found;
     }
 
+    /** Each per-person PostgreSQL table ({@code @Entity}), and the column in it that names the person (W-337c1). */
+    private Map<String, String> personTables() {
+        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
+        Map<String, String> found = new TreeMap<>();
+        for (BeanDefinition candidate : scanner.findCandidateComponents("com.thiru.wealthlens")) {
+            Class<?> type = classOf(candidate);
+            Table table = type.getAnnotation(Table.class);
+            if (table == null) {
+                continue;
+            }
+            for (String personField : PERSON_FIELDS) {
+                try {
+                    Field field = type.getDeclaredField(personField);
+                    Column column = field.getAnnotation(Column.class);
+                    found.put(table.name(), column != null && !column.name().isEmpty() ? column.name() : personField);
+                    break;
+                } catch (NoSuchFieldException ignored) {
+                    // try next candidate field
+                }
+            }
+        }
+        found.remove(KEPT);
+        return found;
+    }
+
     private static Class<?> classOf(BeanDefinition candidate) {
         try {
             return Class.forName(candidate.getBeanClassName());
@@ -203,15 +245,41 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
                 mongoTemplate.getCollection(collection).insertOne(row);
             }
         });
+        personTables().forEach((table, column) -> {
+            if (tableCount(table, column, email) == 0) {
+                if (table.equals("refresh_tokens")) {
+                    refreshTokenRepository.save(new RefreshToken(UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                            UUID.randomUUID().toString(), email, List.of("FACTOR_PASSWORD"), Instant.now(),
+                            Instant.now().plusSeconds(3600), null, null));
+                } else if (table.equals("insurances")) {
+                    InsuranceEntity insurance = new InsuranceEntity();
+                    insurance.setId(UUID.randomUUID().toString());
+                    insurance.setEmail(email);
+                    insurance.setPremium(1000.0);
+                    insuranceRepository.save(insurance);
+                } else {
+                    new JdbcTemplate(postgresDataSource).update(
+                            "INSERT INTO " + table + " (id, " + column + ") VALUES (?, ?)",
+                            UUID.randomUUID().toString(), storedIdentifier(email));
+                }
+            }
+        });
     }
 
     private long count(String collection, String field, String email) {
         return mongoTemplate.getCollection(collection).countDocuments(new Document(field, storedIdentifier(email)));
     }
 
+    private long tableCount(String table, String column, String email) {
+        Long rows = new JdbcTemplate(postgresDataSource).queryForObject(
+                "SELECT COUNT(*) FROM " + table + " WHERE " + column + " = ?", Long.class, storedIdentifier(email));
+        return rows != null ? rows : 0L;
+    }
+
     private Map<String, Long> rowsOf(String email) {
         Map<String, Long> rows = new TreeMap<>();
         personCollections().forEach((collection, field) -> rows.put(collection, count(collection, field, email)));
+        personTables().forEach((table, column) -> rows.put(table, tableCount(table, column, email)));
         return rows;
     }
 

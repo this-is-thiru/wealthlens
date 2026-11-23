@@ -13,6 +13,7 @@ import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -100,7 +101,7 @@ public class AuthService {
     }
 
     private LocalDateTime nowUtc() {
-        return LocalDateTime.now(clock.withZone(ZoneOffset.UTC));
+        return LocalDateTime.now(clock.withZone(ZoneOffset.UTC)).truncatedTo(ChronoUnit.MILLIS);
     }
 
     private LoginResponse createToken(String username, Authentication authentication, String noticeVersion) {

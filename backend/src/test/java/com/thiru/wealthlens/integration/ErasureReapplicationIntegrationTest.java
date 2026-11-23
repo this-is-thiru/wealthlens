@@ -82,13 +82,13 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword("not-read-here");
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
         mongoTemplate.getCollection("assets").insertOne(new Document("_id", email + "-asset").append("email", storedIdentifier(email)));
     }
 
     private long rowsOf(String email) {
         return mongoTemplate.getCollection("assets").countDocuments(new Document("email", storedIdentifier(email)))
-                + mongoTemplate.count(query(where("email").is(email)), UserDetail.class);
+                + (storedLogin(email) != null ? 1 : 0);
     }
 
     private void accountErasedAt(String email, String asked, String erased) {

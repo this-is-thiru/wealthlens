@@ -24,24 +24,21 @@ None.
 
 ## 4. Stored data
 
-Collection `insurances` (`insurance/entity/InsuranceEntity.java:22`), one document per policy:
+PostgreSQL table `insurances` + child table `insurance_policy_details` (W-337c1, D-941; Flyway `db/migration/V1__auth_and_insurance.sql:35` – `:75` and `db/migration/insurance/V6__insurances_audit.sql`), mapped by `insurance/entity/InsuranceEntity.java:36`:
 
-| Field | Stored as | Where |
+| Column | Stored as | Where |
 |---|---|---|
-| `_id` | `@MongoId String` | `InsuranceEntity.java:28` – `:30` |
-| `email` | encrypted, searchable (`SearchableIdentifier`) | `:32` – `:34` |
-| `insurance_id`, `agent_name`, `agent_email`, `agent_contact`, `agent_address`, `notes` | encrypted (`EncryptedField`) | `:39` – `:41`, `:60` – `:76` |
-| `port_from`, `port_to`, `insurance_type` (`HEALTH_INSURANCE`, `TERM_INSURANCE`, `VEHICLE_INSURANCE`, `LIFE_INSURANCE`, `GENERAL_INSURANCE`), `policy_type` (`SINGLE`, `GROUP`), `premium`, `start_date`, `end_date`, `maturity_date`, `renewal_date`, `maturity_amount`, `broker`, `insurance_status` | plain; the four dates and `maturity_amount` are **strings** | `:35` – `:59`, `:72` – `:73`; `dto/enums/InsuranceType.java:3` – `:9`; `dto/enums/PolicyType.java:3` – `:6` |
-| `policyDetails[]` | each `PolicyDetails`: `policy_id`, the four `agent_*`, `notes` and `policy_description` encrypted; `premium`, `start_date` and `end_date` (dates), `policy_name`, `broker_name`, `insurance_status` plain. The list itself has no `@Field` name, so it is stored as `policyDetails` | `:78`; `entity/model/PolicyDetails.java:12` – `:56` |
-| `audit_metadata` | who created and last changed it (actor encrypted) | `:80` – `:82` |
-
-No index is declared on the entity.
+| `id` | `VARCHAR(255)` primary key, caller-assigned (UUID defaulted in `@PrePersist`) | `InsuranceEntity.java:44` – `:46`, `:123` – `:128` |
+| `email` | encrypted, searchable (`SearchableColumn`), indexed (`insurances_email_idx`) | `:48` – `:50`; `V1__auth_and_insurance.sql:57` |
+| `insurance_id`, `agent_name`, `agent_email`, `agent_contact`, `agent_address`, `notes` | encrypted (`EncryptedColumn`) | `:58` – `:60`, `:92` – `:106`, `:111` – `:113` |
+| `port_from`, `port_to`, `insurance_type` (`HEALTH_INSURANCE`, `TERM_INSURANCE`, `VEHICLE_INSURANCE`, `LIFE_INSURANCE`, `GENERAL_INSURANCE`), `policy_type` (`SINGLE`, `GROUP`), `premium`, `start_date`, `end_date`, `maturity_date`, `renewal_date`, `maturity_amount`, `broker`, `insurance_status` | plain (`EnumType.STRING` for enums; the four dates and `maturity_amount` are **strings**) | `:52` – `:90`, `:108` – `:109`; `dto/enums/InsuranceType.java:3` – `:9`; `dto/enums/PolicyType.java:3` – `:6` |
+| `policyDetails` | eager `@ElementCollection` in `insurance_policy_details` (`insurance_id_fk` FK → `insurances.id`, indexed): `policy_id`, the four `agent_*`, `notes` and `policy_description` encrypted (`EncryptedColumn`); `premium`, `start_date` and `end_date` (`DATE`), `policy_name`, `broker_name`, `insurance_status` plain | `:115` – `:117`; `entity/model/PolicyDetails.java:13` – `:59` |
+| `created_by`, `updated_by`, `created_at`, `updated_at` | embedded `AuditColumns` (actors encrypted via `SearchableColumn`, filled by JPA auditing) | `:119` – `:121`; `AuditColumns.java:20` – `:38` |
 
 ## 5. Behaviour
 
-**Erasure** (`InsuranceRecordErasure.java:16` – `:31`): as a `PersonalDataHolder` named `"insurance"` in the erasure notice (`:22` – `:25`),
-it removes every policy whose `email` is the person's (`:27` – `:30`) when their account is erased (W-237d). The query names the entity class,
-so the email is matched through its converter.
+**Erasure** (`InsuranceRecordErasure.java:15` – `:30`): as a `PersonalDataHolder` named `"insurance"` in the erasure notice (`:21` – `:24`),
+it removes every policy whose `email` is the person's via `InsuranceRepository.deleteByEmail` (`:26` – `:30`) inside `postgresTransactionManager` when their account is erased (W-237d).
 
 Nothing else runs.
 

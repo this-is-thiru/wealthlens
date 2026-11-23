@@ -65,28 +65,30 @@ server, configured here.
 
 ## 4. Stored data
 
-**`user_details`** (`entity/UserDetail.java:14` – `:42`), one login per document:
+PostgreSQL tables (W-337c1, D-941; Flyway `db/migration/V1__auth_and_insurance.sql`):
 
-| Field | Stored as | Where |
+**`user_details`** (`entity/UserDetail.java:20` – `:50`), one login per row:
+
+| Column | Stored as | Where |
 |---|---|---|
-| `_id` | `@MongoId String`. **Two types in the data:** a login the app writes holds a string; one re-keyed by runbook §1.r holds an `ObjectId` (staging 14 of 14, W-369), so no code may `save` a loaded login | `UserDetail.java:23` – `:25` |
-| `email` | encrypted, searchable; unique and sparse index `user_email_idx` | `:28` – `:32` |
-| `password` | a labelled hash: `{argon2}…` from W-358d3, or unlabelled BCrypt from before, rewritten at its owner's next sign-in | `:33`; `InvestmentTrackerConfig.java:22` – `:25`; `AuthConfig.java:84` – `:85` |
-| `roles` | comma-separated role names, `USER` at registration; a higher role is granted by the owner in the database (runbook §0.1.3) | `:34`; `AuthService.java:56` – `:57` |
-| `last_signed_in_at` | UTC, the last sign-in or the registration (W-249) | `:40` – `:41` |
+| `id` | `VARCHAR(255)` primary key, caller-assigned (UUID defaulted in `@PrePersist` when absent) | `UserDetail.java:25` – `:27`, `:45` – `:50` |
+| `email` | encrypted, searchable (`SearchableColumn`); unique index `user_details_email_idx` | `:29` – `:32`; `V1__auth_and_insurance.sql:12` |
+| `password` | a labelled hash: `{argon2}…` from W-358d3, or unlabelled BCrypt from before, rewritten at its owner's next sign-in | `:34` – `:35`; `InvestmentTrackerConfig.java:22` – `:25`; `AuthConfig.java:84` – `:85` |
+| `roles` | comma-separated role names, `USER` at registration; a higher role is granted by the owner in the database (runbook §0.1.3) | `:37` – `:38`; `AuthService.java:56` – `:57` |
+| `last_signed_in_at` | `TIMESTAMP(6)` UTC, the last sign-in or the registration (W-249) | `:43` – `:44` |
 
-**`refresh_tokens`** (`entity/RefreshToken.java:20` – `:59`), one row per refresh token issued:
+**`refresh_tokens`** (`entity/RefreshToken.java:25` – `:66`) + child table **`refresh_token_factors`**, one row per refresh token issued:
 
-| Field | Stored as | Where |
+| Column | Stored as | Where |
 |---|---|---|
-| `token_hash` | SHA-256 of the token, unique index; the token itself is never stored | `:29` – `:31`; `RefreshTokens.java:115` – `:121` |
-| `family_id` | indexed; shared by every token rotated from one sign-in | `:33` – `:35` |
-| `email` | encrypted, searchable, indexed | `:37` – `:40` |
-| `factors` | the sign-in's proved factors (`FACTOR_PASSWORD`) | `:42` – `:44` |
-| `issued_at`, `used_at`, `revoked_at` | instants | `:46` – `:58` |
-| `expires_at` | the sign-in's expiry, kept by every rotation; a TTL index (`expireAfter 0s`) deletes the row once it passes | `:49` – `:52` |
+| `token_hash` | SHA-256 of the token, unique index `refresh_tokens_token_hash_idx`; the token itself is never stored | `:34` – `:35`; `RefreshTokens.java:108` – `:114` |
+| `family_id` | indexed (`refresh_tokens_family_idx`); shared by every token rotated from one sign-in | `:37` – `:38` |
+| `email` | encrypted, searchable (`SearchableColumn`), indexed (`refresh_tokens_email_idx`) | `:40` – `:42` |
+| `factors` | eager `@ElementCollection` in `refresh_token_factors` (`refresh_token_id` FK → `refresh_tokens.id`) | `:45` – `:48` |
+| `issued_at`, `used_at`, `revoked_at` | `TIMESTAMPTZ(6)` instants | `:50` – `:59` |
+| `expires_at` | `TIMESTAMPTZ(6)`, indexed (`refresh_tokens_expiry_idx`); swept on each sign-in by `RefreshTokens.start` (D-937 C3a) | `:53` – `:54`; `RefreshTokens.java:43` – `:48` |
 
-Both collections' indexes are created at startup (`config/LoginIndexInitializer.java:25` – `:32`); a failure stops the start.
+Schema and indexes are managed by Flyway (`V1__auth_and_insurance.sql:5` – `:33`).
 
 ## 5. Behaviour
 

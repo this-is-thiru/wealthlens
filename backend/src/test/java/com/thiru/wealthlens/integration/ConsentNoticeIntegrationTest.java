@@ -89,7 +89,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         user.setPassword(passwordEncoder.encode(PASSWORD));
         user.setRoles("USER");
         user.setLastSignedInAt(LocalDateTime.of(2026, 1, 1, 0, 0));
-        mongoTemplate.save(user);
+        saveLogin(user);
         String version = publishedVersion();
 
         // When

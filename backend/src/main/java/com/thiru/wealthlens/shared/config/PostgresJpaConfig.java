@@ -10,6 +10,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
@@ -19,15 +20,14 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * PostgreSQL on Neon/Aiven, for the two parallel entities proving the W-337 mapping (W-337a, D-937): off by default
- * ({@code app.postgres.enabled=false}), so nothing about the live app changes until a test or a run explicitly turns it on.
- * Built by hand rather than left to Spring Boot's own JPA auto-configuration, because this process is already a MongoDB
- * application: letting Boot auto-configure "the" {@code DataSource}/{@code EntityManagerFactory}/transaction manager would
- * collide with it, so every bean here is explicitly named and the entity manager factory is scoped to only the
- * {@code auth}/{@code insurance} JPA entities (W-337c's later port, not every one of the 40 collections).
+ * PostgreSQL on Neon/Aiven (W-337a D-937; live cutover starting W-337c1 D-941 C3a): active by default on branch
+ * {@code w-337} ({@code matchIfMissing = true}), since {@code auth} and {@code insurance} now store their live rows in
+ * PostgreSQL. Built by hand rather than left to Spring Boot's JPA auto-configuration while MongoDB still serves the
+ * remaining modules, so every bean is explicitly named and the entity manager factory scans only the ported packages.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "app.postgres", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "app.postgres", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableJpaAuditing(auditorAwareRef = "securityAuditorAware")
 @EnableJpaRepositories(
         basePackages = {"com.thiru.wealthlens.auth.repository", "com.thiru.wealthlens.insurance.repository"},
         entityManagerFactoryRef = "postgresEntityManagerFactory",

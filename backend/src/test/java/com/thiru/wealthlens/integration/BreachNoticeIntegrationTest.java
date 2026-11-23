@@ -60,7 +60,7 @@ class BreachNoticeIntegrationTest extends AbstractIntegrationTest {
             UserDetail user = new UserDetail();
             user.setEmail(email);
             user.setRoles("USER");
-            mongoTemplate.save(user);
+            saveLogin(user);
         }
         clock.set("2027-06-10T09:00:00Z");
     }
