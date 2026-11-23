@@ -1,5 +1,7 @@
 # Oracle Cloud: MySQL HeatWave Always Free and Bastion — what the docs say (read 2026-11-22, session 118)
 
+> **Not used (D-931, 2026-11-22):** Oracle dropped for PostgreSQL on Aiven. Kept as the record.
+
 For W-337h (D-929). Every line is from a page read that day (HTTP 200); "not stated" means read and absent.
 
 ## MySQL versions
