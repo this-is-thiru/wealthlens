@@ -48,7 +48,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * Advance tax, the interest on it and on a late return, and the late-return fee (W-089c, W-112, D-446; 2025 ss.403 – 408,
  * 423 – 425, 428; 1961 ss.207 – 211, 234A – 234C, 234F; Rules 2026 r.269). Every figure is worked by hand in
- * {@code plans/W-089c.md}: a bill of 1,00,000, tax at source 20,000, advance tax 30,000 on 15 September and 20,000 on
+ * {@code docs/modules/taxengine.md} §11 (W-089c): a bill of 1,00,000, tax at source 20,000, advance tax 30,000 on 15 September and 20,000 on
  * 15 March, the return due on 31 July after the year.
  */
 class AdvanceTaxAndInterestTest {

@@ -1,57 +1,59 @@
 package com.thiru.wealthlens.insurance.entity.model;
 
-import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.EncryptedColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
 import java.time.LocalDate;
 import lombok.Data;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Field;
 
+@Embeddable
 @Data
 public class PolicyDetails {
 
-	@ValueConverter(EncryptedField.class)
-	@Field("policy_id")
-	private String policyId;
+    @Column(name = "policy_id")
+    @Convert(converter = EncryptedColumn.class)
+    private String policyId;
 
-	@Field("premium")
-	private double premium;
+    @Column(name = "premium")
+    private double premium;
 
-	@Field("start_date")
-	private LocalDate startDate;
+    @Column(name = "start_date")
+    private LocalDate startDate;
 
-	@Field("end_date")
-	private LocalDate endDate;
+    @Column(name = "end_date")
+    private LocalDate endDate;
 
-	@Field("policy_name")
-	private String policyName;
+    @Column(name = "policy_name")
+    private String policyName;
 
-	@Field("broker_name")
-	private String broker;
+    @Column(name = "broker_name")
+    private String broker;
 
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_name")
-	private String agentName;
+    @Column(name = "agent_name")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentName;
 
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_email")
-	private String agentEmail;
+    @Column(name = "agent_email")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentEmail;
 
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_contact")
-	private String agentContact;
+    @Column(name = "agent_contact")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentContact;
 
-	@ValueConverter(EncryptedField.class)
-	@Field("agent_address")
-	private String agentAddress;
+    @Column(name = "agent_address")
+    @Convert(converter = EncryptedColumn.class)
+    private String agentAddress;
 
-	@Field("insurance_status")
-	private String insuranceStatus;
+    @Column(name = "insurance_status")
+    private String insuranceStatus;
 
-	@ValueConverter(EncryptedField.class)
-	@Field("notes")
-	private String notes;
+    @Column(name = "notes")
+    @Convert(converter = EncryptedColumn.class)
+    private String notes;
 
-	@ValueConverter(EncryptedField.class)
-	@Field("policy_description")
-	private String policyDescription;
+    @Column(name = "policy_description")
+    @Convert(converter = EncryptedColumn.class)
+    private String policyDescription;
 }

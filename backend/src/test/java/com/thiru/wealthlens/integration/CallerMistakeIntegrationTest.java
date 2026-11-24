@@ -131,7 +131,7 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         // W-358d4: an empty body was stored as an account with every field null — no broker, no demat id, no AMC frequency
         assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/charges/charge-accounts", MediaType.APPLICATION_JSON, "{}"), HttpStatus.BAD_REQUEST,
                 "Field 'amcFrequency' must not be null; field 'brokerName' must not be null; field 'dematAccountId' must not be blank");
-        assertThat(mongoTemplate.getCollection("charge_accounts").countDocuments()).isZero();
+        assertThat(chargeAccountRepository.count()).isZero();
     }
 
     @Test
@@ -158,7 +158,7 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         trade.remove(missing);
 
         assertAnswered(exchange(HttpMethod.POST, route, MediaType.APPLICATION_JSON, trade), HttpStatus.BAD_REQUEST, message);
-        assertThat(mongoTemplate.getCollection("transactions").countDocuments()).isZero();
+        assertThat(transactionRepository.count()).isZero();
     }
 
     @Test

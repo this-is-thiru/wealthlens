@@ -8,7 +8,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.shared.privacy.AccountErasureRequest;
+import com.thiru.wealthlens.shared.privacy.AccountErasureRequestRepository;
 import com.thiru.wealthlens.taxplanning.jobs.AccountErasure;
 import com.thiru.wealthlens.taxplanning.jobs.LogErasure;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
@@ -18,7 +20,6 @@ import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import java.time.LocalDateTime;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +72,9 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private LogErasure logErasure;
 
+    @Autowired
+    private AccountErasureRequestRepository accountErasureRequestRepository;
+
     @BeforeEach
     void theDayAnuAsks() {
         clock.set(ASKED);
@@ -82,13 +86,14 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword("not-read-here");
         user.setRoles("USER");
-        mongoTemplate.save(user);
-        mongoTemplate.getCollection("assets").insertOne(new Document("_id", email + "-asset").append("email", storedIdentifier(email)));
+        saveLogin(user);
+        AssetEntity asset = new AssetEntity();
+        asset.setEmail(email);
+        portfolioRepository.save(asset);
     }
 
     private long rowsOf(String email) {
-        return mongoTemplate.getCollection("assets").countDocuments(new Document("email", storedIdentifier(email)))
-                + mongoTemplate.count(query(where("email").is(email)), UserDetail.class);
+        return portfolioRepository.findByEmail(email).size() + (storedLogin(email) != null ? 1 : 0);
     }
 
     private void accountErasedAt(String email, String asked, String erased) {
@@ -122,7 +127,7 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
     }
 
     private AccountErasureRequest requestOf(String email) {
-        return mongoTemplate.findOne(query(where("email").is(email)), AccountErasureRequest.class);
+        return accountErasureRequestRepository.findFirstByEmailOrderByRequestedAtDesc(email).orElse(null);
     }
 
     @Test

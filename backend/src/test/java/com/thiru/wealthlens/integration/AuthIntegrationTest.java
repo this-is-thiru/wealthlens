@@ -134,7 +134,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail(email);
@@ -167,7 +167,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(oldPassword));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
 
         String token = generateToken(email);
 
@@ -196,7 +196,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         existingUser.setEmail(email);
         existingUser.setPassword(passwordEncoder.encode("password123"));
         existingUser.setRoles("USER");
-        mongoTemplate.save(existingUser);
+        saveLogin(existingUser);
 
         // WHEN / THEN — with the current notice version, so the address is what is refused; named nowhere (W-358d2, D-884 C2a)
         given()
@@ -223,7 +223,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("correctpassword"));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail(email);
@@ -264,7 +264,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("oldpassword"));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
 
         String token = generateToken(email);
 
@@ -296,7 +296,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
 
         String token = generateToken(email);
 
@@ -326,7 +326,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("correctoldpassword"));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
 
         String token = generateToken(email);
 
@@ -414,7 +414,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         user1.setEmail(email1);
         user1.setPassword(passwordEncoder.encode("password123"));
         user1.setRoles("USER");
-        mongoTemplate.save(user1);
+        saveLogin(user1);
 
         String token = generateToken(email1);
 

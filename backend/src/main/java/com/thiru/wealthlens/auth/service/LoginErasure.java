@@ -4,6 +4,7 @@ import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
 import com.thiru.wealthlens.shared.privacy.PersonalDataHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /** A person's login and its refresh tokens, erased last with their account (W-237d), so a run cut off part-way never leaves data without its owner. */
 @Component
@@ -19,6 +20,7 @@ public class LoginErasure implements PersonalDataHolder {
     }
 
     @Override
+    @Transactional("postgresTransactionManager")
     public void erase(String email) {
         refreshTokens.erase(email);
         repository.deleteByEmail(email);

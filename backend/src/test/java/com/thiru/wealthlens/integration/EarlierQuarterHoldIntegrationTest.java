@@ -52,7 +52,7 @@ class EarlierQuarterHoldIntegrationTest extends AbstractIntegrationTest {
         split.setExDate(LocalDate.of(2026, 3, 20));
         split.setRatio("2:1");
         split.setPriority(1);
-        mongoTemplate.save(split);
+        corporateActionRepository.save(split);
     }
 
     @Test

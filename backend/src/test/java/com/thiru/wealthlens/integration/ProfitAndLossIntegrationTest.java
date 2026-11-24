@@ -22,14 +22,9 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
 
@@ -44,28 +39,6 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private TemporaryTransactionService temporaryTransactionService;
-
-    @Autowired
-    private MongoTemplate mongoTemplate;
-
-    @Test
-    void save_whenTheStoredYearStillCarriesTheBackfillsList_readsItAndDropsTheList() {
-        // Given -- W-173: a year stored with pnl_backfilled_outcome_ids, as every database holds until runbook §2.18 clears it
-        ProfitAndLossEntity stored = mongoTemplate.save(new ProfitAndLossEntity("backfilled-list@example.com", "2025-2026"));
-        mongoTemplate.updateFirst(Query.query(Criteria.where("id").is(stored.getId())),
-                new Update().set("pnl_backfilled_outcome_ids", List.of("row-1", "row-2")), ProfitAndLossEntity.class);
-        Query withList = Query.query(Criteria.where("pnl_backfilled_outcome_ids").exists(true));
-        assertEquals(1, mongoTemplate.count(withList, "profit_and_loss"));
-
-        // When -- the build without the field reads and saves it, as any trade in that year would
-        ProfitAndLossEntity read = mongoTemplate.findById(stored.getId(), ProfitAndLossEntity.class);
-        mongoTemplate.save(read);
-
-        // Then -- read without complaint; the save replaced the document, so the list is gone
-        assertNotNull(read);
-        assertEquals("2025-2026", read.getFinancialYear());
-        assertEquals(0, mongoTemplate.count(withList, "profit_and_loss"));
-    }
 
     @Test
     void updateProfitAndLoss_whenSelfSale_shouldCreatePnl() {
@@ -184,7 +157,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         realisedProfits.setGainsByAssetAndSegment(new EnumMap<>(Map.of(AssetType.EQUITY,
                 new EnumMap<>(Map.of(TradeSegment.DELIVERY, delivery)))));
         pnl.setRealisedProfits(realisedProfits);
-        mongoTemplate.save(pnl, "profit_and_loss");
+        profitAndLossRepository.save(pnl);
 
         // WHEN
         var response = profitAndLossService.getProfitAndLoss(userMail, "2023-2024");
@@ -220,7 +193,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
 
         ProfitAndLossEntity pnl = new ProfitAndLossEntity(email);
         pnl.setFinancialYear("2023-2024");
-        mongoTemplate.save(pnl, "profit_and_loss");
+        profitAndLossRepository.save(pnl);
 
         assertNotNull(findPnlByEmail(email));
 
@@ -369,12 +342,10 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
     }
 
     private ProfitAndLossEntity findPnlByEmail(String email) {
-        Query query = new Query(Criteria.where("email").is(email));
-        return mongoTemplate.findOne(query, ProfitAndLossEntity.class, "profit_and_loss");
+        return profitAndLossRepository.findAllByEmail(email).stream().findFirst().orElse(null);
     }
 
     private void deletePnlByEmail(String email) {
-        Query query = new Query(Criteria.where("email").is(email));
-        mongoTemplate.remove(query, ProfitAndLossEntity.class, "profit_and_loss");
+        profitAndLossRepository.deleteByEmail(email);
     }
 }

@@ -12,8 +12,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.mongodb.MongoException;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.exception.TradeCollisionException;
@@ -25,7 +25,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 @ExtendWith(MockitoExtension.class)
 class TradeCollisionRetryTest {
@@ -56,7 +58,7 @@ class TradeCollisionRetryTest {
     @Test
     void addTransaction_whenEveryAttemptCollides_answersThatTheTradeWasNotRecorded() {
         // Given — every attempt collides: the first and five more
-        DataIntegrityViolationException collision = collision();
+        ObjectOptimisticLockingFailureException collision = collision();
         when(portfolioService.addTransaction(eq(USER), any(), anyList())).thenThrow(collision);
 
         // When
@@ -111,14 +113,14 @@ class TradeCollisionRetryTest {
     }
 
     @Test
-    void isCollision_whenNoCauseCarriesTheLabel_isFalse() {
-        // Given — a Mongo failure without the transient label, inside Spring's wrapper
-        DataIntegrityViolationException unlabelled =
-                new DataIntegrityViolationException("duplicate key", new MongoException(11000, "E11000 duplicate key"));
+    void isCollision_whenNoCauseIsALockOrVersionConflict_isFalse() {
+        // Given — a real constraint violation, not a lock or version conflict
+        DataIntegrityViolationException notACollision = new DataIntegrityViolationException("duplicate key");
 
         // When / Then
         assertTrue(TradeCollisionRetry.isCollision(collision()));
-        assertEquals(false, TradeCollisionRetry.isCollision(unlabelled));
+        assertTrue(TradeCollisionRetry.isCollision(new CannotAcquireLockException("deadlock detected")));
+        assertEquals(false, TradeCollisionRetry.isCollision(notACollision));
     }
 
     @Test
@@ -149,10 +151,8 @@ class TradeCollisionRetryTest {
         verify(portfolioService, times(1)).addTransactionV2(eq(USER), any(), anyList());
     }
 
-    private static DataIntegrityViolationException collision() {
-        MongoException conflict = new MongoException(112, "WriteConflict");
-        conflict.addLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL);
-        return new DataIntegrityViolationException("Command failed with error 112 (WriteConflict)", conflict);
+    private static ObjectOptimisticLockingFailureException collision() {
+        return new ObjectOptimisticLockingFailureException(ProfitAndLossEntity.class, "pnl-id");
     }
 
     private static AssetRequest request() {

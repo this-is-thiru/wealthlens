@@ -56,7 +56,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Tax at slab rates on the rounded total income, from the regime's own ladder in the shipped pack
  * ({@code DR 16} S2 step 5; {@code DR 23} A11). Every expected figure is worked by hand in
- * {@code plans/W-046.md}, not taken from a run.
+ * {@code docs/modules/taxengine.md} §11 (W-046), not taken from a run.
  */
 class TaxByBasisNodeTest {
 
@@ -323,7 +323,7 @@ class TaxByBasisNodeTest {
                 .hasMessageContaining(NodeIds.ROUND_TOTALINCOME.value());
     }
 
-    // Special-rate capital gains (D-244). Expected figures are worked by hand in plans/W-088b.md, cases A–C.
+    // Special-rate capital gains (D-244). Expected figures are worked by hand in docs/modules/taxengine.md §11 (W-088b), cases A–C.
 
     private static final SpecialRateId SHORT_LISTED = new SpecialRateId("RATE_CG_SHORT_LISTED_EQUITY");
     private static final SpecialRateId LONG_OTHER = new SpecialRateId("RATE_CG_LONG_OTHER");

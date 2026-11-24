@@ -39,7 +39,7 @@ public class ControllerAdviser {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ProblemDetail> handleBadRequest(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request);
     }
 
@@ -49,13 +49,13 @@ public class ControllerAdviser {
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ProblemDetail> handleUnreadableBody(HttpMessageNotReadableException ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.BAD_REQUEST.value(), unreadable(ex), request);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ProblemDetail> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         String message = "Required request parameter '" + ex.getParameterName() + "' is not present";
         return problem(HttpStatus.BAD_REQUEST.value(), message, request);
     }
@@ -63,7 +63,7 @@ public class ControllerAdviser {
     /** A value that is not of its parameter's type is the caller's to correct, so the answer names what is accepted (W-263). */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         Class<?> type = ex.getParameter().nestedIfOptional().getNestedParameterType();
         String message = "Parameter '" + ex.getName() + "' must be " + accepted(type) + ", but was '" + ex.getValue() + "'";
         return problem(HttpStatus.BAD_REQUEST.value(), message, request);
@@ -71,41 +71,41 @@ public class ControllerAdviser {
 
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<ProblemDetail> handleMissingPart(MissingServletRequestPartException ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         String message = "Required part '" + ex.getRequestPartName() + "' is not present";
         return problem(HttpStatus.BAD_REQUEST.value(), message, request);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ProblemDetail> handleMethodNotAllowed(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.METHOD_NOT_ALLOWED.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ProblemDetail> handleUnsupportedMediaType(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), ex.getMessage(), request);
     }
 
     /** A file past {@code spring.servlet.multipart.max-file-size}: the caller's to fix, so 400, not a 500 (W-131d1). */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ProblemDetail> handleUploadTooLarge(MaxUploadSizeExceededException ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.BAD_REQUEST.value(), "The file is larger than the " + ex.getMaxUploadSize()
                 + " bytes an upload may be", request);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ProblemDetail> handleUnauthorized(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), request);
     }
 
     /** A body missing what its type requires (W-358d4): 400 naming each field, in field order. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleInvalidBody(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         String fields = ex.getBindingResult().getFieldErrors().stream()
                 .sorted(Comparator.comparing(FieldError::getField))
                 .map(error -> "field '" + error.getField() + "' " + error.getDefaultMessage())
@@ -116,7 +116,7 @@ public class ControllerAdviser {
     /** Over a limit on attempts (W-358d2): 429, with how long to wait. */
     @ExceptionHandler(TooManyAttemptsException.class)
     public ResponseEntity<ProblemDetail> handleTooManyAttempts(TooManyAttemptsException ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         ResponseEntity<ProblemDetail> answer = problem(HttpStatus.TOO_MANY_REQUESTS.value(), ex.getMessage(), request);
         return ResponseEntity.status(answer.getStatusCode()).header(HttpHeaders.RETRY_AFTER, String.valueOf(Math.max(1, ex.getRetryAfter().toSeconds())))
                 .body(answer.getBody());
@@ -124,25 +124,25 @@ public class ControllerAdviser {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleForbidden(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.FORBIDDEN.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(ServiceUnavailableException.class)
     public ResponseEntity<ProblemDetail> handleServiceUnavailable(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(TradeCollisionException.class)
     public ResponseEntity<ProblemDetail> handleConflict(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.CONFLICT.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ProblemDetail> handleNotFound(Exception ex, HttpServletRequest request) {
-        log(ex);
+        refused(ex);
         return problem(HttpStatus.NOT_FOUND.value(), ex.getMessage(), request);
     }
 
@@ -152,7 +152,7 @@ public class ControllerAdviser {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, HttpServletRequest request) {
-        log(ex);
+        failed(ex);
         String detail = RequestIdFilter.current().map(id -> "Something went wrong. Quote " + RequestIdFilter.HEADER + " " + id + " when you report it.")
                 .orElse("Something went wrong.");
         return problem(HttpStatus.INTERNAL_SERVER_ERROR.value(), detail, request);
@@ -228,7 +228,16 @@ public class ControllerAdviser {
         return "a " + type.getSimpleName();
     }
 
-    private static void log(Exception ex) {
+    /**
+     * An answer the caller can act on, or an operator's deliberate state (W-370): WARN with the message only — a refused request
+     * names no fault in the code, so its stack trace is noise, and ERROR is kept for what failed.
+     */
+    private static void refused(Exception ex) {
+        log.warn(ex.getMessage());
+    }
+
+    /** An unexpected failure (W-364): ERROR with its stack trace, the only place the cause is kept. */
+    private static void failed(Exception ex) {
         log.error(ex.getMessage(), ex);
     }
 }

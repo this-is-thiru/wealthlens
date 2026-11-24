@@ -6,144 +6,152 @@ import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
- * What a user was charged for one event, broken down line by line.
- *
- * <p>This is the source of truth for charges. The profit-and-loss charge hierarchy is a derived
- * projection of it: the live path accumulates incrementally for speed, but a recomputation rebuilds
- * the affected financial year from these rows rather than applying deltas, because a contribution
- * already folded into a sum cannot be reliably subtracted.
- *
- * <p>A row is written <strong>even when nothing is charged</strong>, carrying the reason in
- * {@code resolution}. Backfilling several years crosses periods with no rate card on file, and a
- * warning in a log scrolls away long before anyone notices the gap.
+ * What a user was charged for one event, broken down line by line
+ * (ported to PostgreSQL in W-337d2, D-947; Flyway {@code V8__brokercharges.sql}).
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(value = "user_charges")
-@CompoundIndexes({
-    /** One row per transaction: a re-uploaded quarter replaces rather than duplicates. */
-    @CompoundIndex(name = "user_charge_txn_idx", def = "{'email': 1, 'transaction_id': 1}", unique = true),
-    /**
-     * Depository-charge deduplication. {@code account_holder} is part of the key because a charge
-     * is levied per demat account: the same scrip sold on the same day under two holders incurs two
-     * separate debits.
-     */
-    @CompoundIndex(name = "user_charge_dedupe_idx",
-            def = "{'email': 1, 'account_holder': 1, 'broker_name': 1, 'stock_code': 1, 'transaction_date': 1}"),
-    /** Charge history and the gaps report. */
-    @CompoundIndex(name = "user_charge_history_idx", def = "{'email': 1, 'transaction_date': -1}")
-})
-public class UserChargeEntity implements AuditableEntity {
+@Entity
+@Table(name = "user_charges")
+@EntityListeners(AuditingEntityListener.class)
+public class UserChargeEntity {
 
     @JsonIgnore
-    @MongoId
+    @Id
     private String id;
 
-    @Field("email")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "email", nullable = false)
+    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** Whose demat account the trade settled in. Part of every deduplication scope. */
-    @Field("account_holder")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "account_holder")
+    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
-    @Field(name = "broker_name", targetType = FieldType.STRING)
+    @Column(name = "broker_name")
+    @Enumerated(EnumType.STRING)
     private BrokerName brokerName;
 
-    @Field(name = "asset_type", targetType = FieldType.STRING)
+    @Column(name = "asset_type")
+    @Enumerated(EnumType.STRING)
     private AssetType assetType;
 
-    @Field(name = "segment", targetType = FieldType.STRING)
+    @Column(name = "segment")
+    @Enumerated(EnumType.STRING)
     private TradeSegment segment;
 
-    @Field("exchange")
+    @Column(name = "exchange")
     private String exchange;
 
-    @Field("stock_code")
+    @Column(name = "stock_code")
     private String stockCode;
 
-    @Field("transaction_id")
+    @Column(name = "transaction_id")
     private String transactionId;
 
-    @Field("order_id")
+    @Column(name = "order_id")
     private String orderId;
 
-    @Field(name = "event", targetType = FieldType.STRING)
+    @Column(name = "event")
+    @Enumerated(EnumType.STRING)
     private ChargeEvent event;
 
     /** When the trade happened. */
-    @Field("transaction_date")
+    @Column(name = "transaction_date")
     private LocalDate transactionDate;
 
     /** When the charge was worked out — long after the trade, for a backfilled quarter. */
-    @Field("computed_on")
+    @Column(name = "computed_on")
     private LocalDateTime computedOn;
 
     /** Why these lines, or why none. */
-    @Field(name = "resolution", targetType = FieldType.STRING)
+    @Column(name = "resolution")
+    @Enumerated(EnumType.STRING)
     private ChargeResolution resolution;
 
     /** Which rate card produced this. Lets a corrected card find every row it touched. */
-    @Field("schedule_id")
+    @Column(name = "schedule_id")
     private String scheduleId;
 
-    @Field("schedule_code")
+    @Column(name = "schedule_code")
     private String scheduleCode;
 
     /** Which statutory card priced the law's lines, where one did (D-380). Absent on rows written before. */
-    @Field("statutory_schedule_id")
+    @Column(name = "statutory_schedule_id")
     private String statutoryScheduleId;
 
-    @Field("statutory_schedule_code")
+    @Column(name = "statutory_schedule_code")
     private String statutoryScheduleCode;
 
     /** Which instrument profile contributed scheme-level lines, where one did. */
-    @Field("instrument_id")
+    @Column(name = "instrument_id")
     private String instrumentId;
 
-    @Field("turnover")
+    @Column(name = "turnover")
     private double turnover;
 
-    @Field("quantity")
+    @Column(name = "quantity")
     private double quantity;
 
     /** The contract note. */
-    @Field("lines")
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_charge_lines", joinColumns = @JoinColumn(name = "user_charge_id"))
+    @OrderColumn(name = "line_order")
     private List<ChargeLine> lines = new ArrayList<>();
 
-    /** Denormalised from {@code lines} so reports aggregate without unwinding. */
-    @Field("amount_by_code")
+    /** Denormalised from {@code lines} so reports and deduplication queries read by charge code directly. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_charge_amounts", joinColumns = @JoinColumn(name = "user_charge_id"))
+    @MapKeyColumn(name = "charge_code")
+    @Column(name = "amount")
     private Map<String, Double> amountByCode = new HashMap<>();
 
-    @Field("total_charges")
+    @Column(name = "total_charges")
     private double totalCharges;
 
-    @Field("audit_metadata")
+    @Embedded
     @Setter(value = AccessLevel.NONE)
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

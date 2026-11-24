@@ -62,7 +62,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * Erasure on request over HTTP and Mongo (W-235, C1a – C5a), on a clock the test sets. The dates are worked by hand in
- * {@code plans/W-235.md}: a request at 2026-11-07T10:00Z with a one-year hold is erased from 2027-11-07T10:00Z, not a second before.
+ * {@code docs/modules/taxplanning.md} §11 (W-235): a request at 2026-11-07T10:00Z with a one-year hold is erased from 2027-11-07T10:00Z, not a second before.
  */
 class TaxErasureIntegrationTest extends AbstractIntegrationTest {
 

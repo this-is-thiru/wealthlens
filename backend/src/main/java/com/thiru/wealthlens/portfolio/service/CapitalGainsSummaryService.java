@@ -42,7 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class CapitalGainsSummaryService {
 

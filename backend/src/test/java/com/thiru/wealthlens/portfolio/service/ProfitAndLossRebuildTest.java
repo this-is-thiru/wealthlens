@@ -97,8 +97,8 @@ class ProfitAndLossRebuildTest {
         // When
         rebuild.rebuild(UserMail.from(EMAIL), false);
 
-        // Then -- the stored documents go, one for 2025-2026 replaces them, its charge on the outsourced side
-        verify(profitAndLossRepository).deleteByEmail(EMAIL);
+        // Then -- no document was stored, so one for 2025-2026 is inserted, its charge on the outsourced side
+        verify(profitAndLossRepository, never()).deleteAllById(any());
         List<ProfitAndLossEntity> saved = savedDocuments();
         assertEquals(1, saved.size());
         assertEquals("2025-2026", saved.getFirst().getFinancialYear());

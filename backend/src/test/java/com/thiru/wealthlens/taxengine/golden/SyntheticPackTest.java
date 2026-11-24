@@ -40,7 +40,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  *
  * <p>The pack is {@code rulepacks-synthetic/}, written by {@code docs/taxplanning-build/tools/w146_synthetic_pack.py}:
  * the synthetic year's own law, and every other row the pipeline reads copied from TY 2026-27 with its regimes renamed
- * (W-245 (a), D-464). Every expected figure is worked by hand in {@code plans/W-146.md}, Revision 1 and its build
+ * (W-245 (a), D-464). Every expected figure is worked by hand in {@code docs/modules/taxengine.md} §11 (W-146), Revision 1 and its build
  * record, before any run.
  */
 class SyntheticPackTest {

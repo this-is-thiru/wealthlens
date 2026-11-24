@@ -19,8 +19,6 @@ import java.net.URI;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -72,7 +70,7 @@ class NoCardCostBasisIntegrationTest extends AbstractIntegrationTest {
         post(TransactionType.BUY, 240.0);
 
         // Then
-        AssetEntity lot = mongoTemplate.findOne(new Query(Criteria.where("email").is(EMAIL)), AssetEntity.class);
+        AssetEntity lot = portfolioRepository.findByEmail(EMAIL).stream().findFirst().orElse(null);
         MoneyAssert.assertMoney(240.0, lot.getBrokerCharges());
     }
 
@@ -98,7 +96,7 @@ class NoCardCostBasisIntegrationTest extends AbstractIntegrationTest {
         // Given — nothing entered on the buy, 30 on the sale
         post(TransactionType.BUY, 0.0);
         post(TransactionType.SELL, 30.0);
-        TradeOutcomeEntity row = mongoTemplate.findOne(new Query(Criteria.where("email").is(EMAIL)), TradeOutcomeEntity.class);
+        TradeOutcomeEntity row = tradeOutcomeRepository.findByEmail(EMAIL).stream().findFirst().orElse(null);
         String year = FinancialYear.containing(LocalDate.now()).label();
 
         // When / Then

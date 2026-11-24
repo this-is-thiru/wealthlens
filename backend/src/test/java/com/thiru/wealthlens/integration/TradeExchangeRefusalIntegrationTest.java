@@ -7,7 +7,6 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
-import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import io.restassured.RestAssured;
 import java.io.ByteArrayOutputStream;
@@ -21,8 +20,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -86,8 +83,7 @@ class TradeExchangeRefusalIntegrationTest extends AbstractIntegrationTest {
     private void assertRefusedBeforeAnyWrite(ResponseEntity<String> response, String expected) {
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value(), response.getBody());
         assertTrue(response.getBody().contains(expected), response.getBody());
-        assertEquals(0, mongoTemplate.count(new Query(Criteria.where("email").is(EMAIL)), TransactionEntity.class,
-                "transactions"), "the refusal must come before any write");
+        assertEquals(0, transactionRepository.findByEmail(EMAIL).size(), "the refusal must come before any write");
     }
 
     /** The quarter's sheet the upload reads — the parser takes the sheet the request's quarter names. */

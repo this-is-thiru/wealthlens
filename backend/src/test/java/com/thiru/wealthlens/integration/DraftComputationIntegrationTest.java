@@ -48,7 +48,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 /**
  * The first tax figure over HTTP: a stored draft, through the assembler and the shipped pipeline (W-103, W-104, W-107, W-109;
- * D-442). The case is {@code DR 13} T13-1, worked by hand in {@code plans/W-089.md}: 1,00,000 of salary, 11,00,000 of listed-equity
+ * D-442). The case is {@code DR 13} T13-1, worked by hand in {@code docs/modules/taxengine.md} §11 (W-089): 1,00,000 of salary, 11,00,000 of listed-equity
  * gains, 84,375 at 12.5 %, nil rebate, 3,375 of cess, a bill of 87,750. Computed on a fixed day, 6-11-2026, because interest for
  * deferring advance tax runs to the day of computation (W-112, D-446): by then 15 June and 15 September have passed.
  */
@@ -128,7 +128,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         row.setSellBrokerCharges(1.0);
         row.setSellExchangeName("NSE");
         row.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(row);
+        tradeOutcomeRepository.save(row);
     }
 
     /** A short lot and a deposit beside T13-1's: 10-1-2026 → 1-9-2026, 1,00,000 → 1,20,000; a deposit's interest elsewhere. */
@@ -150,7 +150,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         lot.setSellBrokerCharges(1.0);
         lot.setSellExchangeName("NSE");
         lot.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(lot);
+        tradeOutcomeRepository.save(lot);
         TradeOutcomeEntity deposit = new TradeOutcomeEntity();
         deposit.setId("deposit");
         deposit.setEmail(OWNER);
@@ -163,7 +163,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         deposit.setCorporateActionAdjustedBuyPrice(100000);
         deposit.setSellPrice(107000);
         deposit.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(deposit);
+        tradeOutcomeRepository.save(deposit);
     }
 
     private JsonNode compute(String draftId) {
@@ -481,7 +481,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         lot.setQuantity(10.0);
         lot.setPrice(100);
         lot.setTransactionDate(LocalDate.of(2025, 6, 1));
-        mongoTemplate.save(lot);
+        portfolioRepository.save(lot);
     }
 
     @Test
@@ -502,7 +502,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         row.setSellChargeBreakup(Map.of("BROKERAGE", 100.0, "STT", 80.0));
         row.setSellExchangeName("NSE");
         row.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(row);
+        tradeOutcomeRepository.save(row);
 
         // When
         JsonNode charges = capitalGains(holderId(), "").at("/realised/0/charges");

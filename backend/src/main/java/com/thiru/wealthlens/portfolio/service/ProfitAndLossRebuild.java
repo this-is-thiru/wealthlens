@@ -49,12 +49,13 @@ import org.springframework.transaction.annotation.Transactional;
  * live V2 trade cannot compute differently. Only a buy's or a sale's charges are folded, as on the live path; an AMC
  * cycle and the other account events never reach the P&amp;L.
  *
- * <p>A real run replaces every document the user has, so it is idempotent by construction and also folds duplicates
- * of one year into one document.
+ * <p>A real run leaves every year's document holding exactly what the replay computed for it, so it is idempotent
+ * by construction and also folds duplicates of one year into one document (W-337e: in place, under the stored
+ * document's own id, not by deleting and reinserting — see {@link #write}).
  */
 @Service
 @Log4j2
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class ProfitAndLossRebuild {
 
@@ -100,12 +101,44 @@ public class ProfitAndLossRebuild {
         ProfitAndLossRebuildReport report = new ProfitAndLossRebuildReport(dryRun, email, sales.size(), charges.size(),
                 compare(stored, rebuilt));
         if (!dryRun) {
-            profitAndLossRepository.deleteByEmail(email);
-            profitAndLossRepository.saveAll(rebuilt.values());
-            log.info("Rebuilt profit_and_loss for {}: {} stored documents replaced by {}", email, stored.size(),
-                    rebuilt.size());
+            write(email, stored, rebuilt);
         }
         return report;
+    }
+
+    /**
+     * A year with a stored document is updated in place, under that document's id, rather than deleted and
+     * reinserted: both land in the same flush, and Hibernate runs inserts before deletes, so a blind
+     * delete-then-insert on {@code pnl_user_year_idx}'s {email, financial_year} would collide with the row it is
+     * about to delete (W-337e). A year with no rebuilt document no longer has any sale or charge and is deleted; a
+     * year stored more than once (a race before the version field) keeps one of its documents and deletes the rest,
+     * so duplicates still fold into one.
+     */
+    private void write(String email, List<ProfitAndLossEntity> stored, Map<String, ProfitAndLossEntity> rebuilt) {
+        Map<String, List<ProfitAndLossEntity>> storedByYear = new HashMap<>();
+        stored.forEach(document -> storedByYear
+                .computeIfAbsent(document.getFinancialYear(), year -> new ArrayList<>()).add(document));
+        List<String> idsToDelete = new ArrayList<>();
+        List<ProfitAndLossEntity> toSave = new ArrayList<>();
+        rebuilt.forEach((year, built) -> {
+            List<ProfitAndLossEntity> existingForYear = storedByYear.remove(year);
+            if (existingForYear == null) {
+                toSave.add(built);
+                return;
+            }
+            ProfitAndLossEntity existing = existingForYear.getFirst();
+            existing.setRealisedProfits(built.getRealisedProfits());
+            existing.setOutSourcedRealisedProfits(built.getOutSourcedRealisedProfits());
+            toSave.add(existing);
+            existingForYear.stream().skip(1).map(ProfitAndLossEntity::getId).forEach(idsToDelete::add);
+        });
+        storedByYear.values().stream().flatMap(List::stream).map(ProfitAndLossEntity::getId).forEach(idsToDelete::add);
+        if (!idsToDelete.isEmpty()) {
+            profitAndLossRepository.deleteAllById(idsToDelete);
+        }
+        profitAndLossRepository.saveAll(toSave);
+        log.info("Rebuilt profit_and_loss for {}: {} stored documents replaced by {}", email, stored.size(),
+                rebuilt.size());
     }
 
     private static ProfitAndLossEntity documentFor(Map<String, ProfitAndLossEntity> rebuilt, String email,

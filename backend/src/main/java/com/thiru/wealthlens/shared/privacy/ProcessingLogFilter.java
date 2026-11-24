@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,7 +37,7 @@ public class ProcessingLogFilter extends OncePerRequestFilter {
 
     private static final String SUBJECT_VARIABLE = "email";
 
-    private final MongoTemplate mongoTemplate;
+    private final ProcessingRecordRepository records;
     private final Clock clock;
 
     /** Names the email a login is attempted for, which no token carries yet; called by the login endpoint before it checks. */
@@ -52,7 +51,7 @@ public class ProcessingLogFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
         Optional<String> principal = principal(request);
         if (principal.isPresent()) {
-            mongoTemplate.insert(record(principal.get(), request, response));
+            records.save(record(principal.get(), request, response));
         }
     }
 

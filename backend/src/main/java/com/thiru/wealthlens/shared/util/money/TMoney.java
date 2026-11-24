@@ -19,7 +19,7 @@ import java.util.Collection;
  * crore, and rounding recovers the exact figure at that scale. Money was never being lost; identity
  * was.
  *
- * <p>Decision TL-8 — see {@code docs/trade-ledger/money-representation-analysis.md} for why this
+ * <p>Decision TL-8 — see {@code docs/modules/portfolio.md} §10 for why this
  * rather than {@code BigDecimal} end to end, and for the five triggers that would change it.
  */
 public final class TMoney {

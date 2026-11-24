@@ -55,7 +55,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 /**
  * Auto-archive and retention purge over Mongo (W-137, W-136; D-449), on a clock the test sets. Every expected date is worked by
- * hand in {@code plans/W-137.md}: 18 months before 2026-11-06 is 2025-05-06; 12 months before it is 2025-11-06; tax year 2025-26
+ * hand in {@code docs/modules/taxplanning.md} §11 (W-137): 18 months before 2026-11-06 is 2025-05-06; 12 months before it is 2025-11-06; tax year 2025-26
  * ends 31-3-2026, and its eight succeeding years end 31-3-2034.
  */
 class TaxJobsIntegrationTest extends AbstractIntegrationTest {

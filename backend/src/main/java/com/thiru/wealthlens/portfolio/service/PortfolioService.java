@@ -74,11 +74,10 @@ public class PortfolioService {
     private final TradeExchangeProperties tradeExchangeProperties;
 
     /**
-     * Multi-document write: creates a TransactionEntity and, for BUY/SELL, also
-     * upserts an AssetEntity. Safe only when MongoDB replica set +
-     * {@code app.mongodb.transactions-enabled=true} is set.
+     * Multi-row write: creates a TransactionEntity and, for BUY/SELL, also
+     * upserts an AssetEntity, atomically in one PostgreSQL transaction (W-337e, D-949).
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public String addTransaction(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
         if (temporaryTransactionService.hasTemporaryTransactions(userMail)) {
             throw new BadRequestException("There are pending temporary transactions. Please redrive them before adding a new transaction.");
@@ -120,7 +119,7 @@ public class PortfolioService {
         };
     }
 
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public String addTransactionV2(UserMail userMail, AssetRequest assetRequest, List<String> filteredOutTransactions) {
         return processTransactionV2(userMail, assetRequest, filteredOutTransactions);
     }
@@ -269,11 +268,10 @@ public class PortfolioService {
     }
 
     /**
-     * Batch multi-document write: parses a spreadsheet and calls addTransaction
-     * for each row. Safe only when MongoDB replica set +
-     * {@code app.mongodb.transactions-enabled=true} is set.
+     * Batch multi-row write: parses a spreadsheet and calls addTransaction for each row, atomically in one
+     * PostgreSQL transaction (W-337e, D-949).
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public String uploadTransactions(UserMail userMail, String quarter, MultipartFile file) {
         if (temporaryTransactionService.hasTemporaryTransactions(userMail)) {
             throw new BadRequestException("There are pending temporary transactions. Please redrive them before uploading transactions. Some transactions may be blocked due to pending corporate actions during upload.");
@@ -331,7 +329,7 @@ public class PortfolioService {
      * A trade the rules refuse fails its own item and the rest go on; any other failure fails the redrive, which rolls
      * back as one transaction (W-281 C2a).
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public RedriveResult redriveTemporaryTransactions(UserMail userMail) {
 
         List<TransactionEntity> userTemporaryTransactions = temporaryTransactionService.getAllTemporaryTransactions(userMail);
@@ -421,7 +419,7 @@ public class PortfolioService {
         String accountHolder = assetRequest.getAccountHolder();
         LocalDate transactionDate = assetRequest.getTransactionDate();
 
-        Optional<AssetEntity> optionalStock = portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByIdAsc(
+        Optional<AssetEntity> optionalStock = portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByAuditMetadataCreatedAtAsc(
                 email, stockCode, brokerName, accountHolder, assetRequest.getSegment(), transactionDate);
         AssetEntity assetEntity;
         if (optionalStock.isPresent()) {

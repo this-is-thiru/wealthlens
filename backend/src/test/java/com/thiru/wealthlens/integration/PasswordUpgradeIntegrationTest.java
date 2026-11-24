@@ -12,8 +12,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -99,24 +97,24 @@ class PasswordUpgradeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void signIn_whenTheLoginWasReKeyedWithAnObjectId_upgradesItInPlace() throws IOException, InterruptedException {
-        // Given — W-369: every login re-keyed by §1.r holds an ObjectId _id (staging 14 of 14), where the app writes a string
-        storedAsReKeyed("rekeyed@example.com", new BCryptPasswordEncoder().encode(PASSWORD));
+    void signIn_whenTheLoginAlreadyExists_upgradesItInPlace() throws IOException, InterruptedException {
+        // Given — W-369: targeted update by email upgrades the hash in place without inserting a second row
+        stored("rekeyed@example.com", new BCryptPasswordEncoder().encode(PASSWORD));
 
         // When
         int first = signIn("rekeyed@example.com", PASSWORD);
 
-        // Then — signed in and rewritten, still one login (a save had inserted a second and hit the unique email index: a 500)
+        // Then — signed in and rewritten, still one login
         assertThat(first).isEqualTo(200);
         assertThat(hashOf("rekeyed@example.com")).startsWith("{argon2}$argon2id$");
-        assertThat(mongoTemplate.getCollection("user_details").countDocuments()).isEqualTo(1);
+        assertThat(userDetailsRepository.count()).isEqualTo(1);
         assertThat(signIn("rekeyed@example.com", PASSWORD)).isEqualTo(200);
     }
 
     @Test
-    void changePassword_whenTheLoginWasReKeyedWithAnObjectId_changesItInPlace() throws IOException, InterruptedException {
-        // Given — W-369: the same save failed here since m1.4 for every re-keyed login
-        storedAsReKeyed("rekeyed-change@example.com", new BCryptPasswordEncoder().encode(PASSWORD));
+    void changePassword_whenTheLoginAlreadyExists_changesItInPlace() throws IOException, InterruptedException {
+        // Given — W-369: targeted update by email changes the password in place
+        stored("rekeyed-change@example.com", new BCryptPasswordEncoder().encode(PASSWORD));
         String body = "{\"email\":\"rekeyed-change@example.com\",\"password\":\"" + PASSWORD + "\",\"newPassword\":\"the-new-password-2\"}";
 
         // When
@@ -125,7 +123,7 @@ class PasswordUpgradeIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(answer.statusCode()).as(answer.body()).isEqualTo(200);
-        assertThat(mongoTemplate.getCollection("user_details").countDocuments()).isEqualTo(1);
+        assertThat(userDetailsRepository.count()).isEqualTo(1);
         assertThat(signIn("rekeyed-change@example.com", "the-new-password-2")).isEqualTo(200);
     }
 
@@ -134,16 +132,7 @@ class PasswordUpgradeIntegrationTest extends AbstractIntegrationTest {
         // When / Then — W-369: a targeted update that matched no row would otherwise report nothing
         assertThatThrownBy(() -> directory.storePassword("nobody@example.com", "{argon2}x")).isInstanceOf(IllegalStateException.class)
                 .hasMessage("No login holds this email to store its password");
-        assertThat(mongoTemplate.getCollection("user_details").countDocuments()).isZero();
-    }
-
-    /** A login as runbook §1.r's re-key left it: the row the app would write, its _id replaced by an ObjectId. */
-    private void storedAsReKeyed(String email, String hash) {
-        stored(email, hash);
-        Document row = mongoTemplate.getCollection("user_details").find(new Document("password", hash)).first();
-        mongoTemplate.getCollection("user_details").deleteOne(new Document("_id", row.get("_id")));
-        row.put("_id", new ObjectId());
-        mongoTemplate.getCollection("user_details").insertOne(row);
+        assertThat(userDetailsRepository.count()).isZero();
     }
 
     private void stored(String email, String hash) {
@@ -151,7 +140,7 @@ class PasswordUpgradeIntegrationTest extends AbstractIntegrationTest {
         login.setEmail(email);
         login.setPassword(hash);
         login.setRoles("USER");
-        mongoTemplate.save(login);
+        saveLogin(login);
     }
 
     private String hashOf(String email) {

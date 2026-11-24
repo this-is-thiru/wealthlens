@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,15 +77,17 @@ class ChargeExtensibilityTest extends AbstractIntegrationTest {
         chargeSeederService.seed("extensibility-test");
 
         // The shipped cards go: this class asserts over the ones it publishes, and leaving eleven
-        // more in the collection would make those assertions depend on which card resolved first.
-        mongoTemplate.getCollection("charge_schedules").deleteMany(new Document());
-        mongoTemplate.getCollection("charge_instruments").deleteMany(new Document());
+        // more in the table would make those assertions depend on which card resolved first.
+        chargeScheduleRepository.deleteAll();
+        chargeInstrumentRepository.deleteAll();
 
-        mongoTemplate.getCollection("charge_catalogue").insertOne(new Document()
-                .append("code", SYNTHETIC_CODE)
-                .append("display_name", "Synthetic levy")
-                .append("category", "EXCHANGE")
-                .append("status", "ACTIVE"));
+        com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity synthetic =
+                new com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity();
+        synthetic.setCode(SYNTHETIC_CODE);
+        synthetic.setDisplayName("Synthetic levy");
+        synthetic.setCategory(ChargeCategory.EXCHANGE);
+        synthetic.setStatus(EntityStatus.ACTIVE);
+        chargeCatalogueRepository.save(synthetic);
     }
 
     /**
@@ -96,7 +97,7 @@ class ChargeExtensibilityTest extends AbstractIntegrationTest {
      */
     @AfterEach
     void removeTheSyntheticCode() {
-        mongoTemplate.getCollection("charge_catalogue").deleteMany(new Document("code", SYNTHETIC_CODE));
+        chargeCatalogueRepository.findByCode(SYNTHETIC_CODE).ifPresent(chargeCatalogueRepository::delete);
     }
 
     @Test

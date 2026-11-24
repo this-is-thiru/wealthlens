@@ -5,50 +5,40 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-public interface ChargeScheduleRepository extends MongoRepository<ChargeScheduleEntity, String> {
+public interface ChargeScheduleRepository extends JpaRepository<ChargeScheduleEntity, String> {
 
-    /**
-     * Every rate card for this broker whose validity window contains the given date.
-     *
-     * <p>Ranking by specificity is the resolver's job, so this deliberately returns all candidates
-     * rather than guessing.
-     *
-     * <h2>Why the status predicate is {@code $ne: INACTIVE}</h2>
-     * A superseded card must still price a transaction backdated into its own window — uploading a
-     * past quarter long after the rates changed is the normal case, not an edge case. Filtering on
-     * {@code status == ACTIVE} would find nothing and silently charge zero. {@code INACTIVE} means
-     * the card was entered in error and is unusable for any date; expiry is expressed by
-     * {@code end_date}, never by status. The negated form also survives a future maintainer setting
-     * {@code SUPERSEDED} in the belief that it is correct.
-     */
-    @Query("{ 'broker_name': ?0, 'status': { $ne: 'INACTIVE' }, 'start_date': { $lte: ?1 },"
-            + " $or: [ { 'end_date': null }, { 'end_date': { $gte: ?1 } } ] }")
-    List<ChargeScheduleEntity> findCandidates(BrokerName brokerName, LocalDate transactionDate);
+    @Query("SELECT s FROM ChargeScheduleEntity s WHERE s.brokerName = :brokerName"
+            + " AND (s.status IS NULL OR s.status <> com.thiru.wealthlens.shared.dto.enums.EntityStatus.INACTIVE)"
+            + " AND s.startDate <= :transactionDate"
+            + " AND (s.endDate IS NULL OR s.endDate >= :transactionDate)")
+    List<ChargeScheduleEntity> findCandidates(
+            @Param("brokerName") BrokerName brokerName, @Param("transactionDate") LocalDate transactionDate);
 
-    /**
-     * Every statutory card that could apply on a date, under the same window and status as
-     * {@link #findCandidates}. A statutory card names no broker: the law levies its charges whoever
-     * executes the trade (D-380). {@code broker_name: null} matches the field absent as well as null.
-     */
-    @Query("{ 'broker_name': null, 'status': { $ne: 'INACTIVE' }, 'start_date': { $lte: ?0 },"
-            + " $or: [ { 'end_date': null }, { 'end_date': { $gte: ?0 } } ] }")
-    List<ChargeScheduleEntity> findStatutoryCandidates(LocalDate transactionDate);
+    @Query("SELECT s FROM ChargeScheduleEntity s WHERE s.brokerName IS NULL"
+            + " AND (s.status IS NULL OR s.status <> com.thiru.wealthlens.shared.dto.enums.EntityStatus.INACTIVE)"
+            + " AND s.startDate <= :transactionDate"
+            + " AND (s.endDate IS NULL OR s.endDate >= :transactionDate)")
+    List<ChargeScheduleEntity> findStatutoryCandidates(@Param("transactionDate") LocalDate transactionDate);
 
     Optional<ChargeScheduleEntity> findByScheduleCode(String scheduleCode);
 
-    /**
-     * The open-ended card for a scope, if there is one. Publishing a new card closes this one by
-     * setting its end date, rather than deactivating it.
-     */
-    @Query("{ 'broker_name': ?0, 'asset_type': ?1, 'segment': ?2, 'exchange': ?3, 'plan_code': ?4,"
-            + " 'status': { $ne: 'INACTIVE' }, 'end_date': null }")
+    @Query("SELECT s FROM ChargeScheduleEntity s"
+            + " WHERE ((:brokerName IS NULL AND s.brokerName IS NULL) OR s.brokerName = :brokerName)"
+            + " AND ((:assetType IS NULL AND s.assetType IS NULL) OR CAST(s.assetType AS string) = :assetType)"
+            + " AND ((:segment IS NULL AND s.segment IS NULL) OR CAST(s.segment AS string) = :segment)"
+            + " AND ((:exchange IS NULL AND s.exchange IS NULL) OR s.exchange = :exchange)"
+            + " AND ((:planCode IS NULL AND s.planCode IS NULL) OR s.planCode = :planCode)"
+            + " AND (s.status IS NULL OR s.status <> com.thiru.wealthlens.shared.dto.enums.EntityStatus.INACTIVE)"
+            + " AND s.endDate IS NULL")
     Optional<ChargeScheduleEntity> findOpenScheduleForScope(
-            BrokerName brokerName, String assetType, String segment, String exchange, String planCode);
+            @Param("brokerName") BrokerName brokerName, @Param("assetType") String assetType,
+            @Param("segment") String segment, @Param("exchange") String exchange,
+            @Param("planCode") String planCode);
 
-    /** Every card on file for a broker, newest window first. Drives the admin listing. */
     List<ChargeScheduleEntity> findByBrokerNameOrderByStartDateDesc(BrokerName brokerName);
 
     List<ChargeScheduleEntity> findByVerifiedOnIsNullOrVerifiedOnBefore(LocalDate horizon);

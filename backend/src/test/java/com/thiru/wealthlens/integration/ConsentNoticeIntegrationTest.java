@@ -2,8 +2,6 @@ package com.thiru.wealthlens.integration;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
@@ -11,6 +9,7 @@ import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.privacy.PersonalDataHolder;
 import com.thiru.wealthlens.shared.privacy.PersonalDataItem;
 import com.thiru.wealthlens.shared.privacy.PrivacyConsent;
+import com.thiru.wealthlens.shared.privacy.PrivacyConsentRepository;
 import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
 import com.thiru.wealthlens.shared.privacy.PrivacyRecordErasure;
 import io.restassured.RestAssured;
@@ -45,6 +44,9 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
+    private PrivacyConsentRepository privacyConsentRepository;
+
+    @Autowired
     private List<PersonalDataHolder> holders;
 
     @Autowired
@@ -70,7 +72,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         register(null).statusCode(400);
         assertThat(storedLogin(ANU)).isNull();
-        assertThat(mongoTemplate.find(query(where("email").is(ANU)), PrivacyConsent.class)).isEmpty();
+        assertThat(privacyConsentRepository.findByEmail(ANU)).isEmpty();
     }
 
     @Test
@@ -78,7 +80,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         // When / Then — a notice the person was not shown
         register("0").statusCode(400);
         assertThat(storedLogin(ANU)).isNull();
-        assertThat(mongoTemplate.find(query(where("email").is(ANU)), PrivacyConsent.class)).isEmpty();
+        assertThat(privacyConsentRepository.findByEmail(ANU)).isEmpty();
     }
 
     @Test
@@ -89,7 +91,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         user.setPassword(passwordEncoder.encode(PASSWORD));
         user.setRoles("USER");
         user.setLastSignedInAt(LocalDateTime.of(2026, 1, 1, 0, 0));
-        mongoTemplate.save(user);
+        saveLogin(user);
         String version = publishedVersion();
 
         // When
@@ -129,7 +131,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         privacyRecordErasure.erase(ANU);
 
         // Then
-        assertThat(mongoTemplate.find(query(where("email").is(ANU)), PrivacyConsent.class)).isEmpty();
+        assertThat(privacyConsentRepository.findByEmail(ANU)).isEmpty();
     }
 
     @Test
@@ -201,8 +203,6 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
     }
 
     private PrivacyConsent onlyConsentOf(String email) {
-        List<PrivacyConsent> consents = mongoTemplate.find(query(where("email").is(email)), PrivacyConsent.class);
-        assertThat(consents).hasSize(1);
-        return consents.getFirst();
+        return privacyConsentRepository.findByEmail(email).orElseThrow();
     }
 }

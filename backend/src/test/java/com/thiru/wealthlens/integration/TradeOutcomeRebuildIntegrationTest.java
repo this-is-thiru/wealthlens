@@ -16,10 +16,10 @@ import io.restassured.response.ValidatableResponse;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import org.assertj.core.groups.Tuple;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * The {@code trade_outcomes} rebuild as a {@code SUPER_USER} operation, over a real database (W-088u8b, D-284): users
@@ -38,9 +38,9 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void seed() {
         for (String user : new String[] {A, B, C}) {
-            mongoTemplate.save(transaction(user, "buy", TransactionType.BUY, 10.0, LocalDate.of(2024, 1, 15)));
-            mongoTemplate.save(transaction(user, "sell-1", TransactionType.SELL, 5.0, LocalDate.of(2025, 2, 3)));
-            mongoTemplate.save(transaction(user, "sell-2", TransactionType.SELL, 5.0, LocalDate.of(2025, 3, 3)));
+            transactionRepository.save(transaction(user, "buy", TransactionType.BUY, 10.0, LocalDate.of(2024, 1, 15)));
+            transactionRepository.save(transaction(user, "sell-1", TransactionType.SELL, 5.0, LocalDate.of(2025, 2, 3)));
+            transactionRepository.save(transaction(user, "sell-2", TransactionType.SELL, 5.0, LocalDate.of(2025, 3, 3)));
         }
         TradeOutcomeEntity existing = new TradeOutcomeEntity();
         existing.setId("c-v2-row");
@@ -72,8 +72,9 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
         assertThat(tradeOutcomeRepository.findByEmail(A)).hasSize(2);
         assertThat(tradeOutcomeRepository.findByEmail(B)).hasSize(2);
         assertThat(tradeOutcomeRepository.findByEmail(C)).extracting(TradeOutcomeEntity::getId).containsExactly("c-v2-row");
-        assertThat(mongoTemplate.getCollection("trade_outcomes").find(new Document("email", storedIdentifier(A))).first()
-                .get("audit_metadata", Document.class).getString("createdBy")).isEqualTo(storedIdentifier(ADMIN));
+        String createdBy = new JdbcTemplate(postgresDataSource).queryForObject(
+                "SELECT created_by FROM trade_outcomes WHERE email = ? LIMIT 1", String.class, storedIdentifier(A));
+        assertThat(createdBy).isEqualTo(storedIdentifier(ADMIN));
     }
 
     @Test
@@ -105,10 +106,10 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
         // Given — d bought 2 on 10 Jan and 2 on 11 Jan, and sold 2 (id …sell-a) and 1 (id …sell-b) on 3 Feb, stored b
         // first; by id, sell-a takes the 10 Jan lot whole and sell-b 1 of the 11 Jan lot (W-343; prod's copy, W-342)
         String d = "d@example.com";
-        mongoTemplate.save(transaction(d, "buy-1", TransactionType.BUY, 2.0, LocalDate.of(2024, 1, 10)));
-        mongoTemplate.save(transaction(d, "buy-2", TransactionType.BUY, 2.0, LocalDate.of(2024, 1, 11)));
-        mongoTemplate.save(transaction(d, "sell-b", TransactionType.SELL, 1.0, LocalDate.of(2025, 2, 3)));
-        mongoTemplate.save(transaction(d, "sell-a", TransactionType.SELL, 2.0, LocalDate.of(2025, 2, 3)));
+        transactionRepository.save(transaction(d, "buy-1", TransactionType.BUY, 2.0, LocalDate.of(2024, 1, 10)));
+        transactionRepository.save(transaction(d, "buy-2", TransactionType.BUY, 2.0, LocalDate.of(2024, 1, 11)));
+        transactionRepository.save(transaction(d, "sell-b", TransactionType.SELL, 1.0, LocalDate.of(2025, 2, 3)));
+        transactionRepository.save(transaction(d, "sell-a", TransactionType.SELL, 2.0, LocalDate.of(2025, 2, 3)));
 
         // When
         rebuild("?dryRun=false", "SUPER_USER").statusCode(200);

@@ -10,45 +10,45 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface UserChargeRepository extends MongoRepository<UserChargeEntity, String> {
+public interface UserChargeRepository extends JpaRepository<UserChargeEntity, String> {
 
-    /**
-     * Whether a charge with the given code has already been levied for this scrip, in this demat
-     * account, on this date.
-     *
-     * <p>{@code accountHolder} is part of the key because depository charges are levied per demat
-     * account: the same scrip sold on the same day under two holders incurs two separate debits.
-     * Returns a boolean rather than the documents, because the caller only ever asks whether one
-     * exists.
-     */
-    @Query(value = "{ 'email': ?0, 'accountHolder': ?1, 'broker_name': ?2, 'stock_code': ?3,"
-            + " 'transaction_date': ?4, 'amount_by_code.?5': { $gt: 0 } }", exists = true)
-    boolean existsChargeForScripOnDate(String email, String accountHolder, BrokerName brokerName,
-                                       String stockCode, LocalDate transactionDate, String chargeCode);
+    @Query("SELECT COUNT(u) > 0 FROM UserChargeEntity u JOIN u.amountByCode a"
+            + " WHERE u.email = :email"
+            + " AND ((:accountHolder IS NULL AND u.accountHolder IS NULL) OR u.accountHolder = :accountHolder)"
+            + " AND u.brokerName = :brokerName AND u.stockCode = :stockCode"
+            + " AND u.transactionDate = :transactionDate"
+            + " AND KEY(a) = :chargeCode AND VALUE(a) > 0")
+    boolean existsChargeForScripOnDate(
+            @Param("email") String email, @Param("accountHolder") String accountHolder,
+            @Param("brokerName") BrokerName brokerName, @Param("stockCode") String stockCode,
+            @Param("transactionDate") LocalDate transactionDate, @Param("chargeCode") String chargeCode);
 
-    /** Order-scoped deduplication, for charges capped per order however many trades fill it. */
-    @Query(value = "{ 'email': ?0, 'accountHolder': ?1, 'order_id': ?2,"
-            + " 'amount_by_code.?3': { $gt: 0 } }", exists = true)
-    boolean existsChargeForOrder(String email, String accountHolder, String orderId, String chargeCode);
+    @Query("SELECT COUNT(u) > 0 FROM UserChargeEntity u JOIN u.amountByCode a"
+            + " WHERE u.email = :email"
+            + " AND ((:accountHolder IS NULL AND u.accountHolder IS NULL) OR u.accountHolder = :accountHolder)"
+            + " AND u.orderId = :orderId"
+            + " AND KEY(a) = :chargeCode AND VALUE(a) > 0")
+    boolean existsChargeForOrder(
+            @Param("email") String email, @Param("accountHolder") String accountHolder,
+            @Param("orderId") String orderId, @Param("chargeCode") String chargeCode);
 
-    /** Day-scoped deduplication, across every scrip in an account. */
-    @Query(value = "{ 'email': ?0, 'accountHolder': ?1, 'broker_name': ?2,"
-            + " 'transaction_date': ?3, 'amount_by_code.?4': { $gt: 0 } }", exists = true)
-    boolean existsChargeForDay(String email, String accountHolder, BrokerName brokerName,
-                               LocalDate transactionDate, String chargeCode);
+    @Query("SELECT COUNT(u) > 0 FROM UserChargeEntity u JOIN u.amountByCode a"
+            + " WHERE u.email = :email"
+            + " AND ((:accountHolder IS NULL AND u.accountHolder IS NULL) OR u.accountHolder = :accountHolder)"
+            + " AND u.brokerName = :brokerName AND u.transactionDate = :transactionDate"
+            + " AND KEY(a) = :chargeCode AND VALUE(a) > 0")
+    boolean existsChargeForDay(
+            @Param("email") String email, @Param("accountHolder") String accountHolder,
+            @Param("brokerName") BrokerName brokerName, @Param("transactionDate") LocalDate transactionDate,
+            @Param("chargeCode") String chargeCode);
 
-    /** Recomputation replaces a transaction's row rather than appending, so a re-upload is safe. */
     Optional<UserChargeEntity> findByEmailAndTransactionId(String email, String transactionId);
 
-    /**
-     * Every charge row for a set of trades, in one round trip.
-     *
-     * <p>Exists so a response carrying many transactions costs one query rather than one per row.
-     * Served by {@code user_charge_txn_idx}.
-     */
     List<UserChargeEntity> findByEmailAndTransactionIdIn(String email, Collection<String> transactionIds);
 
     List<UserChargeEntity> findByEmailOrderByTransactionDateDesc(String email);
@@ -59,11 +59,11 @@ public interface UserChargeRepository extends MongoRepository<UserChargeEntity, 
 
     Page<UserChargeEntity> findByEmailAndTransactionDateBetween(String email, LocalDate from, LocalDate to, Pageable pageable);
 
-    Page<UserChargeEntity> findByEmailAndTransactionDateBetweenAndAssetType(String email, LocalDate from, LocalDate to, AssetType assetType,
-            Pageable pageable);
+    Page<UserChargeEntity> findByEmailAndTransactionDateBetweenAndAssetType(
+            String email, LocalDate from, LocalDate to, AssetType assetType, Pageable pageable);
 
-    /** Rows whose charges could not be fully assessed. Drives the gaps report. */
     List<UserChargeEntity> findByEmailAndResolutionIn(String email, List<ChargeResolution> resolutions);
 
+    @Transactional("postgresTransactionManager")
     void deleteByEmail(String email);
 }

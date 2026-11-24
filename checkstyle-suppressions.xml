@@ -62,7 +62,6 @@
     <suppress checks="MethodLength" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]CorporateActionIntegrationTest\.java$"/>
     <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]EntityExportIntegrationTest\.java$"/>
     <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]FinancesIntegrationTest\.java$"/>
-    <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]MongoTemplateIntegrationTest\.java$"/>
     <suppress checks="AbbreviationAsWordInName" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]PortfolioIntegrationTest\.java$"/>
     <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]PortfolioIntegrationTest\.java$"/>
     <suppress checks="NeedBraces" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]integration[\\/]PortfolioIntegrationTest\.java$"/>

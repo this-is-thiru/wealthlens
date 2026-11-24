@@ -56,7 +56,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  * The capital-gains head by part, after its own losses (S2 s.108(2); 1961 s.70(2), (3); D-243): the declared order is
  * short-term slab, short-term listed equity, long-term other, long-term listed equity. Each bucket's part is the one the
  * row of {@code RS-CG-PART} its facts meet names (D-289); the expected parts are S2 ss.196–198 and 1961 ss.111A, 112,
- * 112A's conditions, worked by hand in {@code plans/W-088f2a.md}.
+ * 112A's conditions, worked by hand in {@code docs/modules/taxengine.md} §11 (W-088f2a).
  */
 class CapitalGainsNodeTest {
 

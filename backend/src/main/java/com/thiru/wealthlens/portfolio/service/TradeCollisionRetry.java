@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.portfolio.service;
 
-import com.mongodb.MongoException;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -9,21 +8,32 @@ import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import java.time.Duration;
 import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.core.retry.Retryable;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Records a trade again when its transaction collided with another trade being recorded at the same moment.
  *
- * <p>Every trade rewrites the user's one profit-and-loss document for the year, so two trades at once abort one of
- * them with Mongo's {@code TransientTransactionError} — the database's word that the whole transaction may be run
- * again. An aborted attempt left nothing behind, so the trade is attempted again, from a fresh copy of its request
- * because an attempt changes the request it is given. Any other failure is answered at once. When every attempt
- * collides, the caller is told the trade was not recorded (W-269, D-554).
+ * <p>Every trade rewrites the user's one profit-and-loss row for the year, and may merge into an existing lot in
+ * {@code assets}. Under PostgreSQL (W-337e, D-949 C5a) there is no document-level write-conflict detection the way
+ * MongoDB's multi-document transactions had, so a collision now surfaces as one of three things: an
+ * {@link OptimisticLockingFailureException} from {@code ProfitAndLossEntity} or {@code AssetEntity}'s own
+ * {@code @Version} check (an update raced another update); a lock timeout or deadlock
+ * ({@link CannotAcquireLockException}, Postgres SQLState {@code 40P01}); or, when two attempts both found no
+ * {@code profit_and_loss} row yet for the user's year and both tried to create it, a
+ * {@link DataIntegrityViolationException} on {@code pnl_user_year_idx} (a create raced another create — retrying
+ * finds the row the other attempt just inserted and updates it instead). An aborted attempt left nothing behind, so
+ * the trade is attempted again, from a fresh copy of its request because an attempt changes the request it is
+ * given. Any other failure is answered at once. When every attempt collides, the caller is told the trade was not
+ * recorded (W-269, D-554).
  *
  * <p>Sits outside {@link PortfolioService}'s transactions, so each attempt is a transaction of its own.
  */
@@ -66,11 +76,17 @@ public class TradeCollisionRetry {
         return attempt(() -> portfolioService.redriveTemporaryTransactions(userMail));
     }
 
+    /** The one unique index two concurrent first-writers can both race to insert against. */
+    private static final String PNL_CREATE_RACE_CONSTRAINT = "pnl_user_year_idx";
+
     /** True when the database labelled the failure, or one it was caused by, safe to run again as a whole. */
     static boolean isCollision(Throwable failure) {
         for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
-            if (cause instanceof MongoException mongo
-                    && mongo.hasErrorLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+            if (cause instanceof OptimisticLockingFailureException || cause instanceof CannotAcquireLockException) {
+                return true;
+            }
+            if (cause instanceof ConstraintViolationException constraintViolation
+                    && PNL_CREATE_RACE_CONSTRAINT.equals(constraintViolation.getConstraintName())) {
                 return true;
             }
         }

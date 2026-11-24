@@ -34,7 +34,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Tax already paid taken off the bill (W-089b, D-436; 2025 s.266(2)(a), (b), s.516; 1961 s.140A(1), s.288B). Every figure is
- * worked by hand in {@code plans/W-089b.md}.
+ * worked by hand in {@code docs/modules/taxengine.md} §11 (W-089b).
  */
 class CreditsAndBalanceTest {
 

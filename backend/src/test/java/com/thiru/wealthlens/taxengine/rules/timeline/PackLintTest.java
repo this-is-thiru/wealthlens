@@ -24,7 +24,7 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * The cross-year lints (W-139, C2a). The shipped-pair lists were found by reading every rule file of the timeline: the two club
  * rows TY 2026-27 merged into {@code PERQ-CLUB-BUSINESS-UNIFORM} say nothing about the 2025 Act, and the three STT rows repeat
- * their instrument at 2026-04-01 ({@code plans/W-139.md}).
+ * their instrument at 2026-04-01 ({@code docs/modules/taxengine.md} §11, W-139).
  */
 class PackLintTest {
 

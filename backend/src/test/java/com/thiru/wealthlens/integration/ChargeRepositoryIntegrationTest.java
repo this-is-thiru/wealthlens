@@ -55,8 +55,8 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
      */
     @BeforeEach
     void clearShippedRateCards() {
-        mongoTemplate.getCollection("charge_schedules").deleteMany(new org.bson.Document());
-        mongoTemplate.getCollection("charge_instruments").deleteMany(new org.bson.Document());
+        chargeScheduleRepository.deleteAll();
+        chargeInstrumentRepository.deleteAll();
     }
 
     @Test
@@ -215,7 +215,7 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then — the unique index is what makes a re-uploaded quarter idempotent
         assertThatThrownBy(() -> userChargeRepository.save(userCharge("txn-dup", "self", "TCS", Map.of("DP", 13.5))))
-                .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
     @Test

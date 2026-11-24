@@ -8,76 +8,79 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.*;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Document(value = "trade_outcomes")
 /**
- * Indexed on {@code {email, sell_date}} because every read is one user's realised trades, and a
- * capital-gains statement wants them in date order. Created by {@code PortfolioIndexInitializer} —
- * {@code auto-index-creation} is off application-wide, so this annotation alone creates nothing.
+ * Indexed on {@code {email, sell_date}} because every read is one user's realised trades, and a capital-gains
+ * statement wants them in date order; {@code trade_outcome_buy_lot_idx} is every realised row that consumed a
+ * given buy lot, backing the per-holding charge view. Both indexes are declared in
+ * {@code db/migration/portfolio/V9__portfolio.sql} (W-337e, D-949) — Postgres indexes apply at DDL time, unlike
+ * {@code PortfolioIndexInitializer}'s old Mongo {@code createIndex} calls, which this port removes.
  */
-@CompoundIndexes({
-    @CompoundIndex(name = "trade_outcome_user_idx", def = "{'email': 1, 'sell_date': -1}"),
-    /**
-     * Every realised row that consumed a given buy lot. Backs the per-holding charge view, which
-     * reads a lot's allocated sell charges rather than re-deriving the split.
-     */
-    @CompoundIndex(name = "trade_outcome_buy_lot_idx", def = "{'email': 1, 'source_buy_lot_id': 1}")
-})
+@Entity
+@Table(name = "trade_outcomes")
+@EntityListeners(AuditingEntityListener.class)
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class TradeOutcomeEntity implements AuditableEntity {
+public class TradeOutcomeEntity {
 
     @JsonIgnore
-    @MongoId
+    @Id
     private String id;
 
     // Identity fields
-    @Field("email")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "email", nullable = false)
+    @Convert(converter = SearchableColumn.class)
     private String email;
 
-    @Field("stock_code")
+    @Column(name = "stock_code")
     private String stockCode;
 
-    @Field("stock_name")
+    @Column(name = "stock_name")
     private String stockName;
 
-    @Field("exchange_name")
+    @Column(name = "exchange_name")
     private String exchangeName;
 
-    @Field(name = "broker_name", targetType = FieldType.STRING)
+    @Column(name = "broker_name")
+    @Enumerated(EnumType.STRING)
     private BrokerName brokerName;
 
-    @Field(name = "asset_type", targetType = FieldType.STRING)
+    @Column(name = "asset_type")
+    @Enumerated(EnumType.STRING)
     private AssetType assetType;
 
-    @Field(name = "account_type", targetType = FieldType.STRING)
+    @Column(name = "account_type")
+    @Enumerated(EnumType.STRING)
     private AccountType accountType;
 
-    @Field("account_holder")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "account_holder")
+    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
     // Buy side
-    @Field("original_buy_price")
+    @Column(name = "original_buy_price")
     private double originalBuyPrice;
 
     /**
@@ -86,61 +89,61 @@ public class TradeOutcomeEntity implements AuditableEntity {
      * <p>"CA" here is <b>corporate action</b>, never chartered accountant. The stored field keeps its
      * original abbreviated name because live documents carry it; the Java name spells it out.
      */
-    @Field("ca_adjusted_buy_price")
+    @Column(name = "ca_adjusted_buy_price")
     private double corporateActionAdjustedBuyPrice;
 
-    @Field("buy_quantity")
+    @Column(name = "buy_quantity")
     private Double buyQuantity;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    @Field("buy_date")
+    @Column(name = "buy_date")
     private LocalDate buyDate;
 
-    @Field("buy_broker_charges")
+    @Column(name = "buy_broker_charges")
     private double buyBrokerCharges;
 
-    @Field("buy_misc_charges")
+    @Column(name = "buy_misc_charges")
     private double buyMiscCharges;
 
     // Sell side
-    @Field("sell_price")
+    @Column(name = "sell_price")
     private double sellPrice;
 
-    @Field("sell_quantity")
+    @Column(name = "sell_quantity")
     private Double sellQuantity;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    @Field("sell_date")
+    @Column(name = "sell_date")
     private LocalDate sellDate;
 
-    @Field("sell_broker_charges")
+    @Column(name = "sell_broker_charges")
     private double sellBrokerCharges;
 
-    @Field("sell_misc_charges")
+    @Column(name = "sell_misc_charges")
     private double sellMiscCharges;
 
     // Computed fields
-    @Field("total_buy_value")
+    @Column(name = "total_buy_value")
     private double totalBuyValue;
 
-    @Field("total_sell_value")
+    @Column(name = "total_sell_value")
     private double totalSellValue;
 
-    @Field("net_profit")
+    @Column(name = "net_profit")
     private double netProfit;
 
-    @Field("profit_percentage")
+    @Column(name = "profit_percentage")
     private double profitPercentage;
 
-    @Field("holding_period_days")
+    @Column(name = "holding_period_days")
     private Long holdingPeriodDays;
-
 
     /**
      * How the disposal was traded. Decides speculative and derivative treatment before holding
      * period is consulted at all (D1), so a row without it cannot be classified after the fact.
      */
-    @Field(name = "segment", targetType = FieldType.STRING)
+    @Column(name = "segment")
+    @Enumerated(EnumType.STRING)
     private TradeSegment segment;
 
     /**
@@ -150,7 +153,7 @@ public class TradeOutcomeEntity implements AuditableEntity {
      * <p>Null until the instrument registry ships (D7). Stored explicitly rather than inferred so a
      * reader can tell a row that was classified as unknown from one written before the field existed.
      */
-    @Field("instrument_sub_class")
+    @Column(name = "instrument_sub_class")
     private String instrumentSubClass;
 
     /**
@@ -159,21 +162,23 @@ public class TradeOutcomeEntity implements AuditableEntity {
      * <p>Kept by code because which charges reduce a capital gain is decided per code, by the tax side's rule data
      * for the year (W-162a, D-376). A single total cannot be split after the fact.
      */
-    @Field("buy_charge_breakup")
+    @Column(name = "buy_charge_breakup_json")
+    @Convert(converter = StringDoubleMapConverter.class)
     private Map<String, Double> buyChargeBreakup = new LinkedHashMap<>();
 
     /** The same for the sell side, pro-rated to this lot's share of the disposal. */
-    @Field("sell_charge_breakup")
+    @Column(name = "sell_charge_breakup_json")
+    @Convert(converter = StringDoubleMapConverter.class)
     private Map<String, Double> sellChargeBreakup = new LinkedHashMap<>();
 
-    @Field("financial_year")
+    @Column(name = "financial_year")
     private String financialYear;
 
     // Linkage fields for traceability
-    @Field("source_sell_transaction_id")
+    @Column(name = "source_sell_transaction_id")
     private String sourceSellTransactionId;
 
-    @Field("source_buy_lot_id")
+    @Column(name = "source_buy_lot_id")
     private String sourceBuyLotId;
 
     // CA tracking
@@ -184,42 +189,54 @@ public class TradeOutcomeEntity implements AuditableEntity {
      * <p>"CA" here is <b>corporate action</b>. The stored field keeps its abbreviated name because
      * live documents carry it; the Java name spells it out.
      */
-    @Field("is_ca_derived")
+    @Column(name = "is_ca_derived")
     private Boolean corporateActionDerived;
 
-    @Field("applied_corporate_actions")
+    @Column(name = "applied_corporate_actions_json")
+    @Convert(converter = CorporateActionListConverter.class)
     private List<CorporateActionEntity> appliedCorporateActions = new ArrayList<>();
 
     /**
      * How the lot came to be held, from the lot's own record. Unlike {@link #corporateActionDerived}, which a purchase
      * later split also sets, this is the lot's origin; absent on rows written before W-088f (D-249).
      */
-    @Field("acquisition_mode")
+    @Column(name = "acquisition_mode")
+    @Enumerated(EnumType.STRING)
     private AcquisitionMode acquisitionMode;
 
     /** The corporate action that created the lot, carried as itself; set only when {@link #acquisitionMode} says so. */
-    @Field("acquisition_corporate_action")
+    @Column(name = "acquisition_corporate_action")
+    @Enumerated(EnumType.STRING)
     private CorporateActionType acquisitionCorporateAction;
 
     /**
      * The exchange the lot's buy was recorded on, from the lot's own record — not {@link #exchangeName}, which the
      * writers take from different sides; absent on rows written before W-088j2b (D-295).
      */
-    @Field("buy_exchange_name")
+    @Column(name = "buy_exchange_name")
     private String buyExchangeName;
 
     /** The segment the lot's buy was recorded in; absent on rows written before W-088j2b. */
-    @Field(name = "buy_segment", targetType = FieldType.STRING)
+    @Column(name = "buy_segment")
+    @Enumerated(EnumType.STRING)
     private TradeSegment buySegment;
 
     /** The exchange the sale was recorded on; absent on rows written before W-088j2b. */
-    @Field("sell_exchange_name")
+    @Column(name = "sell_exchange_name")
     private String sellExchangeName;
 
     /** The segment the sale was recorded in; absent on rows written before W-088j2b. */
-    @Field(name = "sell_segment", targetType = FieldType.STRING)
+    @Column(name = "sell_segment")
+    @Enumerated(EnumType.STRING)
     private TradeSegment sellSegment;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

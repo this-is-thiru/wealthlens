@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Log4j2
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class ChargeScheduleService {
 
@@ -109,7 +109,7 @@ public class ChargeScheduleService {
      * The worklist: cards nobody has checked, and cards nobody has checked <em>recently</em>.
      *
      * <p>The second half is what keeps this from emptying permanently. Verification is a standing
-     * obligation, not an event — see AC-2 and {@code ac2-rate-verification.md}.
+     * obligation, not an event — see AC-2 in {@code docs/modules/brokercharges.md} §10.
      */
     public List<ChargeScheduleEntity> findUnverified() {
         return chargeScheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(

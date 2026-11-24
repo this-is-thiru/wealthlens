@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
-import com.thiru.wealthlens.corporate.entity.LastlyPerformedCorporateAction;
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -21,8 +20,6 @@ import java.net.URI;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * A stock split changes the lots it reaches and nothing else, and a malformed one is refused (W-213, W-216, D-438). Every figure
- * is the table in {@code plans/W-213.md}, by hand.
+ * is the hand-worked table in {@code docs/modules/corporate.md} §5 (moved from W-213's plan, W-357b5).
  */
 class StockSplitIntegrationTest extends AbstractIntegrationTest {
 
@@ -56,7 +53,7 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
         lot.setPrice(price);
         lot.setBrokerCharges(20);
         lot.setTransactionDate(bought);
-        return mongoTemplate.save(lot);
+        return portfolioRepository.save(lot);
     }
 
     private static CorporateActionEntity split(String ratio) {
@@ -73,11 +70,11 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
     }
 
     private AssetEntity reread(AssetEntity lot) {
-        return mongoTemplate.findById(lot.getId(), AssetEntity.class);
+        return portfolioRepository.findById(lot.getId()).orElse(null);
     }
 
     private long performedRows() {
-        return mongoTemplate.count(new Query(Criteria.where("email").is(EMAIL)), LastlyPerformedCorporateAction.class);
+        return lastlyPerformedCorporateActionRepo.findAll().stream().filter(r -> EMAIL.equals(r.getEmail())).count();
     }
 
     @Test
@@ -185,8 +182,7 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
         new RestTemplate().exchange(URI.create("http://localhost:" + RestAssured.port + "/api/v1/me/portfolio/transaction/v2"), HttpMethod.POST, new HttpEntity<>(sale, headers), String.class);
 
         // Then — 50 × 500 = 25,000, and the lot's own date, so the holding period starts where it did
-        TradeOutcomeEntity row = mongoTemplate.findOne(new Query(Criteria.where("email").is(EMAIL)),
-                TradeOutcomeEntity.class);
+        TradeOutcomeEntity row = tradeOutcomeRepository.findByEmail(EMAIL).stream().findFirst().orElse(null);
         assertEquals(50.0, row.getBuyQuantity());
         MoneyAssert.assertMoney(25000, row.getCorporateActionAdjustedBuyPrice() * row.getBuyQuantity());
         assertEquals(LocalDate.of(2024, 1, 10), row.getBuyDate());
@@ -206,6 +202,6 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> corporateActionService.addCorporateAction(dto));
-        assertEquals(0, mongoTemplate.count(new Query(), CorporateActionEntity.class));
+        assertEquals(0, corporateActionRepository.count());
     }
 }

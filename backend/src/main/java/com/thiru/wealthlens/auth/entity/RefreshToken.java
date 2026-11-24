@@ -1,59 +1,70 @@
 package com.thiru.wealthlens.auth.entity;
 
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 
 /**
- * One refresh token of a sign-in (W-358b, D-853 C3a). Only its SHA-256 hash is stored, so a copy of the collection signs nobody in.
- * Every token rotated from one sign-in shares its family and its expiry; presenting a spent token ends the family. Times are
- * {@link Instant}s because the expiry index reads the stored date as an instant.
+ * One refresh token of a sign-in (W-358b, D-853 C3a; ported to PostgreSQL in W-337c1, D-941). Only its SHA-256 hash is
+ * stored, so a copy of the table signs nobody in. Every token rotated from one sign-in shares its family and its expiry;
+ * presenting a spent token ends the family. Expired rows are swept on each sign-in (D-937 C3a).
  */
-@Document(value = "refresh_tokens")
+@Entity
+@Table(name = "refresh_tokens")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class RefreshToken {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("token_hash")
-    @Indexed(name = "refresh_token_hash_idx", unique = true)
+    @Column(name = "token_hash", unique = true, nullable = false)
     private String tokenHash;
 
-    @Field("family_id")
-    @Indexed(name = "refresh_token_family_idx")
+    @Column(name = "family_id", nullable = false)
     private String familyId;
 
-    @Field("email")
-    @Indexed(name = "refresh_token_email_idx")
-    @ValueConverter(SearchableIdentifier.class)
+    @Column(name = "email", nullable = false)
+    @Convert(converter = SearchableColumn.class)
     private String email;
 
-    /** The factors the sign-in proved ({@code FACTOR_PASSWORD}), carried into every access token the family issues. */
-    @Field("factors")
+    /** Eager so callers outside the spend transaction can read the factors carried into the new access token. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "refresh_token_factors", joinColumns = @JoinColumn(name = "refresh_token_id"))
+    @Column(name = "factor")
     private List<String> factors;
 
-    @Field("issued_at")
+    @Column(name = "issued_at", nullable = false)
     private Instant issuedAt;
 
-    /** The sign-in's expiry, kept by every rotation; Mongo removes the row once it passes. */
-    @Field("expires_at")
-    @Indexed(name = "refresh_token_expiry_idx", expireAfter = "0s")
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Field("used_at")
+    @Column(name = "used_at")
     private Instant usedAt;
 
-    @Field("revoked_at")
+    @Column(name = "revoked_at")
     private Instant revokedAt;
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

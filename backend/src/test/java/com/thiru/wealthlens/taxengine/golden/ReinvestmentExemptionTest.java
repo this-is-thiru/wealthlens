@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
  * long-term gain on listed equity, ₹60,00,000 of which buys a house, is charged on ₹40,00,000 rather than on the whole.
  *
  * <p>Every figure is worked by hand from the pack rows the case's own terms name, never taken from a run — and one
- * of them is not the one {@code plans/W-088i.md}'s table states. The gain is ₹1,20,00,000 less ₹40,00,000 = ₹80,00,000;
+ * of them is not the one {@code docs/modules/taxengine.md} §11 (W-088i)'s table states. The gain is ₹1,20,00,000 less ₹40,00,000 = ₹80,00,000;
  * the house's ₹60,00,000 against a net consideration of ₹1,20,00,000 exempts 80,00,000 × 60,00,000 / 1,20,00,000 =
  * ₹40,00,000, leaving ₹40,00,000. Total income is then ₹40,00,000 and nothing else stands in the way of the
  * zero-rate band of ₹4,00,000 ({@code RATE-SLAB-NEW-TAX-REGIME}), so {@code RATE-CG-SHORTFALL-ORDER} shifts the whole

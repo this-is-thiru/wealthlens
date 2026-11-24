@@ -43,7 +43,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * The house-reinvestment exemption on the node's own cases (2025 s.86; 1961 s.54F; W-088i): the cap on the new house's
  * cost, the bar on other houses, the construction limb, and a window missed on each side. Every figure is worked by
- * hand in {@code plans/W-088i.md} from the row the case's own facts meet, never taken from a run.
+ * hand in {@code docs/modules/taxengine.md} §11 (W-088i) from the row the case's own facts meet, never taken from a run.
  */
 class ReinvestmentExemptionTest {
 

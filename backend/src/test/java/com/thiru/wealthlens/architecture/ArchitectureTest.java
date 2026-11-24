@@ -528,10 +528,13 @@ class ArchitectureTest {
     }
 
     /**
-     * A dropped collection loses its indexes, and they are created only at startup ({@code PortfolioIndexInitializer},
-     * {@code @PostConstruct}). A test that dropped {@code profit_and_loss} left every later class in the shared
-     * container without {@code pnl_user_year_idx}, and ten simultaneous buys then stored two documents for one year
-     * (W-300, D-603). Main and test classes alike: clear with {@code deleteMany}.
+     * A dropped Mongo collection loses its indexes, and an {@code @PostConstruct} index initializer (e.g.
+     * {@code TaxProfileIndexInitializer}) creates them only at startup. A test that once dropped {@code profit_and_loss}
+     * this way left every later class in the shared container without {@code pnl_user_year_idx}, and ten simultaneous
+     * buys then stored two documents for one year (W-300, D-603) — {@code profit_and_loss} itself moved to PostgreSQL
+     * in W-337e, D-949, where {@code pnl_user_year_idx} is declared in DDL and survives a {@code TRUNCATE}, but the
+     * hazard remains for every Mongo collection still behind an index initializer. Main and test classes alike: clear
+     * Mongo collections with {@code deleteMany}.
      */
     @Test
     void nothing_drops_a_collection() {

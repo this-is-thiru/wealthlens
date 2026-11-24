@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.exception;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -7,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.thiru.wealthlens.testsupport.LogCapture;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,6 +50,21 @@ class ControllerAdviserTest {
         @GetMapping("/fails")
         String fails() {
             throw new IllegalStateException("Cannot invoke \"com.thiru.wealthlens.corporate.dto.enums.CorporateActionType.ordinal()\"");
+        }
+
+        @GetMapping("/refused")
+        String refused() {
+            throw new IllegalArgumentException("A trade must name its stock code");
+        }
+
+        @GetMapping("/switched-off")
+        String switchedOff() {
+            throw new ServiceUnavailableException("The charge engine is switched off");
+        }
+
+        @GetMapping("/collided")
+        String collided() {
+            throw new TradeCollisionException("The trade collided on every attempt", new IllegalStateException("write conflict"));
         }
 
         @GetMapping("/years/{taxYear}")
@@ -246,6 +263,51 @@ class ControllerAdviserTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.status").value(405)).andExpect(jsonPath("$.title").value("Method Not Allowed"))
                 .andExpect(jsonPath("$.detail").exists()).andExpect(jsonPath("$.instance").value("/years/2026"));
+    }
+
+    @Test
+    void refusal_whenLogged_isAWarningWithoutATrace() throws Exception {
+        // Given — W-370: a caller's mistake was logged at ERROR with its stack trace, so a deploy's ERROR count held refusals
+        try (LogCapture logs = LogCapture.on(ControllerAdviser.class)) {
+            // When
+            mvc.perform(get("/refused")).andExpect(status().isBadRequest());
+            mvc.perform(get("/years/2026-27")).andExpect(status().isBadRequest());
+
+            // Then
+            assertThat(logs.messages()).hasSize(2).allMatch(line -> line.startsWith("WARN "))
+                    .contains("WARN A trade must name its stock code");
+            assertThat(logs.errors()).isEmpty();
+            assertThat(logs.withTrace()).isEmpty();
+        }
+    }
+
+    @Test
+    void operatorStateOrRetryableAnswer_whenLogged_isAWarning() throws Exception {
+        // Given — W-370 C2a: an engine switched off (503) and a trade that collided on every retry (409) are not failures
+        try (LogCapture logs = LogCapture.on(ControllerAdviser.class)) {
+            // When
+            mvc.perform(get("/switched-off")).andExpect(status().isServiceUnavailable());
+            mvc.perform(get("/collided")).andExpect(status().isConflict());
+
+            // Then
+            assertThat(logs.messages()).containsExactly("WARN The charge engine is switched off",
+                    "WARN The trade collided on every attempt");
+            assertThat(logs.withTrace()).isEmpty();
+        }
+    }
+
+    @Test
+    void unexpectedFailure_whenLogged_isAnErrorWithItsTrace() throws Exception {
+        // Given — a 500 is what the log's ERROR lines are for
+        try (LogCapture logs = LogCapture.on(ControllerAdviser.class)) {
+            // When
+            mvc.perform(get("/fails")).andExpect(status().isInternalServerError());
+
+            // Then
+            assertThat(logs.errors()).hasSize(1);
+            assertThat(logs.withTrace()).isEqualTo(logs.errors());
+            assertThat(logs.warnings()).isEmpty();
+        }
     }
 
     @Test

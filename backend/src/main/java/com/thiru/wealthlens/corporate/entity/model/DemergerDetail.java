@@ -1,35 +1,51 @@
 package com.thiru.wealthlens.corporate.entity.model;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.mongodb.core.mapping.Field;
 
+@Embeddable
 @Getter
 @Setter
 public class DemergerDetail {
-    @Field("demerger_ratio")
+
+    @Column(name = "demerger_ratio")
     private String demergerRatio;
 
-    @Field("demerger_price_ratio")
+    @Column(name = "demerger_price_ratio")
     private String demergerPriceRatio;
 
-    @Field("main_stock_code")
+    @Column(name = "main_stock_code")
     private String mainStockCode;
 
-    @Field("main_stock_name")
+    @Column(name = "main_stock_name")
     private String mainStockName;
 
-    @Field("demerger_stocks")
-    private List<DemergerStock> demergerStocks;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "corporate_action_demerger_stocks", joinColumns = @JoinColumn(name = "corporate_action_id"))
+    private List<DemergerStock> demergerStocks = new ArrayList<>();
 
+    public boolean isEmpty() {
+        return demergerRatio == null && demergerPriceRatio == null && mainStockCode == null && mainStockName == null
+                && (demergerStocks == null || demergerStocks.isEmpty());
+    }
+
+    @Embeddable
     @Getter
     @Setter
     public static class DemergerStock {
-        @Field("stock_code")
+
+        @Column(name = "stock_code")
         private String stockCode;
 
-        @Field("stock_name")
+        @Column(name = "stock_name")
         private String stockName;
     }
 }

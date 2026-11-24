@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.shared.privacy.AccountErasureRequest;
+import com.thiru.wealthlens.shared.privacy.AccountErasureRequestRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -55,6 +56,9 @@ class SignInLimitIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AccountErasureRequestRepository accountErasureRequestRepository;
 
     @Test
     void login_whenFivePasswordsWereWrong_answers429UntilTheWindowPasses() {
@@ -145,7 +149,7 @@ class SignInLimitIntegrationTest extends AbstractIntegrationTest {
         AccountErasureRequest held = new AccountErasureRequest();
         held.setEmail("held@example.com");
         held.setRequestedAt(LocalDateTime.parse("2027-01-01T08:00:00"));
-        mongoTemplate.save(held);
+        accountErasureRequestRepository.save(held);
 
         // When
         Response answer = register("held@example.com", version());
@@ -180,7 +184,7 @@ class SignInLimitIntegrationTest extends AbstractIntegrationTest {
         user.setEmail(KNOWN);
         user.setPassword(passwordEncoder.encode(RIGHT));
         user.setRoles("USER");
-        mongoTemplate.save(user);
+        saveLogin(user);
     }
 
     private static Response login(String email, String password) {

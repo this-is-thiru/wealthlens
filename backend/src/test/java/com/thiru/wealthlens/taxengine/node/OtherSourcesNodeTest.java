@@ -296,7 +296,7 @@ class OtherSourcesNodeTest {
     }
 
     /**
-     * {@code plans/W-153b.md} case 2, by hand from the rows' notes: an item of 10,000 bearing a commission of 100,
+     * {@code docs/modules/taxengine.md} §11 (W-153b) case 2, by hand from the rows' notes: an item of 10,000 bearing a commission of 100,
      * interest of 200 and other expenditure of 400 — distinct, so a row reaching the wrong kind changes a figure. Each
      * list is the (in, out) of that row's lines: the commission row reaches interest on securities (S2 s.93(1)(a)); the
      * expenditure row the interest kinds, family pension and the in-full kinds (s.93(1)(e)); the dividend-interest row
@@ -373,7 +373,7 @@ class OtherSourcesNodeTest {
     }
 
     /**
-     * {@code plans/W-153c2.md} case 3, by hand from the rows: the {@code RS-OS-SHARE} row an item of 10,000 meets and
+     * {@code docs/modules/taxengine.md} §11 (W-153c2) case 3, by hand from the rows: the {@code RS-OS-SHARE} row an item of 10,000 meets and
      * what it deducts — half of interest on compensation (S2 s.93(1)(f)), the entire commuted pension or gratuity
      * ((g), (h)), the family pension's third under either regime's limit ((d)) rounded once to paise; no share for
      * any other built kind.
@@ -445,7 +445,7 @@ class OtherSourcesNodeTest {
     }
 
     /**
-     * {@code plans/W-153c1.md} case 2, by hand from the statute ({@code sources/2026-10-22-unit-income.md}): the row
+     * {@code docs/modules/taxengine.md} §11 (W-153c1) case 2, by hand from the statute ({@code sources/2026-10-22-unit-income.md}): the row
      * of {@code RS-OS-INCOME} an item's kind selects — s.92(2)(e) interest, (a) dividends, (i) interest on
      * compensation, (d), (h), (j) their own rows, and s.92(1) the residue, unit income, family pension, commuted fund
      * pension and death gratuity; empty for the four uncharged kinds.

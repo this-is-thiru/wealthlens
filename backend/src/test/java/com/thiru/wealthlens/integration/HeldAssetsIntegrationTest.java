@@ -81,7 +81,7 @@ class HeldAssetsIntegrationTest extends AbstractIntegrationTest {
         lot.setQuantity(quantity);
         lot.setPrice(100);
         lot.setTransactionDate(LocalDate.parse(acquiredOn));
-        mongoTemplate.save(lot);
+        portfolioRepository.save(lot);
     }
 
     private String holdings() {

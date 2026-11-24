@@ -57,8 +57,8 @@ class ResponseContractIntegrationTest extends AbstractIntegrationTest {
     @Test
     void ownRows_whenRead_carryNothingStoredOnlyForTheApp() throws IOException, InterruptedException {
         // Given — a trade and a temporary one with the fields only the app reads, and a holding
-        mongoTemplate.save(transaction("T-1", "PROCESSED"));
-        mongoTemplate.save(transaction("T-2", "TEMPORARY"));
+        transactionRepository.save(transaction("T-1", "PROCESSED"));
+        transactionRepository.save(transaction("T-2", "TEMPORARY"));
         AssetEntity holding = new AssetEntity();
         holding.setEmail(USER);
         holding.setStockCode("INFY");
@@ -67,7 +67,7 @@ class ResponseContractIntegrationTest extends AbstractIntegrationTest {
         holding.setAssetType(AssetType.EQUITY);
         holding.setQuantity(10.0);
         holding.setTransactionDate(LocalDate.of(2026, 1, 5));
-        mongoTemplate.save(holding);
+        portfolioRepository.save(holding);
         String user = generateToken(USER);
 
         // When

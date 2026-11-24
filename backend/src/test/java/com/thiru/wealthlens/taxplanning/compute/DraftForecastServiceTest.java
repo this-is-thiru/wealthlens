@@ -10,7 +10,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /**
- * The forecast's arithmetic (W-113, D-664), on {@code DR 13} T13-1's bill of 87,750 ({@code plans/W-089.md}) with the
+ * The forecast's arithmetic (W-113, D-664), on {@code DR 13} T13-1's bill of 87,750 ({@code docs/modules/taxengine.md} §11, W-089) with the
  * deferment interest {@code DraftComputationIntegrationTest} works by hand for 75,000 at source on 6-11-2026: 57 + 171 = 228.
  * The instalments are what 87,750 − 75,000 = 12,750 gives at 15, 45, 75 and 100 % ({@code ADV-INSTALMENTS}).
  */

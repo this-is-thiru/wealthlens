@@ -481,7 +481,7 @@ class ChargeEngineTest {
 
     @Test
     void compute_whenALotWasBoughtBelowTheSalePrice_chargesItOnTheRedemptionValue() {
-        // Given — an exit load is a % of redemption value (prd.md:89), not of the lot's cost (W-303)
+        // Given — an exit load is a % of redemption value (PRD §4.4, docs/modules/brokercharges.md §10), not of the lot's cost (W-303)
         ChargeRule exitLoad = formulaRule("EXIT_LOAD", 10);
         exitLoad.setPerLot(true);
         givenSchedule(exitLoad);

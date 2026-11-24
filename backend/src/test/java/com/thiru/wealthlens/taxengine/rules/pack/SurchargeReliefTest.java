@@ -32,7 +32,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  * Surcharge marginal relief, W = U + V, as FA 2026 parameterises it for an individual in both years
  * (D-085). The thresholds are typed from the Act's column C — s.2(5) Table Sl. 6 (pp.8–9), Part I-A Para F
  * Table 2 Sl. 1 (p.84), s.3(5) Table Sl. 6 (p.15), Part I-B Para F Table 2 Sl. 1 (p.88) — not read from
- * the files; the relief amounts are worked by hand in {@code plans/W-055.md}.
+ * the files; the relief amounts are worked by hand in {@code docs/modules/taxengine.md} §11 (W-055).
  */
 class SurchargeReliefTest {
 

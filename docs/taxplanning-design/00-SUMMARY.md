@@ -184,8 +184,8 @@ ArchUnit rule already forbids `BigDecimal.setScale(int, RoundingMode)` **outside
 `..shared.util.money..`**. `M6` and `15` Part G specified a `BigDecimal` `Money` whose two rounding
 methods both call it. **The design would have failed the existing build on the first commit.**
 
-The conclusion stands — `taxplanning` needs exact decimal, and `docs/trade-ledger/money-representation-analysis.md`
-§7 anticipates it precisely: *"A regulator or auditor requires exact decimal storage. For a personal
+The conclusion stands — `taxplanning` needs exact decimal, and the trade ledger's money analysis (TL-8, its triggers now in `docs/modules/portfolio.md` §10)
+anticipates it precisely: *"A regulator or auditor requires exact decimal storage. For a personal
 tracker this is remote; **for anything filed on someone else's behalf it is not**."* Two of its five
 triggers fire, and the ~170-declaration migration cost that made `BigDecimal` premature for the ledger
 does not exist in a greenfield module. So the rule is **amended deliberately**, with three new rules

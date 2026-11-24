@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class AccountErasureService {
 

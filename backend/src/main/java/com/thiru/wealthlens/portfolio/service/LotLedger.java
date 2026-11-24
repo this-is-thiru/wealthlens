@@ -23,7 +23,7 @@ import java.util.function.BiFunction;
 
 /**
  * One user's lots replayed in memory, event by event, by the rules the live trade paths apply — the heart of the
- * {@code assets} rebuild (W-283a2, D-582; {@code docs/trade-ledger/assets-rebuild.md}).
+ * {@code assets} rebuild (W-283a2, D-582; {@code docs/modules/portfolio.md} §5).
  *
  * <p>Nothing here reads or writes a store, so a replay can be compared with what is stored before anything changes.
  * Every rule that also runs live is called, not copied: a sale's allocation ({@link LotChargeAllocator}), the sale

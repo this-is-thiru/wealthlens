@@ -46,16 +46,13 @@ class TransactionServiceIdempotencyTest {
     private TransactionRepository transactionRepository;
 
     @Mock
-    private MongoTemplateService mongoTemplateService;
-
-    @Mock
     private ChargeViewAssembler chargeViewAssembler;
 
     private TransactionService transactionService;
 
     @BeforeEach
     void setUp() {
-        transactionService = new TransactionService(transactionRepository, new IdempotencyProperties(60), mongoTemplateService,
+        transactionService = new TransactionService(transactionRepository, new IdempotencyProperties(60),
                 chargeViewAssembler);
         when(transactionRepository.save(any(TransactionEntity.class))).thenAnswer(invocation -> {
             TransactionEntity saved = invocation.getArgument(0);
@@ -200,7 +197,7 @@ class TransactionServiceIdempotencyTest {
     @DisplayName("a zero window disables the fingerprint fallback but leaves client keys working")
     void recordTransaction_whenTheWindowIsZero_skipsTheFingerprintLookup() {
         // Given
-        transactionService = new TransactionService(transactionRepository, new IdempotencyProperties(0), mongoTemplateService,
+        transactionService = new TransactionService(transactionRepository, new IdempotencyProperties(0),
                 chargeViewAssembler);
 
         // When

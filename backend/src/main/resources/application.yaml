@@ -203,7 +203,7 @@ app:
     # ORDER MATTERS. Both flags above need rate cards to exist, and seeding is a deliberate act
     # (ADR-27) -- a fresh database has none. Run POST /api/v1/admin/charges/seed BEFORE the first trade, or
     # every trade resolves NO_SCHEDULE and is charged nothing. ChargeReadinessAuditor warns at
-    # startup when that is the case; docs/charges-engine/production-runbook.md is the procedure.
+    # startup when that is the case; docs/taxplanning-build/post-deployment-runbook.md §1B is the procedure.
     authoritative: true
 
 # W-359a: health and readiness only, read by an admin (AuthConfig: /actuator/** needs SUPER_USER); every other endpoint off.

@@ -23,11 +23,8 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
@@ -37,9 +34,6 @@ import org.springframework.web.client.RestTemplate;
 public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
 
     private static final String TEST_EMAIL = "analytics-test@example.com";
-
-    @Autowired
-    private MongoTemplate mongoTemplate;
 
     private String baseUrl() {
         return "http://localhost:" + RestAssured.port;
@@ -62,10 +56,10 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void clearCollections() {
-        mongoTemplate.getDb().getCollection("transactions").deleteMany(new Document());
-        mongoTemplate.getDb().getCollection("assets").deleteMany(new Document());
-        mongoTemplate.getDb().getCollection("trade_outcomes").deleteMany(new Document());
-        mongoTemplate.getDb().getCollection("profit_and_loss").deleteMany(new Document());
+        transactionRepository.deleteAll();
+        portfolioRepository.deleteAll();
+        tradeOutcomeRepository.deleteAll();
+        profitAndLossRepository.deleteAll();
     }
 
     private void seedData_BuyAndSell() {
@@ -83,7 +77,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         buy.setTransactionDate(LocalDate.of(2023, 1, 1));
         buy.setAssetType(AssetType.EQUITY);
         buy.setBrokerName(BrokerName.ZERODHA);
-        mongoTemplate.save(buy, "transactions");
+        transactionRepository.save(buy);
 
         // Seed Asset (position after BUY)
         AssetEntity asset = new AssetEntity();
@@ -97,7 +91,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         asset.setTransactionDate(LocalDate.of(2023, 1, 1));
         asset.setAssetType(AssetType.EQUITY);
         asset.setBrokerName(BrokerName.ZERODHA);
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         // Seed SELL transaction
         TransactionEntity sell = new TransactionEntity();
@@ -113,7 +107,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         sell.setTransactionDate(LocalDate.of(2024, 6, 1));
         sell.setAssetType(AssetType.EQUITY);
         sell.setBrokerName(BrokerName.ZERODHA);
-        mongoTemplate.save(sell, "transactions");
+        transactionRepository.save(sell);
 
         // Seed TradeOutcome
         TradeOutcomeEntity outcome = new TradeOutcomeEntity();
@@ -137,7 +131,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         outcome.setProfitPercentage((outcome.getNetProfit() / outcome.getTotalBuyValue()) * 100);
         outcome.setHoldingPeriodDays(516L); // days between 2023-01-01 and 2024-06-01
         outcome.setFinancialYear("2024-25");
-        mongoTemplate.save(outcome, "trade_outcomes");
+        tradeOutcomeRepository.save(outcome);
 
         // Seed P&L record with realized profits
         ProfitAndLossEntity pnl = new ProfitAndLossEntity();
@@ -149,7 +143,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         realised.setGainsByAssetAndSegment(new EnumMap<>(Map.of(AssetType.EQUITY,
                 new EnumMap<>(Map.of(TradeSegment.DELIVERY, ltReport)))));
         pnl.setRealisedProfits(realised);
-        mongoTemplate.save(pnl, "profit_and_loss");
+        profitAndLossRepository.save(pnl);
     }
 
     private void seedData_MultipleTrades() {
@@ -163,7 +157,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         win.setTotalSellValue(1500.0);
         win.setHoldingPeriodDays(30L);
         win.setFinancialYear("2024-25");
-        mongoTemplate.save(win, "trade_outcomes");
+        tradeOutcomeRepository.save(win);
 
         // Trade 2: LOSS
         TradeOutcomeEntity loss = new TradeOutcomeEntity();
@@ -175,7 +169,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         loss.setTotalSellValue(1700.0);
         loss.setHoldingPeriodDays(60L);
         loss.setFinancialYear("2024-25");
-        mongoTemplate.save(loss, "trade_outcomes");
+        tradeOutcomeRepository.save(loss);
 
         // Trade 3: BREAKEVEN
         TradeOutcomeEntity breakeven = new TradeOutcomeEntity();
@@ -187,7 +181,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         breakeven.setTotalSellValue(500.0);
         breakeven.setHoldingPeriodDays(45L);
         breakeven.setFinancialYear("2024-25");
-        mongoTemplate.save(breakeven, "trade_outcomes");
+        tradeOutcomeRepository.save(breakeven);
 
         // Seed transactions for XIRR calculation
         TransactionEntity buy1 = new TransactionEntity();
@@ -202,7 +196,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         buy1.setTransactionDate(LocalDate.of(2023, 1, 1));
         buy1.setAssetType(AssetType.EQUITY);
         buy1.setBrokerName(BrokerName.ZERODHA);
-        mongoTemplate.save(buy1, "transactions");
+        transactionRepository.save(buy1);
 
         TransactionEntity sell1 = new TransactionEntity();
         sell1.setEmail(TEST_EMAIL);
@@ -216,7 +210,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         sell1.setTransactionDate(LocalDate.of(2023, 6, 1));
         sell1.setAssetType(AssetType.EQUITY);
         sell1.setBrokerName(BrokerName.ZERODHA);
-        mongoTemplate.save(sell1, "transactions");
+        transactionRepository.save(sell1);
 
         // Asset for XIRR with open positions
         AssetEntity asset = new AssetEntity();
@@ -224,7 +218,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         asset.setStockCode("INFY");
         asset.setQuantity(10.0);
         asset.setAssetType(AssetType.EQUITY);
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         TransactionEntity buy2 = new TransactionEntity();
         buy2.setEmail(TEST_EMAIL);
@@ -238,7 +232,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         buy2.setTransactionDate(LocalDate.of(2023, 1, 1));
         buy2.setAssetType(AssetType.EQUITY);
         buy2.setBrokerName(BrokerName.ZERODHA);
-        mongoTemplate.save(buy2, "transactions");
+        transactionRepository.save(buy2);
     }
 
     // ============================================================
@@ -497,7 +491,7 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         buy.setTransactionDate(LocalDate.of(2023, 1, 1));
         buy.setAssetType(AssetType.EQUITY);
         buy.setBrokerName(BrokerName.ZERODHA);
-        mongoTemplate.save(buy, "transactions");
+        transactionRepository.save(buy);
 
         String token = generateToken(TEST_EMAIL);
 

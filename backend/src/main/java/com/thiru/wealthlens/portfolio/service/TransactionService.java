@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.entity.query.QueryBuilder;
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
@@ -23,24 +24,23 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for managing TransactionEntity records. Class-level @{@link Transactional}
- * ensures that methods touching multiple collections are atomic. Safe only when the
- * MongoDB replica set + {@code app.mongodb.transactions-enabled=true} is set.
+ * ensures that methods touching multiple collections are atomic.
  */
 @Log4j2
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
 
     private final IdempotencyProperties idempotencyProperties;
-    private final MongoTemplateService mongoTemplateService;
     private final ChargeViewAssembler chargeViewAssembler;
 
     /**
@@ -118,7 +118,9 @@ public class TransactionService {
     }
 
     public Page<TransactionResponse> userTransactions(UserMail userMail, List<QueryFilter> queryFilters, Pageable pageable) {
-        return withCharges(userMail, mongoTemplateService.getDocuments(userMail, queryFilters, TransactionEntity.class, newestFirst(pageable)));
+        QueryFilter.validateAndSanitizationOfQueryFilters(queryFilters, userMail);
+        Specification<TransactionEntity> specification = QueryBuilder.build(queryFilters);
+        return withCharges(userMail, transactionRepository.findAll(specification, newestFirst(pageable)));
     }
 
     public List<TransactionEntity> getUserTransactions(UserMail userMail) {

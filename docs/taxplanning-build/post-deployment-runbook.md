@@ -6,9 +6,9 @@
 - **tax planning** (`taxplanning`, `taxengine`), and any other module touched because of it, such as `portfolio`
   (W-085 – W-088u7) and `shared`.
 
-`docs/charges-engine/production-runbook.md` and `docs/trade-ledger/migration.md` are pointers to the sections here
-(W-176, D-379). `docs/charges-engine/staging-runbook.md` stays the charge engine's **test guide**: §1B uses its §4.1
-figure, and its §5, §5b and §7 are optional testing, not deploy steps.
+The trade ledger's and the charge engine's old runbooks (`docs/trade-ledger/migration.md`, `docs/charges-engine/`) moved here
+(W-176, D-379) and were deleted by W-357b7c and W-357b6b (D-913, D-909); §1B now states its own check figure, and what the engine does is
+`docs/modules/brokercharges.md`.
 
 Each entry is keyed to the work item and decision that introduced it, and says:
 - when it runs, and who runs it;
@@ -65,7 +65,7 @@ against the named database.
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
-| 2.1 – 2.14 | Tax planning, by hand, in order (retired: 2.0 by W-159; 2.1, 2.3 – 2.7, 2.9, 2.10 by Phase 15, D-874 – D-881; 2.13 by W-294, D-890; 2.14 by W-299, D-891; 2.8 by W-173, D-892) | per step | per step |
+| 2.1 – 2.14 | Tax planning, by hand, in order (retired: 2.0 by W-159; 2.1, 2.3 – 2.7, 2.9, 2.10 by Phase 15, D-874 – D-881; 2.13 by W-294, D-890; 2.14 by W-299, D-891; 2.8 by W-173, D-892; 2.18 by W-368, D-898) | per step | per step |
 | 3 | Standing data conditions, read-only | check | check |
 | 5 | Standing operations (not deploy steps) | as needed | as needed |
 
@@ -77,22 +77,12 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ## Next deploy — what prod and staging still need
 
-Both are on `m1.5` (W-362, D-870, D-871); the app runs locally, nothing is hosted. An item that needs
+Both are on `m1.6.1` (W-366, D-896, D-897); the app runs locally, nothing is hosted. An item that needs
 something at the next deploy adds its line here when it is committed; each line goes when its run is logged for both. Everything
 below is the full sequence for a fresh database (W-337).
 
-1. W-358d1 (D-873) — nothing to run: every answer carries `X-Request-Id` (quote it when asking about a request); log lines print it and write emails as `[email]`; new `privacy_processing_log` rows store `request_id` (older rows have none).
-2. Phase 15 batch (D-874 – D-883) — nothing to run: the six one-time corrections answer 404 (`…/trade-outcomes/rebuild-charges/correct`, `…/financial-years/rewrite`, `…/stored-terms/remove`, `…/deductible-charges/remove`, `…/profit-and-loss/split/reshape`, `…/corporate-actions/bonus/allotment-dates/correct`, all under `/api/v1/admin/portfolio`); runbook §0.6, §0.8, §2.1, §2.3 – §2.7, §2.9, §2.10 retired and §6 removed.
-3. W-358d2 (D-884) — nothing to run: 5 failed sign-ins for one address from one client in 15 minutes, or 30 calls from one client to `/api/v1/public/auth/**`, answer 429 with `Retry-After`; registering a taken or held address answers "This email cannot be registered" (the address named nowhere), and a wrong notice version is now reported first.
-4. §1.h W-358d3 (D-885) — nothing to run: each sign-in rewrites its account's password hash as Argon2id; the read-only count before and a week after; going back to `m1.5` needs a password reset for each upgraded account (§1.h).
-5. W-358d4 (D-886) — nothing to write: a body missing a required field answers 400 naming it. **Read-only, per database (IntelliJ console):** demat accounts stored with a field the request now requires missing — `db.charge_accounts.countDocuments({ $or: [{ broker_name: null }, { demat_account_id: { $in: [null, ""] } }, { amc_frequency: null }] })`; expected `0`; anything above 0 is reported to the owner, corrected by nobody in this item.
-6. W-364 (D-887) — nothing to run: an unexpected failure answers 500 "Something went wrong. Quote X-Request-Id <id> when you report it."; its message is only in the log.
-7. W-365 (D-889) — nothing to write: a trade without `stockCode`, `brokerName`, `transactionType` or `transactionDate` answers 400 naming it (a missing date is no longer taken to be today), on V1, V2, the upload and redrive; `/finances/calculate` without `calculationType` and `/finances/interest-rate` without `stepUpFrequency` answer 400; `/charges/simulate` needs `price` (0 allowed) and, on a BUY or SELL, `stockCode`. **Read-only, per database (IntelliJ console):** stored trades missing a field now required — `db.transactions.countDocuments({ $or: [{ stock_code: { $in: [null, ""] } }, { broker_name: null }, { transaction_type: null }, { transaction_date: null }] })`; expected `0`. A temporary trade among them would be refused at every redrive and, under V1, block new trades; anything above 0 is reported to the owner, corrected by nobody in this item.
-8. W-294 (D-890) — nothing to run: §2.13 is retired (run on prod and staging).
-9. W-299 (D-891) — nothing to run: §2.14 is retired and `POST /api/v1/admin/portfolio/transactions/segment/correct` is no longer served.
-10. §2.18 W-173 (D-892) — **a write, per database, after the deploy (owner, IntelliJ console):** the V2 backfill is removed (`POST /api/v1/admin/portfolio/profit-and-loss/v2-figures/backfill` no longer served, §2.8 retired); §2.18 backs up and unsets `pnl_backfilled_outcome_ids` on `profit_and_loss` — before N, backup N, after 0, P&L by year unchanged.
-11. W-254 (D-893) — **read-only precheck, per database, before switching to `m1.6`** (IntelliJ console): §1.r step 3's query. Expected: `grievances`, `processingLog`, `insurances` 0; `identifiers` and `embeddedActors` `[]`; `loginsToRekey` 0; `actors` listing only collections no code reads (staging: the two ITS-22 test collections). Anything else: stop, stay on `m1.5` (which still serves `POST /api/v1/admin/privacy/stored-fields/encrypt`) and run §1.r steps 4 – 6 there first. After the switch, §1.r is retired and the route is no longer served.
-12. W-369 (D-895) — nothing to run: a password is stored by a targeted update by email, so a login re-keyed by §1.r (an `ObjectId` `_id`) signs in on `m1.6.1` — `m1.6` answered 500 there — and can change its password again (broken for those logins since `m1.4`). Deploy `m1.6.1`, never `m1.6`.
+1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
+2. W-370 (D-900) — nothing to run: a caller's mistake (every 4xx), the 409 and the 503 are logged at WARN with the message only; only a 500 is logged at ERROR with its trace. A deploy's `grep -c " ERROR "` after the routes check expects **0** again (at `m1.6.1` it counted row 4's four refusals).
 
 ## 0. Before deploying
 
@@ -180,7 +170,10 @@ upsert` restores them.
 **Why.** `ProfitAndLossEntity` carries `@Version private Long version`. On a document written without the field, Spring
 Data reads the null version as a new document and inserts against an existing `_id`
 (`E11000 duplicate key error … profit_and_loss index: _id_`), so every trade for an existing user in an existing year
-fails. `LegacyDocumentUpgradeIntegrationTest` proves it against a real MongoDB.
+fails. This was proven against a real MongoDB by `LegacyDocumentUpgradeIntegrationTest`, which W-337e (D-949) removed:
+`profit_and_loss` moves to PostgreSQL, where `version` is `NOT NULL` from the table's first row, so the failure mode
+this precheck guards against cannot occur there; this precheck still applies to any MongoDB database not yet moved
+(W-337i decides this section's fate once the move runs).
 
 1. **Check** (read-only): `db.profit_and_loss.countDocuments({ version: { $exists: false } })`. Must be `0`.
    **2026-10-27: 0 on prod and on staging** (run log), so there is nothing to do.
@@ -676,7 +669,7 @@ from that deploy on, and erased a year after `erased_at` by §1.t's `log-retenti
 
 ### 1.r W-248 (D-479), W-253 (D-485), W-256 (D-486) — personal data, identifiers and actors stored before them, encrypted · owner, `SUPER_USER` · **retired by W-254 (D-893) · do not run**
 
-> **Retired.** Run on prod (W-334e1 row 10b: `encryptedRows` = `plainRows`, conflicts 0; rows 11 – 13: nothing plain but `reports`, dropped by §2.15) and staging (W-334d2 rows 9b – 10: the same; plain actors only in collections no code reads). W-254 removed its route and code, so nothing in the app seals a plain row any more: step 3's query stays below as the record and as the read-only precheck before a deploy ("Next deploy" item 11). Kept below as the record of what it did.
+> **Retired.** Run on prod (W-334e1 row 10b: `encryptedRows` = `plainRows`, conflicts 0; rows 11 – 13: nothing plain but `reports`, dropped by §2.15) and staging (W-334d2 rows 9b – 10: the same; plain actors only in collections no code reads). W-254 removed its route and code, so nothing in the app seals a plain row any more: step 3's query stays below as the record and as a read-only precheck (run before the switch to `m1.6.1`: W-366b / c row 2a, nothing plain on either). Kept below as the record of what it did.
 
 From W-248 these fields are stored encrypted under `TAX_DATA_KEY` (§0.5): `privacy_grievances` `text` and `answer`;
 `privacy_processing_log` `remote_address`; `insurances` `insurance_id`, `agent_name`, `agent_email`, `agent_contact`,
@@ -1073,9 +1066,11 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
      }' | jq '.data'
    ```
 
-   Compare with the expected figure in [`../charges-engine/staging-runbook.md`](../charges-engine/staging-runbook.md)
-   §4.1. Its §4 holds every shipped card's figure, and §4.7b the three card generations: the same trade prices
-   differently by date, which is correct.
+   Expect `scheduleCode` `ZERODHA_EQ_DELIVERY_2025_04`, `resolution` `RESOLVED`, and, on turnover ₹1,00,000: BROKERAGE 0,
+   STT 100 (0.1 %, to the rupee), EXCHANGE_TXN 2.97 (0.00297 %), SEBI_FEE 0.10, IPFT 0.10 (0.0001 % each), DP 13.50,
+   GST 3.00 (18 % of 0 + 2.97 + 0.10 + 0.10 + 13.50 = 16.67), **total ₹119.67**; no STAMP_DUTY on a sale. Worked by
+   hand from `zerodha-equity-delivery-2025-04-01.json` and `statutory-equity-delivery-2025-04-01.json`; the same
+   method is shown in `docs/modules/brokercharges.md` §5. A later date prices on a later card, which is correct.
 
 **Second run:** safe; the seed skips what is on file. **Way back:** §1A clears what this wrote.
 
@@ -1618,7 +1613,7 @@ documents with the same fold, so a second run writes the same documents (`Profit
 ### 2.12 W-283a3 (D-586) — rebuild one user's `assets` from `transactions` · `SUPER_USER` · **when needed, not once**
 
 **Why.** `assets` (the lots) is derived. This replays one user's transactions into lots
-(`docs/trade-ledger/assets-rebuild.md`; W-283a2, D-582) and replaces the stored ones, instead of hand-editing quantities
+(`docs/modules/portfolio.md` §5; W-283a2, D-582) and replaces the stored ones, instead of hand-editing quantities
 and charges after a correction (B-4). A **standing operation**, not removed after use; never automatic.
 
 **When:** after a correction to a user's `transactions`, or when a dry run shows drift. Run order with the other two
@@ -1839,7 +1834,9 @@ restore again 0; remove with a backup present refused.
 
 ---
 
-### 2.18 W-173 (D-892) — unset `pnl_backfilled_outcome_ids` on `profit_and_loss` · owner, IntelliJ console · **every database · once · outstanding**
+### 2.18 W-173 (D-892) — unset `pnl_backfilled_outcome_ids` on `profit_and_loss` · owner, IntelliJ console · **retired by W-368 (D-898) · do not run**
+
+> **Retired.** Run on staging (W-366b rows 5a – 6c: 7 backed up, 7 unset, P&L hashes unchanged, backup dropped) and prod (W-366c rows 5a – 6c: the same, 7). Kept below as the record of what it did.
 
 **Why.** §2.8's one-time V2 backfill kept, on each P&L document, the list of `trade_outcomes` rows already in its figures, and a §2.11
 rebuild filled it too (D-575). W-173 removed the backfill and the field's mapping, so nothing reads or writes the list any more. A
@@ -2047,14 +2044,14 @@ curl -sS -X POST "$BASE/api/v1/me/charges/charge-accounts" -H "Authorization: Be
 | **Rate verification** | `GET /api/v1/me/charges/charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
 | **Drift check** | `GET /api/v1/admin/charges/charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
 | **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.data'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
-| **Publishing a rate change** | `POST /api/v1/admin/charges/charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. Rehearsal: `staging-runbook.md` §7 |
+| **Publishing a rate change** | `POST /api/v1/admin/charges/charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. How publishing supersedes: `docs/modules/brokercharges.md` §5 |
 
 ### 5.3 History before the engine is not priced
 
 Trades made before the engine priced them carry no computed charge, and **there is no way to give them one**. ADR-32
 applies the cutover forward only; the endpoint that could re-price history was removed for that reason. A charge
 report over an earlier period is sparse, which is correct. Pricing history, if wanted, is the
-[priced-portfolio epic](../epics/priced-portfolio.md), and needs historical rate cards first.
+work of W-383, and needs historical rate cards first.
 
 ### 5.4 If something goes wrong
 
@@ -2075,7 +2072,7 @@ nothing rewrites a stored `AssetEntity`.
 
 ### 5.5 Known limits — recorded, not defects
 
-Full list in `docs/charges-engine/README.md` §10.
+Full list in `docs/modules/brokercharges.md` §8.
 - **A database with no cards prices nothing until §1B runs.**
 - **Nothing before 2025-04-01 can be priced:** no card covers it.
 - **Only two mutual-fund schemes have exit-load profiles.** Every other fund resolves `NO_INSTRUMENT_PROFILE` and
@@ -2172,3 +2169,29 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-22 | staging (W-366b, D-894) | row 3, `m1.6` started (staging profile) | owner | pid 11092; `Started` in 7.263 s; no ERROR; WARN exactly W-362b's two (malware scan off, W-131h; SpringDoc's spec notice, D-867 C1a) — **go** |
 | 2026-11-22 | staging (W-366b, D-894) | row 4, the routes | owner | rights 200 with `X-Request-Id`; **sign-in 500** (twice, 08:56:01 and 08:56:34): `DuplicateKeyException` E11000 on `user_details.user_email_idx` from `UserDetailsServiceImpl.updatePassword`'s `save` (W-358d3's rehash) — so no token, every later call 401, P&L hashes of empty bodies — **stop**. Nothing written (the failed upsert stores nothing; the hash stays BCrypt). Cause, read and reproduced: staging's 14 logins hold `_id` as an `ObjectId` (console: `objectId` ×14), written by the m1.4 re-key (`rekeyed.put("_id", new ObjectId())`), while `UserDetail`'s `@MongoId String id` writes and matches a string; a save filters on the string, matches nothing, and inserts a second login. Reproduced in a throwaway integration test: an app-registered login (`String` `_id`) signs in 200, one shaped as the re-key wrote it 500 with the same E11000. W-366 paused (R13) |
 | 2026-11-22 | staging (W-366b, D-894) | m1.6 stopped after row 4's stop | owner | exit 143 (the `kill`); `m1.6 stopped`, port 8080 free — staging rests on `m1.5`, unchanged |
+| 2026-11-22 | — (W-366a again, Revision 1, D-895) | W-369 committed, PR #72 | session | `e5c696d3` pushed; PR #72 run 44981814412 `success`; `OPEN false e5c696d3 MERGEABLE CLEAN`; `master` 532485e1; no `m1.6.1` tag — **go** |
+| 2026-11-22 | — (W-366a again, D-895) | PR #72 merged as a merge commit | session | `M` = 8dbb4cf0, parents 532485e1 and e5c696d3; diff to e5c696d3 empty — **go** |
+| 2026-11-22 | — (W-366a again, D-895) | the `master` pipeline | session | run 44982257584 (`push`) `success` on 8dbb4cf0 — **go** |
+| 2026-11-22 | — (W-366a again, D-895) | `m1.6.1` tagged, worktree and jar; WL-A-2 | session | tag `m1.6.1` (5d3cfda9) → 8dbb4cf0 pushed; `../wealthlens-m1.6.1` at 8dbb4cf0; `wealthlens.jar` 91,330,043 bytes; WL-A-2 published from `m1.6.1`, read back 201,776 characters holding the file's 201,625, item 12 present — **go**; staging resumes from W-366b row 1 |
+| 2026-11-22 | staging `it-staging` (W-366b on `m1.6.1`, D-896) | row 1, environment (from `staging.env`) | owner | `dev.env`, `prod.env`, `staging.env` each `-rw-------`; keys 32 bytes, prefixes bbf4a26647f6 / c59064f277a6 / 5524e829976b; PRIVACY_CONTACT 25; owner email 25; Mongo user and both passwords set; jobs off; port 8080 free; jars 91,330,043 (`m1.6.1`) and 91,407,010 (`m1.5`) — **go** |
+| 2026-11-22 | staging `it-staging` (W-366b on `m1.6.1`, D-896) | row 2, before (read-only): 2a, 2b | owner | 2a nothing plain (all 0 / `[]`); 2b users 14 (no second login left by m1.6's failed sign-ins), upgraded 0, demat nulls 0, trades missing 0, P&L years 8, `pnlWithBackfillList` 7, backup absent — as the first row 2 — **go** |
+| 2026-11-22 | staging (W-366b on `m1.6.1`, D-896) | row 3, `m1.6.1` started (staging profile) | owner | pid 13707; `Started` in 6.13 s; no ERROR; WARN the two known (malware scan off; SpringDoc's spec notice) — **go** |
+| 2026-11-22 | staging (W-366b on `m1.6.1`, D-896) | row 4, the routes | owner | rights `HTTP/1.1 200` with `X-Request-Id`; **sign-in `expires_in 900`** (W-369: the re-keyed login signs in and its hash is rewritten); my stocks 200; spec paths **127** (136 − 9, as computed); the three removed routes 404; trade without stock `400 A trade must name its stock code`; P&L hashes 2023-24 17a29db87f971895, 2024-25 d515c12bf1ad8157, 2025-26 458545f47307230e (`w366b/pnl-before.txt`) — **go** |
+| 2026-11-22 | staging `it-staging` (W-366b on `m1.6.1`, D-896) | row 5a, §2.18 steps 1 – 2: count, backup | owner | `before` 7 (= row 2b's N), `backup` 7 in `profit_and_loss_backfill_ids_w173` — **go** |
+| 2026-11-22 | staging `it-staging` (W-366b on `m1.6.1`, D-896) | row 5b, §2.18 step 3: the write | owner | `updateMany` matched 7, modified 7; `after` 0 — **go** |
+| 2026-11-22 | staging (W-366b on `m1.6.1`, D-896) | row 6a, P&L read after §2.18 | owner | refreshed `expires_in` 900; hashes 17a29db87f971895 / d515c12bf1ad8157 / 458545f47307230e = row 4's; `diff` empty, "P&L unchanged" — **go** |
+| 2026-11-22 | staging `it-staging` (W-366b on `m1.6.1`, D-896) | row 6b, counts after | owner | users 14, **upgraded 1** (§1.h: the owner's hash now Argon2id), demat nulls 0, trades missing 0, `pnlWithBackfillList` 0, P&L years 8, backup 7 — **go** |
+| 2026-11-22 | staging `it-staging` (W-366b on `m1.6.1`, D-896) | row 6c, §2.18 step 5: backup dropped | owner | `profit_and_loss_backfill_ids_w173` present: `false` — **go**; §2.18 done on staging |
+| 2026-11-22 | staging (W-366b on `m1.6.1`, D-896) | row 7, logout, `m1.6.1` stopped | owner | `logout 204`; exit 143; `m1.6.1 stopped`; ERROR lines **4**, each one of row 4's deliberate refusals (the three removed routes, `No static resource …`, and `A trade must name its stock code`) — `ControllerAdviser` logs a caller's mistake at ERROR (finding, for a proposal) — **go**; awaiting the owner's sign-off |
+| 2026-11-22 | staging (W-366b, D-896) | sign-off | owner | "staging signed off" — staging on `m1.6.1`; W-366b done |
+| 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 1, environment (from `prod.env`, a fresh terminal) | owner | `prod.env` `-rw-------`; keys 32 bytes, prefixes 8d910c6ebabf / f9bf756780af / af38366a5db3; PRIVACY_CONTACT 25; owner email 25; Mongo user and both passwords set; jobs off; port 8080 free; jars 91,330,043 (`m1.6.1`) and 91,407,010 (`m1.5`) — **go** |
+| 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 2, before (read-only): 2a item 11, 2b counts | owner | 2a nothing plain (all 0 / `[]`, `reports` gone with §2.15); 2b users 12, upgraded 0, demat nulls 0, trades missing 0, P&L years 7, `pnlWithBackfillList` **7** (§2.18's N, every year rebuilt by W-334e3's §2.11), backup absent — **go** |
+| 2026-11-22 | prod (W-366c on `m1.6.1`, D-897) | row 3, `m1.6.1` started (prod profile) | owner | pid 14224; `Started` in 6.333 s; no ERROR; WARN the two known (malware scan off; SpringDoc's spec notice) — **go** |
+| 2026-11-22 | prod (W-366c on `m1.6.1`, D-897) | row 4, the routes | owner | rights `HTTP/1.1 200` with `X-Request-Id`; sign-in `expires_in 900`; my stocks 200; spec paths 127; the three removed routes 404; trade without stock `400 A trade must name its stock code`; P&L hashes 2023-24 0871a3705a747557, 2024-25 c7ca734f284df50a, 2025-26 0cc7dc81e4b7be13 (`w366c/pnl-before.txt`) — **go** |
+| 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 5a, §2.18 steps 1 – 2: count, backup | owner | `before` 7 (= row 2b's N), `backup` 7 in `profit_and_loss_backfill_ids_w173` — **go** |
+| 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 5b, §2.18 step 3: the write | owner | `updateMany` matched 7, modified 7; `after` 0 — **go** |
+| 2026-11-22 | prod (W-366c on `m1.6.1`, D-897) | row 6a, P&L read after §2.18 | owner | refreshed `expires_in` 900; hashes 0871a3705a747557 / c7ca734f284df50a / 0cc7dc81e4b7be13 = row 4's; `diff` empty, "P&L unchanged" — **go** |
+| 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 6b, counts after | owner | users 12, **upgraded 1** (§1.h: the owner's hash now Argon2id), demat nulls 0, trades missing 0, `pnlWithBackfillList` 0, P&L years 7, backup 7 — **go** |
+| 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 6c, §2.18 step 5: backup dropped | owner | `profit_and_loss_backfill_ids_w173` present: `false` — **go**; §2.18 done on prod (logged for both databases: W-368 may now retire it) |
+| 2026-11-22 | prod (W-366c on `m1.6.1`, D-897) | row 7, logout, `m1.6.1` stopped | owner | `logout 204`; exit 143; `m1.6.1 stopped`; ERROR lines 4, exactly row 4's deliberate refusals (three `No static resource …`, one `A trade must name its stock code`) as on staging — **go**; awaiting the owner's sign-off |
+| 2026-11-22 | prod (W-366c, D-897) | sign-off | owner | "approved" (to "say prod signed off") — prod on `m1.6.1`; W-366c done, W-366 complete |

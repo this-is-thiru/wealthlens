@@ -26,8 +26,27 @@ Start here. Every kept doc is listed with what it is for. Anything removed is in
 | Doc | What it is |
 |---|---|
 | [`taxplanning-design/`](taxplanning-design/) | the tax design — the cited source for figures and structure (rule R1); `00-BRIEF.md` first |
-| [`charges-engine/`](charges-engine/), [`trade-ledger/`](trade-ledger/) | the charge engine's and trade ledger's design notes; replaced by module docs in W-357b |
 
-## Coming next
+## Modules (`docs/modules/`)
 
-One current doc per module (`docs/modules/…`), written from the code against the final API — W-357b, after the API rebuild (W-358c).
+One current doc per module, written from the code and citing it (W-357b, D-901; the template is `plans/W-357b.md` C2a). Written so far:
+
+| Module | Doc |
+|---|---|
+| `finance` — loan and SIP calculators | [`modules/finance.md`](modules/finance.md) |
+| `insurance` — stored policies, no routes | [`modules/insurance.md`](modules/insurance.md) |
+| `helper` — the upload template and file answers | [`modules/helper.md`](modules/helper.md) |
+| `auth` — accounts, sign-in, tokens | [`modules/auth.md`](modules/auth.md) |
+| `corporate` — corporate actions, recorded then applied per user and broker | [`modules/corporate.md`](modules/corporate.md) |
+| `brokercharges` — rate cards, the charge engine, what each trade cost | [`modules/brokercharges.md`](modules/brokercharges.md) |
+| `portfolio` — trades, holdings, outcomes and reports | [`modules/portfolio.md`](modules/portfolio.md) |
+| `shared` — the privacy duties, and what every module stands on | [`modules/shared.md`](modules/shared.md) |
+| `taxengine` — income tax as data, and the engine | [`modules/taxengine.md`](modules/taxengine.md) |
+| `taxplanning` — profiles, drafts, computations, documents and tax operations (boundary, profiles, workspaces, drafts, salary import, assembly, portfolio bridge, computation, advisory views, report, documents and isolation, protection, erasure, jobs and the Gazette watch) | [`modules/taxplanning.md`](modules/taxplanning.md) |
+
+Every module has its doc (W-357b complete).
+
+`charges-engine/` and `trade-ledger/`, the charge engine's and the trade ledger's design notes, were deleted by W-357b6b (D-909) and
+W-357b7c (D-913): what the code shows is in `modules/brokercharges.md` and `modules/portfolio.md`, each of which also says what the
+design names the code cites mean (§10). Plans, reviews and D-rows that cite either folder read it at tag `docs-history-m1`:
+`git show docs-history-m1:docs/charges-engine/<file>` (or `…/trade-ledger/<file>`).

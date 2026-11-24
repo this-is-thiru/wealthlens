@@ -21,7 +21,7 @@ class EmailLogMaskTest {
 
     @Test
     void write_whenAnExceptionNamesAnEmail_writesTheTraceOnceAndMasked() throws JoranException {
-        // When — ControllerAdviser logs every refusal's message with its trace (AuthService:80's message)
+        // When — a logged exception's message and trace, as ControllerAdviser writes an unexpected failure (W-370)
         String line = ShippedLogLine.written("User with email a.b@c.io not found", new IllegalArgumentException("User with email a.b@c.io not found"));
 
         // Then

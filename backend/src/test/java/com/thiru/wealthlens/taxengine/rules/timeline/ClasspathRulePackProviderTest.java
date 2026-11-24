@@ -204,7 +204,7 @@ class ClasspathRulePackProviderTest {
     /**
      * The application runs from a JAR, where the timeline is an archive entry, not a directory (D-210). The
      * shipped timeline is zipped as a plain JAR lays it out; the Spring Boot JAR's own nested filesystem is
-     * proved by the probe in {@code plans/W-079a.md}, since it needs the repackaged application.
+     * proved by the probe in {@code docs/modules/taxengine.md} §11 (W-079a), since it needs the repackaged application.
      */
     @Nested
     @DisplayName("loading from a JAR")

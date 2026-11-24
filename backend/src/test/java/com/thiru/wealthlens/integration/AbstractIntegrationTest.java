@@ -1,10 +1,19 @@
 package com.thiru.wealthlens.integration;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
-
 import com.thiru.wealthlens.auth.config.AccessTokenConfig;
 import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
+import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
+import com.thiru.wealthlens.corporate.repository.CorporateActionRepository;
+import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionRepo;
+import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
+import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
+import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
+import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.testsupport.FakeClamd;
 import io.restassured.RestAssured;
@@ -13,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import javax.sql.DataSource;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -21,9 +31,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -33,6 +45,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.mongodb.MongoDBContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Tag("integration")
 @Isolated
@@ -69,25 +82,39 @@ public abstract class AbstractIntegrationTest {
      * (SERVER-121912), which CI's Ubuntu 26 runner has (kernel 7.0).
      */
     static final MongoDBContainer mongoDBContainer;
+    static final PostgreSQLContainer postgresContainer;
     static {
         mongoDBContainer = new MongoDBContainer("mongo:8.0.4").withReplicaSet();
         mongoDBContainer.start();
+        /*
+         * max_connections raised from Postgres's default 100 (W-337e): Spring's test context cache holds up to 32
+         * contexts at once (spring.test.context.cache.maxSize), one HikariCP pool each at Boot's default size 10 — up
+         * to 320 possible connections across the whole run's distinct property combinations, all against this one
+         * shared container. The default ceiling made a long local or CI run fail with "sorry, too many clients
+         * already" partway through, unrelated to any one test's correctness.
+         */
+        postgresContainer = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400");
+        postgresContainer.start();
     }
 
-    /** The malware scanner every upload passes through (W-131e); shared and left running, as the Mongo container is. */
+    /** The malware scanner every upload passes through (W-131e); shared and left running, as the database containers are. */
     protected static final FakeClamd CLAMD = FakeClamd.start();
 
     @AfterAll
     static void tearDownContainer() {
-        // Container is shared across all test classes in the same JVM.
-        // Do NOT stop here — it would kill MongoDB for subsequent test classes,
-        // causing them to hang indefinitely. The JVM exit cleans it up.
+        // Containers are shared across all test classes in the same JVM.
+        // Do NOT stop here — it would kill the databases for subsequent test classes,
+        // causing them to hang indefinitely. The JVM exit cleans them up.
     }
 
     @DynamicPropertySource
-    static void mongoProperties(DynamicPropertyRegistry registry) {
+    static void databaseProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
         registry.add("app.mongodb.transactions-enabled", () -> "true");
+        registry.add("app.postgres.enabled", () -> "true");
+        registry.add("app.postgres.datasource.url", postgresContainer::getJdbcUrl);
+        registry.add("app.postgres.datasource.username", postgresContainer::getUsername);
+        registry.add("app.postgres.datasource.password", postgresContainer::getPassword);
         registry.add("app.tax.documents.scan.host", () -> "localhost");
         registry.add("app.tax.documents.scan.port", CLAMD::port);
     }
@@ -97,6 +124,46 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected MongoTemplate mongoTemplate;
+
+    @Autowired
+    @Qualifier("postgresDataSource")
+    protected DataSource postgresDataSource;
+
+    @Autowired
+    protected UserDetailsRepository userDetailsRepository;
+
+    @Autowired
+    protected CorporateActionRepository corporateActionRepository;
+
+    @Autowired
+    protected LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
+
+    @Autowired
+    protected ChargeCatalogueRepository chargeCatalogueRepository;
+
+    @Autowired
+    protected ChargeScheduleRepository chargeScheduleRepository;
+
+    @Autowired
+    protected ChargeInstrumentRepository chargeInstrumentRepository;
+
+    @Autowired
+    protected ChargeAccountRepository chargeAccountRepository;
+
+    @Autowired
+    protected UserChargeRepository userChargeRepository;
+
+    @Autowired
+    protected PortfolioRepository portfolioRepository;
+
+    @Autowired
+    protected TransactionRepository transactionRepository;
+
+    @Autowired
+    protected TradeOutcomeRepository tradeOutcomeRepository;
+
+    @Autowired
+    protected ProfitAndLossRepository profitAndLossRepository;
 
     @Autowired
     private FieldCipher fieldCipher;
@@ -115,12 +182,13 @@ public abstract class AbstractIntegrationTest {
     }
 
     /**
-     * Clears every collection except the seeded reference data.
+     * Clears every collection and PostgreSQL table except the seeded reference data and Flyway history.
      *
-     * <p>Uses {@code deleteMany} rather than {@code drop} deliberately: dropping a collection
-     * also drops its indexes, and nothing recreates them until the next startup
-     * ({@code PortfolioIndexInitializer}), so every later class in the shared container would run
-     * without its unique indexes (W-300). {@code ArchitectureTest.nothing_drops_a_collection} holds it.
+     * <p>Uses {@code deleteMany} / {@code TRUNCATE} rather than {@code drop} deliberately: dropping a Mongo collection
+     * also drops its indexes, and nothing recreates them until the next startup (an {@code @PostConstruct} index
+     * initializer such as {@code TaxProfileIndexInitializer}), so every later class in the shared container would run
+     * without its unique indexes (W-300). {@code TRUNCATE} on PostgreSQL never drops an index, so this risk does not
+     * apply to a ported table such as {@code profit_and_loss} (W-337e). {@code ArchitectureTest.nothing_drops_a_collection} holds it.
      */
     @AfterEach
     void cleanDatabase() {
@@ -130,16 +198,32 @@ public abstract class AbstractIntegrationTest {
             }
             mongoTemplate.getDb().getCollection(collectionName).deleteMany(new Document());
         }
+        JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
+        List<String> tables = jdbc.queryForList(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
+                String.class);
+        List<String> toTruncate = tables.stream()
+                .filter(table -> !table.equals("flyway_schema_history") && !SEEDED_REFERENCE_COLLECTIONS.contains(table))
+                .map(table -> "\"" + table + "\"")
+                .toList();
+        if (!toTruncate.isEmpty()) {
+            jdbc.execute("TRUNCATE TABLE " + String.join(", ", toTruncate) + " CASCADE");
+        }
     }
 
-    /** An identifier as stored (W-253): what a raw document holds and a raw query matches. */
+    /** An identifier as stored (W-253): what a raw document or column holds and a raw query matches. */
     protected String storedIdentifier(String identifier) {
         return fieldCipher.encryptSearchable(identifier);
     }
 
-    /** The login of {@code email}, which is a field now rather than the id (W-253 C2a); {@code null} when there is none. */
+    /** The login of {@code email} from PostgreSQL (W-337c1); {@code null} when there is none. */
     protected UserDetail storedLogin(String email) {
-        return mongoTemplate.findOne(query(where("email").is(email)), UserDetail.class);
+        return userDetailsRepository.findByEmail(email).orElse(null);
+    }
+
+    /** Saves a {@link UserDetail} into PostgreSQL (W-337c1). */
+    protected UserDetail saveLogin(UserDetail user) {
+        return userDetailsRepository.save(user);
     }
 
     protected String generateToken(String email) {

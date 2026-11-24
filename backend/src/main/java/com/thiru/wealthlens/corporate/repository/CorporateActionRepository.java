@@ -1,4 +1,5 @@
 package com.thiru.wealthlens.corporate.repository;
+
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import java.time.LocalDate;
@@ -6,29 +7,38 @@ import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-public interface CorporateActionRepository extends MongoRepository<CorporateActionEntity, String> {
+public interface CorporateActionRepository extends JpaRepository<CorporateActionEntity, String> {
+
     List<CorporateActionEntity> findByType(CorporateActionType type);
 
     /** Every action of these types on a stock, whatever its date: the {@code assets} rebuild sorts them (W-283a2). */
     List<CorporateActionEntity> findByStockCodeAndTypeIn(String stockCode, List<CorporateActionType> types);
 
-    /**
-     * Corporate actions to perform before the transaction date
-     */
-    List<CorporateActionEntity> findByStockCodeAndTypeInAndRecordDateBefore(String stockCode, List<CorporateActionType> types, LocalDate transactionDate);
+    /** Corporate actions to perform before the transaction date. */
+    List<CorporateActionEntity> findByStockCodeAndTypeInAndRecordDateBefore(
+            String stockCode, List<CorporateActionType> types, LocalDate transactionDate);
 
-    @Query("{'stock_code': ?0, 'type': { $in: ?1 }, 'record_date': { $gte: ?2, $lte: ?3 } }")
-    List<CorporateActionEntity> findByStockCodeAndTypeInAndRecordDateBetween(String stockCode, List<CorporateActionType> types, LocalDate start, LocalDate transactionDate);
+    @Query("SELECT c FROM CorporateActionEntity c WHERE c.stockCode = :stockCode AND c.type IN :types"
+            + " AND c.recordDate BETWEEN :start AND :end")
+    List<CorporateActionEntity> findByStockCodeAndTypeInAndRecordDateBetween(
+            @Param("stockCode") String stockCode, @Param("types") List<CorporateActionType> types,
+            @Param("start") LocalDate start, @Param("end") LocalDate transactionDate);
 
     /** Oldest record date first, then priority: a later action applies to what an earlier one left (W-314). */
-    @Query(value = "{'type': { $in: ?0 }, 'record_date': { $gte: ?1, $lte: ?2 } }", sort = "{ 'record_date' : 1, 'priority' : 1 }")
-    List<CorporateActionEntity> findByTypeInAndRecordDateBetween(List<CorporateActionType> types, LocalDate start, LocalDate transactionDate);
+    @Query("SELECT c FROM CorporateActionEntity c WHERE c.type IN :types AND c.recordDate BETWEEN :start AND :end"
+            + " ORDER BY c.recordDate ASC, c.priority ASC")
+    List<CorporateActionEntity> findByTypeInAndRecordDateBetween(
+            @Param("types") List<CorporateActionType> types,
+            @Param("start") LocalDate start, @Param("end") LocalDate transactionDate);
 
-    @Query(value = "{'stock_code': ?0, 'record_date': ?1 }", sort = "{ 'priority' : 1 }")
-    List<CorporateActionEntity> findByStockCodeAndRecordDateAndOrderByPriorityAsc(String stockCode, LocalDate recordDate);
+    @Query("SELECT c FROM CorporateActionEntity c WHERE c.stockCode = :stockCode AND c.recordDate = :recordDate"
+            + " ORDER BY c.priority ASC")
+    List<CorporateActionEntity> findByStockCodeAndRecordDateAndOrderByPriorityAsc(
+            @Param("stockCode") String stockCode, @Param("recordDate") LocalDate recordDate);
 
     Page<CorporateActionEntity> findByIdIn(Collection<String> ids, Pageable pageable);
 }

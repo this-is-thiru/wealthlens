@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The calendar's measured costs (W-114, D-665), on {@code DR 13} T13-1: 1,75,000 of basic pay and ₹11,00,000 of long-term
- * listed-equity gain make a bill of 87,750 ({@code plans/W-089.md}), the salary alone within the nil band. Nothing is paid
+ * listed-equity gain make a bill of 87,750 ({@code docs/modules/taxengine.md} §11, W-089), the salary alone within the nil band. Nothing is paid
  * and the return is due 31-7-2027; every cost is measured as of that day.
  *
  * <p>Worked by hand from {@code INT-ADVANCE-SHORTFALL} (1 % a month or part from 1 April where under 90 % is paid),

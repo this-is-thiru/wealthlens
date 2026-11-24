@@ -23,9 +23,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Interest the Government adds to a refund, run end to end (2025 s.437(1) Table Sl. 1, 2, (2); Rules 2026 r.269; W-112b,
- * D-663), on {@code DR 13} T13-1's bill of 87,750 ({@code plans/W-089.md}) for TY 2026-27, due 31 July 2027.
+ * D-663), on {@code DR 13} T13-1's bill of 87,750 ({@code docs/modules/taxengine.md} §11 (W-089)) for TY 2026-27, due 31 July 2027.
  *
- * <p>Each figure is worked by hand in {@code plans/W-112b.md}: 0.5 % for every month or part of a month on the refund
+ * <p>Each figure is worked by hand in {@code docs/modules/taxengine.md} §11 (W-112b): 0.5 % for every month or part of a month on the refund
  * rounded down to ₹100, none where the refund is less than 10 % of the tax (8,775). Months are counted from the first day
  * of the period to the grant, a part month whole.
  */

@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * One financial year of charges, with its months beneath it.
@@ -16,12 +15,13 @@ import org.springframework.data.mongodb.core.mapping.Field;
  * <p>The year is not derived from the months on read. It carries its own totals, merged alongside
  * them, because the summary is written on the live transaction path and a report should not have to
  * walk twelve nested maps to print one figure.
+ *
+ * <p>Embedded only inside {@code ProfitAndLossEntity.realisedProfits}, stored as JSON (W-337e, D-949 C3a).
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class YearlyChargeSummary extends ChargeSummaryReport {
 
-    @Field("monthly_report")
     private Map<Month, MonthlyChargeSummary> monthlyReport = new HashMap<>();
 
     /**

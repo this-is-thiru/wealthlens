@@ -30,9 +30,6 @@ class PortfolioQueryServiceTest {
     private ProfitAndLossService profitAndLossService;
 
     @Mock
-    private MongoTemplateService mongoTemplateService;
-
-    @Mock
     private ChargeViewAssembler chargeViewAssembler;
 
     @InjectMocks

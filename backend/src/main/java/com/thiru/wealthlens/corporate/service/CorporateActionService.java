@@ -40,7 +40,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class CorporateActionService {
 
@@ -54,6 +53,7 @@ public class CorporateActionService {
     private final LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
 
 
+    @Transactional("postgresTransactionManager")
     public String addCorporateAction(CorporateActionDto actionWrapper) {
         validateCorporateActionData(actionWrapper);
         if (actionWrapper.getType() == CorporateActionType.STOCK_SPLIT) {
@@ -86,6 +86,7 @@ public class CorporateActionService {
         return corporateAction.get();
     }
 
+    @Transactional("postgresTransactionManager")
     public String updateCorporateActionPriority(String id, int priority) {
 
         Optional<CorporateActionEntity> existingAction = corporateActionRepository.findById(id);
@@ -106,7 +107,7 @@ public class CorporateActionService {
         return corporateActionRepository.findByIdIn(ids, latestRecordFirst(pageable));
     }
 
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public void deleteCorporateActions(String id) {
         corporateActionRepository.deleteById(id);
     }
@@ -123,10 +124,11 @@ public class CorporateActionService {
 
     /**
      * Iterates over corporate actions in the current quarter and processes them.
-     * Each action may write to portfolio, transactions, and the performed-CAs table.
-     * Safe only when MongoDB replica set + {@code app.mongodb.transactions-enabled=true} is set.
+     * Each action may write to portfolio, transactions, and the performed-CAs table — all on PostgreSQL since
+     * {@code portfolio}'s own cutover (W-337e, D-949), so this runs as one {@code postgresTransactionManager}
+     * transaction (D-945 C3a named this the point to switch).
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public void performPendingCorporateActions(String email, CorporateActionPerformDto actionPerformDto, boolean allBrokers) {
         if (actionPerformDto.brokerName() == null && !allBrokers) {
             throw new IllegalArgumentException("Invalid action perform details: " + actionPerformDto);
@@ -223,11 +225,10 @@ public class CorporateActionService {
     }
 
     /**
-     * Processes a single corporate action (a name change) by writing
-     * to portfolio and transaction collections. Safe only when MongoDB replica set
-     * + {@code app.mongodb.transactions-enabled=true} is set.
+     * Processes a single corporate action (a name change) by writing to the asset and transaction tables, now both
+     * on PostgreSQL (W-337e, D-949), as one {@code postgresTransactionManager} transaction.
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public String performCorporateAction(CorporateActionDto actionWrapper) {
 
         CorporateActionType action = actionWrapper.getType();
