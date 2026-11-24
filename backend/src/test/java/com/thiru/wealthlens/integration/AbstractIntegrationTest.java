@@ -86,7 +86,14 @@ public abstract class AbstractIntegrationTest {
     static {
         mongoDBContainer = new MongoDBContainer("mongo:8.0.4").withReplicaSet();
         mongoDBContainer.start();
-        postgresContainer = new PostgreSQLContainer("postgres:18");
+        /*
+         * max_connections raised from Postgres's default 100 (W-337e): Spring's test context cache holds up to 32
+         * contexts at once (spring.test.context.cache.maxSize), one HikariCP pool each at Boot's default size 10 — up
+         * to 320 possible connections across the whole run's distinct property combinations, all against this one
+         * shared container. The default ceiling made a long local or CI run fail with "sorry, too many clients
+         * already" partway through, unrelated to any one test's correctness.
+         */
+        postgresContainer = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400");
         postgresContainer.start();
     }
 
