@@ -43,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class AssetsRebuild {
 
@@ -94,7 +94,7 @@ public class AssetsRebuild {
         int kept = (int) pairs.stream().filter(pair -> pair.stored().isPresent() && pair.rebuilt().isPresent()).count();
         List<String> newLots = pairs.stream().filter(pair -> pair.stored().isEmpty())
                 .map(pair -> labelOf(pair.either())).toList();
-        int written = dryRun ? 0 : write(email, pairs);
+        int written = dryRun ? 0 : write(email, pairs, lots);
         return new AssetsRebuildReport(email, dryRun, differing, written, kept, newLots, lots,
                 readings.shapeFromStoredLots(), readings.shapeNotFound(),
                 actions.performed().stream().map(PerformedCorporateActions.BrokerAction::label).toList(),
@@ -125,24 +125,39 @@ public class AssetsRebuild {
     }
 
     /**
-     * Replaces the user's lots with the rebuilt ones. A lot paired with a stored one keeps its id, so the
+     * Replaces the lots that changed or are new; a lot that is the same on both sides is left untouched, so its
+     * audit trail is not disturbed by a no-op rebuild (W-337e). A lot paired with a stored one keeps its id, so the
      * {@code trade_outcomes} naming it still do (C3a of D-582), and what the replay cannot rebuild: its order times, its
-     * list of corporate actions and when it was created (C2a of D-586). Its figures are the replay's.
+     * list of corporate actions and when it was created (C2a of D-586). Its figures are the replay's. A stored lot with
+     * no rebuilt pair no longer exists and is deleted.
      */
-    private int write(String email, List<LotComparisons.LotPair> pairs) {
-        List<AssetEntity> lots = new ArrayList<>();
-        for (LotComparisons.LotPair pair : pairs) {
+    private int write(String email, List<LotComparisons.LotPair> pairs, List<AssetsRebuildReport.LotComparison> lots) {
+        List<String> idsToDelete = new ArrayList<>();
+        List<AssetEntity> toSave = new ArrayList<>();
+        int written = 0;
+        for (int i = 0; i < pairs.size(); i++) {
+            LotComparisons.LotPair pair = pairs.get(i);
             if (pair.rebuilt().isEmpty()) {
+                pair.stored().ifPresent(stored -> idsToDelete.add(stored.getId()));
+                continue;
+            }
+            written++;
+            if (pair.stored().isPresent() && lots.get(i).differingFields().isEmpty()) {
                 continue;
             }
             AssetEntity rebuilt = pair.rebuilt().get();
-            pair.stored().ifPresent(stored -> keepFrom(stored, rebuilt));
-            lots.add(rebuilt);
+            pair.stored().ifPresent(stored -> {
+                keepFrom(stored, rebuilt);
+                idsToDelete.add(stored.getId());
+            });
+            toSave.add(rebuilt);
         }
-        portfolioRepository.deleteByEmail(email);
-        portfolioRepository.saveAll(lots);
-        log.info("Rebuilt assets for {}: {} lots written", email, lots.size());
-        return lots.size();
+        if (!idsToDelete.isEmpty()) {
+            portfolioRepository.deleteAllById(idsToDelete);
+        }
+        portfolioRepository.saveAll(toSave);
+        log.info("Rebuilt assets for {}: {} lots written", email, written);
+        return written;
     }
 
     private static void keepFrom(AssetEntity stored, AssetEntity rebuilt) {

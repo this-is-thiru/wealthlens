@@ -5,52 +5,40 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import java.util.List;
-import java.util.stream.StreamSupport;
-import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Asserts the declared indexes exist: PostgreSQL {@code pg_indexes} for {@code brokercharges} tables (W-337d2, D-947)
- * and MongoDB for {@code profit_and_loss} until W-337e moves {@code portfolio}.
+ * and, since {@code portfolio}'s own cutover, for {@code profit_and_loss} too (W-337e, D-949).
  */
 class ChargeIndexIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void profitAndLoss_isUniquePerUserAndFinancialYear() {
-        assertThat(mongoIndexNamesOf("profit_and_loss")).contains("pnl_user_year_idx");
-
-        Document idx = StreamSupport
-                .stream(mongoTemplate.getCollection("profit_and_loss").listIndexes().spliterator(), false)
-                .filter(index -> "pnl_user_year_idx".equals(index.getString("name")))
-                .findFirst().orElseThrow();
-        assertThat(idx.getBoolean("unique", false)).isTrue();
+        assertThat(pgIndexNamesOf("profit_and_loss")).contains("pnl_user_year_idx");
+        assertThat(isPgIndexUnique("profit_and_loss", "pnl_user_year_idx")).isTrue();
     }
 
     @Test
     void profitAndLoss_refusesAStaleWriteRatherThanLosingIt() {
         // Given — one document, read twice, as two concurrent trades would
         ProfitAndLossEntity seed = new ProfitAndLossEntity("locking@wealthlens.test", "2025-2026");
-        mongoTemplate.save(seed);
+        profitAndLossRepository.save(seed);
 
-        ProfitAndLossEntity first = mongoTemplate.findById(seed.getId(), ProfitAndLossEntity.class);
-        ProfitAndLossEntity second = mongoTemplate.findById(seed.getId(), ProfitAndLossEntity.class);
+        ProfitAndLossEntity first = profitAndLossRepository.findById(seed.getId()).orElse(null);
+        ProfitAndLossEntity second = profitAndLossRepository.findById(seed.getId()).orElse(null);
 
-        // When — the first write succeeds and moves the version on
-        first.setEmail("locking@wealthlens.test");
-        mongoTemplate.save(first);
+        // When — the first write actually changes something and moves the version on (W-337e, D-949: an unchanged
+        // value is not dirty under JPA the way a Mongo whole-document save always was)
+        first.setFinancialYear("2026-2027");
+        profitAndLossRepository.save(first);
 
         // Then — the second is working from a version that no longer exists
-        second.setEmail("locking@wealthlens.test");
-        assertThatThrownBy(() -> mongoTemplate.save(second))
+        second.setFinancialYear("2027-2028");
+        assertThatThrownBy(() -> profitAndLossRepository.save(second))
                 .isInstanceOf(OptimisticLockingFailureException.class);
-    }
-
-    private List<String> mongoIndexNamesOf(String collection) {
-        return StreamSupport.stream(mongoTemplate.getCollection(collection).listIndexes().spliterator(), false)
-                .map(index -> index.getString("name"))
-                .toList();
     }
 
     private List<String> pgIndexNamesOf(String table) {

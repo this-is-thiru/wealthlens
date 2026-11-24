@@ -1,31 +1,35 @@
 package com.thiru.wealthlens.integration;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
-import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.entity.query.QueryBuilder;
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 
-public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
+/**
+ * The ad-hoc {@code QueryFilter} / {@link QueryBuilder} search path, ported from MongoDB's {@code Criteria} to a
+ * JPA {@link Specification} (W-337e, D-949 C6a). Renamed from {@code MongoTemplateIntegrationTest} — the service it
+ * exercised, {@code MongoTemplateService}, is removed.
+ */
+public class QueryFilterSearchIntegrationTest extends AbstractIntegrationTest {
 
     private static final String TEST_EMAIL = "mongotemplate@test.com";
     private static final String OTHER_EMAIL = "other@test.com";
 
     @Autowired
-    private MongoTemplateService mongoTemplateService;
-
-    @Autowired
     private TransactionRepository transactionRepository;
 
     @Test
-    void getDocuments_whenValidFilters_shouldReturnResults() {
+    void search_whenValidFilters_shouldReturnResults() {
         // GIVEN
         String email = TEST_EMAIL;
 
@@ -52,8 +56,7 @@ public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
         ));
 
         // WHEN
-        List<TransactionEntity> results = mongoTemplateService.getDocuments(
-                UserMail.from(email), filters, TransactionEntity.class);
+        List<TransactionEntity> results = search(email, filters);
 
         // THEN
         assertEquals(1, results.size());
@@ -61,7 +64,7 @@ public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void getDocuments_whenInvalidFilter_shouldThrow() {
+    void search_whenInvalidFilter_shouldThrow() {
         // GIVEN
         String email = TEST_EMAIL;
 
@@ -75,12 +78,11 @@ public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
         ));
 
         // WHEN / THEN
-        assertThrows(IllegalArgumentException.class, () ->
-                mongoTemplateService.getDocuments(UserMail.from(email), filters, TransactionEntity.class));
+        assertThrows(IllegalArgumentException.class, () -> search(email, filters));
     }
 
     @Test
-    void getDocuments_whenOtherUser_shouldNotLeakData() {
+    void search_whenOtherUser_shouldNotLeakData() {
         // GIVEN
         String email1 = TEST_EMAIL;
         String email2 = OTHER_EMAIL;
@@ -108,10 +110,8 @@ public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
         transactionRepository.save(txn2);
 
         // WHEN
-        List<TransactionEntity> email1Results = mongoTemplateService.getDocuments(
-                UserMail.from(email1), new ArrayList<>(), TransactionEntity.class);
-        List<TransactionEntity> email2Results = mongoTemplateService.getDocuments(
-                UserMail.from(email2), new ArrayList<>(), TransactionEntity.class);
+        List<TransactionEntity> email1Results = search(email1, new ArrayList<>());
+        List<TransactionEntity> email2Results = search(email2, new ArrayList<>());
 
         // THEN
         assertEquals(1, email1Results.size());
@@ -124,7 +124,7 @@ public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void getDocuments_whenEmptyFilters_shouldReturnAllForUser() {
+    void search_whenEmptyFilters_shouldReturnAllForUser() {
         // GIVEN
         String email = TEST_EMAIL;
 
@@ -151,15 +151,20 @@ public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
         transactionRepository.save(txn2);
 
         // WHEN
-        List<TransactionEntity> results = mongoTemplateService.getDocuments(
-                UserMail.from(email), new ArrayList<>(), TransactionEntity.class);
+        List<TransactionEntity> results = search(email, new ArrayList<>());
 
         // THEN
         assertEquals(2, results.size());
     }
 
+    /**
+     * A filter that omits {@code isDateField} throws a {@code NullPointerException} unboxing a null
+     * {@code Boolean} — {@code QueryBuilder.sanitize} kept this exact behaviour from the Mongo-era version rather
+     * than silently fixing it (W-337e, D-949). Renamed from {@code getDocuments_whenMongoDown_shouldThrow}, which
+     * never actually exercised a Mongo outage: this is what it always actually tested.
+     */
     @Test
-    void getDocuments_whenMongoDown_shouldThrow() {
+    void search_whenIsDateFieldNotSet_throwsNullPointerException() {
         // GIVEN
         String email = TEST_EMAIL;
 
@@ -173,9 +178,13 @@ public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
                         .build()
         ));
 
-        // WHEN / THEN - verify behavior when MongoDB connection is unavailable
-        // This test verifies service handles connection issues gracefully
-        assertThrows(Exception.class, () ->
-                mongoTemplateService.getDocuments(UserMail.from(email), filters, TransactionEntity.class));
+        // WHEN / THEN
+        assertThrows(NullPointerException.class, () -> search(email, filters));
+    }
+
+    private List<TransactionEntity> search(String email, List<QueryFilter> filters) {
+        QueryFilter.validateAndSanitizationOfQueryFilters(filters, UserMail.from(email));
+        Specification<TransactionEntity> specification = QueryBuilder.build(filters);
+        return transactionRepository.findAll(specification);
     }
 }

@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
-import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
@@ -24,9 +23,6 @@ class TransactionServiceTest {
 
     @Mock
     private TransactionRepository transactionRepository;
-
-    @Mock
-    private MongoTemplateService mongoTemplateService;
 
     @InjectMocks
     private TransactionService transactionService;

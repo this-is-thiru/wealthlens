@@ -170,7 +170,10 @@ upsert` restores them.
 **Why.** `ProfitAndLossEntity` carries `@Version private Long version`. On a document written without the field, Spring
 Data reads the null version as a new document and inserts against an existing `_id`
 (`E11000 duplicate key error … profit_and_loss index: _id_`), so every trade for an existing user in an existing year
-fails. `LegacyDocumentUpgradeIntegrationTest` proves it against a real MongoDB.
+fails. This was proven against a real MongoDB by `LegacyDocumentUpgradeIntegrationTest`, which W-337e (D-949) removed:
+`profit_and_loss` moves to PostgreSQL, where `version` is `NOT NULL` from the table's first row, so the failure mode
+this precheck guards against cannot occur there; this precheck still applies to any MongoDB database not yet moved
+(W-337i decides this section's fate once the move runs).
 
 1. **Check** (read-only): `db.profit_and_loss.countDocuments({ version: { $exists: false } })`. Must be `0`.
    **2026-10-27: 0 on prod and on staging** (run log), so there is nothing to do.

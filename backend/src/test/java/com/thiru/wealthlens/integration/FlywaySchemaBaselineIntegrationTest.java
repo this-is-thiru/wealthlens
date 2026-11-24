@@ -23,7 +23,7 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning", "insurances audit", "corporate action", "brokercharges");
+                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio");
     }
 
     @Test
@@ -40,7 +40,8 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
                 "privacy_breach_intimations", "privacy_processing_log", "privacy_grievances", "privacy_breach_notices",
                 "privacy_breach_notice_affected", "charge_catalogue", "charge_schedules", "charge_instruments",
                 "charge_accounts", "charge_account_billing_events", "user_charges", "user_charge_lines",
-                "user_charge_amounts", "tax_gazette_cursor", "tax_gazette_leads",
+                "user_charge_amounts", "assets", "transactions", "trade_outcomes", "profit_and_loss",
+                "tax_gazette_cursor", "tax_gazette_leads",
                 "tax_gazette_lead_matched_terms", "tax_gazette_lead_possibly_affected", "tax_regime_election_history",
                 "tax_regime_election_events", "tax_year_workspaces", "tax_access_log", "tax_employers",
                 "tax_family_members", "tax_bank_accounts", "tax_profile_erasures", "tax_profiles", "tax_documents",

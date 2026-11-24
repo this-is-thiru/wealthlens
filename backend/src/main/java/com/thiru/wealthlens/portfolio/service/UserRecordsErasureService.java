@@ -21,12 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
  * missed when the charges engine added them. One class, one list, one place to add to.
  *
  * <h2>Every delete is attempted, and every failure is reported</h2>
- * The deletes are independent without a working {@code MongoTransactionManager}, so stopping at the
- * first failure leaves strictly more behind than carrying on does. But carrying on used to mean
- * catching the failure, logging it, and answering "deleted successfully" anyway — telling a user
- * their data was gone while it was still there. Both halves matter: continue, and say what did not
- * work. With {@code app.mongodb.transactions-enabled=true} (Atlas replica set) the
- * {@link Transactional} annotation makes the whole wipe atomic and the question moot.
+ * Every collection this erases is now on PostgreSQL (W-337e, D-949), so the {@code postgresTransactionManager}
+ * {@link Transactional} annotation makes the whole wipe one atomic transaction. The per-delete try/catch below
+ * predates that and is kept anyway: catching the failure, logging it, and answering "deleted successfully" anyway
+ * used to be the alternative — telling a user their data was gone while it was still there. Both halves still
+ * matter: continue, and say what did not work.
  *
  * <h2>What is not erased here</h2>
  * Insurance policies, salary profiles and tax computations carry this user's email too. They live
@@ -38,7 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Log4j2
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class UserRecordsErasureService {
 

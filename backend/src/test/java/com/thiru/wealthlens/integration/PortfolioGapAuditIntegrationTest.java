@@ -233,7 +233,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OWNER, buy);
         TransactionEntity first = transactionsOf(OWNER).getFirst();
         first.setSubmittedAt(first.getSubmittedAt().minusMinutes(2));
-        mongoTemplate.save(first, "transactions");
+        transactionRepository.save(first);
 
         // When — the same body again
         postV2(OWNER, buy);
@@ -357,7 +357,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         temp.setTransactionType(TransactionType.SELL);
         temp.setStatus(TransactionStatus.TEMPORARY);
         temp.setAssetRequest(asRequest(trade(TransactionType.SELL, 5.0, 150.0, JAN_5)));
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
 
         // When
         ResponseEntity<String> redriven = post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
@@ -377,7 +377,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         good.setTransactionType(TransactionType.BUY);
         good.setStatus(TransactionStatus.TEMPORARY);
         good.setAssetRequest(asRequest(trade(TransactionType.BUY, 10.0, 100.0, JAN_5)));
-        mongoTemplate.save(good, "transactions");
+        transactionRepository.save(good);
         TransactionEntity bad = new TransactionEntity();
         bad.setEmail(OWNER);
         bad.setStockCode("TCS");
@@ -387,7 +387,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         Map<String, Object> sale = trade(TransactionType.SELL, 5.0, 150.0, FEB_5);
         sale.put("stockCode", "TCS");
         bad.setAssetRequest(asRequest(sale));
-        mongoTemplate.save(bad, "transactions");
+        transactionRepository.save(bad);
 
         // When
         ResponseEntity<String> redriven = post(OWNER, "/api/v1/me/portfolio/temporary-transactions/redrive", null);
@@ -397,8 +397,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
                 redriven.getBody());
         assertEquals(10.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum(),
                 () -> redriven.getBody() + " lots: " + lotsOf(OWNER));
-        assertEquals(TransactionStatus.PROCESSED, mongoTemplate.findById(good.getId(), TransactionEntity.class,
-                "transactions").getStatus());
+        assertEquals(TransactionStatus.PROCESSED, transactionRepository.findById(good.getId()).orElse(null).getStatus());
     }
 
     @Test
@@ -407,7 +406,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         postV2(OTHER, trade(TransactionType.BUY, 10.0, 100.0, JAN_5));
         AssetEntity lot = lotsOf(OTHER).getFirst();
         lot.setAssetType(null);
-        mongoTemplate.save(lot, "assets");
+        portfolioRepository.save(lot);
 
         // When — OWNER, an ordinary user, calls the former backfill on OWNER's own path
         ResponseEntity<String> answer = post(OWNER, "/api/v1/me/portfolio/update", null);
@@ -597,7 +596,10 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then — recorded into the oldest lot: 20 @ (1000 + 1200) / 20 = ₹110; the other keeps 10 @ ₹140
         assertEquals(200, bought.getStatusCode().value(), bought.getBody());
-        List<AssetEntity> lots = lotsOf(OWNER).stream().sorted(Comparator.comparing(AssetEntity::getId)).toList();
+        // Sorted by creation time, not id (W-337e, D-949): the id is a random UUID here, unlike Mongo's time-ordered
+        // ObjectId, so it carries no creation order.
+        List<AssetEntity> lots = lotsOf(OWNER).stream()
+                .sorted(Comparator.comparing(asset -> asset.getAuditMetadata().getCreatedAt())).toList();
         assertEquals(List.of(20.0, 10.0), lots.stream().map(AssetEntity::getQuantity).toList());
         MoneyAssert.assertMoney(110.0, lots.get(0).getPrice());
         MoneyAssert.assertMoney(140.0, lots.get(1).getPrice());
@@ -689,7 +691,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, sold.getStatusCode().value(), sold.getBody());
         assertEquals(0, lotsOf(OWNER).size(), () -> "lots left: " + lotsOf(OWNER));
         // and the sale is recorded against each lot whole — 0.1 and 0.2, not 0.19999999999999998
-        List<Double> recorded = mongoTemplate.findAll(TradeOutcomeEntity.class, "trade_outcomes").stream()
+        List<Double> recorded = tradeOutcomeRepository.findAll().stream()
                 .filter(row -> OWNER.equals(row.getEmail()))
                 .map(TradeOutcomeEntity::getSellQuantity)
                 .sorted()
@@ -720,7 +722,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         AssetEntity residue = lotsOf(OWNER).stream().filter(lot -> "OTHERFUND".equals(lot.getStockCode())).findFirst()
                 .orElseThrow();
         residue.setQuantity(2.7755575615628914E-17);
-        mongoTemplate.save(residue, "assets");
+        portfolioRepository.save(residue);
 
         // When
         AssetResponse[] rows = get(OWNER, "/api/v1/me/portfolio/mutual-funds", AssetResponse[].class).getBody();
@@ -1142,7 +1144,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then -- the row carries the segment P&L files it under, as a V2 row does
         assertEquals(200, sold.getStatusCode().value(), sold.getBody());
-        TradeOutcomeEntity row = mongoTemplate.findAll(TradeOutcomeEntity.class, "trade_outcomes").stream()
+        TradeOutcomeEntity row = tradeOutcomeRepository.findAll().stream()
                 .filter(outcome -> OWNER.equals(outcome.getEmail())).findFirst().orElseThrow();
         assertEquals(TradeSegment.INTRADAY, row.getSegment());
     }
@@ -1162,7 +1164,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
 
         // Then — the row's buy side is the lot's segment, which is now intraday
         assertEquals(200, sold.getStatusCode().value(), sold.getBody());
-        TradeOutcomeEntity row = mongoTemplate.findAll(TradeOutcomeEntity.class, "trade_outcomes").stream()
+        TradeOutcomeEntity row = tradeOutcomeRepository.findAll().stream()
                 .filter(outcome -> OWNER.equals(outcome.getEmail())).findFirst().orElseThrow();
         assertEquals(TradeSegment.INTRADAY, row.getBuySegment());
         assertEquals(TradeSegment.INTRADAY, row.getSellSegment());
@@ -1191,7 +1193,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
 
     /** The flow on each transaction a redrive stored, told apart from its temporary by the link back to it. */
     private List<TradeFlow> redrivenFlows() {
-        return mongoTemplate.findAll(TransactionEntity.class, "transactions").stream()
+        return transactionRepository.findAll().stream()
                 .filter(transaction -> transaction.getSourceTempTransactionId() != null)
                 .map(TransactionEntity::getTradeFlow)
                 .toList();
@@ -1206,7 +1208,7 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         temp.setStatus(TransactionStatus.TEMPORARY);
         temp.setTradeFlow(flow);
         temp.setAssetRequest(asRequest(trade));
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
     }
 
     private static int columnOf(Row header, String name) {
@@ -1298,14 +1300,14 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
     }
 
     private List<AssetEntity> lotsOf(String email) {
-        return mongoTemplate.findAll(AssetEntity.class, "assets").stream()
+        return portfolioRepository.findAll().stream()
                 .filter(lot -> email.equals(lot.getEmail()))
                 .sorted(Comparator.comparing(AssetEntity::getTransactionDate))
                 .toList();
     }
 
     private List<TransactionEntity> transactionsOf(String email) {
-        return mongoTemplate.findAll(TransactionEntity.class, "transactions").stream()
+        return transactionRepository.findAll().stream()
                 .filter(transaction -> email.equals(transaction.getEmail()))
                 .toList();
     }

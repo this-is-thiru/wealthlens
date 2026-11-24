@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * Charges aggregated over a period, keyed by charge code.
@@ -28,13 +27,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 public class ChargeSummaryReport {
 
-    @Field("amount_by_code")
     private Map<String, Double> amountByCode = new HashMap<>();
 
-    @Field("total_charges")
     private double totalCharges;
 
-    @Field("last_updated_time")
     private LocalDateTime lastUpdatedTime;
 
     /**

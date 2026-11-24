@@ -1,23 +1,28 @@
 package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
+import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.entity.query.QueryBuilder;
+import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import java.time.LocalDate;
-import org.bson.Document;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Identifiers stored encrypted and still found by every query shape the code uses (W-253, D-485 C1a): a derived method, an
- * {@code @Query} string and a {@code Criteria} against the entity, each naming the property by its Java name. A stored name that
- * differs ({@code account_holder}) is not converted and finds nothing; {@code StoredIdentifierQueryTest} keeps it out of query strings.
+ * Identifiers stored encrypted and still found by every query shape the code uses (W-253, D-485 C1a; re-based to
+ * JPA in W-337e, D-949): a derived method, an {@code @Query} string and a {@link QueryBuilder} {@code Specification}
+ * against the entity, each naming the property by its Java name.
  */
 class SearchableIdentifierIntegrationTest extends AbstractIntegrationTest {
 
@@ -42,12 +47,12 @@ class SearchableIdentifierIntegrationTest extends AbstractIntegrationTest {
     @Test
     void save_whenAnAssetIsStored_holdsItsIdentifiersEncrypted() {
         // When
-        Document stored = mongoTemplate.getCollection("assets").find().first();
+        Map<String, Object> stored = new JdbcTemplate(postgresDataSource)
+                .queryForMap("SELECT email, account_holder FROM assets LIMIT 1");
 
         // Then
-        assertThat(stored).isNotNull();
-        assertThat(stored.getString("email")).startsWith("k1:").doesNotContain("holder");
-        assertThat(stored.getString("account_holder")).startsWith("k1:").doesNotContain("Lakshmi");
+        assertThat(stored.get("email").toString()).startsWith("k1:").doesNotContain("holder");
+        assertThat(stored.get("account_holder").toString()).startsWith("k1:").doesNotContain("Lakshmi");
     }
 
     @Test
@@ -55,7 +60,7 @@ class SearchableIdentifierIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         assertThat(portfolioRepository.findByEmail(USER)).singleElement()
                 .satisfies(asset -> assertThat(asset.getAccountHolder()).isEqualTo(HOLDER));
-        assertThat(portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByIdAsc(
+        assertThat(portfolioRepository.findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByAuditMetadataCreatedAtAsc(
                 USER, "INFY", BrokerName.ZERODHA, HOLDER, TradeSegment.DELIVERY, BOUGHT)).isPresent();
     }
 
@@ -66,8 +71,15 @@ class SearchableIdentifierIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void find_whenCriteriaNameTheJavaField_findsTheAsset() {
+    void find_whenAnAdHocSpecificationNamesTheJavaField_findsTheAsset() {
+        // Given — the admin search path's QueryFilter shape: account_holder, remapped to its Java name (accountHolder)
+        List<QueryFilter> filters = new ArrayList<>(List.of(
+                QueryFilter.builder().filterKey("account_holder").operation(QueryFilter.FilterOperation.EQUALS)
+                        .value(HOLDER).isDateField(false).build()));
+        QueryFilter.validateAndSanitizationOfQueryFilters(filters, UserMail.from(USER));
+        Specification<AssetEntity> specification = QueryBuilder.build(filters);
+
         // When / Then
-        assertThat(mongoTemplate.find(query(where("email").is(USER).and("accountHolder").is(HOLDER)), AssetEntity.class)).hasSize(1);
+        assertThat(portfolioRepository.findAll(specification)).hasSize(1);
     }
 }

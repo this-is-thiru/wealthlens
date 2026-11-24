@@ -11,110 +11,120 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.*;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Document(value = "transactions")
+@Entity
+@Table(name = "transactions")
+@EntityListeners(AuditingEntityListener.class)
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class TransactionEntity implements AuditableEntity {
+public class TransactionEntity {
 
 	@JsonIgnore
-	@MongoId
+	@Id
 	private String id;
 
-	@Field("email")
-	@ValueConverter(SearchableIdentifier.class)
+	@Column(name = "email", nullable = false)
+	@Convert(converter = SearchableColumn.class)
 	private String email;
 
-	@Field("stock_code")
+	@Column(name = "stock_code")
 	private String stockCode;
 
-	@Field("stock_name")
+	@Column(name = "stock_name")
 	private String stockName;
 
-	@Field("exchange_name")
+	@Column(name = "exchange_name")
 	private String exchangeName;
 
-	@Field(name = "broker_name", targetType = FieldType.STRING)
+	@Column(name = "broker_name")
+	@Enumerated(EnumType.STRING)
 	private BrokerName brokerName;
 
-	@Field("price")
+	@Column(name = "price")
 	private double price;
 
-	@Field("quantity")
+	@Column(name = "quantity")
 	private Double quantity;
 
-	@Field("total_value")
+	@Column(name = "total_value")
 	private double totalValue;
 
-
 	/** Delivery for everything recorded before Chunk 10b; there was no segment concept until then. */
-
-	@Field(name = "segment", targetType = FieldType.STRING)
-
+	@Column(name = "segment")
+	@Enumerated(EnumType.STRING)
 	private TradeSegment segment = TradeSegment.DELIVERY;
 
-	@Field("broker_charges")
+	@Column(name = "broker_charges")
 	private double brokerCharges;
 
-	@Field("misc_charges")
+	@Column(name = "misc_charges")
 	private double miscCharges;
 
-	@Field("comment")
+	@Column(name = "comment")
 	private String comment;
 
-	@Field(name = "asset_type", targetType = FieldType.STRING)
+	@Column(name = "asset_type")
+	@Enumerated(EnumType.STRING)
 	private AssetType assetType;
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-	@Field("maturity_date")
+	@Column(name = "maturity_date")
 	private LocalDate maturityDate;
 
-	@Field("order_id")
+	@Column(name = "order_id")
 	private String orderId;
 
-	@Field("order_execution_time")
+	@Column(name = "order_execution_time")
 	private LocalDateTime orderExecutionTime;
 
-	@Field("timezone_id")
+	@Column(name = "timezone_id")
 	private String timezoneId = TLocalDate.TIME_ZONE_IST;
 
-	@Field(name = "account_type", targetType = FieldType.STRING)
+	@Column(name = "account_type")
+	@Enumerated(EnumType.STRING)
 	private AccountType accountType;
 
-	@Field("account_holder")
-	@ValueConverter(SearchableIdentifier.class)
+	@Column(name = "account_holder")
+	@Convert(converter = SearchableColumn.class)
 	private String accountHolder;
 
-	@Field(name = "transaction_type", targetType = FieldType.STRING)
+	@Column(name = "transaction_type")
+	@Enumerated(EnumType.STRING)
 	private TransactionType transactionType;
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-	@Field("transaction_date")
+	@Column(name = "transaction_date")
 	private LocalDate transactionDate;
 
-	@Field(value = "corporate_action", targetType = FieldType.STRING)
+	@Column(name = "corporate_action")
+	@Enumerated(EnumType.STRING)
 	private CorporateActionType corporateActionType;
 
-	@Field("corporate_actions")
+	@Column(name = "corporate_actions_json")
+	@Convert(converter = CorporateActionListConverter.class)
 	List<CorporateActionEntity> corporateActions = new ArrayList<>();
-
 
 	/**
 	 * The client's own idempotency key, when it supplies one — authoritative, and permanent.
@@ -123,8 +133,7 @@ public class TransactionEntity implements AuditableEntity {
 	 * transaction forever. Unlike {@link #tradeFingerprint} this carries no time window, because the
 	 * client has asserted that two submissions bearing this key are the same submission.
 	 */
-	@Indexed(unique = true, sparse = true)
-	@Field("idempotency_key")
+	@Column(name = "idempotency_key")
 	private String idempotencyKey;
 
 	/**
@@ -134,29 +143,29 @@ public class TransactionEntity implements AuditableEntity {
 	 * must both be accepted, so a fingerprint on its own can never reject anything. It is the
 	 * fingerprint <em>within a short window of</em> {@link #submittedAt} that marks a retry.
 	 */
-	@Indexed(sparse = true)
-	@Field("trade_fingerprint")
+	@Column(name = "trade_fingerprint")
 	private String tradeFingerprint;
 
 	/**
 	 * When the trade was submitted, as distinct from the date it was dated.
 	 *
 	 * <p>Stored explicitly rather than read from {@code auditMetadata.createdAt}: this class carries
-	 * {@code @AllArgsConstructor}, which is the ADR-27 trap — Lombok's {@code @ConstructorProperties}
-	 * makes the mapper bypass field initialisers, so audit metadata can arrive null and never be
-	 * filled. A window that silently anchors on null would disable duplicate detection.
+	 * {@code @AllArgsConstructor}; Hibernate never uses it to materialise a row (it always uses the
+	 * no-arg constructor and property access), but a window that anchored on audit metadata would
+	 * still be wrong the moment anything else constructs this entity directly.
 	 */
-	@Field("submitted_at")
+	@Column(name = "submitted_at")
 	private LocalDateTime submittedAt;
 
-	@Indexed(unique = true, sparse = true)
-	@Field("source_temp_transaction_id")
+	@Column(name = "source_temp_transaction_id")
 	private String sourceTempTransactionId;
 
-	@Field("status")
+	@Column(name = "status")
+	@Enumerated(EnumType.STRING)
 	private TransactionStatus status;
 
-	@Field("asset_request")
+	@Column(name = "asset_request_json")
+	@Convert(converter = AssetRequestConverter.class)
 	private AssetRequest assetRequest;
 
 	/**
@@ -165,11 +174,18 @@ public class TransactionEntity implements AuditableEntity {
 	 * {@code assets} is rebuilt (W-283a1, D-580). Absent on a bonus allotment, which no flow received, and on a
 	 * transaction stored before W-283a1 (a temporary before W-270 is redriven through V1, D-555 C2a).
 	 */
-	@Field("trade_flow")
+	@Column(name = "trade_flow")
+	@Enumerated(EnumType.STRING)
 	private TradeFlow tradeFlow;
 
-	@Field("audit_metadata")
+	@Embedded
 	@Setter(value = AccessLevel.NONE)
-	private AuditMetadata auditMetadata = new AuditMetadata();
+	private AuditColumns auditMetadata = new AuditColumns();
 
+	@PrePersist
+	void assignIdIfAbsent() {
+		if (this.id == null) {
+			this.id = UUID.randomUUID().toString();
+		}
+	}
 }

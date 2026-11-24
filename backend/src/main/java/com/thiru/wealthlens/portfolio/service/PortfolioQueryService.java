@@ -8,6 +8,7 @@ import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.shared.dto.DateRangeFilter;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.entity.query.QueryBuilder;
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +34,12 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Log4j2
 @Service
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class PortfolioQueryService {
 
     private final PortfolioRepository portfolioRepository;
     private final ProfitAndLossService profitAndLossService;
-    private final MongoTemplateService mongoTemplateService;
     private final ChargeViewAssembler chargeViewAssembler;
 
     public List<AssetResponse> getStockQuantity(UserMail userMail, String stockCode) {
@@ -159,12 +160,17 @@ public class PortfolioQueryService {
     }
 
     public List<AssetEntity> searchAssets(UserMail userMail, List<QueryFilter> queryFilters) {
-        return mongoTemplateService.getDocuments(userMail, queryFilters, AssetEntity.class);
+        return portfolioRepository.findAll(filtersFor(userMail, queryFilters));
     }
 
     public List<AssetResponse> getExportEntities(UserMail userMail, List<QueryFilter> queryFilters) {
-        List<AssetEntity> entities = mongoTemplateService.getDocuments(userMail, queryFilters, AssetEntity.class);
+        List<AssetEntity> entities = portfolioRepository.findAll(filtersFor(userMail, queryFilters));
         return groupedWithCharges(userMail, entities);
+    }
+
+    private static Specification<AssetEntity> filtersFor(UserMail userMail, List<QueryFilter> queryFilters) {
+        QueryFilter.validateAndSanitizationOfQueryFilters(queryFilters, userMail);
+        return QueryBuilder.build(queryFilters);
     }
 
     /**

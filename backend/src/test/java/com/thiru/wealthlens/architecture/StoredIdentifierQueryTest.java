@@ -47,8 +47,11 @@ class StoredIdentifierQueryTest {
                         .map(name -> describe(method) + " names '" + name + "'"))
                 .toList();
 
-        // Then — the guard sees the names it guards, and no query uses one
-        assertThat(storedNames).contains("account_holder", "demat_account_id", "subject_email");
+        // Then — the guard sees the names it guards, and no query uses one. account_holder (portfolio), demat_account_id
+        // (brokercharges) and subject_email (shared/privacy) were this list's original examples; each moved to JPA's
+        // @Column/@Convert(SearchableColumn.class) in turn (W-337c2, W-337d2, W-337e, D-943/D-947/D-949) and dropped out
+        // of this Mongo-only scan, leaving the taxplanning module's remaining mismatched names.
+        assertThat(storedNames).contains("changed_by", "updated_by", "confirmed_by");
         assertThat(offending).isEmpty();
     }
 

@@ -14,6 +14,8 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeFlow;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
@@ -35,7 +37,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -50,6 +51,22 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     private static final String TEST_STOCK_CODE = "RELIANCE";
     private static final String TEST_STOCK_NAME = "Reliance Industries";
     private static final String TEST_ACCOUNT_HOLDER = "Self";
+
+    private List<AssetEntity> assetsOf(String email, String stockCode) {
+        return portfolioRepository.findByEmail(email).stream().filter(a -> stockCode.equals(a.getStockCode())).toList();
+    }
+
+    private AssetEntity firstAssetOf(String email, String stockCode) {
+        return assetsOf(email, stockCode).stream().findFirst().orElse(null);
+    }
+
+    private TransactionEntity firstTransactionOf(String email) {
+        return transactionRepository.findByEmail(email).stream().findFirst().orElse(null);
+    }
+
+    private TransactionEntity firstTemporaryTransactionOf(String email) {
+        return transactionRepository.findByEmailAndStatus(email, TransactionStatus.TEMPORARY).stream().findFirst().orElse(null);
+    }
 
     @Autowired
     private PortfolioService portfolioService;
@@ -94,26 +111,23 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals("Stock buy added to portfolio", response.getBody());
 
         // Verify transaction in DB
-        assertEquals(1, mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), TransactionEntity.class, "transactions"));
+        assertEquals(1, transactionRepository.findByEmail(TEST_EMAIL).stream()
+                .filter(t -> TEST_STOCK_CODE.equals(t.getStockCode())).count());
 
         // Verify asset in DB
-        AssetEntity savedAsset = mongoTemplate.findOne(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), AssetEntity.class, "assets");
+        AssetEntity savedAsset = firstAssetOf(TEST_EMAIL, TEST_STOCK_CODE);
         assertNotNull(savedAsset);
         assertEquals(10.0, savedAsset.getQuantity());
         assertEquals(2500.0, savedAsset.getPrice());
         // V1 merges a same-day buy into its lot; the rebuild needs to know that (W-283a1, D-580)
-        assertEquals(TradeFlow.V1, mongoTemplate.findAll(TransactionEntity.class, "transactions").getFirst().getTradeFlow());
+        assertEquals(TradeFlow.V1, transactionRepository.findAll().getFirst().getTradeFlow());
     }
 
     @Test
     void addTransaction_buyExisting_whenSecondPurchase_expectedAvgPriceCalculated() {
         String token = generateToken(TEST_EMAIL);
         AssetRequest first = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2000.0);
-        // Use same transaction date so the findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByIdAsc
+        // Use same transaction date so the findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByAuditMetadataCreatedAtAsc
         // query in buyStock() matches the same record for averaging
         first.setTransactionDate(LocalDate.now());
         portfolioService.addTransaction(
@@ -133,9 +147,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertEquals("Stock buy added to portfolio", response.getBody());
 
-        AssetEntity savedAsset = mongoTemplate.findOne(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), AssetEntity.class, "assets");
+        AssetEntity savedAsset = firstAssetOf(TEST_EMAIL, TEST_STOCK_CODE);
         assertNotNull(savedAsset);
         assertEquals(20.0, savedAsset.getQuantity());
         assertEquals(2500.0, savedAsset.getPrice()); // avg: (20000 + 30000) / 20
@@ -163,9 +175,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertEquals("Stock sell updated in portfolio and profit and loss updated in profit and loss", response.getBody());
 
-        List<AssetEntity> assets = mongoTemplate.find(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), AssetEntity.class, "assets");
+        List<AssetEntity> assets = assetsOf(TEST_EMAIL, TEST_STOCK_CODE);
         // Quantity reduced — may be 15.0 in single record or distributed
         double totalQty = assets.stream().mapToDouble(AssetEntity::getQuantity).sum();
         assertEquals(15.0, totalQty);
@@ -191,9 +201,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
 
-        long count = mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), AssetEntity.class, "assets");
+        long count = assetsOf(TEST_EMAIL, TEST_STOCK_CODE).size();
         assertEquals(0, count);
     }
 
@@ -232,9 +240,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals("Transaction stored as temporary transaction, needs to perform after corporate action ..!", response.getBody());
 
         // Verify TEMPORARY transaction in DB
-        TransactionEntity tempTxn = mongoTemplate.findOne(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("status").is(TransactionStatus.TEMPORARY)), TransactionEntity.class, "transactions");
+        TransactionEntity tempTxn = firstTemporaryTransactionOf(TEST_EMAIL);
         assertNotNull(tempTxn);
         assertNotNull(tempTxn.getAssetRequest());
     }
@@ -248,7 +254,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setEmail(TEST_EMAIL);
         temp.setStockCode("TEMP_STOCK");
         temp.setStatus(TransactionStatus.TEMPORARY);
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
 
         AssetRequest request = buildBuyRequest("TEMP_STOCK", "Temp Stock", 5.0, 100.0);
 
@@ -373,9 +379,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
         assertTrue(response.getBody().contains("A GOLD_BOND needs its MATURITY DATE; it is not assumed"));
-        assertEquals(0, mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
-                TransactionEntity.class, "transactions"),
+        assertEquals(0, transactionRepository.findByEmail(TEST_EMAIL).size(),
                 "the refusal must come before any write");
     }
 
@@ -397,9 +401,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        TransactionEntity stored = mongoTemplate.findOne(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
-                TransactionEntity.class, "transactions");
+        TransactionEntity stored = firstTransactionOf(TEST_EMAIL);
         assertNotNull(stored);
         assertEquals(maturityDate, stored.getMaturityDate());
     }
@@ -433,11 +435,11 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        AssetEntity stored = mongoTemplate.findAll(AssetEntity.class, "assets").stream()
+        AssetEntity stored = portfolioRepository.findAll().stream()
                 .filter(asset -> "RELIANCE".equals(asset.getStockCode())).findFirst().orElseThrow();
         assertEquals(10.0, stored.getQuantity());
         // the upload is served by V1's flow (W-283a1, D-580)
-        assertEquals(TradeFlow.V1, mongoTemplate.findAll(TransactionEntity.class, "transactions").getFirst().getTradeFlow());
+        assertEquals(TradeFlow.V1, transactionRepository.findAll().getFirst().getTradeFlow());
     }
 
     @Test
@@ -509,7 +511,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         // The bonus is on another stock, so VALID_STOCK is recorded, not held back
-        AssetEntity stored = mongoTemplate.findAll(AssetEntity.class, "assets").stream()
+        AssetEntity stored = portfolioRepository.findAll().stream()
                 .filter(asset -> "VALID_STOCK".equals(asset.getStockCode())).findFirst().orElseThrow();
         assertEquals(5.0, stored.getQuantity());
     }
@@ -523,7 +525,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setEmail(TEST_EMAIL);
         temp.setStockCode("TEMP_STOCK");
         temp.setStatus(TransactionStatus.TEMPORARY);
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
 
         byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "SOME_STOCK", "Some Stock Corp",
                 "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
@@ -569,7 +571,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setPrice(2500.0);
         temp.setTransactionDate(LocalDate.now().minusDays(1));
         temp.setAssetRequest(buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0));
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
 
         String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
@@ -611,7 +613,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setStockCode("TEST");
         temp.setStatus(TransactionStatus.TEMPORARY);
         temp.setAssetRequest(null);
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
 
         String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
@@ -649,7 +651,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setBrokerName(TEST_BROKER);
         temp.setStatus(TransactionStatus.TEMPORARY);
         temp.setAssetRequest(buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0));
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
 
         String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
@@ -677,7 +679,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp1.setBrokerName(TEST_BROKER);
         temp1.setStatus(TransactionStatus.TEMPORARY);
         temp1.setAssetRequest(buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0));
-        mongoTemplate.save(temp1, "transactions");
+        transactionRepository.save(temp1);
 
         // Seed one with null assetRequest
         TransactionEntity temp2 = new TransactionEntity();
@@ -685,7 +687,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp2.setStockCode("BAD_STOCK");
         temp2.setStatus(TransactionStatus.TEMPORARY);
         temp2.setAssetRequest(null);
-        mongoTemplate.save(temp2, "transactions");
+        transactionRepository.save(temp2);
 
         String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
@@ -711,7 +713,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setBrokerName(TEST_BROKER);
         temp.setStatus(TransactionStatus.TEMPORARY);
         temp.setAssetRequest(buildBuyRequest("REFILTER", "ReFilter Corp", 10.0, 1000.0));
-        mongoTemplate.save(temp, "transactions");
+        transactionRepository.save(temp);
 
         String url = baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive";
         HttpHeaders headers = new HttpHeaders();
@@ -750,7 +752,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         // Seed an asset
         AssetEntity asset = buildAssetEntity();
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         String url = baseUrl() + "/api/v1/me/portfolio/stocks";
         HttpHeaders headers = new HttpHeaders();
@@ -775,8 +777,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         older.setTransactionDate(today.minusDays(400));
         AssetEntity newer = buildAssetEntity();
         newer.setTransactionDate(today.minusDays(30));
-        mongoTemplate.save(older, "assets");
-        mongoTemplate.save(newer, "assets");
+        portfolioRepository.save(older);
+        portfolioRepository.save(newer);
 
         String url = baseUrl() + "/api/v1/me/portfolio/stocks";
         HttpHeaders headers = new HttpHeaders();
@@ -813,7 +815,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
 
         AssetEntity asset = buildAssetEntity();
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         String url = baseUrl() + "/api/v1/me/portfolio/stocks/" + TEST_STOCK_CODE;
         HttpHeaders headers = new HttpHeaders();
@@ -853,7 +855,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
 
         AssetEntity asset = buildAssetEntity();
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         BulkGetRequest request = new BulkGetRequest();
         DateRangeFilter range = new DateRangeFilter();
@@ -880,7 +882,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         AssetEntity mf = buildAssetEntity();
         mf.setAssetType(AssetType.MUTUAL_FUND);
-        mongoTemplate.save(mf, "assets");
+        portfolioRepository.save(mf);
 
         String url = baseUrl() + "/api/v1/me/portfolio/mutual-funds";
         HttpHeaders headers = new HttpHeaders();
@@ -903,14 +905,14 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         // Seed data in multiple collections
         AssetEntity asset = buildAssetEntity();
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         TransactionEntity txn = new TransactionEntity();
         txn.setEmail(TEST_EMAIL);
         txn.setStockCode(TEST_STOCK_CODE);
         txn.setTransactionType(TransactionType.BUY);
         txn.setStatus(TransactionStatus.PROCESSED);
-        mongoTemplate.save(txn, "transactions");
+        transactionRepository.save(txn);
 
         String url = baseUrl() + "/api/v1/me/portfolio";
         HttpHeaders headers = new HttpHeaders();
@@ -926,8 +928,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertTrue(response.getBody().contains(TEST_EMAIL));
 
         // Verify collections are empty
-        assertEquals(0, mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)), AssetEntity.class, "assets"));
+        assertEquals(0, portfolioRepository.findByEmail(TEST_EMAIL).size());
     }
 
     /**
@@ -949,17 +950,19 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void clearAllRecordsForCustomer_whenEveryCollectionHasData_leavesNoneBehind() {
         String token = generateToken(TEST_EMAIL);
 
-        mongoTemplate.save(buildAssetEntity(), "assets");
+        portfolioRepository.save(buildAssetEntity());
 
         TransactionEntity txn = new TransactionEntity();
         txn.setEmail(TEST_EMAIL);
         txn.setStockCode(TEST_STOCK_CODE);
         txn.setTransactionType(TransactionType.BUY);
         txn.setStatus(TransactionStatus.PROCESSED);
-        mongoTemplate.save(txn, "transactions");
+        transactionRepository.save(txn);
 
-        mongoTemplate.save(emailOnly(), "trade_outcomes");
-        mongoTemplate.save(emailOnly(), "profit_and_loss");
+        TradeOutcomeEntity tradeOutcome = new TradeOutcomeEntity();
+        tradeOutcome.setEmail(TEST_EMAIL);
+        tradeOutcomeRepository.save(tradeOutcome);
+        profitAndLossRepository.save(new ProfitAndLossEntity(TEST_EMAIL));
         com.thiru.wealthlens.brokercharges.entity.UserChargeEntity charge =
                 new com.thiru.wealthlens.brokercharges.entity.UserChargeEntity();
         charge.setEmail(TEST_EMAIL);
@@ -981,9 +984,10 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 .exchange(URI.create(url), HttpMethod.DELETE, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        for (String collection : List.of("assets", "transactions", "trade_outcomes", "profit_and_loss")) {
-            assertEquals(0, countFor(collection), collection + " still holds rows for the cleared user");
-        }
+        assertEquals(0, portfolioRepository.findByEmail(TEST_EMAIL).size(), "assets still holds rows for the cleared user");
+        assertEquals(0, transactionRepository.findByEmail(TEST_EMAIL).size(), "transactions still holds rows for the cleared user");
+        assertEquals(0, tradeOutcomeRepository.findByEmail(TEST_EMAIL).size(), "trade_outcomes still holds rows for the cleared user");
+        assertEquals(0, profitAndLossRepository.findAllByEmail(TEST_EMAIL).size(), "profit_and_loss still holds rows for the cleared user");
         assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDesc(TEST_EMAIL).size(),
                 "user_charges still holds rows for the cleared user");
         assertEquals(0, chargeAccountRepository.findByEmail(TEST_EMAIL).size(),
@@ -993,22 +997,12 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 "lastly_performed_corporate_action still holds rows for the cleared user");
     }
 
-    /** A document carrying nothing but the email, which is all the wipe keys on. */
-    private org.bson.Document emailOnly() {
-        return new org.bson.Document("email", storedIdentifier(TEST_EMAIL));
-    }
-
-    private long countFor(String collection) {
-        return mongoTemplate.getCollection(collection)
-                .countDocuments(new org.bson.Document("email", storedIdentifier(TEST_EMAIL)));
-    }
-
     @Test
     void clearAllRecordsForCustomer_partialFailureResilience_whenOneDeleteFails_expectedContinues() {
         String token = generateToken(TEST_EMAIL);
 
         AssetEntity asset = buildAssetEntity();
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         String url = baseUrl() + "/api/v1/me/portfolio";
         HttpHeaders headers = new HttpHeaders();
@@ -1071,9 +1065,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         // If @Transactional works properly with replica set, partial writes should not occur.
         // At minimum, verify the sell completed without throwing transaction errors.
-        long assetCount = mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), AssetEntity.class, "assets");
+        long assetCount = assetsOf(TEST_EMAIL, TEST_STOCK_CODE).size();
         assertEquals(0, assetCount); // Full sell should delete the asset
     }
 
@@ -1110,9 +1102,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
 
-        List<AssetEntity> remaining = mongoTemplate.find(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), AssetEntity.class, "assets");
+        List<AssetEntity> remaining = assetsOf(TEST_EMAIL, TEST_STOCK_CODE);
 
         double totalRemaining = remaining.stream().mapToDouble(AssetEntity::getQuantity).sum();
         assertEquals(5.0, totalRemaining, 0.001); // 25 total - 15 sold = 5 remaining
@@ -1147,9 +1137,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
 
-        long count = mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)
-                        .and("stock_code").is(TEST_STOCK_CODE)), AssetEntity.class, "assets");
+        long count = assetsOf(TEST_EMAIL, TEST_STOCK_CODE).size();
         assertEquals(0, count); // All lots consumed
     }
 
@@ -1162,7 +1150,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
 
         AssetEntity asset = buildAssetEntity();
-        mongoTemplate.save(asset, "assets");
+        portfolioRepository.save(asset);
 
         BulkGetRequest request = new BulkGetRequest();
         // Include dateRange to satisfy controller's getStocks method
@@ -1239,12 +1227,9 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
 
         // Verify AssetEntity created in portfolio
-        AssetEntity savedAsset = mongoTemplate.findOne(
-                new org.springframework.data.mongodb.core.query.Query(
-                        Criteria.where("email").is(TEST_EMAIL).and("stock_code").is(TEST_STOCK_CODE)),
-                AssetEntity.class, "assets");
+        AssetEntity savedAsset = firstAssetOf(TEST_EMAIL, TEST_STOCK_CODE);
         assertNotNull(savedAsset, "Asset should be created via v2 endpoint");
-        assertEquals(TradeFlow.V2, mongoTemplate.findAll(TransactionEntity.class, "transactions").getFirst().getTradeFlow());
+        assertEquals(TradeFlow.V2, transactionRepository.findAll().getFirst().getTradeFlow());
         assertEquals(10.0, savedAsset.getQuantity());
         // The superseded implementation is deleted (Chunk 11), so user_broker_charges cannot be
         // written by anything. Asserted on the raw collection rather than a mapped type, because
@@ -1281,10 +1266,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals(HttpStatus.OK.value(), sellResponse.getStatusCode().value());
 
         // Verify portfolio quantity reduced
-        List<AssetEntity> assets = mongoTemplate.find(
-                new org.springframework.data.mongodb.core.query.Query(
-                        Criteria.where("email").is(TEST_EMAIL).and("stock_code").is(TEST_STOCK_CODE)),
-                AssetEntity.class, "assets");
+        List<AssetEntity> assets = assetsOf(TEST_EMAIL, TEST_STOCK_CODE);
         double totalQty = assets.stream().mapToDouble(AssetEntity::getQuantity).sum();
         assertEquals(5.0, totalQty, "Quantity should be reduced after partial sell");
         // The superseded implementation is deleted (Chunk 11), so user_broker_charges cannot be
@@ -1311,9 +1293,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
         assertTrue(response.getBody().contains("A GOLD_BOND needs its MATURITY DATE; it is not assumed"));
-        assertEquals(0, mongoTemplate.count(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
-                TransactionEntity.class, "transactions"),
+        assertEquals(0, transactionRepository.findByEmail(TEST_EMAIL).size(),
                 "the refusal must come before any write");
     }
 
@@ -1335,9 +1315,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        TransactionEntity stored = mongoTemplate.findOne(
-                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
-                TransactionEntity.class, "transactions");
+        TransactionEntity stored = firstTransactionOf(TEST_EMAIL);
         assertNotNull(stored);
         assertEquals(maturityDate, stored.getMaturityDate());
     }

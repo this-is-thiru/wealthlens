@@ -8,9 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
-import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import io.restassured.RestAssured;
@@ -22,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -60,7 +56,7 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
     }
 
     private List<TradeOutcomeEntity> rows() {
-        return mongoTemplate.find(new Query(Criteria.where("email").is(EMAIL)), TradeOutcomeEntity.class);
+        return tradeOutcomeRepository.findByEmail(EMAIL);
     }
 
     @Test
@@ -104,10 +100,9 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
         post(SALE).statusCode(200);
 
         // Then
-        Query mine = new Query(Criteria.where("email").is(EMAIL));
-        assertEquals(0, mongoTemplate.count(mine, TransactionEntity.class));
-        assertEquals(0, mongoTemplate.count(mine, AssetEntity.class));
-        assertEquals(0, mongoTemplate.count(mine, "profit_and_loss"));
+        assertEquals(0, transactionRepository.findByEmail(EMAIL).size());
+        assertEquals(0, portfolioRepository.findByEmail(EMAIL).size());
+        assertEquals(0, profitAndLossRepository.findAllByEmail(EMAIL).size());
         assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL).size());
     }
 

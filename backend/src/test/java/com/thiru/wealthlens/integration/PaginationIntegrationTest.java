@@ -85,7 +85,7 @@ class PaginationIntegrationTest extends AbstractIntegrationTest {
             transaction.setQuantity(1.0);
             transaction.setTransactionType(TransactionType.BUY);
             transaction.setTransactionDate(LocalDate.of(2026, 1, day));
-            mongoTemplate.save(transaction);
+            transactionRepository.save(transaction);
         }
     }
 

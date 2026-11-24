@@ -128,7 +128,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         row.setSellBrokerCharges(1.0);
         row.setSellExchangeName("NSE");
         row.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(row);
+        tradeOutcomeRepository.save(row);
     }
 
     /** A short lot and a deposit beside T13-1's: 10-1-2026 → 1-9-2026, 1,00,000 → 1,20,000; a deposit's interest elsewhere. */
@@ -150,7 +150,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         lot.setSellBrokerCharges(1.0);
         lot.setSellExchangeName("NSE");
         lot.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(lot);
+        tradeOutcomeRepository.save(lot);
         TradeOutcomeEntity deposit = new TradeOutcomeEntity();
         deposit.setId("deposit");
         deposit.setEmail(OWNER);
@@ -163,7 +163,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         deposit.setCorporateActionAdjustedBuyPrice(100000);
         deposit.setSellPrice(107000);
         deposit.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(deposit);
+        tradeOutcomeRepository.save(deposit);
     }
 
     private JsonNode compute(String draftId) {
@@ -481,7 +481,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         lot.setQuantity(10.0);
         lot.setPrice(100);
         lot.setTransactionDate(LocalDate.of(2025, 6, 1));
-        mongoTemplate.save(lot);
+        portfolioRepository.save(lot);
     }
 
     @Test
@@ -502,7 +502,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         row.setSellChargeBreakup(Map.of("BROKERAGE", 100.0, "STT", 80.0));
         row.setSellExchangeName("NSE");
         row.setAcquisitionMode(AcquisitionMode.PURCHASE);
-        mongoTemplate.save(row);
+        tradeOutcomeRepository.save(row);
 
         // When
         JsonNode charges = capitalGains(holderId(), "").at("/realised/0/charges");

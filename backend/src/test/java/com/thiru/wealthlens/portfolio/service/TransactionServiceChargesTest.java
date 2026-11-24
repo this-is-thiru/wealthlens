@@ -21,6 +21,7 @@ import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 /** That a transaction response carries its own id, and the charges recorded against it. */
 @Tag("unit")
@@ -45,12 +47,10 @@ class TransactionServiceChargesTest {
     private static final UserMail USER = UserMail.from(EMAIL);
 
     @Mock private TransactionRepository transactionRepository;
-    @Mock private MongoTemplateService mongoTemplateService;
     @Mock private ChargeViewAssembler chargeViewAssembler;
 
     private TransactionService service() {
-        return new TransactionService(transactionRepository, new IdempotencyProperties(60),
-                mongoTemplateService, chargeViewAssembler);
+        return new TransactionService(transactionRepository, new IdempotencyProperties(60), chargeViewAssembler);
     }
 
     /**
@@ -151,9 +151,9 @@ class TransactionServiceChargesTest {
     @Test
     @DisplayName("userTransactions: maps the filtered trades, each with its id")
     void userTransactions_whenFiltered_mapsTheMatchingTrades() {
-        // Given (W-287)
-        List<QueryFilter> filters = List.of();
-        when(mongoTemplateService.getDocuments(eq(USER), eq(filters), eq(TransactionEntity.class), any(Pageable.class)))
+        // Given (W-287) — a mutable list: QueryFilter.validateAndSanitizationOfQueryFilters adds the email filter
+        List<QueryFilter> filters = new ArrayList<>();
+        when(transactionRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(transaction("txn-1"))));
         when(chargeViewAssembler.forTransactions(anyString(), any()))
                 .thenReturn(ChargeViewAssembler.ChargeLookup.empty());

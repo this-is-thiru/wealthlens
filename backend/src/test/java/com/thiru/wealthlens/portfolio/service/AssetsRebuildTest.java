@@ -168,7 +168,7 @@ class AssetsRebuildTest {
         AssetsRebuildReport report = rebuild.rebuild(UserMail.from(EMAIL), false);
 
         // Then -- the user's lots replaced by one: lot-1's id, order time, action and creation; the replay's 10 (C2a)
-        verify(portfolioRepository).deleteByEmail(EMAIL);
+        verify(portfolioRepository).deleteAllById(List.of("lot-1"));
         ArgumentCaptor<List<AssetEntity>> saved = ArgumentCaptor.captor();
         verify(portfolioRepository).saveAll(saved.capture());
         AssetEntity written = saved.getValue().getFirst();

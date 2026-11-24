@@ -43,7 +43,7 @@ user's yearly **P&L** (`profit_and_loss`). The outcome rows are also what the ta
 | `GET /api/v1/me/portfolio/mutual-funds` | me | → the same, mutual funds only | `PortfolioController.java:81` – `:84`; `PortfolioQueryService.java:181` – `:188` |
 | `POST /api/v1/me/portfolio/stocks/search` | me | `BulkGetRequest` (`dateRange`) → holdings bought in the range | `PortfolioController.java:86` – `:90`; `PortfolioQueryService.java:89` – `:103` |
 | `GET /api/v1/me/portfolio/stocks/{stockCode}` | me | → that stock's lots, oldest first, each with its charges | `PortfolioController.java:92` – `:96`; `PortfolioQueryService.java:44` – `:60` |
-| `POST /api/v1/me/portfolio/assets/search` | me | `BulkGetRequest` (`queryFilters`) → matching lots | `PortfolioController.java:99` – `:103`; `service/MongoTemplateService.java:28` – `:44` |
+| `POST /api/v1/me/portfolio/assets/search` | me | `BulkGetRequest` (`queryFilters`) → matching lots | `PortfolioController.java:99` – `:103`; `PortfolioQueryService.searchAssets`, a JPA `Specification` built by `QueryBuilder` (W-337e) |
 | `GET /api/v1/me/portfolio/transactions` | me | → a page of `TransactionResponse`, newest first, each with its charges | `controller/TransactionController.java:32` – `:35`; `service/TransactionService.java:128` – `:163` |
 | `POST /api/v1/me/portfolio/transactions/search` | me | `BulkGetRequest` → a page of matches | `TransactionController.java:26` – `:30` |
 | `GET /api/v1/me/portfolio/temporary-transactions` | me | → the held trades | `controller/TemporaryTransactionsController.java:26` – `:30` |
@@ -89,38 +89,53 @@ upload row and a redrive all meet them:
 
 ## 4. Stored data
 
-**`assets`** (`entity/AssetEntity.java:33` – `:158`), one lot:
-- **Who and what:** `email` and `account_holder` (encrypted, searchable), `account_type`, `stock_code`, `stock_name`, `exchange_name`,
-  `broker_name`, `asset_type`, `segment` (`DELIVERY` when absent, `:69` – `:73`), `maturity_date`.
-- **The lot:** `transaction_date`, `price`, `quantity`, `broker_charges`, `misc_charges`, and how much of each earlier sales have taken,
-  `allocated_buy_charges` and `allocated_buy_misc_charges` (`:81` – `:97`).
-- **Its history:** `buy_transaction_ids`, `sell_transaction_ids`, `corporate_action` (the action that created it, e.g. a bonus),
-  `corporate_actions` (the actions applied to it), `order_id`, `order_execution_time` (`TODO(W-214)`), `order_time_quantities`,
-  `timezone_id`, `comments`, `audit_metadata`.
-- No index is declared on it.
+PostgreSQL tables (W-337e, D-949; Flyway `db/migration/portfolio/V9__portfolio.sql`). Primary keys are caller-assigned `VARCHAR(255)`
+with `@PrePersist` random-UUID default — not time-ordered the way a Mongo `ObjectId` was (see gaps 1 and 3). Nested, never-queried-into
+structures (`order_time_quantities`, `corporate_actions`, `realised_profits`, `out_sourced_realised_profits`, request/charge maps) are
+`TEXT` JSON columns via `AttributeConverter`s (`entity/JsonColumnConverter.java`; `CorporateActionListConverter`,
+`OrderTimeQuantityListConverter`, `RealisedProfitsConverter`, `StringListConverter`, `StringDoubleMapConverter`, `AssetRequestConverter`).
+A converter's `empty()` is the value for a blank column: `List.of()`/`Map.of()` for a collection column, but `null` for
+`RealisedProfitsConverter` — a null `realised_profits`/`out_sourced_realised_profits` means that track was never folded into, which
+`ProfitAndLossService` already tells apart from a zero `RealisedProfits` (`RealisedProfitsConverter.java:25` – `:31`).
 
-**`transactions`** (`entity/TransactionEntity.java:31` – `:175`), one trade as received, or a held one:
+**`assets`** (`entity/AssetEntity.java:45` – `:187`), one lot:
+- **Who and what:** `email` and `account_holder` (encrypted, searchable), `account_type`, `stock_code`, `stock_name`, `exchange_name`,
+  `broker_name`, `asset_type`, `segment` (`DELIVERY` when absent).
+- **The lot:** `transaction_date`, `price`, `quantity`, `broker_charges`, `misc_charges`, and how much of each earlier sales have taken,
+  `allocated_buy_charges` and `allocated_buy_misc_charges`.
+- **Its history:** `buy_transaction_ids`, `sell_transaction_ids` (`StringListConverter`), `corporate_action_type` (the action that created
+  it, e.g. a bonus), `corporate_actions_json` (the actions applied to it, `CorporateActionListConverter`), `order_id`,
+  `order_execution_time` (`TODO(W-214)`), `order_time_quantities_json` (`OrderTimeQuantityListConverter`), `timezone_id`, `comment`,
+  `audit_metadata`, `version` (optimistic locking, added at the port).
+- `OrderTimeQuantity` compares by value (`@EqualsAndHashCode`, W-337e), needed for Hibernate's converter dirty-check: without it, a lot
+  with a non-empty `order_time_quantities` is rewritten — audit trail and all — on any flush that merely loaded it, since a freshly
+  deserialized list is never `.equals()` to the one it was loaded from.
+- No index is declared on it; the "oldest lot of a day" finder orders by `audit_metadata.created_at`, not id (W-337e, D-949;
+  `repository/PortfolioRepository.java`), since the id carries no time order here.
+
+**`transactions`** (`entity/TransactionEntity.java`), one trade as received, or a held one:
 - The same trade facts as a lot, plus `total_value`, `transaction_type`, `comment` and `order_execution_time`.
 - **De-duplication:** `idempotency_key` (unique, sparse), `trade_fingerprint` (indexed, not unique), `submitted_at`, and
-  `source_temp_transaction_id` (unique, sparse) linking a redriven trade to the held one it came from (`:119` – `:154`).
+  `source_temp_transaction_id` (unique, sparse) linking a redriven trade to the held one it came from.
 - **State:** `status` (`TEMPORARY`, `PROCESSED`, `FAILED`; `dto/enums/TransactionStatus.java:3` – `:7`), `asset_request` (the original
-  request, on a held trade), and `trade_flow` (`V1` or `V2`, set by the server from the route, `TransactionEntity.java:162` – `:169`).
-- Its indexes are created at start by `PortfolioIndexInitializer`, which logs and carries on when one cannot be built
-  (`config/PortfolioIndexInitializer.java:33` – `:74`).
+  request, `AssetRequestConverter`, encrypting PII on a held trade), and `trade_flow` (`V1` or `V2`, set by the server from the route).
+- Indexes are declared on the Flyway migration itself, not created at start: `PortfolioIndexInitializer`, which used to build them on
+  startup and carry on when one could not, is gone (W-337e) — a migration either lands cleanly or fails the deploy.
 
-**`profit_and_loss`** (`entity/ProfitAndLossEntity.java:50` – `:96`), one user's financial year:
-- `email` (encrypted, searchable) and `financial_year` (`2025-2026`), unique together (`:51`).
-- **`version`**: optimistic locking, because every trade reads, changes and writes the whole document (`:24` – `:34`, `:77` – `:82`).
-- **`realised_profits`** for the user's own account (`SELF`) and **`out_sourced_realised_profits`** for any other account type. Each is
-  a `RealisedProfits` (`entity/model/RealisedProfits.java:14` – `:42`) holding two hierarchies:
+**`profit_and_loss`** (`entity/ProfitAndLossEntity.java`), one user's financial year:
+- `email` (encrypted, searchable) and `financial_year` (`2025-2026`), unique together on `pnl_user_year_idx`.
+- **`version`**: optimistic locking, because every trade reads, changes and writes the whole row. Under MongoDB this was pre-empted in
+  practice by the database's own write-conflict detection on the replica set; under PostgreSQL there is no document-level equivalent, so
+  `version` is now the only place two concurrent trades for the same user and year are caught (`TradeCollisionRetry` retries on it).
+- **`realised_profits_json`** for the user's own account (`SELF`) and **`out_sourced_realised_profits_json`** for any other account
+  type, each a `RealisedProfits` (nullable — see above) holding two hierarchies:
   - **Capital gains**, `gains_by_asset_and_segment`: per asset type and segment a `FinancialReport` → `capital_gains` per month
     (`MonthlyReport`) → `first_half_report` (days 1 – 15) and `second_half_report`. Every level carries `purchase_amount`, `sell_amount`,
-    `profit`, `misc_charges` and `brokerage` (`entity/model/ReportModel.java:9` – `:28`; `FinancialReport.java:14` – `:21`;
-    `MonthlyReport.java:12` – `:24`).
+    `profit`, `misc_charges` and `brokerage` (`entity/model/ReportModel.java`; `FinancialReport.java`; `MonthlyReport.java`).
   - **Charges**, `yearly_charge_summary` → months → halves, each `amount_by_code` and `total_charges` (`brokercharges`'
     `ChargeSummaryReport`).
 
-**`trade_outcomes`** (`entity/TradeOutcomeEntity.java:29` – `:225`), one row per lot a sale consumed, or one per property sale:
+**`trade_outcomes`** (`entity/TradeOutcomeEntity.java`), one row per lot a sale consumed, or one per property sale:
 - **Who and what:** `email` and `account_holder` (encrypted), `account_type`, `stock_code`, `stock_name`, `exchange_name`, `broker_name`,
   `asset_type`, `segment`, `instrument_sub_class` (null until an instrument registry exists).
 - **The buy side:** `original_buy_price`, `ca_adjusted_buy_price`, `buy_quantity`, `buy_date`, `buy_broker_charges`, `buy_misc_charges`,
@@ -129,7 +144,7 @@ upload row and a redrive all meet them:
 - **Figures:** `total_buy_value`, `total_sell_value`, `net_profit`, `profit_percentage`, `holding_period_days`, `financial_year`.
 - **Lineage:** `source_sell_transaction_id`, `source_buy_lot_id`, `is_ca_derived`, `applied_corporate_actions`, `acquisition_mode`,
   `acquisition_corporate_action`, `buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`, `audit_metadata`.
-- **Indexes:** `{email, sell_date: -1}` and `{email, source_buy_lot_id}` (`:35` – `:42`).
+- **Indexes:** `{email, sell_date}` and `{email, source_buy_lot_id}`, declared on the migration.
 
 ## 5. Behaviour
 
@@ -168,9 +183,12 @@ nothing is deleted (`PortfolioService.java:526` – `:535`, `:795` – `:810`).
 **A buy charge taken once** (`service/LotChargeAllocator.java:36` – `:72`): each sale takes `round(paid − already taken) × sold ÷ held
 before this sale`, to paise, and records it on the lot. So the last sale takes exactly what is left.
 
-**Collisions** (`TradeCollisionRetry.java:38` – `:100`). Every trade rewrites the user's yearly P&L document, so two trades at once can
-abort one with Mongo's `TransientTransactionError`. The trade is then run again from a fresh copy of its request: up to 5 more times,
-waiting 20 ms and doubling to at most 500 ms, with 10 ms of jitter.
+**Collisions** (`TradeCollisionRetry.java`). Every trade rewrites the user's one `profit_and_loss` row for the year. Under PostgreSQL
+(W-337e, D-949 C5a) a collision surfaces as one of three things, none of them Mongo's `TransientTransactionError`: an
+`OptimisticLockingFailureException` from `ProfitAndLossEntity` or `AssetEntity`'s own `@Version` check; a lock timeout or deadlock
+(`CannotAcquireLockException`, Postgres `40P01`); or two attempts both creating the user's first `profit_and_loss` row for the year at
+once, a `DataIntegrityViolationException` on `pnl_user_year_idx`. The trade is then run again from a fresh copy of its request: up to 5
+more times, waiting 20 ms and doubling to at most 500 ms, with 10 ms of jitter.
 
 **The views** (`PortfolioQueryService.java:62` – `:179`). A holding is the lots of one stock, broker and account holder with something
 left:
@@ -182,7 +200,10 @@ left:
 non-temporary trades into lots in memory, using the same rules the live paths use. Events run by date, and on one date the performed
 splits and demergers come before the trades. Each buy takes the shape of the flow it recorded. A buy stored before flows were recorded
 is shaped from the stored lot that lists it, and the report names each such buy. The rebuilt lots are compared with the stored ones.
-Only `dryRun=false` replaces them: a paired lot keeps its id, order times, corporate actions and creation stamp (`AssetsRebuild.java:132` – `:154`).
+With `dryRun=false`, a lot whose figures match its stored pair is left untouched — no delete, no reinsert, its audit trail undisturbed
+(W-337e); a lot that differs or is new is written, keeping its paired stored lot's id, order times, corporate actions and creation stamp;
+a stored lot with no rebuilt pair is deleted. `report.lotsWritten` still counts every paired-or-new lot, whether or not its row was
+actually touched — it tracks replay coverage, not persisted rows (`AssetsRebuild.java`).
 
 **Erasure** (`UserRecordsErasureService.java:60` – `:97`) deletes, in this order:
 - `assets`, `trade_outcomes`, `transactions` and `profit_and_loss`;
@@ -236,9 +257,12 @@ V1 writes its rows in `PortfolioService` with no breakdown by code (`PortfolioSe
 - no lot, transaction or P&L entry;
 - its id a digest of user, name and both dates, so the same sale is refused a second time.
 
-**The P&L rebuild** (`ProfitAndLossRebuild.java:75` – `:181`) folds the user's `trade_outcomes` and trade `user_charges` through the live
-fold steps (`foldSale`, `foldCharges`) into fresh documents. It compares them, year by year, with the stored ones; with
-`dryRun=false` it replaces them all.
+**The P&L rebuild** (`ProfitAndLossRebuild.java`) folds the user's `trade_outcomes` and trade `user_charges` through the live
+fold steps (`foldSale`, `foldCharges`) into fresh rows, one per financial year. It compares them, year by year, with the stored ones;
+with `dryRun=false` a year with a stored row is updated in place, under that row's own id, rather than deleted and reinserted — both
+would land in the same flush, and Hibernate runs inserts before deletes, so a blind delete-then-insert on `pnl_user_year_idx`'s
+`{email, financial_year}` would collide with the row it is about to delete (W-337e). A year with no rebuilt row is deleted; a year
+stored more than once (a race before the version field) keeps one row and deletes the rest, so duplicates still fold into one.
 
 **The trade-outcome rebuild** (`migration/TransactionBasedTradeOutcomeMigration.java:53` – `:142`) works for each user with
 transactions and **no** outcome row:
@@ -297,7 +321,9 @@ Before B-7 / B-8 the full ₹10 was divided by what remained each time: 3.33 + 5
 | `app.portfolio.trade-exchanges.accepted` | EQUITY and MUTUAL_FUND: NSE, BSE; BOND and GOLD_BOND: NSE, BSE, OFF_EXCHANGE; FD and INSURANCE: OFF_EXCHANGE (`application.yaml:183` – `:189`) | the exchanges a trade may name; a type not listed accepts none; absent stops the start (`config/TradeExchangeProperties.java:19` – `:34`) |
 | `app.charges.*` | see `docs/modules/brokercharges.md` §6 | whether a trade is priced, and whether a V2 buy's cost is the computed total |
 
-A multi-document trade is all-or-nothing only on a replica set with `app.mongodb.transactions-enabled` (`PortfolioService.java:76` – `:81`).
+A trade spanning several tables is all-or-nothing under PostgreSQL's own ACID transaction (`@Transactional("postgresTransactionManager")`,
+`PortfolioService.java:80`) — unconditionally, unlike the Mongo era's `app.mongodb.transactions-enabled` flag and replica-set
+requirement, both gone with the port (W-337e).
 
 ## 7. Tests
 
@@ -338,14 +364,15 @@ these routes too.
      WIPRO. A second user naming the first user's id took the row over: the first user's transaction list came back empty, and the
      second user's held a WIPRO row under that id. The first user's lot still lists the lost transaction.
    - **Who can:** any signed-in user who knows or guesses a transaction id. A user sees their own ids in `/transactions`; another's are
-     Mongo ObjectIds, which are ordered by time.
+     random UUIDs (W-337a's convention, since the port), not ordered by time the way a Mongo `ObjectId` was.
 2. **A sale takes lots of any segment.**
    - **How:** a sale's lots are keyed on email, stock, broker, holder and date only (`PortfolioRepository.java:26` – `:30`), and the
      rebuild matches the same way (`LotLedger.java:105` – `:109`). A buy, by contrast, merges only within one segment (W-296).
    - **Shown at the build:** delivery 10 and intraday 5 bought, then an intraday sale of 5, left **delivery 5 and intraday 5**. The sale was
      costed from the delivery lot.
 3. **One date's lots are not ordered.** A sale sorts only by `transaction_date` (`PortfolioRepository.java:28`; `LotLedger.java:108`), so
-   among V2's several lots of one date the order is what Mongo returns, though `LotLedger`'s contract says "in the order they were made"
+   among V2's several lots of one date the order is whatever Postgres returns with no tiebreaker — row order with no `ORDER BY` on the
+   tie is unspecified there exactly as it was under Mongo — though `LotLedger`'s contract says "in the order they were made"
    (`:98` – `:99`). Read from the code; not driven.
 4. **`AssetRequest` carries no constraint**, so its `@Valid` checks nothing, and the missing-field refusals live in the service
    (`PortfolioService.java:240` – `:253`). CLAUDE.md: a constraint on the request type refuses a missing field. It also binds what a caller
@@ -364,9 +391,10 @@ these routes too.
    - **Dead weight:** `recordTransaction` defaults a missing date to today (`TransactionService.java:60` – `:62`), which no path can reach,
      since every path refuses one first (`PortfolioService.java:250` – `:252`).
 8. **Conventions.** `@AllArgsConstructor` where CLAUDE.md asks `@RequiredArgsConstructor`: `PortfolioController.java:28`,
-   `TransactionController.java:19`, `MongoTemplateService.java:22`. The erase answer prints the user's email and answers 200 even when
-   partial (`PortfolioController.java:69` – `:73`). `PortfolioIndexInitializer` catches `RuntimeException` and starts without the index
-   (`config/PortfolioIndexInitializer.java:51` – `:62`).
+   `TransactionController.java:19`. The erase answer prints the user's email and answers 200 even when
+   partial (`PortfolioController.java:69` – `:73`). `MongoTemplateService` and `PortfolioIndexInitializer` — the latter's own instance of
+   this same gap, catching `RuntimeException` to start without an index — are both gone with the port to Postgres (W-337e): indexes are
+   now declared on the Flyway migration, which either applies cleanly or fails the deploy outright.
 9. **Four routes have no request in `api-collection/`** (grep at `41a7123`): `GET …/mutual-funds`, `POST …/stocks/search`, and the two
    admin holdings reads.
 

@@ -124,10 +124,11 @@ public class CorporateActionService {
 
     /**
      * Iterates over corporate actions in the current quarter and processes them.
-     * Each action may write to portfolio, transactions, and the performed-CAs table.
-     * Safe only when MongoDB replica set + {@code app.mongodb.transactions-enabled=true} is set.
+     * Each action may write to portfolio, transactions, and the performed-CAs table — all on PostgreSQL since
+     * {@code portfolio}'s own cutover (W-337e, D-949), so this runs as one {@code postgresTransactionManager}
+     * transaction (D-945 C3a named this the point to switch).
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public void performPendingCorporateActions(String email, CorporateActionPerformDto actionPerformDto, boolean allBrokers) {
         if (actionPerformDto.brokerName() == null && !allBrokers) {
             throw new IllegalArgumentException("Invalid action perform details: " + actionPerformDto);
@@ -224,11 +225,10 @@ public class CorporateActionService {
     }
 
     /**
-     * Processes a single corporate action (a name change) by writing
-     * to portfolio and transaction collections. Safe only when MongoDB replica set
-     * + {@code app.mongodb.transactions-enabled=true} is set.
+     * Processes a single corporate action (a name change) by writing to the asset and transaction tables, now both
+     * on PostgreSQL (W-337e, D-949), as one {@code postgresTransactionManager} transaction.
      */
-    @Transactional
+    @Transactional("postgresTransactionManager")
     public String performCorporateAction(CorporateActionDto actionWrapper) {
 
         CorporateActionType action = actionWrapper.getType();

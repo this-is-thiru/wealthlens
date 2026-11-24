@@ -2,18 +2,24 @@ package com.thiru.wealthlens.portfolio.entity.model;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Field;
 
+/**
+ * Stored only as JSON inside {@code profit_and_loss.realised_profits_json} / {@code .out_sourced_realised_profits_json}
+ * (W-337e, D-949 C3a) — {@code lastUpdatedTime} is stamped by {@code ProfitAndLossService} explicitly, never by
+ * Spring Data auditing, which only ever fires for the aggregate root.
+ *
+ * <p>Deliberately not {@code Serializable}: it was under Mongo, but nothing nested inside it ({@code FinancialReport},
+ * {@code YearlyChargeSummary}, …) is, and Hibernate 7 falls back to byte-serializing the whole graph for dirty-checking
+ * an attribute-converted type that claims to be — which then fails on the first non-serializable nested class.
+ */
 @Data
 @NoArgsConstructor(staticName = "empty")
-public class RealisedProfits implements Serializable {
+public class RealisedProfits {
 
     /**
      * What the charges engine computed for this period, keyed by charge code.
@@ -24,7 +30,6 @@ public class RealisedProfits implements Serializable {
      * Both are written during the cutover and the old one is deleted in Chunk 11 — replacing it in
      * place would put a cutover and a rewrite in one step.
      */
-    @Field("yearly_charge_summary")
     private YearlyChargeSummary yearlyChargeSummary;
 
     /**
@@ -33,10 +38,7 @@ public class RealisedProfits implements Serializable {
      * It replaced the short / long pair and the by-classification map (W-160d2). V1 writes purchase,
      * sell, profit, brokerage and misc; V2 purchase and sell (W-169).
      */
-    @Field("gains_by_asset_and_segment")
     private Map<AssetType, Map<TradeSegment, FinancialReport>> gainsByAssetAndSegment = new EnumMap<>(AssetType.class);
 
-    @Field("last_updated_time")
-    @LastModifiedDate
     private LocalDateTime lastUpdatedTime;
 }

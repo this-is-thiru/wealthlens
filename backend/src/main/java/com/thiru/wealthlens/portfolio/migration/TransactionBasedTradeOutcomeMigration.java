@@ -6,25 +6,19 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
+import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.BuyLot;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.MatchedTrade;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.SellRequest;
-import com.thiru.wealthlens.shared.protection.FieldCipher;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 /**
@@ -44,10 +38,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TransactionBasedTradeOutcomeMigration {
 
-    private final MongoTemplate mongoTemplate;
+    private final TransactionRepository transactionRepository;
     private final TradeOutcomeRepository tradeOutcomeRepository;
     private final TradeMatchingService tradeMatchingService;
-    private final FieldCipher cipher;
 
     /** Rebuild every user with transactions and no rows, unless {@code dryRun}; {@code auditor} is who asked. */
     public TradeOutcomeRebuildReport rebuild(boolean dryRun, String auditor) {
@@ -120,24 +113,10 @@ public class TransactionBasedTradeOutcomeMigration {
     }
 
     private Set<String> getDistinctEmails() {
-        Query query = new Query();
-        query.fields().include("email");
-        List<Document> results = mongoTemplate.find(query, Document.class, "transactions");
-
-        return results.stream()
-                .map(doc -> doc.getString("email"))
-                .filter(email -> email != null && !email.isBlank())
-                // Raw rows hold the stored form; the typed query below encrypts the plain email itself (W-253).
-                .map(cipher::decrypt)
-                .collect(Collectors.toSet());
+        return Set.copyOf(transactionRepository.findDistinctEmails());
     }
 
     private List<TransactionEntity> findByEmailAndTransactionType(String email, TransactionType transactionType) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("email").is(email));
-        query.addCriteria(Criteria.where("transaction_type").is(transactionType.name()));
-        query.with(Sort.by(Sort.Direction.ASC, "transaction_date"));
-
-        return mongoTemplate.find(query, TransactionEntity.class, "transactions");
+        return transactionRepository.findByEmailAndTransactionTypeOrderByTransactionDateAsc(email, transactionType);
     }
 }

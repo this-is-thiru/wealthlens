@@ -158,7 +158,7 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         trade.remove(missing);
 
         assertAnswered(exchange(HttpMethod.POST, route, MediaType.APPLICATION_JSON, trade), HttpStatus.BAD_REQUEST, message);
-        assertThat(mongoTemplate.getCollection("transactions").countDocuments()).isZero();
+        assertThat(transactionRepository.count()).isZero();
     }
 
     @Test

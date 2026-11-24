@@ -48,7 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Log4j2
 @AllArgsConstructor
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 public class ProfitAndLossService {
 
     /** The day a month's first fortnight ends, matching the report this sits beside. */
