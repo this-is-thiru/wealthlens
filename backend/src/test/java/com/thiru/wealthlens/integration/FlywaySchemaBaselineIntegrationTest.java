@@ -1,11 +1,13 @@
 package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -26,7 +28,7 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
         // Then — V10 shares V5's derived description ("taxplanning"), both from the folder name
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning");
+                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning", "unique nulls not distinct");
     }
 
     @Test
@@ -36,6 +38,23 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
         // Then — the app refuses to start when an entity and its table disagree (W-405, D-963)
         assertThat(schemaAction).isEqualTo("validate");
+    }
+
+    @Test
+    void uniqueIndexes_whenTheNullableColumnIsNullTwice_refuseTheSecondRow() {
+        // Given — MongoDB's unique indexes refused a second missing (null) value; PostgreSQL must too (W-407c G-1)
+        JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
+        jdbc.update("INSERT INTO charge_accounts (id, email, broker_name) VALUES ('a1', 'e', 'ZERODHA')");
+        jdbc.update("INSERT INTO user_charges (id, email) VALUES ('u1', 'e')");
+        jdbc.update("INSERT INTO charge_instruments (id, stock_code) VALUES ('i1', 'FUND')");
+
+        // When / Then
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO charge_accounts (id, email, broker_name) VALUES ('a2', 'e', 'ZERODHA')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO user_charges (id, email) VALUES ('u2', 'e')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO charge_instruments (id, stock_code) VALUES ('i2', 'FUND')"))
+                .isInstanceOf(DuplicateKeyException.class);
     }
 
     @Test
