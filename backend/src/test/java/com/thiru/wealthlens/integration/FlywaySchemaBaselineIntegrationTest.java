@@ -2,8 +2,10 @@ package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -11,6 +13,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Testcontainer: every script in every module folder (V1 - V10) runs without error, in order, once each.
  */
 class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
+
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
 
     @Test
     void flyway_whenTheAppStarts_appliesEveryModuleScriptExactlyOnce() {
@@ -22,6 +27,15 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
         // Then — V10 shares V5's derived description ("taxplanning"), both from the folder name
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
                 "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning");
+    }
+
+    @Test
+    void entityManagerFactory_whenStarted_validatesEveryEntityAgainstItsTable() {
+        // When
+        Object schemaAction = entityManagerFactory.getProperties().get("hibernate.hbm2ddl.auto");
+
+        // Then — the app refuses to start when an entity and its table disagree (W-405, D-963)
+        assertThat(schemaAction).isEqualTo("validate");
     }
 
     @Test

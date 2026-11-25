@@ -54,7 +54,10 @@ public class PostgresJpaConfig {
     }
 
     /**
-     * Hibernate instantiates a {@code @Convert} converter by reflection unless told to ask Spring for it instead — the same
+     * Validates every entity against its table at start (W-405, D-963): a missing table or column, or a column of the wrong type,
+     * stops the app instead of failing one query later. Flyway migrates first, so a database it built always passes.
+     *
+     * <p>Hibernate instantiates a {@code @Convert} converter by reflection unless told to ask Spring for it instead — the same
      * problem {@code MongoConfig.mongoCustomConversions} solves for {@code @ValueConverter} (D-447), so {@code EncryptedColumn}
      * and {@code SearchableColumn} can take {@code FieldCipher} as a constructor argument rather than build it themselves.
      */
@@ -67,7 +70,7 @@ public class PostgresJpaConfig {
                         "com.thiru.wealthlens.brokercharges.entity", "com.thiru.wealthlens.portfolio.entity",
                         "com.thiru.wealthlens.taxplanning")
                 .persistenceUnit("postgres")
-                .properties(Map.of("hibernate.resource.beans.container", new SpringBeanContainer(beanFactory)))
+                .properties(Map.of("hibernate.resource.beans.container", new SpringBeanContainer(beanFactory), "hibernate.hbm2ddl.auto", "validate"))
                 .build();
     }
 

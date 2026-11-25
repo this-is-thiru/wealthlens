@@ -4,16 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-404 not taken — D-961; board —; committed and pushed.
+Item            : W-405 DONE — D-963; board D; committed and pushed (with D-962's placements and plans/W-337g2.md).
 Stage           : 6 — DONE. Nothing in flight.
-Last item commit: "taxplanning W-404: close as not taken — D-959 misread V9's tables; both order_execution_time columns already hold their value exactly; D-961" — matches `git log --grep`.
-Next step       : plan W-337g2 (18 collections with embedded data: 12 child tables, 16 JSON columns named *_json; written-zone Asia/Kolkata;
-  assets.order_execution_time an Instant, the other times UTC-held or local-held per D-954; runbook entry; removal ticket). Then W-403.
-  Check pipeline runs 45650940814 (W-402) and this push first.
+Last item commit: "taxplanning W-405: validate every entity against its table at start — nothing checked entities and DDL against each other; D-962, D-963" — matches `git log --grep`.
+Next step       : plan W-407a (port audit: auth, insurance vs m1.6.1 — encryption, unique indexes, nullability/defaults, expiry).
+  Then W-407b – e, then W-337g2a1 … g2c (after W-337g2 C2 – C5). Check the pipeline run of this push first.
 Flags for owner : W-337f flags unchanged (inert @Field, GazetteCursor created*, lease audit nulls, findByEmailAndTransactionDateBetween).
 Env notes       : NO Claude attribution; integration needs OrbStack + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on the
   pipeline only. Tests run in UTC (argLine); time tests pin a fixed Asia/Kolkata clock.
-Updated         : 2026-11-25 (session 122, W-404 closed)
+Updated         : 2026-11-25 (session 122, W-405 committed and pushed)
 ```
 ## Resume check (run these, compare, then act on "Next step")
 
