@@ -100,9 +100,12 @@ public class StalenessSweep implements TaxJob {
                 .sorted().toList();
     }
 
-    /** What the computation ran under: its own field, or, for one stored before W-138, the copy inside its result. */
+    /**
+     * What the computation ran under: its own field, or, for one stored before W-138, the copy inside its result. A table
+     * cannot hold a list as absent, so empty is read as not recorded: every computation runs under at least one version.
+     */
     private static List<String> pinned(DraftComputation computation) {
-        if (computation.getLawAndExec() != null) {
+        if (!computation.getLawAndExec().isEmpty()) {
             return computation.getLawAndExec();
         }
         List<String> versions = new ArrayList<>();

@@ -34,9 +34,12 @@ import tools.jackson.databind.JsonNode;
  * failure ends its transaction, so the controller asks for the conflict afterwards.
  */
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class DraftService {
+
+    /** How long one save attempt waits on a racing one; a choice, not a sourced figure (W-337f plan). */
+    private static final String RACE_WAIT = "100ms";
 
     private final TaxProfileService taxProfileService;
     private final TaxProfileReferenceService thirdPartyReferences;
@@ -128,7 +131,7 @@ public class DraftService {
      *
      * @throws BadRequestException otherwise
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public OwnedDraft ownedDraft(String email, String draftId) {
         FilingDraft draft = owned(email, draftId);
         return new OwnedDraft(draft, DraftInputsMapper.read(draft.getInputsJson()));
@@ -168,6 +171,9 @@ public class DraftService {
     }
 
     private DraftView save(String email, String draftId, int expectedRevision, JsonNode patch, Optional<WorkbookImport> imported) {
+        // PostgreSQL makes a racing save wait on the winner's revision row; bounded, the wait fails like Mongo's write
+        // conflict did, so DraftSaveRetry can still answer that the other save had not finished (D-621 C2a)
+        revisionRepository.boundLockWaits(RACE_WAIT);
         FilingDraft draft = owned(email, draftId);
         if (!draft.getStatus().isEditable()) {
             throw new DraftConflictException("A draft that is " + draft.getStatus() + " cannot be edited", DraftView.of(draft),
@@ -189,7 +195,7 @@ public class DraftService {
         DraftRevision revision = revision(draft, expectedRevision + 1, email, reopened);
         revision.setChangeSetJson(DraftInputsMapper.text(patch));
         imported.ifPresent(revision::setImportedFrom);
-        revisionRepository.insert(revision);
+        revisionRepository.save(revision);
         draft.setInputsJson(DraftInputsMapper.text(inputs));
         draft.setCurrentRevision(expectedRevision + 1);
         draft.setStatus(DraftStatus.DRAFT);
@@ -209,7 +215,7 @@ public class DraftService {
         return added;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public List<DraftRevision> revisions(String email, String draftId) {
         owned(email, draftId);
         return revisionRepository.findByDraftIdOrderByRevisionNumber(draftId);
@@ -281,7 +287,7 @@ public class DraftService {
      * The conflict for a save that collided on every attempt ({@link DraftSaveRetry}): the other save had not
      * committed, so which paths it changes is not yet known and the revision has not visibly moved.
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public DraftConflictException conflictAfterRace(String email, String draftId) {
         return new DraftConflictException("Another save of this draft had not finished; read the draft and send again",
                 DraftView.of(owned(email, draftId)), List.of());

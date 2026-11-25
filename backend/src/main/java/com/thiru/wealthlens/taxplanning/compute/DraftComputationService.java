@@ -42,7 +42,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /** Computes a draft and keeps what was shown, by receipt (W-104, W-107, W-109; D-442). */
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class DraftComputationService {
 
@@ -134,7 +134,7 @@ public class DraftComputationService {
     }
 
     /** Every regime priced on the draft, labelled coarse while a step is open; the draft is unchanged and nothing is stored. */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public DraftRegimeComparison compare(String email, String draftId) {
         DraftService.OwnedDraft owned = draftService.ownedDraft(email, draftId);
         TaxYearId year = TaxYearId.of(owned.draft().getTaxYearStart());
@@ -152,7 +152,7 @@ public class DraftComputationService {
      * @throws IllegalArgumentException if either is missing, the draft is not this account's, or no form of the year
      *     serves the kind
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public ItrFormChoice chooseForm(String email, String draftId, String regimeCode, String returnKind) {
         if (regimeCode == null || regimeCode.isBlank()) {
             throw new BadRequestException("A form choice needs a regime, since total income depends on it");
@@ -173,7 +173,7 @@ public class DraftComputationService {
      * @throws IllegalArgumentException if the draft is not this account's, the request asks for more breadth than the
      *     setting, or the request does not fit the draft or the year's pack
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public DraftOptimisation optimise(String email, String draftId, DraftOptimisationRequest request) {
         int year = draftService.ownedDraft(email, draftId).draft().getTaxYearStart();
         int breadth = optimiserSettings.breadthFor(request.verificationBreadth());
@@ -191,7 +191,7 @@ public class DraftComputationService {
      *
      * @throws BadRequestException if the profile is not this account's, or is held for erasure
      */
-    @Transactional(readOnly = true)
+    @Transactional("postgresTransactionManager")
     /**
      * A page of the profile's computations, newest first (one never computed last), the receipt breaking a tie; only the page read
      * is logged as read (W-358c3b, D-861).

@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxplanning.documents.store;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface StoredConfirmationRepository extends MongoRepository<StoredConfirmation, String> {
+public interface StoredConfirmationRepository extends JpaRepository<StoredConfirmation, String> {
 }

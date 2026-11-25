@@ -3,19 +3,22 @@ package com.thiru.wealthlens.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import com.thiru.wealthlens.taxplanning.profile.Employer;
+import com.thiru.wealthlens.taxplanning.profile.EmployerRepository;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import io.restassured.RestAssured;
 import java.net.URI;
+import java.util.Map;
 import java.util.stream.Stream;
-import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.HttpEntity;
@@ -25,14 +28,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * A taxpayer's profile and the people and accounts it refers to, over HTTP and into Mongo (W-096 – W-098, D-440): only the owner
- * reaches them, and a PAN appears in no response, message or log in full ({@code DR 14} O1.1, O2).
+ * A taxpayer's profile and the people and accounts it refers to, over HTTP and into PostgreSQL (W-096 – W-098, D-440): only the
+ * owner reaches them, and a PAN appears in no response, message or log in full ({@code DR 14} O1.1, O2).
  */
 @ExtendWith(OutputCaptureExtension.class)
 class TaxProfileIntegrationTest extends AbstractIntegrationTest {
@@ -40,6 +44,15 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     private static final String OWNER = "owner@example.com";
     private static final String OTHER = "other@example.com";
     private static final String PAN = "ABCDE1234F";
+
+    @Autowired
+    private TaxpayerProfileRepository profiles;
+
+    @Autowired
+    private EmployerRepository employers;
+
+    @Autowired
+    private AccessRecordRepository accessRecords;
 
     private static String profile(String pan) {
         return """
@@ -64,7 +77,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
 
     private String createdProfileId() {
         assertThat(call(HttpMethod.POST, OWNER, "/profiles", profile(PAN)).getStatusCode()).isEqualTo(HttpStatus.OK);
-        return mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        return profiles.findAll().getFirst().getId();
     }
 
     @Test
@@ -75,7 +88,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(created.getBody()).contains("ABCXXXXX4F").doesNotContain(PAN);
-        TaxpayerProfile stored = mongoTemplate.findAll(TaxpayerProfile.class).getFirst();
+        TaxpayerProfile stored = profiles.findAll().getFirst();
         assertThat(stored.getPan()).isEqualTo(PAN);
         assertThat(stored.getEmail()).isEqualTo(OWNER);
     }
@@ -113,7 +126,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(mongoTemplate.findAll(TaxpayerProfile.class)).isEmpty();
+        assertThat(profiles.findAll()).isEmpty();
     }
 
     @Test
@@ -210,12 +223,12 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, path, "{\"name\": \"HDFC\", \"kind\": \"BANK\"}");
 
         // When
-        String withoutAddress = mongoTemplate.getCollection("tax_lenders").find().first().toJson();
+        Object withoutAddress = rawFirst("tax_lenders").get("address");
         call(HttpMethod.POST, OWNER, path, "{\"name\": \"SBI\", \"address\": \"Mumbai\", \"kind\": \"BANK\"}");
         JsonNode lenders = JsonMapper.builder().build().readTree(call(HttpMethod.GET, OWNER, path, null).getBody());
 
-        // Then — the first stores no address field at all, as a lender stored before W-119b
-        assertThat(withoutAddress).doesNotContain("\"address\"");
+        // Then — the first stores no address value at all, as a lender stored before W-119b
+        assertThat(withoutAddress).isNull();
         assertThat(lenders.size()).isEqualTo(2);
         for (JsonNode lender : lenders) {
             JsonNode address = lender.path("address");
@@ -237,18 +250,18 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         // When
         ResponseEntity<String> again = call(HttpMethod.POST, OWNER, path, body);
         call(HttpMethod.POST, OWNER, "/profiles", profile("PQRST5678K"));
-        String secondId = mongoTemplate.findAll(TaxpayerProfile.class).get(1).getId();
+        String secondId = profiles.findAll().get(1).getId();
         ResponseEntity<String> elsewhere = call(HttpMethod.POST, OWNER, "/profiles/" + secondId + "/employers", body);
 
         // Then — D-046 B5: per account's profile, not shared
         assertThat(again.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(again.getBody()).doesNotContain("BLRA12345B");
         assertThat(elsewhere.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(mongoTemplate.findAll(Employer.class)).hasSize(2);
+        assertThat(employers.findAll()).hasSize(2);
     }
 
-    private String stored(String collection) {
-        return mongoTemplate.getCollection(collection).find().first().toJson();
+    private Map<String, Object> rawFirst(String table) {
+        return new JdbcTemplate(postgresDataSource).queryForMap("SELECT * FROM " + table + " LIMIT 1");
     }
 
     @Test
@@ -266,17 +279,17 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, path + "lenders",
                 "{\"name\": \"Meera\", \"address\": \"Pune\", \"pan\": \"FGHIJ8765K\", \"kind\": \"OTHER\"}");
 
-        // Then — DR 14 O1.1: what Mongo holds names none of them; what the app reads back is unchanged
-        assertThat(stored("tax_profiles")).doesNotContain(PAN, "Self", "1985-06-01");
-        assertThat(stored("tax_family_members")).doesNotContain("PQRST5678K", "Asha", "1986-02-01", "\"DISABILITY\"");
-        assertThat(stored("tax_employers")).doesNotContain("BLRA12345B");
-        assertThat(stored("tax_landlords")).doesNotContain("LMNOP4321Q", "Ravi", "Bengaluru");
-        assertThat(stored("tax_lenders")).doesNotContain("FGHIJ8765K", "Meera", "Pune");
-        Document profile = mongoTemplate.getCollection("tax_profiles").find().first();
-        assertThat(profile.getString("pan")).startsWith("k1:");
+        // Then — DR 14 O1.1: what Postgres holds names none of them; what the app reads back is unchanged
+        assertThat(String.valueOf(rawFirst("tax_profiles"))).doesNotContain(PAN, "Self", "1985-06-01");
+        assertThat(String.valueOf(rawFirst("tax_family_members"))).doesNotContain("PQRST5678K", "Asha", "1986-02-01", "DISABILITY");
+        assertThat(String.valueOf(rawFirst("tax_employers"))).doesNotContain("BLRA12345B");
+        assertThat(String.valueOf(rawFirst("tax_landlords"))).doesNotContain("LMNOP4321Q", "Ravi", "Bengaluru");
+        assertThat(String.valueOf(rawFirst("tax_lenders"))).doesNotContain("FGHIJ8765K", "Meera", "Pune");
+        Map<String, Object> profile = rawFirst("tax_profiles");
+        assertThat((String) profile.get("pan")).startsWith("k1:");
         // HMAC-SHA256 of ABCDE1234F under the test digest key (bytes 0x1F … 0x3E), computed with Python's hmac, not the code
-        assertThat(profile.getString("pan_digest")).isEqualTo("fc7b5d1c7f778ae0d11ff7f39543daf491a5b2f2e1ca37b3f68a03e2066bca62");
-        TaxpayerProfile read = mongoTemplate.findAll(TaxpayerProfile.class).getFirst();
+        assertThat((String) profile.get("pan_digest")).isEqualTo("fc7b5d1c7f778ae0d11ff7f39543daf491a5b2f2e1ca37b3f68a03e2066bca62");
+        TaxpayerProfile read = profiles.findAll().getFirst();
         assertThat(read.getPan()).isEqualTo(PAN);
         assertThat(read.getName()).isEqualTo("Self");
         assertThat(read.getDateOfBirth()).hasToString("1985-06-01");
@@ -294,11 +307,11 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/employers", null);
 
         // Then — DR 14 O1.1, O4: the two reads that carry special-category data, and only those
-        assertThat(mongoTemplate.findAll(AccessRecord.class))
+        assertThat(accessRecords.findAll())
                 .extracting(AccessRecord::getSubject, AccessRecord::getSubjectId, AccessRecord::getPrincipal)
                 .containsExactlyInAnyOrder(
                         tuple(ReadSubject.PROFILE, profileId, OWNER),
                         tuple(ReadSubject.FAMILY_MEMBERS, profileId, OWNER));
-        assertThat(mongoTemplate.getCollection("tax_access_log").find().first().toJson()).doesNotContain(PAN, "Self");
+        assertThat(String.valueOf(rawFirst("tax_access_log"))).doesNotContain(PAN, "Self");
     }
 }

@@ -1,44 +1,58 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A profile's elections of one regime, append-only ({@code DR 17} L3; W-082d). Holds what the user asserted when a draft was acted
  * on. The withdrawal, lapse and revival branches are W-082e's.
  */
+@Entity
+@Table(name = "tax_regime_election_history")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_regime_election_history")
-@CompoundIndex(name = "tax_election_regime_idx", def = "{'profile_id': 1, 'regime_code': 1}", unique = true)
-public class RegimeElectionHistory implements AuditableEntity, CreatedWithId {
+public class RegimeElectionHistory implements CreatedWithId {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("profile_id")
+    @Column(name = "profile_id")
     private String profileId;
 
-    @Field("regime_code")
+    @Column(name = "regime_code")
     private String regimeCode;
 
-    @Field("events")
+    /** Child table from the W-337b baseline (V5), not a JSON column: {@code tax_regime_election_events}. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    @CollectionTable(name = "tax_regime_election_events", joinColumns = @JoinColumn(name = "history_id"))
     private List<ElectionEvent> events = new ArrayList<>();
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /**
      * An election in a tax year, and the draft that asserted it.
@@ -46,7 +60,8 @@ public class RegimeElectionHistory implements AuditableEntity, CreatedWithId {
      * @param taxYearStart the year's first calendar year
      * @param sourceDraft the {@code ACTED_ON} draft
      */
-    public record ElectionEvent(int taxYearStart, String sourceDraft) {
+    @Embeddable
+    public record ElectionEvent(@Column(name = "tax_year_start") int taxYearStart, @Column(name = "source_draft") String sourceDraft) {
     }
 
     /** Whether an election stands recorded by {@code year}; what state that makes it is W-082e's, on the engine's rows. */

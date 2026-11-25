@@ -1,50 +1,56 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A bank account: its kind routes its interest; only a masked number is held ({@code DR 15} F4).
  */
+@Entity
+@Table(name = "tax_bank_accounts")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_bank_accounts")
-public class BankAccount implements AuditableEntity, CreatedWithId, ProfileScoped {
+public class BankAccount implements CreatedWithId, ProfileScoped {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Indexed
-    @Field("profile_id")
+    @Column(name = "profile_id")
     private String profileId;
 
-    @Field("bank_name")
+    @Column(name = "bank_name")
     private String bankName;
 
-    @Field("ifsc")
+    @Column(name = "ifsc")
     private String ifsc;
 
-    @Field("masked_number")
+    @Column(name = "masked_number")
     private String maskedNumber;
 
-    @Field(name = "kind", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "kind")
     private AccountKind kind;
 
-    @Field("nominated_for_refund")
+    @Column(name = "nominated_for_refund")
     private boolean nominatedForRefund;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient

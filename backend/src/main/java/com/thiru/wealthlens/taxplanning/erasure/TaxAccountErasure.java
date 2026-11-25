@@ -1,22 +1,18 @@
 package com.thiru.wealthlens.taxplanning.erasure;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
-
 import com.thiru.wealthlens.shared.privacy.PersonalDataHolder;
-import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
+import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
 import com.thiru.wealthlens.taxplanning.jobs.ProfileRemoval;
 import com.thiru.wealthlens.taxplanning.profile.ProfileErasure;
 import com.thiru.wealthlens.taxplanning.profile.ProfileErasureRepository;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
-import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -33,7 +29,8 @@ public class TaxAccountErasure implements PersonalDataHolder {
     private final TaxProfileService taxProfileService;
     private final ProfileRemoval profileRemoval;
     private final ProfileErasureRepository profileErasures;
-    private final MongoTemplate mongoTemplate;
+    private final DraftComputationRepository computations;
+    private final AccessRecordRepository accessRecords;
 
     @Override
     public void hold(String email, LocalDateTime requestedAt) {
@@ -51,9 +48,9 @@ public class TaxAccountErasure implements PersonalDataHolder {
         for (TaxpayerProfile profile : profiles.findByEmail(email)) {
             profileRemoval.remove(profile);
         }
-        mongoTemplate.remove(query(where("email").is(email)), DraftComputation.class);
-        mongoTemplate.remove(query(where("principal").is(email)), AccessRecord.class);
-        mongoTemplate.remove(query(where("email").is(email)), ProfileErasure.class);
+        computations.deleteByEmail(email);
+        accessRecords.deleteByPrincipal(email);
+        profileErasures.deleteByEmail(email);
     }
 
     /** Profile ids are never reused, so erasing a restored profile by its id cannot reach a profile made since. */

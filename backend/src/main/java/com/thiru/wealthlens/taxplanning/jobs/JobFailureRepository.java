@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxplanning.jobs;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface JobFailureRepository extends MongoRepository<JobFailure, String> {
+public interface JobFailureRepository extends JpaRepository<JobFailure, String> {
 }

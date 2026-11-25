@@ -31,7 +31,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EnableJpaRepositories(
         basePackages = {"com.thiru.wealthlens.auth.repository", "com.thiru.wealthlens.insurance.repository",
                 "com.thiru.wealthlens.shared.privacy", "com.thiru.wealthlens.corporate.repository",
-                "com.thiru.wealthlens.brokercharges.repository", "com.thiru.wealthlens.portfolio.repository"},
+                "com.thiru.wealthlens.brokercharges.repository", "com.thiru.wealthlens.portfolio.repository",
+                "com.thiru.wealthlens.taxplanning"},
         entityManagerFactoryRef = "postgresEntityManagerFactory",
         transactionManagerRef = "postgresTransactionManager")
 public class PostgresJpaConfig {
@@ -58,7 +59,8 @@ public class PostgresJpaConfig {
         return builder.dataSource(postgresDataSource)
                 .packages("com.thiru.wealthlens.auth.entity", "com.thiru.wealthlens.insurance.entity",
                         "com.thiru.wealthlens.shared.privacy", "com.thiru.wealthlens.corporate.entity",
-                        "com.thiru.wealthlens.brokercharges.entity", "com.thiru.wealthlens.portfolio.entity")
+                        "com.thiru.wealthlens.brokercharges.entity", "com.thiru.wealthlens.portfolio.entity",
+                        "com.thiru.wealthlens.taxplanning")
                 .persistenceUnit("postgres")
                 .properties(Map.of("hibernate.resource.beans.container", new SpringBeanContainer(beanFactory)))
                 .build();

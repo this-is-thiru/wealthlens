@@ -1,12 +1,11 @@
 package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
+import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentConfirmation;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
 import com.thiru.wealthlens.taxplanning.documents.ingest.IngestedDocument;
@@ -16,24 +15,34 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
 import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
 import com.thiru.wealthlens.taxplanning.documents.store.DocumentBytes;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmationRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttemptRepository;
+import com.thiru.wealthlens.taxplanning.documents.store.TaxDocumentBytesRepository;
 import com.thiru.wealthlens.taxplanning.jobs.AutoArchive;
 import com.thiru.wealthlens.taxplanning.jobs.JobContext;
-import com.thiru.wealthlens.taxplanning.jobs.JobFailure;
 import com.thiru.wealthlens.taxplanning.jobs.JobFailureRepository;
 import com.thiru.wealthlens.taxplanning.jobs.JobLease;
+import com.thiru.wealthlens.taxplanning.jobs.JobLeaseRepository;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
 import com.thiru.wealthlens.taxplanning.jobs.StalenessSweep;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import com.thiru.wealthlens.taxplanning.profile.Landlord;
+import com.thiru.wealthlens.taxplanning.profile.LandlordRepository;
 import com.thiru.wealthlens.taxplanning.profile.Lender;
+import com.thiru.wealthlens.taxplanning.profile.LenderRepository;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
+import com.thiru.wealthlens.taxplanning.workspace.DraftRevisionRepository;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatus;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
+import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspaceRepository;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import java.time.Clock;
 import java.time.Instant;
@@ -44,19 +53,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Auto-archive and retention purge over Mongo (W-137, W-136; D-449), on a clock the test sets. Every expected date is worked by
- * hand in {@code docs/modules/taxplanning.md} §11 (W-137): 18 months before 2026-11-06 is 2025-05-06; 12 months before it is 2025-11-06; tax year 2025-26
- * ends 31-3-2026, and its eight succeeding years end 31-3-2034.
+ * Auto-archive and retention purge over PostgreSQL (W-137, W-136; D-449; ported off Mongo W-337f, D-951), on a
+ * clock the test sets. Every expected date is worked by hand in {@code docs/modules/taxplanning.md} §11 (W-137):
+ * 18 months before 2026-11-06 is 2025-05-06; 12 months before it is 2025-11-06; tax year 2025-26 ends 31-3-2026,
+ * and its eight succeeding years end 31-3-2034.
  */
 class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
@@ -111,6 +120,9 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
     private JobFailureRepository failures;
 
     @Autowired
+    private JobLeaseRepository leases;
+
+    @Autowired
     private StalenessSweep stalenessSweep;
 
     @Autowired
@@ -118,6 +130,39 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private DocumentBytes documentBytes;
+
+    @Autowired
+    private TaxDocumentBytesRepository documentBytesRepository;
+
+    @Autowired
+    private TaxYearWorkspaceRepository workspaces;
+
+    @Autowired
+    private FilingDraftRepository drafts;
+
+    @Autowired
+    private DraftRevisionRepository revisions;
+
+    @Autowired
+    private DraftComputationRepository computations;
+
+    @Autowired
+    private StoredDocumentRepository documents;
+
+    @Autowired
+    private StoredParseAttemptRepository attempts;
+
+    @Autowired
+    private StoredConfirmationRepository confirmations;
+
+    @Autowired
+    private LandlordRepository landlords;
+
+    @Autowired
+    private LenderRepository lenders;
+
+    @Autowired
+    private TaxpayerProfileRepository profiles;
 
     @BeforeEach
     void theDayOfTheHandFigures() {
@@ -130,7 +175,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         workspace.setProfileId("profile-1");
         workspace.setTaxYearStart(2025);
         workspace.setPrimaryDraftId(primaryDraftId);
-        mongoTemplate.save(workspace);
+        workspaces.save(workspace);
     }
 
     private void draft(String id, DraftStatus status, int taxYear, String lastChanged) {
@@ -142,16 +187,21 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         draft.setLabel(id);
         draft.setStatus(status);
         draft.setInputsJson("{}");
-        mongoTemplate.save(draft);
-        set(id, "audit_metadata.updatedAt", LocalDateTime.parse(lastChanged));
+        drafts.save(draft);
+        setColumn("tax_filing_drafts", "updated_at", id, LocalDateTime.parse(lastChanged));
     }
 
-    private void set(String draftId, String field, LocalDateTime value) {
-        mongoTemplate.updateFirst(query(where("_id").is(draftId)), new Update().set(field, value), FilingDraft.class);
+    /** Sets a column directly by JDBC, bypassing JPA auditing, so a row can be given a historical timestamp. */
+    private void setColumn(String table, String column, String id, Object value) {
+        new JdbcTemplate(postgresDataSource).update("UPDATE " + table + " SET " + column + " = ? WHERE id = ?", value, id);
+    }
+
+    private void set(String draftId, String column, LocalDateTime value) {
+        setColumn("tax_filing_drafts", column, draftId, value);
     }
 
     private FilingDraft stored(String id) {
-        return mongoTemplate.findById(id, FilingDraft.class);
+        return drafts.findById(id).orElse(null);
     }
 
     private void landlord(String id, String profileId, String lastChanged) {
@@ -160,9 +210,8 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         landlord.setProfileId(profileId);
         landlord.setName("A landlord");
         landlord.setPan("ABCPL1234K");
-        mongoTemplate.save(landlord);
-        mongoTemplate.updateFirst(query(where("_id").is(id)), new Update().set("audit_metadata.updatedAt",
-                LocalDateTime.parse(lastChanged)), Landlord.class);
+        landlords.save(landlord);
+        setColumn("tax_landlords", "updated_at", id, LocalDateTime.parse(lastChanged));
     }
 
     private void lender(String id, String profileId, String lastChanged) {
@@ -170,14 +219,15 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         lender.setId(id);
         lender.setProfileId(profileId);
         lender.setName("A bank");
-        mongoTemplate.save(lender);
-        mongoTemplate.updateFirst(query(where("_id").is(id)), new Update().set("audit_metadata.updatedAt",
-                LocalDateTime.parse(lastChanged)), Lender.class);
+        lenders.save(lender);
+        setColumn("tax_lenders", "updated_at", id, LocalDateTime.parse(lastChanged));
     }
 
     private void draftOf(String id, String profileId, int taxYear) {
         draft(id, DraftStatus.DRAFT, taxYear, "2026-10-01T12:00:00");
-        mongoTemplate.updateFirst(query(where("_id").is(id)), new Update().set("profile_id", profileId), FilingDraft.class);
+        FilingDraft draft = stored(id);
+        draft.setProfileId(profileId);
+        drafts.save(draft);
     }
 
     /** Has the stored draft name {@code landlordId} and, if given, {@code lenderId} (W-239a). */
@@ -185,13 +235,13 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         FilingDraft draft = stored(draftId);
         draft.setInputsJson("{\"thirdParties\":{\"landlordIds\":[\"" + landlordId + "\"],\"lenderIds\":["
                 + String.join(",", Arrays.stream(lenderIds).map(id -> "\"" + id + "\"").toList()) + "]}}");
-        mongoTemplate.save(draft);
+        drafts.save(draft);
     }
 
     /** The actor as the row holds it, past the converter (W-256). */
-    private String rawUpdatedBy(String collection, String id) {
-        return mongoTemplate.getCollection(collection).find(new Document("_id", id)).first()
-                .get("audit_metadata", Document.class).getString("updatedBy");
+    private String rawUpdatedBy(String table, String id) {
+        return (String) new JdbcTemplate(postgresDataSource).queryForMap("SELECT * FROM " + table + " WHERE id = ?", id)
+                .get("updated_by");
     }
 
     @Test
@@ -213,7 +263,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(stored("recent").getStatus()).isEqualTo(DraftStatus.DRAFT);
         assertThat(stored("primary").getStatus()).isEqualTo(DraftStatus.DRAFT);
         assertThat(stored("ready").getStatus()).isEqualTo(DraftStatus.READY);
-        assertThat(mongoTemplate.findAll(JobLease.class)).isEmpty();
+        assertThat(leases.findAll()).isEmpty();
         assertThat(stored("old").getAuditMetadata().getUpdatedBy()).isEqualTo("auto-archive");
         assertThat(rawUpdatedBy("tax_filing_drafts", "old")).isEqualTo(storedIdentifier("auto-archive"));
     }
@@ -229,22 +279,23 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         DraftRevision revision = new DraftRevision();
         revision.setId("revision-1");
         revision.setDraftId("expired");
-        mongoTemplate.save(revision);
+        revisions.save(revision);
         DraftComputation computation = new DraftComputation();
         computation.setId("computation-1");
         computation.setDraftId("expired");
         computation.setResultJson("{}");
-        mongoTemplate.save(computation);
+        computation.setEmail("owner@example.com");
+        computations.save(computation);
 
         // When
         runner.run(retentionPurge);
 
         // Then
         assertThat(stored("expired")).isNull();
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).isEmpty();
-        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
-        assertThat(mongoTemplate.findById("workspace-1", TaxYearWorkspace.class).getPrimaryDraftId()).isNull();
-        assertThat(mongoTemplate.findById("workspace-1", TaxYearWorkspace.class).getAuditMetadata().getUpdatedBy())
+        assertThat(revisions.findAll()).isEmpty();
+        assertThat(computations.findAll()).isEmpty();
+        assertThat(workspaces.findById("workspace-1").orElseThrow().getPrimaryDraftId()).isNull();
+        assertThat(workspaces.findById("workspace-1").orElseThrow().getAuditMetadata().getUpdatedBy())
                 .isEqualTo("retention-purge");
         assertThat(stored("young")).isNotNull();
     }
@@ -302,12 +353,12 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void documentOf(String id, int taxYear) {
-        mongoTemplate.save(StoredDocument.of(new IngestedDocument(id, "profile-1", TaxYearId.of(taxYear), DocumentType.FORM_130,
+        documents.save(StoredDocument.of(new IngestedDocument(id, "profile-1", TaxYearId.of(taxYear), DocumentType.FORM_130,
                 id.substring(0, 1).repeat(64), LocalDateTime.parse("2026-06-15T09:00:00"), 2)));
-        mongoTemplate.save(StoredParseAttempt.of(new ParseAttempt("attempt-of-" + id, id, new ParserRun("FORM_130", "1",
+        attempts.save(StoredParseAttempt.of(new ParseAttempt("attempt-of-" + id, id, new ParserRun("FORM_130", "1",
                 LocalDateTime.parse("2026-06-15T09:01:00"), LocalDateTime.parse("2026-06-15T09:02:00")), ParseOutcome.SUCCESS,
                 List.of(), List.of(), List.of())));
-        mongoTemplate.save(StoredConfirmation.of(new DocumentConfirmation("attempt-of-" + id, "owner@example.com",
+        confirmations.save(StoredConfirmation.of(new DocumentConfirmation("attempt-of-" + id, "owner@example.com",
                 LocalDateTime.parse("2026-06-15T09:05:00"), Map.of(), Set.of())));
         documentBytes.store(id, new DocumentContent(TestPdfs.pages(1)));
     }
@@ -323,22 +374,24 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         runner.run(retentionPurge);
 
         // Then
-        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments(new Document("filename", "orphan"))).isOne();
+        assertThat(documentBytesRepository.existsById("orphan")).isTrue();
 
         // When — two days after the upload
         clock.set(java.time.Instant.now().plus(java.time.Duration.ofDays(2)).toString());
         runner.run(retentionPurge);
 
         // Then — the orphan is gone; the document's bytes stay
-        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments(new Document("filename", "orphan"))).isZero();
+        assertThat(documentBytesRepository.existsById("orphan")).isFalse();
         assertThat(storedWithItsReading("b-2026")).isEqualTo(4);
     }
 
     private long storedWithItsReading(String documentId) {
-        return mongoTemplate.getCollection("tax_document_bytes.files").countDocuments(new Document("filename", documentId))
-                + mongoTemplate.count(query(where("_id").is(documentId)), StoredDocument.class)
-                + mongoTemplate.count(query(where("_id").is("attempt-of-" + documentId)), StoredParseAttempt.class)
-                + mongoTemplate.count(query(where("_id").is("attempt-of-" + documentId)), StoredConfirmation.class);
+        long count = 0;
+        count += documentBytesRepository.existsById(documentId) ? 1 : 0;
+        count += documents.existsById(documentId) ? 1 : 0;
+        count += attempts.existsById("attempt-of-" + documentId) ? 1 : 0;
+        count += confirmations.existsById("attempt-of-" + documentId) ? 1 : 0;
+        return count;
     }
 
     @Test
@@ -389,7 +442,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         held.setJob("auto-archive");
         held.setHolder("another-instance");
         held.setExpiresAt(Instant.parse("2026-11-06T06:40:00Z"));
-        mongoTemplate.save(held);
+        leases.save(held);
 
         // When
         boolean whileHeld = runner.run(autoArchive);
@@ -414,7 +467,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(stored("expired")).isNotNull();
-        assertThat(mongoTemplate.findAll(JobFailure.class)).isEmpty();
+        assertThat(failures.findAll()).isEmpty();
     }
 
     @Test
@@ -436,16 +489,16 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         runner.run(retentionPurge);
 
         // Then
-        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
-        assertThat(mongoTemplate.findById("lender-1", Lender.class)).isNull();
+        assertThat(landlords.findById("landlord-1")).isPresent();
+        assertThat(lenders.findById("lender-1")).isEmpty();
 
         // When — the day after
         clock.set("2029-04-01T00:30:00Z");
         runner.run(retentionPurge);
 
         // Then
-        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNull();
-        assertThat(mongoTemplate.findById("lender-2", Lender.class)).isNotNull();
+        assertThat(landlords.findById("landlord-1")).isEmpty();
+        assertThat(lenders.findById("lender-2")).isPresent();
         assertThat(stored("draft-2026")).isNotNull();
         assertThat(failures.findAll()).isEmpty();
     }
@@ -465,23 +518,23 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         runner.run(retentionPurge);
 
         // Then
-        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
-        assertThat(mongoTemplate.findById("lender-1", Lender.class)).isNotNull();
+        assertThat(landlords.findById("landlord-1")).isPresent();
+        assertThat(lenders.findById("lender-1")).isPresent();
     }
 
     @Test
     void retentionPurge_whenALandlordHasNoStoredDate_keepsItAndRecordsWhy() {
         // Given
         landlord("landlord-1", "profile-1", "2020-06-01T12:00:00");
-        mongoTemplate.updateFirst(query(where("_id").is("landlord-1")),
-                new Update().unset("audit_metadata.updatedAt").unset("audit_metadata.createdAt"), Landlord.class);
+        new JdbcTemplate(postgresDataSource)
+                .update("UPDATE tax_landlords SET updated_at = NULL, created_at = NULL WHERE id = ?", "landlord-1");
 
         // When
         clock.set("2029-04-01T00:30:00Z");
         runner.run(retentionPurge);
 
         // Then
-        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
+        assertThat(landlords.findById("landlord-1")).isPresent();
         assertThat(failures.findAll()).singleElement().satisfies(failure -> {
             assertThat(failure.getSubject()).isEqualTo("landlord landlord-1");
             assertThat(failure.getJob()).isEqualTo("retention-purge");
@@ -498,8 +551,8 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         retentionPurge.run(new JobContext("retention-purge", clock, () -> false, failures));
 
         // Then
-        assertThat(mongoTemplate.findById("landlord-1", Landlord.class)).isNotNull();
-        assertThat(mongoTemplate.findAll(JobFailure.class)).isEmpty();
+        assertThat(landlords.findById("landlord-1")).isPresent();
+        assertThat(failures.findAll()).isEmpty();
     }
 
     /** The shipped 2026-27 pack's law and exec versions, with one of them replaced by an older one. */
@@ -518,7 +571,8 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         computation.setResultJson("{}");
         computation.setLawAndExec(lawAndExec);
         computation.setRuleChecksums(ruleChecksums);
-        mongoTemplate.save(computation);
+        computation.setEmail("owner@example.com");
+        computations.save(computation);
     }
 
     /** One of several computations of a draft at revision 1, by its own receipt and time (W-329a). */
@@ -532,7 +586,8 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         computation.setResultJson("{}");
         computation.setLawAndExec(lawAndExec);
         computation.setRuleChecksums(pinnedWithOneChanged());
-        mongoTemplate.save(computation);
+        computation.setEmail("owner@example.com");
+        computations.save(computation);
     }
 
     private Map<String, String> pinnedWithOneChanged() {
@@ -558,7 +613,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(staleness.computedUnder()).isEqualTo(withOlder("LAW"));
         assertThat(staleness.current()).isEqualTo(taxCalculator.packVersions(TaxYearId.of(2026)).orElseThrow());
         assertThat(staleness.since()).isEqualTo(LocalDateTime.parse("2026-11-06T06:30:00"));
-        assertThat(mongoTemplate.findAll(DraftComputation.class)).hasSize(1);
+        assertThat(computations.findAll()).hasSize(1);
         assertThat(stored("ready").getAuditMetadata().getUpdatedBy()).isEqualTo("staleness-sweep");
     }
 
@@ -654,7 +709,8 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         computation.setDraftId("old");
         computation.setRevision(1);
         computation.setResultJson("{\"tax\": {\"lawAndExec\": [\"" + String.join("\", \"", withOlder("LAW")) + "\"]}}");
-        mongoTemplate.save(computation);
+        computation.setEmail("owner@example.com");
+        computations.save(computation);
 
         // When
         runner.run(stalenessSweep);
@@ -670,7 +726,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         TaxpayerProfile held = new TaxpayerProfile();
         held.setId("profile-1");
         held.setErasureRequestedAt(LocalDateTime.parse("2026-11-01T00:00:00"));
-        mongoTemplate.save(held);
+        profiles.save(held);
         workspace("workspace-1", null);
         draft("ready", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
         computation("ready", withOlder("LAW"), pinnedWithOneChanged());

@@ -186,9 +186,10 @@ public abstract class AbstractIntegrationTest {
      *
      * <p>Uses {@code deleteMany} / {@code TRUNCATE} rather than {@code drop} deliberately: dropping a Mongo collection
      * also drops its indexes, and nothing recreates them until the next startup (an {@code @PostConstruct} index
-     * initializer such as {@code TaxProfileIndexInitializer}), so every later class in the shared container would run
-     * without its unique indexes (W-300). {@code TRUNCATE} on PostgreSQL never drops an index, so this risk does not
-     * apply to a ported table such as {@code profit_and_loss} (W-337e). {@code ArchitectureTest.nothing_drops_a_collection} holds it.
+     * initializer), so every later class in the shared container would run without its unique indexes (W-300).
+     * {@code TRUNCATE} on PostgreSQL never drops an index, so this risk does not apply to a ported table such as
+     * {@code profit_and_loss} (W-337e) — every collection with an index initializer moved this way by W-337f, D-951.
+     * {@code ArchitectureTest.nothing_drops_a_collection} holds it.
      */
     @AfterEach
     void cleanDatabase() {

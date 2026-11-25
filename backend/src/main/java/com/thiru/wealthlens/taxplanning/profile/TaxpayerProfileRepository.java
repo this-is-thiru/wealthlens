@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TaxpayerProfileRepository extends MongoRepository<TaxpayerProfile, String> {
+public interface TaxpayerProfileRepository extends JpaRepository<TaxpayerProfile, String> {
 
     /** Every profile of an account. */
     List<TaxpayerProfile> findByEmail(String email);

@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
  * documents switch; each certificate used is a recorded read (C4a).
  */
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class DraftReconciliationService {
 

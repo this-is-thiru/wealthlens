@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Taxpayer profiles, each read and written only through the account that owns it. Logs carry ids, never a PAN ({@code DR 14} O1.1). */
 @Service
 @Log4j2
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class TaxProfileService {
 
@@ -52,7 +52,7 @@ public class TaxProfileService {
      *
      * @throws BadRequestException otherwise, saying the same whether it is absent, another account's or held for erasure
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public TaxpayerProfile owned(String email, String profileId) {
         return taxpayerProfileRepository.findById(profileId)
                 .filter(profile -> email.equals(profile.getEmail()))
@@ -88,10 +88,11 @@ public class TaxProfileService {
         }
         profile.setPanDigest(identifierDigest.of(profile.getPan()));
         try {
-            TaxpayerProfile saved = taxpayerProfileRepository.save(profile);
+            // Flushed here, so the unique index refuses a taken PAN inside this catch rather than at commit
+            TaxpayerProfile saved = taxpayerProfileRepository.saveAndFlush(profile);
             log.info("Saved taxpayer profile {}", saved.getId());
             return saved;
-        } catch (DuplicateKeyException e) {
+        } catch (DataIntegrityViolationException e) {
             throw new BadRequestException("A profile already holds the PAN " + new Pan(profile.getPan()).masked());
         }
     }

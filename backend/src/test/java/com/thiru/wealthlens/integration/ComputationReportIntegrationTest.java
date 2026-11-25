@@ -3,7 +3,8 @@ package com.thiru.wealthlens.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
-import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import io.restassured.RestAssured;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openpdf.text.pdf.PdfReader;
 import org.openpdf.text.pdf.parser.PdfTextExtractor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,6 +37,12 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
 
     private static final String OWNER = "reporter@example.com";
     private static final String OTHER = "other@example.com";
+
+    @Autowired
+    private TaxpayerProfileRepository taxpayerProfileRepository;
+
+    @Autowired
+    private AccessRecordRepository accessRecordRepository;
 
     private String profileId;
     private String receipt;
@@ -64,7 +72,7 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT"}""", String.class, null);
-        profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        profileId = taxpayerProfileRepository.findAll().getFirst().getId();
         receipt = compute(draftOf(profileId, "Mine"));
     }
 
@@ -105,7 +113,7 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
         assertThat(report.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         PdfReader reader = new PdfReader(report.getBody());
         assertThat(new PdfTextExtractor(reader).getTextFromPage(1)).contains(receipt);
-        assertThat(mongoTemplate.findAll(AccessRecord.class))
+        assertThat(accessRecordRepository.findAll())
                 .anySatisfy(read -> {
                     assertThat(read.getSubject()).isEqualTo(ReadSubject.COMPUTATION);
                     assertThat(read.getSubjectId()).isEqualTo(receipt);
@@ -122,9 +130,9 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
     @Test
     void report_whenTheProfileIsHeldForErasure_expected400() {
         // Given — DR 14 O5: a held profile is read by nobody
-        TaxpayerProfile profile = mongoTemplate.findById(profileId, TaxpayerProfile.class);
+        TaxpayerProfile profile = taxpayerProfileRepository.findById(profileId).orElseThrow();
         profile.setErasureRequestedAt(LocalDateTime.of(2026, 11, 7, 10, 0));
-        mongoTemplate.save(profile);
+        taxpayerProfileRepository.save(profile);
 
         // When / Then
         assertThat(call(HttpMethod.GET, OWNER, "/computations/" + receipt + "/report", null, String.class, null)
@@ -140,7 +148,7 @@ class ComputationReportIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Spouse", "pan": "FGHIJ5678K", "kind": "INDIVIDUAL", "dateOfBirth": "1987-02-01",
                  "residentialStatus": "RESIDENT"}""", String.class, null);
-        String spouse = mongoTemplate.findAll(TaxpayerProfile.class).stream().map(TaxpayerProfile::getId)
+        String spouse = taxpayerProfileRepository.findAll().stream().map(TaxpayerProfile::getId)
                 .filter(id -> !id.equals(profileId)).findFirst().orElseThrow();
         String spouses = compute(draftOf(spouse, "Spouse's"));
 

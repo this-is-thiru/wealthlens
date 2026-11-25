@@ -1,39 +1,32 @@
 package com.thiru.wealthlens.taxplanning.documents.store;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
-
-import com.mongodb.MongoSocketException;
-import com.mongodb.MongoTimeoutException;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import com.thiru.wealthlens.shared.exception.ServiceUnavailableException;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
 import com.thiru.wealthlens.taxplanning.documents.parser.IsolatedPdfRead;
 import com.thiru.wealthlens.taxplanning.documents.parser.PdfText;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.function.Supplier;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 /**
- * A document's bytes, kept in their own GridFS bucket under the document's id, sealed with the personal-data key, so nothing
- * stored is readable without the application ({@code DR 14} O6; W-131b, D-762). What is refused is refused before anything is
- * written: too large, failing the malware scan, not a PDF, locked by a password, or too long. The scan comes before the PDF is
- * opened, so the PDF library never reads an unscanned file (W-131e C3a); it is opened in a child process, never here (W-131f C3a). A store or a scanner that cannot be reached is a 503 (O9).
+ * A document's bytes, kept in {@code tax_document_bytes} under the document's id, sealed with the personal-data key, so nothing
+ * stored is readable without the application ({@code DR 14} O6; W-131b, D-762; table instead of a GridFS bucket since W-337f,
+ * D-951). What is refused is refused before anything is written: too large, failing the malware scan, not a PDF, locked by a
+ * password, or too long. The scan comes before the PDF is opened, so the PDF library never reads an unscanned file (W-131e
+ * C3a); it is opened in a child process, never here (W-131f C3a). A store that cannot be reached is a 503 (O9).
  *
- * @param bucket the {@code tax_document_bytes} bucket
+ * @param repository the {@code tax_document_bytes} table
  */
-public record DocumentBytes(GridFsTemplate bucket, FieldCipher cipher, DocumentSettings settings, MalwareScan scan,
-        IsolatedPdfRead reader) {
+public record DocumentBytes(TaxDocumentBytesRepository repository, FieldCipher cipher, DocumentSettings settings, MalwareScan scan,
+        Clock clock, IsolatedPdfRead reader) {
 
     private static final byte[] PDF_START = "%PDF-".getBytes(StandardCharsets.US_ASCII);
 
@@ -48,7 +41,11 @@ public record DocumentBytes(GridFsTemplate bucket, FieldCipher cipher, DocumentS
             throw new IllegalArgumentException("Only a PDF can be uploaded");
         }
         int pages = pagesOf(plain);
-        reachable(() -> bucket.store(new ByteArrayInputStream(cipher.encryptBytes(plain)), documentId));
+        TaxDocumentBytes row = new TaxDocumentBytes();
+        row.setDocumentId(documentId);
+        row.setBytes(cipher.encryptBytes(plain));
+        row.setUploadedAt(LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC));
+        reachable(() -> repository.save(row));
         return pages;
     }
 
@@ -56,21 +53,17 @@ public record DocumentBytes(GridFsTemplate bucket, FieldCipher cipher, DocumentS
      * @throws IllegalStateException if the document has no stored bytes, or they cannot be read
      */
     public DocumentContent read(String documentId) {
-        GridFSFile file = reachable(() -> bucket.findOne(query(where("filename").is(documentId))));
-        if (file == null) {
+        TaxDocumentBytes row = reachable(() -> repository.findById(documentId)).orElse(null);
+        if (row == null) {
             throw new IllegalStateException("Document " + documentId + " has no stored bytes");
         }
-        try {
-            return new DocumentContent(cipher.decryptBytes(reachable(() -> bucket.getResource(file)).getInputStream().readAllBytes()));
-        } catch (IOException e) {
-            throw new IllegalStateException("Document " + documentId + "'s stored bytes could not be read", e);
-        }
+        return new DocumentContent(cipher.decryptBytes(row.getBytes()));
     }
 
     public void remove(Collection<String> documentIds) {
         if (!documentIds.isEmpty()) {
             reachable(() -> {
-                bucket.delete(query(where("filename").in(documentIds)));
+                repository.deleteAllById(documentIds);
                 return documentIds.size();
             });
         }
@@ -78,9 +71,8 @@ public record DocumentBytes(GridFsTemplate bucket, FieldCipher cipher, DocumentS
 
     /** The document ids of bytes stored before {@code instant}, whether or not a document still names them. */
     public List<String> storedBefore(Instant instant) {
-        List<String> names = new ArrayList<>();
-        reachable(() -> bucket.find(query(where("uploadDate").lt(Date.from(instant))))).forEach(file -> names.add(file.getFilename()));
-        return names;
+        return reachable(() -> repository.findByUploadedAtBefore(LocalDateTime.ofInstant(instant, ZoneOffset.UTC))).stream()
+                .map(TaxDocumentBytes::getDocumentId).toList();
     }
 
     private int pagesOf(byte[] plain) {
@@ -100,11 +92,11 @@ public record DocumentBytes(GridFsTemplate bucket, FieldCipher cipher, DocumentS
         return read.pages();
     }
 
-    /** Spring's failure to reach Mongo, and the driver's own: GridFS calls the driver without Spring's translation. */
+    /** Spring's own translation of a connection failure, now that this goes through a normal repository, not a raw driver call. */
     private static <T> T reachable(Supplier<T> call) {
         try {
             return call.get();
-        } catch (DataAccessResourceFailureException | MongoTimeoutException | MongoSocketException e) {
+        } catch (DataAccessResourceFailureException e) {
             throw new ServiceUnavailableException("The document store cannot be reached; try again later");
         }
     }

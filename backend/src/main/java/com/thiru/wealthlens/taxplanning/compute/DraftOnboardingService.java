@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  * rooms to step 4 — own NPS included, which F34 names nowhere; step 3's NPS is the employer's.
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class DraftOnboardingService {
 

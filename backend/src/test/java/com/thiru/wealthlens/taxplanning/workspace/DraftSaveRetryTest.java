@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -53,6 +54,21 @@ class DraftSaveRetryTest {
         // Given — the first attempt and the policy's five re-runs all collide
         DraftConflictException unfinished = new DraftConflictException("had not finished", null, List.of());
         when(draftService.patch(EMAIL, DRAFT, 0, PATCH)).thenThrow(new DataIntegrityViolationException("write conflict"));
+        when(draftService.conflictAfterRace(EMAIL, DRAFT)).thenReturn(unfinished);
+
+        // When
+        Throwable thrown = catchThrowable(() -> draftSaveRetry.patch(EMAIL, DRAFT, 0, PATCH));
+
+        // Then
+        assertThat(thrown).isSameAs(unfinished);
+        verify(draftService, times(6)).patch(EMAIL, DRAFT, 0, PATCH);
+    }
+
+    @Test
+    void patch_whenEveryAttemptTimesOutWaitingOnTheOtherSave_answersThatItHadNotFinished() {
+        // Given — W-337f: under PostgreSQL the loser waits on the winner's row until its lock timeout
+        DraftConflictException unfinished = new DraftConflictException("had not finished", null, List.of());
+        when(draftService.patch(EMAIL, DRAFT, 0, PATCH)).thenThrow(new CannotAcquireLockException("lock timeout"));
         when(draftService.conflictAfterRace(EMAIL, DRAFT)).thenReturn(unfinished);
 
         // When

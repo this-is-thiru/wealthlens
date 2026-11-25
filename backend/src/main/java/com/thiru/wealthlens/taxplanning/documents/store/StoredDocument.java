@@ -1,67 +1,69 @@
 package com.thiru.wealthlens.taxplanning.documents.store;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
 import com.thiru.wealthlens.taxplanning.documents.ingest.IngestedDocument;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * An uploaded document as stored (TS T7; W-131a, D-761). The same bytes are one document per profile, not per world: a key
  * across accounts would refuse a person a file they never stored and tell them someone else has (D-761 C2a). Nothing here says
  * what the form holds, so nothing here is encrypted; where the bytes are is W-131b's.
  */
+@Entity
+@Table(name = "tax_documents")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_documents")
-@CompoundIndexes({
-    @CompoundIndex(name = "tax_document_bytes_idx", def = "{'profile_id': 1, 'sha256': 1}", unique = true),
-    @CompoundIndex(name = "tax_document_year_idx", def = "{'profile_id': 1, 'tax_year': 1}")
-})
-public class StoredDocument implements AuditableEntity, CreatedWithId {
+public class StoredDocument implements CreatedWithId {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("profile_id")
+    @Column(name = "profile_id")
     private String profileId;
 
-    @Field("tax_year")
+    @Column(name = "tax_year_start")
     private int taxYearStart;
 
-    @Field(name = "document_type", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "document_type")
     private DocumentType documentType;
 
-    @Field("sha256")
+    @Column(name = "sha256")
     private String sha256;
 
-    @Field("uploaded_at")
+    @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
 
-    @Field("page_count")
+    @Column(name = "page_count")
     private int pageCount;
 
     /**
      * Whether the malware scan ran on these bytes before they were stored (W-131h C3a). False while the scan is switched off, so a
      * rescan once it is on knows which documents were never scanned; a document stored before W-131h reads false too.
      */
-    @Field("scanned")
+    @Column(name = "scanned")
     private boolean scanned;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient

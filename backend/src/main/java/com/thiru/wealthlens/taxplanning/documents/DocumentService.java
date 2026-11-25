@@ -37,7 +37,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -86,7 +86,7 @@ public class DocumentService {
         toStore.setScanned(settings.scan().enabled());
         try {
             documents.save(toStore);
-        } catch (DuplicateKeyException sameBytesAtOnce) {
+        } catch (DataIntegrityViolationException sameBytesAtOnce) {
             return DocumentView.of(documents.findByProfileIdAndSha256(profileId, content.sha256()).orElseThrow().toRecord(), false);
         }
         parseRequests.request();

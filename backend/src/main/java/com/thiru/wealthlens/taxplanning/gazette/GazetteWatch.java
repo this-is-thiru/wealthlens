@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -63,7 +63,7 @@ public class GazetteWatch implements TaxJob {
             Optional<GazetteCopy> copy = copies.fetch(year, number);
             if (copy.isPresent()) {
                 record(copy.get(), matcher, context);
-                moveTo(cursor, year, number, context);
+                moveTo(cursor, year, number);
                 misses = 0;
             } else if (++misses >= settings.missesToStop()) {
                 if (rolled || LocalDateTime.now(context.clock()).getYear() <= year) {
@@ -91,9 +91,9 @@ public class GazetteWatch implements TaxJob {
 
     private void insert(GazetteLead lead) {
         try {
-            leads.insert(lead);
+            leads.save(lead);
             log.warn("Gazette lead {} (page {}): {}", lead.getUrl(), lead.getPage(), lead.getNote());
-        } catch (DuplicateKeyException already) {
+        } catch (DataIntegrityViolationException already) {
             log.info("Gazette lead {} is already recorded", lead.getUrl());
         }
     }
@@ -112,11 +112,9 @@ public class GazetteWatch implements TaxJob {
         return lead;
     }
 
-    private void moveTo(GazetteCursor cursor, int year, long number, JobContext context) {
+    private void moveTo(GazetteCursor cursor, int year, long number) {
         cursor.setYear(year);
         cursor.setLastNumber(number);
-        cursor.setUpdatedAt(context.nowUtc());
-        cursor.setUpdatedBy(name());
         cursors.save(cursor);
     }
 

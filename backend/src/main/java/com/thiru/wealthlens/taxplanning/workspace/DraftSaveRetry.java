@@ -6,6 +6,7 @@ import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.core.retry.Retryable;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -14,7 +15,8 @@ import tools.jackson.databind.JsonNode;
  * Saves a draft again when the save collided with another save of the same revision (W-310, D-620).
  *
  * <p>Two saves at one revision both insert that revision number, which is unique per draft. The loser's insert
- * fails while the winner's transaction is still open, so reading the draft at that moment still shows the old
+ * fails while the winner's transaction is still open (under PostgreSQL, once its bounded wait on the winner's row
+ * times out — {@link DraftService}'s save sets the bound), so reading the draft at that moment still shows the old
  * revision and no competing change — a 409 built then would name no conflicting path, which {@code DR 11} F5's
  * client takes as "nothing overlaps". Running the save again instead lands in {@link DraftService#patch}'s own
  * revision check once the winner commits, or applies if the winner rolled back; the failed attempt left nothing,
@@ -36,7 +38,7 @@ public class DraftSaveRetry {
             .multiplier(2)
             .maxDelay(Duration.ofMillis(500))
             .jitter(Duration.ofMillis(10))
-            .predicate(DataIntegrityViolationException.class::isInstance)
+            .predicate(DraftSaveRetry::isCollision)
             .build();
 
     private final RetryTemplate retryTemplate = new RetryTemplate(ON_COLLISION);
@@ -62,7 +64,7 @@ public class DraftSaveRetry {
             return retryTemplate.execute(save);
         } catch (RetryException stopped) {
             Throwable last = stopped.getCause();
-            if (last instanceof DataIntegrityViolationException) {
+            if (isCollision(last)) {
                 throw draftService.conflictAfterRace(email, draftId);
             }
             if (last instanceof RuntimeException unchecked) {
@@ -73,5 +75,10 @@ public class DraftSaveRetry {
             }
             throw new IllegalStateException("A draft save failed with a checked exception, which none declares", last);
         }
+    }
+
+    /** The revision insert refused by the winner's committed row, or its wait on the uncommitted one timed out. */
+    private static boolean isCollision(Throwable failure) {
+        return failure instanceof DataIntegrityViolationException || failure instanceof CannotAcquireLockException;
     }
 }

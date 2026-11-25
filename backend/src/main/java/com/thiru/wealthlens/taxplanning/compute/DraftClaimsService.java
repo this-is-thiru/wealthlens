@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * this adds the draft's own dates to its steps (C5a).
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class DraftClaimsService {
 

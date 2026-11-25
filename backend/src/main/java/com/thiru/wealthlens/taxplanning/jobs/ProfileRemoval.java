@@ -1,30 +1,25 @@
 package com.thiru.wealthlens.taxplanning.jobs;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
-
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.DocumentRemoval;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
-import com.thiru.wealthlens.taxplanning.profile.BankAccount;
-import com.thiru.wealthlens.taxplanning.profile.Employer;
-import com.thiru.wealthlens.taxplanning.profile.FamilyMember;
-import com.thiru.wealthlens.taxplanning.profile.Landlord;
-import com.thiru.wealthlens.taxplanning.profile.Lender;
+import com.thiru.wealthlens.taxplanning.profile.BankAccountRepository;
+import com.thiru.wealthlens.taxplanning.profile.EmployerRepository;
+import com.thiru.wealthlens.taxplanning.profile.FamilyMemberRepository;
+import com.thiru.wealthlens.taxplanning.profile.LandlordRepository;
+import com.thiru.wealthlens.taxplanning.profile.LenderRepository;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
-import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
-import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
+import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistoryRepository;
+import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspaceRepository;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,13 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
  * keep a filed computation ({@code sources/2026-11-07-data-protection.md}).
  */
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class ProfileRemoval {
-
-    /** Every collection that holds a record per profile under {@code profile_id}, apart from the drafts. */
-    private static final List<Class<?>> PROFILE_SCOPED = List.of(FamilyMember.class, Employer.class, Landlord.class, Lender.class,
-            BankAccount.class, TaxYearWorkspace.class, RegimeElectionHistory.class);
 
     private final TaxpayerProfileRepository profiles;
     private final FilingDraftRepository drafts;
@@ -51,7 +42,13 @@ public class ProfileRemoval {
     private final AccessRecordRepository accessRecords;
     private final DocumentRemoval documentRemoval;
     private final StoredDocumentRepository documents;
-    private final MongoTemplate mongoTemplate;
+    private final FamilyMemberRepository familyMembers;
+    private final EmployerRepository employers;
+    private final LandlordRepository landlords;
+    private final LenderRepository lenders;
+    private final BankAccountRepository bankAccounts;
+    private final TaxYearWorkspaceRepository workspaces;
+    private final RegimeElectionHistoryRepository regimeElectionHistories;
 
     public void remove(TaxpayerProfile profile) {
         Set<String> readSubjects = new HashSet<>();
@@ -65,7 +62,13 @@ public class ProfileRemoval {
         documents.findByProfileId(profile.getId()).forEach(document -> readSubjects.add(document.getId()));
         accessRecords.deleteBySubjectIdIn(readSubjects);
         documentRemoval.removeUnder(profile.getId());
-        PROFILE_SCOPED.forEach(scoped -> mongoTemplate.remove(query(where("profile_id").is(profile.getId())), scoped));
+        familyMembers.deleteByProfileId(profile.getId());
+        employers.deleteByProfileId(profile.getId());
+        landlords.deleteByProfileId(profile.getId());
+        lenders.deleteByProfileId(profile.getId());
+        bankAccounts.deleteByProfileId(profile.getId());
+        workspaces.deleteByProfileId(profile.getId());
+        regimeElectionHistories.deleteByProfileId(profile.getId());
         profiles.delete(profile);
     }
 }

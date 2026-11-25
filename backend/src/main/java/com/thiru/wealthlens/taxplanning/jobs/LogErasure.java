@@ -1,17 +1,13 @@
 package com.thiru.wealthlens.taxplanning.jobs;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
-
 import com.thiru.wealthlens.shared.privacy.LogRetention;
-import com.thiru.wealthlens.taxplanning.profile.ProfileErasure;
-import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.profile.ProfileErasureRepository;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,7 +21,8 @@ import org.springframework.stereotype.Component;
 public class LogErasure implements TaxJob {
 
     private final LogRetention retention;
-    private final MongoTemplate mongoTemplate;
+    private final AccessRecordRepository accessRecords;
+    private final ProfileErasureRepository profileErasures;
 
     @Override
     public String name() {
@@ -41,10 +38,8 @@ public class LogErasure implements TaxJob {
     public void run(JobContext context) {
         LocalDateTime nowUtc = context.nowUtc();
         retention.eraseExpired(nowUtc);
-        long reads = mongoTemplate.remove(query(where("read_at").lte(retention.cutoff(nowUtc).toInstant(ZoneOffset.UTC))),
-                AccessRecord.class).getDeletedCount();
-        long profileErasures = mongoTemplate.remove(query(where("erased_at").lte(retention.cutoff(nowUtc))),
-                ProfileErasure.class).getDeletedCount();
-        log.info("Erased {} reads of special-category tax data, {} profile erasure records", reads, profileErasures);
+        long reads = accessRecords.deleteByReadAtLessThanEqual(retention.cutoff(nowUtc).toInstant(ZoneOffset.UTC));
+        long erasures = profileErasures.deleteByErasedAtLessThanEqual(retention.cutoff(nowUtc));
+        log.info("Erased {} reads of special-category tax data, {} profile erasure records", reads, erasures);
     }
 }

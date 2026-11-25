@@ -1,38 +1,60 @@
 package com.thiru.wealthlens.taxplanning.protection;
 
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * One read of special-category data, recorded even though nothing changed ({@code DR 14} O1.1, O4): who, what, when — never a
  * value. Appended only; nothing updates one, and only the erasure of what it names deletes it (W-235 C4a) — the hold before an
  * erasure is the year the Data Protection Rules, 2025 r.6(1)(e) keep such logs.
  */
+@Entity
+@Table(name = "tax_access_log")
+@EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
-@Document("tax_access_log")
 public class AccessRecord {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("principal")
-    @ValueConverter(SearchableIdentifier.class)
+    @Convert(converter = SearchableColumn.class)
+    @Column(name = "principal")
     private String principal;
 
-    @Field(name = "subject", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subject")
     private ReadSubject subject;
 
-    @Field("subject_id")
+    @Column(name = "subject_id")
     private String subjectId;
 
-    @Field("read_at")
+    @Column(name = "read_at")
     private Instant readAt;
+
+    /** New (W-337f, D-951 C7a): this entity had no audit trail under Mongo. */
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

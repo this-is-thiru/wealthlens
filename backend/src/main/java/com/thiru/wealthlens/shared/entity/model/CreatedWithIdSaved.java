@@ -1,16 +1,22 @@
 package com.thiru.wealthlens.shared.entity.model;
 
-import org.bson.Document;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
-import org.springframework.stereotype.Component;
+import jakarta.persistence.PostPersist;
 
-/** Clears a {@link CreatedWithId}'s creation flag once it is saved, so saving the same instance again updates it. */
-@Component
-public class CreatedWithIdSaved implements AfterSaveCallback<CreatedWithId> {
+/**
+ * Clears a {@link CreatedWithId}'s creation flag once it is saved, so saving the same instance again updates it.
+ *
+ * <p>JPA's counterpart of the Mongo-era {@code AfterSaveCallback<CreatedWithId>} (W-337f): named on an entity with
+ * {@code @EntityListeners(CreatedWithIdSaved.class)} (alongside {@code AuditingEntityListener.class}). Hibernate
+ * instantiates an entity listener by reflection and calls its {@code @PostPersist} method with the entity itself, so
+ * this takes {@code Object} rather than {@code CreatedWithId} — one listener class is shared across every entity
+ * that implements the interface, not just one.
+ */
+public class CreatedWithIdSaved {
 
-    @Override
-    public CreatedWithId onAfterSave(CreatedWithId entity, Document document, String collection) {
-        entity.setNewlyCreated(false);
-        return entity;
+    @PostPersist
+    public void onPostPersist(Object entity) {
+        if (entity instanceof CreatedWithId createdWithId) {
+            createdWithId.setNewlyCreated(false);
+        }
     }
 }

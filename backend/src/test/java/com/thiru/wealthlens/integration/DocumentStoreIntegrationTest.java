@@ -22,6 +22,7 @@ import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttemptRepository;
+import com.thiru.wealthlens.taxplanning.documents.store.TaxDocumentBytesRepository;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -30,11 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.bson.Document;
-import org.bson.types.Binary;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -59,15 +61,19 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
     private DocumentRemoval documentRemoval;
 
     @Autowired
+    @Qualifier("postgresTransactionManager")
     private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private TaxDocumentBytesRepository documentBytesRepository;
 
     private static IngestedDocument document(String id, String profileId) {
         return new IngestedDocument(id, profileId, TaxYearId.of(2026), DocumentType.FORM_130, BYTES,
                 LocalDateTime.of(2027, 6, 1, 9, 0), 3);
     }
 
-    private Document raw(String collection, String id) {
-        return mongoTemplate.getCollection(collection).find(new Document("_id", id)).first();
+    private Map<String, Object> raw(String table, String id) {
+        return new JdbcTemplate(postgresDataSource).queryForMap("SELECT * FROM " + table + " WHERE id = ?", id);
     }
 
     @Test
@@ -94,12 +100,15 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
         assertThat(attempts.findById("attempt-1").orElseThrow().toRecord()).isEqualTo(attempt);
         assertThat(confirmations.findById("attempt-1").orElseThrow().toRecord()).isEqualTo(confirmation);
         // Then — what the form says, and who confirmed it, is not stored as plain text
-        String storedAttempt = raw("tax_parse_attempts", "attempt-1").toJson();
-        assertThat(storedAttempt).doesNotContain("1,00,000", "100000", "2026-04-01", "Signature", "row 8 not found")
-                .contains("\"parser_version\": \"3\"", "\"outcome\": \"PARTIAL\"");
-        Document storedConfirmation = raw("tax_document_confirmations", "attempt-1");
-        assertThat(storedConfirmation.toJson()).doesNotContain("950000", "owner@example.com");
-        assertThat(storedConfirmation.getString("confirmed_by")).isEqualTo(storedIdentifier("owner@example.com"));
+        Map<String, Object> storedAttempt = raw("tax_parse_attempts", "attempt-1");
+        String attemptAsText = storedAttempt.values().stream().map(String::valueOf).collect(Collectors.joining("|"));
+        assertThat(attemptAsText).doesNotContain("1,00,000", "100000", "2026-04-01", "Signature", "row 8 not found");
+        assertThat(storedAttempt.get("parser_version")).isEqualTo("3");
+        assertThat(storedAttempt.get("outcome")).isEqualTo("PARTIAL");
+        Map<String, Object> storedConfirmation = raw("tax_document_confirmations", "attempt-1");
+        String confirmationAsText = storedConfirmation.values().stream().map(String::valueOf).collect(Collectors.joining("|"));
+        assertThat(confirmationAsText).doesNotContain("950000", "owner@example.com");
+        assertThat(storedConfirmation.get("confirmed_by")).isEqualTo(storedIdentifier("owner@example.com"));
     }
 
     @Test
@@ -109,7 +118,7 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
 
         // When / Then
         assertThatThrownBy(() -> documents.save(StoredDocument.of(document("document-2", "profile-1"))))
-                .isInstanceOf(DuplicateKeyException.class);
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
@@ -125,7 +134,7 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void store_whenAPdfIsStored_readsBackEqualAndKeepsNoPlainByteInMongo() {
+    void store_whenAPdfIsStored_readsBackEqualAndKeepsNoPlainByteInPostgres() {
         // Given
         byte[] pdf = TestPdfs.pages(2);
 
@@ -135,8 +144,7 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(pages).isEqualTo(2);
         assertThat(documentBytes.read("document-1").bytes()).isEqualTo(pdf);
-        Document chunk = mongoTemplate.getCollection("tax_document_bytes.chunks").find().first();
-        byte[] stored = chunk.get("data", Binary.class).getData();
+        byte[] stored = documentBytesRepository.findById("document-1").orElseThrow().getBytes();
         assertThat(new String(stored, StandardCharsets.ISO_8859_1)).doesNotContain("%PDF-");
     }
 
@@ -168,6 +176,6 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(documents.findById("document-1")).isEmpty();
-        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isZero();
+        assertThat(documentBytesRepository.count()).isZero();
     }
 }

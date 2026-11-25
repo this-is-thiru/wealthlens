@@ -15,7 +15,6 @@ import java.util.OptionalInt;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,14 +31,13 @@ class DocumentRetention {
     private final StoredDocumentRepository documents;
     private final DocumentRemoval removal;
     private final TaxCalculator taxCalculator;
-    private final MongoTemplate mongoTemplate;
     private final DocumentBytes bytes;
     private final DocumentSettings settings;
 
     /** False once the lease is lost, so the job stops. */
     boolean purge(String job, JobContext context) {
         LocalDate today = context.nowUtc().toLocalDate();
-        List<Integer> years = mongoTemplate.findDistinct("tax_year", StoredDocument.class, Integer.class);
+        List<Integer> years = documents.findTaxYearStarts();
         for (int year : years) {
             TaxYearId taxYear = TaxYearId.of(year);
             OptionalInt span = taxCalculator.longestCarryForward(taxYear);

@@ -3,8 +3,6 @@ package com.thiru.wealthlens.taxplanning.documents.store;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Deletes documents with everything read from them — their attempts and the confirmations of those attempts — so nothing a
@@ -26,9 +24,8 @@ public class DocumentRemoval {
 
     /**
      * Confirmations first, then attempts, then the documents: a run cut off part-way leaves no confirmation without its attempt.
-     * The bytes go last, after the transaction commits: GridFS takes no part in it, so bytes removed inside a transaction that
-     * then rolled back would leave a document whose bytes are gone (D-762 C4a). Bytes a failed removal leaves behind are
-     * swept by retention once no document names them.
+     * The bytes go last — a plain {@code tax_document_bytes} row now, in the same transaction as everything above, not a GridFS
+     * bucket that "takes no part in it" (W-337f, D-951 removed that split: GridFS is gone, so there is nothing left to defer).
      */
     public void removeAll(List<StoredDocument> removed) {
         if (removed.isEmpty()) {
@@ -38,16 +35,6 @@ public class DocumentRemoval {
         confirmations.deleteAllById(read.stream().map(StoredParseAttempt::getId).toList());
         attempts.deleteAll(read);
         documents.deleteAll(removed);
-        List<String> ids = removed.stream().map(StoredDocument::getId).toList();
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    bytes.remove(ids);
-                }
-            });
-        } else {
-            bytes.remove(ids);
-        }
+        bytes.remove(removed.stream().map(StoredDocument::getId).toList());
     }
 }

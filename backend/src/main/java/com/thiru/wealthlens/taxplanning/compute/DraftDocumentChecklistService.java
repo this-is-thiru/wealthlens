@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
  * covered with no change here; the landlord's particulars are asked only where the engine raised r.205(2)'s notice.
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class DraftDocumentChecklistService {
 

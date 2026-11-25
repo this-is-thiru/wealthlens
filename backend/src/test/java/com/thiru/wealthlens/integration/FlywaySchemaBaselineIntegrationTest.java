@@ -7,10 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Proves the W-337b baseline (D-939) applies cleanly against a real PostgreSQL 18 Testcontainer: every script in
- * every module folder (V2 - V5, beside W-337a's V1) runs without error, in order, once each. No entity reads these
- * 25 tables yet — that is the port items' job (W-337c - f) — so this checks the DDL itself, not round-tripping data
- * through it.
+ * Proves the W-337b baseline (D-939) and W-337f's follow-on (D-951) apply cleanly against a real PostgreSQL 18
+ * Testcontainer: every script in every module folder (V1 - V10) runs without error, in order, once each.
  */
 class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
@@ -21,9 +19,9 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
         List<String> appliedScripts = jdbc.queryForList(
                 "SELECT description FROM flyway_schema_history WHERE success = true ORDER BY installed_rank", String.class);
 
-        // Then
+        // Then — V10 shares V5's derived description ("taxplanning"), both from the folder name
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio");
+                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning");
     }
 
     @Test
@@ -46,6 +44,8 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
                 "tax_regime_election_events", "tax_year_workspaces", "tax_access_log", "tax_employers",
                 "tax_family_members", "tax_bank_accounts", "tax_profile_erasures", "tax_profiles", "tax_documents",
                 "tax_parse_attempts", "tax_document_confirmations", "tax_document_confirmation_rejected_fields",
-                "tax_job_leases", "tax_job_failures", "tax_lenders", "tax_landlords");
+                "tax_job_leases", "tax_job_failures", "tax_lenders", "tax_landlords",
+                "tax_draft_computations", "tax_draft_computation_law_and_exec", "tax_draft_revisions",
+                "tax_filing_drafts", "tax_document_bytes");
     }
 }

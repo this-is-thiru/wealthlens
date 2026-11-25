@@ -18,6 +18,7 @@ import com.thiru.wealthlens.shared.privacy.ProcessingRecordRepository;
 import com.thiru.wealthlens.taxplanning.jobs.LogErasure;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -85,6 +86,9 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ProcessingRecordRepository processingRecordRepository;
+
+    @Autowired
+    private AccessRecordRepository accessRecordRepository;
 
     @Autowired
     private GrievanceRepository grievanceRepository;
@@ -235,7 +239,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(records()).hasSize(1);
-        assertThat(mongoTemplate.findAll(AccessRecord.class)).hasSize(1);
+        assertThat(accessRecordRepository.findAll()).hasSize(1);
         assertThat(grievanceRepository.findAll()).hasSize(2);
         assertThat(breachIntimationRepository.findAll()).hasSize(2);
         assertThat(accountErasureRequestRepository.findAll()).hasSize(1);
@@ -252,7 +256,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
 
         // Then — kept: the unanswered grievance, and the intimation emailed a day after the day
         assertThat(records()).isEmpty();
-        assertThat(mongoTemplate.findAll(AccessRecord.class)).isEmpty();
+        assertThat(accessRecordRepository.findAll()).isEmpty();
         assertThat(grievanceRepository.findAll()).extracting(Grievance::getId).containsExactly("unanswered");
         assertThat(breachIntimationRepository.findAll()).extracting(BreachIntimation::getId)
                 .containsExactly("emailed-later");
@@ -307,7 +311,7 @@ class ProcessingLogIntegrationTest extends AbstractIntegrationTest {
         read.setPrincipal(ANU);
         read.setSubject(ReadSubject.PROFILE);
         read.setReadAt(Instant.parse(PROCESSED));
-        mongoTemplate.insert(read);
+        accessRecordRepository.save(read);
 
         grievanceRepository.save(grievance("answered", PROCESSED_UTC.minusDays(10), PROCESSED_UTC));
         grievanceRepository.save(grievance("unanswered", LocalDateTime.parse("2026-12-01T00:00:00"), null));

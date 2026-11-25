@@ -1,59 +1,65 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
-import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
+import com.thiru.wealthlens.shared.protection.EncryptedColumn;
 import com.thiru.wealthlens.taxplanning.enums.EmployerType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * An employer, one per TAN within a profile, referenced by id across years ({@code DR 15} F3; D-046 B5).
  */
+@Entity
+@Table(name = "tax_employers")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_employers")
-@CompoundIndex(name = "tax_employer_tan_idx", def = "{'profile_id': 1, 'tan_digest': 1}", unique = true)
-public class Employer implements AuditableEntity, CreatedWithId, ProfileScoped {
+public class Employer implements CreatedWithId, ProfileScoped {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("profile_id")
+    @Column(name = "profile_id")
     private String profileId;
 
-    @Field("name")
+    @Column(name = "name")
     private String name;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("tan")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "tan")
     private String tan;
 
     /** The TAN's keyed digest, which keeps a TAN unique within a profile now that the TAN is stored encrypted (D-447 C1a). */
-    @Field("tan_digest")
+    @Column(name = "tan_digest")
     private String tanDigest;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("pan")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "pan")
     private String pan;
 
-    @Field(name = "type", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
     private EmployerType type;
 
-    @Field("address")
+    @Column(name = "address")
     private String address;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient
