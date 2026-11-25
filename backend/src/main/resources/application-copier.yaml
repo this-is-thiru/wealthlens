@@ -1,0 +1,6 @@
+# The copier's run (W-337g, D-953 C2a): started with this profile beside the environment's own, the application serves
+# nothing while it copies MongoDB into PostgreSQL, then stops. app.copier.written-zone has no default: the owner states the
+# time zone the JVM that wrote the MongoDB rows ran in (post-deployment-runbook.md).
+spring:
+  main:
+    web-application-type: none
