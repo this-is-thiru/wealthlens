@@ -1,7 +1,11 @@
 package com.thiru.wealthlens.shared.config;
 
 import jakarta.persistence.EntityManagerFactory;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.Optional;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,6 +14,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -27,7 +32,7 @@ import org.springframework.transaction.PlatformTransactionManager;
  */
 @Configuration
 @ConditionalOnProperty(prefix = "app.postgres", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableJpaAuditing(auditorAwareRef = "securityAuditorAware")
+@EnableJpaAuditing(auditorAwareRef = "securityAuditorAware", dateTimeProviderRef = "utcDateTimeProvider")
 @EnableJpaRepositories(
         basePackages = {"com.thiru.wealthlens.auth.repository", "com.thiru.wealthlens.insurance.repository",
                 "com.thiru.wealthlens.shared.privacy", "com.thiru.wealthlens.corporate.repository",
@@ -70,6 +75,15 @@ public class PostgresJpaConfig {
     EntityManagerFactoryBuilder postgresEntityManagerFactoryBuilder() {
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         return new EntityManagerFactoryBuilder(vendorAdapter, dataSource -> Map.of(), null);
+    }
+
+    /**
+     * Audit times in UTC (W-402, D-959 C1a): with no provider, Spring Data's {@code CurrentDateTimeProvider} takes
+     * {@code LocalDateTime.now()}, the JVM's zone, while every other stored time is UTC.
+     */
+    @Bean
+    DateTimeProvider utcDateTimeProvider(Clock clock) {
+        return () -> Optional.of(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
     }
 
     @Bean

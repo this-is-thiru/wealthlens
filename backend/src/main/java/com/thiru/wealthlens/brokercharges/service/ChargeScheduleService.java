@@ -6,6 +6,7 @@ import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +57,7 @@ public class ChargeScheduleService {
     private final ChargeScheduleRepository chargeScheduleRepository;
     private final ChargeScheduleValidator chargeScheduleValidator;
     private final ChargeScheduleResolver chargeScheduleResolver;
+    private final Clock clock;
 
     /**
      * Validates, closes any incumbent covering the same scope, and saves.
@@ -113,7 +115,7 @@ public class ChargeScheduleService {
      */
     public List<ChargeScheduleEntity> findUnverified() {
         return chargeScheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(
-                LocalDate.now().minusDays(VERIFICATION_MAX_AGE_DAYS));
+                LocalDate.now(clock).minusDays(VERIFICATION_MAX_AGE_DAYS));
     }
 
     private void supersedeIncumbent(ChargeScheduleEntity schedule) {

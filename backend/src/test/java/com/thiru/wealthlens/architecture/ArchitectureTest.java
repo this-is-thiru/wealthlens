@@ -28,6 +28,8 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -163,6 +165,18 @@ class ArchitectureTest {
                     .that().resideInAPackage("..repository..")
                     .should().dependOnClassesThat().resideInAPackage("..controller..")
                     .because("dependencies point downward through the layers");
+
+    /**
+     * A time or a date is taken from the application's clock (W-402, D-959 C5a): a bare {@code LocalDateTime.now()} or
+     * {@code LocalDate.now()} follows the JVM's zone, which is UTC (D-958), and cannot be fixed by a test. A stored time takes
+     * the clock {@code withZone(ZoneOffset.UTC)}; "today" is {@code LocalDate.now(clock)}, the business zone's date.
+     */
+    @ArchTest
+    static final ArchRule no_time_without_the_clock =
+            noClasses()
+                    .should().callMethod(LocalDateTime.class, "now")
+                    .orShould().callMethod(LocalDate.class, "now")
+                    .because("D-958: stored times are UTC and \"today\" is the business zone's, both from the Clock bean");
 
     @ArchTest
     static final ArchRule no_console_printing =

@@ -29,6 +29,9 @@ spring:
         max-page-size: 200
 
 app:
+  # The business time zone (D-958): "today" and what a front end shows times in. Stored times are UTC; the JVM runs in UTC.
+  time:
+    zone: Asia/Kolkata
   auth:
     # W-358d2 (D-884 C1a): failed sign-ins per address and client, and calls per client to /api/v1/public/auth/**, within the window
     sign-in-limit:

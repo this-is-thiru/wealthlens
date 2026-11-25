@@ -191,8 +191,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- @{argLine} preserves the JaCoCo agent injected by prepare-agent. -->
-                    <argLine>@{argLine}</argLine>
+                    <!-- @{argLine} preserves the JaCoCo agent injected by prepare-agent. Tests run in UTC, as main() makes the app (D-958). -->
+                    <argLine>@{argLine} -Duser.timezone=UTC</argLine>
                     <!-- Timings depend on the machine, so benchmarks run only under -Pbenchmark (W-143). -->
                     <excludedGroups>benchmark</excludedGroups>
                 </configuration>

@@ -31,6 +31,7 @@ import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -72,6 +73,7 @@ public class PortfolioService {
 
     private final TradeOutcomeRecorder tradeOutcomeRecorder;
     private final TradeExchangeProperties tradeExchangeProperties;
+    private final Clock clock;
 
     /**
      * Multi-row write: creates a TransactionEntity and, for BUY/SELL, also
@@ -213,7 +215,7 @@ public class PortfolioService {
         }
 
         LocalDate transactionDate = assetRequest.getTransactionDate();
-        if (transactionDate != null && transactionDate.isAfter(LocalDate.now())) {
+        if (transactionDate != null && transactionDate.isAfter(LocalDate.now(clock))) {
             throw new BadRequestException(
                     "A trade cannot be dated in the future: " + transactionDate + ". It would be priced "
                             + "against whichever rate card is open-ended today rather than the one in force "

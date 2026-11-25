@@ -73,14 +73,20 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
     static final class SettableClock extends Clock {
 
         private Instant instant = Instant.parse("2026-11-06T06:30:00Z");
+        private ZoneId zone = ZoneOffset.UTC;
 
         void set(String isoInstant) {
             instant = Instant.parse(isoInstant);
         }
 
+        /** The zone the clock reads in: the application's clock is in the business zone (D-958). */
+        void inZone(ZoneId readIn) {
+            zone = readIn;
+        }
+
         @Override
         public ZoneId getZone() {
-            return ZoneOffset.UTC;
+            return zone;
         }
 
         @Override
@@ -167,6 +173,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void theDayOfTheHandFigures() {
         clock.set("2026-11-06T06:30:00Z");
+        clock.inZone(ZoneOffset.UTC);
     }
 
     private void workspace(String id, String primaryDraftId) {
@@ -266,6 +273,24 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(leases.findAll()).isEmpty();
         assertThat(stored("old").getAuditMetadata().getUpdatedBy()).isEqualTo("auto-archive");
         assertThat(rawUpdatedBy("tax_filing_drafts", "old")).isEqualTo(storedIdentifier("auto-archive"));
+    }
+
+    @Test
+    void autoArchive_whenTheClockReadsInKolkata_takesTheCutoffInUtc() {
+        // Given — run at 2026-11-06T06:30Z, 12:00 in Kolkata. updated_at is stored in UTC (W-402), so the cutoff is
+        // 2025-05-06T06:30 UTC; taken in Kolkata's time it would be 2025-05-06T12:00, which "between" (09:00 UTC) precedes
+        clock.inZone(ZoneId.of("Asia/Kolkata"));
+        workspace("workspace-1", "primary");
+        draft("old", DraftStatus.DRAFT, 2025, "2025-05-06T06:00:00");
+        draft("between", DraftStatus.DRAFT, 2025, "2025-05-06T09:00:00");
+
+        // When
+        runner.run(autoArchive);
+
+        // Then
+        assertThat(stored("old").getStatus()).isEqualTo(DraftStatus.ARCHIVED);
+        assertThat(stored("old").getArchivedAt()).isEqualTo(LocalDateTime.parse("2026-11-06T06:30:00"));
+        assertThat(stored("between").getStatus()).isEqualTo(DraftStatus.DRAFT);
     }
 
     @Test

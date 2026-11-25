@@ -24,6 +24,7 @@ import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.AnalyticsService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +50,9 @@ class AnalyticsServiceTest {
 
     @Mock
     private TradeOutcomeRepository tradeOutcomeRepository;
+
+    @Spy
+    private Clock clock = Clock.systemUTC();
 
     @InjectMocks
     private AnalyticsService analyticsService;

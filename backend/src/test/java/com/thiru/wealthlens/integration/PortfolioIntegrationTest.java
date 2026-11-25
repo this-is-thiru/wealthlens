@@ -24,11 +24,11 @@ import com.thiru.wealthlens.shared.dto.DateRangeFilter;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import io.restassured.RestAssured;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -70,6 +70,10 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PortfolioService portfolioService;
+
+    /** The application's clock: "today" is its date, the business zone's (D-958). */
+    @Autowired
+    private Clock clock;
 
     @Autowired
     private TransactionService transactionService;
@@ -772,7 +776,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
 
         // Given -- one holding bought 400 days ago and 30 days ago
-        LocalDate today = TLocalDate.today();
+        LocalDate today = LocalDate.now(clock);
         AssetEntity older = buildAssetEntity();
         older.setTransactionDate(today.minusDays(400));
         AssetEntity newer = buildAssetEntity();
