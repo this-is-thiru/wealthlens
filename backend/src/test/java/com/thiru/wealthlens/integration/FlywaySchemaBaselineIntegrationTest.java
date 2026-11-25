@@ -28,7 +28,7 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
         // Then — V10 shares V5's derived description ("taxplanning"), both from the folder name
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning", "unique nulls not distinct", "pnl unique nulls not distinct");
+                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning", "unique nulls not distinct", "pnl unique nulls not distinct", "taxplanning unique nulls not distinct");
     }
 
     @Test
@@ -48,6 +48,9 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
         jdbc.update("INSERT INTO user_charges (id, email) VALUES ('u1', 'e')");
         jdbc.update("INSERT INTO charge_instruments (id, stock_code) VALUES ('i1', 'FUND')");
         jdbc.update("INSERT INTO profit_and_loss (id, email) VALUES ('p1', 'e')");
+        jdbc.update("INSERT INTO tax_employers (id, profile_id) VALUES ('t1', 'pr')");
+        jdbc.update("INSERT INTO tax_documents (id, profile_id) VALUES ('d1', 'pr')");
+        jdbc.update("INSERT INTO tax_draft_computations (id, draft_id, email) VALUES ('c1', 'dr', 'e')");
 
         // When / Then
         assertThatThrownBy(() -> jdbc.update("INSERT INTO charge_accounts (id, email, broker_name) VALUES ('a2', 'e', 'ZERODHA')"))
@@ -57,6 +60,12 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
         assertThatThrownBy(() -> jdbc.update("INSERT INTO charge_instruments (id, stock_code) VALUES ('i2', 'FUND')"))
                 .isInstanceOf(DuplicateKeyException.class);
         assertThatThrownBy(() -> jdbc.update("INSERT INTO profit_and_loss (id, email) VALUES ('p2', 'e')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO tax_employers (id, profile_id) VALUES ('t2', 'pr')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO tax_documents (id, profile_id) VALUES ('d2', 'pr')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO tax_draft_computations (id, draft_id, email) VALUES ('c2', 'dr', 'e')"))
                 .isInstanceOf(DuplicateKeyException.class);
     }
 
