@@ -31,10 +31,13 @@ import java.util.List;
 import java.util.Map;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 /**
  * The copier against both stores (W-337g1, D-953): rows written by hand in the shapes the {@code m1.6.1} classes stored, never
@@ -158,6 +161,25 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(report(reports, "privacy_breach_notices").problems()).containsExactlyInAnyOrder(
                 "rows differ from the source: notice-1", "2 source child rows but 1 target child rows in privacy_breach_notice_affected");
+    }
+
+    private List<Map<String, Object>> seededCatalogue;
+
+    /**
+     * cleanDatabase keeps charge_catalogue between classes as reference data, so a class that seeded it leaves rows the copier
+     * rightly refuses ("holds rows the source lacks"); each test here starts from a fresh target and puts the rows back after.
+     */
+    @BeforeEach
+    void setAsideTheSeededCatalogue() {
+        seededCatalogue = jdbc().queryForList("SELECT * FROM charge_catalogue");
+        jdbc().update("DELETE FROM charge_catalogue");
+    }
+
+    @AfterEach
+    void restoreTheSeededCatalogue() {
+        jdbc().update("DELETE FROM charge_catalogue");
+        SimpleJdbcInsert insert = new SimpleJdbcInsert(postgresDataSource).withTableName("charge_catalogue");
+        seededCatalogue.forEach(insert::execute);
     }
 
     @Test
