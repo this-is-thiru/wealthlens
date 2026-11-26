@@ -4,12 +4,15 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import jakarta.persistence.Column;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 import jakarta.persistence.metamodel.EntityType;
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -108,9 +111,11 @@ public class MongoCopier {
     private PreparedCopy prepare(JdbcTemplate jdbc, CollectionCopy copy, ZoneId writtenZone) {
         TargetTable table = TargetTable.read(jdbc, copy.table());
         List<ChildTable> children = copy.children().stream().map(child -> ChildTable.read(jdbc, child)).toList();
+        Map<String, Type> jsonTypes = copy.jsonCopies().stream()
+                .collect(Collectors.toMap(JsonCopy::key, json -> columnType(copy.table(), json.column())));
         List<SourceRow> rows = new ArrayList<>();
         for (Document document : mongoTemplate.getCollection(copy.collection()).find()) {
-            rows.add(RowMapping.of(document, copy, table, children, writtenZone));
+            rows.add(RowMapping.of(document, copy, table, children, jsonTypes, writtenZone));
         }
         return checked(jdbc, new PreparedCopy(copy.collection(), table, children, rows));
     }
@@ -227,10 +232,7 @@ public class MongoCopier {
      * converts and no NULL sits where the entity holds a primitive.
      */
     private Optional<String> readBack(String table, int targetRows) {
-        EntityType<?> entity = entityManagerFactory.getMetamodel().getEntities().stream()
-                .filter(type -> type.getJavaType().isAnnotationPresent(Table.class)
-                        && type.getJavaType().getAnnotation(Table.class).name().equals(table))
-                .findFirst().orElseThrow(() -> new IllegalStateException("No entity is stored in " + table));
+        EntityType<?> entity = entity(table);
         try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
             int loaded = entityManager.createQuery("SELECT e FROM " + entity.getName() + " e", entity.getJavaType()).getResultList().size();
             return loaded == targetRows ? Optional.empty()
@@ -238,6 +240,26 @@ public class MongoCopier {
         } catch (PersistenceException unreadable) {
             return Optional.of(entity.getName() + " cannot load the copied rows: " + unreadable.getMessage());
         }
+    }
+
+    private EntityType<?> entity(String table) {
+        return entityManagerFactory.getMetamodel().getEntities().stream()
+                .filter(type -> type.getJavaType().isAnnotationPresent(Table.class)
+                        && type.getJavaType().getAnnotation(Table.class).name().equals(table))
+                .findFirst().orElseThrow(() -> new IllegalStateException("No entity is stored in " + table));
+    }
+
+    /** The Java type of the entity field the column holds (plans/W-337g2b1.md C1a): never restated in the copier. */
+    private Type columnType(String table, String column) {
+        for (Class<?> each = entity(table).getJavaType(); each != null; each = each.getSuperclass()) {
+            for (Field field : each.getDeclaredFields()) {
+                Column named = field.getAnnotation(Column.class);
+                if (named != null && named.name().equals(column)) {
+                    return field.getGenericType();
+                }
+            }
+        }
+        throw new IllegalStateException("No field of the entity stored in " + table + " holds the column " + column);
     }
 
     private static String first(Set<String> ids) {

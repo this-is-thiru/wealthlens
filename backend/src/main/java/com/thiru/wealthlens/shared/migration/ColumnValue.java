@@ -72,7 +72,8 @@ final class ColumnValue {
         return value instanceof Integer whole ? Double.valueOf(whole) : require(value, Double.class, columnType);
     }
 
-    private static LocalDate date(Date stored) {
+    /** A stored date, which must be midnight UTC; the JSON walk reads embedded dates by the same rule (W-337g2b1). */
+    static LocalDate date(Date stored) {
         LocalDateTime atUtc = LocalDateTime.ofInstant(stored.toInstant(), ZoneOffset.UTC);
         if (!atUtc.toLocalTime().equals(LocalTime.MIDNIGHT)) {
             throw new IllegalStateException("A stored date is not at midnight UTC: " + stored.toInstant());

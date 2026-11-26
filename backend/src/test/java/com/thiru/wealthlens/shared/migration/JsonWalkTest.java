@@ -1,0 +1,110 @@
+package com.thiru.wealthlens.shared.migration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeBasis;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeCategory;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
+import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
+import com.thiru.wealthlens.brokercharges.entity.ChargeRuleListConverter;
+import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
+import com.thiru.wealthlens.brokercharges.entity.ChargeSlab;
+import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
+import com.thiru.wealthlens.taxplanning.workspace.DraftStalenessConverter;
+import java.lang.reflect.Type;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import org.bson.Document;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+class JsonWalkTest {
+
+    private static final ZoneId KOLKATA = ZoneId.of("Asia/Kolkata");
+
+    /** A type holding a time EmbeddedTimes does not classify. */
+    record Stamp(@Field("at") LocalDateTime at) {
+    }
+
+    @Test
+    void json_whenChargeRulesAsStored_isWhatTheApplicationsConverterReads() throws NoSuchFieldException {
+        // Given — a rule as m1.6.1 stored it: @Field names, enums as text, a whole number where the field is a Double
+        Document rule = new Document("code", "STT").append("display_name", "Securities transaction tax")
+                .append("category", "STATUTORY").append("basis", "SLAB").append("events", List.of("SELL", "BUY"))
+                .append("slabs", List.of(new Document("from_value", 0).append("to_value", 100.5).append("rate", 0.1)))
+                .append("order", 2).append("taxable", false).append("active", true).append("per_lot", false);
+
+        // When
+        String json = JsonWalk.json(List.of(rule), rulesType(), KOLKATA, "charge_schedules schedule-1, rules");
+
+        // Then — the rule the source describes, field by field
+        ChargeRule expected = new ChargeRule();
+        expected.setCode("STT");
+        expected.setDisplayName("Securities transaction tax");
+        expected.setCategory(ChargeCategory.STATUTORY);
+        expected.setBasis(ChargeBasis.SLAB);
+        expected.setEvents(Set.of(ChargeEvent.SELL, ChargeEvent.BUY));
+        expected.setSlabs(List.of(new ChargeSlab(0.0, 100.5, 0.1, null)));
+        expected.setOrder(2);
+        expected.setActive(true);
+        assertThat(new ChargeRuleListConverter().convertToEntityAttribute(json)).containsExactly(expected);
+    }
+
+    @Test
+    void json_whenAStoredKeyHasNoField_isRefusedNamingIt() {
+        // Given
+        Document rule = new Document("code", "STT").append("legacy_flag", true);
+
+        // When / Then
+        assertThatThrownBy(() -> JsonWalk.json(List.of(rule), rulesType(), KOLKATA, "charge_schedules schedule-1, rules"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("charge_schedules schedule-1, rules: ChargeRule has no field for the stored key legacy_flag");
+    }
+
+    @Test
+    void json_whenAnEnumValueIsNotAConstant_isRefused() {
+        // Given
+        Document rule = new Document("code", "STT").append("category", "LEVY");
+
+        // When / Then
+        assertThatThrownBy(() -> JsonWalk.json(List.of(rule), rulesType(), KOLKATA, "charge_schedules schedule-1, rules"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("charge_schedules schedule-1, rules: LEVY is not a ChargeCategory");
+    }
+
+    @Test
+    void json_whenAUtcHeldTimeWasStoredThroughKolkata_isThatUtcTime() {
+        // Given — StalenessSweep held context.nowUtc() = 2026-02-01T00:00 UTC; Spring Data stored it as Kolkata's
+        // midnight, 18:30Z (IST = UTC + 05:30, D-958)
+        Document staleness = new Document("since", Date.from(Instant.parse("2026-01-31T18:30:00Z"))).append("receipt", "receipt-1")
+                .append("computed_under", List.of("pack-1")).append("current", List.of("pack-2"))
+                .append("changed_rules", List.of("RS-1")).append("rule_diff_available", true);
+
+        // When
+        String json = JsonWalk.json(staleness, DraftStaleness.class, KOLKATA, "tax_filing_drafts draft-1, staleness");
+
+        // Then
+        assertThat(new DraftStalenessConverter().convertToEntityAttribute(json)).isEqualTo(new DraftStaleness(
+                LocalDateTime.of(2026, 2, 1, 0, 0), "receipt-1", List.of("pack-1"), List.of("pack-2"), List.of("RS-1"), true));
+    }
+
+    @Test
+    void json_whenATimeNoEntryClassifies_isRefused() {
+        // Given
+        Document stamp = new Document("at", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
+
+        // When / Then
+        assertThatThrownBy(() -> JsonWalk.json(stamp, Stamp.class, KOLKATA, "somewhere 1, stamp"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("somewhere 1, stamp: no entry in EmbeddedTimes says how " + Stamp.class.getName() + ".at was held");
+    }
+
+    private static Type rulesType() throws NoSuchFieldException {
+        return ChargeScheduleEntity.class.getDeclaredField("rules").getGenericType();
+    }
+}

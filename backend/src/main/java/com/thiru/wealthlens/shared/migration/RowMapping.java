@@ -1,11 +1,13 @@
 package com.thiru.wealthlens.shared.migration;
 
+import java.lang.reflect.Type;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.bson.Document;
 
@@ -31,7 +33,8 @@ final class RowMapping {
     private RowMapping() {
     }
 
-    static SourceRow of(Document document, CollectionCopy copy, TargetTable table, List<ChildTable> children, ZoneId writtenZone) {
+    static SourceRow of(Document document, CollectionCopy copy, TargetTable table, List<ChildTable> children,
+            Map<String, Type> jsonTypes, ZoneId writtenZone) {
         String where = copy.collection() + " " + document.get(ID);
         Map<String, ChildTable> childByKey = children.stream().collect(Collectors.toMap(child -> child.copy().key(), child -> child));
         Map<String, Object> values = new LinkedHashMap<>();
@@ -48,11 +51,11 @@ final class RowMapping {
             } else if (copy.embedded().contains(key)) {
                 subDocument(value, key, where).forEach((embeddedKey, embeddedValue) -> {
                     if (!embeddedKey.equals(TYPE_HINT) && embeddedValue != null) {
-                        mapKey(embeddedKey, embeddedValue, new Destination(copy, table, childByKey, values, childRows), writtenZone, where);
+                        mapKey(embeddedKey, embeddedValue, new Destination(copy, table, childByKey, jsonTypes, values, childRows), writtenZone, where);
                     }
                 });
             } else {
-                mapKey(key, value, new Destination(copy, table, childByKey, values, childRows), writtenZone, where);
+                mapKey(key, value, new Destination(copy, table, childByKey, jsonTypes, values, childRows), writtenZone, where);
             }
         }
         Object id = values.get(table.primaryKey());
@@ -63,11 +66,16 @@ final class RowMapping {
     }
 
     /** Where a document's keys go: the row's columns, or the rows of the child table a key names. */
-    private record Destination(CollectionCopy copy, TargetTable table, Map<String, ChildTable> childByKey, Map<String, Object> values,
-            Map<String, List<Map<String, Object>>> childRows) {
+    private record Destination(CollectionCopy copy, TargetTable table, Map<String, ChildTable> childByKey, Map<String, Type> jsonTypes,
+            Map<String, Object> values, Map<String, List<Map<String, Object>>> childRows) {
     }
 
     private static void mapKey(String key, Object value, Destination destination, ZoneId writtenZone, String where) {
+        Optional<JsonCopy> json = destination.copy().jsonCopies().stream().filter(each -> each.key().equals(key)).findFirst();
+        if (json.isPresent()) {
+            mapJson(json.get(), value, destination, writtenZone, where);
+            return;
+        }
         ChildTable child = destination.childByKey().get(key);
         if (child == null) {
             put(destination.values(), destination.table(), columnFor(key, destination.copy(), destination.table()), value, writtenZone,
@@ -77,6 +85,14 @@ final class RowMapping {
         } else {
             destination.childRows().put(child.name(), childRows(child, value, writtenZone, where));
         }
+    }
+
+    /** A JSON column built by the walk, and each sub-key that also fills a column of the row (W-337g2b1). */
+    private static void mapJson(JsonCopy json, Object value, Destination destination, ZoneId writtenZone, String where) {
+        String text = JsonWalk.json(value, destination.jsonTypes().get(json.key()), writtenZone, where + ", " + json.key());
+        put(destination.values(), destination.table(), json.column(), text, writtenZone, where);
+        json.columnsBySubKey().forEach((subKey, column) -> put(destination.values(), destination.table(), column,
+                subDocument(value, json.key(), where).get(subKey), writtenZone, where));
     }
 
     private static Document subDocument(Object value, String key, String where) {

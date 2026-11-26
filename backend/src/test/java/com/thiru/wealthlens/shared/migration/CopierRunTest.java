@@ -28,11 +28,11 @@ class CopierRunTest {
 
     @Test
     void run_whenACollectionHasNoCopySpecified_refusesBeforeReadingAnything() {
-        // Given — 31 of the 40 specified (W-337g1, W-337g2a1 – a3); the 9 left, with JSON columns, are W-337g2b's
+        // Given — 36 of the 40 specified (W-337g1, W-337g2a1 – a3, W-337g2b1); the 4 left are W-337g2b2's and b3's
 
         // When / Then
         assertThatThrownBy(() -> run.run(null)).isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("The copier has no copy specified for [assets, charge_instruments");
+                .hasMessageContaining("The copier has no copy specified for [assets, profit_and_loss");
         verifyNoInteractions(copier, environment, context);
     }
 }

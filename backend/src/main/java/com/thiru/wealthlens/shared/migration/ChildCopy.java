@@ -23,6 +23,11 @@ public record ChildCopy(String key, String table, String parentColumn, Optional<
         return new ChildCopy(key, table, parentColumn, Optional.of(column), Optional.empty(), Optional.empty());
     }
 
+    /** A list of plain values whose order the application keeps, by Hibernate's {@code @OrderColumn}. */
+    static ChildCopy orderedValues(String key, String table, String parentColumn, String column, String orderColumn) {
+        return new ChildCopy(key, table, parentColumn, Optional.of(column), Optional.of(orderColumn), Optional.empty());
+    }
+
     /** A list of sub-documents, each one row with each key in the column of its name. */
     static ChildCopy documents(String key, String table, String parentColumn) {
         return new ChildCopy(key, table, parentColumn, Optional.empty(), Optional.empty(), Optional.empty());

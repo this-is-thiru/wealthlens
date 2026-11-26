@@ -10,8 +10,11 @@ import com.thiru.wealthlens.auth.entity.RefreshToken;
 import com.thiru.wealthlens.auth.repository.RefreshTokenRepository;
 import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity.BillingEvent;
 import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
+import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.corporate.entity.model.DemergerDetail;
 import com.thiru.wealthlens.corporate.entity.model.DemergerDetail.DemergerStock;
@@ -21,6 +24,8 @@ import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import com.thiru.wealthlens.integration.AbstractIntegrationTest;
 import com.thiru.wealthlens.shared.privacy.BreachNoticeRepository;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
+import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
+import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmationRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.TaxDocumentBytesRepository;
@@ -31,10 +36,15 @@ import com.thiru.wealthlens.taxplanning.jobs.JobLeaseRepository;
 import com.thiru.wealthlens.taxplanning.profile.AssesseeKind;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
+import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
+import com.thiru.wealthlens.taxplanning.workspace.DraftRevisionRepository;
+import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory.ElectionEvent;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistoryRepository;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspaceRepository;
+import com.thiru.wealthlens.taxplanning.workspace.WorkbookImport;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -110,6 +120,61 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private GazetteLeadRepository leads;
+
+    @Autowired
+    private ChargeScheduleRepository schedules;
+
+    @Autowired
+    private ChargeInstrumentRepository instruments;
+
+    @Autowired
+    private FilingDraftRepository drafts;
+
+    @Autowired
+    private DraftRevisionRepository revisions;
+
+    @Autowired
+    private DraftComputationRepository computations;
+
+    @Test
+    void copyAll_whenJsonColumnsAsStored_storesWhatTheApplicationsConvertersRead() {
+        // Given — one document of each of W-337g2b1's five
+        storeJsonHolders();
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then — each JSON column read back through the entity's own converter
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(schedules.findById("schedule-1").orElseThrow().getRules()).extracting(ChargeRule::getCode, ChargeRule::getRate,
+                ChargeRule::getOrder).containsExactly(tuple("BROKERAGE", 0.03, 1), tuple("GST", 18.0, 2));
+        assertThat(instruments.findById("instrument-1").orElseThrow().getRules()).singleElement()
+                .satisfies(rule -> assertThat(rule.isPerLot()).isTrue());
+        assertThat(drafts.findById("draft-1").orElseThrow().getStaleness()).isEqualTo(new DraftStaleness(
+                LocalDateTime.of(2026, 2, 1, 0, 0), "receipt-0", List.of("pack-1"), List.of("pack-2"), List.of("RS-1"), true));
+        assertThat(drafts.findById("draft-1").orElseThrow().getTaxYearStart()).isEqualTo(2026);
+        DraftRevision revision = revisions.findFirstByDraftIdAndImportedFromWorkbookSha256("draft-1", SHA256).orElseThrow();
+        assertThat(revision.getImportedFrom()).isEqualTo(new WorkbookImport(SHA256, List.of(2, 3), List.of(3), List.of(4)));
+        DraftComputation computation = computations.findById("computation-1").orElseThrow();
+        assertThat(computation.getRuleChecksums()).containsExactlyInAnyOrderEntriesOf(Map.of("RS-1", "c1", "RS-2", "c2"));
+        assertThat(computation.getLawAndExec()).containsExactly("law-2026.1", "engine-7", "rules-3");
+    }
+
+    @Test
+    void copyAll_whenJsonColumnsAreCopiedAgain_changesNothing() {
+        // Given
+        storeJsonHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+        List<Map<String, Object>> before = jdbc().queryForList("SELECT * FROM tax_draft_revisions");
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(jdbc().queryForList("SELECT * FROM tax_draft_revisions")).isEqualTo(before);
+        assertThat(jdbc().queryForObject("SELECT count(*) FROM tax_draft_computation_law_and_exec", Long.class)).isEqualTo(3L);
+    }
 
     @Test
     void copyAll_whenTaxDocumentsHoldLists_fillsTheChildTablesTheApplicationReads() {
@@ -340,7 +405,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
         // Then — every source proven, and every time in UTC: auditing held Kolkata's local midnight (stored 18:30Z, its true
         // instant), JobContext.nowUtc() held midnight UTC (stored shifted to 18:30Z through the Kolkata JVM)
-        assertThat(reports).hasSize(32).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(reports).hasSize(37).allSatisfy(report -> assertThat(report.problems()).isEmpty());
         TaxpayerProfile profile = profiles.findById(PROFILE_ID).orElseThrow();
         assertThat(profile.getEmail()).isEqualTo("owner@example.com");
         assertThat(profile.getPan()).isEqualTo("ABCDE1234F");
@@ -520,6 +585,32 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
                 .append("found_at", Date.from(Instant.parse("2026-02-01T10:00:00Z"))),
                 new Document("_id", "lead-2").append("url", "https://egazette.gov.in/two").append("year", 2026).append("number", 13L)
                         .append("page", 1)));
+    }
+
+    private static final String SHA256 = "a".repeat(64);
+
+    private void storeJsonHolders() {
+        mongoTemplate.getCollection("charge_schedules").insertOne(new Document("_id", "schedule-1").append("schedule_code", "SC-1")
+                .append("rules", List.of(new Document("code", "BROKERAGE").append("basis", "TURNOVER").append("rate", 0.03)
+                                .append("events", List.of("BUY", "SELL")).append("order", 1).append("taxable", true).append("active", true),
+                        new Document("code", "GST").append("basis", "DERIVED").append("rate", 18).append("base_codes", List.of("BROKERAGE"))
+                                .append("order", 2).append("active", true))));
+        mongoTemplate.getCollection("charge_instruments").insertOne(new Document("_id", "instrument-1").append("stock_code", "MF1")
+                .append("rules", List.of(new Document("code", "EXIT_LOAD").append("basis", "SLAB").append("per_lot", true)
+                        .append("slabs", List.of(new Document("from_value", 0).append("to_value", 365).append("rate", 1.0))))));
+        mongoTemplate.getCollection("tax_filing_drafts").insertOne(new Document("_id", "draft-1").append("workspace_id", "ws-1")
+                .append("profile_id", PROFILE_ID).append("tax_year", 2026).append("status", "DRAFT")
+                .append("staleness", new Document("since", Date.from(Instant.parse("2026-01-31T18:30:00Z"))).append("receipt", "receipt-0")
+                        .append("computed_under", List.of("pack-1")).append("current", List.of("pack-2"))
+                        .append("changed_rules", List.of("RS-1")).append("rule_diff_available", true)));
+        mongoTemplate.getCollection("tax_draft_revisions").insertOne(new Document("_id", "revision-1").append("draft_id", "draft-1")
+                .append("revision_number", 1).append("reopened", false).append("imported_from", new Document("workbook_sha256", SHA256)
+                        .append("rows_applied", List.of(2, 3)).append("rows_mapped", List.of(3)).append("rows_left_out", List.of(4))));
+        mongoTemplate.getCollection("tax_draft_computations").insertOne(new Document("_id", "computation-1").append("receipt", "receipt-1")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("draft_id", "draft-1").append("revision", 1)
+                .append("law_and_exec", List.of("law-2026.1", "engine-7", "rules-3"))
+                .append("rule_checksums", new Document("RS-1", "c1").append("RS-2", "c2"))
+                .append("computed_at", Date.from(Instant.parse("2026-02-01T10:00:00Z"))));
     }
 
     private List<Long> childCounts() {
