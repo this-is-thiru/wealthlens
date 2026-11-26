@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.migration;
 
+import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -23,10 +24,14 @@ import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
 import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import com.thiru.wealthlens.integration.AbstractIntegrationTest;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
+import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.privacy.BreachNoticeRepository;
@@ -57,6 +62,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
@@ -151,6 +157,43 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private TradeOutcomeRepository tradeOutcomes;
+
+    @Autowired
+    private ProfitAndLossRepository profitAndLoss;
+
+    @Test
+    void copyAll_whenProfitAndLossAsStored_storesTheTreesTheApplicationReads() {
+        // Given — a P&L year with its own and its outsourced tree, as m1.6.1 stored it
+        storeProfitAndLoss();
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        ProfitAndLossEntity year = profitAndLoss.findById("pnl-1").orElseThrow();
+        assertThat(year.getFinancialYear()).isEqualTo("2025-26");
+        assertMoney(200.0, year.getRealisedProfits().getGainsByAssetAndSegment().get(AssetType.EQUITY).get(TradeSegment.DELIVERY)
+                .getMonthlyReport().get(Month.JANUARY).getFirstFortnightReport().getProfit());
+        assertMoney(20.0, year.getRealisedProfits().getYearlyChargeSummary().getTotalCharges());
+        assertMoney(-50.0, year.getOutSourcedRealisedProfits().getGainsByAssetAndSegment().get(AssetType.EQUITY)
+                .get(TradeSegment.DELIVERY).getProfit());
+    }
+
+    @Test
+    void copyAll_whenProfitAndLossIsCopiedAgain_changesNothing() {
+        // Given
+        storeProfitAndLoss();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+        List<Map<String, Object>> before = jdbc().queryForList("SELECT * FROM profit_and_loss");
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(jdbc().queryForList("SELECT * FROM profit_and_loss")).isEqualTo(before);
+    }
 
     @Test
     void copyAll_whenTheTradeLedgerAsStored_storesWhatTheApplicationsConvertersRead() {
@@ -467,7 +510,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
         // Then — every source proven, and every time in UTC: auditing held Kolkata's local midnight (stored 18:30Z, its true
         // instant), JobContext.nowUtc() held midnight UTC (stored shifted to 18:30Z through the Kolkata JVM)
-        assertThat(reports).hasSize(40).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(reports).hasSize(41).allSatisfy(report -> assertThat(report.problems()).isEmpty());
         TaxpayerProfile profile = profiles.findById(PROFILE_ID).orElseThrow();
         assertThat(profile.getEmail()).isEqualTo("owner@example.com");
         assertThat(profile.getPan()).isEqualTo("ABCDE1234F");
@@ -704,6 +747,21 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
                 .append("record_date", Date.from(Instant.parse("2026-01-10T00:00:00Z"))).append("priority", 1)
                 .append("audit_metadata", new Document("createdBy", cipher.encryptSearchable("admin@example.com"))
                         .append("createdAt", Date.from(Instant.parse("2026-01-31T18:30:00Z"))));
+    }
+
+    private void storeProfitAndLoss() {
+        Document fortnight = new Document("purchase_amount", 1000.0).append("sell_amount", 1200.0).append("profit", 200.0)
+                .append("misc_charges", 0.0).append("brokerage", 20.0);
+        Document own = new Document("gains_by_asset_and_segment", new Document("EQUITY", new Document("DELIVERY", new Document(fortnight)
+                .append("capital_gains", new Document("JANUARY", new Document(fortnight).append("month", "JANUARY")
+                        .append("first_half_report", fortnight))))))
+                .append("yearly_charge_summary", new Document("amount_by_code", new Document("BROKERAGE", 20.0)).append("total_charges", 20.0))
+                .append("last_updated_time", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
+        Document outsourced = new Document("gains_by_asset_and_segment", new Document("EQUITY", new Document("DELIVERY",
+                new Document("purchase_amount", 500.0).append("sell_amount", 450.0).append("profit", -50.0))));
+        mongoTemplate.getCollection("profit_and_loss").insertOne(new Document("_id", "pnl-1")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("financial_year", "2025-26").append("version", 3L)
+                .append("realised_profits", own).append("out_sourced_realised_profits", outsourced));
     }
 
     private List<Long> childCounts() {

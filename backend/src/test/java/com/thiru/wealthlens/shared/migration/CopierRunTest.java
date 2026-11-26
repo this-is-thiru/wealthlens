@@ -1,38 +1,20 @@
 package com.thiru.wealthlens.shared.migration;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.env.Environment;
 
-@ExtendWith(MockitoExtension.class)
 class CopierRunTest {
 
-    @Mock
-    private MongoCopier copier;
-
-    @Mock
-    private Environment environment;
-
-    @Mock
-    private ApplicationContext context;
-
-    @InjectMocks
-    private CopierRun run;
-
     @Test
-    void run_whenACollectionHasNoCopySpecified_refusesBeforeReadingAnything() {
-        // Given — 39 of the 40 specified (W-337g1, W-337g2a1 – a3, W-337g2b1 – b2); profit_and_loss is W-337g2b3's
+    void requireSpecified_whenACollectionHasNoCopySpecified_refusesBeforeReadingAnything() {
+        // Given — a source collection the copier has no copy for (every m1.6.1 collection is specified since W-337g2b3, so
+        // the guard is shown with a set of its own)
+        Set<String> unspecified = Set.of("profit_and_loss");
 
         // When / Then
-        assertThatThrownBy(() -> run.run(null)).isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("The copier has no copy specified for [profit_and_loss]");
-        verifyNoInteractions(copier, environment, context);
+        assertThatThrownBy(() -> CopierRun.requireSpecified(unspecified)).isInstanceOf(IllegalStateException.class)
+                .hasMessage("The copier has no copy specified for [profit_and_loss]; nothing was copied");
     }
 }

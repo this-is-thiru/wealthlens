@@ -30,7 +30,7 @@ final class CollectionCopies {
     static final String DOCUMENT_BYTES_BUCKET = "tax_document_bytes";
     static final Set<String> DOCUMENT_BYTES_COLLECTIONS = Set.of(DOCUMENT_BYTES_BUCKET + ".files", DOCUMENT_BYTES_BUCKET + ".chunks");
 
-    /** The collections holding no embedded data (W-337g1) and those whose lists, maps and sub-documents fill child tables and columns (W-337g2a1 – a3), and those holding JSON columns (W-337g2b1, W-337g2b2). */
+    /** The collections holding no embedded data (W-337g1) and those whose lists, maps and sub-documents fill child tables and columns (W-337g2a1 – a3), and those holding JSON columns (W-337g2b1 – b3): every one of {@link #SOURCE}. */
     static final List<CollectionCopy> SPECIFIED = List.of(
             CollectionCopy.sameName("user_details"),
             CollectionCopy.sameName("charge_catalogue"),
@@ -102,7 +102,10 @@ final class CollectionCopies {
             new CollectionCopy("trade_outcomes", "trade_outcomes", Map.of(), Set.of(), List.of(), List.of(
                     new JsonCopy("buy_charge_breakup", "buy_charge_breakup_json", Map.of()),
                     new JsonCopy("sell_charge_breakup", "sell_charge_breakup_json", Map.of()),
-                    new JsonCopy("applied_corporate_actions", "applied_corporate_actions_json", Map.of())), Set.of()));
+                    new JsonCopy("applied_corporate_actions", "applied_corporate_actions_json", Map.of())), Set.of()),
+            new CollectionCopy("profit_and_loss", "profit_and_loss", Map.of(), Set.of(), List.of(), List.of(
+                    new JsonCopy("realised_profits", "realised_profits_json", Map.of()),
+                    new JsonCopy("out_sourced_realised_profits", "out_sourced_realised_profits_json", Map.of())), Set.of()));
 
     private CollectionCopies() {
     }

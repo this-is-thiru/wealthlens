@@ -9,15 +9,14 @@ import org.junit.jupiter.api.Test;
 class CollectionCopiesTest {
 
     @Test
-    void unspecified_whenTheTradeLedgerIsSpecified_leavesProfitAndLoss() {
-        // Given — plans/W-337g.md's eighteen with embedded data, less W-337g2a1 – a3's nine, W-337g2b1's five and W-337g2b2's three: W-337g2b3's one
-        Set<String> embedded = Set.of("profit_and_loss");
+    void unspecified_whenEveryCollectionIsSpecified_isEmpty() {
+        // Given — the forty m1.6.1 collections, every one specified by W-337g1 – W-337g2b3
 
         // When
         Set<String> unspecified = CollectionCopies.unspecified();
 
         // Then
-        assertThat(unspecified).containsExactlyInAnyOrderElementsOf(embedded);
+        assertThat(unspecified).isEmpty();
     }
 
     @Test
@@ -26,7 +25,7 @@ class CollectionCopiesTest {
         List<String> collections = CollectionCopies.SPECIFIED.stream().map(CollectionCopy::collection).toList();
 
         // Then
-        assertThat(collections).hasSize(39).doesNotHaveDuplicates();
+        assertThat(collections).hasSize(40).doesNotHaveDuplicates();
         assertThat(CollectionCopies.SOURCE).hasSize(40).containsAll(collections);
     }
 }

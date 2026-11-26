@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.shared.migration;
 
+import static com.thiru.wealthlens.testsupport.MoneyAssert.assertBreakdown;
+import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -12,16 +14,26 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeSlab;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.RealisedProfitsConverter;
+import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
+import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
+import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
+import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
+import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStalenessConverter;
 import java.lang.reflect.Type;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -154,6 +166,64 @@ class JsonWalkTest {
                 .readValue(json, new TypeReference<List<OrderTimeQuantity>>() { }).getFirst();
         assertThat(read.getOrderExecutionTime()).isEqualTo(LocalDateTime.of(2026, 1, 15, 5, 0));
         assertThat(read.getQuantity()).isEqualTo(5.0);
+    }
+
+    @Test
+    void json_whenTheProfitTreeAsStored_isTheTreeTheApplicationsConverterReads() {
+        // Given — a P&L tree as m1.6.1 stored it: capital_gains, first_half_report, second_half_report are its former @Field
+        // names; RealisedProfits' time local-held (LocalDateTime.now(), Kolkata's 2026-02-01T00:00 stored as 18:30Z); the charge
+        // summary's time UTC-held (TLocalDateTime.now() = 2026-02-01T00:00 UTC, stored through Kolkata as 18:30Z; D-958)
+        Date kolkataMidnight = Date.from(Instant.parse("2026-01-31T18:30:00Z"));
+        Document fortnight = new Document("purchase_amount", 1000.0).append("sell_amount", 1200.0).append("profit", 200.0)
+                .append("misc_charges", 0.0).append("brokerage", 20.0);
+        Document empty = new Document("purchase_amount", 0.0).append("sell_amount", 0.0).append("profit", 0.0)
+                .append("misc_charges", 0.0).append("brokerage", 0.0);
+        Document gains = new Document(fortnight).append("capital_gains", new Document("JANUARY", new Document(fortnight)
+                .append("month", "JANUARY").append("first_half_report", fortnight).append("second_half_report", empty)));
+        Document charges = new Document("amount_by_code", new Document("BROKERAGE", 20.0)).append("total_charges", 20.0);
+        Document stored = new Document("gains_by_asset_and_segment", new Document("EQUITY", new Document("DELIVERY", gains)))
+                .append("yearly_charge_summary", new Document(charges).append("last_updated_time", kolkataMidnight)
+                        .append("monthly_report", new Document("JANUARY", new Document(charges).append("month", "JANUARY")
+                                .append("first_half_charges", charges)
+                                .append("second_half_charges", new Document("amount_by_code", new Document()).append("total_charges", 0.0)))))
+                .append("last_updated_time", kolkataMidnight);
+
+        // When
+        String json = JsonWalk.json(stored, RealisedProfits.class, KOLKATA, "profit_and_loss pnl-1, realised_profits");
+
+        // Then
+        RealisedProfits read = new RealisedProfitsConverter().convertToEntityAttribute(json);
+        FinancialReport report = read.getGainsByAssetAndSegment().get(AssetType.EQUITY).get(TradeSegment.DELIVERY);
+        assertMoney(200.0, report.getProfit());
+        MonthlyReport january = report.getMonthlyReport().get(Month.JANUARY);
+        assertMoney(1200.0, january.getFirstFortnightReport().getSellAmount());
+        assertMoney(0.0, january.getSecondFortnightReport().getSellAmount());
+        assertBreakdown(Map.of("BROKERAGE", 20.0),
+                read.getYearlyChargeSummary().getMonthlyReport().get(Month.JANUARY).getFirstHalfCharges().getAmountByCode());
+        assertThat(read.getLastUpdatedTime()).isEqualTo(LocalDateTime.of(2026, 1, 31, 18, 30));
+        assertThat(read.getYearlyChargeSummary().getLastUpdatedTime()).isEqualTo(LocalDateTime.of(2026, 2, 1, 0, 0));
+    }
+
+    @Test
+    void json_whenAReportHoldsATimeNothingSet_isRefused() {
+        // Given — ReportModel.lastUpdatedTime only carried @LastModifiedDate, which never fires for a nested object
+        Document report = new Document("profit", 1.0).append("last_updated_time", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
+
+        // When / Then
+        assertThatThrownBy(() -> JsonWalk.json(report, FortnightReport.class, KOLKATA, "profit_and_loss pnl-1, report"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("profit_and_loss pnl-1, report: no entry in EmbeddedTimes says how " + ReportModel.class.getName()
+                        + ".lastUpdatedTime was held");
+    }
+
+    @Test
+    void json_whenAMapKeyIsNotItsEnumsConstant_isRefused() {
+        // Given
+        Document stored = new Document("gains_by_asset_and_segment", new Document("BONDS", new Document()));
+
+        // When / Then
+        assertThatThrownBy(() -> JsonWalk.json(stored, RealisedProfits.class, KOLKATA, "profit_and_loss pnl-1, realised_profits"))
+                .isInstanceOf(IllegalStateException.class).hasMessage("profit_and_loss pnl-1, realised_profits: BONDS is not a AssetType");
     }
 
     private static Type rulesType() throws NoSuchFieldException {

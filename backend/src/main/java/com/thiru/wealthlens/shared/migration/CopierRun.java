@@ -36,10 +36,7 @@ public class CopierRun implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments arguments) {
-        Set<String> unspecified = CollectionCopies.unspecified();
-        if (!unspecified.isEmpty()) {
-            throw new IllegalStateException("The copier has no copy specified for " + unspecified + "; nothing was copied");
-        }
+        requireSpecified(CollectionCopies.unspecified());
         ZoneId writtenZone = ZoneId.of(environment.getRequiredProperty(WRITTEN_ZONE));
         copier.requireKnownSource();
         List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, writtenZone);
@@ -50,5 +47,12 @@ public class CopierRun implements ApplicationRunner {
         }
         log.info("Every source copied and proven, times written in UTC from rows written in {}", writtenZone);
         SpringApplication.exit(context);
+    }
+
+    /** Refuses before anything is read when a source collection has no copy, so no data is copied around (W-337g2b3 C3a). */
+    static void requireSpecified(Set<String> unspecified) {
+        if (!unspecified.isEmpty()) {
+            throw new IllegalStateException("The copier has no copy specified for " + unspecified + "; nothing was copied");
+        }
     }
 }

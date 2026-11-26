@@ -4,14 +4,13 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-337g2b2 DONE — D-977 (trade ledger). Committed and pushed.
+Item            : W-337g2b3 DONE — D-978 (profit_and_loss; all 40 specified). Committed and pushed.
 Stage           : between items. Nothing in flight.
-Last item commit: "taxplanning W-337g2b2: copy assets, transactions and trade outcomes — corporate-action copies, the kept request and order times in UTC; D-977" — matches `git log --grep`.
-Next step       : check this commit's pipeline; then plan W-337g2b3 (profit_and_loss: realised_profits_json and
-  out_sourced_realised_profits_json, the four-level tree, both halves; renames capital_gains→monthlyReport,
-  first/second_half_report→first/secondFortnightReport; ReportModel.lastUpdatedTime to classify; RealisedProfits.lastUpdatedTime
-  local-held, ChargeSummaryReport.lastUpdatedTime UTC-held per plans/W-337g2.md finding 3); EXPLAIN, board E, stop.
-  Note for W-337g2c: the runbook copies before seeding the catalogue (the copier refuses a seeded target).
+Last item commit: "taxplanning W-337g2b3: copy profit_and_loss — the gains and charge trees under their former names; every collection specified; D-978" — matches `git log --grep`.
+Next step       : check this commit's pipeline; then plan W-337g2c (row in 03-WORK-ITEMS.md): CopierRun runs whole (a "runs and exits"
+  case), post-deployment-runbook.md entry per W-337g2 C5a (precheck incl. user_details rows without email, D-964; copy BEFORE seeding
+  the catalogue — the copier refuses a seeded target; --app.copier.written-zone=Asia/Kolkata), W-337j's row + a YouTrack issue,
+  WL-A-2 republished. EXPLAIN, board E, stop.
 Flags for owner : W-337f flags unchanged (inert @Field, GazetteCursor created*, lease audit nulls, findByEmailAndTransactionDateBetween).
 Env notes       : NO Claude attribution; integration needs OrbStack + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on the
   pipeline only. Tests run in UTC (argLine); time tests pin a fixed Asia/Kolkata clock. Next Flyway version: V14.

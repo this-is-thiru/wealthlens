@@ -66,6 +66,9 @@ final class JsonWalk {
             if (Map.class.isAssignableFrom(raw)) {
                 ObjectNode map = MAPPER.createObjectNode();
                 require(stored, Document.class, type, where).forEach((key, value) -> {
+                    if (arguments[0] instanceof Class<?> keyType && keyType.isEnum()) {
+                        constant(key, keyType, where);
+                    }
                     if (value != null) {
                         map.set(key, node(value, arguments[1], owner, writtenZone, where));
                     }
@@ -139,7 +142,7 @@ final class JsonWalk {
             Field field = fields.stream().filter(candidate -> isStoredUnder(candidate, key)).findFirst()
                     .orElseThrow(() -> new IllegalStateException(where + ": " + target.getSimpleName()
                             + " has no field for the stored key " + key));
-            object.set(field.getName(), node(value, field.getGenericType(), Optional.of(new Owner(target, field.getName())),
+            object.set(field.getName(), node(value, field.getGenericType(), Optional.of(new Owner(field.getDeclaringClass(), field.getName())),
                     writtenZone, where));
         });
         // a field the document never stored reads as Java's default, as Spring Data read it at m1.6.1
@@ -189,7 +192,8 @@ final class JsonWalk {
         if (key.equals(ID)) {
             return field.isAnnotationPresent(Id.class) || field.getName().equals("id");
         }
-        return storedName(field).equals(key) || RowMapping.snakeCase(field.getName()).equals(key);
+        return FormerFieldNames.of(field).map(key::equals).orElse(false) || storedName(field).equals(key)
+                || RowMapping.snakeCase(field.getName()).equals(key);
     }
 
     private static String storedName(Field field) {

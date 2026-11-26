@@ -20,12 +20,16 @@ final class EmbeddedTimes {
             // LotLedger.java:201: transactions.order_execution_time, UTC (D-961)
             "com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity.orderExecutionTime",
             // AssetRequestParser.java:210: the upload's cell, held as entered and read back as held (W-408)
-            "com.thiru.wealthlens.portfolio.dto.AssetRequest.orderExecutionDateTime");
+            "com.thiru.wealthlens.portfolio.dto.AssetRequest.orderExecutionDateTime",
+            // ChargeSummaryReport.java:71 at m1.6.1: merge stamps TLocalDateTime.now(), then ZonedDateTime.now(UTC) (TLocalDateTime.java:16-18)
+            "com.thiru.wealthlens.brokercharges.entity.model.ChargeSummaryReport.lastUpdatedTime");
 
     private static final Set<String> HELD_LOCALLY = Set.of(
             // a corporate-action copy's audit times: the copied action's auditing, LocalDateTime.now() (D-954)
             "com.thiru.wealthlens.shared.entity.helper.AuditColumns.createdAt",
-            "com.thiru.wealthlens.shared.entity.helper.AuditColumns.updatedAt");
+            "com.thiru.wealthlens.shared.entity.helper.AuditColumns.updatedAt",
+            // ProfitAndLossService.java:131, 420 at m1.6.1: LocalDateTime.now()
+            "com.thiru.wealthlens.portfolio.entity.model.RealisedProfits.lastUpdatedTime");
 
     private EmbeddedTimes() {
     }
