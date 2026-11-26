@@ -21,12 +21,18 @@ import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import com.thiru.wealthlens.integration.AbstractIntegrationTest;
 import com.thiru.wealthlens.shared.privacy.BreachNoticeRepository;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmationRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.TaxDocumentBytesRepository;
+import com.thiru.wealthlens.taxplanning.gazette.GazetteLead;
+import com.thiru.wealthlens.taxplanning.gazette.GazetteLeadRepository;
 import com.thiru.wealthlens.taxplanning.jobs.JobFailureRepository;
 import com.thiru.wealthlens.taxplanning.jobs.JobLeaseRepository;
 import com.thiru.wealthlens.taxplanning.profile.AssesseeKind;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
+import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory.ElectionEvent;
+import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistoryRepository;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspaceRepository;
 import java.io.ByteArrayInputStream;
@@ -95,6 +101,53 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CorporateActionRepository corporateActions;
+
+    @Autowired
+    private RegimeElectionHistoryRepository electionHistories;
+
+    @Autowired
+    private StoredConfirmationRepository confirmations;
+
+    @Autowired
+    private GazetteLeadRepository leads;
+
+    @Test
+    void copyAll_whenTaxDocumentsHoldLists_fillsTheChildTablesTheApplicationReads() {
+        // Given — one document of each of W-337g2a3's three, and a lead with neither list
+        storeTaxListHolders();
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then — ElectionEvent's Java-named keys reach their snake_case columns
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(electionHistories.findById("history-1").orElseThrow().getEvents()).containsExactlyInAnyOrder(
+                new ElectionEvent(2025, "draft-1"), new ElectionEvent(2026, "draft-2"));
+        StoredConfirmation confirmation = confirmations.findById("attempt-1").orElseThrow();
+        assertThat(confirmation.getRejectedFields()).containsExactlyInAnyOrder("gross_salary", "tds");
+        assertThat(confirmation.getConfirmedBy()).isEqualTo("owner@example.com");
+        GazetteLead lead = leads.findById("lead-1").orElseThrow();
+        assertThat(lead.getMatchedTerms()).containsExactlyInAnyOrder("income-tax", "section 80C");
+        assertThat(lead.getPossiblyAffected()).containsExactly("RS-CH6A-80C");
+        assertThat(leads.findById("lead-2").orElseThrow().getMatchedTerms()).isEmpty();
+    }
+
+    @Test
+    void copyAll_whenTaxListsAreCopiedAgain_doublesNoChild() {
+        // Given
+        storeTaxListHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(List.of("tax_regime_election_events", "tax_document_confirmation_rejected_fields", "tax_gazette_lead_matched_terms",
+                "tax_gazette_lead_possibly_affected").stream()
+                .map(table -> jdbc().queryForObject("SELECT count(*) FROM " + table, Long.class)).toList())
+                .containsExactly(2L, 2L, 2L, 1L);
+    }
 
     @Test
     void copyAll_whenOrderedListsMapsAndEmbeddedDetail_storesWhatTheApplicationReads() {
@@ -287,7 +340,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
         // Then — every source proven, and every time in UTC: auditing held Kolkata's local midnight (stored 18:30Z, its true
         // instant), JobContext.nowUtc() held midnight UTC (stored shifted to 18:30Z through the Kolkata JVM)
-        assertThat(reports).hasSize(29).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(reports).hasSize(32).allSatisfy(report -> assertThat(report.problems()).isEmpty());
         TaxpayerProfile profile = profiles.findById(PROFILE_ID).orElseThrow();
         assertThat(profile.getEmail()).isEqualTo("owner@example.com");
         assertThat(profile.getPan()).isEqualTo("ABCDE1234F");
@@ -450,6 +503,23 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
                         .append("demerger_stocks", List.of(new Document("stock_code", "NEW1").append("stock_name", "New One"),
                                 new Document("stock_code", "NEW2").append("stock_name", "New Two")))),
                 new Document("_id", "ca-2").append("stock_code", "OTHER").append("type", "BONUS")));
+    }
+
+    private void storeTaxListHolders() {
+        mongoTemplate.getCollection("tax_regime_election_history").insertOne(new Document("_id", "history-1")
+                .append("profile_id", PROFILE_ID).append("regime_code", "OLD").append("events", List.of(
+                        new Document("taxYearStart", 2025).append("sourceDraft", "draft-1"),
+                        new Document("taxYearStart", 2026).append("sourceDraft", "draft-2"))));
+        mongoTemplate.getCollection("tax_document_confirmations").insertOne(new Document("_id", "attempt-1")
+                .append("confirmed_by", cipher.encryptSearchable("owner@example.com"))
+                .append("confirmed_at", Date.from(Instant.parse("2026-02-01T10:00:00Z")))
+                .append("accepted_json", cipher.encrypt("{}")).append("rejected_fields", List.of("gross_salary", "tds")));
+        mongoTemplate.getCollection("tax_gazette_leads").insertMany(List.of(new Document("_id", "lead-1")
+                .append("url", "https://egazette.gov.in/one").append("year", 2026).append("number", 12L).append("page", 3)
+                .append("matched_terms", List.of("income-tax", "section 80C")).append("possibly_affected", List.of("RS-CH6A-80C"))
+                .append("found_at", Date.from(Instant.parse("2026-02-01T10:00:00Z"))),
+                new Document("_id", "lead-2").append("url", "https://egazette.gov.in/two").append("year", 2026).append("number", 13L)
+                        .append("page", 1)));
     }
 
     private List<Long> childCounts() {

@@ -68,7 +68,15 @@ final class CollectionCopies {
                     ChildCopy.entries("amount_by_code", "user_charge_amounts", "user_charge_id", "charge_code", "amount"))),
             // DemergerDetail is @Embedded: its scalars are corporate_action's own columns, its stocks a child table
             new CollectionCopy("corporate_action", "corporate_action", Map.of(), Set.of("demerger_detail"),
-                    List.of(ChildCopy.documents("demerger_stocks", "corporate_action_demerger_stocks", "corporate_action_id"))));
+                    List.of(ChildCopy.documents("demerger_stocks", "corporate_action_demerger_stocks", "corporate_action_id"))),
+            // ElectionEvent is a record with no @Field: its keys are stored as taxYearStart and sourceDraft, snake_cased on the way
+            new CollectionCopy("tax_regime_election_history", "tax_regime_election_history", Map.of(), Set.of(),
+                    List.of(ChildCopy.documents("events", "tax_regime_election_events", "history_id"))),
+            new CollectionCopy("tax_document_confirmations", "tax_document_confirmations", Map.of(), Set.of(), List.of(
+                    ChildCopy.values("rejected_fields", "tax_document_confirmation_rejected_fields", "confirmation_id", "rejected_field"))),
+            new CollectionCopy("tax_gazette_leads", "tax_gazette_leads", Map.of(), Set.of(), List.of(
+                    ChildCopy.values("matched_terms", "tax_gazette_lead_matched_terms", "lead_id", "matched_term"),
+                    ChildCopy.values("possibly_affected", "tax_gazette_lead_possibly_affected", "lead_id", "possibly_affected"))));
 
     private CollectionCopies() {
     }

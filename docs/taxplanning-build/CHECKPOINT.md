@@ -4,11 +4,11 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-337g2a2 DONE — D-972 (charge_accounts, user_charges, corporate_action). Committed and pushed.
+Item            : W-337g2a3 DONE — D-973 (election history, confirmations, gazette leads). Committed and pushed.
 Stage           : between items. Nothing in flight.
-Last item commit: "taxplanning W-337g2a2: copy charge_accounts, user_charges and corporate_action — ordered lines, the amounts map and the embedded demerger detail; D-972" — matches `git log --grep`.
-Next step       : check the pipeline (1ed914e0's run, then this commit's); then plan W-337g2a3 (row in 03-WORK-ITEMS.md:
-  tax_regime_election_history, tax_document_confirmations, tax_gazette_leads); EXPLAIN template, board E, stop for approval.
+Last item commit: "taxplanning W-337g2a3: copy election history, document confirmations and gazette leads — sub-document keys reach their snake_case columns; D-973" — matches `git log --grep`.
+Next step       : check the pipeline (45748701282 for 5ee64639, then this commit's); then plan W-337g2b1 (03-WORK-ITEMS.md row; the
+  typed JSON walk C2a and time table C4a of plans/W-337g2.md); EXPLAIN template, board E, stop for approval.
   Note for W-337g2c: the runbook copies before seeding the catalogue (the copier refuses a seeded target).
 Flags for owner : W-337f flags unchanged (inert @Field, GazetteCursor created*, lease audit nulls, findByEmailAndTransactionDateBetween).
 Env notes       : NO Claude attribution; integration needs OrbStack + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on the

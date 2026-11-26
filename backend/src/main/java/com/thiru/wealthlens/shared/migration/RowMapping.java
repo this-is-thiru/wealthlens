@@ -18,7 +18,8 @@ import org.bson.Document;
  * back the UTC value it held. A key no column takes is
  * refused rather than dropped, so nothing stored is lost without a word; a key holding {@code null} is left out, as
  * Spring Data read it the same as a missing one. A key a {@link ChildCopy} names becomes that child table's rows, each entry
- * mapped by the same rules (W-337g2a1); a key {@link CollectionCopy#embedded} names holds a sub-document whose keys are
+ * mapped by the same rules, a sub-document's key reaching the column of its snake_case as a document's does (W-337g2a1,
+ * W-337g2a3); a key {@link CollectionCopy#embedded} names holds a sub-document whose keys are
  * mapped as the document's own are (W-337g2a2).
  */
 final class RowMapping {
@@ -130,7 +131,7 @@ final class RowMapping {
         }
         subDocument.forEach((key, value) -> {
             if (!key.equals(TYPE_HINT)) {
-                put(row, child.name(), child.typeByColumn(), key, value, writtenZone, where);
+                put(row, child.name(), child.typeByColumn(), snakeCase(key), value, writtenZone, where);
             }
         });
         return row;

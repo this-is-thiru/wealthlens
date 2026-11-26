@@ -49,6 +49,13 @@ class RowMappingTest {
             "demerger_ratio", "text", "demerger_price_ratio", "text", "main_stock_code", "text"));
     private static final ChildTable DEMERGED = new ChildTable(DEMERGED_COPY, Map.of("corporate_action_id", "character varying",
             "stock_code", "text", "stock_name", "text"));
+    private static final ChildCopy EVENTS_COPY = ChildCopy.documents("events", "tax_regime_election_events", "history_id");
+    private static final CollectionCopy ELECTIONS = new CollectionCopy("tax_regime_election_history", "tax_regime_election_history",
+            Map.of(), Set.of(), List.of(EVENTS_COPY));
+    private static final TargetTable ELECTIONS_TABLE = new TargetTable("tax_regime_election_history", "id",
+            Map.of("id", "character varying"));
+    private static final ChildTable EVENTS = new ChildTable(EVENTS_COPY, Map.of("history_id", "character varying", "tax_year_start",
+            "integer", "source_draft", "text"));
     private static final ChildCopy POLICY_COPY = ChildCopy.documents("policyDetails", "insurance_policy_details", "insurance_id_fk");
     private static final CollectionCopy INSURANCES = new CollectionCopy("insurances", "insurances", Map.of(), Set.of(),
             List.of(POLICY_COPY));
@@ -232,6 +239,31 @@ class RowMappingTest {
         // When / Then
         assertThatThrownBy(() -> RowMapping.of(stored, ACTIONS, ACTIONS_TABLE, List.of(DEMERGED), KOLKATA))
                 .isInstanceOf(IllegalStateException.class).hasMessage("corporate_action ca-1: demerger_detail is not a sub-document");
+    }
+
+    @Test
+    void of_whenASubDocumentKeyIsItsJavaName_fillsItsSnakeCaseColumn() {
+        // Given — an election history's events: ElectionEvent is a record with no @Field, so m1.6.1 stored the Java names
+        Document stored = new Document("_id", "history-1").append("events", List.of(new Document("taxYearStart", 2025)
+                .append("sourceDraft", "draft-1")));
+
+        // When
+        SourceRow row = RowMapping.of(stored, ELECTIONS, ELECTIONS_TABLE, List.of(EVENTS), KOLKATA);
+
+        // Then
+        assertThat(row.children()).containsExactly(Map.entry("tax_regime_election_events",
+                List.of(Map.of("tax_year_start", 2025, "source_draft", "draft-1"))));
+    }
+
+    @Test
+    void of_whenASubDocumentHoldsBothSpellingsOfAKey_isRefused() {
+        // Given
+        Document stored = new Document("_id", "history-1").append("events", List.of(new Document("taxYearStart", 2025)
+                .append("tax_year_start", 2026)));
+
+        // When / Then
+        assertThatThrownBy(() -> RowMapping.of(stored, ELECTIONS, ELECTIONS_TABLE, List.of(EVENTS), KOLKATA))
+                .isInstanceOf(IllegalStateException.class).hasMessage("tax_regime_election_history history-1: two stored keys fill tax_year_start");
     }
 
     @Test

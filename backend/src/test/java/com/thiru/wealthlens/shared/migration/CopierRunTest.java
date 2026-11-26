@@ -28,7 +28,7 @@ class CopierRunTest {
 
     @Test
     void run_whenACollectionHasNoCopySpecified_refusesBeforeReadingAnything() {
-        // Given — 28 of the 40 specified (W-337g1, W-337g2a1, W-337g2a2); the 12 left are W-337g2a3's and W-337g2b's
+        // Given — 31 of the 40 specified (W-337g1, W-337g2a1 – a3); the 9 left, with JSON columns, are W-337g2b's
 
         // When / Then
         assertThatThrownBy(() -> run.run(null)).isInstanceOf(IllegalStateException.class)
