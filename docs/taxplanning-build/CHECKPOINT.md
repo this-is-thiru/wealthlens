@@ -5,7 +5,7 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-337g2c DONE — D-979; the W-337 copier complete. Committed and pushed.
-Stage           : between items. After the commit: YouTrack issue under WL-28 (id into §0.9 + W-337j's row, docs commit), WL-A-2 republished.
+Stage           : between items. WL-50 (under WL-28) opened; f77a5bf4's runbook repaired by 149308c9; WL-A-2 republished.
 Last item commit: "taxplanning W-337g2c: test the copier's whole run and write its runbook entry — the move's copy, step by step; D-979" — matches `git log --grep`.
 Next step       : check the pipeline; then W-337h (owner's database setup, status P, plans/W-337h.md) or plan W-406 (the rehearsal's
   side-by-side read comparison) — ask the owner which.

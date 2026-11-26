@@ -451,7 +451,7 @@ unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KE
    (`MongoCopierIntegrationTest`). **Way back:** on the target, `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` (DataGrip) — MongoDB
    is untouched — then step 2 again.
 
-**Removed after use:** W-337j removes the copier with MongoDB (YouTrack WL-?, under WL-28), once this step is logged for every database.
+**Removed after use:** W-337j removes the copier with MongoDB (YouTrack WL-50, under WL-28), once this step is logged for every database.
 
 ## 1. On every deploy — startup, automatic; confirm in the log
 
