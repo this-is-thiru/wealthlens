@@ -15,19 +15,22 @@ import java.util.Set;
  * @param embedded the keys holding a sub-document whose own keys are mapped as the document's are (W-337g2a2)
  * @param children the lists and maps the documents hold, each filling a child table (W-337g2a1)
  * @param jsonCopies the values the application keeps as JSON in one column (W-337g2b1)
+ * @param localHeldKeys the top-level keys holding a time the application held in the JVM's local zone, so stored as its true
+ *     instant and read in UTC, as audit times are (W-337g2 C4a, W-337g2b2)
  */
 public record CollectionCopy(String collection, String table, Map<String, String> columnsByKey, Set<String> embedded,
-        List<ChildCopy> children, List<JsonCopy> jsonCopies) {
+        List<ChildCopy> children, List<JsonCopy> jsonCopies, Set<String> localHeldKeys) {
 
     public CollectionCopy {
         columnsByKey = Map.copyOf(columnsByKey);
         embedded = Set.copyOf(embedded);
         children = List.copyOf(children);
         jsonCopies = List.copyOf(jsonCopies);
+        localHeldKeys = Set.copyOf(localHeldKeys);
     }
 
     /** A collection copied to the table of its own name, every key to the column of its name. */
     static CollectionCopy sameName(String collection) {
-        return new CollectionCopy(collection, collection, Map.of(), Set.of(), List.of(), List.of());
+        return new CollectionCopy(collection, collection, Map.of(), Set.of(), List.of(), List.of(), Set.of());
     }
 }

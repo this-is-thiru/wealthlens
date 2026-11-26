@@ -78,8 +78,8 @@ final class RowMapping {
         }
         ChildTable child = destination.childByKey().get(key);
         if (child == null) {
-            put(destination.values(), destination.table(), columnFor(key, destination.copy(), destination.table()), value, writtenZone,
-                    where);
+            ZoneId zone = destination.copy().localHeldKeys().contains(key) ? ZoneOffset.UTC : writtenZone;
+            put(destination.values(), destination.table(), columnFor(key, destination.copy(), destination.table()), value, zone, where);
         } else if (child.copy().keyColumn().isPresent()) {
             destination.childRows().put(child.name(), entryRows(child, subDocument(value, key, where), writtenZone, where));
         } else {

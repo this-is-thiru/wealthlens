@@ -1,5 +1,8 @@
 package com.thiru.wealthlens.shared.migration;
 
+import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.entity.StoredAssetRequest;
+import jakarta.persistence.Id;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -31,8 +35,10 @@ import tools.jackson.databind.node.ObjectNode;
  */
 final class JsonWalk {
 
-    private static final JsonMapper MAPPER = JsonMapper.builder().build();
+    // the stored form of AssetRequest keeps the upload's execution time, as AssetRequestConverter writes it (W-408)
+    private static final JsonMapper MAPPER = JsonMapper.builder().addMixIn(AssetRequest.class, StoredAssetRequest.class).build();
     private static final String TYPE_HINT = "_class";
+    private static final String ID = "_id";
 
     private JsonWalk() {
     }
@@ -80,7 +86,7 @@ final class JsonWalk {
     }
 
     private static final Map<Class<?>, LeafReader> LEAVES = Map.ofEntries(
-            Map.entry(String.class, (stored, where) -> require(stored, String.class, String.class, where)),
+            Map.entry(String.class, JsonWalk::text),
             Map.entry(Integer.class, JsonWalk::whole), Map.entry(int.class, JsonWalk::whole),
             Map.entry(Long.class, JsonWalk::wide), Map.entry(long.class, JsonWalk::wide),
             Map.entry(Double.class, JsonWalk::fraction), Map.entry(double.class, JsonWalk::fraction),
@@ -130,7 +136,7 @@ final class JsonWalk {
             if (key.equals(TYPE_HINT) || value == null) {
                 return;
             }
-            Field field = fields.stream().filter(candidate -> storedName(candidate).equals(key)).findFirst()
+            Field field = fields.stream().filter(candidate -> isStoredUnder(candidate, key)).findFirst()
                     .orElseThrow(() -> new IllegalStateException(where + ": " + target.getSimpleName()
                             + " has no field for the stored key " + key));
             object.set(field.getName(), node(value, field.getGenericType(), Optional.of(new Owner(target, field.getName())),
@@ -167,6 +173,23 @@ final class JsonWalk {
         } catch (NoSuchFieldException absent) {
             throw new IllegalStateException("A record's component is its field: " + target.getName() + "." + name, absent);
         }
+    }
+
+    /** An ObjectId kept where the type holds text is its hex, as ColumnValue reads it at top level. */
+    private static Object text(Object stored, String where) {
+        return stored instanceof ObjectId id ? id.toHexString() : require(stored, String.class, String.class, where);
+    }
+
+    /**
+     * Whether a stored key is this field's: its MongoDB {@code @Field} name, its Java name or that name in snake_case (a type that
+     * no longer carries {@code @Field}, D-975 C2a), and {@code _id} for the id, which MappingMongoConverter stored there even
+     * inside an embedded document.
+     */
+    private static boolean isStoredUnder(Field field, String key) {
+        if (key.equals(ID)) {
+            return field.isAnnotationPresent(Id.class) || field.getName().equals("id");
+        }
+        return storedName(field).equals(key) || RowMapping.snakeCase(field.getName()).equals(key);
     }
 
     private static String storedName(Field field) {

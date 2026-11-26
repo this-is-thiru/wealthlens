@@ -22,6 +22,13 @@ import com.thiru.wealthlens.corporate.repository.CorporateActionRepository;
 import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
 import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import com.thiru.wealthlens.integration.AbstractIntegrationTest;
+import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
+import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
+import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
+import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.privacy.BreachNoticeRepository;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
@@ -135,6 +142,61 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private DraftComputationRepository computations;
+
+    @Autowired
+    private PortfolioRepository assets;
+
+    @Autowired
+    private TransactionRepository transactions;
+
+    @Autowired
+    private TradeOutcomeRepository tradeOutcomes;
+
+    @Test
+    void copyAll_whenTheTradeLedgerAsStored_storesWhatTheApplicationsConvertersRead() {
+        // Given — an asset, a held transaction and a trade outcome as m1.6.1 stored them
+        storeLedgerHolders();
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then — ciphertext opened by the app's converters, times in UTC (IST = UTC + 05:30, D-958)
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        AssetEntity asset = assets.findById("asset-1").orElseThrow();
+        assertThat(asset.getOrderTimeQuantities()).singleElement()
+                .satisfies(orderTime -> assertThat(orderTime.getOrderExecutionTime()).isEqualTo(LocalDateTime.of(2026, 1, 15, 5, 0)));
+        assertThat(asset.getBuyTransactionIds()).containsExactly("txn-0");
+        assertThat(asset.getCorporateActions()).singleElement().satisfies(copy -> {
+            assertThat(copy.getId()).isEqualTo("ca-1");
+            assertThat(copy.getAuditMetadata().getCreatedBy()).isEqualTo("admin@example.com");
+            assertThat(copy.getAuditMetadata().getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 1, 31, 18, 30));
+        });
+        TransactionEntity held = transactions.findById("txn-1").orElseThrow();
+        assertThat(held.getSubmittedAt()).isEqualTo(LocalDateTime.of(2026, 1, 31, 18, 30));
+        AssetRequest request = held.getAssetRequest();
+        assertThat(request.getEmail()).isEqualTo("owner@example.com");
+        assertThat(request.getAccountHolder()).isEqualTo("Owner");
+        assertThat(request.getOrderExecutionDateTime()).isEqualTo(LocalDateTime.of(2026, 1, 15, 10, 30));
+        TradeOutcomeEntity outcome = tradeOutcomes.findById("outcome-1").orElseThrow();
+        assertThat(outcome.getBuyChargeBreakup()).containsExactlyInAnyOrderEntriesOf(Map.of("BROKERAGE", 20.0, "STT", 10.0));
+        assertThat(outcome.getAppliedCorporateActions()).singleElement()
+                .satisfies(copy -> assertThat(copy.getStockCode()).isEqualTo("INFY"));
+    }
+
+    @Test
+    void copyAll_whenTheTradeLedgerIsCopiedAgain_changesNothing() {
+        // Given
+        storeLedgerHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+        List<Map<String, Object>> before = jdbc().queryForList("SELECT * FROM transactions");
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(jdbc().queryForList("SELECT * FROM transactions")).isEqualTo(before);
+    }
 
     @Test
     void copyAll_whenJsonColumnsAsStored_storesWhatTheApplicationsConvertersRead() {
@@ -405,7 +467,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
         // Then — every source proven, and every time in UTC: auditing held Kolkata's local midnight (stored 18:30Z, its true
         // instant), JobContext.nowUtc() held midnight UTC (stored shifted to 18:30Z through the Kolkata JVM)
-        assertThat(reports).hasSize(37).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(reports).hasSize(40).allSatisfy(report -> assertThat(report.problems()).isEmpty());
         TaxpayerProfile profile = profiles.findById(PROFILE_ID).orElseThrow();
         assertThat(profile.getEmail()).isEqualTo("owner@example.com");
         assertThat(profile.getPan()).isEqualTo("ABCDE1234F");
@@ -611,6 +673,37 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
                 .append("law_and_exec", List.of("law-2026.1", "engine-7", "rules-3"))
                 .append("rule_checksums", new Document("RS-1", "c1").append("RS-2", "c2"))
                 .append("computed_at", Date.from(Instant.parse("2026-02-01T10:00:00Z"))));
+    }
+
+    private void storeLedgerHolders() {
+        mongoTemplate.getCollection("assets").insertOne(new Document("_id", "asset-1")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("stock_code", "INFY").append("price", 1500.0)
+                .append("quantity", 5.0).append("order_execution_time", Date.from(Instant.parse("2026-01-15T05:00:00Z")))
+                .append("order_time_quantities", List.of(new Document("quantity", 5.0)
+                        .append("orderExecutionTime", Date.from(Instant.parse("2026-01-14T23:30:00Z"))).append("timezoneId", "Asia/Kolkata")))
+                .append("buy_transaction_ids", List.of("txn-0")).append("sell_transaction_ids", List.of())
+                .append("corporate_actions", List.of(corporateActionCopy())));
+        mongoTemplate.getCollection("transactions").insertOne(new Document("_id", "txn-1")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("stock_code", "INFY").append("status", "TEMPORARY")
+                .append("submitted_at", Date.from(Instant.parse("2026-01-31T18:30:00Z")))
+                .append("corporate_actions", List.of(corporateActionCopy()))
+                .append("asset_request", new Document("email", cipher.encryptSearchable("owner@example.com"))
+                        .append("accountHolder", cipher.encryptSearchable("Owner")).append("stockCode", "INFY").append("price", 1500.0)
+                        .append("quantity", 5.0).append("brokerCharges", 0.0).append("miscCharges", 0.0)
+                        .append("orderExecutionDateTime", Date.from(Instant.parse("2026-01-15T05:00:00Z")))
+                        .append("timezoneId", "Asia/Kolkata").append("orderTimeQuantities", List.of())));
+        mongoTemplate.getCollection("trade_outcomes").insertOne(new Document("_id", "outcome-1")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("stock_code", "INFY")
+                .append("buy_charge_breakup", new Document("BROKERAGE", 20.0).append("STT", 10))
+                .append("sell_charge_breakup", new Document()).append("applied_corporate_actions", List.of(corporateActionCopy())));
+    }
+
+    /** A corporate action's copy as m1.6.1 embedded it: its id under _id, its actor sealed, its audit time local-held. */
+    private Document corporateActionCopy() {
+        return new Document("_id", "ca-1").append("stock_code", "INFY").append("type", "BONUS")
+                .append("record_date", Date.from(Instant.parse("2026-01-10T00:00:00Z"))).append("priority", 1)
+                .append("audit_metadata", new Document("createdBy", cipher.encryptSearchable("admin@example.com"))
+                        .append("createdAt", Date.from(Instant.parse("2026-01-31T18:30:00Z"))));
     }
 
     private List<Long> childCounts() {

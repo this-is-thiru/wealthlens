@@ -10,10 +10,14 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRuleListConverter;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeSlab;
+import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
+import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStalenessConverter;
 import java.lang.reflect.Type;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -22,6 +26,8 @@ import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.Field;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 class JsonWalkTest {
 
@@ -102,6 +108,52 @@ class JsonWalkTest {
         assertThatThrownBy(() -> JsonWalk.json(stamp, Stamp.class, KOLKATA, "somewhere 1, stamp"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("somewhere 1, stamp: no entry in EmbeddedTimes says how " + Stamp.class.getName() + ".at was held");
+    }
+
+    @Test
+    void json_whenACorporateActionCopyAsStored_carriesItsCiphertextAndItsAuditTimeInUtc() throws NoSuchFieldException {
+        // Given — a copy as m1.6.1 stored it: CorporateActionEntity's @Field names (snake_case; the class carries none now),
+        // its id under _id (MappingMongoConverter, checked at build), its audit actor sealed, its audit time local-held:
+        // auditing held Kolkata's 2026-02-01T00:00, stored as its true instant 18:30Z (IST = UTC + 05:30, D-958)
+        Document copy = new Document("_id", "ca-1").append("stock_code", "INFY").append("type", "BONUS")
+                .append("record_date", Date.from(Instant.parse("2026-01-10T00:00:00Z"))).append("priority", 1)
+                .append("demerger_detail", new Document("demerger_ratio", "1:1")
+                        .append("demerger_stocks", List.of(new Document("stock_code", "NEW1").append("stock_name", "New One"))))
+                .append("audit_metadata", new Document("createdBy", "sealed-actor")
+                        .append("createdAt", Date.from(Instant.parse("2026-01-31T18:30:00Z"))));
+
+        // When
+        String json = JsonWalk.json(List.of(copy), AssetEntity.class.getDeclaredField("corporateActions").getGenericType(), KOLKATA,
+                "assets asset-1, corporate_actions");
+
+        // Then — read without the converter, so the stored ciphertext is seen as it is
+        CorporateActionEntity read = JsonMapper.builder().build()
+                .readValue(json, new TypeReference<List<CorporateActionEntity>>() { }).getFirst();
+        assertThat(read.getId()).isEqualTo("ca-1");
+        assertThat(read.getStockCode()).isEqualTo("INFY");
+        assertThat(read.getRecordDate()).isEqualTo(LocalDate.of(2026, 1, 10));
+        assertThat(read.getDemergerDetail().getDemergerStocks()).singleElement()
+                .satisfies(stock -> assertThat(stock.getStockCode()).isEqualTo("NEW1"));
+        assertThat(read.getAuditMetadata().getCreatedBy()).isEqualTo("sealed-actor");
+        assertThat(read.getAuditMetadata().getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 1, 31, 18, 30));
+    }
+
+    @Test
+    void json_whenOrderTimesStoredThroughKolkata_areTheUtcTimesTheApplicationHeld() throws NoSuchFieldException {
+        // Given — PortfolioService held 2026-01-15T05:00 UTC (orderExecutionDateTime(), atUtc); stored through Kolkata as
+        // 05:00 IST, 2026-01-14T23:30Z; the quantity a whole number stored as an int
+        Document orderTime = new Document("quantity", 5).append("orderExecutionTime", Date.from(Instant.parse("2026-01-14T23:30:00Z")))
+                .append("timezoneId", "Asia/Kolkata");
+
+        // When
+        String json = JsonWalk.json(List.of(orderTime), AssetEntity.class.getDeclaredField("orderTimeQuantities").getGenericType(),
+                KOLKATA, "assets asset-1, order_time_quantities");
+
+        // Then
+        OrderTimeQuantity read = JsonMapper.builder().build()
+                .readValue(json, new TypeReference<List<OrderTimeQuantity>>() { }).getFirst();
+        assertThat(read.getOrderExecutionTime()).isEqualTo(LocalDateTime.of(2026, 1, 15, 5, 0));
+        assertThat(read.getQuantity()).isEqualTo(5.0);
     }
 
     private static Type rulesType() throws NoSuchFieldException {

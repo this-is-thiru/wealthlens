@@ -23,10 +23,10 @@ class RowMappingTest {
             "profile_id", "character varying", "tax_year_start", "integer", "primary_draft_id", "text", "created_by", "text",
             "updated_by", "text", "created_at", "timestamp without time zone", "updated_at", "timestamp without time zone"));
     private static final CollectionCopy COPY = new CollectionCopy("tax_year_workspaces", "tax_year_workspaces",
-            Map.of("tax_year", "tax_year_start"), Set.of(), List.of(), List.of());
+            Map.of("tax_year", "tax_year_start"), Set.of(), List.of(), List.of(), Set.of());
     private static final ChildCopy FACTOR_COPY = ChildCopy.values("factors", "refresh_token_factors", "refresh_token_id", "factor");
     private static final CollectionCopy TOKENS = new CollectionCopy("refresh_tokens", "refresh_tokens", Map.of(), Set.of(),
-            List.of(FACTOR_COPY), List.of());
+            List.of(FACTOR_COPY), List.of(), Set.of());
     private static final TargetTable TOKENS_TABLE = new TargetTable("refresh_tokens", "id", Map.of("id", "character varying"));
     private static final ChildTable FACTORS = new ChildTable(FACTOR_COPY, Map.of("refresh_token_id", "character varying",
             "factor", "text"));
@@ -35,7 +35,7 @@ class RowMappingTest {
     private static final ChildCopy AMOUNTS_COPY = ChildCopy.entries("amount_by_code", "user_charge_amounts", "user_charge_id",
             "charge_code", "amount");
     private static final CollectionCopy CHARGES = new CollectionCopy("user_charges", "user_charges", Map.of(), Set.of(),
-            List.of(LINES_COPY, AMOUNTS_COPY), List.of());
+            List.of(LINES_COPY, AMOUNTS_COPY), List.of(), Set.of());
     private static final TargetTable CHARGES_TABLE = new TargetTable("user_charges", "id", Map.of("id", "character varying"));
     private static final ChildTable LINES = new ChildTable(LINES_COPY, Map.of("user_charge_id", "character varying",
             "line_order", "integer", "code", "text"));
@@ -44,21 +44,21 @@ class RowMappingTest {
     private static final ChildCopy DEMERGED_COPY = ChildCopy.documents("demerger_stocks", "corporate_action_demerger_stocks",
             "corporate_action_id");
     private static final CollectionCopy ACTIONS = new CollectionCopy("corporate_action", "corporate_action", Map.of(),
-            Set.of("demerger_detail"), List.of(DEMERGED_COPY), List.of());
+            Set.of("demerger_detail"), List.of(DEMERGED_COPY), List.of(), Set.of());
     private static final TargetTable ACTIONS_TABLE = new TargetTable("corporate_action", "id", Map.of("id", "character varying",
             "demerger_ratio", "text", "demerger_price_ratio", "text", "main_stock_code", "text"));
     private static final ChildTable DEMERGED = new ChildTable(DEMERGED_COPY, Map.of("corporate_action_id", "character varying",
             "stock_code", "text", "stock_name", "text"));
     private static final ChildCopy EVENTS_COPY = ChildCopy.documents("events", "tax_regime_election_events", "history_id");
     private static final CollectionCopy ELECTIONS = new CollectionCopy("tax_regime_election_history", "tax_regime_election_history",
-            Map.of(), Set.of(), List.of(EVENTS_COPY), List.of());
+            Map.of(), Set.of(), List.of(EVENTS_COPY), List.of(), Set.of());
     private static final TargetTable ELECTIONS_TABLE = new TargetTable("tax_regime_election_history", "id",
             Map.of("id", "character varying"));
     private static final ChildTable EVENTS = new ChildTable(EVENTS_COPY, Map.of("history_id", "character varying", "tax_year_start",
             "integer", "source_draft", "text"));
     private static final ChildCopy POLICY_COPY = ChildCopy.documents("policyDetails", "insurance_policy_details", "insurance_id_fk");
     private static final CollectionCopy INSURANCES = new CollectionCopy("insurances", "insurances", Map.of(), Set.of(),
-            List.of(POLICY_COPY), List.of());
+            List.of(POLICY_COPY), List.of(), Set.of());
     private static final TargetTable INSURANCES_TABLE = new TargetTable("insurances", "id", Map.of("id", "character varying"));
     private static final ChildTable POLICY_DETAILS = new ChildTable(POLICY_COPY, Map.of("insurance_id_fk", "character varying",
             "policy_id", "text", "premium", "double precision", "start_date", "date", "notes", "text"));
@@ -264,6 +264,22 @@ class RowMappingTest {
         // When / Then
         assertThatThrownBy(() -> RowMapping.of(stored, ELECTIONS, ELECTIONS_TABLE, List.of(EVENTS), Map.of(), KOLKATA))
                 .isInstanceOf(IllegalStateException.class).hasMessage("tax_regime_election_history history-1: two stored keys fill tax_year_start");
+    }
+
+    @Test
+    void of_whenAKeyIsLocalHeld_readsItInUtc() {
+        // Given — TransactionService held LocalDateTime.now() in Kolkata, 2026-02-01T00:00, stored as its true instant 18:30Z
+        CollectionCopy transactions = new CollectionCopy("transactions", "transactions", Map.of(), Set.of(), List.of(), List.of(),
+                Set.of("submitted_at"));
+        TargetTable table = new TargetTable("transactions", "id", Map.of("id", "character varying", "submitted_at",
+                "timestamp without time zone"));
+        Document stored = new Document("_id", "txn-1").append("submitted_at", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
+
+        // When
+        SourceRow row = RowMapping.of(stored, transactions, table, List.of(), Map.of(), KOLKATA);
+
+        // Then — the UTC time of that instant
+        assertThat(row.values()).containsEntry("submitted_at", LocalDateTime.of(2026, 1, 31, 18, 30));
     }
 
     @Test

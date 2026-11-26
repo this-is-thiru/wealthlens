@@ -4,12 +4,13 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-408 DONE — D-976 (StoredAssetRequest mix-in). Committed and pushed with the D-975 placement records.
+Item            : W-337g2b2 DONE — D-977 (trade ledger). Committed and pushed.
 Stage           : between items. Nothing in flight.
-Last item commit: "taxplanning W-408: keep an uploaded trade's execution time in the stored request — a redrive recorded no order time; D-976" — matches `git log --grep`.
-Next step       : check this commit's pipeline; then BUILD W-337g2b2 (approved C1a – C3a, D-975; plans/W-337g2b2.md): the walk's
-  snake_case + _id matching (check m1.6.1's nested-id key with MappingMongoConverter first), StoredAssetRequest mix-in in the walk's
-  mapper, EmbeddedTimes local-held case, CollectionCopy.localHeldKeys; board · → P.
+Last item commit: "taxplanning W-337g2b2: copy assets, transactions and trade outcomes — corporate-action copies, the kept request and order times in UTC; D-977" — matches `git log --grep`.
+Next step       : check this commit's pipeline; then plan W-337g2b3 (profit_and_loss: realised_profits_json and
+  out_sourced_realised_profits_json, the four-level tree, both halves; renames capital_gains→monthlyReport,
+  first/second_half_report→first/secondFortnightReport; ReportModel.lastUpdatedTime to classify; RealisedProfits.lastUpdatedTime
+  local-held, ChargeSummaryReport.lastUpdatedTime UTC-held per plans/W-337g2.md finding 3); EXPLAIN, board E, stop.
   Note for W-337g2c: the runbook copies before seeding the catalogue (the copier refuses a seeded target).
 Flags for owner : W-337f flags unchanged (inert @Field, GazetteCursor created*, lease audit nulls, findByEmailAndTransactionDateBetween).
 Env notes       : NO Claude attribution; integration needs OrbStack + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on the
