@@ -5,7 +5,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import com.thiru.wealthlens.auth.entity.RefreshToken;
+import com.thiru.wealthlens.auth.repository.RefreshTokenRepository;
+import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
+import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import com.thiru.wealthlens.integration.AbstractIntegrationTest;
+import com.thiru.wealthlens.shared.privacy.BreachNoticeRepository;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.taxplanning.documents.store.TaxDocumentBytesRepository;
 import com.thiru.wealthlens.taxplanning.jobs.JobFailureRepository;
@@ -61,6 +66,100 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private JobFailureRepository failures;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokens;
+
+    @Autowired
+    private InsuranceRepository insurances;
+
+    @Autowired
+    private BreachNoticeRepository breachNotices;
+
+    @Test
+    void copyAll_whenDocumentsHoldLists_fillsTheChildTablesTheApplicationReads() {
+        // Given — one document of each of W-337g2a1's three, two list entries each
+        storeListHolders();
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then — ciphertext carried as stored, so each entity decrypts it
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        RefreshToken token = refreshTokens.findById("token-1").orElseThrow();
+        assertThat(token.getFactors()).containsExactlyInAnyOrder("FACTOR_PASSWORD", "FACTOR_OTP");
+        assertThat(token.getEmail()).isEqualTo("owner@example.com");
+        List<PolicyDetails> details = insurances.findById("insurance-1").orElseThrow().getPolicyDetails();
+        assertThat(details).extracting(PolicyDetails::getPolicyId).containsExactlyInAnyOrder("P-1", "P-2");
+        assertThat(details).extracting(PolicyDetails::getStartDate).containsExactlyInAnyOrder(LocalDate.of(2026, 4, 1), null);
+        assertThat(breachNotices.findById("notice-1").orElseThrow().getAffected())
+                .containsExactlyInAnyOrder("owner@example.com", "other@example.com");
+    }
+
+    @Test
+    void copyAll_whenListsAreCopiedAgain_doublesNoChild() {
+        // Given
+        storeListHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(childCounts()).containsExactly(2L, 2L, 2L);
+    }
+
+    @Test
+    void copyAll_whenAChildIsRefusedAfterItsParent_writesNeitherAndTheNextRunFinishes() {
+        // Given — a policy detail without premium, which insurance_policy_details refuses (NOT NULL) after the insurance row
+        storeListHolders();
+        mongoTemplate.getCollection("insurances").updateOne(new Document("_id", "insurance-1"),
+                new Document("$unset", new Document("policyDetails.1.premium", "")));
+        assertThatThrownBy(() -> copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        assertThat(jdbc().queryForList("SELECT id FROM insurances", String.class)).isEmpty();
+        assertThat(jdbc().queryForObject("SELECT count(*) FROM insurance_policy_details", Long.class)).isZero();
+        mongoTemplate.getCollection("insurances").updateOne(new Document("_id", "insurance-1"),
+                new Document("$set", new Document("policyDetails.1.premium", 700.0)));
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(childCounts()).containsExactly(2L, 2L, 2L);
+    }
+
+    @Test
+    void copyAll_whenACopiedChildWasChanged_reportsItsParentsKey() {
+        // Given
+        storeListHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+        jdbc().update("UPDATE refresh_token_factors SET factor = 'FACTOR_CHANGED' WHERE factor = 'FACTOR_OTP'");
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(report(reports, "refresh_tokens").problems()).containsExactly("rows differ from the source: token-1");
+    }
+
+    @Test
+    void copyAll_whenACopiedChildIsMissing_reportsTheChildCounts() {
+        // Given
+        storeListHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+        jdbc().update("DELETE FROM privacy_breach_notice_affected WHERE notice_id = 'notice-1' AND affected = ?",
+                cipher.encryptSearchable("other@example.com"));
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(report(reports, "privacy_breach_notices").problems()).containsExactlyInAnyOrder(
+                "rows differ from the source: notice-1", "2 source child rows but 1 target child rows in privacy_breach_notice_affected");
+    }
+
     @Test
     void copyAll_whenFlatRowsAndDocumentBytes_storesWhatTheApplicationReads() {
         // Given
@@ -78,7 +177,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
         // Then — every source proven, and every time in UTC: auditing held Kolkata's local midnight (stored 18:30Z, its true
         // instant), JobContext.nowUtc() held midnight UTC (stored shifted to 18:30Z through the Kolkata JVM)
-        assertThat(reports).hasSize(23).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(reports).hasSize(26).allSatisfy(report -> assertThat(report.problems()).isEmpty());
         TaxpayerProfile profile = profiles.findById(PROFILE_ID).orElseThrow();
         assertThat(profile.getEmail()).isEqualTo("owner@example.com");
         assertThat(profile.getPan()).isEqualTo("ABCDE1234F");
@@ -163,7 +262,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
         JdbcTemplate jdbc = jdbc();
         TargetTable table = TargetTable.read(jdbc, "tax_job_failures");
         PreparedCopy prepared = new PreparedCopy("tax_job_failures", table,
-                List.of(new SourceRow("failure-1", Map.of("id", "failure-1", "job", "gazette-watch"))));
+                List.of(), List.of(new SourceRow("failure-1", Map.of("id", "failure-1", "job", "gazette-watch"))));
 
         // When
         CopyReport report = copier.verify(jdbc, prepared);
@@ -204,6 +303,27 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
                 .append("date_of_death", Date.from(Instant.parse("2025-01-02T00:00:00Z")))
                 .append("audit_metadata", new Document("createdBy", cipher.encryptSearchable("owner@example.com"))
                         .append("createdAt", Date.from(Instant.parse("2026-01-31T18:30:00Z")))));
+    }
+
+    private void storeListHolders() {
+        Date issued = Date.from(Instant.parse("2026-02-01T10:00:00Z"));
+        mongoTemplate.getCollection("refresh_tokens").insertOne(new Document("_id", "token-1").append("token_hash", "hash-1")
+                .append("family_id", "family-1").append("email", cipher.encryptSearchable("owner@example.com"))
+                .append("factors", List.of("FACTOR_PASSWORD", "FACTOR_OTP")).append("issued_at", issued)
+                .append("expires_at", Date.from(Instant.parse("2026-02-15T10:00:00Z"))));
+        mongoTemplate.getCollection("insurances").insertOne(new Document("_id", "insurance-1").append("_class",
+                "com.thiru.wealthlens.insurance.entity.InsuranceEntity").append("email", cipher.encryptSearchable("owner@example.com"))
+                .append("premium", 1200.0).append("policyDetails", List.of(
+                        new Document("policy_id", cipher.encrypt("P-1")).append("premium", 500.0)
+                                .append("start_date", Date.from(Instant.parse("2026-04-01T00:00:00Z"))).append("policy_name", "Term"),
+                        new Document("policy_id", cipher.encrypt("P-2")).append("premium", 700.0))));
+        mongoTemplate.getCollection("privacy_breach_notices").insertOne(new Document("_id", "notice-1").append("description", "a breach")
+                .append("affected", List.of(cipher.encryptSearchable("owner@example.com"), cipher.encryptSearchable("other@example.com"))));
+    }
+
+    private List<Long> childCounts() {
+        return List.of("refresh_token_factors", "insurance_policy_details", "privacy_breach_notice_affected").stream()
+                .map(table -> jdbc().queryForObject("SELECT count(*) FROM " + table, Long.class)).toList();
     }
 
     private static Document workspace(String id, String profileId, int year) {

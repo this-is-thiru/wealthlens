@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.migration;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,15 +11,17 @@ import java.util.Map;
  * @param collection the source collection, as {@code m1.6.1} names it
  * @param table the target table
  * @param columnsByKey a stored key to the column it fills, where the two names differ
+ * @param children the lists the documents hold, each filling a child table (W-337g2a1)
  */
-public record CollectionCopy(String collection, String table, Map<String, String> columnsByKey) {
+public record CollectionCopy(String collection, String table, Map<String, String> columnsByKey, List<ChildCopy> children) {
 
     public CollectionCopy {
         columnsByKey = Map.copyOf(columnsByKey);
+        children = List.copyOf(children);
     }
 
     /** A collection copied to the table of its own name, every key to the column of its name. */
     static CollectionCopy sameName(String collection) {
-        return new CollectionCopy(collection, collection, Map.of());
+        return new CollectionCopy(collection, collection, Map.of(), List.of());
     }
 }

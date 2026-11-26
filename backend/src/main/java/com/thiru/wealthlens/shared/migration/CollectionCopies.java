@@ -30,7 +30,7 @@ final class CollectionCopies {
     static final String DOCUMENT_BYTES_BUCKET = "tax_document_bytes";
     static final Set<String> DOCUMENT_BYTES_COLLECTIONS = Set.of(DOCUMENT_BYTES_BUCKET + ".files", DOCUMENT_BYTES_BUCKET + ".chunks");
 
-    /** The collections holding no embedded data (W-337g1); the other eighteen are W-337g2's. */
+    /** The collections holding no embedded data (W-337g1) and those whose lists fill child tables (W-337g2a1). */
     static final List<CollectionCopy> SPECIFIED = List.of(
             CollectionCopy.sameName("user_details"),
             CollectionCopy.sameName("charge_catalogue"),
@@ -40,7 +40,7 @@ final class CollectionCopies {
             CollectionCopy.sameName("privacy_grievances"),
             CollectionCopy.sameName("privacy_consents"),
             CollectionCopy.sameName("privacy_processing_log"),
-            new CollectionCopy("tax_documents", "tax_documents", Map.of("tax_year", "tax_year_start")),
+            new CollectionCopy("tax_documents", "tax_documents", Map.of("tax_year", "tax_year_start"), List.of()),
             CollectionCopy.sameName("tax_parse_attempts"),
             CollectionCopy.sameName("tax_gazette_cursor"),
             CollectionCopy.sameName("tax_job_failures"),
@@ -53,7 +53,14 @@ final class CollectionCopies {
             CollectionCopy.sameName("tax_profile_erasures"),
             CollectionCopy.sameName("tax_profiles"),
             CollectionCopy.sameName("tax_access_log"),
-            new CollectionCopy("tax_year_workspaces", "tax_year_workspaces", Map.of("tax_year", "tax_year_start")));
+            new CollectionCopy("tax_year_workspaces", "tax_year_workspaces", Map.of("tax_year", "tax_year_start"), List.of()),
+            new CollectionCopy("refresh_tokens", "refresh_tokens", Map.of(),
+                    List.of(ChildCopy.values("factors", "refresh_token_factors", "refresh_token_id", "factor"))),
+            // m1.6.1's InsuranceEntity.policyDetails had no @Field, so the list is stored under its Java name
+            new CollectionCopy("insurances", "insurances", Map.of(),
+                    List.of(ChildCopy.documents("policyDetails", "insurance_policy_details", "insurance_id_fk"))),
+            new CollectionCopy("privacy_breach_notices", "privacy_breach_notices", Map.of(),
+                    List.of(ChildCopy.values("affected", "privacy_breach_notice_affected", "notice_id", "affected"))));
 
     private CollectionCopies() {
     }

@@ -2,8 +2,11 @@ package com.thiru.wealthlens.shared.migration;
 
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.bson.Document;
 
 /**
@@ -14,7 +17,8 @@ import org.bson.Document;
  * every other time in these collections the application already held in UTC, so it is read in the written zone, which gives
  * back the UTC value it held. A key no column takes is
  * refused rather than dropped, so nothing stored is lost without a word; a key holding {@code null} is left out, as
- * Spring Data read it the same as a missing one.
+ * Spring Data read it the same as a missing one. A key a {@link ChildCopy} names becomes that child table's rows, each entry
+ * mapped by the same rules (W-337g2a1).
  */
 final class RowMapping {
 
@@ -25,9 +29,11 @@ final class RowMapping {
     private RowMapping() {
     }
 
-    static SourceRow of(Document document, CollectionCopy copy, TargetTable table, ZoneId writtenZone) {
+    static SourceRow of(Document document, CollectionCopy copy, TargetTable table, List<ChildTable> children, ZoneId writtenZone) {
         String where = copy.collection() + " " + document.get(ID);
+        Map<String, ChildTable> childByKey = children.stream().collect(Collectors.toMap(child -> child.copy().key(), child -> child));
         Map<String, Object> values = new LinkedHashMap<>();
+        Map<String, List<Map<String, Object>>> childRows = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : document.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
@@ -41,13 +47,49 @@ final class RowMapping {
                 audit.forEach((auditKey, auditValue) -> put(values, table, snakeCase(auditKey), auditValue, ZoneOffset.UTC, where));
                 continue;
             }
+            if (childByKey.containsKey(key)) {
+                childRows.put(childByKey.get(key).name(), childRows(childByKey.get(key), value, writtenZone, where));
+                continue;
+            }
             put(values, table, columnFor(key, copy, table), value, writtenZone, where);
         }
         Object id = values.get(table.primaryKey());
         if (id == null) {
             throw new IllegalStateException(where + ": no " + ID);
         }
-        return new SourceRow(id.toString(), values);
+        return new SourceRow(id.toString(), values, childRows);
+    }
+
+    private static List<Map<String, Object>> childRows(ChildTable child, Object list, ZoneId writtenZone, String where) {
+        if (!(list instanceof List<?> entries)) {
+            throw new IllegalStateException(where + ": " + child.copy().key() + " is not a list");
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Object entry : entries) {
+            if (entry == null) {
+                throw new IllegalStateException(where + ": " + child.copy().key() + " holds a null");
+            }
+            rows.add(childRow(child, entry, writtenZone, where));
+        }
+        return rows;
+    }
+
+    private static Map<String, Object> childRow(ChildTable child, Object entry, ZoneId writtenZone, String where) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        if (child.copy().valueColumn().isPresent()) {
+            put(row, child.name(), child.typeByColumn(), child.copy().valueColumn().get(), entry, writtenZone, where);
+            return row;
+        }
+        if (!(entry instanceof Document subDocument)) {
+            throw new IllegalStateException(where + ": " + child.copy().key() + " holds a " + entry.getClass().getSimpleName()
+                    + ", not a sub-document");
+        }
+        subDocument.forEach((key, value) -> {
+            if (!key.equals(TYPE_HINT)) {
+                put(row, child.name(), child.typeByColumn(), key, value, writtenZone, where);
+            }
+        });
+        return row;
     }
 
     private static String columnFor(String key, CollectionCopy copy, TargetTable table) {
@@ -59,12 +101,17 @@ final class RowMapping {
 
     private static void put(Map<String, Object> values, TargetTable table, String column, Object value, ZoneId writtenZone,
             String where) {
+        put(values, table.name(), table.typeByColumn(), column, value, writtenZone, where);
+    }
+
+    private static void put(Map<String, Object> values, String tableName, Map<String, String> typeByColumn, String column,
+            Object value, ZoneId writtenZone, String where) {
         if (value == null) {
             return;
         }
-        String type = table.typeByColumn().get(column);
+        String type = typeByColumn.get(column);
         if (type == null) {
-            throw new IllegalStateException(where + ": " + table.name() + " has no column " + column + " for a stored key");
+            throw new IllegalStateException(where + ": " + tableName + " has no column " + column + " for a stored key");
         }
         if (values.containsKey(column)) {
             throw new IllegalStateException(where + ": two stored keys fill " + column);
