@@ -4,13 +4,11 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-337g2b3 DONE — D-978 (profit_and_loss; all 40 specified). Committed and pushed.
-Stage           : between items. Nothing in flight.
-Last item commit: "taxplanning W-337g2b3: copy profit_and_loss — the gains and charge trees under their former names; every collection specified; D-978" — matches `git log --grep`.
-Next step       : check this commit's pipeline; then plan W-337g2c (row in 03-WORK-ITEMS.md): CopierRun runs whole (a "runs and exits"
-  case), post-deployment-runbook.md entry per W-337g2 C5a (precheck incl. user_details rows without email, D-964; copy BEFORE seeding
-  the catalogue — the copier refuses a seeded target; --app.copier.written-zone=Asia/Kolkata), W-337j's row + a YouTrack issue,
-  WL-A-2 republished. EXPLAIN, board E, stop.
+Item            : W-337g2c DONE — D-979; the W-337 copier complete. Committed and pushed.
+Stage           : between items. After the commit: YouTrack issue under WL-28 (id into §0.9 + W-337j's row, docs commit), WL-A-2 republished.
+Last item commit: "taxplanning W-337g2c: test the copier's whole run and write its runbook entry — the move's copy, step by step; D-979" — matches `git log --grep`.
+Next step       : check the pipeline; then W-337h (owner's database setup, status P, plans/W-337h.md) or plan W-406 (the rehearsal's
+  side-by-side read comparison) — ask the owner which.
 Flags for owner : W-337f flags unchanged (inert @Field, GazetteCursor created*, lease audit nulls, findByEmailAndTransactionDateBetween).
 Env notes       : NO Claude attribution; integration needs OrbStack + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on the
   pipeline only. Tests run in UTC (argLine); time tests pin a fixed Asia/Kolkata clock. Next Flyway version: V14.
