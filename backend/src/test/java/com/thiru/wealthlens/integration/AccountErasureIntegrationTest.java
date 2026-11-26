@@ -232,6 +232,11 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
                     insurance.setEmail(email);
                     insurance.setPremium(1000.0);
                     insuranceRepository.save(insurance);
+                } else if (table.equals("tax_draft_computations")) {
+                    // the receipt index refuses a second null, as m1.6.1's unique index did (D-969)
+                    new JdbcTemplate(postgresDataSource).update(
+                            "INSERT INTO tax_draft_computations (id, email, receipt) VALUES (?, ?, ?)",
+                            UUID.randomUUID().toString(), storedIdentifier(email), UUID.randomUUID().toString());
                 } else if (table.equals("privacy_processing_log")) {
                     new JdbcTemplate(postgresDataSource).update(
                             "INSERT INTO privacy_processing_log (id, principal, status) VALUES (?, ?, 200)",
