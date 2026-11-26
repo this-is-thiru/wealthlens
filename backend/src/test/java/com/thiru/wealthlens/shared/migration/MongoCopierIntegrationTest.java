@@ -2,11 +2,20 @@ package com.thiru.wealthlens.shared.migration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.thiru.wealthlens.auth.entity.RefreshToken;
 import com.thiru.wealthlens.auth.repository.RefreshTokenRepository;
+import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity.BillingEvent;
+import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
+import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
+import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
+import com.thiru.wealthlens.corporate.entity.model.DemergerDetail;
+import com.thiru.wealthlens.corporate.entity.model.DemergerDetail.DemergerStock;
+import com.thiru.wealthlens.corporate.repository.CorporateActionRepository;
 import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
 import com.thiru.wealthlens.insurance.repository.InsuranceRepository;
 import com.thiru.wealthlens.integration.AbstractIntegrationTest;
@@ -77,6 +86,85 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private BreachNoticeRepository breachNotices;
+
+    @Autowired
+    private ChargeAccountRepository chargeAccounts;
+
+    @Autowired
+    private UserChargeRepository userCharges;
+
+    @Autowired
+    private CorporateActionRepository corporateActions;
+
+    @Test
+    void copyAll_whenOrderedListsMapsAndEmbeddedDetail_storesWhatTheApplicationReads() {
+        // Given — one document of each of W-337g2a2's three, and a corporate action with no demerger detail
+        storeChargeAndActionHolders();
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(chargeAccounts.findById("account-1").orElseThrow().getBillingEvents()).extracting(BillingEvent::getUserChargeId,
+                BillingEvent::getPeriodFrom, BillingEvent::getAmount).containsExactlyInAnyOrder(
+                        tuple("uc-1", LocalDate.of(2026, 1, 1), 88.5),
+                        tuple("uc-2", null, 0.0));
+        UserChargeEntity charge = userCharges.findById("uc-1").orElseThrow();
+        assertThat(charge.getLines()).extracting(ChargeLine::getCode).containsExactly("BROKERAGE", "STT", "GST");
+        assertThat(charge.getLines().get(1).getRate()).isEqualTo(0.001);
+        assertThat(charge.getAmountByCode()).containsExactlyInAnyOrderEntriesOf(Map.of("BROKERAGE", 20.0, "STT", 10.0));
+        DemergerDetail detail = corporateActions.findById("ca-1").orElseThrow().getDemergerDetail();
+        assertThat(detail.getDemergerRatio()).isEqualTo("1:1");
+        assertThat(detail.getMainStockCode()).isEqualTo("MAIN");
+        assertThat(detail.getDemergerStocks()).extracting(DemergerStock::getStockCode).containsExactlyInAnyOrder("NEW1", "NEW2");
+        assertThat(corporateActions.findById("ca-2").orElseThrow().getDemergerDetail()).isNull();
+    }
+
+    @Test
+    void copyAll_whenOrderedListsAndMapsAreCopiedAgain_doublesNoChild() {
+        // Given
+        storeChargeAndActionHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(List.of("charge_account_billing_events", "user_charge_lines", "user_charge_amounts",
+                "corporate_action_demerger_stocks").stream()
+                .map(table -> jdbc().queryForObject("SELECT count(*) FROM " + table, Long.class)).toList())
+                .containsExactly(2L, 3L, 2L, 2L);
+    }
+
+    @Test
+    void copyAll_whenTwoCopiedLinesWereReordered_reportsTheUserCharge() {
+        // Given
+        storeChargeAndActionHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+        jdbc().update("UPDATE user_charge_lines SET line_order = 1 - line_order WHERE line_order IN (0, 1)");
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(report(reports, "user_charges").problems()).containsExactly("rows differ from the source: uc-1");
+    }
+
+    @Test
+    void copyAll_whenACopiedMapAmountWasChanged_reportsTheUserCharge() {
+        // Given
+        storeChargeAndActionHolders();
+        copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+        jdbc().update("UPDATE user_charge_amounts SET amount = 99 WHERE charge_code = 'STT'");
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(report(reports, "user_charges").problems()).containsExactly("rows differ from the source: uc-1");
+    }
 
     @Test
     void copyAll_whenDocumentsHoldLists_fillsTheChildTablesTheApplicationReads() {
@@ -199,7 +287,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
 
         // Then — every source proven, and every time in UTC: auditing held Kolkata's local midnight (stored 18:30Z, its true
         // instant), JobContext.nowUtc() held midnight UTC (stored shifted to 18:30Z through the Kolkata JVM)
-        assertThat(reports).hasSize(26).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        assertThat(reports).hasSize(29).allSatisfy(report -> assertThat(report.problems()).isEmpty());
         TaxpayerProfile profile = profiles.findById(PROFILE_ID).orElseThrow();
         assertThat(profile.getEmail()).isEqualTo("owner@example.com");
         assertThat(profile.getPan()).isEqualTo("ABCDE1234F");
@@ -341,6 +429,27 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
                         new Document("policy_id", cipher.encrypt("P-2")).append("premium", 700.0))));
         mongoTemplate.getCollection("privacy_breach_notices").insertOne(new Document("_id", "notice-1").append("description", "a breach")
                 .append("affected", List.of(cipher.encryptSearchable("owner@example.com"), cipher.encryptSearchable("other@example.com"))));
+    }
+
+    private void storeChargeAndActionHolders() {
+        mongoTemplate.getCollection("charge_accounts").insertOne(new Document("_id", "account-1")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("billing_events", List.of(
+                        new Document("user_charge_id", "uc-1").append("period_from", Date.from(Instant.parse("2026-01-01T00:00:00Z")))
+                                .append("amount", 88.5),
+                        new Document("user_charge_id", "uc-2").append("amount", 0.0))));
+        mongoTemplate.getCollection("user_charges").insertOne(new Document("_id", "uc-1")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("transaction_id", "txn-1")
+                .append("computed_on", Date.from(Instant.parse("2026-01-31T18:30:00Z"))).append("total_charges", 33.6)
+                .append("lines", List.of(new Document("code", "BROKERAGE").append("base_amount", 50000.0).append("amount", 20.0).append("taxable", true),
+                        new Document("code", "STT").append("rate", 0.001).append("base_amount", 10000.0).append("amount", 10.0).append("taxable", false),
+                        new Document("code", "GST").append("category", "TAX").append("base_amount", 20.0).append("amount", 3.6).append("taxable", false)))
+                .append("amount_by_code", new Document("BROKERAGE", 20.0).append("STT", 10.0)));
+        mongoTemplate.getCollection("corporate_action").insertMany(List.of(new Document("_id", "ca-1").append("stock_code", "MAIN")
+                .append("type", "DEMERGER").append("demerger_detail", new Document("demerger_ratio", "1:1")
+                        .append("demerger_price_ratio", "70:30").append("main_stock_code", "MAIN").append("main_stock_name", "Main Ltd")
+                        .append("demerger_stocks", List.of(new Document("stock_code", "NEW1").append("stock_name", "New One"),
+                                new Document("stock_code", "NEW2").append("stock_name", "New Two")))),
+                new Document("_id", "ca-2").append("stock_code", "OTHER").append("type", "BONUS")));
     }
 
     private List<Long> childCounts() {

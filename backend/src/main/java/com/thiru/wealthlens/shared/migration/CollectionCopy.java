@@ -2,6 +2,7 @@ package com.thiru.wealthlens.shared.migration;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * One MongoDB collection and the PostgreSQL table the copier fills from it (W-337g, D-953 C1a). A stored key reaches the
@@ -11,17 +12,20 @@ import java.util.Map;
  * @param collection the source collection, as {@code m1.6.1} names it
  * @param table the target table
  * @param columnsByKey a stored key to the column it fills, where the two names differ
- * @param children the lists the documents hold, each filling a child table (W-337g2a1)
+ * @param embedded the keys holding a sub-document whose own keys are mapped as the document's are (W-337g2a2)
+ * @param children the lists and maps the documents hold, each filling a child table (W-337g2a1)
  */
-public record CollectionCopy(String collection, String table, Map<String, String> columnsByKey, List<ChildCopy> children) {
+public record CollectionCopy(String collection, String table, Map<String, String> columnsByKey, Set<String> embedded,
+        List<ChildCopy> children) {
 
     public CollectionCopy {
         columnsByKey = Map.copyOf(columnsByKey);
+        embedded = Set.copyOf(embedded);
         children = List.copyOf(children);
     }
 
     /** A collection copied to the table of its own name, every key to the column of its name. */
     static CollectionCopy sameName(String collection) {
-        return new CollectionCopy(collection, collection, Map.of(), List.of());
+        return new CollectionCopy(collection, collection, Map.of(), Set.of(), List.of());
     }
 }
