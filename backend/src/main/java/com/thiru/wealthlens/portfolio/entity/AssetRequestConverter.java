@@ -18,13 +18,17 @@ import tools.jackson.databind.json.JsonMapper;
  * both fields itself before serializing (and decrypts them after reading back) — otherwise a second, plaintext
  * copy of the user's email and account holder would appear in the JSON blob, a protection regression this port
  * must not introduce.
+ *
+ * <p>Its mapper writes the stored form, {@link StoredAssetRequest}: the execution time an upload read, hidden from API
+ * callers, is kept (W-408).
  */
 @Component
 @Converter
 @RequiredArgsConstructor
 public class AssetRequestConverter implements AttributeConverter<AssetRequest, String> {
 
-    private static final JsonMapper MAPPER = JsonMapper.builder().build();
+    /** Registers the stored form, so an uploaded trade's execution time survives (W-408). */
+    private static final JsonMapper MAPPER = JsonMapper.builder().addMixIn(AssetRequest.class, StoredAssetRequest.class).build();
 
     private final FieldCipher cipher;
 

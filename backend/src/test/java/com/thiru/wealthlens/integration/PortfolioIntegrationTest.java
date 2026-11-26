@@ -591,6 +591,41 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void redriveTemporaryTransactions_whenAnUploadedTradeHeldItsOrderTime_recordsThatTimeInUtc() {
+        // Given — an uploaded trade held as temporary, its cell's order time 10:30 in Asia/Kolkata (AssetRequestParser:210)
+        String token = generateToken(TEST_EMAIL);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setOrderExecutionDateTime(LocalDateTime.of(2026, 1, 15, 10, 30));
+        request.setTimezoneId("Asia/Kolkata");
+        TransactionEntity temp = new TransactionEntity();
+        temp.setEmail(TEST_EMAIL);
+        temp.setStockCode(TEST_STOCK_CODE);
+        temp.setStockName(TEST_STOCK_NAME);
+        temp.setBrokerName(TEST_BROKER);
+        temp.setStatus(TransactionStatus.TEMPORARY);
+        temp.setTransactionType(TransactionType.BUY);
+        temp.setQuantity(10.0);
+        temp.setPrice(2500.0);
+        temp.setTransactionDate(LocalDate.now().minusDays(1));
+        temp.setAssetRequest(request);
+        String tempId = transactionRepository.save(temp).getId();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // When
+        ResponseEntity<RedriveResult> response = createRestTemplate().exchange(
+                URI.create(baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive"), HttpMethod.POST,
+                new HttpEntity<Void>(headers), RedriveResult.class);
+
+        // Then — 10:30 IST is 05:00 UTC (IST = UTC + 05:30, D-958)
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        TransactionEntity recorded = transactionRepository.findByEmail(TEST_EMAIL).stream()
+                .filter(transaction -> tempId.equals(transaction.getSourceTempTransactionId())).findFirst().orElseThrow();
+        assertEquals(LocalDateTime.of(2026, 1, 15, 5, 0), recorded.getOrderExecutionTime());
+    }
+
+    @Test
     void redriveTemporaryTransactions_noneToRedrive_whenNoTemps_expectedMessage() {
         String token = generateToken(TEST_EMAIL);
 
