@@ -710,6 +710,14 @@ request (§1.z, §1.u), so a snapshot taken during the hold holds it until that 
 | EC2 volume snapshotted (EBS, AMI)? | *not given* | — |
 | Processor terms accepted (Atlas, AWS): document and date (Act s.8(2), r.6(1)(f)) | *not given* | *not given* |
 
+**After the move (W-337h, D-980)** — the PostgreSQL hosts, from the sources notes; the owner fills in what is not given:
+
+| | prod (Neon, Free) | staging (Aiven, `wealthlens-staging`) | dev (Aiven, `wealthlens-dev`) |
+|---|---|---|---|
+| Snapshot schedule; retention; point-in-time window | 1 manual snapshot, no scheduled backups; history 6 hours (`sources/2026-11-23-neon-postgresql.md`) | *not given* — retention not shown on the old service's Overview (`sources/2026-11-22-aiven-postgresql.md`); this service not read | *not given* |
+| Longest retention ≤ P1Y? (the check) | yes, 6 hours | *not given* | *not given* |
+| Processor terms accepted: document and date | *not given* | *not given* | *not given* |
+
 **The check (owner, read-only, safe to repeat):** read each cluster's backup policy in Atlas, enter every retention
 figure above, and confirm none exceeds one year. A longer one is shortened in Atlas before the duties commence. If a
 tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here. **2026-11-19:** every
@@ -1979,6 +1987,26 @@ list, one without — before 2, backup 2, write 2 / 2, after 0, second run 0 / 0
 
 **Retired after use:** W-368 / WL-49, once this is logged for every database. There is no code to remove.
 
+### 2.19 W-337h (D-936, D-980) — the PostgreSQL databases · owner, DataGrip · **every database · once · done 2026-11-27**
+
+What exists, one host per database (D-980). Each has one role used by the owner, Flyway and the app (C2a), over TLS:
+
+| Database | Host | Database, role | TLS |
+|---|---|---|---|
+| prod | Neon project `wealthlens`, branch `production`: `ep-holy-meadow-a1f4tyxx.ap-southeast-1.aws.neon.tech` | `neondb`, `neondb_owner` | `sslmode=require&channel_binding=require` |
+| staging | Aiven project `aaaaaw`: `wealthlens-staging-aaaaaw.e.aivencloud.com:18042` | `defaultdb`, `avnadmin` | `sslmode=require` |
+| dev | Aiven service `wealthlens-dev`: `wealthlens-dev-wealthlens-dev.d.aivencloud.com:13196` | `defaultdb`, `avnadmin` | `sslmode=require` |
+
+Passwords are in the owner's password manager only, never in the repo.
+
+1. **Check before (read-only):** `SELECT version() AS version, current_database() AS db, current_schema() AS schema;` — expect
+   `PostgreSQL 18.…`, the database above, `public`.
+2. **The schema:** `CREATE SCHEMA IF NOT EXISTS wealthlens;`
+3. **Check after (read-only):** `SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'wealthlens';` — one row.
+
+**Second run:** safe; `IF NOT EXISTS` changes nothing. **Way back:** `DROP SCHEMA wealthlens;` (empty until §0.9), or delete
+the Neon branch or Aiven service. Nothing but the empty schema is in any of them before W-337i.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
@@ -2297,3 +2325,7 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 6c, §2.18 step 5: backup dropped | owner | `profit_and_loss_backfill_ids_w173` present: `false` — **go**; §2.18 done on prod (logged for both databases: W-368 may now retire it) |
 | 2026-11-22 | prod (W-366c on `m1.6.1`, D-897) | row 7, logout, `m1.6.1` stopped | owner | `logout 204`; exit 143; `m1.6.1 stopped`; ERROR lines 4, exactly row 4's deliberate refusals (three `No static resource …`, one `A trade must name its stock code`) as on staging — **go**; awaiting the owner's sign-off |
 | 2026-11-22 | prod (W-366c, D-897) | sign-off | owner | "approved" (to "say prod signed off") — prod on `m1.6.1`; W-366c done, W-366 complete |
+| 2026-11-23 | prod, Neon `production` (W-337h, D-936) | rows 0 – 3, 5, 6 | owner | done per `plans/W-337h.md` step 2a; "prod signed off" — **go** |
+| 2026-11-27 | staging, Aiven `wealthlens-staging` (W-337h, D-980) | connection details; rows 0, 2 – 3 | owner | host `wealthlens-staging-aaaaaw.e.aivencloud.com:18042`, `defaultdb`, `avnadmin`, `sslmode=require`; **the version and schema readback was not pasted** |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337h, D-980) | connection details; rows 0, 2 – 3 | owner | host `wealthlens-dev-wealthlens-dev.d.aivencloud.com:13196`, `defaultdb`, `avnadmin`, `sslmode=require`; **the version and schema readback was not pasted**; rows 4 – 5 not taken (D-980) |
+| 2026-11-27 | prod, staging, dev (W-337h, D-980) | row 6, sign-off | owner | "credentials saved off-repo, prod + staging + dev signed off" |
