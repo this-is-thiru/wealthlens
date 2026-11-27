@@ -16,7 +16,8 @@ import org.bson.Document;
  * (D-954). An audit time was the writing JVM's local time ({@code CurrentDateTimeProvider} calls {@code LocalDateTime.now()},
  * no provider being configured), stored through that same zone, so the stored instant is the true one and is read in UTC;
  * every other time in these collections the application already held in UTC, so it is read in the written zone, which gives
- * back the UTC value it held. A key {@link RetiredKeys} names is left out and counted on the source's report line (W-417);
+ * back the UTC value it held. A key {@link RetiredKeys} names is left out and counted on the source's report line (W-417); a
+ * key {@link FormerDefaults} names that a document lacks is written as {@code m1.6.1}'s default and counted (W-419);
  * any other key no column takes is refused rather than dropped, so nothing stored is lost without a word; a key holding {@code null} is left out, as
  * Spring Data read it the same as a missing one. A key a {@link ChildCopy} names becomes that child table's rows, each entry
  * mapped by the same rules, a sub-document's key reaching the column of its snake_case as a document's does (W-337g2a1,
@@ -61,11 +62,23 @@ final class RowMapping {
                 mapKey(key, value, new Destination(copy, table, childByKey, jsonTypes, values, childRows), forms, where);
             }
         }
+        formerDefaults(document, copy, table, values, forms, where);
         Object id = values.get(table.primaryKey());
         if (id == null) {
             throw new IllegalStateException(where + ": no " + ID);
         }
         return new SourceRow(id.toString(), values, childRows);
+    }
+
+    /** A key {@link FormerDefaults} names that the document lacks is written as {@code m1.6.1} read it, and counted (W-419). */
+    private static void formerDefaults(Document document, CollectionCopy copy, TargetTable table, Map<String, Object> values,
+            FormerForms forms, String where) {
+        FormerDefaults.of(copy.collection()).forEach((key, value) -> {
+            if (!document.containsKey(key)) {
+                forms.defaulted(key, value);
+                put(values, table, columnFor(key, copy, table), value, forms, where);
+            }
+        });
     }
 
     /** Where a document's keys go: the row's columns, or the rows of the child table a key names. */

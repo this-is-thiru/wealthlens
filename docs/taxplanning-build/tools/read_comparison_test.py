@@ -125,6 +125,85 @@ class CompareTest(unittest.TestCase):
         # Then
         self.assertEqual(1, len(found))
 
+    def test_compare_whenHoldingOrderTimeEqual_allowed(self):
+        # Given: m1.6.1 kept each lot's order time in UTC (PortfolioService.java:445), so both builds show the same digits
+        lot = {"orderTimeQuantities": [{"orderExecutionTime": "2025-06-30T08:13:34", "quantity": 1.0}]}
+        before = [("u@x", "/api/v1/me/portfolio/stocks/{stockCode}", "/s/INFY", 200, "application/json", as_json([lot]))]
+        after = [("u@x", "/api/v1/me/portfolio/stocks/{stockCode}", "/s/INFY", 200, "application/json", as_json([lot]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual([], found)
+
+    def test_compare_whenCardsSharingAStartDateInAnotherOrder_allowed(self):
+        # Given: W-411 orders the tie by scheduleCode; m1.6.1 gave it in stored order
+        cards = [{"startDate": "2025-04-01", "scheduleCode": "B"}, {"startDate": "2025-04-01", "scheduleCode": "A"},
+                 {"startDate": "2024-04-01", "scheduleCode": "C"}]
+        before = [("u@x", "/api/v1/me/charges/charge-schedules", "/c", 200, "application/json", as_json(cards))]
+        after = [("u@x", "/api/v1/me/charges/charge-schedules", "/c", 200, "application/json",
+                  as_json([cards[1], cards[0], cards[2]]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual([], found)
+
+    def test_compare_whenAllocationRowsInAnotherOrder_allowed(self):
+        # Given: both builds iterate a HashMap keyed by the enum, so the rows' order changes with each start
+        equity = {"assetType": "EQUITY", "investedValue": 209095.98}
+        funds = {"assetType": "MUTUAL_FUND", "investedValue": 261467.99}
+        route = "/api/v1/me/portfolio/analytics/asset-allocation"
+        before = [("u@x", route, "/a", 200, "application/json", as_json([equity, funds]))]
+        after = [("u@x", route, "/a", 200, "application/json", as_json([funds, equity]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual([], found)
+
+    def test_compare_whenCardsDifferBeyondTheirOrder_difference(self):
+        # Given: ordering both sides hides no changed value
+        before = [("u@x", "/api/v1/me/charges/charge-schedules", "/c", 200, "application/json",
+                   as_json([{"startDate": "2025-04-01", "scheduleCode": "A", "rate": 0.03}]))]
+        after = [("u@x", "/api/v1/me/charges/charge-schedules", "/c", 200, "application/json",
+                  as_json([{"startDate": "2025-04-01", "scheduleCode": "A", "rate": 0.3}]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual(["u@x | /c | $[0].rate: before 0.03, after 0.3"], found)
+
+    def test_compare_whenHoldingsInAnotherOrderWithAnotherFirstLot_allowed(self):
+        # Given: m1.6.1's first lot was MongoDB's stored order; the w-337 build reads the oldest first
+        infy = {"stockCode": "INFY", "brokerName": "ZERODHA", "accountHolder": None, "quantity": 3.0, "exchangeName": "NSE",
+                "orderId": "1", "buyTransactionIds": ["t1"]}
+        tcs = {"stockCode": "TCS", "brokerName": "ZERODHA", "accountHolder": None, "quantity": 2.0, "exchangeName": "BSE"}
+        infy_other_lot = dict(infy, exchangeName="BSE", orderId="2", buyTransactionIds=["t2"])
+        before = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json", as_json([infy, tcs]))]
+        after = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json", as_json([tcs, infy_other_lot]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual([], found)
+
+    def test_compare_whenAHoldingsSummedFigureChanged_difference(self):
+        # Given: only the first lot's own fields are left out; a total must still match
+        before = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json",
+                   as_json([{"stockCode": "INFY", "brokerName": "ZERODHA", "accountHolder": None, "quantity": 3.0}]))]
+        after = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json",
+                  as_json([{"stockCode": "INFY", "brokerName": "ZERODHA", "accountHolder": None, "quantity": 4.0}]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual(["u@x | /s | $.INFY ZERODHA None.quantity: before 3.0, after 4.0"], found)
+
+    def test_compare_whenAHoldingIsMissingOnOneSide_difference(self):
+        # Given
+        infy = {"stockCode": "INFY", "brokerName": "ZERODHA", "accountHolder": None, "quantity": 3.0}
+        before = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json", as_json([infy]))]
+        after = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json", as_json([]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual(["u@x | /s | $.INFY ZERODHA None: only in before"], found)
+
     def test_compare_whenListReordered_difference(self):
         # Given
         before = [("u@x", "/r", "/r", 200, "application/json", as_json([{"id": "a"}, {"id": "b"}]))]

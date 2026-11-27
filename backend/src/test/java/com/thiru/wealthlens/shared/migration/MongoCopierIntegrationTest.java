@@ -255,6 +255,24 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void copyAll_whenATransactionLacksTimezoneId_copiesM161sDefaultAndNamesIt() {
+        // Given — a transaction stored before timezone_id was written; m1.6.1 read it as Asia/Kolkata (W-419, D-1002)
+        mongoTemplate.getCollection("transactions").insertOne(new Document("_id", "txn-old")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("stock_code", "INFY").append("price", 1500.0)
+                .append("quantity", 5.0).append("transaction_date", Date.from(Instant.parse("2025-06-30T00:00:00Z"))));
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        CopyReport transactionsReport = reports.stream().filter(report -> report.source().equals("transactions")).findFirst().orElseThrow();
+        assertThat(transactionsReport.formerForms()).isEqualTo("read as m1.6.1 read them: 1 × timezone_id absent, read as Asia/Kolkata");
+        assertThat(transactionsReport.describe()).endsWith(", clean");
+        assertThat(transactions.findById("txn-old").orElseThrow().getTimezoneId()).isEqualTo("Asia/Kolkata");
+    }
+
+    @Test
     void copyAll_whenTheTradeLedgerIsCopiedAgain_changesNothing() {
         // Given
         storeLedgerHolders();
