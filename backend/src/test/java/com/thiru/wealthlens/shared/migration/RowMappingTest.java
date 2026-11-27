@@ -111,6 +111,50 @@ class RowMappingTest {
     }
 
     @Test
+    void of_whenATransactionLacksTimezoneId_writesM161sDefaultAndCountsIt() {
+        // Given — a transaction stored without timezone_id; m1.6.1 kept TransactionEntity's initial Asia/Kolkata (W-419, D-1002)
+        TargetTable transactionsTable = new TargetTable("transactions", "id", Map.of("id", "character varying", "timezone_id", "text"));
+        Document stored = new Document("_id", "trade-1");
+        FormerForms forms = FormerForms.of(KOLKATA);
+
+        // When
+        SourceRow row = RowMapping.of(stored, CollectionCopy.sameName("transactions"), transactionsTable, List.of(), Map.of(), forms);
+
+        // Then
+        assertThat(row.values()).containsExactlyInAnyOrderEntriesOf(Map.of("id", "trade-1", "timezone_id", "Asia/Kolkata"));
+        assertThat(forms.describe()).isEqualTo("read as m1.6.1 read them: 1 × timezone_id absent, read as Asia/Kolkata");
+    }
+
+    @Test
+    void of_whenATransactionStoresTimezoneId_keepsItUncounted() {
+        // Given — a stored zone is what m1.6.1 read, whatever it is
+        TargetTable transactionsTable = new TargetTable("transactions", "id", Map.of("id", "character varying", "timezone_id", "text"));
+        Document stored = new Document("_id", "trade-2").append("timezone_id", "UTC");
+        FormerForms forms = FormerForms.of(KOLKATA);
+
+        // When
+        SourceRow row = RowMapping.of(stored, CollectionCopy.sameName("transactions"), transactionsTable, List.of(), Map.of(), forms);
+
+        // Then
+        assertThat(row.values()).containsEntry("timezone_id", "UTC");
+        assertThat(forms.describe()).isEmpty();
+    }
+
+    @Test
+    void of_whenAnotherCollectionLacksTimezoneId_writesNothingForIt() {
+        // Given — the default is m1.6.1's TransactionEntity's alone
+        Document stored = new Document("_id", "ws-2");
+        FormerForms forms = FormerForms.of(KOLKATA);
+
+        // When
+        SourceRow row = RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), forms);
+
+        // Then
+        assertThat(row.values()).doesNotContainKey("timezone_id");
+        assertThat(forms.describe()).isEmpty();
+    }
+
+    @Test
     void of_whenAnotherCollectionHoldsTotalValue_isStillRefused() {
         // Given — total_value is retired only where assets stored it
         Document stored = new Document("_id", "ws-1").append("total_value", 7500.0);
@@ -298,7 +342,7 @@ class RowMappingTest {
         CollectionCopy transactions = new CollectionCopy("transactions", "transactions", Map.of(), Set.of(), List.of(), List.of(),
                 Set.of("submitted_at"));
         TargetTable table = new TargetTable("transactions", "id", Map.of("id", "character varying", "submitted_at",
-                "timestamp without time zone"));
+                "timestamp without time zone", "timezone_id", "text"));
         Document stored = new Document("_id", "txn-1").append("submitted_at", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
 
         // When

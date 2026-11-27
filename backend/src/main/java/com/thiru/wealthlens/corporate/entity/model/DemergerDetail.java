@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.corporate.entity.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -32,6 +33,8 @@ public class DemergerDetail {
     @CollectionTable(name = "corporate_action_demerger_stocks", joinColumns = @JoinColumn(name = "corporate_action_id"))
     private List<DemergerStock> demergerStocks = new ArrayList<>();
 
+    /** For {@code CorporateActionEntity}'s own check only: the detail answers as itself, and m1.6.1 answered no {@code empty}. */
+    @JsonIgnore
     public boolean isEmpty() {
         return demergerRatio == null && demergerPriceRatio == null && mainStockCode == null && mainStockName == null
                 && (demergerStocks == null || demergerStocks.isEmpty());

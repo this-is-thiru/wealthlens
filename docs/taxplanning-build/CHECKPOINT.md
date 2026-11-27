@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-417 DONE (D-1000), committed + pushed. W-337i3 stopped at row 6, resumes at row 5 on m1.7.2. W-418 placed (after the move).
-Stage           : PR #76: first run 45961283088 red (FinishedPlanTest, W-417 step 4 open) — fixed and pushed; new run to check. Containers UP (C2a).
-Last item commit: "taxplanning W-417: read prod's old data in the copier as m1.6.1 read it — retired keys left out, pre-#33 dates read at UTC, each counted; prod's copy refused all three; D-997 – D-1000"
-Next step       : 1. gh run view 45961283088 (red → read, report). 2. Green: owner's word → merge --match-head-commit, master run, tag m1.7.2, worktree ../wealthlens-m1.7.2-pg + jar, WL-A-2, log rows as "W-337i1 again". 3. W-337i3 plan: J17 → m1.7.2 jar; owner runs DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens; then rows 5 – 14.
+Item            : W-419 DONE (D-1003), committed + pushed. W-337i3 stopped at row 10, resumes at row 5 on m1.7.3.
+Stage           : PR for w-337 → check its run; then m1.7.3 (W-337i1 again). Containers + both apps UP (8081 pid 14757, 8082 pid 14758); w406/before,after,users.txt kept.
+Last item commit: "taxplanning W-419: answer every read on prod's copy as m1.6.1 did — old transactions' zone copied, holdings' lots oldest first, no leaked empty flag; the tool compares holdings by holding and orders what neither build fixes; row 10 found 6496 differences; D-1001 – D-1003"
+Next step       : 1. gh run for the PR (red → read, report). 2. Green: owner's word → merge, master run, tag m1.7.3, worktree ../wealthlens-m1.7.3-pg + jar, WL-A-2, log rows. 3. W-337i3: J17 → m1.7.3; stop 8082 app; DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA; rows 5 – 14.
 Files touched   : (none); api-collection Bruno edits — never commit
 Flags for owner : §1.h count due 2026-11-29 (staging/prod still Mongo: console; dev on PG). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner.
 Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only.

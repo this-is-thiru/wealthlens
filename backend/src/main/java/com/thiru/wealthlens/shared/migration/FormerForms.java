@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 
 /**
  * How one source is read (W-417, D-999): the zone its rows were written in, the zone a time is read in, and a tally of what an
- * earlier build left in a form {@code m1.6.1} read past — a retired key left out, or a date stored at midnight in the written
- * zone rather than UTC — so each is named on the source's report line, never dropped without a word. A view made by
+ * earlier build left in a form {@code m1.6.1} read past — a retired key left out, a missing key read as its default, or a date
+ * stored at midnight in the written zone rather than UTC — so each is named on the source's report line, never dropped without a word. A view made by
  * {@link #timesIn} reads times in another zone and counts into the same tally.
  */
 final class FormerForms {
@@ -47,6 +47,10 @@ final class FormerForms {
 
     void leftOut(String key) {
         counts.merge(key + " left out", 1, Integer::sum);
+    }
+
+    void defaulted(String key, String value) {
+        counts.merge(key + " absent, read as " + value, 1, Integer::sum);
     }
 
     /**

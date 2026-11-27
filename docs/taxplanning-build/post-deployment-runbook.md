@@ -452,7 +452,9 @@ unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KE
    shows it). Each count is checked against that database's key survey before go; prod's copy (W-337i3) showed:
    `assets` — 220 × `total_value`, 1 date, and in 5 corporate-action entries `exDate`, `recordDate`, `stockCode`,
    `stockName`, `toStockCode`, `toStockName`, `actionPrice` (5 each), `createdAt`, `createdBy` (3 each);
-   `transactions` — 1 date and the same corporate-action keys. A form not listed is still refused.
+   `transactions` — 1 date and the same corporate-action keys. A form not listed is still refused. **W-419 (D-1002):**
+   `N × timezone_id absent, read as Asia/Kolkata` — a transaction stored without `timezone_id`, written as the default
+   `m1.6.1`'s `TransactionEntity` read it (`FormerDefaults`); on prod's copy at least 379 (row 10 read the owner's transactions only); W-337i3's next row 7 gives the whole count.
 5. **After-check, read-only** (DataGrip): these six equal step 1's counts — `SELECT (SELECT count(*) FROM wealthlens.user_details),
    (SELECT count(*) FROM wealthlens.transactions), (SELECT count(*) FROM wealthlens.assets),
    (SELECT count(*) FROM wealthlens.trade_outcomes), (SELECT count(*) FROM wealthlens.profit_and_loss),
@@ -471,20 +473,25 @@ MongoDB copy it was copied from, as every user. `tools/read_comparison.py` reads
 build's OpenAPI spec, fills the path ids from list answers, walks every page at 200, and diffs the two answers field by
 field. **Allowed, and nothing else** (D-981 C3a, D-983 C5a): a time `m1.6.1` showed in Asia/Kolkata comes back in UTC;
 a time `m1.6.1` already held in UTC (`UTC_HELD_FIELDS`, each with its `m1.6.1` line) comes back equal; a field filled
-at request time (`REQUEST_TIME_FIELDS`); an Excel answer compared by cell; a PDF by status and type. **Any other
+at request time (`REQUEST_TIME_FIELDS`); a list the `w-337` build orders where `m1.6.1` left ties in MongoDB's order
+or that neither build orders (`ORDERED_FOR_COMPARISON`, each with its line: the rate cards, W-411; asset allocation's
+`HashMap`), put in that order on both sides first (W-419); the
+holdings lists (`HOLDING_ROUTES`) compared holding by holding, without the five fields `m1.6.1` copied from whichever lot
+MongoDB gave first (`FIRST_LOT_FIELDS`; each lot's own fields are still compared on `/stocks/{stockCode}`, W-419 R1-C1a); an Excel answer compared by cell; a PDF by status and type. **Any other
 difference stops the move.** The tool sends `GET` only. Both builds still record each read (processing log), on the
 rehearsal copies only.
 
 **Before.** Both builds run on your machine at once, with the **same** `JWT_SECURITY_KEY`, `TAX_DATA_KEY` and
 `TAX_DIGEST_KEY`: `m1.6.1` on port 8081 against the MongoDB copy, and the `w-337` build on port 8082 against the
-PostgreSQL copy §0.9 filled. W-411 is built first, or every rate card that shares a start date is listed as a difference.
+PostgreSQL copy §0.9 filled.
 
 1. **Precheck, read-only — the two lists** (DataGrip, on the rehearsal PostgreSQL):
    ```sql
    SELECT count(*) AS logins FROM wealthlens.user_details;
    SELECT profile_id || ' ' || tax_year_start FROM wealthlens.tax_year_workspaces ORDER BY 1;
    ```
-   Save the second query's rows as `~/wealthlens-runs/w406/workspaces.txt`, one per line. Write
+   Save the second query's rows as `~/wealthlens-runs/w406/workspaces.txt`, one per line — an empty file when it returns
+   none, as on prod's copy (D-1001): the tool then reads no workspace route on either side. Write
    `~/wealthlens-runs/w406/users.txt` as **one line, your own account** (D-988 (1)): `your-email USER,SUPER_USER`, the
    roles as `user_details.roles` holds them. Your account is `SUPER_USER`, so the admin routes are read too. Other
    accounts are not compared; their rows are proven by §0.9's own checks. **Stop** unless the file is that one line.
@@ -495,7 +502,7 @@ read -r 'REPO?Release worktree path (W-337i names it): '
 W=$REPO/docs/taxplanning-build/tools/read_comparison.py
 [[ -f $W ]] || { echo "no $W: stop"; return 1 }
 cd ~/wealthlens-runs/w406 || return 1
-[[ $(wc -l < users.txt) -eq 1 && -s workspaces.txt ]] || { echo "users.txt must be your one line, workspaces.txt not empty: stop"; return 1 }
+[[ $(wc -l < users.txt) -eq 1 && -f workspaces.txt ]] || { echo "users.txt must be your one line, workspaces.txt written by step 1: stop"; return 1 }
 python3 -I -B $W spec --base http://localhost:8082 --users users.txt --out spec.json
 V=(--value taxYear=2025,2026 --value financialYear=2025-2026,2026-2027 --value broker=UPSTOX,FYERS,ZERODHA
    --value frequency=ANNUALLY,QUARTERLY --value billedThrough=$(date +%F) --workspaces workspaces.txt)
@@ -2437,3 +2444,12 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 3, the dump (prod read-only, piped; nothing on disk) | owner | SRV lookup worked from the container (no `--network host`); dumped non-empty: transactions 788, assets 518, trade_outcomes 163, privacy_processing_log 91, charge_schedules 39, charge_catalogue 13, user_details 12, lastly_performed_corporate_action 11, profit_and_loss 7, corporate_action 6, refresh_tokens 4, charge_instruments 2, privacy_consents 1 (sum 1655); `1655 document(s) restored successfully. 0 document(s) failed to restore.`; `exit: 0 0`; Atlas login replaced by `rehearsal` (C2a) — **go** |
 | 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 4, §0.9 step 1 on prod (console) and on the copy (`mongosh --eval` of the same query from `q.js`, `.toArray()` added) | owner | both: `database` `Cluster0`, `counted` 42, `loginsWithoutEmail` 0, `unknownWithData` `[]`; `nonZero` identical, 13 collections: user_details 12, refresh_tokens 4, charge_catalogue 13, charge_schedules 39, charge_instruments 2, corporate_action 6, lastly_performed_corporate_action 11, assets 518, transactions 788, trade_outcomes 163, profit_and_loss 7, privacy_consents 1, privacy_processing_log 91 — equal to row 3's dump; the copy is whole — **go** |
 | 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | rows 5 – 7, target, copy, report | owner | row 5 `0`; first paste never ran (zsh, no interactive comments: an apostrophe in a `#` line left `quote>`); again: row 6 **`exit: 1`** — `IllegalStateException: assets 68d2dd7f59825ea2f98d7ea5: assets has no column total_value for a stored key` (`RowMapping.java:175`, from `MongoCopier.prepare`, before any write); row 7 `0` `0` `0` `0`; target holds Flyway's 54 tables, empty. `m1.6.1`'s `AssetEntity` has no `total_value` (removed by d55dd15f, #45); old prod assets still carry it — **stop (R13)**: key survey of the copy asked, then a decision |
+| 2026-11-27 | — (W-337i1 again for `m1.7.2`, D-1000) | rows 2 – 3, preconditions and the merge | session | `origin/master` 9dcc9394, no `m1.7.2` tag; PR #76 first run 45961283088 **failure** (`FinishedPlanTest`: W-417 step 4 open) — fixed by c5868f50; run 45963211386 `success`, `OPEN CLEAN` at c5868f50; owner: "approved as recommended"; `M` = 0e3a4163, parents 9dcc9394 and c5868f50, `git diff --stat c5868f50 origin/master` empty — **go** |
+| 2026-11-27 | — (W-337i1 again for `m1.7.2`, D-1000) | row 4, the `master` pipeline | session | run 45965533383 (`push`) `success` on 0e3a4163 — **go** |
+| 2026-11-27 | — (W-337i1 again for `m1.7.2`, D-1000) | row 5, `m1.7.2` tagged, worktree and jar | session | tag `m1.7.2` (b6a94ef3) → 0e3a4163 pushed; `../wealthlens-m1.7.2-pg` at 0e3a4163; `backend/target/wealthlens.jar` 120,972,449 bytes — **go** |
+| 2026-11-27 | — (W-337i1 again for `m1.7.2`, D-1000) | row 6, WL-A-2 published from `m1.7.2`'s runbook | session | `{"idReadable":"WL-A-2",…}`; read back: 238,838 characters holding the file's 238,687 after the source-of-truth header (whole body found) — **go**; `m1.7.2` is the build W-337i3 – i6 run |
+| 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | rows 5 – 7 again, on `m1.7.2` | owner | `DROP SCHEMA wealthlens CASCADE` (54 tables, probe 2's copy), `CREATE SCHEMA`; row 5 `0`; row 6 `exit: 0`; row 7 `41` `0` `1` `0`, every count equal to row 4; `assets` (518 / 518) and `transactions` (788 / 788) name `read as m1.6.1 read them`: `CorporateActionEntity` actionPrice, exDate, recordDate, stockCode, stockName, toStockCode, toStockName 5 each, createdAt, createdBy 3 each, `1 × date at midnight Asia/Kolkata`, and on assets `220 × total_value` — equal to the key survey and dates.js; 2 lines carry the text — **go** |
+| 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 8, §0.9 step 5, after (read-only) | owner | `12\|788\|518\|163\|7\|0` — user_details, transactions, assets, trade_outcomes, profit_and_loss equal to row 4, tax_profiles 0 (none in row 4); Flyway `1:true` … `13:true`, the 13 migrations `m1.7.2` ships — **go** |
+| 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 9, both builds up | owner | first paste: both `exit 1`, "Port 8081/8082 was already in use" — an earlier row 9 start (PIDs 13698 `m1.6.1`, 13699 `m1.7.2`, up since 14:21 IST, before rows 5 – 7's `DROP SCHEMA`), its logs overwritten; owner killed both; again: pids 14757 / 14758, `Started` in 4.87 s (`m1.6.1`, 8081) and 7.473 s (`m1.7.2`, 8082); `x6trgen` 0 / 0; no ERROR; Flyway "Successfully validated 13 migrations", "Schema wealthlens is up to date"; "Charges engine ready: 39 rate card(s)" = row 4's charge_schedules; WARN: the malware scan is off (both; `DocumentBytesConfig.java:23`, prod `scan.enabled: false`, D-769), SpringDoc's spec notice (both; D-867 C1a), `open-in-view` (`m1.7.2`; as on dev, W-337i2 row 7) — all expected — **go** |
+| 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 10, §0.10 step 1, the two lists | owner | logins `12`; `workspaces.txt` 0 lines (no `tax_year_workspaces` on prod's copy); first roles read matched no row (`user_details.email` is `SearchableColumn`, encrypted — the plain email in `WHERE` cannot match); roles grouped: `ADMIN,USER,SUPER_USER,` × 1, `ADMIN,USER,TEST_USER` × 2, `USER` × 4, `USER,TEST_USER` × 5; `users.txt` one line, roles `ADMIN,USER,SUPER_USER` (trailing comma left out: Java's `split` drops it, `UserDetailsImpl.java:24`; Python's keeps it, `read_comparison.py:117`) — **go**; step 2's `-s workspaces.txt` guard stops an empty file — decision D1a/D1b asked |
+| 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 10, §0.10 step 2, the read comparison (guard as D-1001) | owner | `spec saved: 127 paths`; 591 answers before and after; `not reached` equal on both sides (28 routes: the three of the trial and every tax route — no tax data on the copy); **`exit: 1`, 6496 differences outside the list** — read by the session ignoring list order (a scratch script pairing items, the tool's own `diff_json` and lists): 490 remain — (1) `transactions` `timezoneId` `Asia/Kolkata` before, `null` after, 379; (2) `orderExecutionTime` equal on both sides where a shift is expected, 97 across transactions, stocks, stock, mutual funds; (3) `demergerDetail.empty` only after, 6 (`DemergerDetail.isEmpty()` added in `w-337`, serialised by Jackson); (4) one stock lot NSE / 1 before, BSE / 2 after, unexplained (may be the pairing); the other ~6000 are list order (stocks, mutual funds, transactions pages, charge schedules) — **stop (R13)**; both builds left up, `before/` `after/` kept for the investigation |

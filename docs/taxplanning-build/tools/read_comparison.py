@@ -100,7 +100,36 @@ UTC_HELD_FIELDS = (
     ("/api/v1/admin/tax/gazette-leads", "**.foundAt"),
     # AssetRequest.java:159, 162 TLocalDateTime.atUtc(...): the order time is held in UTC (D-961)
     ("/api/v1/me/portfolio/transactions", "$.content[*].orderExecutionTime"),
+    # the same UTC time on each lot: PortfolioService.java:445, 453 assetRequest.orderExecutionDateTime(), LotLedger.java:201
+    # trade.getOrderExecutionTime() (W-419, D-1002); the holdings lists leave the field out (HOLDING_ROUTES)
+    ("/api/v1/me/portfolio/stocks/{stockCode}", "$[*].orderTimeQuantities[*].orderExecutionTime"),
 )
+
+# W-419 R1-C1a (D-1002): these views combine a holding's lots and copy every field but the summed ones from the first lot read
+# (PortfolioQueryService.java:116). m1.6.1 read lots in MongoDB's stored order, which the 2026-11-21 rewrite left and no field
+# records, so its first lot was arbitrary; the w-337 build reads oldest first (PortfolioRepository.findByEmail). They are
+# compared holding by holding, every other field exact, without FIRST_LOT_FIELDS; each lot's own fields are compared on
+# /stocks/{stockCode}, which both builds order by trade date.
+HOLDING_ROUTES = (
+    "/api/v1/me/portfolio/stocks",
+    "/api/v1/me/portfolio/mutual-funds",
+    "/api/v1/admin/portfolio/users/{email}/stocks",
+    "/api/v1/admin/portfolio/users/{email}/mutual-funds",
+)
+HOLDING_KEY = ("stockCode", "brokerName", "accountHolder")
+FIRST_LOT_FIELDS = ("exchangeName", "buyTransactionIds", "sellTransactionIds", "orderId", "orderTimeQuantities")
+
+# W-419 C3a, R2-C1a (D-1002): the lists whose order is not the move's — one the w-337 build orders where m1.6.1 left ties in
+# MongoDB's stored order, or one neither build orders — as (route, the key fields, each with descending True or False). Both
+# answers are put in that order before comparing; every other list keeps its position.
+ORDERED_FOR_COMPARISON = {
+    # ChargeScheduleRepository.java:43 findByBrokerNameOrderByStartDateDescScheduleCodeAsc (W-411, D-987); m1.6.1's
+    # findByBrokerNameOrderByStartDateDesc left cards sharing a start date in MongoDB's stored order
+    "/api/v1/me/charges/charge-schedules": (("startDate", True), ("scheduleCode", False)),
+    # AnalyticsService.java:94 – 110 (and :93 – 108 at m1.6.1) groups by AssetType into a HashMap, whose order follows the
+    # enum's identity hash: it changes with each start of either build
+    "/api/v1/me/portfolio/analytics/asset-allocation": (("assetType", False),),
+}
 
 DATE_TIME = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,9})?$")
 SHEET_NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
@@ -373,11 +402,35 @@ def numeric(text):
         return text
 
 
+def ordered_for_comparison(route, answer):
+    """A list ORDERED_FOR_COMPARISON names, sorted by its key fields, last key first, so each sort keeps the one before."""
+    if route not in ORDERED_FOR_COMPARISON or not isinstance(answer, list):
+        return answer
+    for field, descending in reversed(ORDERED_FOR_COMPARISON[route]):
+        answer = sorted(answer, key=lambda item, name=field: item[name], reverse=descending)
+    return answer
+
+
+def by_holding(route, answer):
+    """A HOLDING_ROUTES list as {holding: its fields without FIRST_LOT_FIELDS}; any other answer as it is."""
+    if route not in HOLDING_ROUTES or not isinstance(answer, list):
+        return answer
+    holdings = {}
+    for item in answer:
+        key = " ".join(str(item.get(field)) for field in HOLDING_KEY)
+        if key in holdings:
+            raise ValueError(f"{route}: two holdings answer as {key}")
+        holdings[key] = {name: value for name, value in item.items() if name not in FIRST_LOT_FIELDS}
+    return holdings
+
+
 def diff_body(before, after, before_body, after_body, zone):
     content_type = before["contentType"]
     if "json" in content_type:
         found = []
-        diff_json(json.loads(before_body or b"null"), json.loads(after_body or b"null"), "$", before["route"], zone, found)
+        route = before["route"]
+        diff_json(by_holding(route, ordered_for_comparison(route, json.loads(before_body or b"null"))),
+                  by_holding(route, ordered_for_comparison(route, json.loads(after_body or b"null"))), "$", route, zone, found)
         return found
     if is_workbook(before_body) and is_workbook(after_body):
         b, a = cells(before_body), cells(after_body)

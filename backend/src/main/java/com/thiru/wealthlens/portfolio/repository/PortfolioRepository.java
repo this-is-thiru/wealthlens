@@ -16,7 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface PortfolioRepository extends JpaRepository<AssetEntity, String>, JpaSpecificationExecutor<AssetEntity> {
 
-    List<AssetEntity> findByEmail(String email);
+    String OLDEST_FIRST = "ORDER BY a.auditMetadata.createdAt ASC NULLS FIRST, a.id ASC";
+
+    /**
+     * Every lot oldest first — creation time, the one lot stored before auditing first, then id — so each holding a view
+     * combines shows its oldest lot's own fields and the list keeps one order (W-419, D-1002). MongoDB answered in its stored
+     * order, which no column records.
+     */
+    @Query("SELECT a FROM AssetEntity a WHERE a.email = :email " + OLDEST_FIRST)
+    List<AssetEntity> findByEmail(@Param("email") String email);
 
     /**
      * The oldest lot of a stock bought on a day in a segment — the one V1's buy merges into; V2 may have bought several
@@ -45,9 +53,15 @@ public interface PortfolioRepository extends JpaRepository<AssetEntity, String>,
 
     List<AssetEntity> findByEmailAndStockCodeIn(String email, Collection<String> stockCodes);
 
-    List<AssetEntity> findByEmailAndAssetType(String email, AssetType assetType);
+    /** Oldest first, as {@link #findByEmail}. */
+    @Query("SELECT a FROM AssetEntity a WHERE a.email = :email AND a.assetType = :assetType " + OLDEST_FIRST)
+    List<AssetEntity> findByEmailAndAssetType(@Param("email") String email, @Param("assetType") AssetType assetType);
 
-    List<AssetEntity> findByEmailAndTransactionDateBetween(String email, LocalDate startDate, LocalDate endDate);
+    /** Oldest first, as {@link #findByEmail}; both dates included, as the derived query had them. */
+    @Query("SELECT a FROM AssetEntity a WHERE a.email = :email AND a.transactionDate BETWEEN :startDate AND :endDate "
+            + OLDEST_FIRST)
+    List<AssetEntity> findByEmailAndTransactionDateBetween(@Param("email") String email, @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 
     @Transactional("postgresTransactionManager")
     void deleteByEmail(String email);
