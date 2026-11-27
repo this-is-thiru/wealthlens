@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-419 DONE (D-1003), committed + pushed. W-337i3 stopped at row 10, resumes at row 5 on m1.7.3.
-Stage           : PR for w-337 → check its run; then m1.7.3 (W-337i1 again). Containers + both apps UP (8081 pid 14757, 8082 pid 14758); w406/before,after,users.txt kept.
-Last item commit: "taxplanning W-419: answer every read on prod's copy as m1.6.1 did — old transactions' zone copied, holdings' lots oldest first, no leaked empty flag; the tool compares holdings by holding and orders what neither build fixes; row 10 found 6496 differences; D-1001 – D-1003"
-Next step       : 1. gh run for the PR (red → read, report). 2. Green: owner's word → merge, master run, tag m1.7.3, worktree ../wealthlens-m1.7.3-pg + jar, WL-A-2, log rows. 3. W-337i3: J17 → m1.7.3; stop 8082 app; DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA; rows 5 – 14.
+Item            : W-337i3 (D-998) resuming at row 5 on m1.7.3 (W-419 done, D-1003).
+Stage           : W-419 Revision 3 committed + pushed (PR to open/check). W-337i3 rows 5 – 9 go on m1.7.3, row 10 stopped (138) then clean on the saved answers with the fixed tool. Apps up 20784/20785. W-420 (CI speed: single verify pass, split unit/integration jobs, no PR image) proposed, not placed — owner to answer.
+Last item commit: "taxplanning W-419: compare the holdings lists on what the view works out for the holding — sums within 1e-9, no field copied from a lot; row 10 on m1.7.3 found 138 such differences; D-1004"
+Next step       : 1. PR run (red → read). 2. Green: owner's word → merge, master run, tag m1.7.4, worktree ../wealthlens-m1.7.4-pg + jar, WL-A-2, log rows. 3. Row 10: compare only, tool from m1.7.4, on saved before/after → expect exit 0. 4. Rows 11 – 14.
 Files touched   : (none); api-collection Bruno edits — never commit
 Flags for owner : §1.h count due 2026-11-29 (staging/prod still Mongo: console; dev on PG). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner.
 Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only.

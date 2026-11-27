@@ -204,6 +204,37 @@ class CompareTest(unittest.TestCase):
         # Then
         self.assertEqual(["u@x | /s | $.INFY ZERODHA None: only in before"], found)
 
+    def test_compare_whenAHoldingsSumDiffersOnlyInItsLastDigits_allowed(self):
+        # Given: 518.02 summed lot by lot in another order (W-419 R3-C1a)
+        before = [("u@x", "/api/v1/me/portfolio/mutual-funds", "/m", 200, "application/json",
+                   as_json([{"stockCode": "F", "brokerName": "UPSTOX", "accountHolder": None, "quantity": 518.02}]))]
+        after = [("u@x", "/api/v1/me/portfolio/mutual-funds", "/m", 200, "application/json",
+                  as_json([{"stockCode": "F", "brokerName": "UPSTOX", "accountHolder": None, "quantity": 518.0200000000001}]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual([], found)
+
+    def test_compare_whenAHoldingsFirstLotCorporateActionDiffers_allowed(self):
+        # Given: the view copies corporateActionType from whichever lot it reads first
+        before = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json",
+                   as_json([{"stockCode": "R", "brokerName": "FYERS", "accountHolder": None, "corporateActionType": "BONUS"}]))]
+        after = [("u@x", "/api/v1/me/portfolio/stocks", "/s", 200, "application/json",
+                  as_json([{"stockCode": "R", "brokerName": "FYERS", "accountHolder": None, "corporateActionType": None}]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual([], found)
+
+    def test_compare_whenLastDigitsDifferOutsideTheHoldingsLists_difference(self):
+        # Given: the tolerance is the holdings lists' alone
+        before = [("u@x", "/r", "/r", 200, "application/json", as_json({"quantity": 518.02}))]
+        after = [("u@x", "/r", "/r", 200, "application/json", as_json({"quantity": 518.0200000000001}))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual(1, len(found))
+
     def test_compare_whenListReordered_difference(self):
         # Given
         before = [("u@x", "/r", "/r", 200, "application/json", as_json([{"id": "a"}, {"id": "b"}]))]
