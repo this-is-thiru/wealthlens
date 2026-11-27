@@ -4,15 +4,12 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-410 DONE (D-986), committed; W-411 built, its records being written for its own commit.
-Stage           : between W-410's and W-411's commits.
-Last item commit: "taxplanning W-410: refuse a read of a workspace not started instead of creating it — a GET must not write; D-986"
-Next step       : 1. On "commit it": W-410 board D + plan step 3; commit ONLY W-410's files (DraftService, DraftIntegrationTest,
-  plans/W-410.md, DECISIONS, STATE, WORK-ITEMS, CHECKPOINT). 2. Then write W-411's D-987, W-412 row (C2a), board D, and commit
-  W-411's files (ChargeScheduleRepository, ChargeScheduleService, ChargeScheduleServiceTest, ChargeRepositoryIntegrationTest,
-  plans/W-411.md + docs). 3. Then plan W-412, then W-337i. Owner: every account's email for §0.10?
-Files touched   : W-410: DraftService.java, DraftIntegrationTest.java, plans/W-410.md, DECISIONS.md, STATE.md, 03-WORK-ITEMS.md;
-  W-411: ChargeScheduleRepository.java, ChargeScheduleService.java, ChargeScheduleServiceTest.java, ChargeRepositoryIntegrationTest.java, plans/W-411.md
+Item            : W-410 (D-986) and W-411 (D-987) DONE, board D; committed separately and pushed on "commit it and push".
+Stage           : between items. W-412 placed (user-charge lists' tie). Owner still to answer: every account's email for §0.10?
+Last item commit: "taxplanning W-411: list rate cards by start date, then schedule code — a shared start date came back in store order; D-987"
+Next step       : 1. Check the pipeline run on the W-411 commit (gh run list -b w-337 -L 2). Red → fix first.
+  2. Plan W-412, then W-337i. Trial containers w406-mongo / w406-pg still running (stop when no longer needed).
+Files touched   : (none uncommitted)
 Flags for owner : staging/dev readback unpasted (W-337h); §1.s Aiven retention not given. W-337f flags unchanged.
 Env notes       : NO Claude attribution; OrbStack started this session; DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on
   pipeline only. Trial: m1.6.1 jar built in ../wealthlens-m1.6.1/backend/target, w-337 jar in backend/target.

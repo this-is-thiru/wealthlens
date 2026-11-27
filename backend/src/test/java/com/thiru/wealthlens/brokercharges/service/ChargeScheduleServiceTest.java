@@ -296,7 +296,7 @@ class ChargeScheduleServiceTest {
     void findByBroker_listsEveryCardOnFileForThatBroker() {
         // Given
         List<ChargeScheduleEntity> cards = List.of(card("A", APRIL), card("B", JULY));
-        when(chargeScheduleRepository.findByBrokerNameOrderByStartDateDesc(BrokerName.ZERODHA))
+        when(chargeScheduleRepository.findByBrokerNameOrderByStartDateDescScheduleCodeAsc(BrokerName.ZERODHA))
                 .thenReturn(cards);
 
         // When / Then

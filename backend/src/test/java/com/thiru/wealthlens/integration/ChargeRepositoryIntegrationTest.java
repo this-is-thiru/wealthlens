@@ -16,6 +16,7 @@ import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
+import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
@@ -42,6 +43,9 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ChargeScheduleRepository scheduleRepository;
+
+    @Autowired
+    private ChargeScheduleService scheduleService;
 
     @Autowired
     private ChargeInstrumentRepository instrumentRepository;
@@ -76,6 +80,20 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertThat(gst.getBasis()).isEqualTo(ChargeBasis.DERIVED);
         assertThat(gst.getEvents()).containsExactlyInAnyOrder(ChargeEvent.BUY, ChargeEvent.SELL);
         assertMoney(18.0, gst.getRate());
+    }
+
+    @Test
+    void findByBroker_whenCardsShareAStartDate_ordersByScheduleCode() {
+        // Given — the tie saved in the reverse of code order, so an order by start date alone returns it as saved
+        scheduleRepository.save(schedule("TIE_Z", LocalDate.of(2026, 3, 1), null));
+        scheduleRepository.save(schedule("OLDER", LocalDate.of(2025, 1, 1), LocalDate.of(2026, 2, 28)));
+        scheduleRepository.save(schedule("TIE_A", LocalDate.of(2026, 3, 1), null));
+
+        // When
+        List<ChargeScheduleEntity> cards = scheduleService.findByBroker(BrokerName.ZERODHA);
+
+        // Then — newest start first, a shared start in code order (W-411)
+        assertThat(cards).extracting(ChargeScheduleEntity::getScheduleCode).containsExactly("TIE_A", "TIE_Z", "OLDER");
     }
 
     @Test

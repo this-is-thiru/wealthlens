@@ -103,7 +103,7 @@ public class ChargeScheduleService {
     }
 
     public List<ChargeScheduleEntity> findByBroker(BrokerName brokerName) {
-        return chargeScheduleRepository.findByBrokerNameOrderByStartDateDesc(brokerName);
+        return chargeScheduleRepository.findByBrokerNameOrderByStartDateDescScheduleCodeAsc(brokerName);
     }
 
     /** Cards whose rates no human has checked against the broker's published page. */
