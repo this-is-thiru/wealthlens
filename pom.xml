@@ -227,6 +227,29 @@
                         </goals>
                     </execution>
                     <!--
+                      The pipeline runs the unit and integration tiers as two jobs, each writing its own data file (W-420,
+                      D-1005); its gate job merges them into the one file report and the checks below read. Bound to no
+                      phase: invoked only as jacoco:merge@merge-tiers, so a local build is unchanged.
+                    -->
+                    <execution>
+                        <id>merge-tiers</id>
+                        <phase>none</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>jacoco-*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${project.build.directory}/jacoco.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <!--
                       Scoped to the charges work rather than applied globally. A global threshold
                       would fail on day one and be switched off, which is worse than no gate.
 

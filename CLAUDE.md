@@ -102,8 +102,8 @@ override convenience. Where the build enforces one, the enforcing check is named
 ./mvnw test -pl backend -Dtest=PortfolioServiceTest
 ./mvnw test -pl backend -Dtest=PortfolioServiceTest#addTransaction_whenBuy_createsAsset
 
-# Full CI equivalent: runs tests then generates the consolidated HTML report
-./mvnw clean test verify
+# Full local equivalent of CI: every check once, both tiers, the coverage gates, the consolidated HTML report
+./mvnw clean verify
 # → test-report/target/consolidated-test-report.html
 
 # Format — spotless:check runs in `validate` and fails an unformatted build; apply fixes it
@@ -112,7 +112,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 
 ### Build gotchas
 
-- **A failing test now fails the build.** `maven.test.failure.ignore` defaults to `false`; CI passes `-Dmaven.test.failure.ignore=true` on its own invocation so `verify` is still reached and the consolidated HTML report is generated. CI's surefire-XML gate (`failures="[1-9]"` / `errors="[1-9]"`, plus a minimum report count) is what fails the pipeline there.
+- **A failing test now fails the build.** `maven.test.failure.ignore` defaults to `false`; CI passes `-Dmaven.test.failure.ignore=true` so its reports are always uploaded. **CI runs three jobs** (W-420): `unit` (`clean package -Punit`: format and Checkstyle, the unit tier, the jar) and `integration` (`clean test -pl backend -Pintegration`) side by side, then `gate`, which merges their JaCoCo data (`jacoco:merge@merge-tiers`), applies the four coverage checks to it, runs the surefire-XML gate (`failures="[1-9]"` / `errors="[1-9]"`, plus a minimum report count) — what fails the pipeline — writes the consolidated report, and builds the image (pushed from `master` only).
 - **Integration tests require Docker** and are tagged `integration` via `AbstractIntegrationTest` (Testcontainers `mongo:8.0.4` replica set — pinned: later 8.0 patches refuse to start on Linux 6.19+, SERVER-121912, which CI's Ubuntu 26 runner has). They still run by default; use `-Punit` to exclude them for a fast loop or when Docker is unavailable.
 - **Tests run in parallel by class** (`backend/src/test/resources/junit-platform.properties`); methods within a class share a thread. `AbstractIntegrationTest` is `@Isolated` — every integration class runs alone, because RestAssured's `baseURI`/`port` are static and all integration classes share one Mongo container. Do not remove that annotation.
 - **Coverage** is measured by JaCoCo (`backend/target/site/jacoco/`). The `check` gates run at `verify` and are scoped where they are meant to bite rather than failing globally: `com.thiru.wealthlens.brokercharges.engine*` at 90% line / 85% branch; `taxengine` outside `rules` at 95% line and `taxengine.rules` at 90% line (`DR 07` X5.5), with **branch minimums at X5.5's 90% and 85%** (W-144 measured 81% and 76%; W-240a – d closed the gap) — never lower them. `-Pmutation-taxengine` holds the cap shapes and marginal reliefs to a 90% PIT score (100% at W-144).

@@ -18,6 +18,7 @@ import hashlib
 import hmac
 import io
 import json
+import math
 import os
 import re
 import sys
@@ -105,11 +106,13 @@ UTC_HELD_FIELDS = (
     ("/api/v1/me/portfolio/stocks/{stockCode}", "$[*].orderTimeQuantities[*].orderExecutionTime"),
 )
 
-# W-419 R1-C1a (D-1002): these views combine a holding's lots and copy every field but the summed ones from the first lot read
-# (PortfolioQueryService.java:116). m1.6.1 read lots in MongoDB's stored order, which the 2026-11-21 rewrite left and no field
-# records, so its first lot was arbitrary; the w-337 build reads oldest first (PortfolioRepository.findByEmail). They are
-# compared holding by holding, every other field exact, without FIRST_LOT_FIELDS; each lot's own fields are compared on
-# /stocks/{stockCode}, which both builds order by trade date.
+# W-419 R1-C1a, R3-C1a (D-1002): these views combine a holding's lots, copy every field from the first lot read and then set
+# the holding's own (PortfolioQueryService.java:115 – 156, 87). m1.6.1 read lots in MongoDB's stored order, which the
+# 2026-11-21 rewrite left and no field records, so its first lot was arbitrary; the w-337 build reads oldest first
+# (PortfolioRepository.findByEmail). They are compared holding by holding on HOLDING_FIELDS only — the key and what the
+# view works out for the holding — each lot's own fields being compared on /stocks/{stockCode}, which both builds order by
+# trade date. A worked-out number is a double summed lot by lot, so lots in another order move its last digits: it is
+# equal within HOLDING_RELATIVE_TOLERANCE.
 HOLDING_ROUTES = (
     "/api/v1/me/portfolio/stocks",
     "/api/v1/me/portfolio/mutual-funds",
@@ -117,7 +120,9 @@ HOLDING_ROUTES = (
     "/api/v1/admin/portfolio/users/{email}/mutual-funds",
 )
 HOLDING_KEY = ("stockCode", "brokerName", "accountHolder")
-FIRST_LOT_FIELDS = ("exchangeName", "buyTransactionIds", "sellTransactionIds", "orderId", "orderTimeQuantities")
+HOLDING_FIELDS = HOLDING_KEY + ("quantity", "totalQuantity", "totalValue", "price", "brokerCharges", "miscCharges",
+                                "transactionQuantities", "daysHeld", "transactionDate", "charges")
+HOLDING_RELATIVE_TOLERANCE = 1e-9
 
 # W-419 C3a, R2-C1a (D-1002): the lists whose order is not the move's — one the w-337 build orders where m1.6.1 left ties in
 # MongoDB's stored order, or one neither build orders — as (route, the key fields, each with descending True or False). Both
@@ -344,6 +349,12 @@ def allowed(route, path):
     return any(route == r and generic == p for r, p in REQUEST_TIME_FIELDS)
 
 
+def summed_alike(route, before, after):
+    """A HOLDING_ROUTES number summed in another lot order: equal within HOLDING_RELATIVE_TOLERANCE."""
+    numbers = all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in (before, after))
+    return route in HOLDING_ROUTES and numbers and math.isclose(before, after, rel_tol=HOLDING_RELATIVE_TOLERANCE)
+
+
 def diff_json(before, after, path, route, zone, found):
     if isinstance(before, dict) and isinstance(after, dict):
         for name in sorted(set(before) | set(after)):
@@ -358,7 +369,8 @@ def diff_json(before, after, path, route, zone, found):
             found.append(f"{path}: {len(before)} items before, {len(after)} after")
         for index, (b, a) in enumerate(zip(before, after)):
             diff_json(b, a, f"{path}[{index}]", route, zone, found)
-    elif not same_value(before, after, zone, held_in_utc(route, path)) and not allowed(route, path):
+    elif not same_value(before, after, zone, held_in_utc(route, path)) and not allowed(route, path) \
+            and not summed_alike(route, before, after):
         found.append(f"{path}: before {json.dumps(before)}, after {json.dumps(after)}")
 
 
@@ -412,7 +424,7 @@ def ordered_for_comparison(route, answer):
 
 
 def by_holding(route, answer):
-    """A HOLDING_ROUTES list as {holding: its fields without FIRST_LOT_FIELDS}; any other answer as it is."""
+    """A HOLDING_ROUTES list as {holding: its HOLDING_FIELDS}; any other answer as it is."""
     if route not in HOLDING_ROUTES or not isinstance(answer, list):
         return answer
     holdings = {}
@@ -420,7 +432,7 @@ def by_holding(route, answer):
         key = " ".join(str(item.get(field)) for field in HOLDING_KEY)
         if key in holdings:
             raise ValueError(f"{route}: two holdings answer as {key}")
-        holdings[key] = {name: value for name, value in item.items() if name not in FIRST_LOT_FIELDS}
+        holdings[key] = {name: value for name, value in item.items() if name in HOLDING_FIELDS}
     return holdings
 
 
