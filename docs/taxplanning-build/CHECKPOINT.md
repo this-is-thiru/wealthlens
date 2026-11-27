@@ -5,9 +5,9 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-417 DONE (D-1000), committed + pushed. W-337i3 stopped at row 6, resumes at row 5 on m1.7.2. W-418 placed (after the move).
-Stage           : m1.7.2 release = W-337i1 again: PR w-337 → master to open, its run, merge on owner's word, tag, worktree, jar, WL-A-2. Containers UP (C2a).
+Stage           : PR #76: first run 45961283088 red (FinishedPlanTest, W-417 step 4 open) — fixed and pushed; new run to check. Containers UP (C2a).
 Last item commit: "taxplanning W-417: read prod's old data in the copier as m1.6.1 read it — retired keys left out, pre-#33 dates read at UTC, each counted; prod's copy refused all three; D-997 – D-1000"
-Next step       : 1. PR w-337 → master, its run (red → read, report). 2. Green: owner's word → merge --match-head-commit, master run, tag m1.7.2, worktree ../wealthlens-m1.7.2-pg + jar, WL-A-2, log rows as "W-337i1 again". 3. W-337i3 plan: J17 → m1.7.2 jar; owner runs DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens; then rows 5 – 14.
+Next step       : 1. gh run view 45961283088 (red → read, report). 2. Green: owner's word → merge --match-head-commit, master run, tag m1.7.2, worktree ../wealthlens-m1.7.2-pg + jar, WL-A-2, log rows as "W-337i1 again". 3. W-337i3 plan: J17 → m1.7.2 jar; owner runs DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens; then rows 5 – 14.
 Files touched   : (none); api-collection Bruno edits — never commit
 Flags for owner : §1.h count due 2026-11-29 (staging/prod still Mongo: console; dev on PG). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner.
 Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only.
