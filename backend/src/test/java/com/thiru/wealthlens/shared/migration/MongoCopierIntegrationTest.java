@@ -227,6 +227,34 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void copyAll_whenAnAssetHoldsFormsM161ReadPast_copiesItAsM161ReadItAndNamesEachForm() {
+        // Given — an asset written before d55dd15f (total_value), before #33 (its date at Kolkata's midnight), holding a
+        // corporate action stored under its Java names (W-417, D-999)
+        mongoTemplate.getCollection("assets").insertOne(new Document("_id", "asset-old")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("stock_code", "INFY").append("price", 1500.0)
+                .append("quantity", 5.0).append("total_value", 7500.0)
+                .append("transaction_date", Date.from(Instant.parse("2023-09-21T18:30:00Z")))
+                .append("corporate_actions", List.of(new Document("type", "BONUS")
+                        .append("exDate", Date.from(Instant.parse("2024-06-30T18:30:00Z"))).append("stockCode", "INFY"))));
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then — m1.6.1 read the date at UTC (2023-09-21) and the Java-named keys as empty
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        CopyReport assetsReport = reports.stream().filter(report -> report.source().equals("assets")).findFirst().orElseThrow();
+        assertThat(assetsReport.formerForms()).isEqualTo("read as m1.6.1 read them: 1 × CorporateActionEntity.exDate left out, "
+                + "1 × CorporateActionEntity.stockCode left out, 1 × date at midnight Asia/Kolkata, 1 × total_value left out");
+        assertThat(assetsReport.describe()).endsWith(", clean");
+        AssetEntity asset = assets.findById("asset-old").orElseThrow();
+        assertThat(asset.getTransactionDate()).isEqualTo(LocalDate.of(2023, 9, 21));
+        assertThat(asset.getCorporateActions()).singleElement().satisfies(copy -> {
+            assertThat(copy.getExDate()).isNull();
+            assertThat(copy.getStockCode()).isNull();
+        });
+    }
+
+    @Test
     void copyAll_whenTheTradeLedgerIsCopiedAgain_changesNothing() {
         // Given
         storeLedgerHolders();
@@ -595,7 +623,7 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
         JdbcTemplate jdbc = jdbc();
         TargetTable table = TargetTable.read(jdbc, "tax_job_failures");
         PreparedCopy prepared = new PreparedCopy("tax_job_failures", table,
-                List.of(), List.of(new SourceRow("failure-1", Map.of("id", "failure-1", "job", "gazette-watch"))));
+                List.of(), List.of(new SourceRow("failure-1", Map.of("id", "failure-1", "job", "gazette-watch"))), "");
 
         // When
         CopyReport report = copier.verify(jdbc, prepared);

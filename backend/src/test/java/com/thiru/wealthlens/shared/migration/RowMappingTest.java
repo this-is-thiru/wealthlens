@@ -72,7 +72,7 @@ class RowMappingTest {
                         Date.from(Instant.parse("2026-01-31T18:30:00Z"))));
 
         // When
-        SourceRow row = RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), FormerForms.of(KOLKATA));
 
         // Then — auditing held Kolkata's local 2026-02-01T00:00, stored as its true instant 18:30Z, which is the UTC time;
         // _class and the null key leave no column
@@ -89,10 +89,36 @@ class RowMappingTest {
         Document stored = new Document("_id", "failure-1").append("failed_at", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
 
         // When
-        SourceRow row = RowMapping.of(stored, CollectionCopy.sameName("tax_job_failures"), failures, List.of(), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, CollectionCopy.sameName("tax_job_failures"), failures, List.of(), Map.of(), FormerForms.of(KOLKATA));
 
         // Then
         assertThat(row.values()).containsEntry("failed_at", LocalDateTime.of(2026, 2, 1, 0, 0));
+    }
+
+    @Test
+    void of_whenAnAssetHoldsTheRetiredTotalValue_leavesItOutAndCountsIt() {
+        // Given — an asset written before d55dd15f removed AssetEntity's totalValue; m1.6.1 read past it (W-417, D-999)
+        TargetTable assetsTable = new TargetTable("assets", "id", Map.of("id", "character varying", "price", "double precision"));
+        Document stored = new Document("_id", "asset-1").append("price", 1500.0).append("total_value", 7500.0);
+        FormerForms forms = FormerForms.of(KOLKATA);
+
+        // When
+        SourceRow row = RowMapping.of(stored, CollectionCopy.sameName("assets"), assetsTable, List.of(), Map.of(), forms);
+
+        // Then
+        assertThat(row.values()).containsExactlyInAnyOrderEntriesOf(Map.of("id", "asset-1", "price", 1500.0));
+        assertThat(forms.describe()).isEqualTo("read as m1.6.1 read them: 1 × total_value left out");
+    }
+
+    @Test
+    void of_whenAnotherCollectionHoldsTotalValue_isStillRefused() {
+        // Given — total_value is retired only where assets stored it
+        Document stored = new Document("_id", "ws-1").append("total_value", 7500.0);
+
+        // When / Then
+        assertThatThrownBy(() -> RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), FormerForms.of(KOLKATA)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("tax_year_workspaces ws-1: tax_year_workspaces has no column total_value for a stored key");
     }
 
     @Test
@@ -101,7 +127,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "ws-1").append("profile_id", "profile-1").append("legacy_flag", true);
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), KOLKATA)).isInstanceOf(IllegalStateException.class)
+        assertThatThrownBy(() -> RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), FormerForms.of(KOLKATA))).isInstanceOf(IllegalStateException.class)
                 .hasMessage("tax_year_workspaces ws-1: tax_year_workspaces has no column legacy_flag for a stored key");
     }
 
@@ -111,7 +137,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "ws-1").append("tax_year", 2026).append("taxYearStart", 2027);
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), KOLKATA)).isInstanceOf(IllegalStateException.class)
+        assertThatThrownBy(() -> RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), FormerForms.of(KOLKATA))).isInstanceOf(IllegalStateException.class)
                 .hasMessage("tax_year_workspaces ws-1: two stored keys fill tax_year_start");
     }
 
@@ -121,7 +147,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "ws-1").append("tax_year", "2026");
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), KOLKATA)).isInstanceOf(IllegalStateException.class)
+        assertThatThrownBy(() -> RowMapping.of(stored, COPY, WORKSPACES, List.of(), Map.of(), FormerForms.of(KOLKATA))).isInstanceOf(IllegalStateException.class)
                 .hasMessage("tax_year_workspaces ws-1, tax_year_start: A String cannot be stored in a integer column");
     }
 
@@ -131,7 +157,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "token-1").append("factors", List.of("FACTOR_PASSWORD", "FACTOR_OTP"));
 
         // When
-        SourceRow row = RowMapping.of(stored, TOKENS, TOKENS_TABLE, List.of(FACTORS), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, TOKENS, TOKENS_TABLE, List.of(FACTORS), Map.of(), FormerForms.of(KOLKATA));
 
         // Then
         assertThat(row.values()).containsExactlyInAnyOrderEntriesOf(Map.of("id", "token-1"));
@@ -147,7 +173,7 @@ class RowMappingTest {
                 .append("start_date", Date.from(Instant.parse("2026-04-01T00:00:00Z")))));
 
         // When
-        SourceRow row = RowMapping.of(stored, INSURANCES, INSURANCES_TABLE, List.of(POLICY_DETAILS), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, INSURANCES, INSURANCES_TABLE, List.of(POLICY_DETAILS), Map.of(), FormerForms.of(KOLKATA));
 
         // Then
         assertThat(row.children()).containsExactly(Map.entry("insurance_policy_details", List.of(Map.of("policy_id", "sealed-policy",
@@ -161,7 +187,7 @@ class RowMappingTest {
                 .append("legacy_flag", true)));
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, INSURANCES, INSURANCES_TABLE, List.of(POLICY_DETAILS), Map.of(), KOLKATA))
+        assertThatThrownBy(() -> RowMapping.of(stored, INSURANCES, INSURANCES_TABLE, List.of(POLICY_DETAILS), Map.of(), FormerForms.of(KOLKATA)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("insurances insurance-1: insurance_policy_details has no column legacy_flag for a stored key");
     }
@@ -172,7 +198,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "token-1").append("factors", Arrays.asList("FACTOR_PASSWORD", null));
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, TOKENS, TOKENS_TABLE, List.of(FACTORS), Map.of(), KOLKATA))
+        assertThatThrownBy(() -> RowMapping.of(stored, TOKENS, TOKENS_TABLE, List.of(FACTORS), Map.of(), FormerForms.of(KOLKATA)))
                 .isInstanceOf(IllegalStateException.class).hasMessage("refresh_tokens token-1: factors holds a null");
     }
 
@@ -183,7 +209,7 @@ class RowMappingTest {
                 new Document("code", "STT"), new Document("code", "GST")));
 
         // When
-        SourceRow row = RowMapping.of(stored, CHARGES, CHARGES_TABLE, List.of(LINES, AMOUNTS), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, CHARGES, CHARGES_TABLE, List.of(LINES, AMOUNTS), Map.of(), FormerForms.of(KOLKATA));
 
         // Then — positions 0, 1, 2, as Hibernate's @OrderColumn numbers them
         assertThat(row.children().get("user_charge_lines")).containsExactly(Map.of("code", "BROKERAGE", "line_order", 0),
@@ -196,7 +222,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "uc-1").append("amount_by_code", new Document("BROKERAGE", 20.0).append("STT", 10));
 
         // When
-        SourceRow row = RowMapping.of(stored, CHARGES, CHARGES_TABLE, List.of(LINES, AMOUNTS), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, CHARGES, CHARGES_TABLE, List.of(LINES, AMOUNTS), Map.of(), FormerForms.of(KOLKATA));
 
         // Then — the whole number stored as an int is widened to the column's double
         assertThat(row.children().get("user_charge_amounts")).containsExactly(Map.of("charge_code", "BROKERAGE", "amount", 20.0),
@@ -209,7 +235,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "uc-1").append("amount_by_code", new Document("STT", "ten"));
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, CHARGES, CHARGES_TABLE, List.of(LINES, AMOUNTS), Map.of(), KOLKATA))
+        assertThatThrownBy(() -> RowMapping.of(stored, CHARGES, CHARGES_TABLE, List.of(LINES, AMOUNTS), Map.of(), FormerForms.of(KOLKATA)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("user_charges uc-1, amount: A String cannot be stored in a double precision column");
     }
@@ -222,7 +248,7 @@ class RowMappingTest {
                 .append("demerger_stocks", List.of(new Document("stock_code", "NEW1").append("stock_name", "New One"))));
 
         // When
-        SourceRow row = RowMapping.of(stored, ACTIONS, ACTIONS_TABLE, List.of(DEMERGED), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, ACTIONS, ACTIONS_TABLE, List.of(DEMERGED), Map.of(), FormerForms.of(KOLKATA));
 
         // Then
         assertThat(row.values()).containsExactlyInAnyOrderEntriesOf(Map.of("id", "ca-1", "demerger_ratio", "1:1",
@@ -237,7 +263,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "ca-1").append("demerger_detail", "1:1");
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, ACTIONS, ACTIONS_TABLE, List.of(DEMERGED), Map.of(), KOLKATA))
+        assertThatThrownBy(() -> RowMapping.of(stored, ACTIONS, ACTIONS_TABLE, List.of(DEMERGED), Map.of(), FormerForms.of(KOLKATA)))
                 .isInstanceOf(IllegalStateException.class).hasMessage("corporate_action ca-1: demerger_detail is not a sub-document");
     }
 
@@ -248,7 +274,7 @@ class RowMappingTest {
                 .append("sourceDraft", "draft-1")));
 
         // When
-        SourceRow row = RowMapping.of(stored, ELECTIONS, ELECTIONS_TABLE, List.of(EVENTS), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, ELECTIONS, ELECTIONS_TABLE, List.of(EVENTS), Map.of(), FormerForms.of(KOLKATA));
 
         // Then
         assertThat(row.children()).containsExactly(Map.entry("tax_regime_election_events",
@@ -262,7 +288,7 @@ class RowMappingTest {
                 .append("tax_year_start", 2026)));
 
         // When / Then
-        assertThatThrownBy(() -> RowMapping.of(stored, ELECTIONS, ELECTIONS_TABLE, List.of(EVENTS), Map.of(), KOLKATA))
+        assertThatThrownBy(() -> RowMapping.of(stored, ELECTIONS, ELECTIONS_TABLE, List.of(EVENTS), Map.of(), FormerForms.of(KOLKATA)))
                 .isInstanceOf(IllegalStateException.class).hasMessage("tax_regime_election_history history-1: two stored keys fill tax_year_start");
     }
 
@@ -276,7 +302,7 @@ class RowMappingTest {
         Document stored = new Document("_id", "txn-1").append("submitted_at", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
 
         // When
-        SourceRow row = RowMapping.of(stored, transactions, table, List.of(), Map.of(), KOLKATA);
+        SourceRow row = RowMapping.of(stored, transactions, table, List.of(), Map.of(), FormerForms.of(KOLKATA));
 
         // Then — the UTC time of that instant
         assertThat(row.values()).containsEntry("submitted_at", LocalDateTime.of(2026, 1, 31, 18, 30));

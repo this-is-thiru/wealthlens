@@ -114,10 +114,11 @@ public class MongoCopier {
         Map<String, Type> jsonTypes = copy.jsonCopies().stream()
                 .collect(Collectors.toMap(JsonCopy::key, json -> columnType(copy.table(), json.column())));
         List<SourceRow> rows = new ArrayList<>();
+        FormerForms forms = FormerForms.of(writtenZone);
         for (Document document : mongoTemplate.getCollection(copy.collection()).find()) {
-            rows.add(RowMapping.of(document, copy, table, children, jsonTypes, writtenZone));
+            rows.add(RowMapping.of(document, copy, table, children, jsonTypes, forms));
         }
-        return checked(jdbc, new PreparedCopy(copy.collection(), table, children, rows));
+        return checked(jdbc, new PreparedCopy(copy.collection(), table, children, rows, forms.describe()));
     }
 
     /** The GridFS bucket's files, each already sealed by {@code FieldCipher.encryptBytes}, as one row each. */
@@ -131,7 +132,7 @@ public class MongoCopier {
             rows.add(new SourceRow(file.getFilename(), Map.of("document_id", file.getFilename(), "bytes", bytes.toByteArray(),
                     "uploaded_at", LocalDateTime.ofInstant(file.getUploadDate().toInstant(), ZoneOffset.UTC))));
         }
-        return checked(jdbc, new PreparedCopy(CollectionCopies.DOCUMENT_BYTES_BUCKET + " (GridFS)", table, List.of(), rows));
+        return checked(jdbc, new PreparedCopy(CollectionCopies.DOCUMENT_BYTES_BUCKET + " (GridFS)", table, List.of(), rows, ""));
     }
 
     /** Refuses a source with a key twice, and a target holding a row the source lacks (D-953 C3a: the target is fresh). */
@@ -174,7 +175,8 @@ public class MongoCopier {
         }
         childCountProblems(jdbc, prepared).forEach(problems::add);
         readBack(prepared.table().name(), target.size()).ifPresent(problems::add);
-        return new CopyReport(prepared.source(), prepared.table().name(), prepared.rows().size(), target.size(), sourceDigest, problems);
+        return new CopyReport(prepared.source(), prepared.table().name(), prepared.rows().size(), target.size(), sourceDigest,
+                prepared.formerForms(), problems);
     }
 
     /** Each child table's rows against the summed lengths of the lists it was filled from (W-337g2 C3a). */

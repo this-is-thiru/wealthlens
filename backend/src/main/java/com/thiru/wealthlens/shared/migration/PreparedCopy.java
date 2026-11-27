@@ -7,8 +7,9 @@ import java.util.List;
  * before the first row of any is copied, so a refused source stops the run with nothing written.
  *
  * @param children the child tables its lists fill (W-337g2a1)
+ * @param formerForms what was read in an earlier build's form, as {@link FormerForms#describe} names it (W-417)
  */
-record PreparedCopy(String source, TargetTable table, List<ChildTable> children, List<SourceRow> rows) {
+record PreparedCopy(String source, TargetTable table, List<ChildTable> children, List<SourceRow> rows, String formerForms) {
 
     PreparedCopy {
         children = List.copyOf(children);
