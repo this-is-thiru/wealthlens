@@ -4,13 +4,12 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-409 DONE (D-984), board D; committed and pushed on "commit it and push".
-Stage           : between items; W-406 resumes next (C5a – C8a approved, D-983); W-410, W-411 placed, before W-337i.
-Last item commit: "taxplanning W-409: open no port under the copier profile — the jar failed at start, CORS needs the servlet context; D-984"
-Next step       : 1. Check the pipeline run on the W-409 commit (gh run list -b w-337 -L 1). Red → fix first.
-  2. W-406: C5a (UTC-held fields list) in the tool, C6a (taxYear values), runbook §0.10, rerun the trial (containers
-  w406-mongo / w406-pg running; scratchpad w406/ has keys, logs, answers; re-copy: drop public schema, §0.9 command).
-Files touched   : plans/W-406.md, tools/read_comparison.py, tools/read_comparison_test.py (all new, W-406, uncommitted)
+Item            : W-406 DONE (D-985), board D; committed and pushed on "commit it and push".
+Stage           : between items. W-410, W-411 placed (both before W-337i). Owner asked: do you hold every account's email (§0.10 users.txt)?
+Last item commit: "taxplanning W-406: compare every read of m1.6.1 and the PostgreSQL build in the rehearsal — a difference not listed stops the move; D-985"
+Next step       : 1. Check the pipeline runs on 8a537a5c (45932326356) and the W-406 commit (gh run list -b w-337 -L 2). Red → fix first.
+  2. Plan W-410 + W-411 together (batch-small-items), then W-337i. Trial containers w406-mongo / w406-pg still running (stop when done).
+Files touched   : (none uncommitted)
 Flags for owner : staging/dev readback unpasted (W-337h); §1.s Aiven retention not given. W-337f flags unchanged.
 Env notes       : NO Claude attribution; OrbStack started this session; DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on
   pipeline only. Trial: m1.6.1 jar built in ../wealthlens-m1.6.1/backend/target, w-337 jar in backend/target.

@@ -85,6 +85,7 @@ below is the full sequence for a fresh database (W-337).
 1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
 2. W-370 (D-900) — nothing to run: a caller's mistake (every 4xx), the 409 and the 503 are logged at WARN with the message only; only a 500 is logged at ERROR with its trace. A deploy's `grep -c " ERROR "` after the routes check expects **0** again (at `m1.6.1` it counted row 4's four refusals).
 3. §0.9 W-337g2c (D-979) — **at the move (W-337i), once per database:** the copy into PostgreSQL, before the PostgreSQL build first starts and before §1B there.
+4. §0.10 W-406 (D-985) — **at W-337i's rehearsal, after §0.9 there, before staging:** the read comparison, `m1.6.1` against the PostgreSQL build.
 
 ## 0. Before deploying
 
@@ -452,6 +453,58 @@ unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KE
    is untouched — then step 2 again.
 
 **Removed after use:** W-337j removes the copier with MongoDB (YouTrack WL-50, under WL-28), once this step is logged for every database.
+
+### 0.10 W-406 (D-981, D-983, D-985) — the rehearsal's read comparison · owner · **at W-337i's rehearsal, after §0.9 there, before staging moves**
+
+**Why.** Before staging moves, every read the PostgreSQL build answers is compared with what `m1.6.1` answers on the
+MongoDB copy it was copied from, as every user. `tools/read_comparison.py` reads every `GET` route in the `w-337`
+build's OpenAPI spec, fills the path ids from list answers, walks every page at 200, and diffs the two answers field by
+field. **Allowed, and nothing else** (D-981 C3a, D-983 C5a): a time `m1.6.1` showed in Asia/Kolkata comes back in UTC;
+a time `m1.6.1` already held in UTC (`UTC_HELD_FIELDS`, each with its `m1.6.1` line) comes back equal; a field filled
+at request time (`REQUEST_TIME_FIELDS`); an Excel answer compared by cell; a PDF by status and type. **Any other
+difference stops the move.** The tool sends `GET` only. Both builds still record each read (processing log), on the
+rehearsal copies only.
+
+**Before.** Both builds run on your machine at once, with the **same** `JWT_SECURITY_KEY`, `TAX_DATA_KEY` and
+`TAX_DIGEST_KEY`: `m1.6.1` on port 8081 against the MongoDB copy, and the `w-337` build on port 8082 against the
+PostgreSQL copy §0.9 filled. W-411 is built first, or every rate card that shares a start date is listed as a difference.
+
+1. **Precheck, read-only — the two lists** (DataGrip, on the rehearsal PostgreSQL):
+   ```sql
+   SELECT count(*) AS logins FROM user_details;
+   SELECT profile_id || ' ' || tax_year_start FROM tax_year_workspaces ORDER BY 1;
+   ```
+   Save the second query's rows as `~/wealthlens-runs/w406/workspaces.txt`, one per line. Write
+   `~/wealthlens-runs/w406/users.txt` yourself, one `email roles` line per account (roles as `user_details.roles` holds
+   them, e.g. `USER,SUPER_USER`). The stored emails are encrypted, so the list is yours. **Stop** unless its line count
+   equals `logins`, and unless at least one line has `SUPER_USER`.
+2. **Run** (from the release worktree W-337i names; the tool asks for `JWT_SECURITY_KEY` at each step):
+```zsh
+# Rehearsal read comparison: both builds already running on 8081 (m1.6.1) and 8082 (w-337)
+read -r 'REPO?Release worktree path (W-337i names it): '
+W=$REPO/docs/taxplanning-build/tools/read_comparison.py
+[[ -f $W ]] || { echo "no $W: stop"; return 1 }
+cd ~/wealthlens-runs/w406 || return 1
+[[ $(wc -l < users.txt) -gt 0 && -s workspaces.txt ]] || { echo "users.txt or workspaces.txt empty: stop"; return 1 }
+python3 -I -B $W spec --base http://localhost:8082 --users users.txt --out spec.json
+V=(--value taxYear=2025,2026 --value financialYear=2025-2026,2026-2027 --value broker=UPSTOX,FYERS,ZERODHA
+   --value frequency=ANNUALLY,QUARTERLY --value billedThrough=$(date +%F) --workspaces workspaces.txt)
+python3 -I -B $W fetch --base http://localhost:8081 --users users.txt --spec spec.json --out before "${V[@]}"
+python3 -I -B $W fetch --base http://localhost:8082 --users users.txt --spec spec.json --out after "${V[@]}"
+python3 -I -B $W compare before after > report.txt; echo "exit: $?"; tail -3 report.txt
+```
+   `broker` is every `BrokerName` (`BrokerName.java:3 – 7`). Give the `taxYear` and `financialYear` values your copy holds;
+   a value with no rows answers the same on both sides.
+3. **Read the report.** Expect `exit: 0` and `0 differences outside the list`. The `not reached` lines name the routes no
+   list answer led to (both sides alike). The trial (D-985) left three: the admin contract note, a breach notice report and
+   a document parse. **Stop** on any difference. Paste `report.txt` to the session; nothing is worked around or allowed
+   without a decision (a new `UTC_HELD_FIELDS` or `REQUEST_TIME_FIELDS` entry carries the line that proves it).
+4. **After.** `before/` and `after/` hold every user's answers, which is personal data. Once the report is logged,
+   `rm -rf ~/wealthlens-runs/w406/before ~/wealthlens-runs/w406/after`, and delete `users.txt` once the move is signed off.
+5. **Second run / way back.** A second run is safe: it only reads, and `fetch` writes a fresh folder (remove the old one
+   first). There is nothing to undo on either database beyond the read records both builds keep.
+
+**Removed after use:** W-337j removes the tool with the copier (YouTrack WL-50).
 
 ## 1. On every deploy — startup, automatic; confirm in the log
 
