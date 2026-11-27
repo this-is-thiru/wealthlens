@@ -1,9 +1,11 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
 import java.util.Optional;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TaxYearWorkspaceRepository extends MongoRepository<TaxYearWorkspace, String> {
+public interface TaxYearWorkspaceRepository extends JpaRepository<TaxYearWorkspace, String> {
 
     Optional<TaxYearWorkspace> findByProfileIdAndTaxYearStart(String profileId, int taxYearStart);
+
+    void deleteByProfileId(String profileId);
 }

@@ -29,10 +29,11 @@ public class InvestmentTrackerConfig {
 
 	/**
 	 * Today, for code whose result turns on the date: interest on a return runs to the day it is computed (W-112, D-446), so a
-	 * test must be able to fix the day. The zone is the system's, as {@code LocalDate.now()} used before.
+	 * test must be able to fix the day. Its zone is the business zone ({@link TimeSettings}, D-958), not the host's: the JVM runs
+	 * in UTC, and a stored time takes this clock {@code withZone(ZoneOffset.UTC)} (W-402).
 	 */
 	@Bean
-	public Clock clock() {
-		return Clock.systemDefaultZone();
+	public Clock clock(TimeSettings time) {
+		return Clock.system(time.zone());
 	}
 }

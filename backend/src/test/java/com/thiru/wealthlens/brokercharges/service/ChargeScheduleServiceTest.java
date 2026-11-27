@@ -23,7 +23,10 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -60,6 +64,10 @@ class ChargeScheduleServiceTest {
 
     @Mock
     private ChargeScheduleResolver chargeScheduleResolver;
+
+    /** 00:30 on 1 February 2026 in Kolkata, still 31 January in UTC: "today" is the business zone's date (D-958). */
+    @Spy
+    private Clock clock = Clock.fixed(Instant.parse("2026-01-31T19:00:00Z"), ZoneId.of("Asia/Kolkata"));
 
     @InjectMocks
     private ChargeScheduleService service;
@@ -288,7 +296,7 @@ class ChargeScheduleServiceTest {
     void findByBroker_listsEveryCardOnFileForThatBroker() {
         // Given
         List<ChargeScheduleEntity> cards = List.of(card("A", APRIL), card("B", JULY));
-        when(chargeScheduleRepository.findByBrokerNameOrderByStartDateDesc(BrokerName.ZERODHA))
+        when(chargeScheduleRepository.findByBrokerNameOrderByStartDateDescScheduleCodeAsc(BrokerName.ZERODHA))
                 .thenReturn(cards);
 
         // When / Then
@@ -301,7 +309,7 @@ class ChargeScheduleServiceTest {
         // transaction charge in March 2026 and Zerodha moved its depository fee in June; a
         // verifiedOn date that never expires turns rate verification into a one-off and lets the
         // worklist sit empty while reality drifts away from it.
-        ChargeScheduleEntity stale = card("STALE", LocalDate.now().minusDays(120));
+        ChargeScheduleEntity stale = card("STALE", LocalDate.of(2025, 10, 4));
         ChargeScheduleEntity never = card("NEVER", null);
         when(chargeScheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(any()))
                 .thenReturn(List.of(never, stale));
@@ -323,7 +331,7 @@ class ChargeScheduleServiceTest {
         // current, and one checked the day before the horizon is not
         ArgumentCaptor<LocalDate> cutoff = ArgumentCaptor.forClass(LocalDate.class);
         verify(chargeScheduleRepository).findByVerifiedOnIsNullOrVerifiedOnBefore(cutoff.capture());
-        assertThat(cutoff.getValue()).isEqualTo(LocalDate.now().minusDays(90));
+        assertThat(cutoff.getValue()).isEqualTo(LocalDate.of(2025, 11, 3));
     }
 
     @Test

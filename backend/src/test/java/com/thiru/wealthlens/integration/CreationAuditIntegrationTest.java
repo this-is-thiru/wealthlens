@@ -7,19 +7,24 @@ import com.thiru.wealthlens.taxplanning.profile.BankAccount;
 import com.thiru.wealthlens.taxplanning.profile.Employer;
 import com.thiru.wealthlens.taxplanning.profile.FamilyMember;
 import com.thiru.wealthlens.taxplanning.profile.Landlord;
+import com.thiru.wealthlens.taxplanning.profile.LandlordRepository;
 import com.thiru.wealthlens.taxplanning.profile.Lender;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
 import io.restassured.RestAssured;
+import jakarta.persistence.Table;
 import java.net.URI;
 import java.util.Date;
 import java.util.List;
-import org.bson.Document;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,6 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
@@ -45,6 +51,15 @@ class CreationAuditIntegrationTest extends AbstractIntegrationTest {
             DraftRevision.class, DraftComputation.class, RegimeElectionHistory.class);
 
     private String profileId;
+
+    @Autowired
+    private TaxpayerProfileRepository taxpayerProfileRepository;
+
+    @Autowired
+    private FilingDraftRepository filingDraftRepository;
+
+    @Autowired
+    private LandlordRepository landlordRepository;
 
     private ResponseEntity<String> call(HttpMethod method, String path, String body) {
         RestTemplate client = new RestTemplate(new JdkClientHttpRequestFactory());
@@ -66,9 +81,10 @@ class CreationAuditIntegrationTest extends AbstractIntegrationTest {
         assertThat(response.getStatusCode()).as(path + " " + response.getBody()).isEqualTo(HttpStatus.OK);
     }
 
-    private Document audit(Class<?> entity) {
-        return (Document) mongoTemplate.getCollection(mongoTemplate.getCollectionName(entity)).find().first()
-                .get("audit_metadata");
+    private Map<String, Object> audit(Class<?> entity) {
+        String table = entity.getAnnotation(Table.class).name();
+        return new JdbcTemplate(postgresDataSource)
+                .queryForMap("SELECT created_at, created_by, updated_at, updated_by FROM " + table + " LIMIT 1");
     }
 
     @BeforeEach
@@ -76,7 +92,7 @@ class CreationAuditIntegrationTest extends AbstractIntegrationTest {
         created(HttpMethod.POST, "/profiles", """
                 {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT"}""");
-        profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        profileId = taxpayerProfileRepository.findAll().getFirst().getId();
         String references = "/profiles/" + profileId;
         created(HttpMethod.POST, references + "/family-members", """
                 {"name": "Asha", "relationship": "SPOUSE", "dateOfBirth": "1986-02-01", "dependant": true}""");
@@ -90,7 +106,7 @@ class CreationAuditIntegrationTest extends AbstractIntegrationTest {
                 {"bankName": "SBI", "ifsc": "SBIN0000001", "maskedNumber": "XXXX1234", "kind": "SAVINGS"}""");
         created(HttpMethod.POST, references + "/workspaces/2026/first-figure", """
                 {"label": "First figure", "grossPay": {"amountInRupees": 1200000}, "dueDate": "2027-07-31"}""");
-        String draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        String draftId = filingDraftRepository.findAll().getFirst().getId();
         created(HttpMethod.POST, "/drafts/" + draftId + "/status", "{\"status\": \"READY\"}");
         created(HttpMethod.POST, "/drafts/" + draftId + "/status",
                 "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}");
@@ -100,47 +116,46 @@ class CreationAuditIntegrationTest extends AbstractIntegrationTest {
     void create_whenEachKindIsMade_recordsWhenAndByWhomItWasCreated() {
         // When / Then — each of the 11 kinds, as its first save stored it
         for (Class<?> entity : CREATED_WITH_ID) {
-            Document audit = audit(entity);
-            assertThat(audit.get("createdAt")).as(entity.getSimpleName() + " createdAt").isNotNull();
-            assertThat(audit.get("createdBy")).as(entity.getSimpleName() + " createdBy").isNotNull();
+            Map<String, Object> audit = audit(entity);
+            assertThat(audit.get("created_at")).as(entity.getSimpleName() + " createdAt").isNotNull();
+            assertThat(audit.get("created_by")).as(entity.getSimpleName() + " createdBy").isNotNull();
         }
     }
 
     @Test
     void update_whenARecordIsSavedAgain_keepsItsCreationAndMovesItsUpdate() {
         // Given
-        Document before = audit(Landlord.class);
-        String landlordId = mongoTemplate.findAll(Landlord.class).getFirst().getId();
+        Map<String, Object> before = audit(Landlord.class);
+        String landlordId = landlordRepository.findAll().getFirst().getId();
 
         // When
         created(HttpMethod.PUT, "/profiles/" + profileId + "/landlords/" + landlordId, """
                 {"name": "Ravi Kumar", "address": "Bengaluru", "pan": "PQRST5678K"}""");
 
         // Then
-        Document after = audit(Landlord.class);
-        assertThat(mongoTemplate.findAll(Landlord.class)).hasSize(1);
-        assertThat(after.get("createdAt")).isEqualTo(before.get("createdAt"));
-        assertThat(after.get("createdBy")).isEqualTo(before.get("createdBy"));
-        assertThat((Date) after.get("updatedAt")).isAfterOrEqualTo((Date) before.get("updatedAt"));
+        Map<String, Object> after = audit(Landlord.class);
+        assertThat(landlordRepository.findAll()).hasSize(1);
+        assertThat(after.get("created_at")).isEqualTo(before.get("created_at"));
+        assertThat(after.get("created_by")).isEqualTo(before.get("created_by"));
+        assertThat((Date) after.get("updated_at")).isAfterOrEqualTo((Date) before.get("updated_at"));
     }
 
     @Test
     void update_whenARecordWasStoredBeforeItsCreationWasRecorded_staysWithoutIt() {
         // Given — as every landlord stored before W-329b is: no creation fields
-        String landlordId = mongoTemplate.findAll(Landlord.class).getFirst().getId();
-        mongoTemplate.getCollection(mongoTemplate.getCollectionName(Landlord.class)).updateOne(
-                new Document("_id", landlordId),
-                new Document("$unset", new Document("audit_metadata.createdAt", "").append("audit_metadata.createdBy", "")));
+        String landlordId = landlordRepository.findAll().getFirst().getId();
+        new JdbcTemplate(postgresDataSource)
+                .update("UPDATE tax_landlords SET created_at = NULL, created_by = NULL WHERE id = ?", landlordId);
 
         // When
         created(HttpMethod.PUT, "/profiles/" + profileId + "/landlords/" + landlordId, """
                 {"name": "Ravi Kumar", "address": "Bengaluru", "pan": "PQRST5678K"}""");
 
         // Then — updated, not inserted again, and no creation is invented
-        Document audit = audit(Landlord.class);
-        assertThat(mongoTemplate.findAll(Landlord.class)).hasSize(1);
-        assertThat(audit.get("createdAt")).isNull();
-        assertThat(audit.get("createdBy")).isNull();
-        assertThat(audit.get("updatedAt")).isNotNull();
+        Map<String, Object> audit = audit(Landlord.class);
+        assertThat(landlordRepository.findAll()).hasSize(1);
+        assertThat(audit.get("created_at")).isNull();
+        assertThat(audit.get("created_by")).isNull();
+        assertThat(audit.get("updated_at")).isNotNull();
     }
 }

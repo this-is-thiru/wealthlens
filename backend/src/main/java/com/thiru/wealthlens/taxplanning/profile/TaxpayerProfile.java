@@ -2,92 +2,99 @@ package com.thiru.wealthlens.taxplanning.profile;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
-import com.thiru.wealthlens.shared.protection.EncryptedField;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
+import com.thiru.wealthlens.shared.protection.EncryptedColumn;
+import com.thiru.wealthlens.shared.protection.EncryptedDateColumn;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A taxpayer: who a computation is for, with their PAN and the facts the Acts turn on ({@code DR 15} F1). An account owns several
  * (D-046 B2), so a PAN is unique and an email is not. {@code id} is an opaque UUID, the key deep paths carry instead of an email
  * ({@code DR 14} O1.2).
  */
+@Entity
+@Table(name = "tax_profiles")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_profiles")
-public class TaxpayerProfile implements AuditableEntity, CreatedWithId {
+public class TaxpayerProfile implements CreatedWithId {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Indexed
-    @Field("email")
-    @ValueConverter(SearchableIdentifier.class)
+    @Convert(converter = SearchableColumn.class)
+    @Column(name = "email")
     private String email;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("pan")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "pan")
     private String pan;
 
     /**
      * The PAN's keyed digest: what keeps a PAN unique now that the PAN itself is stored encrypted (D-447 C1a). Absent while the
      * profile is held for erasure, so the same PAN may be registered again (W-235); hence sparse.
      */
-    @Indexed(unique = true, sparse = true)
-    @Field("pan_digest")
+    @Column(name = "pan_digest")
     private String panDigest;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("name")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "name")
     private String name;
 
-    @Field(name = "kind", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "kind")
     private AssesseeKind kind;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    @ValueConverter(EncryptedField.class)
-    @Field("date_of_birth")
+    @Convert(converter = EncryptedDateColumn.class)
+    @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Field(name = "residential_status", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "residential_status")
     private ResidentialStatus residentialStatus;
 
     /** Whether the account's portfolio is this person's: its trades belong to one profile, or they would be taxed twice (D-442). */
-    @Field("holds_portfolio")
+    @Column(name = "holds_portfolio")
     private boolean holdsPortfolio;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("disability")
+    @Convert(converter = EncryptedDisabilitySeverityColumn.class)
+    @Column(name = "disability")
     private DisabilitySeverity disability;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    @Field("date_of_death")
+    @Column(name = "date_of_death")
     private LocalDate dateOfDeath;
 
     /**
      * When the user asked for this profile to be erased, in UTC (W-235). From then nothing reads or processes it; it is erased once
      * the hold the law requires has passed ({@code PrivacySettings#erasureHold}, W-237d).
      */
-    @Field("erasure_requested_at")
+    @Column(name = "erasure_requested_at")
     private LocalDateTime erasureRequestedAt;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient

@@ -16,6 +16,8 @@ import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
+import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
+import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
@@ -42,6 +44,12 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ChargeScheduleRepository scheduleRepository;
+
+    @Autowired
+    private ChargeScheduleService scheduleService;
+
+    @Autowired
+    private UserChargeService userChargeService;
 
     @Autowired
     private ChargeInstrumentRepository instrumentRepository;
@@ -76,6 +84,20 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertThat(gst.getBasis()).isEqualTo(ChargeBasis.DERIVED);
         assertThat(gst.getEvents()).containsExactlyInAnyOrder(ChargeEvent.BUY, ChargeEvent.SELL);
         assertMoney(18.0, gst.getRate());
+    }
+
+    @Test
+    void findByBroker_whenCardsShareAStartDate_ordersByScheduleCode() {
+        // Given — the tie saved in the reverse of code order, so an order by start date alone returns it as saved
+        scheduleRepository.save(schedule("TIE_Z", LocalDate.of(2026, 3, 1), null));
+        scheduleRepository.save(schedule("OLDER", LocalDate.of(2025, 1, 1), LocalDate.of(2026, 2, 28)));
+        scheduleRepository.save(schedule("TIE_A", LocalDate.of(2026, 3, 1), null));
+
+        // When
+        List<ChargeScheduleEntity> cards = scheduleService.findByBroker(BrokerName.ZERODHA);
+
+        // Then — newest start first, a shared start in code order (W-411)
+        assertThat(cards).extracting(ChargeScheduleEntity::getScheduleCode).containsExactly("TIE_A", "TIE_Z", "OLDER");
     }
 
     @Test
@@ -227,7 +249,7 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
         userChargeRepository.save(gap);
 
         // When / Then — a missing charge is queryable, not merely logged
-        assertThat(userChargeRepository.findByEmailAndResolutionIn(
+        assertThat(userChargeRepository.findByEmailAndResolutionInOrderByTransactionDateDescIdAsc(
                 EMAIL, List.of(ChargeResolution.NO_SCHEDULE, ChargeResolution.NO_INSTRUMENT_PROFILE)))
                 .extracting(UserChargeEntity::getTransactionId).containsExactly("txn-gap");
     }
@@ -254,6 +276,44 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
         instrument.setEndDate(to);
         instrument.setStatus(EntityStatus.ACTIVE);
         return instrument;
+    }
+
+    @Test
+    void findHistory_whenTradesShareADate_ordersById() {
+        // Given — one trade date, saved in the reverse of id order
+        for (String id : List.of("uc-c", "uc-b", "uc-a")) {
+            UserChargeEntity charge = userCharge("t-" + id, null, "INFY", Map.of("BROKERAGE", 1.0));
+            charge.setId(id);
+            userChargeRepository.save(charge);
+        }
+
+        // When
+        List<UserChargeEntity> history = userChargeService.findHistory(EMAIL);
+
+        // Then — the paged history's rule (D-861 C3a) on the unpaged list too (W-412)
+        assertThat(history).extracting(UserChargeEntity::getId).containsExactly("uc-a", "uc-b", "uc-c");
+    }
+
+    @Test
+    void findGaps_whenTradesShareADate_ordersNewestFirstThenById() {
+        // Given — two gaps on one date and one earlier, saved out of order
+        userChargeRepository.save(gap("gap-z", IN_2024));
+        userChargeRepository.save(gap("gap-a", IN_2024.minusYears(1)));
+        userChargeRepository.save(gap("gap-y", IN_2024));
+
+        // When
+        List<UserChargeEntity> gaps = userChargeService.findGaps(EMAIL);
+
+        // Then
+        assertThat(gaps).extracting(UserChargeEntity::getId).containsExactly("gap-y", "gap-z", "gap-a");
+    }
+
+    private static UserChargeEntity gap(String id, LocalDate tradeDate) {
+        UserChargeEntity charge = userCharge("t-" + id, null, "INFY", Map.of("BROKERAGE", 1.0));
+        charge.setId(id);
+        charge.setTransactionDate(tradeDate);
+        charge.setResolution(ChargeResolution.NO_SCHEDULE);
+        return charge;
     }
 
     private static UserChargeEntity userCharge(String transactionId, String holder, String stockCode,

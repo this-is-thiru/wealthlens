@@ -62,6 +62,7 @@ against the named database.
 | 0.2 | Duplicate checks before the unique indexes | run | run |
 | 0.3 | `profit_and_loss.version` present | **done**: 0 without (2026-10-27) | **done**: 0 without (2026-10-27) |
 | 0.8 | Legacy salary and policy collections: count, back up, drop (W-159) | **retired** (W-331): done (W-334e1) | **retired** (W-331): done (W-334d2) |
+| 0.9 | The move: copy MongoDB into PostgreSQL (W-337g2c), at W-337i, before §1B on that database | at the move | at the move |
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
@@ -83,6 +84,9 @@ below is the full sequence for a fresh database (W-337).
 
 1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
 2. W-370 (D-900) — nothing to run: a caller's mistake (every 4xx), the 409 and the 503 are logged at WARN with the message only; only a 500 is logged at ERROR with its trace. A deploy's `grep -c " ERROR "` after the routes check expects **0** again (at `m1.6.1` it counted row 4's four refusals).
+3. §0.9 W-337g2c (D-979) — **at the move (W-337i), once per database:** the copy into PostgreSQL, before the PostgreSQL build first starts and before §1B there.
+4. §2.19 W-413 (D-989) — **before the PostgreSQL build first starts on a host:** schema `wealthlens` exists there (§2.19 steps 2 – 3). Prod: done (W-337h). Dev and staging: done (2026-11-27, 18.7, schema present). All three hosts ready.
+5. §0.10 W-406 (D-985) — **at W-337i's rehearsal, after §0.9 there, before staging:** the read comparison, `m1.6.1` against the PostgreSQL build.
 
 ## 0. Before deploying
 
@@ -351,6 +355,160 @@ as the export rule above says, once step 4 is logged.
 **Removed after use:** W-331 / WL-47, with §0.6, once this step is logged for every database.
 
 
+### 0.9 W-337g2c (D-979) — the move: copy MongoDB into PostgreSQL · owner · **once per database, at W-337i, before the PostgreSQL build first starts against it**
+
+**Why.** The PostgreSQL build reads only PostgreSQL. The copier (W-337g, D-953; every `m1.6.1` collection specified by D-978) starts
+the app with the `copier` profile — no port opened (W-409, D-984: before it, this step failed at start) — reads every MongoDB collection and the documents' bytes, writes each row by key,
+and proves each copy three ways (keys on both sides, each row against its source, each row loaded through the app's own entity),
+logging one line per source. Ciphertext and digests are carried as stored, so the **target must run with the same `TAX_DATA_KEY`
+and `TAX_DIGEST_KEY` the source was written with**; every time is written in UTC (D-954, D-958). MongoDB is only read.
+
+**Order.** W-337h's target database exists with schema `wealthlens` and is empty (the build works only in that schema and
+never makes it, W-413, D-989: a host without it stops at start with `schema "wealthlens" does not exist`) → this step → §1B (seed) → the app's normal start. **Never seed (§1B) a new
+PostgreSQL database before this step:** the copier refuses a target holding a row its source lacks (D-953 C3a), and the copy brings
+the catalogue across.
+
+1. **Precheck, read-only — the source** (the owner's console, against the named database: dev `wealthlens-dev`, staging
+   `it-staging`, prod `Cluster0`). Expect `loginsWithoutEmail` **0** and `unknownWithData` `[]`; keep `counts` for step 4. **Stop** on
+   either: a login without `email` fails the copy (D-964) and each is a decision (re-key or remove), never worked around here; an
+   unknown collection holding data is refused by the copier.
+   ```js
+   db.aggregate([{ $documents: [(() => { const known = ["user_details", "refresh_tokens", "insurances", "charge_catalogue", "charge_schedules", "charge_instruments", "charge_accounts", "user_charges", "corporate_action", "lastly_performed_corporate_action", "assets", "transactions", "trade_outcomes", "profit_and_loss", "privacy_erasure_requests", "privacy_breach_intimations", "privacy_breach_notices", "privacy_grievances", "privacy_consents", "privacy_processing_log", "tax_profiles", "tax_family_members", "tax_employers", "tax_landlords", "tax_lenders", "tax_bank_accounts", "tax_profile_erasures", "tax_year_workspaces", "tax_filing_drafts", "tax_draft_revisions", "tax_regime_election_history", "tax_draft_computations", "tax_documents", "tax_parse_attempts", "tax_document_confirmations", "tax_gazette_cursor", "tax_gazette_leads", "tax_job_failures", "tax_job_leases", "tax_access_log"];
+     const bytes = ["tax_document_bytes.files", "tax_document_bytes.chunks"];
+     return { database: db.getName(),
+       counts: Object.fromEntries(known.concat(bytes).map(c => [c, db.getCollection(c).countDocuments({})])),
+       unknownWithData: db.getCollectionNames().filter(c => !c.startsWith("system.") && !known.includes(c) && !bytes.includes(c)
+         && db.getCollection(c).countDocuments({}, { limit: 1 }) > 0),
+       loginsWithoutEmail: db.user_details.countDocuments({ email: { $exists: false } }) }; })()] }])
+   ```
+2. **Precheck, read-only — the target** (DataGrip, D-936 C3a, on the target database). Expect **no rows** before the first run
+   (Flyway builds the schema when the copier starts):
+   ```sql
+   SELECT table_name FROM information_schema.tables
+   WHERE table_schema = 'wealthlens' AND table_type = 'BASE TABLE' AND table_name <> 'flyway_schema_history';
+   ```
+   Tables listed after a run that failed part-way are expected — step 3 again finishes it.
+3. **Run** — one block per database, every value by prompt. **Backup:** none is taken: MongoDB is only read, and the target was
+   empty at step 2, so its way back is step 6.
+
+   Dev (no profile but `copier`; `application.yaml` names the dev cluster):
+```zsh
+# Dev: from the release worktree W-337i names; one jar, or stop
+[[ -f wealthlens.jar ]] || { echo "no wealthlens.jar here: stop"; return 1 }
+read -r 'MONGO_USER?Dev Mongo user: '; read -rs 'MONGO_PASSWORD?Dev Mongo password: '; echo
+read -r 'APP_POSTGRES_DATASOURCE_URL?Dev target JDBC URL (jdbc:postgresql://…): '
+read -r 'APP_POSTGRES_DATASOURCE_USERNAME?Dev target user: '; read -rs 'APP_POSTGRES_DATASOURCE_PASSWORD?Dev target password: '; echo
+read -rs 'TAX_DATA_KEY?Dev TAX_DATA_KEY: '; echo; read -rs 'TAX_DIGEST_KEY?Dev TAX_DIGEST_KEY: '; echo
+read -rs 'JWT_SECURITY_KEY?Dev JWT_SECURITY_KEY: '; echo; read -r 'PRIVACY_CONTACT?Dev PRIVACY_CONTACT: '
+export MONGO_USER MONGO_PASSWORD APP_POSTGRES_DATASOURCE_URL APP_POSTGRES_DATASOURCE_USERNAME APP_POSTGRES_DATASOURCE_PASSWORD \
+  TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY PRIVACY_CONTACT
+java -jar wealthlens.jar --spring.profiles.active=copier --app.copier.written-zone=Asia/Kolkata \
+  --app.tax.jobs.enabled=false 2>&1 | tee copier-dev.log
+echo "exit: ${pipestatus[1]}"
+unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY
+```
+   Staging:
+```zsh
+# Staging: from the release worktree W-337i names; one jar, or stop
+[[ -f wealthlens.jar ]] || { echo "no wealthlens.jar here: stop"; return 1 }
+read -r 'MONGO_USER?Staging Mongo user: '; read -rs 'MONGO_PASSWORD?Staging Mongo password: '; echo
+read -r 'APP_POSTGRES_DATASOURCE_URL?Staging target JDBC URL (jdbc:postgresql://…): '
+read -r 'APP_POSTGRES_DATASOURCE_USERNAME?Staging target user: '; read -rs 'APP_POSTGRES_DATASOURCE_PASSWORD?Staging target password: '; echo
+read -rs 'TAX_DATA_KEY?Staging TAX_DATA_KEY: '; echo; read -rs 'TAX_DIGEST_KEY?Staging TAX_DIGEST_KEY: '; echo
+read -rs 'JWT_SECURITY_KEY?Staging JWT_SECURITY_KEY: '; echo; read -r 'PRIVACY_CONTACT?Staging PRIVACY_CONTACT: '
+export MONGO_USER MONGO_PASSWORD APP_POSTGRES_DATASOURCE_URL APP_POSTGRES_DATASOURCE_USERNAME APP_POSTGRES_DATASOURCE_PASSWORD \
+  TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY PRIVACY_CONTACT
+java -jar wealthlens.jar --spring.profiles.active=staging,copier --app.copier.written-zone=Asia/Kolkata \
+  --app.tax.jobs.enabled=false 2>&1 | tee copier-staging.log
+echo "exit: ${pipestatus[1]}"
+unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY
+```
+   Prod:
+```zsh
+# Prod: from the release worktree W-337i names; one jar, or stop
+[[ -f wealthlens.jar ]] || { echo "no wealthlens.jar here: stop"; return 1 }
+read -r 'MONGO_USER?Prod Mongo user: '; read -rs 'MONGO_PASSWORD?Prod Mongo password: '; echo
+read -r 'APP_POSTGRES_DATASOURCE_URL?Prod target JDBC URL (jdbc:postgresql://…): '
+read -r 'APP_POSTGRES_DATASOURCE_USERNAME?Prod target user: '; read -rs 'APP_POSTGRES_DATASOURCE_PASSWORD?Prod target password: '; echo
+read -rs 'TAX_DATA_KEY?Prod TAX_DATA_KEY: '; echo; read -rs 'TAX_DIGEST_KEY?Prod TAX_DIGEST_KEY: '; echo
+read -rs 'JWT_SECURITY_KEY?Prod JWT_SECURITY_KEY: '; echo; read -r 'PRIVACY_CONTACT?Prod PRIVACY_CONTACT: '
+export MONGO_USER MONGO_PASSWORD APP_POSTGRES_DATASOURCE_URL APP_POSTGRES_DATASOURCE_USERNAME APP_POSTGRES_DATASOURCE_PASSWORD \
+  TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY PRIVACY_CONTACT
+java -jar wealthlens.jar --spring.profiles.active=prod,copier --app.copier.written-zone=Asia/Kolkata \
+  --app.tax.jobs.enabled=false 2>&1 | tee copier-prod.log
+echo "exit: ${pipestatus[1]}"
+unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY
+```
+4. **Read the report.** Expect `exit: 0`, **41** lines ending `, clean` (40 collections and the documents' bytes) and one line
+   `Every source copied and proven, times written in UTC from rows written in Asia/Kolkata` (shutdown lines may follow it):
+   ```zsh
+   grep -c ', clean$' copier-<database>.log; grep -c 'PROBLEMS' copier-<database>.log; grep -c 'Every source copied and proven' copier-<database>.log
+   ```
+   → `41`, `0`, `1`. **Stop** on any `PROBLEMS` line or a non-zero exit: keep the log, report it; nothing is worked
+   around. Each line's source and target counts equal step 1's `counts` for that collection.
+5. **After-check, read-only** (DataGrip): these six equal step 1's counts — `SELECT (SELECT count(*) FROM wealthlens.user_details),
+   (SELECT count(*) FROM wealthlens.transactions), (SELECT count(*) FROM wealthlens.assets),
+   (SELECT count(*) FROM wealthlens.trade_outcomes), (SELECT count(*) FROM wealthlens.profit_and_loss),
+   (SELECT count(*) FROM wealthlens.tax_profiles);`. The run-log line records step 4's three
+   answers and these six. Then delete `copier-<database>.log` (it names row keys, no personal data, but is not kept).
+6. **Second run / way back.** A second run is safe: it writes nothing it wrote before and finishes a run that failed part-way
+   (`MongoCopierIntegrationTest`). **Way back:** on the target, `DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens;` (DataGrip) — MongoDB
+   is untouched — then step 2 again.
+
+**Removed after use:** W-337j removes the copier with MongoDB (YouTrack WL-50, under WL-28), once this step is logged for every database.
+
+### 0.10 W-406 (D-981, D-983, D-985) — the rehearsal's read comparison · owner · **at W-337i's rehearsal, after §0.9 there, before staging moves**
+
+**Why.** Before staging moves, every read the PostgreSQL build answers is compared with what `m1.6.1` answers on the
+MongoDB copy it was copied from, as every user. `tools/read_comparison.py` reads every `GET` route in the `w-337`
+build's OpenAPI spec, fills the path ids from list answers, walks every page at 200, and diffs the two answers field by
+field. **Allowed, and nothing else** (D-981 C3a, D-983 C5a): a time `m1.6.1` showed in Asia/Kolkata comes back in UTC;
+a time `m1.6.1` already held in UTC (`UTC_HELD_FIELDS`, each with its `m1.6.1` line) comes back equal; a field filled
+at request time (`REQUEST_TIME_FIELDS`); an Excel answer compared by cell; a PDF by status and type. **Any other
+difference stops the move.** The tool sends `GET` only. Both builds still record each read (processing log), on the
+rehearsal copies only.
+
+**Before.** Both builds run on your machine at once, with the **same** `JWT_SECURITY_KEY`, `TAX_DATA_KEY` and
+`TAX_DIGEST_KEY`: `m1.6.1` on port 8081 against the MongoDB copy, and the `w-337` build on port 8082 against the
+PostgreSQL copy §0.9 filled. W-411 is built first, or every rate card that shares a start date is listed as a difference.
+
+1. **Precheck, read-only — the two lists** (DataGrip, on the rehearsal PostgreSQL):
+   ```sql
+   SELECT count(*) AS logins FROM wealthlens.user_details;
+   SELECT profile_id || ' ' || tax_year_start FROM wealthlens.tax_year_workspaces ORDER BY 1;
+   ```
+   Save the second query's rows as `~/wealthlens-runs/w406/workspaces.txt`, one per line. Write
+   `~/wealthlens-runs/w406/users.txt` as **one line, your own account** (D-988 (1)): `your-email USER,SUPER_USER`, the
+   roles as `user_details.roles` holds them. Your account is `SUPER_USER`, so the admin routes are read too. Other
+   accounts are not compared; their rows are proven by §0.9's own checks. **Stop** unless the file is that one line.
+2. **Run** (from the release worktree W-337i names; the tool asks for `JWT_SECURITY_KEY` at each step):
+```zsh
+# Rehearsal read comparison: both builds already running on 8081 (m1.6.1) and 8082 (w-337)
+read -r 'REPO?Release worktree path (W-337i names it): '
+W=$REPO/docs/taxplanning-build/tools/read_comparison.py
+[[ -f $W ]] || { echo "no $W: stop"; return 1 }
+cd ~/wealthlens-runs/w406 || return 1
+[[ $(wc -l < users.txt) -eq 1 && -s workspaces.txt ]] || { echo "users.txt must be your one line, workspaces.txt not empty: stop"; return 1 }
+python3 -I -B $W spec --base http://localhost:8082 --users users.txt --out spec.json
+V=(--value taxYear=2025,2026 --value financialYear=2025-2026,2026-2027 --value broker=UPSTOX,FYERS,ZERODHA
+   --value frequency=ANNUALLY,QUARTERLY --value billedThrough=$(date +%F) --workspaces workspaces.txt)
+python3 -I -B $W fetch --base http://localhost:8081 --users users.txt --spec spec.json --out before "${V[@]}"
+python3 -I -B $W fetch --base http://localhost:8082 --users users.txt --spec spec.json --out after "${V[@]}"
+python3 -I -B $W compare before after > report.txt; echo "exit: $?"; tail -3 report.txt
+```
+   `broker` is every `BrokerName` (`BrokerName.java:3 – 7`). Give the `taxYear` and `financialYear` values your copy holds;
+   a value with no rows answers the same on both sides.
+3. **Read the report.** Expect `exit: 0` and `0 differences outside the list`. The `not reached` lines name the routes no
+   list answer led to (both sides alike). The trial (D-985) left three: the admin contract note, a breach notice report and
+   a document parse. **Stop** on any difference. Paste `report.txt` to the session; nothing is worked around or allowed
+   without a decision (a new `UTC_HELD_FIELDS` or `REQUEST_TIME_FIELDS` entry carries the line that proves it).
+4. **After.** `before/` and `after/` hold every user's answers, which is personal data. Once the report is logged,
+   `rm -rf ~/wealthlens-runs/w406/before ~/wealthlens-runs/w406/after`, and delete `users.txt` once the move is signed off.
+5. **Second run / way back.** A second run is safe: it only reads, and `fetch` writes a fresh folder (remove the old one
+   first). There is nothing to undo on either database beyond the read records both builds keep.
+
+**Removed after use:** W-337j removes the tool with the copier (YouTrack WL-50).
+
 ## 1. On every deploy — startup, automatic; confirm in the log
 
 | # | Item / decision | What happens at startup | Check | If it fails |
@@ -607,6 +765,14 @@ request (§1.z, §1.u), so a snapshot taken during the hold holds it until that 
 | Snapshots or exports kept outside Atlas | none (owner, 2026-11-19) | none (owner, 2026-11-19) |
 | EC2 volume snapshotted (EBS, AMI)? | *not given* | — |
 | Processor terms accepted (Atlas, AWS): document and date (Act s.8(2), r.6(1)(f)) | *not given* | *not given* |
+
+**After the move (W-337h, D-980)** — the PostgreSQL hosts, from the sources notes; the owner fills in what is not given:
+
+| | prod (Neon, Free) | staging (Aiven, `wealthlens-staging`) | dev (Aiven, `wealthlens-dev`) |
+|---|---|---|---|
+| Snapshot schedule; retention; point-in-time window | 1 manual snapshot, no scheduled backups; history 6 hours (`sources/2026-11-23-neon-postgresql.md`) | *not given* — retention not shown on the old service's Overview (`sources/2026-11-22-aiven-postgresql.md`); this service not read | *not given* |
+| Longest retention ≤ P1Y? (the check) | yes, 6 hours | *not given* | *not given* |
+| Processor terms accepted: document and date | *not given* | *not given* | *not given* |
 
 **The check (owner, read-only, safe to repeat):** read each cluster's backup policy in Atlas, enter every retention
 figure above, and confirm none exceeds one year. A longer one is shortened in Atlas before the duties commence. If a
@@ -1023,7 +1189,7 @@ absent field change nothing (all counts 0). **Way back:** `mongoimport --uri "<u
 charge-engine-<c>-backup.json` per collection, and `mongoimport --mode merge` of the P&L file; then `POST
 /api/v1/admin/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5, "written directly").
 
-## 1B. Charge engine — seed the rate cards · `SUPER_USER` · **every database · after §1A, before the first trade**
+## 1B. Charge engine — seed the rate cards · `SUPER_USER` · **every database · after §1A, before the first trade; on a PostgreSQL database, after §0.9**
 
 **Why.** Seeding is not automatic (ADR-27). A database with no cards prices every V2 trade `NO_SCHEDULE` at ₹0, and
 with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
@@ -1877,6 +2043,27 @@ list, one without — before 2, backup 2, write 2 / 2, after 0, second run 0 / 0
 
 **Retired after use:** W-368 / WL-49, once this is logged for every database. There is no code to remove.
 
+### 2.19 W-337h (D-936, D-980) — the PostgreSQL databases · owner, DataGrip · **every database · once · done 2026-11-27**
+
+What exists, one host per database (D-980). Each has one role used by the owner, Flyway and the app (C2a), over TLS:
+
+| Database | Host | Database, role | TLS |
+|---|---|---|---|
+| prod | Neon project `wealthlens`, branch `production`: `ep-holy-meadow-a1f4tyxx.ap-southeast-1.aws.neon.tech` | `neondb`, `neondb_owner` | `sslmode=require&channel_binding=require` |
+| staging | Aiven project `aaaaaw`: `wealthlens-staging-aaaaaw.e.aivencloud.com:18042` | `defaultdb`, `avnadmin` | `sslmode=require` |
+| dev | Aiven service `wealthlens-dev`: `wealthlens-dev-wealthlens-dev.d.aivencloud.com:13196` | `defaultdb`, `avnadmin` | `sslmode=require` |
+
+Passwords are in the owner's password manager only, never in the repo. The app works in schema `wealthlens` and never
+makes it (W-413, D-989): step 2 below is what makes it, on each host, before the PostgreSQL build first starts there.
+
+1. **Check before (read-only):** `SELECT version() AS version, current_database() AS db, current_schema() AS schema;` — expect
+   `PostgreSQL 18.…`, the database above, `public`.
+2. **The schema:** `CREATE SCHEMA IF NOT EXISTS wealthlens;`
+3. **Check after (read-only):** `SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'wealthlens';` — one row.
+
+**Second run:** safe; `IF NOT EXISTS` changes nothing. **Way back:** `DROP SCHEMA wealthlens;` (empty until §0.9), or delete
+the Neon branch or Aiven service. Nothing but the empty schema is in any of them before W-337i.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
@@ -2195,3 +2382,9 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-22 | prod `Cluster0` (W-366c on `m1.6.1`, D-897) | row 6c, §2.18 step 5: backup dropped | owner | `profit_and_loss_backfill_ids_w173` present: `false` — **go**; §2.18 done on prod (logged for both databases: W-368 may now retire it) |
 | 2026-11-22 | prod (W-366c on `m1.6.1`, D-897) | row 7, logout, `m1.6.1` stopped | owner | `logout 204`; exit 143; `m1.6.1 stopped`; ERROR lines 4, exactly row 4's deliberate refusals (three `No static resource …`, one `A trade must name its stock code`) as on staging — **go**; awaiting the owner's sign-off |
 | 2026-11-22 | prod (W-366c, D-897) | sign-off | owner | "approved" (to "say prod signed off") — prod on `m1.6.1`; W-366c done, W-366 complete |
+| 2026-11-23 | prod, Neon `production` (W-337h, D-936) | rows 0 – 3, 5, 6 | owner | done per `plans/W-337h.md` step 2a; "prod signed off" — **go** |
+| 2026-11-27 | staging, Aiven `wealthlens-staging` (W-337h, D-980) | connection details; rows 0, 2 – 3 | owner | host `wealthlens-staging-aaaaaw.e.aivencloud.com:18042`, `defaultdb`, `avnadmin`, `sslmode=require`; **the version and schema readback was not pasted** |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337h, D-980) | connection details; rows 0, 2 – 3 | owner | host `wealthlens-dev-wealthlens-dev.d.aivencloud.com:13196`, `defaultdb`, `avnadmin`, `sslmode=require`; **the version and schema readback was not pasted**; rows 4 – 5 not taken (D-980) |
+| 2026-11-27 | prod, staging, dev (W-337h, D-980) | row 6, sign-off | owner | "credentials saved off-repo, prod + staging + dev signed off" |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337h, W-413; D-980, D-989) | §2.19 steps 1 – 3, readback | owner | `PostgreSQL 18.7 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.3.1 20260722 (Red Hat 15.3.1-1), 64-bit`, `defaultdb`, `public`; schema `wealthlens` present — **go**; closes the readback the 2026-11-27 dev line left "not pasted" |
+| 2026-11-27 | staging, Aiven `wealthlens-staging` (W-337h, W-413; D-980, D-989) | §2.19 steps 1 – 3, readback | owner | `PostgreSQL 18.7 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.3.1 20260722 (Red Hat 15.3.1-1), 64-bit`, `defaultdb`, `public`; schema `wealthlens` present — **go**; the service was created 2026-11-27 01:58 UTC, so the password saved before then failed (`28P01`) until the connection was set up again; closes the staging line left "not pasted" |

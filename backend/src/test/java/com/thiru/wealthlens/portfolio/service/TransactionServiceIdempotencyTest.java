@@ -2,7 +2,6 @@ package com.thiru.wealthlens.portfolio.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -20,8 +19,11 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +44,9 @@ class TransactionServiceIdempotencyTest {
     private static final String EMAIL = "test@example.com";
     private static final UserMail USER = UserMail.from(EMAIL);
 
+    /** Midnight of 1 February 2026 in Asia/Kolkata: 18:30 on 31 January in UTC, the time a submission is stored at (W-402). */
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-01-31T18:30:00Z"), ZoneId.of("Asia/Kolkata"));
+
     @Mock
     private TransactionRepository transactionRepository;
 
@@ -53,7 +58,7 @@ class TransactionServiceIdempotencyTest {
     @BeforeEach
     void setUp() {
         transactionService = new TransactionService(transactionRepository, new IdempotencyProperties(60),
-                chargeViewAssembler);
+                chargeViewAssembler, CLOCK);
         when(transactionRepository.save(any(TransactionEntity.class))).thenAnswer(invocation -> {
             TransactionEntity saved = invocation.getArgument(0);
             saved.setId("txn-new");
@@ -120,10 +125,12 @@ class TransactionServiceIdempotencyTest {
         // When
         TransactionRecord record = transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
 
-        // Then
+        // Then -- the window is 60 s back from now in UTC, the zone submitted_at is stored in (W-402)
         assertEquals("txn-seconds-ago", record.transactionId());
         assertTrue(record.replay());
         verify(transactionRepository, never()).save(any(TransactionEntity.class));
+        verify(transactionRepository).findFirstByEmailAndTradeFingerprintAndSubmittedAtAfterOrderBySubmittedAtDesc(eq(EMAIL), any(),
+                eq(LocalDateTime.of(2026, 1, 31, 18, 29)));
     }
 
     @Test
@@ -178,9 +185,6 @@ class TransactionServiceIdempotencyTest {
     @Test
     @DisplayName("what gets written carries the fingerprint and the submission time")
     void recordTransaction_whenNew_stampsTheFingerprintAndSubmissionTime() {
-        // Given
-        LocalDateTime before = LocalDateTime.now();
-
         // When
         transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
 
@@ -189,8 +193,7 @@ class TransactionServiceIdempotencyTest {
         verify(transactionRepository).save(captor.capture());
         TransactionEntity saved = captor.getValue();
         assertEquals(TradeFingerprint.of(EMAIL, trade()), saved.getTradeFingerprint());
-        assertNotNull(saved.getSubmittedAt());
-        assertFalse(saved.getSubmittedAt().isBefore(before));
+        assertEquals(LocalDateTime.of(2026, 1, 31, 18, 30), saved.getSubmittedAt());
     }
 
     @Test
@@ -198,7 +201,7 @@ class TransactionServiceIdempotencyTest {
     void recordTransaction_whenTheWindowIsZero_skipsTheFingerprintLookup() {
         // Given
         transactionService = new TransactionService(transactionRepository, new IdempotencyProperties(0),
-                chargeViewAssembler);
+                chargeViewAssembler, CLOCK);
 
         // When
         TransactionRecord record = transactionService.recordTransaction(USER, trade(), TradeFlow.V2);
@@ -215,16 +218,12 @@ class TransactionServiceIdempotencyTest {
         // Given (W-287)
         AssetRequest request = trade();
         request.setTransactionDate(null);
-        LocalDate before = LocalDate.now();
 
         // When
         transactionService.recordTransaction(USER, request, TradeFlow.V2);
 
-        // Then -- bounded on both sides so a run across midnight still holds
-        LocalDate stored = storedTransaction().getTransactionDate();
-        LocalDate after = LocalDate.now();
-        assertFalse(stored.isBefore(before));
-        assertFalse(stored.isAfter(after));
+        // Then -- the business zone's date: midnight of 1 February in Kolkata, while UTC is still on 31 January (D-958)
+        assertEquals(LocalDate.of(2026, 2, 1), storedTransaction().getTransactionDate());
     }
 
     @Test

@@ -93,7 +93,8 @@ public abstract class AbstractIntegrationTest {
          * shared container. The default ceiling made a long local or CI run fail with "sorry, too many clients
          * already" partway through, unrelated to any one test's correctness.
          */
-        postgresContainer = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400");
+        postgresContainer = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400")
+                .withInitScript("postgres-schema.sql");
         postgresContainer.start();
     }
 
@@ -186,9 +187,10 @@ public abstract class AbstractIntegrationTest {
      *
      * <p>Uses {@code deleteMany} / {@code TRUNCATE} rather than {@code drop} deliberately: dropping a Mongo collection
      * also drops its indexes, and nothing recreates them until the next startup (an {@code @PostConstruct} index
-     * initializer such as {@code TaxProfileIndexInitializer}), so every later class in the shared container would run
-     * without its unique indexes (W-300). {@code TRUNCATE} on PostgreSQL never drops an index, so this risk does not
-     * apply to a ported table such as {@code profit_and_loss} (W-337e). {@code ArchitectureTest.nothing_drops_a_collection} holds it.
+     * initializer), so every later class in the shared container would run without its unique indexes (W-300).
+     * {@code TRUNCATE} on PostgreSQL never drops an index, so this risk does not apply to a ported table such as
+     * {@code profit_and_loss} (W-337e) — every collection with an index initializer moved this way by W-337f, D-951.
+     * {@code ArchitectureTest.nothing_drops_a_collection} holds it.
      */
     @AfterEach
     void cleanDatabase() {
@@ -200,7 +202,7 @@ public abstract class AbstractIntegrationTest {
         }
         JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
         List<String> tables = jdbc.queryForList(
-                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'",
                 String.class);
         List<String> toTruncate = tables.stream()
                 .filter(table -> !table.equals("flyway_schema_history") && !SEEDED_REFERENCE_COLLECTIONS.contains(table))

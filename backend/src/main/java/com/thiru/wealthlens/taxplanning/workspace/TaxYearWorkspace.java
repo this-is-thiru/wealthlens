@@ -1,38 +1,42 @@
 package com.thiru.wealthlens.taxplanning.workspace;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** One profile's one tax year, holding its drafts (T7, keyed by profile: D-046 B2 over {@code DR 11} F8). */
+@Entity
+@Table(name = "tax_year_workspaces")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_year_workspaces")
-@CompoundIndex(name = "tax_workspace_year_idx", def = "{'profile_id': 1, 'tax_year': 1}", unique = true)
-public class TaxYearWorkspace implements AuditableEntity, CreatedWithId {
+public class TaxYearWorkspace implements CreatedWithId {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("profile_id")
+    @Column(name = "profile_id")
     private String profileId;
 
-    @Field("tax_year")
+    @Column(name = "tax_year_start")
     private int taxYearStart;
 
-    @Field("primary_draft_id")
+    @Column(name = "primary_draft_id")
     private String primaryDraftId;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient

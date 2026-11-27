@@ -3,9 +3,9 @@ package com.thiru.wealthlens.taxplanning.workspace;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface FilingDraftRepository extends MongoRepository<FilingDraft, String> {
+public interface FilingDraftRepository extends JpaRepository<FilingDraft, String> {
 
     List<FilingDraft> findByWorkspaceId(String workspaceId);
 

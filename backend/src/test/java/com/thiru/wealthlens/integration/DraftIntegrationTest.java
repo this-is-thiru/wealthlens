@@ -4,16 +4,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
-import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
-import com.thiru.wealthlens.taxplanning.profile.Landlord;
+import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
+import com.thiru.wealthlens.taxplanning.profile.LandlordRepository;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
+import com.thiru.wealthlens.taxplanning.workspace.DraftRevisionRepository;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
-import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
+import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistoryRepository;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
+import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspaceRepository;
 import io.restassured.RestAssured;
 import java.net.URI;
 import java.util.List;
@@ -27,8 +32,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -37,13 +41,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-/** A draft over HTTP and into Mongo: its revisions, its locking, its freeze and its election (W-099, W-100, W-108, W-110, W-082d; D-441). */
+/** A draft over HTTP and into PostgreSQL: its revisions, its locking, its freeze and its election (W-099, W-100, W-108, W-110, W-082d; D-441). */
 class DraftIntegrationTest extends AbstractIntegrationTest {
 
     private static final String OWNER = "drafter@example.com";
@@ -55,10 +61,35 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
               "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}}]""";
 
     @Autowired
+    private TaxpayerProfileRepository profiles;
+
+    @Autowired
+    private TaxYearWorkspaceRepository workspaces;
+
+    @Autowired
+    private FilingDraftRepository drafts;
+
+    @Autowired
+    private DraftRevisionRepository revisions;
+
+    @Autowired
+    private DraftComputationRepository computations;
+
+    @Autowired
+    private LandlordRepository landlords;
+
+    @Autowired
+    private RegimeElectionHistoryRepository elections;
+
+    @Autowired
+    private AccessRecordRepository accessRecords;
+
+    @Autowired
     private DraftService draftService;
 
     @Autowired
-    private MongoTransactionManager transactionManager;
+    @Qualifier("postgresTransactionManager")
+    private PlatformTransactionManager transactionManager;
 
     private String profileId;
     private String draftId;
@@ -94,9 +125,9 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT"}""", null);
-        profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        profileId = profiles.findAll().getFirst().getId();
         call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"As per Form 16\"}", null);
-        draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        draftId = drafts.findAll().getFirst().getId();
     }
 
     @Test
@@ -106,8 +137,30 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(read.getHeaders().getETag()).isEqualTo("\"rev-0\"");
-        assertThat(mongoTemplate.findAll(TaxYearWorkspace.class).getFirst().getPrimaryDraftId()).isEqualTo(draftId);
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+        assertThat(workspaces.findAll().getFirst().getPrimaryDraftId()).isEqualTo(draftId);
+        assertThat(revisions.findAll()).hasSize(1);
+    }
+
+    @Test
+    void workspace_whenYearNeverStarted_refusesAndWritesNothing() {
+        // When — the setup started 2026 only
+        ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/workspaces/2027", null, null);
+
+        // Then
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(read.getBody()).contains("This profile has no workspace for that year");
+        assertThat(workspaces.findAll()).extracting(TaxYearWorkspace::getTaxYearStart).containsExactly(2026);
+    }
+
+    @Test
+    void drafts_whenYearNeverStarted_listsNoneAndWritesNothing() {
+        // When
+        ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/workspaces/2027/drafts", null, null);
+
+        // Then
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(read.getBody()).isEqualTo("[]");
+        assertThat(workspaces.findAll()).extracting(TaxYearWorkspace::getTaxYearStart).containsExactly(2026);
     }
 
     @Test
@@ -116,7 +169,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/workspaces/2026", null, null);
 
         // Then
-        assertThat(mongoTemplate.findAll(TaxYearWorkspace.class)).hasSize(1);
+        assertThat(workspaces.findAll()).hasSize(1);
     }
 
     @Test
@@ -128,7 +181,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(saved.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(saved.getHeaders().getETag()).isEqualTo("\"rev-1\"");
         assertThat(saved.getBody()).contains("175000");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+        assertThat(revisions.findAll()).hasSize(2);
     }
 
     @Test
@@ -146,7 +199,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(employments).hasSize(1);
         assertThat(employments.at("/0/components/0/annualAmount/amountInRupees").decimalValue())
                 .isEqualByComparingTo("175000");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+        assertThat(revisions.findAll()).hasSize(2);
     }
 
     @Test
@@ -163,7 +216,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).contains("employmentz");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+        assertThat(revisions.findAll()).hasSize(1);
     }
 
     private static final String ANSWER = """
@@ -207,7 +260,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).contains("NOT_ASKED is not a question 2026-27 asks");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+        assertThat(revisions.findAll()).hasSize(1);
     }
 
     @Test
@@ -220,13 +273,13 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).contains("DIRECTOR_IN_COMPANY is answered as AMOUNT").doesNotContain("98765");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+        assertThat(revisions.findAll()).hasSize(1);
     }
 
     private String landlordOf(String ownerProfileId) {
         call(HttpMethod.POST, OWNER, "/profiles/" + ownerProfileId + "/landlords", """
                 {"name": "A landlord", "address": "1 Main Road", "pan": "ABCPL1234K"}""", null);
-        return mongoTemplate.findAll(Landlord.class).getLast().getId();
+        return landlords.findByProfileId(ownerProfileId).getLast().getId();
     }
 
     private static String naming(String list, String id) {
@@ -253,7 +306,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Spouse", "pan": "BCDEF2345G", "kind": "INDIVIDUAL", "dateOfBirth": "1987-02-01",
                  "residentialStatus": "RESIDENT"}""", null);
-        String otherProfileId = mongoTemplate.findAll(TaxpayerProfile.class).stream().map(TaxpayerProfile::getId)
+        String otherProfileId = profiles.findAll().stream().map(TaxpayerProfile::getId)
                 .filter(id -> !id.equals(profileId)).findFirst().orElseThrow();
         String landlordId = landlordOf(otherProfileId);
 
@@ -263,7 +316,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).contains("landlord " + landlordId + " is not one of this profile's landlords");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+        assertThat(revisions.findAll()).hasSize(1);
     }
 
     @Test
@@ -281,7 +334,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // Given — named, then removed as retention would
         String landlordId = landlordOf(profileId);
         save(naming("landlordIds", landlordId), "\"rev-0\"");
-        mongoTemplate.remove(mongoTemplate.findById(landlordId, Landlord.class));
+        landlords.deleteById(landlordId);
 
         // When
         ResponseEntity<String> saved = save(ADD_EMPLOYMENT.formatted("175000"), "\"rev-1\"");
@@ -316,7 +369,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(saved.getBody()).contains("\"status\":\"DRAFT\"");
-        assertThat(mongoTemplate.findAll(DraftRevision.class).stream().filter(DraftRevision::isReopened)).hasSize(1);
+        assertThat(revisions.findAll().stream().filter(DraftRevision::isReopened)).hasSize(1);
     }
 
     @Test
@@ -330,7 +383,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
 
         // Then — T11-6
         assertThat(frozen.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
+        assertThat(revisions.findAll()).hasSize(1);
     }
 
     @Test
@@ -348,7 +401,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         status("{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}");
 
         // Then
-        RegimeElectionHistory history = mongoTemplate.findAll(RegimeElectionHistory.class).getFirst();
+        RegimeElectionHistory history = elections.findAll().getFirst();
         assertThat(history.getEvents()).hasSize(1);
         assertThat(history.isElectedBy(TaxYearId.of(2027))).isTrue();
         assertThat(history.isElectedBy(TaxYearId.of(2025))).isFalse();
@@ -370,8 +423,8 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         }
 
         // When / Then
-        assertThat(mongoTemplate.findAll(FilingDraft.class)).hasSize(5);
-        assertThat(mongoTemplate.findAll(TaxYearWorkspace.class)).hasSize(1);
+        assertThat(drafts.findAll()).hasSize(5);
+        assertThat(workspaces.findAll()).hasSize(1);
     }
 
     @Test
@@ -388,7 +441,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(both).extracting(ResponseEntity::getStatusCode).containsExactlyInAnyOrder(HttpStatus.OK, HttpStatus.CONFLICT);
         String loser = both.stream().filter(r -> r.getStatusCode() == HttpStatus.CONFLICT).findFirst().orElseThrow().getBody();
         assertThat(loser).contains("\"conflictingPaths\":[\"/entered/employments/-\"]");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+        assertThat(revisions.findAll()).hasSize(2);
     }
 
     private static ResponseEntity<String> resultOf(Future<ResponseEntity<String>> future) {
@@ -419,7 +472,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(answer.getBody()).contains("moved on to revision 1", "\"conflictingPaths\":[\"/entered/employments/-\"]");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+        assertThat(revisions.findAll()).hasSize(2);
     }
 
     @Test
@@ -441,7 +494,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(answer.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(answer.getBody()).contains("Another save of this draft had not finished; read the draft and send again")
                 .doesNotContain("moved on to revision");
-        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+        assertThat(revisions.findAll()).hasSize(2);
     }
 
     /** Writes revision 1 inside a transaction that stays open until released, so the race is the same on every run. */
@@ -449,6 +502,8 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         JsonNode patch = JsonMapper.builder().build().readTree(ADD_EMPLOYMENT.formatted("1"));
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             draftService.patch(OWNER, draftId, 0, patch);
+            // JPA holds the insert until commit; written means written, as Mongo's insert was at once
+            status.flush();
             written.countDown();
             try {
                 assertThat(release.await(10, TimeUnit.SECONDS)).isTrue();
@@ -479,9 +534,9 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
     @Test
     void inputsAt_whenEachSaveIsReplayed_isByteIdenticalToWhatWasRead() {
         // Given — T11-4
-        String blank = mongoTemplate.findAll(FilingDraft.class).getFirst().getInputsJson();
+        String blank = drafts.findAll().getFirst().getInputsJson();
         save(ADD_EMPLOYMENT.formatted("100"), "\"rev-0\"");
-        String first = mongoTemplate.findAll(FilingDraft.class).getFirst().getInputsJson();
+        String first = drafts.findAll().getFirst().getInputsJson();
         save(ADD_EMPLOYMENT.formatted("200"), "\"rev-1\"");
 
         // When / Then
@@ -500,12 +555,13 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
 
         // Then — DR 14 O1.1: the figure is read back but is in no stored document; O4: both reads recorded
         assertThat(atOne).contains("175000");
-        assertThat(mongoTemplate.getCollection("tax_filing_drafts").find().first().getString("inputs_json")).startsWith("k1:");
-        mongoTemplate.getCollection("tax_filing_drafts").find()
-                .forEach(stored -> assertThat(stored.toJson()).doesNotContain("175000", "BASIC"));
-        mongoTemplate.getCollection("tax_draft_revisions").find()
-                .forEach(stored -> assertThat(stored.toJson()).doesNotContain("175000", "BASIC"));
-        assertThat(mongoTemplate.findAll(AccessRecord.class))
+        JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
+        assertThat(jdbc.queryForObject("SELECT inputs_json FROM tax_filing_drafts", String.class)).startsWith("k1:");
+        jdbc.queryForList("SELECT * FROM tax_filing_drafts")
+                .forEach(stored -> assertThat(stored.toString()).doesNotContain("175000", "BASIC"));
+        jdbc.queryForList("SELECT * FROM tax_draft_revisions")
+                .forEach(stored -> assertThat(stored.toString()).doesNotContain("175000", "BASIC"));
+        assertThat(accessRecords.findAll())
                 .extracting(AccessRecord::getSubject, AccessRecord::getSubjectId)
                 .containsExactlyInAnyOrder(tuple(ReadSubject.DRAFT, draftId), tuple(ReadSubject.DRAFT_REVISION, draftId));
     }
@@ -615,7 +671,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         status("{\"status\": \"READY\"}");
         status("{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}");
         String fingerprint = computed().get("inputsFingerprint").asString();
-        long stored = mongoTemplate.count(new Query(), DraftComputation.class);
+        long stored = computations.count();
 
         // When
         ResponseEntity<String> response = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/claim-integrity", null, null);
@@ -630,7 +686,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(panel.at("/rows/0/gap/amountInRupees").decimalValue()).isEqualByComparingTo("160000");
         assertThat(panel.at("/rows/0/says").toString()).contains("6 months not yet receipted", "not all on file");
         assertThat(panel.get("notIncluded").toString()).contains("landlords together").doesNotContain("W-119b1");
-        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isEqualTo(stored);
+        assertThat(computations.count()).isEqualTo(stored);
         assertThat(computed().get("inputsFingerprint").asString()).isEqualTo(fingerprint);
     }
 
@@ -646,7 +702,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         status("{\"status\": \"READY\"}");
         status("{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}");
         String fingerprint = computed().get("inputsFingerprint").asString();
-        long stored = mongoTemplate.count(new Query(), DraftComputation.class);
+        long stored = computations.count();
 
         // When
         ResponseEntity<String> response =
@@ -669,7 +725,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(rent.at("/1/state").asString()).isEqualTo("NOT_HELD");
         assertThat(rent.at("/1/from").asString()).isEqualTo("LANDLORD");
         assertThat(checklist.get("notIncluded").toString()).contains("not yet catalogued");
-        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isEqualTo(stored);
+        assertThat(computations.count()).isEqualTo(stored);
         assertThat(computed().get("inputsFingerprint").asString()).isEqualTo(fingerprint);
     }
 
@@ -698,7 +754,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(old.at("/tax/bill/amountInRupees").decimalValue()).isEqualByComparingTo("163800");
         assertThat(old.get("coarse").asBoolean()).isTrue();
         assertThat(old.at("/band/lower/amountInRupees").decimalValue()).isEqualByComparingTo("88920");
-        assertThat(mongoTemplate.count(new Query(), DraftComputation.class)).isEqualTo(2);
+        assertThat(computations.count()).isEqualTo(2);
         JsonNode steps = JsonMapper.builder().build().readTree(
                 call(HttpMethod.GET, OWNER, "/drafts/" + created + "/onboarding", null, null).getBody());
         assertThat(steps.at("/steps/0/answered").asBoolean()).isTrue();
@@ -734,7 +790,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
     @Test
     void firstFigure_whenNoDueDateIsGiven_expected400AndCreatesNoDraft() {
         // Given
-        long drafts = mongoTemplate.count(new Query(), FilingDraft.class);
+        long draftsBefore = drafts.count();
 
         // When
         ResponseEntity<String> response = call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/first-figure",
@@ -743,7 +799,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).contains("/dueDate");
-        assertThat(mongoTemplate.count(new Query(), FilingDraft.class)).isEqualTo(drafts);
+        assertThat(drafts.count()).isEqualTo(draftsBefore);
     }
 
     @Test

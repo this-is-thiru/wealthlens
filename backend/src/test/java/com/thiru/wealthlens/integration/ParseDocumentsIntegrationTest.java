@@ -13,11 +13,13 @@ import com.thiru.wealthlens.taxplanning.documents.parser.DocumentParser;
 import com.thiru.wealthlens.taxplanning.documents.parser.DocumentReading;
 import com.thiru.wealthlens.taxplanning.documents.store.DocumentBytes;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttemptRepository;
 import com.thiru.wealthlens.taxplanning.jobs.ParseDocuments;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -92,6 +94,12 @@ class ParseDocumentsIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private StoredParseAttemptRepository attempts;
 
+    @Autowired
+    private StoredDocumentRepository documents;
+
+    @Autowired
+    private TaxpayerProfileRepository profiles;
+
     @BeforeEach
     void theParserReads() {
         behaviour = Behaviour.READS;
@@ -100,7 +108,7 @@ class ParseDocumentsIntegrationTest extends AbstractIntegrationTest {
     /** A document of {@code type} under {@code profileId}, its bytes stored. */
     private void uploaded(String id, String profileId, DocumentType type) {
         byte[] pdf = TestPdfs.pages(1);
-        mongoTemplate.save(StoredDocument.of(new IngestedDocument(id, profileId, TaxYearId.of(2026), type, new DocumentContent(pdf).sha256(),
+        documents.save(StoredDocument.of(new IngestedDocument(id, profileId, TaxYearId.of(2026), type, new DocumentContent(pdf).sha256(),
                 LocalDateTime.parse("2027-06-01T09:00:00"), 1)));
         documentBytes.store(id, new DocumentContent(pdf));
     }
@@ -139,7 +147,7 @@ class ParseDocumentsIntegrationTest extends AbstractIntegrationTest {
         TaxpayerProfile held = new TaxpayerProfile();
         held.setId("held-profile");
         held.setErasureRequestedAt(LocalDateTime.parse("2027-05-01T10:00:00"));
-        mongoTemplate.save(held);
+        profiles.save(held);
         uploaded("document-held", "held-profile", DocumentType.FORM_122);
 
         // When
@@ -179,13 +187,13 @@ class ParseDocumentsIntegrationTest extends AbstractIntegrationTest {
             assertThat(attempt.outcome()).isEqualTo(ParseOutcome.FAILED);
             assertThat(attempt.parserNotes()).containsExactly("The parser stopped: IllegalStateException");
         });
-        assertThat(mongoTemplate.findById("document-hostile", StoredDocument.class)).isNotNull();
+        assertThat(documents.findById("document-hostile")).isPresent();
     }
 
     @Test
     void run_whenTheStoredBytesAreNotTheDocuments_recordsAFailedAttemptOnce() {
         // Given — the document names other bytes than those stored under it
-        mongoTemplate.save(StoredDocument.of(new IngestedDocument("document-swapped", "profile-1", TaxYearId.of(2026), DocumentType.FORM_122,
+        documents.save(StoredDocument.of(new IngestedDocument("document-swapped", "profile-1", TaxYearId.of(2026), DocumentType.FORM_122,
                 "c".repeat(64), LocalDateTime.parse("2027-06-01T09:00:00"), 1)));
         documentBytes.store("document-swapped", new DocumentContent(TestPdfs.pages(1)));
 

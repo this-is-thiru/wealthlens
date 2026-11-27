@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
  * is the engine's to know.
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class DraftClaimIntegrityService {
 

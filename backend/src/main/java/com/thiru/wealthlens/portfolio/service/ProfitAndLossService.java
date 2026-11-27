@@ -26,9 +26,11 @@ import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,7 @@ public class ProfitAndLossService {
 
     private final ProfitAndLossRepository profitAndLossRepository;
     private final ChargeRecordingGateway chargeRecordingGateway;
+    private final Clock clock;
 
     /**
      * Updates the profit and loss aggregates for the given user and the financial year
@@ -87,8 +90,13 @@ public class ProfitAndLossService {
         InternalTransactionContext internalContext = new InternalTransactionContext(profitAndLossContext);
 
         ProfitAndLossEntity profitAndLossEntity = getProfitAndLoss(userMail, profitAndLossContext);
-        updateProfitAndLossReport(profitAndLossEntity, internalContext);
+        updateProfitAndLossReport(profitAndLossEntity, internalContext, nowUtc());
         profitAndLossRepository.save(profitAndLossEntity);
+    }
+
+    /** A P&L document's last-updated time, stored in UTC as every stored time is (W-402). */
+    private LocalDateTime nowUtc() {
+        return LocalDateTime.now(clock.withZone(ZoneOffset.UTC));
     }
 
 	private ProfitAndLossEntity getProfitAndLoss(UserMail userMail, ProfitAndLossContext profitAndLossContext) {
@@ -107,28 +115,28 @@ public class ProfitAndLossService {
 	}
 
     private static void updateProfitAndLossReport(ProfitAndLossEntity profitAndLossEntity,
-                                                  InternalTransactionContext internalContext) {
+                                                  InternalTransactionContext internalContext, LocalDateTime nowUtc) {
 
 		AccountType accountType = internalContext.getProfitAndLossContext().getMetadata().getAccountType();
 		if (accountType == AccountType.SELF) {
 			RealisedProfits existingRealisedProfits = TOptional.mapO(profitAndLossEntity.getRealisedProfits(),
 					RealisedProfits.empty());
-			RealisedProfits calculatedProfitDetails = calculateProfitDetails(existingRealisedProfits, internalContext);
+			RealisedProfits calculatedProfitDetails = calculateProfitDetails(existingRealisedProfits, internalContext, nowUtc);
 			profitAndLossEntity.setRealisedProfits(calculatedProfitDetails);
 		} else {
 			RealisedProfits outSourcedRealisedProfits = TOptional
 					.mapO(profitAndLossEntity.getOutSourcedRealisedProfits(), RealisedProfits.empty());
 			RealisedProfits calculatedProfitDetails = calculateProfitDetails(outSourcedRealisedProfits,
-					internalContext);
+					internalContext, nowUtc);
 			profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
 		}
 	}
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits,
-                                                          InternalTransactionContext internalContext) {
+                                                          InternalTransactionContext internalContext, LocalDateTime nowUtc) {
 
 		recordByAssetAndSegment(realisedProfits, internalContext);
-		realisedProfits.setLastUpdatedTime(LocalDateTime.now());
+		realisedProfits.setLastUpdatedTime(nowUtc);
 		return realisedProfits;
 	}
 
@@ -373,11 +381,12 @@ public class ProfitAndLossService {
         ProfitAndLossEntity profitAndLossEntity = profitAndLossRepository.findByEmailAndFinancialYear(email, financialYear)
                 .orElse(new ProfitAndLossEntity(email, financialYear));
 
+        LocalDateTime nowUtc = nowUtc();
         for (int i = 0; i < rows.size(); i++) {
             AssetType assetType = assetTypeOf(Optional.ofNullable(profitLossContext.assetType()),
                     lots.get(i).assetType(), profitLossContext.stockCode());
             updateProfitAndLossReport(profitAndLossEntity, profitLossContext.accountType(),
-                    InternalContext.of(rows.get(i), transactionDate, assetType, profitLossContext.segment()));
+                    InternalContext.of(rows.get(i), transactionDate, assetType, profitLossContext.segment()), nowUtc);
         }
 
         // Prices the trade if the caller did not, as every V2 trade is (Phase B shadow recording).
@@ -391,33 +400,35 @@ public class ProfitAndLossService {
      * compute differently from the trade that wrote the row (W-283, D-575). The row's own date, account type, asset type
      * and segment place it, as the sale's did.
      *
+     * @param nowUtc the document's last-updated time, UTC (W-402)
      * @throws IllegalArgumentException if the row records no asset type
      */
-    public static void foldSale(ProfitAndLossEntity profitAndLossEntity, TradeOutcomeContext row) {
+    public static void foldSale(ProfitAndLossEntity profitAndLossEntity, TradeOutcomeContext row, LocalDateTime nowUtc) {
         AssetType assetType = assetTypeOf(Optional.ofNullable(row.getAssetType()), Optional.empty(), row.getStockCode());
         updateProfitAndLossReport(profitAndLossEntity, row.getAccountType(),
-                InternalContext.of(row, row.getSellDate(), assetType, row.getSegment()));
+                InternalContext.of(row, row.getSellDate(), assetType, row.getSegment()), nowUtc);
     }
 
     private static void updateProfitAndLossReport(ProfitAndLossEntity profitAndLossEntity, AccountType accountType,
-                                                  InternalContext internalContext) {
+                                                  InternalContext internalContext, LocalDateTime nowUtc) {
         if (accountType == AccountType.SELF) {
             RealisedProfits existingRealisedProfits = TOptional.mapO(profitAndLossEntity.getRealisedProfits(), RealisedProfits.empty());
-            RealisedProfits calculatedProfitDetails = calculateProfitDetails(existingRealisedProfits, internalContext);
+            RealisedProfits calculatedProfitDetails = calculateProfitDetails(existingRealisedProfits, internalContext, nowUtc);
             profitAndLossEntity.setRealisedProfits(calculatedProfitDetails);
         } else {
             RealisedProfits outSourcedRealisedProfits = TOptional.mapO(profitAndLossEntity.getOutSourcedRealisedProfits(), RealisedProfits.empty());
-            RealisedProfits calculatedProfitDetails = calculateProfitDetails(outSourcedRealisedProfits, internalContext);
+            RealisedProfits calculatedProfitDetails = calculateProfitDetails(outSourcedRealisedProfits, internalContext, nowUtc);
             profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
         }
     }
 
-    private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits, InternalContext internalContext) {
+    private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits, InternalContext internalContext,
+            LocalDateTime nowUtc) {
 
         updateFinancialReport(splitReport(realisedProfits, internalContext.assetType(), internalContext.segment()),
                 internalContext);
 
-        realisedProfits.setLastUpdatedTime(LocalDateTime.now());
+        realisedProfits.setLastUpdatedTime(nowUtc);
         return realisedProfits;
     }
 

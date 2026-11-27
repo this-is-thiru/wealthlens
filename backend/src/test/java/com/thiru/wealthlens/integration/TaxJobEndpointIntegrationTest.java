@@ -2,7 +2,7 @@ package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.thiru.wealthlens.taxplanning.jobs.JobLease;
+import com.thiru.wealthlens.taxplanning.jobs.JobLeaseRepository;
 import io.restassured.RestAssured;
 import java.io.IOException;
 import java.net.URI;
@@ -10,7 +10,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Running a tax job on request (W-336): {@code SUPER_USER} only, through the job's lease, and a name no job has refused naming
@@ -20,6 +20,9 @@ class TaxJobEndpointIntegrationTest extends AbstractIntegrationTest {
 
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
+    @Autowired
+    private JobLeaseRepository leases;
+
     @Test
     void run_whenTheOwnerAsksForAKnownJob_runsItAndReleasesTheLease() throws IOException, InterruptedException {
         // When
@@ -28,7 +31,7 @@ class TaxJobEndpointIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).contains("\"job\":\"log-retention\"").contains("\"ran\":true");
-        assertThat(mongoTemplate.count(new Query(), JobLease.class)).isZero();
+        assertThat(leases.count()).isZero();
     }
 
     @Test

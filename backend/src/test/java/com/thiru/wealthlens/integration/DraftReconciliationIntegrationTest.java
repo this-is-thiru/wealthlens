@@ -13,10 +13,13 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
 import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
-import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttemptRepository;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
-import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import io.restassured.RestAssured;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -32,6 +35,7 @@ import java.util.Optional;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -57,6 +61,21 @@ class DraftReconciliationIntegrationTest extends AbstractIntegrationTest {
     private static final String PAN = "ABCDE1234F";
     private static final String TAX_DEDUCTED = "partB.summary.total.taxDeducted";
     private static final JsonMapper JSON = JsonMapper.builder().build();
+
+    @Autowired
+    private TaxpayerProfileRepository taxpayerProfileRepository;
+
+    @Autowired
+    private FilingDraftRepository filingDraftRepository;
+
+    @Autowired
+    private StoredDocumentRepository storedDocumentRepository;
+
+    @Autowired
+    private StoredParseAttemptRepository storedParseAttemptRepository;
+
+    @Autowired
+    private AccessRecordRepository accessRecordRepository;
 
     private final Map<String, List<String>> readPaths = new HashMap<>();
     private String profileId;
@@ -86,9 +105,9 @@ class DraftReconciliationIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Self", "pan": "%s", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT", "holdsPortfolio": false}""".formatted(PAN));
-        profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        profileId = taxpayerProfileRepository.findAll().getFirst().getId();
         call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}");
-        draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        draftId = filingDraftRepository.findAll().getFirst().getId();
         ResponseEntity<String> saved = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId, """
                 [%s, %s,
                  {"op": "replace", "path": "/filing/dueDate", "value": "2027-07-31"}]""".formatted(employment(900000),
@@ -107,7 +126,7 @@ class DraftReconciliationIntegrationTest extends AbstractIntegrationTest {
     /** A Form No. 130 of the profile's TY 2026-27, stored as an upload stores it. */
     private String certificate(String name) {
         String documentId = "document-" + name;
-        mongoTemplate.save(StoredDocument.of(new IngestedDocument(documentId, profileId, TaxYearId.of(2026), DocumentType.FORM_130,
+        storedDocumentRepository.save(StoredDocument.of(new IngestedDocument(documentId, profileId, TaxYearId.of(2026), DocumentType.FORM_130,
                 new DocumentContent(name.getBytes(StandardCharsets.UTF_8)).sha256(), LocalDateTime.parse("2027-06-01T09:00:00"), 2)));
         return documentId;
     }
@@ -133,7 +152,7 @@ class DraftReconciliationIntegrationTest extends AbstractIntegrationTest {
                 Optional.empty(), Optional.empty())));
         String attemptId = "attempt-" + documentId + "-" + startedAt;
         LocalDateTime started = LocalDateTime.parse("2027-06-01T" + startedAt);
-        mongoTemplate.save(StoredParseAttempt.of(new ParseAttempt(attemptId, documentId, new ParserRun("FORM_130", "1", started,
+        storedParseAttemptRepository.save(StoredParseAttempt.of(new ParseAttempt(attemptId, documentId, new ParserRun("FORM_130", "1", started,
                 started.plusMinutes(1)), ParseOutcome.SUCCESS, fields, List.of(), List.of())));
         readPaths.put(attemptId, List.copyOf(values.keySet()));
         return attemptId;
@@ -196,7 +215,7 @@ class DraftReconciliationIntegrationTest extends AbstractIntegrationTest {
         assertThat(view.get("assembly").get("notices").toString()).contains("SAL-STDDED-001");
         assertThat(view.get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
         assertThat(view.get("unconfirmedDocumentIds")).isEmpty();
-        assertThat(mongoTemplate.findAll(AccessRecord.class).stream().map(AccessRecord::getSubjectId)).contains(first, second);
+        assertThat(accessRecordRepository.findAll().stream().map(AccessRecord::getSubjectId)).contains(first, second);
     }
 
     @Test

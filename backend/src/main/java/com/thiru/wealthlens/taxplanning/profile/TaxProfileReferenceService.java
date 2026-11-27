@@ -12,8 +12,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * profile is this account's.
  */
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class TaxProfileReferenceService {
 
@@ -66,7 +66,7 @@ public class TaxProfileReferenceService {
         };
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public List<Employer> employers(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return employerRepository.findByProfileId(profileId);
@@ -80,7 +80,7 @@ public class TaxProfileReferenceService {
         return replace(email, profileId, id, request, landlordRepository);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public List<Landlord> landlords(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return landlordRepository.findByProfileId(profileId);
@@ -94,7 +94,7 @@ public class TaxProfileReferenceService {
         return replace(email, profileId, id, request, lenderRepository);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public List<Lender> lenders(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return lenderRepository.findByProfileId(profileId);
@@ -106,7 +106,7 @@ public class TaxProfileReferenceService {
      *
      * @throws BadRequestException naming the first id the profile does not hold
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public void requireHeld(String profileId, Collection<String> landlordIds, Collection<String> lenderIds) {
         requireAmong(landlordIds, landlordRepository.findByProfileId(profileId).stream().map(Landlord::getId), "landlord");
         requireAmong(lenderIds, lenderRepository.findByProfileId(profileId).stream().map(Lender::getId), "lender");
@@ -130,14 +130,14 @@ public class TaxProfileReferenceService {
         return replace(email, profileId, id, request, bankAccountRepository);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public List<BankAccount> bankAccounts(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return bankAccountRepository.findByProfileId(profileId);
     }
 
     private <T extends ProfileScoped & CreatedWithId> T create(String email, String profileId, ProfileReferenceRequest<T> request, T blank,
-            MongoRepository<T, String> repository) {
+            JpaRepository<T, String> repository) {
         taxProfileService.owned(email, profileId);
         T record = request.applyTo(blank);
         record.setId(UUID.randomUUID().toString());
@@ -147,7 +147,7 @@ public class TaxProfileReferenceService {
     }
 
     private <T extends ProfileScoped & CreatedWithId> T replace(String email, String profileId, String id, ProfileReferenceRequest<T> request,
-            MongoRepository<T, String> repository) {
+            JpaRepository<T, String> repository) {
         taxProfileService.owned(email, profileId);
         T stored = repository.findById(id)
                 .filter(record -> profileId.equals(record.getProfileId()))
@@ -155,10 +155,11 @@ public class TaxProfileReferenceService {
         return save(request.applyTo(stored), repository);
     }
 
-    private static <T> T save(T record, MongoRepository<T, String> repository) {
+    private static <T> T save(T record, JpaRepository<T, String> repository) {
         try {
-            return repository.save(record);
-        } catch (DuplicateKeyException e) {
+            // Flushed here, so the unique index refuses a taken TAN inside this catch rather than at commit
+            return repository.saveAndFlush(record);
+        } catch (DataIntegrityViolationException e) {
             throw new BadRequestException("This profile already holds an employer with that TAN");
         }
     }

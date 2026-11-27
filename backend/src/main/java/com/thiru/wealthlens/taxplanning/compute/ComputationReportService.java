@@ -30,7 +30,7 @@ import org.xhtmlrenderer.util.XRRuntimeException;
  * verified, guarded by the rule's checksum then and now (C1a), and whether the rule data has moved on (C2a).
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class ComputationReportService {
 

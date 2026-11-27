@@ -2,8 +2,8 @@ package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
-import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
+import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import io.restassured.RestAssured;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +36,12 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
     private static final String STRANGER = "stranger@example.com";
 
     private String draftId;
+
+    @Autowired
+    private TaxpayerProfileRepository taxpayerProfileRepository;
+
+    @Autowired
+    private FilingDraftRepository filingDraftRepository;
 
     private static RestTemplate client() {
         RestTemplate client = new RestTemplate(new JdkClientHttpRequestFactory());
@@ -88,15 +95,15 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT"}""", MediaType.APPLICATION_JSON);
-        String profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        String profileId = taxpayerProfileRepository.findAll().getFirst().getId();
         call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Mine\"}", MediaType.APPLICATION_JSON);
-        draftId = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        draftId = filingDraftRepository.findAll().getFirst().getId();
     }
 
     @Test
     void preview_whenTheOwnerUploadsACtcSheet_matchesWhatItCanReturnsTheRestAndStoresNothing() throws IOException {
         // Given
-        int revisionBefore = mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision();
+        int revisionBefore = filingDraftRepository.findById(draftId).orElseThrow().getCurrentRevision();
 
         // When
         ResponseEntity<String> response = upload(OWNER, workbook());
@@ -104,7 +111,7 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
         // Then — "Basic salary" is BASIC's name; "Conveyance" comes back; the draft is untouched
         assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).contains("\"code\":\"BASIC\"", "\"label\":\"Conveyance\"", "\"taxYear\":\"2026-27\"");
-        assertThat(mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision()).isEqualTo(revisionBefore);
+        assertThat(filingDraftRepository.findById(draftId).orElseThrow().getCurrentRevision()).isEqualTo(revisionBefore);
     }
 
     private ResponseEntity<String> apply(String caller, String ifMatch, byte[] workbook, String decisions) {
@@ -131,14 +138,14 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
                             "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}}""";
 
     private String currentTag() {
-        return "\"rev-" + mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision() + "\"";
+        return "\"rev-" + filingDraftRepository.findById(draftId).orElseThrow().getCurrentRevision() + "\"";
     }
 
     @Test
     void apply_whenTheReturnedRowIsMapped_addsOneEmploymentAndTheRevisionNamesTheWorkbook() throws IOException {
         // Given
         byte[] workbook = workbook();
-        int before = mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision();
+        int before = filingDraftRepository.findById(draftId).orElseThrow().getCurrentRevision();
 
         // When
         ResponseEntity<String> applied = apply(OWNER, currentTag(), workbook, DECISIONS);
@@ -155,7 +162,7 @@ class SalaryImportIntegrationTest extends AbstractIntegrationTest {
         // Given
         byte[] workbook = workbook();
         apply(OWNER, currentTag(), workbook, DECISIONS);
-        int importedAt = mongoTemplate.findById(draftId, FilingDraft.class).getCurrentRevision();
+        int importedAt = filingDraftRepository.findById(draftId).orElseThrow().getCurrentRevision();
 
         // When
         ResponseEntity<String> again = apply(OWNER, currentTag(), workbook, DECISIONS);

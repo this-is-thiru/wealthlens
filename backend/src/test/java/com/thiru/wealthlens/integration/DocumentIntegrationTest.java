@@ -9,12 +9,16 @@ import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmation;
-import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredConfirmationRepository;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttempt;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredParseAttemptRepository;
+import com.thiru.wealthlens.taxplanning.documents.store.TaxDocumentBytesRepository;
 import com.thiru.wealthlens.taxplanning.jobs.ParseDocuments;
+import com.thiru.wealthlens.taxplanning.jobs.ProfileRemoval;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
-import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
-import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecordRepository;
 import com.thiru.wealthlens.testsupport.FakeClamd;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import io.restassured.RestAssured;
@@ -50,6 +54,27 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ParseDocuments parseDocuments;
+
+    @Autowired
+    private StoredDocumentRepository documents;
+
+    @Autowired
+    private StoredParseAttemptRepository attempts;
+
+    @Autowired
+    private StoredConfirmationRepository confirmations;
+
+    @Autowired
+    private TaxDocumentBytesRepository documentBytesRows;
+
+    @Autowired
+    private AccessRecordRepository accessRecords;
+
+    @Autowired
+    private TaxpayerProfileRepository profiles;
+
+    @Autowired
+    private ProfileRemoval profileRemoval;
 
     private String profileId;
 
@@ -91,13 +116,13 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String storedDocumentId() {
-        return mongoTemplate.findAll(StoredDocument.class).getFirst().getId();
+        return documents.findAll().getFirst().getId();
     }
 
     /** A reading of Part A's PAN and row 12, as the parser would store it. */
     private String readingOf(String documentId, String pan) {
         String attemptId = "attempt-of-" + documentId;
-        mongoTemplate.save(StoredParseAttempt.of(new ParseAttempt(attemptId, documentId, new ParserRun("FORM_130", "1",
+        attempts.save(StoredParseAttempt.of(new ParseAttempt(attemptId, documentId, new ParserRun("FORM_130", "1",
                 LocalDateTime.parse("2027-06-01T09:01:00"), LocalDateTime.parse("2027-06-01T09:02:00")), ParseOutcome.PARTIAL,
                 List.of(new ExtractedField("partA.employee.pan", Optional.of(pan), Optional.of(new ExtractedValue.TextRead(pan)), 1,
                                 Optional.empty(), Optional.empty()),
@@ -112,7 +137,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, "/profiles", """
                 {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT"}""");
-        profileId = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        profileId = profiles.findAll().getFirst().getId();
     }
 
     @Test
@@ -128,8 +153,8 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(first.getBody()).contains("\"pages\":2", "\"newlyStored\":true", "\"taxYear\":\"2026-27\"");
         assertThat(again.getBody()).contains("\"newlyStored\":false", "\"documentId\":\"" + storedDocumentId() + "\"");
-        assertThat(mongoTemplate.findAll(StoredDocument.class)).singleElement().satisfies(document -> assertThat(document.isScanned()).isTrue());
-        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isOne();
+        assertThat(documents.findAll()).singleElement().satisfies(document -> assertThat(document.isScanned()).isTrue());
+        assertThat(documentBytesRows.count()).isOne();
     }
 
     @Test
@@ -143,7 +168,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         assertThat(oldYear.getBody()).contains("FORM_130 has no layout for tax year 2025-26");
         assertThat(noParser.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(noParser.getBody()).contains("No parser reads FORM_122 yet");
-        assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
+        assertThat(documents.findAll()).isEmpty();
     }
 
     @Test
@@ -159,8 +184,8 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).contains("This file failed the malware scan and was not stored");
-        assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
-        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isZero();
+        assertThat(documents.findAll()).isEmpty();
+        assertThat(documentBytesRows.count()).isZero();
     }
 
     @Test
@@ -179,8 +204,8 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(response.getBody()).contains("The malware scan could not be completed; nothing was stored");
-        assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
-        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isZero();
+        assertThat(documents.findAll()).isEmpty();
+        assertThat(documentBytesRows.count()).isZero();
     }
 
     @Test
@@ -208,7 +233,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(read.getBody()).contains("\"state\":\"READ\"", "\"employeePan\":\"NOT_READ\"", "\"confirmed\":false");
-        assertThat(mongoTemplate.findAll(AccessRecord.class)).anySatisfy(record -> assertThat(record.getSubjectId()).isEqualTo(documentId));
+        assertThat(accessRecords.findAll()).anySatisfy(record -> assertThat(record.getSubjectId()).isEqualTo(documentId));
     }
 
     @Test
@@ -243,7 +268,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(confirmed.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(confirmed.getBody()).contains("\"confirmed\":true", "\"employeePan\":\"MATCHES\"");
-        StoredConfirmation stored = mongoTemplate.findById(attemptId, StoredConfirmation.class);
+        StoredConfirmation stored = confirmations.findById(attemptId).orElseThrow();
         assertThat(stored.toRecord().acceptedFields()).containsEntry("partC.annexureI.row12",
                 new ExtractedValue.MoneyRead(Money.of("950000")));
         assertThat(stored.toRecord().confirmedBy()).isEqualTo(OWNER);
@@ -266,7 +291,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).contains("This certificate is for another PAN than the profile's");
-        assertThat(mongoTemplate.findById(attemptId, StoredConfirmation.class)).isNull();
+        assertThat(confirmations.findById(attemptId)).isEmpty();
     }
 
     @Test
@@ -293,17 +318,10 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         String documentId = storedDocumentId();
         call(HttpMethod.GET, OWNER, "/documents/" + documentId + "/parse", null);
 
-        // When
-        new org.springframework.transaction.support.TransactionTemplate(transactionManager)
-                .executeWithoutResult(status -> profileRemoval.remove(mongoTemplate.findById(profileId, TaxpayerProfile.class)));
+        // When — ProfileRemoval.remove is itself @Transactional("postgresTransactionManager"); no outer wrapping needed
+        profileRemoval.remove(profiles.findById(profileId).orElseThrow());
 
         // Then
-        assertThat(mongoTemplate.findAll(AccessRecord.class)).noneSatisfy(record -> assertThat(record.getSubjectId()).isEqualTo(documentId));
+        assertThat(accessRecords.findAll()).noneSatisfy(record -> assertThat(record.getSubjectId()).isEqualTo(documentId));
     }
-
-    @Autowired
-    private org.springframework.transaction.PlatformTransactionManager transactionManager;
-
-    @Autowired
-    private com.thiru.wealthlens.taxplanning.jobs.ProfileRemoval profileRemoval;
 }

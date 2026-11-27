@@ -45,7 +45,7 @@ class GazetteWatchEndpointIntegrationTest extends AbstractIntegrationTest {
         assertThat(response.body()).contains("\"lastNumber\":271439");
         assertThat(cursors.findById(GazetteCursor.ID)).hasValueSatisfying(cursor -> {
             assertThat(cursor.getYear()).isEqualTo(2026);
-            assertThat(cursor.getUpdatedBy()).isEqualTo("admin@example.com");
+            assertThat(cursor.getAuditMetadata().getUpdatedBy()).isEqualTo("admin@example.com");
         });
         assertThat(send(get("/api/v1/admin/tax/gazette-leads", "SUPER_USER")).statusCode()).isEqualTo(200);
     }

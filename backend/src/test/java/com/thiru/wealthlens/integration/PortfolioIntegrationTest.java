@@ -24,11 +24,11 @@ import com.thiru.wealthlens.shared.dto.DateRangeFilter;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import io.restassured.RestAssured;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -70,6 +70,10 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PortfolioService portfolioService;
+
+    /** The application's clock: "today" is its date, the business zone's (D-958). */
+    @Autowired
+    private Clock clock;
 
     @Autowired
     private TransactionService transactionService;
@@ -587,6 +591,41 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void redriveTemporaryTransactions_whenAnUploadedTradeHeldItsOrderTime_recordsThatTimeInUtc() {
+        // Given — an uploaded trade held as temporary, its cell's order time 10:30 in Asia/Kolkata (AssetRequestParser:210)
+        String token = generateToken(TEST_EMAIL);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setOrderExecutionDateTime(LocalDateTime.of(2026, 1, 15, 10, 30));
+        request.setTimezoneId("Asia/Kolkata");
+        TransactionEntity temp = new TransactionEntity();
+        temp.setEmail(TEST_EMAIL);
+        temp.setStockCode(TEST_STOCK_CODE);
+        temp.setStockName(TEST_STOCK_NAME);
+        temp.setBrokerName(TEST_BROKER);
+        temp.setStatus(TransactionStatus.TEMPORARY);
+        temp.setTransactionType(TransactionType.BUY);
+        temp.setQuantity(10.0);
+        temp.setPrice(2500.0);
+        temp.setTransactionDate(LocalDate.now().minusDays(1));
+        temp.setAssetRequest(request);
+        String tempId = transactionRepository.save(temp).getId();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // When
+        ResponseEntity<RedriveResult> response = createRestTemplate().exchange(
+                URI.create(baseUrl() + "/api/v1/me/portfolio/temporary-transactions/redrive"), HttpMethod.POST,
+                new HttpEntity<Void>(headers), RedriveResult.class);
+
+        // Then — 10:30 IST is 05:00 UTC (IST = UTC + 05:30, D-958)
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        TransactionEntity recorded = transactionRepository.findByEmail(TEST_EMAIL).stream()
+                .filter(transaction -> tempId.equals(transaction.getSourceTempTransactionId())).findFirst().orElseThrow();
+        assertEquals(LocalDateTime.of(2026, 1, 15, 5, 0), recorded.getOrderExecutionTime());
+    }
+
+    @Test
     void redriveTemporaryTransactions_noneToRedrive_whenNoTemps_expectedMessage() {
         String token = generateToken(TEST_EMAIL);
 
@@ -772,7 +811,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
 
         // Given -- one holding bought 400 days ago and 30 days ago
-        LocalDate today = TLocalDate.today();
+        LocalDate today = LocalDate.now(clock);
         AssetEntity older = buildAssetEntity();
         older.setTransactionDate(today.minusDays(400));
         AssetEntity newer = buildAssetEntity();
@@ -988,7 +1027,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals(0, transactionRepository.findByEmail(TEST_EMAIL).size(), "transactions still holds rows for the cleared user");
         assertEquals(0, tradeOutcomeRepository.findByEmail(TEST_EMAIL).size(), "trade_outcomes still holds rows for the cleared user");
         assertEquals(0, profitAndLossRepository.findAllByEmail(TEST_EMAIL).size(), "profit_and_loss still holds rows for the cleared user");
-        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDesc(TEST_EMAIL).size(),
+        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(TEST_EMAIL).size(),
                 "user_charges still holds rows for the cleared user");
         assertEquals(0, chargeAccountRepository.findByEmail(TEST_EMAIL).size(),
                 "charge_accounts still holds rows for the cleared user");

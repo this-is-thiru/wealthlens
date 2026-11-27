@@ -40,8 +40,8 @@ public class AutoArchive implements TaxJob {
 
     @Override
     public void run(JobContext context) {
-        // audit_metadata.updated_at is written in the system's zone by Spring Data auditing, so the cutoff is too
-        LocalDateTime cutoff = LocalDateTime.now(context.clock()).minus(periods.archiveAfter());
+        // audit_metadata.updated_at is stored in UTC (W-402), so the cutoff is taken in UTC too
+        LocalDateTime cutoff = context.nowUtc().minus(periods.archiveAfter());
         List<FilingDraft> untouched = drafts.findByStatusAndAuditMetadataUpdatedAtBefore(DraftStatus.DRAFT, cutoff);
         Set<String> held = profiles.idsHeldForErasure();
         for (FilingDraft draft : untouched) {

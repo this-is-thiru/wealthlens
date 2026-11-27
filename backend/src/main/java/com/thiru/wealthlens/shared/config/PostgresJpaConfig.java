@@ -1,7 +1,12 @@
 package com.thiru.wealthlens.shared.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.Optional;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,6 +15,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -27,11 +33,12 @@ import org.springframework.transaction.PlatformTransactionManager;
  */
 @Configuration
 @ConditionalOnProperty(prefix = "app.postgres", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableJpaAuditing(auditorAwareRef = "securityAuditorAware")
+@EnableJpaAuditing(auditorAwareRef = "securityAuditorAware", dateTimeProviderRef = "utcDateTimeProvider")
 @EnableJpaRepositories(
         basePackages = {"com.thiru.wealthlens.auth.repository", "com.thiru.wealthlens.insurance.repository",
                 "com.thiru.wealthlens.shared.privacy", "com.thiru.wealthlens.corporate.repository",
-                "com.thiru.wealthlens.brokercharges.repository", "com.thiru.wealthlens.portfolio.repository"},
+                "com.thiru.wealthlens.brokercharges.repository", "com.thiru.wealthlens.portfolio.repository",
+                "com.thiru.wealthlens.taxplanning"},
         entityManagerFactoryRef = "postgresEntityManagerFactory",
         transactionManagerRef = "postgresTransactionManager")
 public class PostgresJpaConfig {
@@ -42,13 +49,21 @@ public class PostgresJpaConfig {
         return new DataSourceProperties();
     }
 
+    /**
+     * The pool every PostgreSQL user shares — Flyway, Hibernate, the copier's {@code current_schema()} — so its
+     * {@code hikari.schema} puts them all in schema {@code wealthlens} (W-413, D-989; D-929).
+     */
     @Bean
-    DataSource postgresDataSource(DataSourceProperties postgresDataSourceProperties) {
-        return postgresDataSourceProperties.initializeDataSourceBuilder().build();
+    @ConfigurationProperties("app.postgres.datasource.hikari")
+    HikariDataSource postgresDataSource(DataSourceProperties postgresDataSourceProperties) {
+        return postgresDataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
     }
 
     /**
-     * Hibernate instantiates a {@code @Convert} converter by reflection unless told to ask Spring for it instead — the same
+     * Validates every entity against its table at start (W-405, D-963): a missing table or column, or a column of the wrong type,
+     * stops the app instead of failing one query later. Flyway migrates first, so a database it built always passes.
+     *
+     * <p>Hibernate instantiates a {@code @Convert} converter by reflection unless told to ask Spring for it instead — the same
      * problem {@code MongoConfig.mongoCustomConversions} solves for {@code @ValueConverter} (D-447), so {@code EncryptedColumn}
      * and {@code SearchableColumn} can take {@code FieldCipher} as a constructor argument rather than build it themselves.
      */
@@ -58,9 +73,10 @@ public class PostgresJpaConfig {
         return builder.dataSource(postgresDataSource)
                 .packages("com.thiru.wealthlens.auth.entity", "com.thiru.wealthlens.insurance.entity",
                         "com.thiru.wealthlens.shared.privacy", "com.thiru.wealthlens.corporate.entity",
-                        "com.thiru.wealthlens.brokercharges.entity", "com.thiru.wealthlens.portfolio.entity")
+                        "com.thiru.wealthlens.brokercharges.entity", "com.thiru.wealthlens.portfolio.entity",
+                        "com.thiru.wealthlens.taxplanning")
                 .persistenceUnit("postgres")
-                .properties(Map.of("hibernate.resource.beans.container", new SpringBeanContainer(beanFactory)))
+                .properties(Map.of("hibernate.resource.beans.container", new SpringBeanContainer(beanFactory), "hibernate.hbm2ddl.auto", "validate"))
                 .build();
     }
 
@@ -68,6 +84,15 @@ public class PostgresJpaConfig {
     EntityManagerFactoryBuilder postgresEntityManagerFactoryBuilder() {
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         return new EntityManagerFactoryBuilder(vendorAdapter, dataSource -> Map.of(), null);
+    }
+
+    /**
+     * Audit times in UTC (W-402, D-959 C1a): with no provider, Spring Data's {@code CurrentDateTimeProvider} takes
+     * {@code LocalDateTime.now()}, the JVM's zone, while every other stored time is UTC.
+     */
+    @Bean
+    DateTimeProvider utcDateTimeProvider(Clock clock) {
+        return () -> Optional.of(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
     }
 
     @Bean

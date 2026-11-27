@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import io.restassured.RestAssured;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -44,6 +45,9 @@ class HeldAssetsIntegrationTest extends AbstractIntegrationTest {
     private static final String OWNER = "holder-it@example.com";
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
+    @Autowired
+    private TaxpayerProfileRepository profiles;
+
     private <T> ResponseEntity<T> get(String path, Class<T> as) {
         RestTemplate client = new RestTemplate();
         client.setErrorHandler(new DefaultResponseErrorHandler() {
@@ -67,7 +71,7 @@ class HeldAssetsIntegrationTest extends AbstractIntegrationTest {
                 new HttpEntity<>("""
                         {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                          "residentialStatus": "RESIDENT", "holdsPortfolio": %s}""".formatted(holdsPortfolio), headers), String.class);
-        return mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        return profiles.findAll().getFirst().getId();
     }
 
     private void lot(String acquiredOn, double quantity, String exchange) {

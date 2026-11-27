@@ -43,13 +43,13 @@ class ChargeIndexIntegrationTest extends AbstractIntegrationTest {
 
     private List<String> pgIndexNamesOf(String table) {
         return new JdbcTemplate(postgresDataSource).queryForList(
-                "SELECT indexname FROM pg_indexes WHERE schemaname = 'public' AND tablename = ?",
+                "SELECT indexname FROM pg_indexes WHERE schemaname = current_schema() AND tablename = ?",
                 String.class, table);
     }
 
     private boolean isPgIndexUnique(String table, String indexName) {
         String def = new JdbcTemplate(postgresDataSource).queryForObject(
-                "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND tablename = ? AND indexname = ?",
+                "SELECT indexdef FROM pg_indexes WHERE schemaname = current_schema() AND tablename = ? AND indexname = ?",
                 String.class, table, indexName);
         return def != null && def.startsWith("CREATE UNIQUE INDEX");
     }

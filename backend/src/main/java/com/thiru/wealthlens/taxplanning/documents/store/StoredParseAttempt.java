@@ -1,70 +1,76 @@
 package com.thiru.wealthlens.taxplanning.documents.store;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
-import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
+import com.thiru.wealthlens.shared.protection.EncryptedColumn;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * One try at reading a document, as stored (TS T7; W-131a, D-761 C4a). What was read — the fields, the text left unread and the
  * parser's notes — is encrypted; which parser ran, when and how it ended stay plain, since a rerun is found by them
  * ({@code DR 19} E8).
  */
+@Entity
+@Table(name = "tax_parse_attempts")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_parse_attempts")
-@CompoundIndex(name = "tax_parse_attempt_document_idx", def = "{'document_id': 1, 'started_at': -1}")
-public class StoredParseAttempt implements AuditableEntity, CreatedWithId {
+public class StoredParseAttempt implements CreatedWithId {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("document_id")
+    @Column(name = "document_id")
     private String documentId;
 
-    @Field("parser_id")
+    @Column(name = "parser_id")
     private String parserId;
 
-    @Field("parser_version")
+    @Column(name = "parser_version")
     private String parserVersion;
 
-    @Field("started_at")
+    @Column(name = "started_at")
     private LocalDateTime startedAt;
 
-    @Field("finished_at")
+    @Column(name = "finished_at")
     private LocalDateTime finishedAt;
 
-    @Field(name = "outcome", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "outcome")
     private ParseOutcome outcome;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("fields_json")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "fields_json")
     private String fieldsJson;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("unmapped_text_json")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "unmapped_text_json")
     private String unmappedTextJson;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("parser_notes_json")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "parser_notes_json")
     private String parserNotesJson;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient

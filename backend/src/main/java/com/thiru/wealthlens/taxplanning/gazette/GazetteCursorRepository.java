@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxplanning.gazette;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface GazetteCursorRepository extends MongoRepository<GazetteCursor, String> {
+public interface GazetteCursorRepository extends JpaRepository<GazetteCursor, String> {
 }

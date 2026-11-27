@@ -22,8 +22,10 @@ import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.calculator.XirrCalculator;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +47,7 @@ public class AnalyticsService {
     private final TransactionRepository transactionRepository;
     private final ProfitAndLossRepository profitAndLossRepository;
     private final TradeOutcomeRepository tradeOutcomeRepository;
+    private final Clock clock;
 
     public PortfolioSummaryResponse getPortfolioSummary(UserMail userMail) {
         String email = userMail.getEmail();
@@ -80,7 +83,7 @@ public class AnalyticsService {
                 .buyTrades(buyTrades)
                 .sellTrades(sellTrades)
                 .holdingCount(holdingCount)
-                .lastUpdated(LocalDateTime.now())
+                .lastUpdated(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)))
                 .build();
     }
 
@@ -227,7 +230,7 @@ public class AnalyticsService {
                 .sum();
         boolean includesOpenPositions = currentValue > 0;
         if (includesOpenPositions) {
-            cashFlows.add(new CashFlow(currentValue, LocalDate.now()));
+            cashFlows.add(new CashFlow(currentValue, LocalDate.now(clock)));
         }
         String message = unpriced.isEmpty() ? null : "Left out for want of a current price: " + String.join(", ", unpriced.stream().sorted().toList())
                 + ". Give currentPrices for them to include them.";
@@ -259,9 +262,9 @@ public class AnalyticsService {
         };
     }
 
-    private static XirrResponse xirrOf(List<CashFlow> cashFlows, boolean includesOpenPositions, String message) {
+    private XirrResponse xirrOf(List<CashFlow> cashFlows, boolean includesOpenPositions, String message) {
         XirrResponse.XirrResponseBuilder response = XirrResponse.builder()
-                .calculationDate(LocalDate.now())
+                .calculationDate(LocalDate.now(clock))
                 .cashFlowsCount(cashFlows.size())
                 .includesOpenPositions(includesOpenPositions);
         if (cashFlows.size() < 2) {

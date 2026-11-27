@@ -1,51 +1,68 @@
 package com.thiru.wealthlens.taxplanning.documents.store;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
-import com.thiru.wealthlens.shared.protection.EncryptedField;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
+import com.thiru.wealthlens.shared.protection.EncryptedColumn;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentConfirmation;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A person's confirmation of one attempt, as stored (TS T7; W-131a, D-761 C4a): one per attempt, so the attempt's id is its
  * key. The values the person accepted are encrypted; the paths they rejected name rows of a form, not what the rows hold.
  */
+@Entity
+@Table(name = "tax_document_confirmations")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_document_confirmations")
-public class StoredConfirmation implements AuditableEntity, CreatedWithId {
+public class StoredConfirmation implements CreatedWithId {
 
-    @MongoId
+    @Id
     private String id;
 
-    @ValueConverter(SearchableIdentifier.class)
-    @Field("confirmed_by")
+    @Convert(converter = SearchableColumn.class)
+    @Column(name = "confirmed_by")
     private String confirmedBy;
 
-    @Field("confirmed_at")
+    @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("accepted_json")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "accepted_json")
     private String acceptedJson;
 
-    @Field("rejected_fields")
-    private List<String> rejectedFields = List.of();
+    /** Child table from the W-337b baseline (V5), not a JSON column: {@code tax_document_confirmation_rejected_fields}. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    @CollectionTable(name = "tax_document_confirmation_rejected_fields", joinColumns = @JoinColumn(name = "confirmation_id"))
+    @Column(name = "rejected_field")
+    private List<String> rejectedFields = new ArrayList<>();
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient

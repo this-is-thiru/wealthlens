@@ -57,7 +57,7 @@ public class UserChargeService {
     }
 
     public List<UserChargeEntity> findHistory(String email) {
-        return userChargeRepository.findByEmailOrderByTransactionDateDesc(email);
+        return userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(email);
     }
 
     /**
@@ -95,7 +95,7 @@ public class UserChargeService {
 
     /** Rows whose charges could not be fully assessed. Drives the gaps report. */
     public List<UserChargeEntity> findGaps(String email) {
-        return userChargeRepository.findByEmailAndResolutionIn(email, ChargeResolution.UNRESOLVED);
+        return userChargeRepository.findByEmailAndResolutionInOrderByTransactionDateDescIdAsc(email, ChargeResolution.UNRESOLVED);
     }
 
     /**

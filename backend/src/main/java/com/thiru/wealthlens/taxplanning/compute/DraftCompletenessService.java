@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * An item worth nothing — a regime that allows the row nothing — is dropped (C6a).
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class DraftCompletenessService {
 

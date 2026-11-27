@@ -3,13 +3,16 @@ package com.thiru.wealthlens.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
-import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
+import com.thiru.wealthlens.taxplanning.documents.store.TaxDocumentBytesRepository;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.testsupport.TestPdfs;
 import io.restassured.RestAssured;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +33,15 @@ import org.springframework.web.client.RestTemplate;
 class DocumentScanOffIntegrationTest extends AbstractIntegrationTest {
 
     private static final String OWNER = "owner@example.com";
+
+    @Autowired
+    private TaxpayerProfileRepository profiles;
+
+    @Autowired
+    private StoredDocumentRepository documents;
+
+    @Autowired
+    private TaxDocumentBytesRepository bytesRepository;
 
     private static RestTemplate client() {
         RestTemplate client = new RestTemplate(new JdkClientHttpRequestFactory());
@@ -54,7 +66,7 @@ class DocumentScanOffIntegrationTest extends AbstractIntegrationTest {
                 new HttpEntity<>("""
                         {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                          "residentialStatus": "RESIDENT"}""", headers(MediaType.APPLICATION_JSON)), String.class);
-        return mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        return profiles.findAll().getFirst().getId();
     }
 
     private ResponseEntity<String> upload(String profileId, byte[] file) {
@@ -90,8 +102,8 @@ class DocumentScanOffIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(CLAMD.commands()).hasSize(commandsBefore);
-        List<StoredDocument> stored = mongoTemplate.findAll(StoredDocument.class);
+        List<StoredDocument> stored = documents.findAll();
         assertThat(stored).singleElement().satisfies(document -> assertThat(document.isScanned()).isFalse());
-        assertThat(mongoTemplate.getCollection("tax_document_bytes.files").countDocuments()).isOne();
+        assertThat(bytesRepository.count()).isOne();
     }
 }

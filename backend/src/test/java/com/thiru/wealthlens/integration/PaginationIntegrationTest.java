@@ -10,13 +10,15 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.taxplanning.gazette.GazetteLead;
-import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.gazette.GazetteLeadRepository;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import io.restassured.RestAssured;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -38,6 +40,12 @@ class PaginationIntegrationTest extends AbstractIntegrationTest {
 
     private static final String USER = "pager@example.com";
     private static final String OWNER = "pager-admin@example.com";
+
+    @Autowired
+    private GazetteLeadRepository gazetteLeads;
+
+    @Autowired
+    private TaxpayerProfileRepository profiles;
 
     private ResponseEntity<String> call(HttpMethod method, String caller, String role, String path, String body, String ifMatch) {
         RestTemplate client = new RestTemplate(new JdkClientHttpRequestFactory());
@@ -153,7 +161,7 @@ class PaginationIntegrationTest extends AbstractIntegrationTest {
             lead.setNumber(number);
             lead.setMatchedTerms(List.of("Income-tax"));
             lead.setFoundAt(LocalDateTime.of(2026, 1, number, 9, 0));
-            mongoTemplate.save(lead);
+            gazetteLeads.save(lead);
         }
 
         // When / Then
@@ -164,7 +172,7 @@ class PaginationIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, USER, "USER", "/api/v1/me/tax/profiles", """
                 {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
                  "residentialStatus": "RESIDENT"}""", null);
-        return mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        return profiles.findAll().getFirst().getId();
     }
 
     private String draft(String profileId, String label) {

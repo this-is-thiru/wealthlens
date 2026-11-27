@@ -39,7 +39,8 @@ public interface ChargeScheduleRepository extends JpaRepository<ChargeScheduleEn
             @Param("segment") String segment, @Param("exchange") String exchange,
             @Param("planCode") String planCode);
 
-    List<ChargeScheduleEntity> findByBrokerNameOrderByStartDateDesc(BrokerName brokerName);
+    /** Newest card first; cards sharing a start date by code, so the order is the same on any store (W-411). */
+    List<ChargeScheduleEntity> findByBrokerNameOrderByStartDateDescScheduleCodeAsc(BrokerName brokerName);
 
     List<ChargeScheduleEntity> findByVerifiedOnIsNullOrVerifiedOnBefore(LocalDate horizon);
 }

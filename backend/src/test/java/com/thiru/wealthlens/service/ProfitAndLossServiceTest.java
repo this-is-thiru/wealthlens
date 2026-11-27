@@ -38,6 +38,7 @@ import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.EnumMap;
@@ -75,7 +76,7 @@ class ProfitAndLossServiceTest {
 
     @BeforeEach
     void setUp() {
-        profitAndLossService = new ProfitAndLossService(profitAndLossRepository, chargeRecordingGateway);
+        profitAndLossService = new ProfitAndLossService(profitAndLossRepository, chargeRecordingGateway, Clock.systemUTC());
     }
 
     // ========================================

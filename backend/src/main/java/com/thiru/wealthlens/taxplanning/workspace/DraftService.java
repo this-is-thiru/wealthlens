@@ -34,9 +34,12 @@ import tools.jackson.databind.JsonNode;
  * failure ends its transaction, so the controller asks for the conflict afterwards.
  */
 @Service
-@Transactional
+@Transactional("postgresTransactionManager")
 @RequiredArgsConstructor
 public class DraftService {
+
+    /** How long one save attempt waits on a racing one; a choice, not a sourced figure (W-337f plan). */
+    private static final String RACE_WAIT = "100ms";
 
     private final TaxProfileService taxProfileService;
     private final TaxProfileReferenceService thirdPartyReferences;
@@ -48,8 +51,15 @@ public class DraftService {
     private final Clock clock;
     private final TaxCalculator taxCalculator;
 
-    /** The profile's workspace for the year, made on first asking. */
+    /** The profile's workspace for the year; a read never makes one (W-410, D-986), so asking for a year not started is refused. */
     public TaxYearWorkspace workspace(String email, String profileId, int taxYearStart) {
+        taxProfileService.owned(email, profileId);
+        return workspaceRepository.findByProfileIdAndTaxYearStart(profileId, taxYearStart)
+                .orElseThrow(() -> new BadRequestException("This profile has no workspace for that year"));
+    }
+
+    /** The workspace a new draft goes into, made with the year's first draft. */
+    private TaxYearWorkspace workspaceMadeIfAbsent(String email, String profileId, int taxYearStart) {
         taxProfileService.owned(email, profileId);
         return workspaceRepository.findByProfileIdAndTaxYearStart(profileId, taxYearStart)
                 .orElseGet(() -> create(profileId, taxYearStart));
@@ -72,9 +82,14 @@ public class DraftService {
         return taxCalculator.declarations(TaxYearId.of(taxYearStart));
     }
 
-    /** The year's drafts, each read recorded: a draft's inputs carry claims such as medical spend ({@code DR 14} O1.1). */
+    /**
+     * The year's drafts, each read recorded: a draft's inputs carry claims such as medical spend ({@code DR 14} O1.1). A year
+     * not started has none, and the read makes no workspace (W-410).
+     */
     public List<DraftView> drafts(String email, String profileId, int taxYearStart) {
-        List<FilingDraft> drafts = draftRepository.findByWorkspaceId(workspace(email, profileId, taxYearStart).getId());
+        taxProfileService.owned(email, profileId);
+        List<FilingDraft> drafts = workspaceRepository.findByProfileIdAndTaxYearStart(profileId, taxYearStart)
+                .map(found -> draftRepository.findByWorkspaceId(found.getId())).orElse(List.of());
         drafts.forEach(draft -> taxAccessLog.record(email, ReadSubject.DRAFT, draft.getId()));
         return drafts.stream().map(DraftView::of).toList();
     }
@@ -102,7 +117,7 @@ public class DraftService {
         if (label == null || label.isBlank()) {
             throw new BadRequestException("A draft needs a label");
         }
-        TaxYearWorkspace workspace = workspace(email, profileId, taxYearStart);
+        TaxYearWorkspace workspace = workspaceMadeIfAbsent(email, profileId, taxYearStart);
         FilingDraft draft = new FilingDraft();
         draft.setId(UUID.randomUUID().toString());
         draft.setNewlyCreated(true);
@@ -128,7 +143,7 @@ public class DraftService {
      *
      * @throws BadRequestException otherwise
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public OwnedDraft ownedDraft(String email, String draftId) {
         FilingDraft draft = owned(email, draftId);
         return new OwnedDraft(draft, DraftInputsMapper.read(draft.getInputsJson()));
@@ -168,6 +183,9 @@ public class DraftService {
     }
 
     private DraftView save(String email, String draftId, int expectedRevision, JsonNode patch, Optional<WorkbookImport> imported) {
+        // PostgreSQL makes a racing save wait on the winner's revision row; bounded, the wait fails like Mongo's write
+        // conflict did, so DraftSaveRetry can still answer that the other save had not finished (D-621 C2a)
+        revisionRepository.boundLockWaits(RACE_WAIT);
         FilingDraft draft = owned(email, draftId);
         if (!draft.getStatus().isEditable()) {
             throw new DraftConflictException("A draft that is " + draft.getStatus() + " cannot be edited", DraftView.of(draft),
@@ -189,7 +207,7 @@ public class DraftService {
         DraftRevision revision = revision(draft, expectedRevision + 1, email, reopened);
         revision.setChangeSetJson(DraftInputsMapper.text(patch));
         imported.ifPresent(revision::setImportedFrom);
-        revisionRepository.insert(revision);
+        revisionRepository.save(revision);
         draft.setInputsJson(DraftInputsMapper.text(inputs));
         draft.setCurrentRevision(expectedRevision + 1);
         draft.setStatus(DraftStatus.DRAFT);
@@ -209,7 +227,7 @@ public class DraftService {
         return added;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public List<DraftRevision> revisions(String email, String draftId) {
         owned(email, draftId);
         return revisionRepository.findByDraftIdOrderByRevisionNumber(draftId);
@@ -281,7 +299,7 @@ public class DraftService {
      * The conflict for a save that collided on every attempt ({@link DraftSaveRetry}): the other save had not
      * committed, so which paths it changes is not yet known and the revision has not visibly moved.
      */
-    @Transactional(readOnly = true)
+    @Transactional(value = "postgresTransactionManager", readOnly = true)
     public DraftConflictException conflictAfterRace(String email, String draftId) {
         return new DraftConflictException("Another save of this draft had not finished; read the draft and send again",
                 DraftView.of(owned(email, draftId)), List.of());

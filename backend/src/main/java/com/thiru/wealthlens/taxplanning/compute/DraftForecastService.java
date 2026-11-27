@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * the portfolio as it stands, so a stored copy would only be one more thing to keep fresh and to erase.
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional(value = "postgresTransactionManager", readOnly = true)
 @RequiredArgsConstructor
 public class DraftForecastService {
 

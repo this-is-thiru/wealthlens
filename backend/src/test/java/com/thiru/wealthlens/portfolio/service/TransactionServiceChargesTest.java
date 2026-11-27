@@ -20,6 +20,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +51,8 @@ class TransactionServiceChargesTest {
     @Mock private ChargeViewAssembler chargeViewAssembler;
 
     private TransactionService service() {
-        return new TransactionService(transactionRepository, new IdempotencyProperties(60), chargeViewAssembler);
+        return new TransactionService(transactionRepository, new IdempotencyProperties(60), chargeViewAssembler,
+                Clock.systemUTC());
     }
 
     /**

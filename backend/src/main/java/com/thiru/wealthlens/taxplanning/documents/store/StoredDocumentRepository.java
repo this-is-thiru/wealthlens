@@ -3,9 +3,10 @@ package com.thiru.wealthlens.taxplanning.documents.store;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentType;
 import java.util.Collection;
 import java.util.List;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-public interface StoredDocumentRepository extends MongoRepository<StoredDocument, String> {
+public interface StoredDocumentRepository extends JpaRepository<StoredDocument, String> {
 
     /** The document a profile holds with these bytes, if any ({@code DR 05} M7). */
     java.util.Optional<StoredDocument> findByProfileIdAndSha256(String profileId, String sha256);
@@ -18,4 +19,8 @@ public interface StoredDocumentRepository extends MongoRepository<StoredDocument
 
     /** Every document of one tax year, whichever profile holds it, for retention. */
     List<StoredDocument> findByTaxYearStart(int taxYearStart);
+
+    /** Each tax year some document is held for, for retention. */
+    @Query("SELECT DISTINCT d.taxYearStart FROM StoredDocument d")
+    List<Integer> findTaxYearStarts();
 }

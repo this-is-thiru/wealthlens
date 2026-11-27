@@ -14,6 +14,7 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public class PortfolioQueryService {
     private final PortfolioRepository portfolioRepository;
     private final ProfitAndLossService profitAndLossService;
     private final ChargeViewAssembler chargeViewAssembler;
+    private final Clock clock;
 
     public List<AssetResponse> getStockQuantity(UserMail userMail, String stockCode) {
 
@@ -110,7 +112,7 @@ public class PortfolioQueryService {
      * @param stockEntities a list of stock entities to search through
      * @return the response entity that matches the provided stock code
      */
-    private static AssetResponse combineAllDetailsOfEntities(List<AssetEntity> stockEntities) {
+    private AssetResponse combineAllDetailsOfEntities(List<AssetEntity> stockEntities) {
         AssetResponse assetResponse = TJsonMapper.copy(stockEntities.getFirst(), AssetResponse.class);
 
         double totalValue = 0;
@@ -146,7 +148,7 @@ public class PortfolioQueryService {
                 .sorted(Map.Entry.comparingByKey())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, _) -> e1, LinkedHashMap::new));
         assetResponse.setTransactionQuantities(transactionQuantities);
-        LocalDate today = TLocalDate.today();
+        LocalDate today = LocalDate.now(clock);
         Map<String, Long> daysHeld = new LinkedHashMap<>();
         transactionQuantities.keySet().forEach(date ->
                 daysHeld.put(date, ChronoUnit.DAYS.between(TLocalDate.convertToDate(date), today)));

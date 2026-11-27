@@ -10,10 +10,6 @@ public class TLocalDate {
 
     public static String TIME_ZONE_IST = "Asia/Kolkata";
 
-    public static LocalDate today() {
-        return LocalDate.now();
-    }
-
     public static Month firstMonthOfQuarter(int quarter) {
         if (quarter <= 0 || quarter >= 5) {
             throw new IllegalArgumentException("Valid quarters are 1(Q1) to 4(Q4)");
@@ -36,12 +32,4 @@ public class TLocalDate {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TCollectionUtil.DATE_TIME_FORMAT);
         return LocalDateTime.parse(date, formatter);
-    }
-
-    public static String standardDateFormattedString(LocalDate date) {
-
-        LocalDate localDate = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TCollectionUtil.DATE_FORMAT);
-        return localDate.format(formatter);
-    }
-}
+    }}

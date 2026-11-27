@@ -3,7 +3,6 @@ package com.thiru.wealthlens.taxplanning.jobs;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -35,12 +34,11 @@ public class JobContext {
     /** Records that the job left {@code subject} alone, and why; logged at ERROR so it is seen. */
     public void refuse(String subject, String reason) {
         JobFailure failure = new JobFailure();
-        failure.setId(UUID.randomUUID().toString());
         failure.setJob(job);
         failure.setSubject(subject);
         failure.setReason(reason);
         failure.setFailedAt(nowUtc());
-        failures.insert(failure);
+        failures.save(failure);
         log.error("Job {} refused {}: {}", job, subject, reason);
     }
 }

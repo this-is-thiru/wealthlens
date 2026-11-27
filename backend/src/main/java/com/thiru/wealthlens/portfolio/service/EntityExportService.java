@@ -14,6 +14,7 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.io.ByteArrayInputStream;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,6 +42,7 @@ public class EntityExportService {
     private final Environment env;
     private final PortfolioQueryService portfolioQueryService;
     private final TransactionService transactionService;
+    private final Clock clock;
 
     public FileStream export(UserMail userMail, EntityExportRequest exportRequest) {
         String entityName = exportRequest.getEntityName();
@@ -65,7 +67,8 @@ public class EntityExportService {
     }
 
     /**
-     * A dated filename, prefixed outside production.
+     * A dated filename, prefixed outside production. Dated in the business zone (the clock's, D-958): the name is read by a
+     * person, not stored.
      *
      * <p>The prefix exists so a spreadsheet pulled from a test environment is identifiable as one
      * once it is sitting in somebody's downloads folder beside the real thing.
@@ -73,13 +76,13 @@ public class EntityExportService {
     private FileStream stream(String namePrefix, ByteArrayInputStream workbook) {
         boolean isProdEnv = Set.of(env.getActiveProfiles()).contains(ENV_PROD);
         String fileName = (isProdEnv ? namePrefix : ENV_UAT + "-" + namePrefix)
-                + TLocalDateTime.format(LocalDateTime.now(), FILE_NAME_DATE_FORMAT)
+                + TLocalDateTime.format(LocalDateTime.now(clock), FILE_NAME_DATE_FORMAT)
                 + FileType.XLSX.getExtension();
         return FileStream.from(fileName, new InputStreamResource(workbook), FileType.XLSX);
     }
 
     /** One filled row, so the template shows the shape of every column rather than only its name. */
-    private static TransactionEntity templateRow() {
+    private TransactionEntity templateRow() {
         TransactionEntity transaction = new TransactionEntity();
         transaction.setEmail("email@gmail.com");
         transaction.setStockCode("STOCK_CODE");
@@ -90,13 +93,13 @@ public class EntityExportService {
         transaction.setAccountType(AccountType.SELF);
         transaction.setAccountHolder("Self");
         transaction.setAssetType(AssetType.EQUITY);
-        transaction.setMaturityDate(LocalDate.now());
+        transaction.setMaturityDate(LocalDate.now(clock));
         transaction.setTransactionType(TransactionType.BUY);
         transaction.setPrice(0.0);
         transaction.setQuantity(0.0);
         transaction.setBrokerCharges(0.0);
         transaction.setMiscCharges(0.0);
-        transaction.setTransactionDate(LocalDate.now());
+        transaction.setTransactionDate(LocalDate.now(clock));
         transaction.setComment("comments");
         return transaction;
     }

@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxplanning.jobs;
 
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.profile.LandlordRepository;
 import com.thiru.wealthlens.taxplanning.profile.LenderRepository;
@@ -86,7 +86,7 @@ class ThirdPartyRetention {
     }
 
     /** A landlord or lender as retention sees it: whose it is, when it last changed, and how to delete it. */
-    private record HeldRecord(String kind, String id, String profileId, AuditMetadata audit, Consumer<String> remover) {
+    private record HeldRecord(String kind, String id, String profileId, AuditColumns audit, Consumer<String> remover) {
 
         String subject() {
             return kind + " " + id;

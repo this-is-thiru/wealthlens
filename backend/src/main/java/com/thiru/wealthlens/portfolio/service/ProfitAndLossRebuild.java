@@ -22,7 +22,10 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -65,6 +68,7 @@ public class ProfitAndLossRebuild {
     private final TradeOutcomeRepository tradeOutcomeRepository;
     private final TransactionRepository transactionRepository;
     private final UserChargeService userChargeService;
+    private final Clock clock;
 
     /**
      * Folds the user's stored rows into fresh documents and compares them with what is stored; unless a dry run,
@@ -76,6 +80,7 @@ public class ProfitAndLossRebuild {
     public ProfitAndLossRebuildReport rebuild(UserMail userMail, boolean dryRun) {
         String email = userMail.getEmail();
         Map<String, ProfitAndLossEntity> rebuilt = new TreeMap<>();
+        LocalDateTime rebuiltAt = LocalDateTime.now(clock.withZone(ZoneOffset.UTC));
 
         List<TradeOutcomeEntity> sales = tradeOutcomeRepository.findByEmail(email).stream()
                 .sorted(Comparator.comparing(TradeOutcomeEntity::getSellDate).thenComparing(TradeOutcomeEntity::getId))
@@ -83,7 +88,7 @@ public class ProfitAndLossRebuild {
         for (TradeOutcomeEntity sale : sales) {
             TradeOutcomeContext row = TJsonMapper.copy(sale, TradeOutcomeContext.class);
             ProfitAndLossEntity document = documentFor(rebuilt, email, row.getSellDate());
-            ProfitAndLossService.foldSale(document, row);
+            ProfitAndLossService.foldSale(document, row, rebuiltAt);
         }
 
         List<UserChargeEntity> charges = userChargeService.findHistory(email).stream()

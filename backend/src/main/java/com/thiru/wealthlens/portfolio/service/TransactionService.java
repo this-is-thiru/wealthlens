@@ -13,8 +13,10 @@ import com.thiru.wealthlens.shared.entity.query.QueryBuilder;
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class TransactionService {
 
     private final IdempotencyProperties idempotencyProperties;
     private final ChargeViewAssembler chargeViewAssembler;
+    private final Clock clock;
 
     /**
      * Records a trade, or recognises that this submission already did.
@@ -58,7 +61,7 @@ public class TransactionService {
      */
     public TransactionRecord recordTransaction(UserMail userMail, AssetRequest assetRequest, TradeFlow tradeFlow) {
         if (assetRequest.getTransactionDate() == null) {
-            assetRequest.setTransactionDate(LocalDate.now());
+            assetRequest.setTransactionDate(LocalDate.now(clock));
         }
         String email = userMail.getEmail();
 
@@ -80,7 +83,7 @@ public class TransactionService {
 
         String fingerprint = TradeFingerprint.of(email, assetRequest);
         if (assetRequest.getIdempotencyKey() == null && idempotencyProperties.fingerprintFallbackEnabled()) {
-            LocalDateTime since = LocalDateTime.now().minus(idempotencyProperties.window());
+            LocalDateTime since = LocalDateTime.now(clock.withZone(ZoneOffset.UTC)).minus(idempotencyProperties.window());
             Optional<TransactionEntity> recent = transactionRepository
                     .findFirstByEmailAndTradeFingerprintAndSubmittedAtAfterOrderBySubmittedAtDesc(
                             email, fingerprint, since);
@@ -98,7 +101,7 @@ public class TransactionService {
         entity.setIdempotencyKey(assetRequest.getIdempotencyKey());
         entity.setTradeFlow(tradeFlow);
         entity.setTradeFingerprint(fingerprint);
-        entity.setSubmittedAt(LocalDateTime.now());
+        entity.setSubmittedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
         log.info("Transaction: {}, Stock: '{}' on '{}' noted successfully for: {}", entity.getTransactionType(),
                 entity.getStockName(), entity.getTransactionDate(), email);
         return TransactionRecord.created(transactionRepository.save(entity).getId());

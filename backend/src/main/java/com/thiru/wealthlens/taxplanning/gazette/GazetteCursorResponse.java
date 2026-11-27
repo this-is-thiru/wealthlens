@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public record GazetteCursorResponse(String id, int year, long lastNumber, LocalDateTime updatedAt, String updatedBy) {
 
     public static GazetteCursorResponse from(GazetteCursor entity) {
-        return new GazetteCursorResponse(entity.getId(), entity.getYear(), entity.getLastNumber(), entity.getUpdatedAt(), entity.getUpdatedBy());
+        return new GazetteCursorResponse(entity.getId(), entity.getYear(), entity.getLastNumber(),
+                entity.getAuditMetadata().getUpdatedAt(), entity.getAuditMetadata().getUpdatedBy());
     }
 }

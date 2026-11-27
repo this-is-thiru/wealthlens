@@ -1,53 +1,59 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
-import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
+import com.thiru.wealthlens.shared.protection.EncryptedColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A lender: data about someone who is not the user ({@code DR 15} F3; retention {@code DR 14} O5, W-239).
  */
+@Entity
+@Table(name = "tax_lenders")
+@EntityListeners({AuditingEntityListener.class, CreatedWithIdSaved.class})
 @Data
 @NoArgsConstructor
-@Document("tax_lenders")
-public class Lender implements AuditableEntity, CreatedWithId, ProfileScoped {
+public class Lender implements CreatedWithId, ProfileScoped {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Indexed
-    @Field("profile_id")
+    @Column(name = "profile_id")
     private String profileId;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("name")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "name")
     private String name;
 
     /** The lender's address, which r.205(2) asks of a person claiming house-property interest; none on a lender stored before W-119b. */
-    @ValueConverter(EncryptedField.class)
-    @Field("address")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "address")
     private String address;
 
-    @ValueConverter(EncryptedField.class)
-    @Field("pan")
+    @Convert(converter = EncryptedColumn.class)
+    @Column(name = "pan")
     private String pan;
 
-    @Field(name = "kind", targetType = FieldType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "kind")
     private LenderKind kind;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 
     /** Whether this instance is not yet stored (W-329b): never stored, never read back. */
     @Transient

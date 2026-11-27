@@ -1,15 +1,20 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
-import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import com.thiru.wealthlens.shared.protection.SearchableColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * The record that a user asked for one profile to be erased, and when it was (W-235; W-237f C2a′). The hold itself lives on
@@ -17,29 +22,38 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
  * snapshot taken before them would bring the profile back with nothing to say it was erased. Kept a year after the erasure
  * (Rules r.8(3)), as an account's erasure request is.
  */
+@Entity
+@Table(name = "tax_profile_erasures")
+@EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
-@Document("tax_profile_erasures")
-public class ProfileErasure implements AuditableEntity {
+public class ProfileErasure {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("email")
-    @ValueConverter(SearchableIdentifier.class)
+    @Convert(converter = SearchableColumn.class)
+    @Column(name = "email")
     private String email;
 
-    @Field("profile_id")
+    @Column(name = "profile_id")
     private String profileId;
 
     /** UTC. */
-    @Field("requested_at")
+    @Column(name = "requested_at")
     private LocalDateTime requestedAt;
 
     /** UTC; absent until the retention purge has erased the profile. */
-    @Field("erased_at")
+    @Column(name = "erased_at")
     private LocalDateTime erasedAt;
 
-    @Field("audit_metadata")
-    private AuditMetadata auditMetadata = new AuditMetadata();
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

@@ -1,30 +1,50 @@
 package com.thiru.wealthlens.taxplanning.jobs;
 
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /** Something a job refused to do, and why ({@code DR 19} E8's dead letter): kept for the owner to act on. Never a value. */
+@Entity
+@Table(name = "tax_job_failures")
+@EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
-@Document("tax_job_failures")
 public class JobFailure {
 
-    @MongoId
+    @Id
     private String id;
 
-    @Field("job")
+    @Column(name = "job")
     private String job;
 
-    @Field("subject")
+    @Column(name = "subject")
     private String subject;
 
-    @Field("reason")
+    @Column(name = "reason")
     private String reason;
 
-    @Field("failed_at")
+    @Column(name = "failed_at")
     private LocalDateTime failedAt;
+
+    /** New (W-337f, D-951 C7a): this entity had no audit trail under Mongo. */
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
+
+    @PrePersist
+    void assignIdIfAbsent() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 }

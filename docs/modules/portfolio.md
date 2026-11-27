@@ -385,9 +385,9 @@ these routes too.
    answer whole lists (`PortfolioController.java:76` – `:103`; `TemporaryTransactionsController.java:26` – `:30`). CLAUDE.md: a list that
    grows answers a page. Whether a holdings view is such a list is the owner's ruling.
 7. **The wall clock and dead weight.**
-   - **The wall clock:** the future-date refusal uses `LocalDate.now()` (`PortfolioService.java:217`), `daysHeld` uses `TLocalDate.today()`
-     (`PortfolioQueryService.java:148`), and the fingerprint window uses `LocalDateTime.now()` (`TransactionService.java:83`, `:101`). None
-     uses the app's `Clock`.
+   - **The wall clock:** closed by W-402 (D-959): the future-date refusal, `daysHeld` and a dateless trade's date take "today" from
+     the app's `Clock` (the business zone, D-958), and the fingerprint window and `submitted_at` are UTC from it; `ArchitectureTest`
+     refuses a bare `LocalDate.now()` / `LocalDateTime.now()`.
    - **Dead weight:** `recordTransaction` defaults a missing date to today (`TransactionService.java:60` – `:62`), which no path can reach,
      since every path refuses one first (`PortfolioService.java:250` – `:252`).
 8. **Conventions.** `@AllArgsConstructor` where CLAUDE.md asks `@RequiredArgsConstructor`: `PortfolioController.java:28`,
@@ -422,9 +422,8 @@ these routes too.
     (`ProfitAndLossService.java:67`, `:277`); "an EQUITY gate below … nothing here may touch cost basis until Phase C" (`:343` – `:347`), where no gate follows
     and `authoritative` sets the cost; `RealisedProfits` describes a `yearlyBrokerCharges` hierarchy "deleted in Chunk 11" beside it
     (`RealisedProfits.java:18` – `:26`).
-16. **The wall clock:** `calculateXirr` values open lots and dates the answer at `LocalDate.now()` (`AnalyticsService.java:230`, `:264`),
-    and the summary at `LocalDateTime.now()` (`:83`); the export's file name and template rows likewise
-    (`EntityExportService.java:76`, `:93`, `:99`).
+16. **The wall clock:** closed by W-402 (D-959): `calculateXirr`'s date, the export's file name and template rows take the app's
+    `Clock` (the business zone's date and time); the summary's `lastUpdated` is UTC from it.
 17. **Conventions:** `@AllArgsConstructor` on `ProfitAndLossService.java:49`, `EntityExportService.java:34` and
     `EntityExportController.java:18`; `PropertySaleRequest` carries no constraint, so its `@Valid` checks nothing
     (`dto/PropertySaleRequest.java:17` – `:37`).

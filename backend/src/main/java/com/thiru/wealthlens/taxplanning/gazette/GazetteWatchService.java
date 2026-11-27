@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxplanning.gazette;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -51,8 +50,6 @@ public class GazetteWatchService {
         cursor.setId(GazetteCursor.ID);
         cursor.setYear(request.year());
         cursor.setLastNumber(request.lastNumber());
-        cursor.setUpdatedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
-        cursor.setUpdatedBy(caller);
         log.info("Gazette watch cursor set to {}/{} by {}", request.year(), request.lastNumber(), caller);
         return cursors.save(cursor);
     }

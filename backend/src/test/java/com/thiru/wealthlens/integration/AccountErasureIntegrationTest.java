@@ -22,6 +22,7 @@ import com.thiru.wealthlens.shared.privacy.PersonalDataHolder;
 import com.thiru.wealthlens.taxplanning.jobs.AccountErasure;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
@@ -39,11 +40,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,8 +52,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import tools.jackson.databind.JsonNode;
@@ -153,6 +150,9 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private BreachNoticeRepository breachNoticeRepository;
 
+    @Autowired
+    private TaxpayerProfileRepository taxpayerProfileRepository;
+
     @BeforeEach
     void twoAccountsOnTheDayAnuAsks() {
         clock.set(ASKED);
@@ -183,22 +183,6 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
                         URI.create(RestAssured.baseURI + ":" + RestAssured.port + "/api/v1/admin/privacy/erasure/users/" + ANU))
                 .header("Authorization", "Bearer " + generateToken(OWNER, "SUPER_USER")).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
-    }
-
-    /** Each per-person collection, and the field in it that names the person. */
-    private Map<String, String> personCollections() {
-        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
-        scanner.addIncludeFilter(new AnnotationTypeFilter(org.springframework.data.mongodb.core.mapping.Document.class));
-        Map<String, String> found = new TreeMap<>();
-        for (BeanDefinition candidate : scanner.findCandidateComponents("com.thiru.wealthlens")) {
-            MongoPersistentEntity<?> entity = mongoTemplate.getConverter().getMappingContext()
-                    .getRequiredPersistentEntity(classOf(candidate));
-            PERSON_FIELDS.stream().map(entity::getPersistentProperty).filter(Objects::nonNull)
-                    .map(MongoPersistentProperty::getFieldName).findFirst()
-                    .ifPresent(field -> found.put(entity.getCollection(), field));
-        }
-        found.remove(KEPT);
-        return found;
     }
 
     /** Each per-person PostgreSQL table ({@code @Entity}), and the column in it that names the person (W-337c1). */
@@ -236,21 +220,6 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void aRowInEveryCollectionFor(String email) {
-        personCollections().forEach((collection, field) -> {
-            if (count(collection, field, email) == 0) {
-                // A string id, as the entities' own ids are, so the app reads and deletes the row as one of its own; the
-                // identifier as stored (W-253); and a value of its own in each other uniquely indexed field, so two seeded rows
-                // never collide on an absent one.
-                Document row = new Document("_id", UUID.randomUUID().toString()).append(field, storedIdentifier(email));
-                for (Document index : mongoTemplate.getCollection(collection).listIndexes()) {
-                    if (Boolean.TRUE.equals(index.getBoolean("unique"))) {
-                        index.get("key", Document.class).keySet().stream().filter(key -> !row.containsKey(key))
-                                .forEach(key -> row.append(key, UUID.randomUUID().toString()));
-                    }
-                }
-                mongoTemplate.getCollection(collection).insertOne(row);
-            }
-        });
         personTables().forEach((table, column) -> {
             if (tableCount(table, column, email) == 0) {
                 if (table.equals("refresh_tokens")) {
@@ -263,6 +232,11 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
                     insurance.setEmail(email);
                     insurance.setPremium(1000.0);
                     insuranceRepository.save(insurance);
+                } else if (table.equals("tax_draft_computations")) {
+                    // the receipt index refuses a second null, as m1.6.1's unique index did (D-969)
+                    new JdbcTemplate(postgresDataSource).update(
+                            "INSERT INTO tax_draft_computations (id, email, receipt) VALUES (?, ?, ?)",
+                            UUID.randomUUID().toString(), storedIdentifier(email), UUID.randomUUID().toString());
                 } else if (table.equals("privacy_processing_log")) {
                     new JdbcTemplate(postgresDataSource).update(
                             "INSERT INTO privacy_processing_log (id, principal, status) VALUES (?, ?, 200)",
@@ -276,10 +250,6 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
         });
     }
 
-    private long count(String collection, String field, String email) {
-        return mongoTemplate.getCollection(collection).countDocuments(new Document(field, storedIdentifier(email)));
-    }
-
     private long tableCount(String table, String column, String email) {
         Long rows = new JdbcTemplate(postgresDataSource).queryForObject(
                 "SELECT COUNT(*) FROM " + table + " WHERE " + column + " = ?", Long.class, storedIdentifier(email));
@@ -288,7 +258,6 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
 
     private Map<String, Long> rowsOf(String email) {
         Map<String, Long> rows = new TreeMap<>();
-        personCollections().forEach((collection, field) -> rows.put(collection, count(collection, field, email)));
         personTables().forEach((table, column) -> rows.put(table, tableCount(table, column, email)));
         return rows;
     }
@@ -347,14 +316,16 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     void request_whenTheAccountHasATaxProfile_holdsItFromTheMomentOfTheRequest() {
         // Given
         TaxpayerProfile profile = new TaxpayerProfile();
+        profile.setId(UUID.randomUUID().toString());
+        profile.setNewlyCreated(true);
         profile.setEmail(ANU);
-        mongoTemplate.save(profile);
+        taxpayerProfileRepository.save(profile);
 
         // When
         requestErasure().statusCode(202);
 
         // Then
-        assertThat(mongoTemplate.findById(profile.getId(), TaxpayerProfile.class).getErasureRequestedAt())
+        assertThat(taxpayerProfileRepository.findById(profile.getId()).orElseThrow().getErasureRequestedAt())
                 .isEqualTo(LocalDateTime.parse("2027-06-10T08:00:00"));
     }
 

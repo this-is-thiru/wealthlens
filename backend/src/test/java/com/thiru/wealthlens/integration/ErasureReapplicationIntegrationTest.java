@@ -4,8 +4,6 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -15,8 +13,8 @@ import com.thiru.wealthlens.taxplanning.jobs.AccountErasure;
 import com.thiru.wealthlens.taxplanning.jobs.LogErasure;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
-import com.thiru.wealthlens.taxplanning.profile.ProfileErasure;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import java.time.LocalDateTime;
@@ -26,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * A restore from a snapshot must not bring an erased person back (W-237f C2a′), on a clock the test sets. A restore is
@@ -75,6 +74,9 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private AccountErasureRequestRepository accountErasureRequestRepository;
 
+    @Autowired
+    private TaxpayerProfileRepository profiles;
+
     @BeforeEach
     void theDayAnuAsks() {
         clock.set(ASKED);
@@ -105,11 +107,13 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         runner.run(accountErasure);
     }
 
+    /** The profile as a snapshot holds it; a restore replaces the stored row where there is one. */
     private void restoredProfile(String id) {
         TaxpayerProfile profile = new TaxpayerProfile();
         profile.setId(id);
+        profile.setNewlyCreated(!profiles.existsById(id));
         profile.setEmail(ANU);
-        mongoTemplate.save(profile);
+        profiles.save(profile);
     }
 
     private void profileErasureAskedByAnu() {
@@ -128,6 +132,17 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
 
     private AccountErasureRequest requestOf(String email) {
         return accountErasureRequestRepository.findFirstByEmailOrderByRequestedAtDesc(email).orElse(null);
+    }
+
+    /** {@code tax_profile_erasures} has no derived query by {@code profile_id} alone (only paired with erasedAt). */
+    private long profileErasureCountFor(String profileId) {
+        return new JdbcTemplate(postgresDataSource).queryForObject(
+                "SELECT COUNT(*) FROM tax_profile_erasures WHERE profile_id = ?", Long.class, profileId);
+    }
+
+    private LocalDateTime profileErasureErasedAtFor(String profileId) {
+        return new JdbcTemplate(postgresDataSource).queryForObject(
+                "SELECT erased_at FROM tax_profile_erasures WHERE profile_id = ?", LocalDateTime.class, profileId);
     }
 
     @Test
@@ -190,7 +205,7 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         reapplySince("2027-06-01T00:00:00").statusCode(200).body("accountsHeld", contains(ANU));
 
         // Then
-        assertThat(mongoTemplate.findById(PROFILE, TaxpayerProfile.class).getErasureRequestedAt())
+        assertThat(profiles.findById(PROFILE).orElseThrow().getErasureRequestedAt())
                 .isEqualTo(LocalDateTime.parse("2027-06-10T08:00:00"));
     }
 
@@ -201,7 +216,7 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         profileErasureAskedByAnu();
         clock.set(ERASED);
         runner.run(retentionPurge);
-        assertThat(mongoTemplate.findById(PROFILE, TaxpayerProfile.class)).isNull();
+        assertThat(profiles.findById(PROFILE)).isEmpty();
         restoredProfile(PROFILE);
         clock.set(AFTER_THE_RESTORE);
 
@@ -209,9 +224,8 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         reapplySince(SNAPSHOT).statusCode(200).body("profiles", contains(PROFILE)).body("accountsErased", empty());
 
         // Then
-        assertThat(mongoTemplate.findById(PROFILE, TaxpayerProfile.class)).isNull();
-        assertThat(mongoTemplate.findOne(query(where("profile_id").is(PROFILE)), ProfileErasure.class).getErasedAt())
-                .isEqualTo(LocalDateTime.parse("2028-06-10T08:00:00"));
+        assertThat(profiles.findById(PROFILE)).isEmpty();
+        assertThat(profileErasureErasedAtFor(PROFILE)).isEqualTo(LocalDateTime.parse("2028-06-10T08:00:00"));
     }
 
     @Test
@@ -226,7 +240,7 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         reapplySince("2027-06-01T00:00:00").statusCode(200).body("profiles", contains(PROFILE));
 
         // Then
-        assertThat(mongoTemplate.findById(PROFILE, TaxpayerProfile.class).getErasureRequestedAt())
+        assertThat(profiles.findById(PROFILE).orElseThrow().getErasureRequestedAt())
                 .isEqualTo(LocalDateTime.parse("2027-06-10T08:00:00"));
     }
 
@@ -243,14 +257,14 @@ class ErasureReapplicationIntegrationTest extends AbstractIntegrationTest {
         runner.run(logErasure);
 
         // Then
-        assertThat(mongoTemplate.count(query(where("profile_id").is(PROFILE)), ProfileErasure.class)).isEqualTo(1);
+        assertThat(profileErasureCountFor(PROFILE)).isEqualTo(1);
 
         // When — at the year
         clock.set("2029-06-10T08:00:00Z");
         runner.run(logErasure);
 
         // Then
-        assertThat(mongoTemplate.count(query(where("profile_id").is(PROFILE)), ProfileErasure.class)).isZero();
+        assertThat(profileErasureCountFor(PROFILE)).isZero();
     }
 
     @Test

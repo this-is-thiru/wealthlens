@@ -196,37 +196,128 @@ Every `BadRequestException` and `IllegalArgumentException` maps to HTTP **400** 
 
 ## 4. Stored data
 
-The module holds 20 `@Document` collections: `profile/` (7), `workspace/` (4), `compute/` (1), `documents/store/` (3), `protection/` (1), `jobs/` (2) and `gazette/` (2), and one GridFS bucket. The 15 of parts one to three implement `AuditableEntity` (`audit_metadata`), and 14 of those implement `CreatedWithId`; part four's five records implement neither (`newlyCreated` transient flag so Spring Data Mongo treats a caller-assigned UUID as an insert; `ProfileErasure` does not).
+PostgreSQL tables (W-337b, D-939/D-940 laid out 17 of the 20 as a dormant baseline; W-337f, D-951 built the entities,
+added the 3 the baseline deferred, and replaced the GridFS bucket; `db/migration/taxplanning/V5__taxplanning.sql`
+and `V10__taxplanning.sql`). Primary keys are caller-assigned `VARCHAR(255)`: 15 of the 20 entities implement
+`CreatedWithId` (a caller sets the id and a transient `newlyCreated` flag before the first save, same idiom as
+every other `CreatedWithId` entity app-wide); the other 5 (`ProfileErasure`, `GazetteLead`, `JobFailure`,
+`JobLease`'s business key, `AccessRecord`) get a `@PrePersist`-assigned UUID if the caller leaves the id absent.
+Every one of the 20 embeds `AuditColumns` (`created_by`, `updated_by`, `created_at`, `updated_at`) - 5 had no audit
+trail at all under Mongo and gained it fresh in V10 (`tax_gazette_cursor`, `tax_gazette_leads`, `tax_access_log`,
+`tax_job_failures`, `tax_job_leases`); `tax_gazette_cursor`'s pre-existing manual `updated_at`/`updated_by` columns
+were folded into the same embeddable instead of being set by hand.
 
-| Collection | Fields (encrypted: **E** = `EncryptedField`, **S** = `SearchableIdentifier`) | Indexes | Where |
-|---|---|---|---|
-| `tax_profiles` | `_id` (UUID), `email` (**S**), `pan` (**E**), `pan_digest`, `name` (**E**), `kind` (`INDIVIDUAL`/`HUF`), `date_of_birth` (**E**), `residential_status`, `holds_portfolio`, `disability` (**E**), `date_of_death`, `erasure_requested_at` (UTC), `audit_metadata` | `email`; `pan_digest` (unique, sparse) | `profile/TaxpayerProfile.java:32` – `:101` |
-| `tax_family_members` | `_id`, `profile_id`, `name` (**E**), `relationship`, `date_of_birth` (**E**), `dependant`, `disability` (**E**), `date_of_death`, `multiple_birth_after_first_child`, `resident_in_india`, `pan` (**E**), `audit_metadata` | `profile_id` | `profile/FamilyMember.java:29` – `:84` |
-| `tax_employers` | `_id`, `profile_id`, `name`, `tan` (**E**), `tan_digest`, `pan` (**E**), `type` (`GOVT`/`PSU`/`PRIVATE`), `address`, `audit_metadata` | `tax_employer_tan_idx`: `{profile_id: 1, tan_digest: 1}` (unique) | `profile/Employer.java:24` – `:67` |
-| `tax_landlords` | `_id`, `profile_id`, `name` (**E**), `address` (**E**), `pan` (**E**), `relationship_to_taxpayer`, `audit_metadata` | `profile_id` | `profile/Landlord.java:24` – `:61` |
-| `tax_lenders` | `_id`, `profile_id`, `name` (**E**), `address` (**E**), `pan` (**E**), `kind` (`BANK`/`HOUSING_FINANCE_COMPANY`/`EMPLOYER`/`OTHER`), `audit_metadata` | `profile_id` | `profile/Lender.java:23` – `:61` |
-| `tax_bank_accounts` | `_id`, `profile_id`, `bank_name`, `ifsc`, `masked_number`, `kind` (`SAVINGS`/`TIME_DEPOSIT`/`CURRENT`/`POST_OFFICE`), `nominated_for_refund`, `audit_metadata` | `profile_id` | `profile/BankAccount.java:21` – `:58` |
-| `tax_profile_erasures` | `_id`, `email` (**S**), `profile_id`, `requested_at` (UTC), `erased_at` (UTC), `audit_metadata` | none declared (gap 8) | `profile/ProfileErasure.java:22` – `:45` |
-| `tax_year_workspaces` | `_id`, `profile_id`, `tax_year` (`int`), `primary_draft_id`, `audit_metadata` | `tax_workspace_year_idx`: `{profile_id: 1, tax_year: 1}` (unique) | `workspace/TaxYearWorkspace.java:18` – `:46` |
-| `tax_filing_drafts` | `_id`, `workspace_id`, `profile_id`, `tax_year`, `label`, `status`, `current_revision`, `inputs_json` (**E**), `regime_election`, `acted_on_at` (UTC), `archived_at` (UTC), `staleness` (`DraftStaleness`), `audit_metadata` | `tax_draft_workspace_idx`: `{workspace_id: 1, status: 1}` | `workspace/FilingDraft.java:25` – `:90`; `DraftStaleness.java:16` – `:29` |
-| `tax_draft_revisions` | `_id`, `draft_id`, `revision_number`, `full_state_json` (**E**), `change_set_json` (**E**), `changed_by` (**S**), `reopened`, `imported_from` (`WorkbookImport`: `workbook_sha256`, `rows_applied`, `rows_mapped`, `rows_left_out`), `audit_metadata` | `tax_revision_number_idx`: `{draft_id: 1, revision_number: 1}` (unique) | `workspace/DraftRevision.java:24` – `:69`; `WorkbookImport.java:17` – `:34` |
-| `tax_regime_election_history` | `_id`, `profile_id`, `regime_code`, `events` (`List<ElectionEvent(taxYearStart, sourceDraft)>`), `audit_metadata` | `tax_election_regime_idx`: `{profile_id: 1, regime_code: 1}` (unique) | `workspace/RegimeElectionHistory.java:24` – `:73` |
-| `tax_draft_computations` | `_id`, `receipt`, `email` (**S**), `draft_id`, `revision`, `result_json` (**E**), `law_and_exec`, `rule_checksums`, `computed_at` (UTC), `audit_metadata` | `receipt` (unique); `draft_id` | `compute/DraftComputation.java:27` – `:79` |
-| `tax_documents` | `_id` (UUID), `profile_id`, `tax_year` (`int`), `document_type`, `sha256`, `uploaded_at` (UTC), `page_count`, `scanned`, `audit_metadata` — nothing encrypted: nothing here says what the form holds | `tax_document_bytes_idx`: `{profile_id: 1, sha256: 1}` (unique); `tax_document_year_idx`: `{profile_id: 1, tax_year: 1}` | `documents/store/StoredDocument.java:21` – `:64` |
-| `tax_parse_attempts` | `_id` (attempt UUID), `document_id`, `parser_id`, `parser_version`, `started_at`, `finished_at` (UTC), `outcome` (`SUCCESS`/`PARTIAL`/`FAILED`), `fields_json` (**E**), `unmapped_text_json` (**E**), `parser_notes_json` (**E**), `audit_metadata` | `tax_parse_attempt_document_idx`: `{document_id: 1, started_at: -1}` | `documents/store/StoredParseAttempt.java:22` – `:67` |
-| `tax_document_confirmations` | `_id` (= the attempt's id, so one confirmation per attempt), `confirmed_by` (**S**), `confirmed_at` (UTC), `accepted_json` (**E**), `rejected_fields` (paths only, sorted), `audit_metadata` | none beyond `_id` | `documents/store/StoredConfirmation.java:21` – `:69` |
-| `tax_access_log` | `_id`, `principal` (**S**), `subject` (`ReadSubject`: `PROFILE`, `FAMILY_MEMBERS`, `DRAFT`, `DRAFT_REVISION`, `COMPUTATION`, `DOCUMENT`), `subject_id`, `read_at` (`Instant`) — never a value; not `AuditableEntity` | none declared | `protection/AccessRecord.java:13` – `:37`; `protection/ReadSubject.java:4` – `:11` |
-| `tax_job_failures` | `_id`, `job`, `subject`, `reason`, `failed_at` (UTC) — the dead letter, never a value | none declared | `jobs/JobFailure.java:10` – `:29` |
-| `tax_job_leases` | `_id` (= the job's name, so at most one lease per job), `holder` (a UUID per run), `expires_at` (`Instant`) | TTL on `expires_at` (`expireAfter = "0s"`) | `jobs/JobLease.java:11` – `:30` |
-| `tax_gazette_cursor` | `_id` (`"egazette"`, the one cursor), `year`, `last_number`, `updated_at`, `updated_by` (**S**) | none beyond `_id` | `gazette/GazetteCursor.java:12` – `:38` |
-| `tax_gazette_leads` | `_id`, `url`, `year`, `number`, `page` (0 for a copy too large to read), `matched_terms`, `possibly_affected`, `note`, `found_at` | `url` (unique) | `gazette/GazetteLead.java:12` – `:49` |
-| `tax_document_bytes` (GridFS bucket: `.files` + `.chunks`) | each file named by its document's id; the bytes sealed by `FieldCipher.encryptBytes` (the personal-data key) | GridFS's own | `documents/store/DocumentBytesConfig.java:17`, `:26`; `documents/store/DocumentBytes.java:27` – `:35`, `:51`, `:58` – `:67` |
+**Encrypted fields** (`EncryptedColumn` for text, same as every other module since W-337a) carry over field for
+field from the Mongo-era `EncryptedField`, with one exception this port found: `FamilyMember.dateOfBirth` and
+`TaxpayerProfile.dateOfBirth` (`LocalDate`) and both entities' `disability` (`DisabilitySeverity`) were encrypted
+non-string fields - a shape no other module had yet. `EncryptedColumn` stays scoped to text; two new converters
+cover it instead: `shared.protection.EncryptedDateColumn` (generic, any module) and
+`taxplanning.profile.EncryptedDisabilitySeverityColumn` (lives in `taxplanning`, not `shared`, because `shared`'s
+allowed dependencies are `portfolio` only and this converter must import a `taxengine` type). V5's baseline DDL
+declared `date_of_birth` as a real `DATE` column, not knowing it would hold ciphertext; V10 corrects the column
+type to `TEXT` on both tables.
 
-`TaxProfileIndexInitializer` (`profile/TaxProfileIndexInitializer.java:20` – `:35`) creates the indexes for the first six profile collections at `@PostConstruct`, `WorkspaceIndexInitializer` (`workspace/WorkspaceIndexInitializer.java:16` – `:31`) creates the indexes for all four workspace collections, and `DraftComputationIndexInitializer` (`compute/DraftComputationIndexInitializer.java:16` – `:30`) creates the indexes for `tax_draft_computations`; none catches errors, so a failure stops startup.
+**Opaque, never-queried-into fields** are `TEXT` JSON columns via `portfolio.entity.JsonColumnConverter` (reused
+directly, not duplicated - `taxplanning`'s allowed dependencies permit `-> portfolio`): `DraftComputation.ruleChecksums`
+(`Map<String,String>`, a new `compute.StringMapConverter`), `DraftRevision.importedFrom` (`WorkbookImport`) and
+`FilingDraft.staleness` (`DraftStaleness`) - the latter two converters' `empty()` returns `null`, not a default
+instance, since a column with no stored JSON means "never happened" here (a revision that didn't come from a
+workbook import; a draft that isn't known stale), exactly the bug class `RealisedProfitsConverter` was fixed for in
+`portfolio` (W-337e). **Plain lists of scalars** are `@ElementCollection` child tables instead, matching the shape
+V5's baseline already chose for every other such field in this module (`GazetteLead.matchedTerms`/`.possiblyAffected`,
+`RegimeElectionHistory.events`, `StoredConfirmation.rejectedFields`): `DraftComputation.lawAndExec` follows the same
+pattern (`tax_draft_computation_law_and_exec`, `@OrderColumn` because `ComputationReportService` compares the list
+with `equals`, which is order-sensitive).
 
-`DocumentIndexInitializer` (`documents/store/DocumentIndexInitializer.java:18` – `:29`) creates the indexes of the three document collections at `@PostConstruct`; a failure stops startup. The `*_json` fields are `ReadingJson`'s own shape, not a mapper's view of the records: each value names its kind (`MONEY` with an exact-text `amount`, `FLAG`, `PERIOD`, `TEXT`), and a kind it never wrote is refused (`documents/store/ReadingJson.java:19` – `:23`, `:80` – `:102`).
+**`tax_profiles`** (`profile/TaxpayerProfile.java`): `email` (`SearchableColumn`), `pan`/`name` (`EncryptedColumn`),
+`pan_digest`, `kind`, `date_of_birth`/`disability` (as above), `residential_status`, `holds_portfolio`,
+`date_of_death`, `erasure_requested_at`. Indexes: `email`; `pan_digest` unique (a bare `UNIQUE INDEX`, not a
+partial one - Postgres already excludes `NULL` from a unique constraint, so a profile held for erasure, whose
+digest is cleared, does not need a `WHERE` clause the way Mongo's sparse index needed one).
 
-`JobIndexInitializer` (`jobs/JobIndexInitializer.java:13` – `:31`) creates the indexes of `tax_job_leases` and `tax_gazette_leads` at `@PostConstruct`; a failure stops startup.
+**`tax_family_members`**, **`tax_landlords`**, **`tax_lenders`**, **`tax_bank_accounts`**, **`tax_employers`**
+(`profile/{FamilyMember,Landlord,Lender,BankAccount,Employer}.java`) - each `profile_id`-indexed (plain, except
+`tax_employers`' unique `{profile_id, tan_digest}`), fields carried over field for field from the Mongo source with
+the encrypted-field conversions above.
+
+**`tax_profile_erasures`** (`profile/ProfileErasure.java`): `email` (`SearchableColumn`), `profile_id`,
+`requested_at`, `erased_at`. No index, matching the Mongo source.
+
+**`tax_year_workspaces`** (`workspace/TaxYearWorkspace.java`): `profile_id`, `tax_year_start`, `primary_draft_id`.
+Unique `{profile_id, tax_year_start}`.
+
+**`tax_filing_drafts`** (`workspace/FilingDraft.java`, new in V10): `workspace_id`, `profile_id`, `tax_year_start`,
+`label`, `status`, `current_revision`, `inputs_json` (`EncryptedColumn`), `regime_election`, `acted_on_at`,
+`archived_at`, `staleness` (opaque, above). Index `{workspace_id, status}`.
+
+**`tax_draft_revisions`** (`workspace/DraftRevision.java`, new in V10): `draft_id`, `revision_number`,
+`full_state_json`/`change_set_json` (`EncryptedColumn`), `changed_by` (`SearchableColumn`), `reopened`,
+`imported_from` (opaque, above) **plus** `imported_from_workbook_sha256` - the one field of `WorkbookImport` pulled
+out as its own column, because `DraftRevisionRepository.findFirstByDraftIdAndImportedFromWorkbookSha256` queries
+into it; Spring Data JPA cannot derive a query path into a `@Convert`-mapped attribute, so the one field actually
+queried is normalized out while the rest of the object stays opaque. Unique `{draft_id, revision_number}`.
+
+**`tax_regime_election_history`** (`workspace/RegimeElectionHistory.java`) + child table
+**`tax_regime_election_events`** (`history_id`, `tax_year_start`, `source_draft`): `profile_id`, `regime_code`,
+`events` (`@ElementCollection`, `ElectionEvent` an `@Embeddable` record). Unique `{profile_id, regime_code}`.
+
+**`tax_draft_computations`** (`compute/DraftComputation.java`, new in V10) + child table
+**`tax_draft_computation_law_and_exec`** (`draft_computation_id`, `position`, `version`, ordered): `receipt`,
+`email` (`SearchableColumn`), `draft_id`, `revision`, `result_json` (`EncryptedColumn`), `law_and_exec`
+(`@ElementCollection`, ordered), `rule_checksums` (opaque, above), `computed_at`. Unique `receipt`; index
+`draft_id`.
+
+**`tax_documents`** (`documents/store/StoredDocument.java`): `profile_id`, `tax_year_start`, `document_type`,
+`sha256`, `uploaded_at`, `page_count`, `scanned` - nothing encrypted, same as the Mongo source. Unique
+`{profile_id, sha256}`; index `{profile_id, tax_year_start}`.
+
+**`tax_parse_attempts`** (`documents/store/StoredParseAttempt.java`): `document_id`, `parser_id`, `parser_version`,
+`started_at`, `finished_at`, `outcome`, `fields_json`/`unmapped_text_json`/`parser_notes_json` (`EncryptedColumn`).
+Index `{document_id, started_at}`.
+
+**`tax_document_confirmations`** (`documents/store/StoredConfirmation.java`) + child table
+**`tax_document_confirmation_rejected_fields`** (`confirmation_id`, `rejected_field`): `confirmed_by`
+(`SearchableColumn`), `confirmed_at`, `accepted_json` (`EncryptedColumn`), `rejected_fields`
+(`@ElementCollection`). No index beyond the primary key.
+
+**`tax_document_bytes`** (`documents/store/TaxDocumentBytes.java`, new in V10) replaces the GridFS bucket: one row
+per document, `document_id` the primary key (caller-assigned, the document's own id, no auto-generation), `bytes`
+(`BYTEA`, already sealed by `FieldCipher.encryptBytes` before it reaches this column - no column-level converter),
+`uploaded_at`. Index on `uploaded_at` for the retention sweep's `storedBefore`. `DocumentBytes` (the service, not
+the entity) is now a plain repository-backed class, not a hand-built `@Bean`; `DocumentRemoval.removeAll` deletes
+the bytes row inline, in the same transaction as the document/attempt/confirmation deletes above it, instead of
+the Mongo-era's post-commit deferral (GridFS "took no part in" the transaction; a plain table row does).
+
+**`tax_access_log`** (`protection/AccessRecord.java`): `principal` (`SearchableColumn`), `subject`, `subject_id`,
+`read_at` (`Instant`) - never a value. No index beyond the primary key.
+
+**`tax_job_failures`** (`jobs/JobFailure.java`): `job`, `subject`, `reason`, `failed_at` - the dead letter, never a
+value. No index.
+
+**`tax_job_leases`** (`jobs/JobLease.java`): the primary key is literally `job` (the Mongo source's `@MongoId`
+field was named `job`, not `id` - kept as-is), plus `holder`, `expires_at`. No TTL index - unlike Mongo, Postgres
+has no expiring-document feature; an abandoned lease (a crashed run) is reclaimed lazily by the next acquire
+attempt's own `expires_at < now` check instead, the same choice `auth`'s `refresh_tokens` made (D-937 C3a). The
+acquire itself is one atomic `INSERT ... ON CONFLICT (job) DO UPDATE ... WHERE tax_job_leases.expires_at < :now`
+(`jobs/JobLeaseRepository.java`), replacing Mongo's `findAndModify`-upsert-plus-`DuplicateKeyException` trick
+(`jobs/TaxJobRunner.java`).
+
+**`tax_gazette_cursor`** (`gazette/GazetteCursor.java`): the one row, id fixed to `GazetteCursor.ID` (`"egazette"`),
+`year`, `last_number`. Since the id is always this fixed value (never absent, so never auto-generated), auditing
+never sees this row as "new" - `created_by`/`created_at` stay null even on the row's first save, the one
+consequence of a true singleton with a caller-assigned, unchanging id; `updated_by`/`updated_at` still fill
+correctly on every save, matching the Mongo-era's manually-set behaviour.
+
+**`tax_gazette_leads`** (`gazette/GazetteLead.java`) + child tables **`tax_gazette_lead_matched_terms`** and
+**`tax_gazette_lead_possibly_affected`** (both `lead_id` + one text column): `url`, `year`, `number`, `page`,
+`matched_terms`/`possibly_affected` (`@ElementCollection`), `note`, `found_at`. Unique `url`.
+
+`@PostConstruct` index initializers (`TaxProfileIndexInitializer`, `WorkspaceIndexInitializer`,
+`DraftComputationIndexInitializer`, `DocumentIndexInitializer`, `JobIndexInitializer`) are gone (W-337f) - every
+index above is declared on the Flyway migration instead, matching every other already-ported module. The `*_json`
+fields that are `ReadingJson`'s own shape (not opaque-converter JSON) are unaffected by any of this: each value
+still names its kind (`MONEY` with an exact-text `amount`, `FLAG`, `PERIOD`, `TEXT`), and a kind it never wrote is
+still refused (`documents/store/ReadingJson.java`).
 
 ## 5. Behaviour
 
@@ -315,7 +406,7 @@ The module holds 20 `@Document` collections: `profile/` (7), `workspace/` (4), `
 
 ### Documents (`documents/`)
 
-- **Upload (`documents/DocumentService.java:69` – `:95`; `documents/store/DocumentBytes.java:41` – `:53`):** the switch, then the profile's owner (`TaxProfileService.owned`), then a parser for the form and a layout for the year. The SHA-256 of the bytes (`documents/parser/DocumentContent.java:23` – `:29`) is looked up under the profile first: the same bytes return the stored document (`DR 05` M7), and two uploads racing to store them meet the unique index, the loser answering the winner's document (`:87` – `:91`). New bytes are checked in this order, so the PDF library never reads an unscanned file: size, the ClamAV scan, the `%PDF-` start, then the page count read in a child process within `upload-read-budget`. Then they are sealed into GridFS under a new UUID. `StoredDocument.scanned` records whether the scan was on (`:86`); `ParseRequests.request()` wakes the parse job (`:92`), which is part four's.
+- **Upload (`documents/DocumentService.java:69` – `:95`; `documents/store/DocumentBytes.java:41` – `:53`):** the switch, then the profile's owner (`TaxProfileService.owned`), then a parser for the form and a layout for the year. The SHA-256 of the bytes (`documents/parser/DocumentContent.java:23` – `:29`) is looked up under the profile first: the same bytes return the stored document (`DR 05` M7), and two uploads racing to store them meet the unique index, the loser answering the winner's document (`:87` – `:91`). New bytes are checked in this order, so the PDF library never reads an unscanned file: size, the ClamAV scan, the `%PDF-` start, then the page count read in a child process within `upload-read-budget`. Then they are sealed into `tax_document_bytes` under the document's own id (W-337f: a plain table row, not a GridFS bucket). `StoredDocument.scanned` records whether the scan was on (`:86`); `ParseRequests.request()` wakes the parse job (`:92`), which is part four's.
 - **Malware scan (`documents/store/MalwareScan.java:14` – `:92`):** clamd's `zINSTREAM` over TCP to `scan.host:scan.port`, in 64 KiB chunks each led by its 4-byte length, ended by a zero length; it fails closed: only `stream: OK` passes, a reply ending ` FOUND` is the 400 (the signature name alone is logged), anything else is a 503. Off (`scan.enabled=false`), it passes every file without connecting, and `DocumentBytesConfig` logs `"The malware scan is off: uploads are stored unscanned (W-131h)"` once per start (`documents/store/DocumentBytesConfig.java:22` – `:25`).
 - **Parsing (`documents/parser/`):** `DocumentParsers` holds one parser per form; two for one form fail the start (`documents/parser/DocumentParsers.java:29` – `:39`). It checks that the bytes are the document's, times the run in UTC and makes the `ParseAttempt` with a fresh id (`:44` – `:59`). The one parser is `Form130Parser`, id `form-130`, version `4` (`documents/parser/Form130Parser.java:23` – `:44`), reading against the year's layout from the pack (`backend/src/main/resources/rulepacks/timeline/forms/certificates/FORM_130.json`: 6 part headings, 3 Part B tables, 17 printed sums, 2 agreements, 7 comparisons). `CertificateReading` (`documents/parser/CertificateReading.java:50` – `:254`) never throws on a bad document; every failure is a `FAILED` reading with its reason (`:52` – `:68`): no layout in force, a password, an unreadable PDF, no text layer ("a scanned page is not read yet"), or no first part heading (`"Not a Form No. 130: no PART A"`, `:88` – `:91`). Otherwise:
   - **L1, labels (`documents/parser/LabelMatch.java:11` – `:174`):** each top part's lines are found in printed order by their label, a cursor only moving forward. A label's words may break across lines, with or without a hyphen; quotes and U+2010 hyphens are folded; a gap wider than 12 pt (`COLUMN_GAP`, `:20`) separates the label from its value cells. Words come from `PrintedText`: runs within 2 pt of a baseline are one line, within 0.8 pt one word (`documents/parser/PrintedText.java:26` – `:28`). A top part not printed is noted ("… is not in this certificate") and leaves the reading whole; a line or a group heading not found is noted and makes it `PARTIAL` (`documents/parser/CertificateReading.java:137` – `:147`, `:167` – `:172`).
@@ -328,7 +419,7 @@ The module holds 20 `@Document` collections: `profile/` (7), `workspace/` (4), `
 - **Reading back and confirming (`documents/DocumentService.java:97` – `:139`; `documents/ConfirmedRows.java:24` – `:55`; `documents/Corrections.java:29` – `:60`):** the parse view shows the latest attempt by `started_at`, and the employee PAN only as whether it matches the profile's, trimmed and upper-cased (`documents/DocumentService.java:165` – `:174`; `documents/ParseView.java:10` – `:12`). A confirmation names the latest attempt; `accepted` rows are taken as read, `corrected` rows are read from text by the kind of the value read, or of the layout's line for a row the parser did not read; `rejected` rows must have been read. It is stored only when the confirmed employee PAN (the layout's `EMPLOYEE_PAN` fact) matches the profile's (B9-73). Nothing read is used until a confirmation exists (`documents/ingest/DocumentConfirmation.java:7` – `:10`).
 - **Assembly (`documents/assembly/EmployerAssembly.java:18` – `:129`):** a year's confirmed certificates read together, each found by the facts its layout names, never by path. Mode (`:47` – `:49`): one Part C beside several certificates is `LAST_EMPLOYER_CONSOLIDATED`, a Part C on every certificate `PER_EMPLOYER`, anything else `MIXED`. Notices: a gap or an overlap between employers' periods (`ATTENTION`, `:76` – `:97`); a consolidating Part C whose row 1(e) is nil (`ACTION_REQUIRED`, `TDS-SAL-12B-001`, `:100` – `:108`); several employers' standard deductions above one year's ceiling for the regime row A states (`ACTION_REQUIRED`, `SAL-STDDED-001`/`-002`, `:114` – `:129`).
 - **Reconciliation (`documents/reconcile/Reconciliation.java:19` – `:218`):** read by part two's `DraftReconciliationService`. A `MIXED` year answers `CANNOT_COMPARE` with `MIXED_YEAR`'s sentence and no lines (`:51` – `:53`). Otherwise each layout comparison (`backend/src/main/resources/rulepacks/timeline/forms/certificates/FORM_130.json:1490` – `:1525`) whose printed figure and computed figure both exist becomes a `ReconciliationLine` (`difference` = printed − computed). The printed figure is the one Part C covering the year (`:81` – `:93`), or, for Part B's table Total with several certificates, the sum over them (`:109` – `:113`). The computed figure is a total or a trace node's last output (`:147` – `:155`). Reasons (`:178` – `:199`): a summed Total short beyond ₹10 takes the employers' errors (`:120` – `:145`); else a comparison's own reason by direction (`whenHigher`/`whenLower`, `:170` – `:176`); a zero difference keeps a pairing reason (`TAXSUM`); ₹10 or less is `ROUNDING`; then `REGIME_DIFFERS`, `CAPITAL_GAINS`, or the own reasons of the lines above. Ten closed reasons, each `EXPECTED` or `EMPLOYER_ERROR` with its rule and sentence (`documents/reconcile/ReconciliationReason.java:11` – `:40`). Verdict (`documents/reconcile/Reconciliation.java:206` – `:214`): all within ₹10 `MATCHED`; every differing line explained by `EXPECTED` reasons `MINOR_DIFFERENCE`; else `MATERIAL_DIFFERENCE` (`documents/reconcile/Verdict.java:4` – `:12`). `explanations` carries each reason's sentence once, in line order (`documents/reconcile/Reconciliation.java:76` – `:78`).
-- **Removal (`documents/store/DocumentRemoval.java:9` – `:52`):** confirmations, then attempts, then documents, so a run cut off part-way leaves no confirmation without its attempt; the GridFS bytes go after the transaction commits, since GridFS takes no part in it. Profile erasure and retention (part four) both come through here.
+- **Removal (`documents/store/DocumentRemoval.java`):** confirmations, then attempts, then documents, so a run cut off part-way leaves no confirmation without its attempt; the `tax_document_bytes` row goes last, inline in the same transaction (W-337f removed the Mongo-era's post-commit deferral — GridFS "took no part in" the transaction, a plain table row does). Profile erasure and retention (part four) both come through here.
 
 ### Isolation (`isolation/`, `documents/parser/`)
 
@@ -346,10 +437,10 @@ The module holds 20 `@Document` collections: `profile/` (7), `workspace/` (4), `
 
 - **Framework:**
   - `TaxJob` is a name, a lease timeout and `run(JobContext)`; every job is idempotent, so a run cut off is completed by the next, and no retry policy is kept (`jobs/TaxJob.java:5` – `:17`).
-  - `TaxJobRunner.run` takes the lease with one `findAndModify`: an upsert on `{_id: name, expires_at < now}`, where a live lease makes the insert collide (`DuplicateKeyException` → skipped). It runs the job as the job's own name for auditing, and removes the lease it holds when done (`jobs/TaxJobRunner.java:34` – `:58`). A failure inside a job is not caught: it reaches the caller, and the lease lapses at its timeout.
+  - `TaxJobRunner.run` takes the lease with one atomic statement (`jobs/JobLeaseRepository.java`, W-337f): `INSERT ... ON CONFLICT (job) DO UPDATE ... WHERE tax_job_leases.expires_at < :now`, so a live lease's row simply doesn't update and the acquire reports zero rows affected — replacing the Mongo-era's `findAndModify` upsert plus `DuplicateKeyException`-on-collision trick. It runs the job as the job's own name for auditing, and removes the lease it holds when done (`jobs/TaxJobRunner.java`). A failure inside a job is not caught: it reaches the caller, and the lease lapses at its timeout.
   - `JobContext.holdsLease` checks the run's own holder against an unexpired lease before each change (`jobs/TaxJobRunner.java:60` – `:63`), so a run overtaken while slow stops. `refuse` writes a `tax_job_failures` row and logs at ERROR (`jobs/JobContext.java:30` – `:45`).
   - **When jobs run:** `TaxJobSchedule` exists only with `app.tax.jobs.enabled=true` (off in all three yamls, W-336). It schedules six jobs by cron, the Gazette watch only while its own switch is on, and runs the staleness sweep at every start (`jobs/TaxJobSchedule.java:13` – `:74`). On request, `TaxJobDirectory` runs any job by name through the same runner and lease (`jobs/TaxJobDirectory.java:10` – `:37`). `ParseRequests` starts a parse run after an upload only where the schedule exists (`jobs/ParseRequests.java:7` – `:20`).
-- **`auto-archive` (`jobs/AutoArchive.java:17` – `:63`, lease 30 min):** archives each `DRAFT` whose `audit_metadata.updated_at` is before now − `archive-after` (in the system's zone, as auditing writes it). It skips its workspace's primary draft and any draft of a profile held for erasure.
+- **`auto-archive` (`jobs/AutoArchive.java:17` – `:63`, lease 30 min):** archives each `DRAFT` whose `audit_metadata.updated_at` is before now − `archive-after` (in UTC, as auditing writes it since W-402, D-959). It skips its workspace's primary draft and any draft of a profile held for erasure.
 - **`retention-purge` (`jobs/RetentionPurge.java:22` – `:114`, lease 1 h), in order:**
   1. Erases each profile held for at least `erasure-hold`: its `ProfileErasure` is marked erased first, then `ProfileRemoval` runs (`:87` – `:102`).
   2. Deletes archived drafts never acted on whose `archived_at` is before now − `purge-archived-after`.
@@ -359,8 +450,8 @@ The module holds 20 `@Document` collections: `profile/` (7), `workspace/` (4), `
 
   Each delete checks the lease first.
 - **`DraftRemoval` (`jobs/DraftRemoval.java:12` – `:35`):** in one transaction, a draft's computations, then its revisions; it unsets the draft as its workspace's primary, then deletes the draft. The access log and the regime election history stay.
-- **`ProfileRemoval` (`jobs/ProfileRemoval.java:31` – `:70`):** in one transaction: every draft (through `DraftRemoval`), then the access records naming the profile, any of its drafts, any of its receipts or any of its documents. Then its documents with what was read from them (`DocumentRemoval`, the bytes after commit), then every `profile_id`-scoped record: family members, employers, landlords, lenders, bank accounts, workspaces and regime election history (`:44` – `:45`). Last, the profile itself.
-- **`DocumentRetention` (`jobs/DocumentRetention.java:21` – `:72`):** for each distinct `tax_year` of `tax_documents`, deletes the year's documents once the same span as filed drafts has ended; a year with no span is refused and kept. Then deletes GridFS bytes older than `orphan-after` that no document names, left by an upload race or a removal cut off part-way (`:63` – `:72`).
+- **`ProfileRemoval` (`jobs/ProfileRemoval.java`):** in one transaction: every draft (through `DraftRemoval`), then the access records naming the profile, any of its drafts, any of its receipts or any of its documents. Then its documents with what was read from them (`DocumentRemoval`, the bytes row now inline, not after commit). Then every `profile_id`-scoped record — family members, employers, landlords, lenders, bank accounts, workspaces and regime election history — each via its own repository's `deleteByProfileId` (W-337f replaced a single raw `MongoTemplate.remove` loop over all seven with these). Last, the profile itself.
+- **`DocumentRetention` (`jobs/DocumentRetention.java`):** for each distinct `tax_year` of `tax_documents`, deletes the year's documents once the same span as filed drafts has ended; a year with no span is refused and kept. Then deletes `tax_document_bytes` rows older than `orphan-after` that no document names, left by an upload race or a removal cut off part-way.
 - **`ThirdPartyRetention` (`jobs/ThirdPartyRetention.java:22` – `:100`):** a landlord or lender is deleted once today is after the end of its last supported tax year + `third-party-after`. That year is the later of the latest year of a draft naming it and the year it was last entered or changed (`audit_metadata` updated, else created). A record with neither date is refused and kept.
 - **`parse-documents` (`jobs/ParseDocuments.java:32` – `:132`, lease 10 min):**
   - A document is due while every attempt at it failed and none was by the current parser version (`:73` – `:84`); a profile held for erasure is not read.
@@ -468,7 +559,7 @@ Properties read by the module (shipped identically across `application.yaml`, `a
 - `workspace/importing/SalaryImportServiceTest` (12): real child-process preview and apply, monthly annualisation, returned rows, decision checks, duplicate-component refusal.
 
 **Integration tests** (`backend/src/test/java/com/thiru/wealthlens/integration/`):
-- `TaxProfileIntegrationTest` (13): profile and all five reference CRUD routes over HTTP + Mongo, ownership isolation, PAN/TAN masking, unique PAN/TAN digests, `holdsPortfolio` uniqueness, access log writes.
+- `TaxProfileIntegrationTest` (13): profile and all five reference CRUD routes over HTTP + PostgreSQL (W-337f), ownership isolation, PAN/TAN masking, unique PAN/TAN digests, `holdsPortfolio` uniqueness, access log writes.
 - `DraftIntegrationTest` (40): workspaces, draft CRUD, `ETag`/`If-Match` concurrency and conflict paths, revision pagination and replay, status transitions, `RegimeElectionHistory`, declarations, evidence and third-party checks.
 - `SalaryImportIntegrationTest` (7): multipart preview and apply over HTTP, `If-Match` conflict, duplicate workbook SHA-256 refusal, `WorkbookImport` on the revision.
 - `RetiredSalaryFlowIntegrationTest` (2): confirms the retired `/tax-planning/**` paths answer 404.

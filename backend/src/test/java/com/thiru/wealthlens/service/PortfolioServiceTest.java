@@ -36,6 +36,7 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -137,7 +138,7 @@ class PortfolioServiceTest {
                     tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    tradeOutcomeRecorder, tradeExchangeProperties);
+                    tradeOutcomeRecorder, tradeExchangeProperties, Clock.systemUTC());
         }
 
         void resetAddTransactionBehaviour() {
@@ -185,7 +186,7 @@ class PortfolioServiceTest {
                     tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    tradeOutcomeRecorder, tradeExchangeProperties);
+                    tradeOutcomeRecorder, tradeExchangeProperties, Clock.systemUTC());
         }
 
         @Override

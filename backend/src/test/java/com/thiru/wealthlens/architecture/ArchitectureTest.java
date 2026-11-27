@@ -28,6 +28,8 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -163,6 +165,18 @@ class ArchitectureTest {
                     .that().resideInAPackage("..repository..")
                     .should().dependOnClassesThat().resideInAPackage("..controller..")
                     .because("dependencies point downward through the layers");
+
+    /**
+     * A time or a date is taken from the application's clock (W-402, D-959 C5a): a bare {@code LocalDateTime.now()} or
+     * {@code LocalDate.now()} follows the JVM's zone, which is UTC (D-958), and cannot be fixed by a test. A stored time takes
+     * the clock {@code withZone(ZoneOffset.UTC)}; "today" is {@code LocalDate.now(clock)}, the business zone's date.
+     */
+    @ArchTest
+    static final ArchRule no_time_without_the_clock =
+            noClasses()
+                    .should().callMethod(LocalDateTime.class, "now")
+                    .orShould().callMethod(LocalDate.class, "now")
+                    .because("D-958: stored times are UTC and \"today\" is the business zone's, both from the Clock bean");
 
     @ArchTest
     static final ArchRule no_console_printing =
@@ -528,13 +542,14 @@ class ArchitectureTest {
     }
 
     /**
-     * A dropped Mongo collection loses its indexes, and an {@code @PostConstruct} index initializer (e.g.
-     * {@code TaxProfileIndexInitializer}) creates them only at startup. A test that once dropped {@code profit_and_loss}
-     * this way left every later class in the shared container without {@code pnl_user_year_idx}, and ten simultaneous
-     * buys then stored two documents for one year (W-300, D-603) — {@code profit_and_loss} itself moved to PostgreSQL
-     * in W-337e, D-949, where {@code pnl_user_year_idx} is declared in DDL and survives a {@code TRUNCATE}, but the
-     * hazard remains for every Mongo collection still behind an index initializer. Main and test classes alike: clear
-     * Mongo collections with {@code deleteMany}.
+     * A dropped Mongo collection loses its indexes, and an {@code @PostConstruct} index initializer created them only
+     * at startup. A test that once dropped {@code profit_and_loss} this way left every later class in the shared
+     * container without {@code pnl_user_year_idx}, and ten simultaneous buys then stored two documents for one year
+     * (W-300, D-603) — {@code profit_and_loss} itself moved to PostgreSQL in W-337e, D-949, where
+     * {@code pnl_user_year_idx} is declared in DDL and survives a {@code TRUNCATE}; the last Mongo collections still
+     * behind an index initializer moved the same way in W-337f, D-951, which leaves this rule guarding against a
+     * hazard no current collection can hit — kept as the safety net for whichever one comes back. Main and test
+     * classes alike: clear Mongo collections with {@code deleteMany}.
      */
     @Test
     void nothing_drops_a_collection() {

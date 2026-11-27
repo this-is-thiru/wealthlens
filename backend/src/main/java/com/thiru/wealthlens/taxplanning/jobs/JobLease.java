@@ -1,31 +1,43 @@
 package com.thiru.wealthlens.taxplanning.jobs;
 
+import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * Which run of a job holds it ({@code DR 19} E8): keyed by the job's name, so at most one exists; a lease past {@code expiresAt}
- * may be taken over, and Mongo removes it once expired. {@code holder} is unique per run, so a run overtaken while it was slow
- * sees that it no longer holds the lease and stops. An {@link Instant}, not a local time, so the TTL index removes it at the
- * moment it expires whatever the server's zone.
+ * may be taken over. {@code holder} is unique per run, so a run overtaken while it was slow sees that it no longer holds the
+ * lease and stops. An {@link Instant}, not a local time, so the comparison against "now" is the same moment whatever the
+ * server's zone. No TTL index under Postgres (W-337f, D-951 C6a): an abandoned lease is reclaimed lazily by the next
+ * acquire's {@code expires_at < now} check, same as Mongo's TTL removal achieved in effect, never swept proactively — same
+ * precedent as {@code refresh_tokens} (D-937 C3a).
  */
+@Entity
+@Table(name = "tax_job_leases")
+@EntityListeners(AuditingEntityListener.class)
 @Data
 @NoArgsConstructor
-@Document("tax_job_leases")
 public class JobLease {
 
-    @MongoId
+    @Id
+    @Column(name = "job")
     private String job;
 
-    @Field("holder")
+    @Column(name = "holder")
     private String holder;
 
-    @Indexed(expireAfter = "0s")
-    @Field("expires_at")
+    @Column(name = "expires_at")
     private Instant expiresAt;
+
+    /** New (W-337f, D-951 C7a): this entity had no audit trail under Mongo. */
+    @Embedded
+    private AuditColumns auditMetadata = new AuditColumns();
 }

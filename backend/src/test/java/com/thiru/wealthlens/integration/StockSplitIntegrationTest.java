@@ -1,7 +1,9 @@
 package com.thiru.wealthlens.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
@@ -24,6 +26,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -33,6 +36,8 @@ import org.springframework.web.client.RestTemplate;
 class StockSplitIntegrationTest extends AbstractIntegrationTest {
 
     private static final String EMAIL = "splitter@example.com";
+
+    private static final String AUTHOR = "admin@example.com";
 
     private static final LocalDate RECORD_DATE = LocalDate.of(2024, 1, 15);
 
@@ -96,6 +101,24 @@ class StockSplitIntegrationTest extends AbstractIntegrationTest {
         assertEquals(60.0, reread(second).getQuantity());
         MoneyAssert.assertMoney(450, reread(second).getPrice());
         assertEquals(1, performedRows());
+    }
+
+    @Test
+    void processStockSplit_whenTheActionNamesItsAuthor_storesTheAuthorEncryptedOnTheLotsCopy() {
+        // Given — the copy a lot keeps carries the action's audit fields (W-341); the column must not hold the email in clear
+        AssetEntity held = lot(BrokerName.ZERODHA, 100, 1000, LocalDate.of(2024, 1, 10));
+        CorporateActionEntity action = split("2:1");
+        action.getAuditMetadata().setCreatedBy(AUTHOR);
+
+        // When
+        corporateActionService.processStockSplit(EMAIL, action, BrokerName.ZERODHA);
+
+        // Then — stored in the searchable form m1.6.1's SearchableIdentifier gave it (W-401, D-956), read back as the email
+        String stored = new JdbcTemplate(postgresDataSource).queryForObject("SELECT corporate_actions_json FROM assets WHERE id = ?",
+                String.class, held.getId());
+        assertFalse(stored.contains(AUTHOR), stored);
+        assertTrue(stored.contains(storedIdentifier(AUTHOR)), stored);
+        assertEquals(AUTHOR, reread(held).getCorporateActions().getFirst().getAuditMetadata().getCreatedBy());
     }
 
     @Test

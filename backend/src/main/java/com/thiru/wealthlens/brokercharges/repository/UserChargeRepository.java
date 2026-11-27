@@ -51,7 +51,8 @@ public interface UserChargeRepository extends JpaRepository<UserChargeEntity, St
 
     List<UserChargeEntity> findByEmailAndTransactionIdIn(String email, Collection<String> transactionIds);
 
-    List<UserChargeEntity> findByEmailOrderByTransactionDateDesc(String email);
+    /** Newest trade first, the id breaking a tie as the paged history does (D-861 C3a), so any store answers alike (W-412). */
+    List<UserChargeEntity> findByEmailOrderByTransactionDateDescIdAsc(String email);
 
     Page<UserChargeEntity> findByEmail(String email, Pageable pageable);
 
@@ -62,7 +63,8 @@ public interface UserChargeRepository extends JpaRepository<UserChargeEntity, St
     Page<UserChargeEntity> findByEmailAndTransactionDateBetweenAndAssetType(
             String email, LocalDate from, LocalDate to, AssetType assetType, Pageable pageable);
 
-    List<UserChargeEntity> findByEmailAndResolutionIn(String email, List<ChargeResolution> resolutions);
+    /** In the same order as {@link #findByEmailOrderByTransactionDateDescIdAsc} (W-412). */
+    List<UserChargeEntity> findByEmailAndResolutionInOrderByTransactionDateDescIdAsc(String email, List<ChargeResolution> resolutions);
 
     @Transactional("postgresTransactionManager")
     void deleteByEmail(String email);

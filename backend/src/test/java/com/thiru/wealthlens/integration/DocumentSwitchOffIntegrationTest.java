@@ -2,11 +2,12 @@ package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.thiru.wealthlens.taxplanning.documents.store.StoredDocument;
+import com.thiru.wealthlens.taxplanning.documents.store.StoredDocumentRepository;
 import io.restassured.RestAssured;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,9 @@ import org.springframework.web.client.RestTemplate;
 class DocumentSwitchOffIntegrationTest extends AbstractIntegrationTest {
 
     private static final String OWNER = "owner@example.com";
+
+    @Autowired
+    private StoredDocumentRepository documents;
 
     private HttpStatus status(HttpMethod method, String path, Object body, MediaType type) {
         RestTemplate client = new RestTemplate(new JdkClientHttpRequestFactory());
@@ -63,6 +67,6 @@ class DocumentSwitchOffIntegrationTest extends AbstractIntegrationTest {
                 "{\"attemptId\": \"a\", \"accepted\": [], \"corrected\": {}, \"rejected\": []}", MediaType.APPLICATION_JSON))
                 .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(status(HttpMethod.GET, "/drafts/d/reconciliation", null, MediaType.APPLICATION_JSON)).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(mongoTemplate.findAll(StoredDocument.class)).isEmpty();
+        assertThat(documents.findAll()).isEmpty();
     }
 }

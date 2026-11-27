@@ -3,29 +3,29 @@ package com.thiru.wealthlens.taxplanning.documents.store;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.mongodb.MongoTimeoutException;
 import com.thiru.wealthlens.shared.exception.ServiceUnavailableException;
 import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.shared.protection.PersonalDataKeys;
 import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
 import com.thiru.wealthlens.taxplanning.documents.parser.IsolatedPdfRead;
 import com.thiru.wealthlens.testsupport.TestPdfs;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.Period;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentBytesTest {
@@ -33,16 +33,17 @@ class DocumentBytesTest {
     private static final String KEY = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
     private static final FieldCipher CIPHER = new FieldCipher(new PersonalDataKeys(KEY, KEY));
     private static final DocumentSettings.Isolation ISOLATION = new DocumentSettings.Isolation(256, 30, Duration.ofSeconds(10), 16_777_216);
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-01-05T10:00:00Z"), ZoneOffset.UTC);
 
     @Mock
-    private GridFsTemplate bucket;
+    private TaxDocumentBytesRepository repository;
 
     @Mock
     private MalwareScan scan;
 
     private DocumentBytes bytes(long maxBytes, int maxPages) {
-        return new DocumentBytes(bucket, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), Duration.ofSeconds(30), true,
-                new DocumentSettings.Scan(true, "localhost", 3310, Duration.ofSeconds(60)), ISOLATION), scan,
+        return new DocumentBytes(repository, CIPHER, new DocumentSettings(maxBytes, maxPages, Period.ofDays(1), Duration.ofSeconds(30), true,
+                new DocumentSettings.Scan(true, "localhost", 3310, Duration.ofSeconds(60)), ISOLATION), scan, CLOCK,
                 IsolatedPdfRead.of(ISOLATION, Duration.ofSeconds(30)));
     }
 
@@ -54,7 +55,7 @@ class DocumentBytesTest {
         // When / Then
         assertThatThrownBy(() -> bytes(1000, 50).store("document-1", content)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Only a PDF can be uploaded");
-        verifyNoInteractions(bucket);
+        verifyNoInteractions(repository);
     }
 
     @Test
@@ -66,7 +67,7 @@ class DocumentBytesTest {
         // When / Then
         assertThatThrownBy(() -> bytes(1000, 50).store("document-1", new DocumentContent(file))).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("This file failed the malware scan and was not stored");
-        verifyNoInteractions(bucket);
+        verifyNoInteractions(repository);
     }
 
     @Test
@@ -77,7 +78,7 @@ class DocumentBytesTest {
         // When / Then
         assertThatThrownBy(() -> bytes(file.length - 1, 50).store("document-1", new DocumentContent(file)))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A document is at most " + (file.length - 1) + " bytes");
-        verifyNoInteractions(bucket);
+        verifyNoInteractions(repository);
     }
 
     @Test
@@ -91,11 +92,12 @@ class DocumentBytesTest {
         // Then
         assertThat(pages).isEqualTo(2);
         verify(scan).requireClean(file);
-        org.mockito.ArgumentCaptor<InputStream> written = org.mockito.ArgumentCaptor.forClass(InputStream.class);
-        verify(bucket).store(written.capture(), eq("document-1"));
-        byte[] stored = written.getValue().readAllBytes();
-        assertThat(new String(stored, StandardCharsets.ISO_8859_1)).doesNotContain("%PDF-");
-        assertThat(CIPHER.decryptBytes(stored)).isEqualTo(file);
+        ArgumentCaptor<TaxDocumentBytes> written = ArgumentCaptor.forClass(TaxDocumentBytes.class);
+        verify(repository).save(written.capture());
+        TaxDocumentBytes stored = written.getValue();
+        assertThat(stored.getDocumentId()).isEqualTo("document-1");
+        assertThat(new String(stored.getBytes(), StandardCharsets.ISO_8859_1)).doesNotContain("%PDF-");
+        assertThat(CIPHER.decryptBytes(stored.getBytes())).isEqualTo(file);
     }
 
     @Test
@@ -106,7 +108,7 @@ class DocumentBytesTest {
         // When / Then
         assertThatThrownBy(() -> bytes(file.length, 2).store("document-1", new DocumentContent(file)))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("A document has at most 2 pages");
-        verifyNoInteractions(bucket);
+        verifyNoInteractions(repository);
     }
 
     @Test
@@ -118,22 +120,18 @@ class DocumentBytesTest {
         assertThatThrownBy(() -> bytes(file.length, 50).store("document-1", new DocumentContent(file)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("The PDF is protected by a password: upload it without one (a password is never kept)");
-        verifyNoInteractions(bucket);
+        verifyNoInteractions(repository);
     }
 
     @Test
     void store_whenTheStoreCannotBeReached_isUnavailable() {
-        // Given — Spring's failure and the driver's own, either of which an unreachable server raises
+        // Given — Spring's own translation of a connection failure, now that this is a normal repository call
         byte[] file = TestPdfs.pages(1);
-        when(bucket.store(any(InputStream.class), eq("document-1")))
-                .thenThrow(new DataAccessResourceFailureException("down"))
-                .thenThrow(new MongoTimeoutException("down"));
+        when(repository.save(any(TaxDocumentBytes.class))).thenThrow(new DataAccessResourceFailureException("down"));
 
         // When / Then
-        for (int attempt = 0; attempt < 2; attempt++) {
-            assertThatThrownBy(() -> bytes(file.length, 50).store("document-1", new DocumentContent(file)))
-                    .isInstanceOf(ServiceUnavailableException.class)
-                    .hasMessage("The document store cannot be reached; try again later");
-        }
+        assertThatThrownBy(() -> bytes(file.length, 50).store("document-1", new DocumentContent(file)))
+                .isInstanceOf(ServiceUnavailableException.class)
+                .hasMessage("The document store cannot be reached; try again later");
     }
 }

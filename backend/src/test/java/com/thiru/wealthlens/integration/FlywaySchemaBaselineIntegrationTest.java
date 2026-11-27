@@ -1,18 +1,23 @@
 package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Proves the W-337b baseline (D-939) applies cleanly against a real PostgreSQL 18 Testcontainer: every script in
- * every module folder (V2 - V5, beside W-337a's V1) runs without error, in order, once each. No entity reads these
- * 25 tables yet — that is the port items' job (W-337c - f) — so this checks the DDL itself, not round-tripping data
- * through it.
+ * Proves the W-337b baseline (D-939) and W-337f's follow-on (D-951) apply cleanly against a real PostgreSQL 18
+ * Testcontainer: every script in every module folder (V1 - V10) runs without error, in order, once each.
  */
 class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
+
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
 
     @Test
     void flyway_whenTheAppStarts_appliesEveryModuleScriptExactlyOnce() {
@@ -21,9 +26,60 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
         List<String> appliedScripts = jdbc.queryForList(
                 "SELECT description FROM flyway_schema_history WHERE success = true ORDER BY installed_rank", String.class);
 
-        // Then
+        // Then — V10 shares V5's derived description ("taxplanning"), both from the folder name
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio");
+                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning", "unique nulls not distinct", "pnl unique nulls not distinct", "taxplanning unique nulls not distinct");
+    }
+
+    @Test
+    void schema_whenTheAppStarts_isWealthlensAndPublicHoldsNoTable() {
+        // When
+        JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
+        String schema = jdbc.queryForObject("SELECT current_schema()", String.class);
+        List<String> inPublic = jdbc.queryForList(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", String.class);
+
+        // Then — every table where D-929 put it, none left in the default (W-413)
+        assertThat(schema).isEqualTo("wealthlens");
+        assertThat(inPublic).isEmpty();
+    }
+
+    @Test
+    void entityManagerFactory_whenStarted_validatesEveryEntityAgainstItsTable() {
+        // When
+        Object schemaAction = entityManagerFactory.getProperties().get("hibernate.hbm2ddl.auto");
+
+        // Then — the app refuses to start when an entity and its table disagree (W-405, D-963)
+        assertThat(schemaAction).isEqualTo("validate");
+    }
+
+    @Test
+    void uniqueIndexes_whenTheNullableColumnIsNullTwice_refuseTheSecondRow() {
+        // Given — MongoDB's non-sparse unique indexes refused a second missing (null) value; PostgreSQL must too (W-407c G-1, W-407d)
+        JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
+        jdbc.update("INSERT INTO charge_accounts (id, email, broker_name) VALUES ('a1', 'e', 'ZERODHA')");
+        jdbc.update("INSERT INTO user_charges (id, email) VALUES ('u1', 'e')");
+        jdbc.update("INSERT INTO charge_instruments (id, stock_code) VALUES ('i1', 'FUND')");
+        jdbc.update("INSERT INTO profit_and_loss (id, email) VALUES ('p1', 'e')");
+        jdbc.update("INSERT INTO tax_employers (id, profile_id) VALUES ('t1', 'pr')");
+        jdbc.update("INSERT INTO tax_documents (id, profile_id) VALUES ('d1', 'pr')");
+        jdbc.update("INSERT INTO tax_draft_computations (id, draft_id, email) VALUES ('c1', 'dr', 'e')");
+
+        // When / Then
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO charge_accounts (id, email, broker_name) VALUES ('a2', 'e', 'ZERODHA')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO user_charges (id, email) VALUES ('u2', 'e')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO charge_instruments (id, stock_code) VALUES ('i2', 'FUND')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO profit_and_loss (id, email) VALUES ('p2', 'e')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO tax_employers (id, profile_id) VALUES ('t2', 'pr')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO tax_documents (id, profile_id) VALUES ('d2', 'pr')"))
+                .isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO tax_draft_computations (id, draft_id, email) VALUES ('c2', 'dr', 'e')"))
+                .isInstanceOf(DuplicateKeyException.class);
     }
 
     @Test
@@ -31,7 +87,7 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
         // When
         JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
         List<String> tables = jdbc.queryForList(
-                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name",
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() ORDER BY table_name",
                 String.class);
 
         // Then — one per module, main tables and their child tables
@@ -46,6 +102,8 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
                 "tax_regime_election_events", "tax_year_workspaces", "tax_access_log", "tax_employers",
                 "tax_family_members", "tax_bank_accounts", "tax_profile_erasures", "tax_profiles", "tax_documents",
                 "tax_parse_attempts", "tax_document_confirmations", "tax_document_confirmation_rejected_fields",
-                "tax_job_leases", "tax_job_failures", "tax_lenders", "tax_landlords");
+                "tax_job_leases", "tax_job_failures", "tax_lenders", "tax_landlords",
+                "tax_draft_computations", "tax_draft_computation_law_and_exec", "tax_draft_revisions",
+                "tax_filing_drafts", "tax_document_bytes");
     }
 }
