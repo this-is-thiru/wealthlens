@@ -200,7 +200,7 @@ class UserChargeServiceTest {
     @Test
     void findHistory_returnsEveryRowNewestFirst() {
         List<UserChargeEntity> rows = List.of(new UserChargeEntity());
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).thenReturn(rows);
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL)).thenReturn(rows);
 
         assertThat(service.findHistory(EMAIL)).isEqualTo(rows);
     }
@@ -214,7 +214,7 @@ class UserChargeServiceTest {
         // whose asset type has no card of its own, wins by default, and then matches none of its
         // rules against a trade event. Without this the trade charges zero and never surfaces.
         List<UserChargeEntity> rows = List.of(new UserChargeEntity());
-        when(userChargeRepository.findByEmailAndResolutionIn(EMAIL, List.of(
+        when(userChargeRepository.findByEmailAndResolutionInOrderByTransactionDateDescIdAsc(EMAIL, List.of(
                 ChargeResolution.NO_SCHEDULE,
                 ChargeResolution.NO_INSTRUMENT_PROFILE,
                 ChargeResolution.NO_STATUTORY_SCHEDULE,

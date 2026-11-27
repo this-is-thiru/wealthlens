@@ -124,7 +124,7 @@ class ProfitAndLossRebuildIntegrationTest extends AbstractIntegrationTest {
         // Given -- buy 10 @ 100 (5 Jan 2026), sell 4 @ 150 (5 Mar), both V1
         post(V1_USER, "/transaction", trade(TransactionType.BUY, 10.0, 100.0, LocalDate.of(2026, 1, 5)));
         post(V1_USER, "/transaction", trade(TransactionType.SELL, 4.0, 150.0, LocalDate.of(2026, 3, 5)));
-        double recordedTradeCharges = userChargeRepository.findByEmailOrderByTransactionDateDesc(V1_USER).stream()
+        double recordedTradeCharges = userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(V1_USER).stream()
                 .filter(row -> row.getEvent() == ChargeEvent.BUY || row.getEvent() == ChargeEvent.SELL)
                 .mapToDouble(UserChargeEntity::getTotalCharges)
                 .sum();

@@ -1027,7 +1027,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertEquals(0, transactionRepository.findByEmail(TEST_EMAIL).size(), "transactions still holds rows for the cleared user");
         assertEquals(0, tradeOutcomeRepository.findByEmail(TEST_EMAIL).size(), "trade_outcomes still holds rows for the cleared user");
         assertEquals(0, profitAndLossRepository.findAllByEmail(TEST_EMAIL).size(), "profit_and_loss still holds rows for the cleared user");
-        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDesc(TEST_EMAIL).size(),
+        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(TEST_EMAIL).size(),
                 "user_charges still holds rows for the cleared user");
         assertEquals(0, chargeAccountRepository.findByEmail(TEST_EMAIL).size(),
                 "charge_accounts still holds rows for the cleared user");

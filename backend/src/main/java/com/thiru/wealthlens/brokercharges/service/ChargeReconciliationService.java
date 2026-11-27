@@ -48,7 +48,7 @@ public class ChargeReconciliationService {
     private final TransactionRepository transactionRepository;
 
     public ChargeReconciliationResponse reconcile(String email) {
-        List<UserChargeEntity> computations = userChargeRepository.findByEmailOrderByTransactionDateDesc(email);
+        List<UserChargeEntity> computations = userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(email);
         // No null-id filter and no merge function: findByEmail returns documents, every document
         // carries its _id, and two documents in one collection cannot share one.
         Map<String, TransactionEntity> transactionsById = transactionRepository.findByEmail(email).stream()

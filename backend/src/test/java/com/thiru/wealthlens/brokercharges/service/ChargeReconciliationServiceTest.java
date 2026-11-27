@@ -69,7 +69,7 @@ class ChargeReconciliationServiceTest {
     @Test
     void reconcile_whenBothFiguresArePresent_reportsTheDelta() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL))
                 .thenReturn(List.of(computed("txn-1", 23.45, ChargeResolution.RESOLVED)));
         when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(entered("txn-1", 20.00)));
 
@@ -93,7 +93,7 @@ class ChargeReconciliationServiceTest {
     @Test
     void reconcile_roundsTheDeltaToPaise() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL))
                 .thenReturn(List.of(computed("txn-1", 119.67, ChargeResolution.RESOLVED)));
         when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(entered("txn-1", 119.20)));
 
@@ -108,7 +108,7 @@ class ChargeReconciliationServiceTest {
     @Test
     void reconcile_sumsEachColumnAcrossRows() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL))
                 .thenReturn(List.of(
                         computed("txn-1", 23.45, ChargeResolution.RESOLVED),
                         computed("txn-2", 10.10, ChargeResolution.RESOLVED)));
@@ -132,7 +132,7 @@ class ChargeReconciliationServiceTest {
     @Test
     void reconcile_whenTheTransactionIsMissing_marksTheRowNotComparable() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL))
                 .thenReturn(List.of(computed("txn-gone", 23.45, ChargeResolution.RESOLVED)));
         when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of());
 
@@ -156,7 +156,7 @@ class ChargeReconciliationServiceTest {
     @Test
     void reconcile_whenNothingResolved_marksTheRowNotComparable() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL))
                 .thenReturn(List.of(computed("txn-1", 0.0, ChargeResolution.NO_SCHEDULE)));
         when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(entered("txn-1", 20.00)));
 
@@ -175,7 +175,7 @@ class ChargeReconciliationServiceTest {
     @Test
     void reconcile_countsTransactionsTheEngineNeverSaw() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL))
                 .thenReturn(List.of(computed("txn-1", 23.45, ChargeResolution.RESOLVED)));
         when(transactionRepository.findByEmail(EMAIL))
                 .thenReturn(List.of(entered("txn-1", 20.00), entered("txn-2", 15.00), entered("txn-3", 18.00)));
@@ -191,7 +191,7 @@ class ChargeReconciliationServiceTest {
     @Test
     void reconcile_whenNothingWasRecorded_returnsAnEmptyReportRatherThanFailing() {
         // Given
-        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).thenReturn(List.of());
+        when(userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL)).thenReturn(List.of());
         when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of());
 
         // When

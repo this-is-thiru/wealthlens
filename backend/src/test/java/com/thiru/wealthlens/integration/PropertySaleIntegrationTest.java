@@ -103,7 +103,7 @@ class PropertySaleIntegrationTest extends AbstractIntegrationTest {
         assertEquals(0, transactionRepository.findByEmail(EMAIL).size());
         assertEquals(0, portfolioRepository.findByEmail(EMAIL).size());
         assertEquals(0, profitAndLossRepository.findAllByEmail(EMAIL).size());
-        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL).size());
+        assertEquals(0, userChargeRepository.findByEmailOrderByTransactionDateDescIdAsc(EMAIL).size());
     }
 
     @Test
