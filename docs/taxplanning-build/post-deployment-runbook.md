@@ -2420,3 +2420,9 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-27 | dev (W-337i2, D-993) | row 11, ruling | owner | "sure" to C3a: both 500s are `m1.6.1`'s too, not the move's; W-415 placed, W-414 widened — **go** to row 12 |
 | 2026-11-27 | dev (W-337i2, D-992) | row 12, clean-up | owner | `w337i2/` (logs, pid) and `dev.env.old` deleted (`No such file or directory` ×2); `dev.env` kept, `-rw-------`, the one place for dev's values — **go**; awaiting sign-off |
 | 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | sign-off | owner | "dev signed off" — dev on `m1.7` / PostgreSQL; §0.9 logged for dev; W-337i2 done |
+| 2026-11-27 | — (W-337i1 again, D-997) | row 2, preconditions (read-only) | session | `origin/master` 4e8209c8; no `m1.7.1` tag on `origin`; PR #75 `OPEN 0ebf3c85 MERGEABLE CLEAN`; its run 45953794343 (`pull_request`) `success` on 0ebf3c85 — **go** |
+| 2026-11-27 | — (W-337i1 again, D-997) | row 3, PR #75 merged as a merge commit | session | owner: "approved as recommended"; `M` = 9dcc9394, parents 4e8209c8 and 0ebf3c85; `git diff --stat 0ebf3c85 origin/master` empty — **go** |
+| 2026-11-27 | — (W-337i1 again, D-997) | row 4, the `master` pipeline | session | run 45954909059 (`push`) `success` on 9dcc9394 — **go** |
+| 2026-11-27 | — (W-337i1 again, D-997) | row 5, `m1.7.1` tagged, worktree and jar | session | tag `m1.7.1` (08e111e6) → 9dcc9394 pushed; `../wealthlens-m1.7.1-pg` at 9dcc9394; `backend/target/wealthlens.jar` 120,968,574 bytes — **go** |
+| 2026-11-27 | — (W-337i1 again, D-997) | row 6, WL-A-2 published from `m1.7.1`'s runbook | session | `{"idReadable":"WL-A-2",…}`; read back: 233,870 characters holding the file's 233,719 after the source-of-truth header (whole body found); §0.9 and §0.10 present — **go**; rows done, owner's sign-off next |
+| 2026-11-27 | — (W-337i1 again, D-997) | sign-off | owner | "sure" — `m1.7.1` is the build every remaining move runs; W-337i1 again done |
