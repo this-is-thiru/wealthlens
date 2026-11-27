@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.core.JacksonException;
@@ -94,6 +95,16 @@ public class ControllerAdviser {
         refused(ex);
         return problem(HttpStatus.BAD_REQUEST.value(), "The file is larger than the " + ex.getMaxUploadSize()
                 + " bytes an upload may be", request);
+    }
+
+    /**
+     * A multipart body that cannot be parsed, such as a part cut off mid-stream: the caller's to send again, so 400 (W-415).
+     * A file past the size limit is the subclass above, answered by its own handler.
+     */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ProblemDetail> handleUnreadableUpload(MultipartException ex, HttpServletRequest request) {
+        refused(ex);
+        return problem(HttpStatus.BAD_REQUEST.value(), "The upload could not be read as multipart form data", request);
     }
 
     @ExceptionHandler(BadCredentialsException.class)

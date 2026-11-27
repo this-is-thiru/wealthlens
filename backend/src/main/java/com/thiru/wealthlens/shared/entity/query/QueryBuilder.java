@@ -2,6 +2,7 @@ package com.thiru.wealthlens.shared.entity.query;
 
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import jakarta.persistence.criteria.Path;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import org.springframework.data.jpa.domain.Specification;
@@ -71,7 +72,13 @@ public final class QueryBuilder {
     private static void sanitize(QueryFilter queryFilter) {
         if (queryFilter.getIsDateField()) {
             String value = (String) queryFilter.getValue();
-            queryFilter.setValue(TLocalDate.convertToDate(value));
+            try {
+                queryFilter.setValue(TLocalDate.convertToDate(value));
+            } catch (DateTimeParseException e) {
+                // The caller's value, so a 400 naming it (W-415), not the parser's 500
+                throw new IllegalArgumentException("A date filter's value must be a date as yyyy-MM-dd; got '" + value + "' for "
+                        + queryFilter.getFilterKey(), e);
+            }
         }
     }
 }
