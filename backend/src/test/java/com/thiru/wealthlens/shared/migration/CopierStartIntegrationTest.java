@@ -23,7 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 class CopierStartIntegrationTest {
 
     private static final MongoDBContainer MONGO = new MongoDBContainer("mongo:8.0.4").withReplicaSet();
-    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
+    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18").withInitScript("postgres-schema.sql");
 
     @BeforeAll
     static void startStores() {

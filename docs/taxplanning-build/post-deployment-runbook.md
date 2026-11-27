@@ -85,7 +85,8 @@ below is the full sequence for a fresh database (W-337).
 1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
 2. W-370 (D-900) — nothing to run: a caller's mistake (every 4xx), the 409 and the 503 are logged at WARN with the message only; only a 500 is logged at ERROR with its trace. A deploy's `grep -c " ERROR "` after the routes check expects **0** again (at `m1.6.1` it counted row 4's four refusals).
 3. §0.9 W-337g2c (D-979) — **at the move (W-337i), once per database:** the copy into PostgreSQL, before the PostgreSQL build first starts and before §1B there.
-4. §0.10 W-406 (D-985) — **at W-337i's rehearsal, after §0.9 there, before staging:** the read comparison, `m1.6.1` against the PostgreSQL build.
+4. §2.19 W-413 (D-989) — **before the PostgreSQL build first starts on a host:** schema `wealthlens` exists there (§2.19 steps 2 – 3). Prod: done (W-337h). Staging and dev: their readback is not yet pasted, so run §2.19 steps 1 – 3 there first.
+5. §0.10 W-406 (D-985) — **at W-337i's rehearsal, after §0.9 there, before staging:** the read comparison, `m1.6.1` against the PostgreSQL build.
 
 ## 0. Before deploying
 
@@ -362,7 +363,8 @@ and proves each copy three ways (keys on both sides, each row against its source
 logging one line per source. Ciphertext and digests are carried as stored, so the **target must run with the same `TAX_DATA_KEY`
 and `TAX_DIGEST_KEY` the source was written with**; every time is written in UTC (D-954, D-958). MongoDB is only read.
 
-**Order.** W-337h's target database exists and is empty → this step → §1B (seed) → the app's normal start. **Never seed (§1B) a new
+**Order.** W-337h's target database exists with schema `wealthlens` and is empty (the build works only in that schema and
+never makes it, W-413, D-989: a host without it stops at start with `schema "wealthlens" does not exist`) → this step → §1B (seed) → the app's normal start. **Never seed (§1B) a new
 PostgreSQL database before this step:** the copier refuses a target holding a row its source lacks (D-953 C3a), and the copy brings
 the catalogue across.
 
@@ -383,7 +385,7 @@ the catalogue across.
    (Flyway builds the schema when the copier starts):
    ```sql
    SELECT table_name FROM information_schema.tables
-   WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name <> 'flyway_schema_history';
+   WHERE table_schema = 'wealthlens' AND table_type = 'BASE TABLE' AND table_name <> 'flyway_schema_history';
    ```
    Tables listed after a run that failed part-way are expected — step 3 again finishes it.
 3. **Run** — one block per database, every value by prompt. **Backup:** none is taken: MongoDB is only read, and the target was
@@ -444,12 +446,13 @@ unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KE
    ```
    → `41`, `0`, `1`. **Stop** on any `PROBLEMS` line or a non-zero exit: keep the log, report it; nothing is worked
    around. Each line's source and target counts equal step 1's `counts` for that collection.
-5. **After-check, read-only** (DataGrip): these six equal step 1's counts — `SELECT (SELECT count(*) FROM user_details),
-   (SELECT count(*) FROM transactions), (SELECT count(*) FROM assets), (SELECT count(*) FROM trade_outcomes),
-   (SELECT count(*) FROM profit_and_loss), (SELECT count(*) FROM tax_profiles);`. The run-log line records step 4's three
+5. **After-check, read-only** (DataGrip): these six equal step 1's counts — `SELECT (SELECT count(*) FROM wealthlens.user_details),
+   (SELECT count(*) FROM wealthlens.transactions), (SELECT count(*) FROM wealthlens.assets),
+   (SELECT count(*) FROM wealthlens.trade_outcomes), (SELECT count(*) FROM wealthlens.profit_and_loss),
+   (SELECT count(*) FROM wealthlens.tax_profiles);`. The run-log line records step 4's three
    answers and these six. Then delete `copier-<database>.log` (it names row keys, no personal data, but is not kept).
 6. **Second run / way back.** A second run is safe: it writes nothing it wrote before and finishes a run that failed part-way
-   (`MongoCopierIntegrationTest`). **Way back:** on the target, `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` (DataGrip) — MongoDB
+   (`MongoCopierIntegrationTest`). **Way back:** on the target, `DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens;` (DataGrip) — MongoDB
    is untouched — then step 2 again.
 
 **Removed after use:** W-337j removes the copier with MongoDB (YouTrack WL-50, under WL-28), once this step is logged for every database.
@@ -471,13 +474,13 @@ PostgreSQL copy §0.9 filled. W-411 is built first, or every rate card that shar
 
 1. **Precheck, read-only — the two lists** (DataGrip, on the rehearsal PostgreSQL):
    ```sql
-   SELECT count(*) AS logins FROM user_details;
-   SELECT profile_id || ' ' || tax_year_start FROM tax_year_workspaces ORDER BY 1;
+   SELECT count(*) AS logins FROM wealthlens.user_details;
+   SELECT profile_id || ' ' || tax_year_start FROM wealthlens.tax_year_workspaces ORDER BY 1;
    ```
    Save the second query's rows as `~/wealthlens-runs/w406/workspaces.txt`, one per line. Write
-   `~/wealthlens-runs/w406/users.txt` yourself, one `email roles` line per account (roles as `user_details.roles` holds
-   them, e.g. `USER,SUPER_USER`). The stored emails are encrypted, so the list is yours. **Stop** unless its line count
-   equals `logins`, and unless at least one line has `SUPER_USER`.
+   `~/wealthlens-runs/w406/users.txt` as **one line, your own account** (D-988 (1)): `your-email USER,SUPER_USER`, the
+   roles as `user_details.roles` holds them. Your account is `SUPER_USER`, so the admin routes are read too. Other
+   accounts are not compared; their rows are proven by §0.9's own checks. **Stop** unless the file is that one line.
 2. **Run** (from the release worktree W-337i names; the tool asks for `JWT_SECURITY_KEY` at each step):
 ```zsh
 # Rehearsal read comparison: both builds already running on 8081 (m1.6.1) and 8082 (w-337)
@@ -485,7 +488,7 @@ read -r 'REPO?Release worktree path (W-337i names it): '
 W=$REPO/docs/taxplanning-build/tools/read_comparison.py
 [[ -f $W ]] || { echo "no $W: stop"; return 1 }
 cd ~/wealthlens-runs/w406 || return 1
-[[ $(wc -l < users.txt) -gt 0 && -s workspaces.txt ]] || { echo "users.txt or workspaces.txt empty: stop"; return 1 }
+[[ $(wc -l < users.txt) -eq 1 && -s workspaces.txt ]] || { echo "users.txt must be your one line, workspaces.txt not empty: stop"; return 1 }
 python3 -I -B $W spec --base http://localhost:8082 --users users.txt --out spec.json
 V=(--value taxYear=2025,2026 --value financialYear=2025-2026,2026-2027 --value broker=UPSTOX,FYERS,ZERODHA
    --value frequency=ANNUALLY,QUARTERLY --value billedThrough=$(date +%F) --workspaces workspaces.txt)
@@ -2050,7 +2053,8 @@ What exists, one host per database (D-980). Each has one role used by the owner,
 | staging | Aiven project `aaaaaw`: `wealthlens-staging-aaaaaw.e.aivencloud.com:18042` | `defaultdb`, `avnadmin` | `sslmode=require` |
 | dev | Aiven service `wealthlens-dev`: `wealthlens-dev-wealthlens-dev.d.aivencloud.com:13196` | `defaultdb`, `avnadmin` | `sslmode=require` |
 
-Passwords are in the owner's password manager only, never in the repo.
+Passwords are in the owner's password manager only, never in the repo. The app works in schema `wealthlens` and never
+makes it (W-413, D-989): step 2 below is what makes it, on each host, before the PostgreSQL build first starts there.
 
 1. **Check before (read-only):** `SELECT version() AS version, current_database() AS db, current_schema() AS schema;` — expect
    `PostgreSQL 18.…`, the database above, `public`.

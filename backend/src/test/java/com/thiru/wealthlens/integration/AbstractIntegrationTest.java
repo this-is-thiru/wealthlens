@@ -93,7 +93,8 @@ public abstract class AbstractIntegrationTest {
          * shared container. The default ceiling made a long local or CI run fail with "sorry, too many clients
          * already" partway through, unrelated to any one test's correctness.
          */
-        postgresContainer = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400");
+        postgresContainer = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400")
+                .withInitScript("postgres-schema.sql");
         postgresContainer.start();
     }
 
@@ -201,7 +202,7 @@ public abstract class AbstractIntegrationTest {
         }
         JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
         List<String> tables = jdbc.queryForList(
-                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'",
                 String.class);
         List<String> toTruncate = tables.stream()
                 .filter(table -> !table.equals("flyway_schema_history") && !SEEDED_REFERENCE_COLLECTIONS.contains(table))

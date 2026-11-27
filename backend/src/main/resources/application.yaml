@@ -14,6 +14,11 @@ spring:
     uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@wealthlens-dev.gmhwxe2.mongodb.net/?retryWrites=true&w=majority
     database: wealthlens-dev
 
+  # W-413 (D-989 C1a): Flyway works in the schema and never makes it, so a host without it stops at start
+  flyway:
+    default-schema: wealthlens
+    create-schemas: false
+
   jackson:
     deserialization:
       # A request body naming a field its DTO does not have answers 400 instead of the field being dropped:
@@ -167,6 +172,11 @@ app:
         timeout: PT60S
   mongodb:
     transactions-enabled: true
+  # W-413 (D-989): every connection works in schema wealthlens (D-929), which W-337h made on each host
+  postgres:
+    datasource:
+      hikari:
+        schema: wealthlens
   portfolio:
     idempotency:
       # How long a trade with NO client-supplied idempotencyKey stays de-duplicable, in seconds.

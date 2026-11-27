@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -48,9 +49,14 @@ public class PostgresJpaConfig {
         return new DataSourceProperties();
     }
 
+    /**
+     * The pool every PostgreSQL user shares — Flyway, Hibernate, the copier's {@code current_schema()} — so its
+     * {@code hikari.schema} puts them all in schema {@code wealthlens} (W-413, D-989; D-929).
+     */
     @Bean
-    DataSource postgresDataSource(DataSourceProperties postgresDataSourceProperties) {
-        return postgresDataSourceProperties.initializeDataSourceBuilder().build();
+    @ConfigurationProperties("app.postgres.datasource.hikari")
+    HikariDataSource postgresDataSource(DataSourceProperties postgresDataSourceProperties) {
+        return postgresDataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
     }
 
     /**

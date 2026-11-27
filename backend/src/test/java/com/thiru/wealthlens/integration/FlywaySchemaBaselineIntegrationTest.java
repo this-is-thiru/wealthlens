@@ -32,6 +32,19 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void schema_whenTheAppStarts_isWealthlensAndPublicHoldsNoTable() {
+        // When
+        JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
+        String schema = jdbc.queryForObject("SELECT current_schema()", String.class);
+        List<String> inPublic = jdbc.queryForList(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", String.class);
+
+        // Then — every table where D-929 put it, none left in the default (W-413)
+        assertThat(schema).isEqualTo("wealthlens");
+        assertThat(inPublic).isEmpty();
+    }
+
+    @Test
     void entityManagerFactory_whenStarted_validatesEveryEntityAgainstItsTable() {
         // When
         Object schemaAction = entityManagerFactory.getProperties().get("hibernate.hbm2ddl.auto");
@@ -74,7 +87,7 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
         // When
         JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
         List<String> tables = jdbc.queryForList(
-                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name",
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() ORDER BY table_name",
                 String.class);
 
         // Then — one per module, main tables and their child tables
