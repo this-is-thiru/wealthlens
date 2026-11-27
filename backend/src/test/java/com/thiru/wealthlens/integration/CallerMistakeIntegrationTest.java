@@ -188,4 +188,28 @@ class CallerMistakeIntegrationTest extends AbstractIntegrationTest {
         assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/charges/simulate", MediaType.APPLICATION_JSON, trade),
                 HttpStatus.BAD_REQUEST, message);
     }
+
+    @Test
+    void searchAssets_whenADateFilterIsNotADate_expected400NamingIt() {
+        // Given — W-415: a date filter's value one digit short, as the api-collection once sent it (a 500 until then)
+        String body = """
+                {"queryFilters": [{"filterKey": "transaction_date", "operation": "LESSER_THAN_OR_EQUAL_TO", "value": "2024-12-3",
+                  "logicalOperation": "AND", "expressionLogicalOperation": "AND", "allowEmptyOrNull": false, "caseSensitive": false,
+                  "isDateField": true}]}""";
+
+        // When / Then
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/portfolio/assets/search", MediaType.APPLICATION_JSON, body),
+                HttpStatus.BAD_REQUEST, "A date filter's value must be a date as yyyy-MM-dd; got '2024-12-3' for transaction_date");
+    }
+
+    @Test
+    void uploadTransactions_whenTheMultipartBodyCannotBeParsed_expected400() {
+        // Given — W-415: a part that opens and never closes, as a client that could not finish reading its file sends (a 500)
+        MediaType multipart = MediaType.parseMediaType("multipart/form-data; boundary=wl415");
+        String cutOff = "--wl415\r\nContent-Disposition: form-data; name=\"file\"; filename=\"trades.csv\"\r\n\r\nstock_code,quan";
+
+        // When / Then
+        assertAnswered(exchange(HttpMethod.POST, "/api/v1/me/portfolio/transactions/uploads?quarter=Q1", multipart, cutOff),
+                HttpStatus.BAD_REQUEST, "The upload could not be read as multipart form data");
+    }
 }

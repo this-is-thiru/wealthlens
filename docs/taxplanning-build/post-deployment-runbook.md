@@ -369,14 +369,15 @@ PostgreSQL database before this step:** the copier refuses a target holding a ro
 the catalogue across.
 
 1. **Precheck, read-only — the source** (the owner's console, against the named database: dev `wealthlens-dev`, staging
-   `it-staging`, prod `Cluster0`). Expect `loginsWithoutEmail` **0** and `unknownWithData` `[]`; keep `counts` for step 4. **Stop** on
+   `it-staging`, prod `Cluster0`). Expect `counted` **42**, `loginsWithoutEmail` **0** and `unknownWithData` `[]`; keep `nonZero` for step 4 (a source it does not list holds 0). **Corrected 2026-11-27 (W-337i2 row 2):** the query first returned `counts` keyed by collection name, and `$documents` refuses a field name holding `.` (`tax_document_bytes.files`: error 16412 on dev); tried on a throwaway `mongo:8.0.4` with a login without `email`, the bytes and an unknown collection planted → `counted` 42, both in `nonZero`, `unknownWithData` `['stray']`, `loginsWithoutEmail` 1. **Stop** on
    either: a login without `email` fails the copy (D-964) and each is a decision (re-key or remove), never worked around here; an
    unknown collection holding data is refused by the copier.
    ```js
    db.aggregate([{ $documents: [(() => { const known = ["user_details", "refresh_tokens", "insurances", "charge_catalogue", "charge_schedules", "charge_instruments", "charge_accounts", "user_charges", "corporate_action", "lastly_performed_corporate_action", "assets", "transactions", "trade_outcomes", "profit_and_loss", "privacy_erasure_requests", "privacy_breach_intimations", "privacy_breach_notices", "privacy_grievances", "privacy_consents", "privacy_processing_log", "tax_profiles", "tax_family_members", "tax_employers", "tax_landlords", "tax_lenders", "tax_bank_accounts", "tax_profile_erasures", "tax_year_workspaces", "tax_filing_drafts", "tax_draft_revisions", "tax_regime_election_history", "tax_draft_computations", "tax_documents", "tax_parse_attempts", "tax_document_confirmations", "tax_gazette_cursor", "tax_gazette_leads", "tax_job_failures", "tax_job_leases", "tax_access_log"];
      const bytes = ["tax_document_bytes.files", "tax_document_bytes.chunks"];
      return { database: db.getName(),
-       counts: Object.fromEntries(known.concat(bytes).map(c => [c, db.getCollection(c).countDocuments({})])),
+       counted: known.concat(bytes).length,
+       nonZero: known.concat(bytes).map(c => ({ collection: c, count: db.getCollection(c).countDocuments({}) })).filter(x => x.count > 0),
        unknownWithData: db.getCollectionNames().filter(c => !c.startsWith("system.") && !known.includes(c) && !bytes.includes(c)
          && db.getCollection(c).countDocuments({}, { limit: 1 }) > 0),
        loginsWithoutEmail: db.user_details.countDocuments({ email: { $exists: false } }) }; })()] }])
@@ -591,7 +592,7 @@ holds `Ensured the indexes of GazetteLead`.
 1. **Check before** (read-only): no cursor yet, no leads.
 
    ```bash
-   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data | length'
+   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.page.totalElements'
    ```
 
    Expect `0`. In `mongosh`: `db.tax_gazette_cursor.find()` returns nothing.
@@ -603,20 +604,20 @@ holds `Ensured the indexes of GazetteLead`.
 
    ```bash
    curl -sS -X PUT "$BASE/api/v1/admin/tax/gazette-cursor" -H "Authorization: Bearer $ADMIN_TOKEN" \
-     -H "Content-Type: application/json" -d '{"year": <year>, "lastNumber": <number>}' | jq '.data'
+     -H "Content-Type: application/json" -d '{"year": <year>, "lastNumber": <number>}' | jq '.'
    ```
 
    Expect the cursor back with `updatedBy` your login.
 4. **Turn it on:** set `app.tax.gazette-watch.enabled=true` for the environment (`APP_TAX_GAZETTEWATCH_ENABLED=true`)
    and restart. With the jobs off (every shipped profile from W-336) run it on request, on §5.2's cadence:
-   `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/gazette-watch/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
+   `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/gazette-watch/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'`
    → `{"job": "gazette-watch", "ran": true}`; where `app.tax.jobs.enabled` is true it also runs at 05:00 daily, server time
    (`app.tax.jobs.gazette-watch-cron`). Each run reads at most 400 numbers and stops after 20 missing in a row.
 5. **After the first run** (read-only): the log holds `Job gazette-watch stopped at <year>/<number>`, one
    `Gazette lead <url> …` WARN line per lead, and no `Job gazette-watch refused`; then
 
    ```bash
-   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data[] | {url, page, note, possiblyAffected}'
+   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.content[] | {url, page, note, possiblyAffected}'
    ```
 
    **Unverified until this run:** whether `egazette.gov.in` serves the server's host daily. A failure in
@@ -1197,7 +1198,7 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 1. **Seed:**
 
    ```bash
-   curl -sS -X POST "$BASE/api/v1/admin/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
 
    Expect 13 catalogue codes, 39 rate cards and 2 scheme profiles written. That is the 13 entries of
@@ -1210,9 +1211,9 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 
    ```bash
    # Must be empty: the shipped files and the database agree
-   curl -sS "$BASE/api/v1/admin/charges/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS "$BASE/api/v1/admin/charges/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    # Every card with a verifiedOn older than 90 days, or none; rows mean rate verification is due (§5.2), not a failure
-   curl -sS "$BASE/api/v1/me/charges/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS "$BASE/api/v1/me/charges/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
 
    Expect `unverified` empty. Every card carries a `verifiedOn`: a broker card against its charges page, and a
@@ -1227,12 +1228,13 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
    ```bash
    curl -sS -X POST "$BASE/api/v1/me/charges/simulate" -H "Authorization: Bearer $TOKEN" \
      -H 'Content-Type: application/json' -d '{
-       "brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
+       "stockCode":"INFY","brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
        "exchange":"NSE","transactionDate":"2025-06-10","quantity":100,"price":1000
-     }' | jq '.data'
+     }' | jq '{scheduleCode, resolution, totalCharges, amountByCode}'
    ```
 
-   Expect `scheduleCode` `ZERODHA_EQ_DELIVERY_2025_04`, `resolution` `RESOLVED`, and, on turnover ₹1,00,000: BROKERAGE 0,
+   `stockCode` is required on a sale since W-365 (a 400 without it; it picks the scheme's own charges, none on an equity
+   delivery sale). Expect `scheduleCode` `ZERODHA_EQ_DELIVERY_2025_04`, `resolution` `RESOLVED`, and, on turnover ₹1,00,000: BROKERAGE 0,
    STT 100 (0.1 %, to the rupee), EXCHANGE_TXN 2.97 (0.00297 %), SEBI_FEE 0.10, IPFT 0.10 (0.0001 % each), DP 13.50,
    GST 3.00 (18 % of 0 + 2.97 + 0.10 + 0.10 + 13.50 = 16.67), **total ₹119.67**; no STAMP_DUTY on a sale. Worked by
    hand from `zerodha-equity-delivery-2025-04-01.json` and `statutory-equity-delivery-2025-04-01.json`; the same
@@ -1383,7 +1385,7 @@ A failing user is an error naming them; the users before stay written.
 1. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
 
    **Read `usersRebuilt` and `rowsWritten` before writing.** Only users with transactions and no rows at all should
@@ -2230,7 +2232,7 @@ curl -sS -X POST "$BASE/api/v1/me/charges/charge-accounts" -H "Authorization: Be
 | **AMC cycle** | `POST /api/v1/admin/charges/amc/impose` | quarterly / annually, per account frequency | No maintenance charge is billed. Idempotent per account and period: running it twice bills once |
 | **Rate verification** | `GET /api/v1/me/charges/charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
 | **Drift check** | `GET /api/v1/admin/charges/charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
-| **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.data'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
+| **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
 | **Publishing a rate change** | `POST /api/v1/admin/charges/charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. How publishing supersedes: `docs/modules/brokercharges.md` §5 |
 
 ### 5.3 History before the engine is not priced
@@ -2388,3 +2390,33 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-27 | prod, staging, dev (W-337h, D-980) | row 6, sign-off | owner | "credentials saved off-repo, prod + staging + dev signed off" |
 | 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337h, W-413; D-980, D-989) | §2.19 steps 1 – 3, readback | owner | `PostgreSQL 18.7 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.3.1 20260722 (Red Hat 15.3.1-1), 64-bit`, `defaultdb`, `public`; schema `wealthlens` present — **go**; closes the readback the 2026-11-27 dev line left "not pasted" |
 | 2026-11-27 | staging, Aiven `wealthlens-staging` (W-337h, W-413; D-980, D-989) | §2.19 steps 1 – 3, readback | owner | `PostgreSQL 18.7 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.3.1 20260722 (Red Hat 15.3.1-1), 64-bit`, `defaultdb`, `public`; schema `wealthlens` present — **go**; the service was created 2026-11-27 01:58 UTC, so the password saved before then failed (`28P01`) until the connection was set up again; closes the staging line left "not pasted" |
+| 2026-11-27 | — (W-337i1, D-991) | row 1, plans committed, their run | session | `830f9873` pushed to `w-337`; run 45940025399 (`pull_request`) `success` on it — **go** |
+| 2026-11-27 | — (W-337i1, D-991) | row 2, preconditions (read-only) | session | `origin/master` 55b06df0; no `m1.7` tag on `origin`; PR #74 `OPEN false 830f9873 MERGEABLE CLEAN`; row 1's run `success` on 830f9873 — **go** |
+| 2026-11-27 | — (W-337i1, D-991) | row 3, PR #74 merged as a merge commit | session | `M` = 4e8209c8, parents 55b06df0 and 830f9873; `git diff --stat 830f9873 origin/master` empty — **go** |
+| 2026-11-27 | — (W-337i1, D-991) | row 4, the `master` pipeline | session | run 45941014325 (`push`) `success` on 4e8209c8 — **go** |
+| 2026-11-27 | — (W-337i1, D-991) | row 5, `m1.7` tagged, worktree and jar | session | tag `m1.7` (fb86fdce) → 4e8209c8 pushed; `../wealthlens-m1.7` at 4e8209c8; `backend/target/wealthlens.jar` 120,968,297 bytes — **go** |
+| 2026-11-27 | — (W-337i1, D-991) | row 6, WL-A-2 published from `m1.7`'s runbook | session | `{"idReadable":"WL-A-2",…}`; read back: 224,063 characters holding the file's 223,912 after the source-of-truth header (its head and tail found); §0.9 and §0.10 present — **go**; W-337i1 rows done |
+| 2026-11-27 | — (W-337i1, D-991) | sign-off | owner | "signed off" — `m1.7` is the build every move runs; W-337i1 done |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | row 1, environment | owner | keys 32 bytes, prefixes 9dbe9c7018bd / 55b28ef39f76 / 886cb3703540 (first record of dev's); PRIVACY_CONTACT 25; owner email 25; JDBC `wealthlens-dev-wealthlens-dev.d.aivencloud.com:13196 defaultdb`; port 8080 free; m1.7 jar 120,968,297 bytes — **go** |
+| 2026-11-27 | dev `wealthlens-dev` (W-337i2, D-992) | row 2, §0.9 step 1 (read-only) | owner | **refused by the server**: error 16412, `$documents` field name may not contain `.` (`tax_document_bytes.files`) — nothing read or written; §0.9 step 1's query corrected (`counted` / `nonZero`), tried on a throwaway `mongo:8.0.4`; row 2 again |
+| 2026-11-27 | dev (W-337i2, D-992) | row 2 again, §0.9 step 1 (read-only) | owner | `database` **`test`** — the console's default database, not `wealthlens-dev`; `counted` 42, `nonZero` `[]`, `unknownWithData` `[]`, `loginsWithoutEmail` 0 describe `test` only — **stop**, nothing read from dev; row 2 again on `wealthlens-dev` |
+| 2026-11-27 | dev `wealthlens-dev` (W-337i2, D-992) | row 2, §0.9 step 1 (read-only), on `wealthlens-dev` | owner | `database` `wealthlens-dev`; `counted` 42; `nonZero` `[]` (every source 0: dev is empty); `unknownWithData` `[]`; `loginsWithoutEmail` 0 — **go**; row 8 takes its register-and-grant path |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | row 3, §0.9 step 2 (read-only) | owner | no tables in schema `wealthlens` — **go** |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | row 4, §0.9 step 3, the copy | owner | `exit: 0`; `Started` in 33.6 s with only `copier` active (port -1); Flyway "Successfully applied 13 migrations … now at version v13"; every source 0 rows, `clean`; final line "Every source copied and proven, times written in UTC from rows written in Asia/Kolkata"; WARN: NO RATE CARDS (expected before §1B), `spring.jpa.open-in-view` (Spring's default notice), Tomcat acceptor "did not stop cleanly" (port -1, W-409) — **go** |
+| 2026-11-27 | dev (W-337i2, D-992) | row 5, §0.9 step 4, the report | owner | `41`, `0`, `1`; every line 0 = row 2's counts — **go** |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | row 6, §0.9 step 5 (read-only), part 2 | owner | `flyway_schema_history` versions 1 – 13, each `success` true — **go**; the six counts awaited |
+| 2026-11-27 | dev (W-337i2, D-992) | row 7, `m1.7`'s first normal start (default profile) | owner | pid 21269; `Started` in 9.889 s; no ERROR; Flyway "validated 13", "Schema wealthlens is up to date"; WARN: NO RATE CARDS (before §1B), `open-in-view`, SpringDoc's spec notice (D-867 C1a); row 6's six counts not pasted — each table's 0 target rows is row 4's own check — **go** |
+| 2026-11-27 | dev (W-337i2, D-992) | row 8a, register; stored email | owner | notice version 6f36c92105ff…; registered ("added to system"); stored form computed with dev's keys (§0.7), `UPDATE` printed — **go** |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | row 8b, the role | owner | `UPDATE wealthlens.user_details SET roles = 'SUPER_USER' WHERE email = '<stored>' AND roles = 'USER'` → 1 row affected — **go** |
+| 2026-11-27 | dev (W-337i2, D-992) | row 8c, sign-in as `SUPER_USER` | owner | `expires_in 900`; `admin spec 200` — **go** |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | row 9, §1B seed, drift, unverified, simulate | owner | seed `{"catalogue":13,"created":39,"skipped":0,"instruments":2,"instrumentsSkipped":0,"drift":0}`; drift `0`; unverified `[]`; **simulate: every field `null`** — the filter's fields are `ChargeBreakdownResponse`'s, so the answer was not that type; raw answer asked — **hold** |
+| 2026-11-27 | dev (W-337i2, D-992) | terminal closed after row 9 | owner | `m1.7` stopped with it (port 8080 free, no `wealthlens.jar` process); dev's data kept (seeded, owner `SUPER_USER`). `~/wealthlens-runs/dev.env` (600) held only empty values (`''`) — rewritten by the owner as the one place for dev's run values (owner: "lets keep somewhere … we can src there"); rows from here start with `source` |
+| 2026-11-27 | dev (W-337i2, D-992) | `dev.env` rewritten (step 1), checked (step 2, read by the session, fingerprints only) | owner, session | `-rw-------`, 12 `export` names; keys 32 bytes, prefixes 9dbe9c7018bd / 55b28ef39f76 / 886cb3703540 = row 1; JDBC host `wealthlens-dev-wealthlens-dev.d.aivencloud.com:13196 defaultdb`; owner email 25; the empty template kept as `dev.env.old` — **go** |
+| 2026-11-27 | dev (W-337i2, D-992) | `m1.7` restarted detached; row 9d, simulate raw | owner | pid in `m17.pid`; `Started` in 16.6 s; no ERROR; WARN open-in-view, SpringDoc only (NO RATE CARDS gone: seeded); `expires_in 900`; simulate **400** "stockCode is required on a BUY or a SELL: it finds the scheme's own charges, such as an exit load" — the refusal W-365 added (`bd19dd39`, `ChargeSimulationService.java:102`, in `m1.6.1` too); §1B step 3's body predates it, so the first row 9's nulls were this 400 read through the filter. Not a port defect — runbook defect; simulate again with `stockCode` |
+| 2026-11-27 | dev (W-337i2, D-992) | row 9d, simulate with `stockCode` | owner | `status 200`; `ZERODHA_EQ_DELIVERY_2025_04` (statutory `STATUTORY_EQ_DELIVERY_2025_04`), `RESOLVED`, `totalCharges` 119.67; BROKERAGE 0, STT 100, EXCHANGE_TXN 2.97, SEBI_FEE 0.1, IPFT 0.1, DP 13.5, GST 3 (on 16.67) = §1B's figures worked by hand — **go**; row 9 done |
+| 2026-11-27 | dev (W-337i2, D-992) | row 10, before: ERROR count | owner | `grep -c " ERROR " m17.log` → `0` — **go** to the collection pass |
+| 2026-11-27 | dev (W-337i2, D-992) | row 10, api-collection pass (Bruno runner, `Local - Staging`, after `Auth/Login.yml` sent `{{PASSWORD}}`) | owner | all passed but two, both failed in Bruno before sending: `Transactions/Upload Transactions` (EPERM reading `~/Desktop/DEMAT P&L/FYERS.csv`, macOS file permission) and `Tax Profile/Upload a Document` (EISDIR: its file path is a folder) — not server answers; the runner's "passed" does not show status codes, so 5xx is read from the app log in row 11 |
+| 2026-11-27 | dev (W-337i2, D-992) | row 11, the log after the pass; `m1.7` stopped | owner, session | ERROR **2** (two 500s): (1) `Text '2024-12-3' could not be parsed at index 8` — `Complex Filters/Assets more than 1 year` sends a malformed date; `QueryBuilder.sanitize` → `TLocalDate.convertToDate` throws, unmapped by `ControllerAdviser`, the same code in `m1.6.1` (`QueryBuilder.java:61 – 63` there) — a caller mistake answered 500, not a port regression; (2) `Failed to parse multipart servlet request` — the upload Bruno could not read (EPERM) sent a broken body; `MultipartException` is mapped in neither build. WARN refusals (10), each explained: simulate without `stockCode` (row 9d's terminal call; the collection's request sends one — corrected planning W-414), stocks dev lacks (`A`, `ASHOKLEYDUMMY`, one blank), unfilled `:transactionId` / `:id`, a Mongo-era corporate-action id, a wrong old password, registration without the current notice. Port 8080 free, no `wealthlens.jar` process (checked by the session) — **stop per the plan (5xx); owner to rule** |
+| 2026-11-27 | dev (W-337i2, D-993) | row 11, ruling | owner | "sure" to C3a: both 500s are `m1.6.1`'s too, not the move's; W-415 placed, W-414 widened — **go** to row 12 |
+| 2026-11-27 | dev (W-337i2, D-992) | row 12, clean-up | owner | `w337i2/` (logs, pid) and `dev.env.old` deleted (`No such file or directory` ×2); `dev.env` kept, `-rw-------`, the one place for dev's values — **go**; awaiting sign-off |
+| 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | sign-off | owner | "dev signed off" — dev on `m1.7` / PostgreSQL; §0.9 logged for dev; W-337i2 done |
