@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraftRepository;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistoryRepository;
+import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspaceRepository;
 import io.restassured.RestAssured;
 import java.net.URI;
@@ -138,6 +139,28 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(read.getHeaders().getETag()).isEqualTo("\"rev-0\"");
         assertThat(workspaces.findAll().getFirst().getPrimaryDraftId()).isEqualTo(draftId);
         assertThat(revisions.findAll()).hasSize(1);
+    }
+
+    @Test
+    void workspace_whenYearNeverStarted_refusesAndWritesNothing() {
+        // When — the setup started 2026 only
+        ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/workspaces/2027", null, null);
+
+        // Then
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(read.getBody()).contains("This profile has no workspace for that year");
+        assertThat(workspaces.findAll()).extracting(TaxYearWorkspace::getTaxYearStart).containsExactly(2026);
+    }
+
+    @Test
+    void drafts_whenYearNeverStarted_listsNoneAndWritesNothing() {
+        // When
+        ResponseEntity<String> read = call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/workspaces/2027/drafts", null, null);
+
+        // Then
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(read.getBody()).isEqualTo("[]");
+        assertThat(workspaces.findAll()).extracting(TaxYearWorkspace::getTaxYearStart).containsExactly(2026);
     }
 
     @Test

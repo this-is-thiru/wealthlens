@@ -51,8 +51,15 @@ public class DraftService {
     private final Clock clock;
     private final TaxCalculator taxCalculator;
 
-    /** The profile's workspace for the year, made on first asking. */
+    /** The profile's workspace for the year; a read never makes one (W-410, D-986), so asking for a year not started is refused. */
     public TaxYearWorkspace workspace(String email, String profileId, int taxYearStart) {
+        taxProfileService.owned(email, profileId);
+        return workspaceRepository.findByProfileIdAndTaxYearStart(profileId, taxYearStart)
+                .orElseThrow(() -> new BadRequestException("This profile has no workspace for that year"));
+    }
+
+    /** The workspace a new draft goes into, made with the year's first draft. */
+    private TaxYearWorkspace workspaceMadeIfAbsent(String email, String profileId, int taxYearStart) {
         taxProfileService.owned(email, profileId);
         return workspaceRepository.findByProfileIdAndTaxYearStart(profileId, taxYearStart)
                 .orElseGet(() -> create(profileId, taxYearStart));
@@ -75,9 +82,14 @@ public class DraftService {
         return taxCalculator.declarations(TaxYearId.of(taxYearStart));
     }
 
-    /** The year's drafts, each read recorded: a draft's inputs carry claims such as medical spend ({@code DR 14} O1.1). */
+    /**
+     * The year's drafts, each read recorded: a draft's inputs carry claims such as medical spend ({@code DR 14} O1.1). A year
+     * not started has none, and the read makes no workspace (W-410).
+     */
     public List<DraftView> drafts(String email, String profileId, int taxYearStart) {
-        List<FilingDraft> drafts = draftRepository.findByWorkspaceId(workspace(email, profileId, taxYearStart).getId());
+        taxProfileService.owned(email, profileId);
+        List<FilingDraft> drafts = workspaceRepository.findByProfileIdAndTaxYearStart(profileId, taxYearStart)
+                .map(found -> draftRepository.findByWorkspaceId(found.getId())).orElse(List.of());
         drafts.forEach(draft -> taxAccessLog.record(email, ReadSubject.DRAFT, draft.getId()));
         return drafts.stream().map(DraftView::of).toList();
     }
@@ -105,7 +117,7 @@ public class DraftService {
         if (label == null || label.isBlank()) {
             throw new BadRequestException("A draft needs a label");
         }
-        TaxYearWorkspace workspace = workspace(email, profileId, taxYearStart);
+        TaxYearWorkspace workspace = workspaceMadeIfAbsent(email, profileId, taxYearStart);
         FilingDraft draft = new FilingDraft();
         draft.setId(UUID.randomUUID().toString());
         draft.setNewlyCreated(true);
