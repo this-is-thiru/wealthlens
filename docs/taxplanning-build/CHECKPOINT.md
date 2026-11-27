@@ -5,10 +5,10 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-337i3 (D-998) resuming at row 5 on m1.7.3 (W-419 done, D-1003).
-Stage           : W-419 Revision 3 committed + pushed (PR to open/check). W-337i3 rows 5 – 9 go on m1.7.3, row 10 stopped (138) then clean on the saved answers with the fixed tool. Apps up 20784/20785. W-420 (CI speed: single verify pass, split unit/integration jobs, no PR image) proposed, not placed — owner to answer.
+Stage           : W-420 committed + pushed on w-337 (owner: "push") — cancels PR #78's run 46041253371; the new run tests W-419 R3 + W-420 together on the three-job pipeline. Apps up 20784/20785.
 Last item commit: "taxplanning W-419: compare the holdings lists on what the view works out for the holding — sums within 1e-9, no field copied from a lot; row 10 on m1.7.3 found 138 such differences; D-1004"
-Next step       : 1. PR run (red → read). 2. Green: owner's word → merge, master run, tag m1.7.4, worktree ../wealthlens-m1.7.4-pg + jar, WL-A-2, log rows. 3. Row 10: compare only, tool from m1.7.4, on saved before/after → expect exit 0. 4. Rows 11 – 14.
-Files touched   : (none); api-collection Bruno edits — never commit
+Next step       : 1. #78 green → owner "merge and release" → m1.7.4, row 10 compare from it, rows 11 – 14. 2. Then commit W-420 on w-337 → PR: green run (counts = PR #77's 6888+26, gate ratios = its jacoco.xml), one red commit per tier, revert; owner's word to merge.
+Files touched   : (none); api-collection — never commit
 Flags for owner : §1.h count due 2026-11-29 (staging/prod still Mongo: console; dev on PG). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner.
 Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only.
   Owner values: ~/wealthlens-runs/dev.env (600, Mongo + PG + keys); staging.env/prod.env lack PG vars yet. No app running. Jars: m1.7.1 ../wealthlens-m1.7.1-pg/backend/target, m1.7

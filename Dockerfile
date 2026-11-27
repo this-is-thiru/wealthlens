@@ -1,5 +1,5 @@
-# Runtime only. CI builds and tests backend/target/wealthlens.jar first (./mvnw … test verify), and
-# this image wraps that exact jar, so what is published is what was tested. To build it locally:
+# Runtime only. CI's unit job builds and tests backend/target/wealthlens.jar (./mvnw … package) and its gate job
+# wraps that exact jar once both tiers pass, so what is published is what was tested. To build it locally:
 #   ./mvnw clean install -pl backend -am -DskipTests && docker build -t wealthlens .
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app

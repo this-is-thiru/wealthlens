@@ -17,9 +17,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # The two test tiers run side by side (W-420, D-1005): the unit tier is CPU-bound and parallel, the integration tier runs
+  # its classes one at a time (@Isolated), so together they took the longest part of one job's run. Each job keeps
+  # -Dmaven.test.failure.ignore=true so its reports and coverage data are uploaded even when tests fail; the gate job below
+  # is what fails the pipeline.
+  unit:
     runs-on: [ubuntu-latest]
-    # The whole run takes under 10 minutes; a hung container wait must not hold a runner for 6 hours.
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # One pass: Spotless and Checkstyle run at validate (their executions in the root pom), then compile, the unit tier
+      # with the JaCoCo agent, and the jar the image wraps. The coverage checks run in the gate, on both tiers' data.
+      - name: Check formatting, run the unit tier, build the jar
+        run: ./mvnw -B clean package -Punit -Dmaven.test.failure.ignore=true
+
+      # The classes the coverage checks read, as one file: upload-artifact moves files one at a time.
+      - name: Name the unit tier's coverage data and pack its classes
+        if: ${{ !cancelled() }}
+        run: |
+          cp backend/target/jacoco.exec backend/target/jacoco-unit.exec
+          tar -cf backend/target/classes.tar -C backend/target classes
+
+      - name: Upload the unit tier's results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-results
+          path: |
+            backend/target/surefire-reports/TEST-*.xml
+            test-report/target/surefire-reports/TEST-*.xml
+            backend/target/jacoco-unit.exec
+            backend/target/classes.tar
+            backend/target/wealthlens.jar
+
+  integration:
+    runs-on: [ubuntu-latest]
     timeout-minutes: 30
     steps:
       - name: Checkout source
@@ -35,21 +78,63 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # spotless:check runs inside this single invocation rather than as its own step.
-      # A separate ./mvnw call costs a full JVM boot plus reactor and plugin resolution
-      # on a cold runner — tens of seconds for a check that takes ~2s of actual work.
-      # It still runs before the tests, so formatting drift fails fast.
-      #
-      # -Dmaven.test.failure.ignore=true is set HERE ONLY, so the build reaches `verify`
-      # and the consolidated HTML report is generated even when tests fail. The gate below
-      # is what fails the pipeline. Local and IDE runs use the default (false) and fail
-      # immediately on a test failure, so an exit code means what it says.
-      - name: Verify formatting, run tests, generate consolidated report
-        run: ./mvnw clean spotless:check test verify -Dmaven.test.failure.ignore=true
+      - name: Run the integration tier
+        run: ./mvnw -B clean test -pl backend -Pintegration -Dmaven.test.failure.ignore=true
 
-      # Runs even when the step above failed. A failing coverage gate stops that step, and the
-      # tests whose failure caused it would otherwise go unreported — the integration tier
-      # erroring as a whole looks exactly like "UserChargeService coverage 0.88".
+      - name: Name the integration tier's coverage data
+        if: ${{ !cancelled() }}
+        run: cp backend/target/jacoco.exec backend/target/jacoco-integration.exec
+
+      - name: Upload the integration tier's results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: integration-results
+          path: |
+            backend/target/surefire-reports/TEST-*.xml
+            backend/target/jacoco-integration.exec
+
+  gate:
+    needs: [unit, integration]
+    if: ${{ !cancelled() }}
+    runs-on: [ubuntu-latest]
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Both tiers' reports land in backend/target/surefire-reports (one file per class, so none collide); the unit job also
+      # brings the compiled classes the coverage checks read and the jar the image wraps. An artifact keeps paths from its
+      # files' common folder: the unit tier's is the repository root, the integration tier's backend/target.
+      - name: Download the unit tier's results
+        uses: actions/download-artifact@v8
+        with:
+          name: unit-results
+          path: .
+
+      - name: Download the integration tier's results
+        uses: actions/download-artifact@v8
+        with:
+          name: integration-results
+          path: backend/target
+
+      - name: Unpack the classes
+        run: tar -xf backend/target/classes.tar -C backend/target
+
+      # The four checks are the root pom's own executions, run on the merged data of both tiers, as one job's run read it.
+      - name: Merge coverage and apply the coverage gates
+        run: >-
+          ./mvnw -B -pl backend jacoco:merge@merge-tiers jacoco:report@report
+          jacoco:check@check-charges-engine jacoco:check@check-trade-ledger
+          jacoco:check@check-taxengine jacoco:check@check-taxengine-rules
+
       - name: Check for test failures
         if: ${{ !cancelled() }}
         run: |
@@ -90,6 +175,10 @@ jobs:
             echo "Failing build due to test failures."
             exit 1
           fi
+
+      - name: Generate the consolidated report
+        if: always()
+        run: ./mvnw -B -pl test-report compile exec:java@generate-consolidated-report
 
       - name: Upload consolidated test report
         uses: actions/upload-artifact@v7
@@ -134,17 +223,17 @@ jobs:
       - name: Build docker image
         run: docker build -t "${{ steps.set_tag.outputs.moving }}" -t "${{ steps.set_tag.outputs.sha }}" .
 
-      # Pushing needs Docker Hub secrets, which a pull request from a fork does not get: on master,
-      # and on pull requests from this repository, only.
+      # Built on every run, so a pull request proves the Dockerfile; pushed only from master, the one tag anything pulls
+      # (`latest`, runbook) and its commit tag (W-420 C3a).
       - name: Login to docker hub
-        if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        if: success() && github.event_name == 'push'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Publish image to docker hub
-        if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        if: success() && github.event_name == 'push'
         run: |
           docker push "${{ steps.set_tag.outputs.moving }}"
           docker push "${{ steps.set_tag.outputs.sha }}"
