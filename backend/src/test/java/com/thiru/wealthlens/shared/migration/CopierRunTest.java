@@ -76,6 +76,6 @@ class CopierRunTest {
     }
 
     private static CopyReport report(String source, List<String> problems) {
-        return new CopyReport(source, source, 1, 1, "digest", problems);
+        return new CopyReport(source, source, 1, 1, "digest", "", problems);
     }
 }

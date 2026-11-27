@@ -1,11 +1,8 @@
 package com.thiru.wealthlens.shared.migration;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Date;
@@ -23,21 +20,22 @@ final class ColumnValue {
     }
 
     /**
-     * @param writtenZone the zone a stored {@code LocalDateTime} is read in: {@code m1.6.1} stored one through Spring Data's
-     *     default converter, which takes it as a time in the writing JVM's zone ({@link RowMapping} picks the zone that gives
-     *     UTC); a {@code LocalDate} it stored at midnight UTC ({@code LocalDateToDateConverter}), and an {@code Instant} is
-     *     zone-free
+     * @param forms how the source is read: its time zone is the one a stored {@code LocalDateTime} is read in ({@code m1.6.1}
+     *     stored one through Spring Data's default converter, which takes it as a time in the writing JVM's zone;
+     *     {@link RowMapping} picks the zone that gives UTC); a {@code LocalDate} is read as {@link FormerForms#date} reads it,
+     *     and an {@code Instant} is zone-free
      * @throws IllegalStateException if the column cannot hold the value exactly
      */
-    static Object of(Object value, String columnType, ZoneId writtenZone) {
+    static Object of(Object value, String columnType, FormerForms forms) {
         return switch (columnType) {
             case "text", "character varying" -> text(value);
             case "integer" -> require(value, Integer.class, columnType);
             case "bigint" -> widened(value, columnType);
             case "double precision" -> fractional(value, columnType);
             case "boolean" -> require(value, Boolean.class, columnType);
-            case "date" -> date(require(value, Date.class, columnType));
-            case "timestamp without time zone" -> LocalDateTime.ofInstant(require(value, Date.class, columnType).toInstant(), writtenZone);
+            case "date" -> forms.date(require(value, Date.class, columnType));
+            case "timestamp without time zone" -> LocalDateTime.ofInstant(require(value, Date.class, columnType).toInstant(),
+                    forms.timeZone());
             case "timestamp with time zone" -> OffsetDateTime.ofInstant(require(value, Date.class, columnType).toInstant(), ZoneOffset.UTC);
             case "bytea" -> require(value, Binary.class, columnType).getData();
             default -> throw new IllegalStateException("The copier stores no value in a " + columnType + " column");
@@ -70,15 +68,6 @@ final class ColumnValue {
     /** A whole number written into a {@code double} field by hand is stored as an integer; every {@code int} is an exact double. */
     private static Double fractional(Object value, String columnType) {
         return value instanceof Integer whole ? Double.valueOf(whole) : require(value, Double.class, columnType);
-    }
-
-    /** A stored date, which must be midnight UTC; the JSON walk reads embedded dates by the same rule (W-337g2b1). */
-    static LocalDate date(Date stored) {
-        LocalDateTime atUtc = LocalDateTime.ofInstant(stored.toInstant(), ZoneOffset.UTC);
-        if (!atUtc.toLocalTime().equals(LocalTime.MIDNIGHT)) {
-            throw new IllegalStateException("A stored date is not at midnight UTC: " + stored.toInstant());
-        }
-        return atUtc.toLocalDate();
     }
 
     private static <T> T require(Object value, Class<T> type, String columnType) {

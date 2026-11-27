@@ -58,7 +58,7 @@ class JsonWalkTest {
                 .append("order", 2).append("taxable", false).append("active", true).append("per_lot", false);
 
         // When
-        String json = JsonWalk.json(List.of(rule), rulesType(), KOLKATA, "charge_schedules schedule-1, rules");
+        String json = JsonWalk.json(List.of(rule), rulesType(), FormerForms.of(KOLKATA), "charge_schedules schedule-1, rules");
 
         // Then — the rule the source describes, field by field
         ChargeRule expected = new ChargeRule();
@@ -79,7 +79,7 @@ class JsonWalkTest {
         Document rule = new Document("code", "STT").append("legacy_flag", true);
 
         // When / Then
-        assertThatThrownBy(() -> JsonWalk.json(List.of(rule), rulesType(), KOLKATA, "charge_schedules schedule-1, rules"))
+        assertThatThrownBy(() -> JsonWalk.json(List.of(rule), rulesType(), FormerForms.of(KOLKATA), "charge_schedules schedule-1, rules"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("charge_schedules schedule-1, rules: ChargeRule has no field for the stored key legacy_flag");
     }
@@ -90,7 +90,7 @@ class JsonWalkTest {
         Document rule = new Document("code", "STT").append("category", "LEVY");
 
         // When / Then
-        assertThatThrownBy(() -> JsonWalk.json(List.of(rule), rulesType(), KOLKATA, "charge_schedules schedule-1, rules"))
+        assertThatThrownBy(() -> JsonWalk.json(List.of(rule), rulesType(), FormerForms.of(KOLKATA), "charge_schedules schedule-1, rules"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("charge_schedules schedule-1, rules: LEVY is not a ChargeCategory");
     }
@@ -104,7 +104,7 @@ class JsonWalkTest {
                 .append("changed_rules", List.of("RS-1")).append("rule_diff_available", true);
 
         // When
-        String json = JsonWalk.json(staleness, DraftStaleness.class, KOLKATA, "tax_filing_drafts draft-1, staleness");
+        String json = JsonWalk.json(staleness, DraftStaleness.class, FormerForms.of(KOLKATA), "tax_filing_drafts draft-1, staleness");
 
         // Then
         assertThat(new DraftStalenessConverter().convertToEntityAttribute(json)).isEqualTo(new DraftStaleness(
@@ -117,7 +117,7 @@ class JsonWalkTest {
         Document stamp = new Document("at", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
 
         // When / Then
-        assertThatThrownBy(() -> JsonWalk.json(stamp, Stamp.class, KOLKATA, "somewhere 1, stamp"))
+        assertThatThrownBy(() -> JsonWalk.json(stamp, Stamp.class, FormerForms.of(KOLKATA), "somewhere 1, stamp"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("somewhere 1, stamp: no entry in EmbeddedTimes says how " + Stamp.class.getName() + ".at was held");
     }
@@ -135,7 +135,7 @@ class JsonWalkTest {
                         .append("createdAt", Date.from(Instant.parse("2026-01-31T18:30:00Z"))));
 
         // When
-        String json = JsonWalk.json(List.of(copy), AssetEntity.class.getDeclaredField("corporateActions").getGenericType(), KOLKATA,
+        String json = JsonWalk.json(List.of(copy), AssetEntity.class.getDeclaredField("corporateActions").getGenericType(), FormerForms.of(KOLKATA),
                 "assets asset-1, corporate_actions");
 
         // Then — read without the converter, so the stored ciphertext is seen as it is
@@ -151,6 +151,39 @@ class JsonWalkTest {
     }
 
     @Test
+    void json_whenACorporateActionHoldsJavaNamedKeys_leavesThemOutAsM161ReadThem() throws NoSuchFieldException {
+        // Given — an entry stored under the Java names before CorporateActionEntity took snake_case @Field names; m1.6.1 read its
+        // fields under those names, so showed these as empty; createdBy predates audit_metadata (W-417, D-999)
+        Document copy = new Document("type", "BONUS").append("ratio", "1:1")
+                .append("exDate", Date.from(Instant.parse("2024-06-30T18:30:00Z"))).append("stockCode", "INFY").append("createdBy", "someone");
+        FormerForms forms = FormerForms.of(KOLKATA);
+
+        // When
+        String json = JsonWalk.json(List.of(copy), AssetEntity.class.getDeclaredField("corporateActions").getGenericType(), forms,
+                "assets asset-1, corporate_actions");
+
+        // Then
+        CorporateActionEntity read = JsonMapper.builder().build()
+                .readValue(json, new TypeReference<List<CorporateActionEntity>>() { }).getFirst();
+        assertThat(read.getRatio()).isEqualTo("1:1");
+        assertThat(read.getExDate()).isNull();
+        assertThat(read.getStockCode()).isNull();
+        assertThat(forms.describe()).isEqualTo("read as m1.6.1 read them: 1 × CorporateActionEntity.createdBy left out, "
+                + "1 × CorporateActionEntity.exDate left out, 1 × CorporateActionEntity.stockCode left out");
+    }
+
+    @Test
+    void json_whenACorporateActionHoldsAnUnknownKey_isStillRefused() throws NoSuchFieldException {
+        // Given
+        Document copy = new Document("type", "BONUS").append("somethingElse", 1);
+
+        // When / Then
+        assertThatThrownBy(() -> JsonWalk.json(List.of(copy), AssetEntity.class.getDeclaredField("corporateActions").getGenericType(),
+                FormerForms.of(KOLKATA), "assets asset-1, corporate_actions")).isInstanceOf(IllegalStateException.class)
+                .hasMessage("assets asset-1, corporate_actions: CorporateActionEntity has no field for the stored key somethingElse");
+    }
+
+    @Test
     void json_whenOrderTimesStoredThroughKolkata_areTheUtcTimesTheApplicationHeld() throws NoSuchFieldException {
         // Given — PortfolioService held 2026-01-15T05:00 UTC (orderExecutionDateTime(), atUtc); stored through Kolkata as
         // 05:00 IST, 2026-01-14T23:30Z; the quantity a whole number stored as an int
@@ -159,7 +192,7 @@ class JsonWalkTest {
 
         // When
         String json = JsonWalk.json(List.of(orderTime), AssetEntity.class.getDeclaredField("orderTimeQuantities").getGenericType(),
-                KOLKATA, "assets asset-1, order_time_quantities");
+                FormerForms.of(KOLKATA), "assets asset-1, order_time_quantities");
 
         // Then
         OrderTimeQuantity read = JsonMapper.builder().build()
@@ -189,7 +222,7 @@ class JsonWalkTest {
                 .append("last_updated_time", kolkataMidnight);
 
         // When
-        String json = JsonWalk.json(stored, RealisedProfits.class, KOLKATA, "profit_and_loss pnl-1, realised_profits");
+        String json = JsonWalk.json(stored, RealisedProfits.class, FormerForms.of(KOLKATA), "profit_and_loss pnl-1, realised_profits");
 
         // Then
         RealisedProfits read = new RealisedProfitsConverter().convertToEntityAttribute(json);
@@ -210,7 +243,7 @@ class JsonWalkTest {
         Document report = new Document("profit", 1.0).append("last_updated_time", Date.from(Instant.parse("2026-01-31T18:30:00Z")));
 
         // When / Then
-        assertThatThrownBy(() -> JsonWalk.json(report, FortnightReport.class, KOLKATA, "profit_and_loss pnl-1, report"))
+        assertThatThrownBy(() -> JsonWalk.json(report, FortnightReport.class, FormerForms.of(KOLKATA), "profit_and_loss pnl-1, report"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("profit_and_loss pnl-1, report: no entry in EmbeddedTimes says how " + ReportModel.class.getName()
                         + ".lastUpdatedTime was held");
@@ -222,7 +255,7 @@ class JsonWalkTest {
         Document stored = new Document("gains_by_asset_and_segment", new Document("BONDS", new Document()));
 
         // When / Then
-        assertThatThrownBy(() -> JsonWalk.json(stored, RealisedProfits.class, KOLKATA, "profit_and_loss pnl-1, realised_profits"))
+        assertThatThrownBy(() -> JsonWalk.json(stored, RealisedProfits.class, FormerForms.of(KOLKATA), "profit_and_loss pnl-1, realised_profits"))
                 .isInstanceOf(IllegalStateException.class).hasMessage("profit_and_loss pnl-1, realised_profits: BONDS is not a AssetType");
     }
 

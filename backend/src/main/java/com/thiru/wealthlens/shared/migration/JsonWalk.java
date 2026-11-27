@@ -29,7 +29,7 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * Builds the JSON a column holds from the stored value, by the column's Java type (W-337g2b1, W-337g2 C2a). A class's or
  * record's stored key is its field's MongoDB {@code @Field} name, else its Java name, and becomes the Java name Jackson writes;
- * a key with no field is refused. The tree is read into the type, which proves it parses, and written by a default
+ * a key {@link RetiredKeys} names is left out and counted, and any other key with no field is refused. The tree is read into the type, which proves it parses, and written by a default
  * {@code JsonMapper} — the form the application's converters write — never through an {@code AttributeConverter}, so nothing
  * is encrypted twice (W-337g2 finding 2).
  */
@@ -43,9 +43,9 @@ final class JsonWalk {
     private JsonWalk() {
     }
 
-    static String json(Object stored, Type type, ZoneId writtenZone, String where) {
+    static String json(Object stored, Type type, FormerForms forms, String where) {
         JavaType javaType = MAPPER.constructType(type);
-        Object value = MAPPER.treeToValue(node(stored, type, Optional.empty(), writtenZone, where), javaType);
+        Object value = MAPPER.treeToValue(node(stored, type, Optional.empty(), forms, where), javaType);
         return MAPPER.writeValueAsString(value);
     }
 
@@ -53,13 +53,13 @@ final class JsonWalk {
     private record Owner(Class<?> declaringClass, String field) {
     }
 
-    private static JsonNode node(Object stored, Type type, Optional<Owner> owner, ZoneId writtenZone, String where) {
+    private static JsonNode node(Object stored, Type type, Optional<Owner> owner, FormerForms forms, String where) {
         if (type instanceof ParameterizedType parameterized && parameterized.getRawType() instanceof Class<?> raw) {
             Type[] arguments = parameterized.getActualTypeArguments();
             if (Collection.class.isAssignableFrom(raw)) {
                 ArrayNode array = MAPPER.createArrayNode();
                 for (Object element : require(stored, List.class, type, where)) {
-                    array.add(node(element, arguments[0], owner, writtenZone, where));
+                    array.add(node(element, arguments[0], owner, forms, where));
                 }
                 return array;
             }
@@ -70,7 +70,7 @@ final class JsonWalk {
                         constant(key, keyType, where);
                     }
                     if (value != null) {
-                        map.set(key, node(value, arguments[1], owner, writtenZone, where));
+                        map.set(key, node(value, arguments[1], owner, forms, where));
                     }
                 });
                 return map;
@@ -79,7 +79,7 @@ final class JsonWalk {
         if (!(type instanceof Class<?> target)) {
             throw new IllegalStateException(where + ": the copier walks no " + type.getTypeName());
         }
-        return leaf(stored, target, owner, writtenZone, where).orElseGet(() -> object(stored, target, writtenZone, where));
+        return leaf(stored, target, owner, forms, where).orElseGet(() -> object(stored, target, forms, where));
     }
 
     /** Reads a stored leaf as its Java type, or refuses it. */
@@ -93,15 +93,17 @@ final class JsonWalk {
             Map.entry(Integer.class, JsonWalk::whole), Map.entry(int.class, JsonWalk::whole),
             Map.entry(Long.class, JsonWalk::wide), Map.entry(long.class, JsonWalk::wide),
             Map.entry(Double.class, JsonWalk::fraction), Map.entry(double.class, JsonWalk::fraction),
-            Map.entry(Boolean.class, JsonWalk::truth), Map.entry(boolean.class, JsonWalk::truth),
-            Map.entry(LocalDate.class, (stored, where) -> ColumnValue.date(require(stored, Date.class, LocalDate.class, where))));
+            Map.entry(Boolean.class, JsonWalk::truth), Map.entry(boolean.class, JsonWalk::truth));
 
-    private static Optional<JsonNode> leaf(Object stored, Class<?> target, Optional<Owner> owner, ZoneId writtenZone, String where) {
+    private static Optional<JsonNode> leaf(Object stored, Class<?> target, Optional<Owner> owner, FormerForms forms, String where) {
         if (target.isEnum()) {
             return Optional.of(MAPPER.valueToTree(constant(require(stored, String.class, target, where), target, where)));
         }
+        if (target == LocalDate.class) {
+            return Optional.of(MAPPER.valueToTree(forms.date(require(stored, Date.class, target, where))));
+        }
         if (target == LocalDateTime.class) {
-            return Optional.of(MAPPER.valueToTree(time(require(stored, Date.class, target, where), owner, writtenZone, where)));
+            return Optional.of(MAPPER.valueToTree(time(require(stored, Date.class, target, where), owner, forms, where)));
         }
         return Optional.ofNullable(LEAVES.get(target)).map(reader -> MAPPER.valueToTree(reader.read(stored, where)));
     }
@@ -124,26 +126,30 @@ final class JsonWalk {
         return require(stored, Boolean.class, Boolean.class, where);
     }
 
-    private static LocalDateTime time(Date stored, Optional<Owner> owner, ZoneId writtenZone, String where) {
+    private static LocalDateTime time(Date stored, Optional<Owner> owner, FormerForms forms, String where) {
         Owner holder = owner.orElseThrow(() -> new IllegalStateException(where + ": a time no field holds cannot be classified"));
-        ZoneId zone = EmbeddedTimes.readZone(holder.declaringClass(), holder.field(), writtenZone)
+        ZoneId zone = EmbeddedTimes.readZone(holder.declaringClass(), holder.field(), forms.writtenZone())
                 .orElseThrow(() -> new IllegalStateException(where + ": no entry in EmbeddedTimes says how "
                         + holder.declaringClass().getName() + "." + holder.field() + " was held"));
         return LocalDateTime.ofInstant(stored.toInstant(), zone);
     }
 
-    private static ObjectNode object(Object stored, Class<?> target, ZoneId writtenZone, String where) {
+    private static ObjectNode object(Object stored, Class<?> target, FormerForms forms, String where) {
         List<Field> fields = fields(target);
         ObjectNode object = MAPPER.createObjectNode();
         require(stored, Document.class, target, where).forEach((key, value) -> {
             if (key.equals(TYPE_HINT) || value == null) {
                 return;
             }
+            if (RetiredKeys.isRetired(target, key)) {
+                forms.leftOut(target.getSimpleName() + "." + key);
+                return;
+            }
             Field field = fields.stream().filter(candidate -> isStoredUnder(candidate, key)).findFirst()
                     .orElseThrow(() -> new IllegalStateException(where + ": " + target.getSimpleName()
                             + " has no field for the stored key " + key));
             object.set(field.getName(), node(value, field.getGenericType(), Optional.of(new Owner(field.getDeclaringClass(), field.getName())),
-                    writtenZone, where));
+                    forms, where));
         });
         // a field the document never stored reads as Java's default, as Spring Data read it at m1.6.1
         fields.stream().filter(field -> !object.has(field.getName()))
