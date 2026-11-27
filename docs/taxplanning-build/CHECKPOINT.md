@@ -4,11 +4,11 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-412 DONE (D-990), board D; committed and pushed on "commit it and push". Trial stores removed.
-Stage           : between items. Staging and dev readback DONE (both 18.7, schema wealthlens), logged; all three hosts ready.
+Item            : W-337i split (D-991: C1a, C2b, C3a – C6a). W-337i1 (the release) EXPLAINED, plans/W-337i1.md; board i1 E.
+Stage           : W-337i1 approved ("sure, approved"); paths staged, validate run; awaiting the owner's explicit word to commit + push (row 1).
 Last item commit: "taxplanning W-337h: log staging's and dev's readback — PostgreSQL 18.7, schema wealthlens on both; the setup's last gap"
-Next step       : 1. Plan W-337i (the moves: dev, a rehearsal on a copy of prod, staging, prod).
-Files touched   : (none uncommitted)
+Next step       : 1. On "commit it and push": W-337i1 row 1, then rows 2 – 6 (each outward row on the owner's word).
+Files touched   : plans/W-337i.md, plans/W-337i1.md (new); DECISIONS.md (D-991); 03-WORK-ITEMS.md; STATE.md
 Flags for owner : §1.s Aiven retention not given; staging termination protection off (owner's call). W-337f flags unchanged.
 Env notes       : NO Claude attribution; OrbStack started this session; DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on
   pipeline only. Trial: m1.6.1 jar built in ../wealthlens-m1.6.1/backend/target, w-337 jar in backend/target.
