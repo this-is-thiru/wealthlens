@@ -356,7 +356,7 @@ as the export rule above says, once step 4 is logged.
 ### 0.9 W-337g2c (D-979) — the move: copy MongoDB into PostgreSQL · owner · **once per database, at W-337i, before the PostgreSQL build first starts against it**
 
 **Why.** The PostgreSQL build reads only PostgreSQL. The copier (W-337g, D-953; every `m1.6.1` collection specified by D-978) starts
-the app with the `copier` profile — no web server — reads every MongoDB collection and the documents' bytes, writes each row by key,
+the app with the `copier` profile — no port opened (W-409, D-984: before it, this step failed at start) — reads every MongoDB collection and the documents' bytes, writes each row by key,
 and proves each copy three ways (keys on both sides, each row against its source, each row loaded through the app's own entity),
 logging one line per source. Ciphertext and digests are carried as stored, so the **target must run with the same `TAX_DATA_KEY`
 and `TAX_DIGEST_KEY` the source was written with**; every time is written in UTC (D-954, D-958). MongoDB is only read.

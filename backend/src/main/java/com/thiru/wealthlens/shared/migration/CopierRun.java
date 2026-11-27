@@ -14,7 +14,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /**
- * The copier's one run (W-337g, D-953 C2a): with the {@code copier} profile the application starts without a web server,
+ * The copier's one run (W-337g, D-953 C2a): with the {@code copier} profile the application starts with no port open (W-409),
  * copies, logs one line per source and stops — with an error, so a non-zero exit, when any check failed. The owner runs it
  * ({@code post-deployment-runbook.md}); nothing serves while it copies, so no write can slip past it.
  */
