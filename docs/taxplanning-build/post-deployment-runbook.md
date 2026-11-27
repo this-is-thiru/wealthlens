@@ -592,7 +592,7 @@ holds `Ensured the indexes of GazetteLead`.
 1. **Check before** (read-only): no cursor yet, no leads.
 
    ```bash
-   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data | length'
+   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.page.totalElements'
    ```
 
    Expect `0`. In `mongosh`: `db.tax_gazette_cursor.find()` returns nothing.
@@ -604,20 +604,20 @@ holds `Ensured the indexes of GazetteLead`.
 
    ```bash
    curl -sS -X PUT "$BASE/api/v1/admin/tax/gazette-cursor" -H "Authorization: Bearer $ADMIN_TOKEN" \
-     -H "Content-Type: application/json" -d '{"year": <year>, "lastNumber": <number>}' | jq '.data'
+     -H "Content-Type: application/json" -d '{"year": <year>, "lastNumber": <number>}' | jq '.'
    ```
 
    Expect the cursor back with `updatedBy` your login.
 4. **Turn it on:** set `app.tax.gazette-watch.enabled=true` for the environment (`APP_TAX_GAZETTEWATCH_ENABLED=true`)
    and restart. With the jobs off (every shipped profile from W-336) run it on request, on §5.2's cadence:
-   `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/gazette-watch/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'`
+   `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/gazette-watch/run" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'`
    → `{"job": "gazette-watch", "ran": true}`; where `app.tax.jobs.enabled` is true it also runs at 05:00 daily, server time
    (`app.tax.jobs.gazette-watch-cron`). Each run reads at most 400 numbers and stops after 20 missing in a row.
 5. **After the first run** (read-only): the log holds `Job gazette-watch stopped at <year>/<number>`, one
    `Gazette lead <url> …` WARN line per lead, and no `Job gazette-watch refused`; then
 
    ```bash
-   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data[] | {url, page, note, possiblyAffected}'
+   curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.content[] | {url, page, note, possiblyAffected}'
    ```
 
    **Unverified until this run:** whether `egazette.gov.in` serves the server's host daily. A failure in
@@ -1198,7 +1198,7 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 1. **Seed:**
 
    ```bash
-   curl -sS -X POST "$BASE/api/v1/admin/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
 
    Expect 13 catalogue codes, 39 rate cards and 2 scheme profiles written. That is the 13 entries of
@@ -1211,9 +1211,9 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
 
    ```bash
    # Must be empty: the shipped files and the database agree
-   curl -sS "$BASE/api/v1/admin/charges/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS "$BASE/api/v1/admin/charges/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    # Every card with a verifiedOn older than 90 days, or none; rows mean rate verification is due (§5.2), not a failure
-   curl -sS "$BASE/api/v1/me/charges/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS "$BASE/api/v1/me/charges/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
 
    Expect `unverified` empty. Every card carries a `verifiedOn`: a broker card against its charges page, and a
@@ -1228,12 +1228,13 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
    ```bash
    curl -sS -X POST "$BASE/api/v1/me/charges/simulate" -H "Authorization: Bearer $TOKEN" \
      -H 'Content-Type: application/json' -d '{
-       "brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
+       "stockCode":"INFY","brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
        "exchange":"NSE","transactionDate":"2025-06-10","quantity":100,"price":1000
-     }' | jq '.data'
+     }' | jq '{scheduleCode, resolution, totalCharges, amountByCode}'
    ```
 
-   Expect `scheduleCode` `ZERODHA_EQ_DELIVERY_2025_04`, `resolution` `RESOLVED`, and, on turnover ₹1,00,000: BROKERAGE 0,
+   `stockCode` is required on a sale since W-365 (a 400 without it; it picks the scheme's own charges, none on an equity
+   delivery sale). Expect `scheduleCode` `ZERODHA_EQ_DELIVERY_2025_04`, `resolution` `RESOLVED`, and, on turnover ₹1,00,000: BROKERAGE 0,
    STT 100 (0.1 %, to the rupee), EXCHANGE_TXN 2.97 (0.00297 %), SEBI_FEE 0.10, IPFT 0.10 (0.0001 % each), DP 13.50,
    GST 3.00 (18 % of 0 + 2.97 + 0.10 + 0.10 + 13.50 = 16.67), **total ₹119.67**; no STAMP_DUTY on a sale. Worked by
    hand from `zerodha-equity-delivery-2025-04-01.json` and `statutory-equity-delivery-2025-04-01.json`; the same
@@ -1384,7 +1385,7 @@ A failing user is an error naming them; the users before stay written.
 1. **Dry run** (the default):
 
    ```bash
-   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   curl -sS -X POST "$BASE/api/v1/admin/portfolio/trade-outcomes/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
    ```
 
    **Read `usersRebuilt` and `rowsWritten` before writing.** Only users with transactions and no rows at all should
@@ -2231,7 +2232,7 @@ curl -sS -X POST "$BASE/api/v1/me/charges/charge-accounts" -H "Authorization: Be
 | **AMC cycle** | `POST /api/v1/admin/charges/amc/impose` | quarterly / annually, per account frequency | No maintenance charge is billed. Idempotent per account and period: running it twice bills once |
 | **Rate verification** | `GET /api/v1/me/charges/charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
 | **Drift check** | `GET /api/v1/admin/charges/charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
-| **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.data'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
+| **Tax jobs** (W-336, D-783) | `curl -s -X POST "$BASE/api/v1/admin/tax/jobs/<name>/run" -H "Authorization: Bearer $ADMIN_TOKEN" \| jq '.'` | `account-erasure`, `log-retention`, `auto-archive` weekly; `retention-purge` monthly; `staleness-sweep` after every start of a new build; `gazette-watch` only once §1.w turns it on; `parse-documents` after an upload, while documents are on | A held account, a year-old log or an expired draft stays stored until the next run: while the app is local the duties run on this cadence. `ran: false` means another run holds the lease: run again later. A second run finds nothing new. Log each run |
 | **Publishing a rate change** | `POST /api/v1/admin/charges/charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. How publishing supersedes: `docs/modules/brokercharges.md` §5 |
 
 ### 5.3 History before the engine is not priced
@@ -2415,7 +2416,7 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-27 | dev (W-337i2, D-992) | row 9d, simulate with `stockCode` | owner | `status 200`; `ZERODHA_EQ_DELIVERY_2025_04` (statutory `STATUTORY_EQ_DELIVERY_2025_04`), `RESOLVED`, `totalCharges` 119.67; BROKERAGE 0, STT 100, EXCHANGE_TXN 2.97, SEBI_FEE 0.1, IPFT 0.1, DP 13.5, GST 3 (on 16.67) = §1B's figures worked by hand — **go**; row 9 done |
 | 2026-11-27 | dev (W-337i2, D-992) | row 10, before: ERROR count | owner | `grep -c " ERROR " m17.log` → `0` — **go** to the collection pass |
 | 2026-11-27 | dev (W-337i2, D-992) | row 10, api-collection pass (Bruno runner, `Local - Staging`, after `Auth/Login.yml` sent `{{PASSWORD}}`) | owner | all passed but two, both failed in Bruno before sending: `Transactions/Upload Transactions` (EPERM reading `~/Desktop/DEMAT P&L/FYERS.csv`, macOS file permission) and `Tax Profile/Upload a Document` (EISDIR: its file path is a folder) — not server answers; the runner's "passed" does not show status codes, so 5xx is read from the app log in row 11 |
-| 2026-11-27 | dev (W-337i2, D-992) | row 11, the log after the pass; `m1.7` stopped | owner, session | ERROR **2** (two 500s): (1) `Text '2024-12-3' could not be parsed at index 8` — `Complex Filters/Assets more than 1 year` sends a malformed date; `QueryBuilder.sanitize` → `TLocalDate.convertToDate` throws, unmapped by `ControllerAdviser`, the same code in `m1.6.1` (`QueryBuilder.java:61 – 63` there) — a caller mistake answered 500, not a port regression; (2) `Failed to parse multipart servlet request` — the upload Bruno could not read (EPERM) sent a broken body; `MultipartException` is mapped in neither build. WARN refusals (10), each explained: simulate without `stockCode` (the collection's request too), stocks dev lacks (`A`, `ASHOKLEYDUMMY`, one blank), unfilled `:transactionId` / `:id`, a Mongo-era corporate-action id, a wrong old password, registration without the current notice. Port 8080 free, no `wealthlens.jar` process (checked by the session) — **stop per the plan (5xx); owner to rule** |
+| 2026-11-27 | dev (W-337i2, D-992) | row 11, the log after the pass; `m1.7` stopped | owner, session | ERROR **2** (two 500s): (1) `Text '2024-12-3' could not be parsed at index 8` — `Complex Filters/Assets more than 1 year` sends a malformed date; `QueryBuilder.sanitize` → `TLocalDate.convertToDate` throws, unmapped by `ControllerAdviser`, the same code in `m1.6.1` (`QueryBuilder.java:61 – 63` there) — a caller mistake answered 500, not a port regression; (2) `Failed to parse multipart servlet request` — the upload Bruno could not read (EPERM) sent a broken body; `MultipartException` is mapped in neither build. WARN refusals (10), each explained: simulate without `stockCode` (row 9d's terminal call; the collection's request sends one — corrected planning W-414), stocks dev lacks (`A`, `ASHOKLEYDUMMY`, one blank), unfilled `:transactionId` / `:id`, a Mongo-era corporate-action id, a wrong old password, registration without the current notice. Port 8080 free, no `wealthlens.jar` process (checked by the session) — **stop per the plan (5xx); owner to rule** |
 | 2026-11-27 | dev (W-337i2, D-993) | row 11, ruling | owner | "sure" to C3a: both 500s are `m1.6.1`'s too, not the move's; W-415 placed, W-414 widened — **go** to row 12 |
 | 2026-11-27 | dev (W-337i2, D-992) | row 12, clean-up | owner | `w337i2/` (logs, pid) and `dev.env.old` deleted (`No such file or directory` ×2); `dev.env` kept, `-rw-------`, the one place for dev's values — **go**; awaiting sign-off |
 | 2026-11-27 | dev, Aiven `wealthlens-dev` (W-337i2, D-992) | sign-off | owner | "dev signed off" — dev on `m1.7` / PostgreSQL; §0.9 logged for dev; W-337i2 done |

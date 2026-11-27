@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-337i2 DONE (dev on m1.7/PostgreSQL). Next: W-414, W-415 (before staging), W-337i3 (rehearsal).
-Stage           : between items; W-337i1 + W-337i2 committed and pushed; api-collection f4c85b8.
-Last item commit: "taxplanning W-337i2: move dev to PostgreSQL on m1.7 — copied, seeded, the collection run; §0.9 step 1's query fixed; D-992 – D-994"
-Next step       : 1. Plan W-414 + W-415 (batched small items), then W-337i3. Commit on the owner's word (api-collection: Auth/Login.yml only).
+Item            : W-415 DONE (D-995), W-414 DONE (D-996). Next: m1.7.1 = W-337i1 again (PR w-337 → master), then plan W-337i3.
+Stage           : between items; pushed. Release rows need the owner's word each (merge, tag, publish).
+Last item commit: "taxplanning W-414: read the plain answer in the runbook's live commands, send §1B's stockCode, fix the collection — dev's run found each; D-996"
+Next step       : 1. Open PR w-337 → master; on its green run and the owner's word: merge, master run, tag m1.7.1, worktree, jar, WL-A-2.
 Files touched   : (none uncommitted but this file)
 Flags for owner : §1.s Aiven retention not given; staging termination protection off (owner's call). W-337f flags unchanged.
 Env notes       : NO Claude attribution; DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only.
