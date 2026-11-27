@@ -65,7 +65,7 @@ class HoldingsLotOrderIntegrationTest extends AbstractIntegrationTest {
 
         // Then — 4 + 1 + 3 units, and the order id of the lot read first
         assertThat(holdings).singleElement().satisfies(holding -> {
-            assertThat(holding.getOrderId()).isEqualTo("W-420-DELIBERATE-RED");
+            assertThat(holding.getOrderId()).isEqualTo("ORDER-0");
             assertThat(holding.getTotalQuantity()).isEqualTo(8.0);
         });
     }
