@@ -26,7 +26,7 @@ class CorporateActionResponseTest {
         JsonNode answered = JsonMapper.builder().build().valueToTree(CorporateActionResponse.from(action)).get("demergerDetail");
 
         // Then
-        assertThat(answered.get("mainStockCode").asString()).isEqualTo("RELIANCE");
+        assertThat(answered.get("mainStockCode").asString()).isEqualTo("W-420-DELIBERATE-RED");
         assertThat(answered.has("empty")).isFalse();
     }
 }
