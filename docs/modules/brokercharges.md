@@ -222,7 +222,7 @@ The other figures `ChargeGapAuditIntegrationTest` asserts:
 | `authoritative` | the computed total is a V2 buy's cost, only while `shadow-recording` is on too (`portfolio/service/PortfolioService.java:502` – `:508`) |
 
 At start, with the engine on, either phase flag on and **no card on file**, `ChargeReadinessAuditor` warns that every trade will be
-`NO_SCHEDULE` and charged nothing (`config/ChargeReadinessAuditor.java:37` – `:63`): seed first (deploy runbook §1B).
+`NO_SCHEDULE` and charged nothing (`config/ChargeReadinessAuditor.java:37` – `:63`): seed first (deploy runbook §1B in tag `docs-history-m2`).
 
 ## 7. Tests
 

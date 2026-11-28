@@ -74,7 +74,7 @@ PostgreSQL tables (W-337c1, D-941; Flyway `db/migration/V1__auth_and_insurance.s
 | `id` | `VARCHAR(255)` primary key, caller-assigned (UUID defaulted in `@PrePersist` when absent) | `UserDetail.java:25` – `:27`, `:45` – `:50` |
 | `email` | encrypted, searchable (`SearchableColumn`); unique index `user_details_email_idx` | `:29` – `:32`; `V1__auth_and_insurance.sql:12` |
 | `password` | a labelled hash: `{argon2}…` from W-358d3, or unlabelled BCrypt from before, rewritten at its owner's next sign-in | `:34` – `:35`; `InvestmentTrackerConfig.java:22` – `:25`; `AuthConfig.java:84` – `:85` |
-| `roles` | comma-separated role names, `USER` at registration; a higher role is granted by the owner in the database (runbook §0.1.3) | `:37` – `:38`; `AuthService.java:56` – `:57` |
+| `roles` | comma-separated role names, `USER` at registration; a higher role is granted by the owner in the database (runbook §0.1) | `:37` – `:38`; `AuthService.java:56` – `:57` |
 | `last_signed_in_at` | `TIMESTAMP(6)` UTC, the last sign-in or the registration (W-249) | `:43` – `:44` |
 
 **`refresh_tokens`** (`entity/RefreshToken.java:25` – `:66`) + child table **`refresh_token_factors`**, one row per refresh token issued:
@@ -175,4 +175,4 @@ purpose-lapse and re-application integration tests sign in through the module. N
 
 - The zone and module prefix on every path (`ApiZones`), the error format and the request id: `shared`.
 - Consent, the privacy notice, held accounts, the processing log and erasure as a whole: `shared`'s privacy package (W-237, W-250).
-- How the owner grants a role (runbook §0.1.3) and the hash count after a deploy (runbook §1.h).
+- How the owner grants a role (runbook §0.1) and the hash count after a deploy (runbook §1.2).

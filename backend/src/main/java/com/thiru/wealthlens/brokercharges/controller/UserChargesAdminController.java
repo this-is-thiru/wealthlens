@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * One user's charges, read by the owner when something looks wrong (runbook §5.4, D-855 C3a): the gaps, a trade's contract note and
+ * One user's charges, read by the owner when something looks wrong (runbook §4.4, D-855 C3a): the gaps, a trade's contract note and
  * the reconciliation, as {@link UserChargesController} gives them to the user.
  */
 @RequiredArgsConstructor
