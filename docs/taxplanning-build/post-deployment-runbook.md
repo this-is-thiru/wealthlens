@@ -96,7 +96,9 @@ and W-370's went with W-337i6 (D-1015), their runs logged for every database.
 | 0.1.2 | ~~MongoDB is a replica set~~ | **Retired by W-337j2 (D-1018):** the app has no MongoDB client; PostgreSQL's transactions need no setting. `MONGO_USER` / `MONGO_PASSWORD` are no longer read |
 | 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /api/v1/public/auth/register`, then `db.user_details.updateOne({ email: "<stored owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })` with the stored form from §0.7 (from W-253 the email is stored encrypted and is no longer the `_id`), then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
 
-### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **every database · before the deploy that first carries TL-7**
+### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Mongo-only: the unique indexes `PortfolioIndexInitializer` applied are Flyway DDL on PostgreSQL, built before the copy, which refuses a violating row (W-337g), so the step cannot apply on PostgreSQL. Kept below as the record of what it did.
 
 **Why.** `PortfolioIndexInitializer` covers `transactions` and `profit_and_loss`. Both carry unique indexes
 (`transactions.source_temp_transaction_id`, unique and sparse; `profit_and_loss {email, financial_year}`) that, with
@@ -167,7 +169,9 @@ half. **Never simply delete one:** the figures do not come back.
 **Way back:** each correction above starts with a `mongoexport` of the documents it touches; `mongoimport --mode
 upsert` restores them.
 
-### 0.3 Trade ledger — `version` on `profit_and_loss` · owner, `mongosh` · **every database · before the deploy · done**
+### 0.3 Trade ledger — `version` on `profit_and_loss` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Mongo-only (Spring Data reading a null `@Version` as a new document); its heading recorded it done before the move. Kept below as the record of what it did.
 
 **Why.** `ProfitAndLossEntity` carries `@Version private Long version`. On a document written without the field, Spring
 Data reads the null version as a new document and inserts against an existing `_id`
@@ -200,7 +204,9 @@ grep -oE 'W-[0-9]+[a-z0-9]* K( |$)' docs/taxplanning-build/STATE.md
 Expected: empty, or every row printed named in a waiver D-row by the owner.
 
 
-### 0.5 W-134 (D-447) — the tax keys, and the tax-planning collections cleared · owner · **every database · before the first deploy carrying W-134**
+### 0.5 W-134 (D-447) — the tax keys, and the tax-planning collections cleared · owner · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** A MongoDB clearing step for the first deploy carrying W-134; the two keys stay required at every start (§0.1.1). Kept below as the record of what it did.
 
 **Why.** From W-134 the profile, reference, draft and computation collections hold personal data encrypted
 (`k1:…`) and PANs and TANs as keyed digests (`pan_digest`, `tan_digest`). Rows written before it are plain text, which
@@ -1007,7 +1013,9 @@ nothing: the index already exists, and a row is never written twice for one acco
 build. `privacy_consents` can stay (nothing else reads it) or be dropped (`db.privacy_consents.drop()`, after
 `mongodump --collection privacy_consents`), and nothing else changes.
 
-### 1.o W-255 (D-482) — accounts that chose their own role · owner · **every database · before the deploy carrying W-255, then after any correction**
+### 1.o W-255 (D-482) — accounts that chose their own role · owner · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Its read was a MongoDB query before W-255's deploy; every account since registers as `USER` and the copy carried the roles as stored (W-337i). Kept below as the record of what it did.
 
 Until W-255, `POST /api/v1/public/auth/register` stored whatever `role` the body sent, so anyone could register as `SUPER_USER`. Now
 every registration stores `USER`, and a body naming `role` is refused with 400. Roles already stored are not changed
@@ -1093,7 +1101,9 @@ and so its version — changes with this deploy (§1.p): a client registering re
 `curl -s -o /dev/null -w '%{http_code}\n' "$BASE/privacy/rights"` — expected `401` (outside every zone). **Way back:** deploy the
 previous build; callers go back to the old paths.
 
-### 1.j W-358b (D-854) — refresh tokens; callers sign in again · owner · **first deploy carrying W-358b**
+### 1.j W-358b (D-854) — refresh tokens; callers sign in again · owner · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Its checks were MongoDB index reads at W-358b's deploy; on PostgreSQL the indexes are Flyway DDL. Kept below as the record of what it did.
 
 Automatic at startup (`LoginIndexInitializer`). **Before** (read-only, `mongosh` on the database): `db.refresh_tokens.countDocuments({})` — expected `0`
 (the collection is new). **Confirm** the log holds `Ensured the indexes of UserDetail` and `Ensured the indexes of RefreshToken`; a failure stops
@@ -1933,7 +1943,9 @@ transactions-segment-backup.json`, and the same for `trade_outcomes`.
 **Retired after use:** W-299 / WL-46, once this is logged for every database. The code
 (`SegmentCorrection`, its controller, report and test) is removed then.
 
-### 2.15 W-339 (D-803) — back up and drop `reports` · owner, `mongosh` · **every database · once · outstanding**
+### 2.15 W-339 (D-803) — back up and drop `reports` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Moot: `reports` was never copied (no entity maps it) and no table of that name exists on staging or prod (W-337j3a's check, 2026-11-28); the MongoDB clusters holding it are deleted by W-337j4. Kept below as the record of what it did.
 
 **Why.** `reports` holds rows no code has read or written since `4c6c92e0` (2026-06-14): no entity maps it and no code names it
 (`grep '"reports"'`, 2026-11-20). On prod it holds 163 rows, 73 of them with a plain actor email (W-334c2 row 5) that §1.r cannot
@@ -1957,7 +1969,9 @@ reports --file reports-backup.json`. No code would read it.
 
 **Retired after use:** W-339, once this is logged for every database. There is no code to remove.
 
-### 2.16 W-347 (D-808) — remove the owner's test entries `DUMMY` and `LAVANYA` · owner, `mongosh` · **prod · once; other databases sized at their run**
+### 2.16 W-347 (D-808) — remove the owner's test entries `DUMMY` and `LAVANYA` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Moot on PostgreSQL: staging and prod hold no `DUMMY` / `LAVANYA` row and no row without an `asset_type` (W-337j3a's check, 2026-11-28). Kept below as the record of what it did.
 
 **Why.** The owner entered trades in two made-up stocks on prod to test the app (owner, 2026-11-20). They sit in two users' data with no
 corporate action behind their bonuses and count in those users' holdings. On prod's copy (W-347 row 1) they are 9 transactions and 8
@@ -1979,7 +1993,9 @@ lots, in two users who hold nothing else and have no P&L year, so removing them 
 
 **Retired after use:** W-347, once logged for prod. There is no code to remove.
 
-### 2.17 W-354 (D-831, D-832) — remove prod's last test entries: `DUMMY3` and `"username"` · owner, `mongosh` · **prod · once, after §2.16; other databases sized at their run**
+### 2.17 W-354 (D-831, D-832) — remove prod's last test entries: `DUMMY3` and `"username"` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Moot on PostgreSQL: staging and prod hold no `DUMMY3` row, no `ICICIBANK` lot `6835e328e9c3af1009a6f4dd` and no row without an `asset_type` (W-337j3a's check, 2026-11-28). Kept below as the record of what it did.
 
 **Why.** Prod's 5 trades and 6 lots with no `asset_type` (§3.10) are all test entries (owner, 2026-11-20: "safe to delete"). §2.16
 removes the `LAVANYA` ones; this removes the rest: the stock `DUMMY3` (user A: 1 transaction, 1 lot, a login, nothing else) and the
@@ -2523,3 +2539,5 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-28 | prod (W-337i5, D-1013) | row 14, part 1 (read-only, by the session) | session | `m161.log` ERROR lines of any other kind `0`; the run's files still present (`w337i5`, `w406` with `users.txt` and `report.txt`, `prod.env.before-w337i5`) — the removal not yet run; owner's "prod signed off" received, recorded once row 14's removal is pasted |
 | 2026-11-28 | prod (W-337i5, D-1013) | row 14, the run's files removed | owner | `w337i5`, `w406` (logs, `users.txt`, `report.txt`) and `prod.env.before-w337i5` gone ("No such file or directory" ×3); `prod.env` kept, `-rw-------`, 617 bytes, now holding the target's values; secrets unset — **go** |
 | 2026-11-28 | prod, `Cluster0` → Neon `production` (W-337i5, D-1014) | sign-off | owner | "prod signed off" — prod on `m1.7.6` / PostgreSQL; §0.9, §0.10 and §1B logged for prod (and so for every database); `Cluster0` kept, unused, as the way back (D-991 C5a); W-337i5 done |
+| 2026-11-28 | staging, prod (W-337j3a, D-1020) | §2.15 – §2.17 sized on PostgreSQL (read-only) | owner | both: no `DUMMY` / `LAVANYA` / `DUMMY3` row, no row without `asset_type`, `icici lot 6835e328` 0, `reports table` 0 — the three cleanups moot; retired with §0.2, §0.3, §0.5, §1.o, §1.j |
+| 2026-11-28 | — (W-337i1's steps for `m1.8`, D-1018) | PR #85 to WL-A-2 | session (owner: "merge #85, release m1.8") | PR #85 run 46103853759 `success` on f979b2af; merged `ce445f6f`; `master` run 46104306496 `push` `success`; tag `m1.8` → `ce445f6f` pushed; worktree `../wealthlens-m1.8-pg`; jar 115,408,953 bytes (5.6 MB smaller: no MongoDB driver), sha256 `8440d4c56b20de92…`, 0 entries naming mongo; WL-A-2 published from it, read back whole — **go**; `m1.8` is the build staging and prod start next ("Next deploy" line 2) |
