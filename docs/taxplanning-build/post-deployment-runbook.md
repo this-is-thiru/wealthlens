@@ -78,13 +78,12 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ## Next deploy — what prod and staging still need
 
-All three databases are on PostgreSQL with `m1.7.6` (dev W-337i2, staging W-337i4, prod W-337i5; D-1012, D-1014); the app runs
+All three databases are on PostgreSQL (dev W-337i2, staging W-337i4, prod W-337i5; D-1012, D-1014); staging and prod run `m1.8`, which needs no MongoDB (W-337j2, D-1018); the app runs
 locally, nothing is hosted. An item that needs something at the next deploy adds its line here when it is committed; each line goes
 when its run is logged for both. Everything below is the full sequence for a fresh database. The move's lines (§0.9, §2.19, §0.10)
-and W-370's went with W-337i6 (D-1015), their runs logged for every database.
+and W-370's went with W-337i6 (D-1015), W-337j2's start check once logged for both (2026-11-28).
 
 1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, read in SQL on PostgreSQL (`SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded FROM wealthlens.user_details;`, D-1007 C2a, D-1013 C1a): the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
-2. W-337j2 (D-1018) — **at the deploy of the release carrying it, per database:** the app no longer reads `MONGO_USER` / `MONGO_PASSWORD` and opens no MongoDB connection (§0.1.1, §0.1.2, §1.7). Start it with the two lines removed from the environment; check `grep -ci mongo` on the start log is `0`. That release starts W-337j4's week (D-1016 C2a).
 
 ## 0. Before deploying
 
@@ -2541,3 +2540,4 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-28 | prod, `Cluster0` → Neon `production` (W-337i5, D-1014) | sign-off | owner | "prod signed off" — prod on `m1.7.6` / PostgreSQL; §0.9, §0.10 and §1B logged for prod (and so for every database); `Cluster0` kept, unused, as the way back (D-991 C5a); W-337i5 done |
 | 2026-11-28 | staging, prod (W-337j3a, D-1020) | §2.15 – §2.17 sized on PostgreSQL (read-only) | owner | both: no `DUMMY` / `LAVANYA` / `DUMMY3` row, no row without `asset_type`, `icici lot 6835e328` 0, `reports table` 0 — the three cleanups moot; retired with §0.2, §0.3, §0.5, §1.o, §1.j |
 | 2026-11-28 | — (W-337i1's steps for `m1.8`, D-1018) | PR #85 to WL-A-2 | session (owner: "merge #85, release m1.8") | PR #85 run 46103853759 `success` on f979b2af; merged `ce445f6f`; `master` run 46104306496 `push` `success`; tag `m1.8` → `ce445f6f` pushed; worktree `../wealthlens-m1.8-pg`; jar 115,408,953 bytes (5.6 MB smaller: no MongoDB driver), sha256 `8440d4c56b20de92…`, 0 entries naming mongo; WL-A-2 published from it, read back whole — **go**; `m1.8` is the build staging and prod start next ("Next deploy" line 2) |
+| 2026-11-28 | staging, prod (W-337j2, D-1018; "Next deploy" line 2) | `m1.8` started without `MONGO_USER` / `MONGO_PASSWORD` (8082, then stopped) | owner | jar 115,408,953 bytes; staging `Started` in 8.956 s, prod in 11.267 s; each log: mongo lines **0**, ERROR **0**, `Charges engine ready: 39 rate card(s)`; `/privacy/rights` 200 on both; run folder removed — **go**; staging and prod on `m1.8`; W-337j4's week starts (due 2026-12-05, D-1016 C2a) |
