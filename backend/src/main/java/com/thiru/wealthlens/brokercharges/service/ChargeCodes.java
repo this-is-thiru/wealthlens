@@ -37,7 +37,7 @@ public final class ChargeCodes {
         }
         if (!code.equals(code.toUpperCase())) {
             throw new BadRequestException(
-                    "Charge code " + code + " must be upper case: Mongo's unique index is "
+                    "Charge code " + code + " must be upper case: the catalogue's unique index is "
                             + "case-sensitive, so two casings would be two catalogue rows for one charge");
         }
         if (!VALID.matcher(code).matches()) {

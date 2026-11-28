@@ -23,7 +23,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
-import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -44,7 +42,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.mongodb.MongoDBContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Tag("integration")
@@ -55,37 +52,22 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 public abstract class AbstractIntegrationTest {
 
     /**
-     * Reference data shared read-only by every test. Everything else is per-test state and is cleared after each test. Anything not listed here is wiped, so a new collection needs no
+     * Reference data shared read-only by every test. Everything else is per-test state and is cleared after each test. Anything not listed here is wiped, so a new table needs no
      * change to this class — which is the point.
      */
-    private static final Set<String> SEEDED_REFERENCE_COLLECTIONS = Set.of(
+    private static final Set<String> SEEDED_REFERENCE_TABLES = Set.of(
             // Written by ChargeSeederService, which since ADR-27 runs only when asked. Dropping it
             // between tests would leave whichever test seeds it carrying the cost for the rest, and
             // any rate card published afterwards would be rejected for naming codes the catalogue
             // no longer holds. It is reference data; it survives.
             //
             // charge_schedules is deliberately NOT here. Tests assert over the cards they create,
-            // and shipped cards in the same collection would make those assertions depend on which
+            // and shipped cards in the same table would make those assertions depend on which
             // class happened to run first. A test needing a rate card writes one.
             "charge_catalogue");
 
-    /**
-     * A single-node replica set, because this application's multi-document writes need one.
-     *
-     * <p><b>{@code withReplicaSet()} is not optional.</b> The superseded
-     * {@code org.testcontainers.containers.MongoDBContainer} always initialised a replica set;
-     * {@code org.testcontainers.mongodb.MongoDBContainer} does so only when asked. Dropping it
-     * would leave {@code app.mongodb.transactions-enabled=true} pointed at a standalone server, and
-     * every {@code @Transactional} write spanning two collections would fail.
-     *
-     * <p><b>Pinned to 8.0.4.</b> Later 8.0 patches refuse to start on Linux 6.19 and newer
-     * (SERVER-121912), which CI's Ubuntu 26 runner has (kernel 7.0).
-     */
-    static final MongoDBContainer mongoDBContainer;
     static final PostgreSQLContainer postgresContainer;
     static {
-        mongoDBContainer = new MongoDBContainer("mongo:8.0.4").withReplicaSet();
-        mongoDBContainer.start();
         /*
          * max_connections raised from Postgres's default 100 (W-337e): Spring's test context cache holds up to 32
          * contexts at once (spring.test.context.cache.maxSize), one HikariCP pool each at Boot's default size 10 — up
@@ -110,8 +92,6 @@ public abstract class AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-        registry.add("app.mongodb.transactions-enabled", () -> "true");
         registry.add("app.postgres.enabled", () -> "true");
         registry.add("app.postgres.datasource.url", postgresContainer::getJdbcUrl);
         registry.add("app.postgres.datasource.username", postgresContainer::getUsername);
@@ -122,9 +102,6 @@ public abstract class AbstractIntegrationTest {
 
     @LocalServerPort
     private int port;
-
-    @Autowired
-    protected MongoTemplate mongoTemplate;
 
     @Autowired
     @Qualifier("postgresDataSource")
@@ -183,29 +160,18 @@ public abstract class AbstractIntegrationTest {
     }
 
     /**
-     * Clears every collection and PostgreSQL table except the seeded reference data and Flyway history.
-     *
-     * <p>Uses {@code deleteMany} / {@code TRUNCATE} rather than {@code drop} deliberately: dropping a Mongo collection
-     * also drops its indexes, and nothing recreates them until the next startup (an {@code @PostConstruct} index
-     * initializer), so every later class in the shared container would run without its unique indexes (W-300).
-     * {@code TRUNCATE} on PostgreSQL never drops an index, so this risk does not apply to a ported table such as
-     * {@code profit_and_loss} (W-337e) — every collection with an index initializer moved this way by W-337f, D-951.
-     * {@code ArchitectureTest.nothing_drops_a_collection} holds it.
+     * Clears every PostgreSQL table except the seeded reference data and Flyway history. {@code TRUNCATE}, never
+     * {@code DROP}: a dropped table would lose its indexes and constraints for every later class in the shared container
+     * (W-300's lesson, from when collections were dropped).
      */
     @AfterEach
     void cleanDatabase() {
-        for (String collectionName : mongoTemplate.getDb().listCollectionNames()) {
-            if (SEEDED_REFERENCE_COLLECTIONS.contains(collectionName)) {
-                continue;
-            }
-            mongoTemplate.getDb().getCollection(collectionName).deleteMany(new Document());
-        }
         JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
         List<String> tables = jdbc.queryForList(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'",
                 String.class);
         List<String> toTruncate = tables.stream()
-                .filter(table -> !table.equals("flyway_schema_history") && !SEEDED_REFERENCE_COLLECTIONS.contains(table))
+                .filter(table -> !table.equals("flyway_schema_history") && !SEEDED_REFERENCE_TABLES.contains(table))
                 .map(table -> "\"" + table + "\"")
                 .toList();
         if (!toTruncate.isEmpty()) {

@@ -10,10 +10,6 @@ spring:
       max-file-size: 21MB
       max-request-size: 22MB
 
-  mongodb:
-    uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@wealthlens-dev.gmhwxe2.mongodb.net/?retryWrites=true&w=majority
-    database: wealthlens-dev
-
   # W-413 (D-989 C1a): Flyway works in the schema and never makes it, so a host without it stops at start
   flyway:
     default-schema: wealthlens
@@ -170,8 +166,6 @@ app:
         port: 3310
         # W-131e: connect, then each read; the slowest 20 MiB scan seen was 1.33 s (CI run 44328189271); owner adopted PT60S
         timeout: PT60S
-  mongodb:
-    transactions-enabled: true
   # W-413 (D-989): every connection works in schema wealthlens (D-929), which W-337h made on each host
   postgres:
     datasource:

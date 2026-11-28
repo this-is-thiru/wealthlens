@@ -6,10 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * {@link EncryptedField}'s JPA counterpart (W-337a, D-937): stores a text column encrypted, named on the field with
- * {@code @Convert(converter = EncryptedColumn.class)}. Scoped to text only — no insurance or auth column that moves on this
- * branch encrypts a date or an enum, so those forms are not built speculatively; {@link EncryptedField} still carries them
- * for MongoDB's remaining collections.
+ * Stores a text column encrypted (W-337a, D-937; {@code DR 14} O1.1), named on the field with
+ * {@code @Convert(converter = EncryptedColumn.class)}. Text only: a date has {@link EncryptedDateColumn}, an enum its own
+ * converter where one is stored encrypted.
  */
 @Component
 @Converter

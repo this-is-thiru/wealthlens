@@ -9,7 +9,6 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mongodb.client.MongoCollection;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -30,17 +29,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.MongoOperations;
 
 /**
  * The conventions documented in CLAUDE.md, made executable.
@@ -137,12 +133,11 @@ class ArchitectureTest {
             methods()
                     .that().areDeclaredInClassesThat().resideInAnyPackage("..taxplanning.profile.controller..",
                             "..taxplanning.workspace.controller..", "..taxplanning.compute.controller..")
-                    .should(new ArchCondition<JavaMethod>("return no @Document type") {
+                    .should(new ArchCondition<JavaMethod>("return no @Entity type") {
                         @Override
                         public void check(JavaMethod method, ConditionEvents events) {
                             method.getReturnType().getAllInvolvedRawTypes().stream()
-                                    .filter(type -> type.isAnnotatedWith(
-                                            "org.springframework.data.mongodb.core.mapping.Document"))
+                                    .filter(type -> type.isAnnotatedWith("jakarta.persistence.Entity"))
                                     .forEach(type -> events.add(SimpleConditionEvent.violated(method,
                                             method.getFullName() + " returns the stored " + type.getName())));
                         }
@@ -187,11 +182,18 @@ class ArchitectureTest {
                     .allowEmptyShould(true);
 
     @ArchTest
-    static final ArchRule mongo_fields_are_snake_case =
+    static final ArchRule columns_are_snake_case =
             fields()
-                    .that().areAnnotatedWith("org.springframework.data.mongodb.core.mapping.Field")
-                    .should(SnakeCaseFieldCondition.snakeCase())
-                    .because("CLAUDE.md: MongoDB collections and fields are snake_case");
+                    .that().areAnnotatedWith("jakarta.persistence.Column")
+                    .should(SnakeCaseNames.columnName())
+                    .because("CLAUDE.md: tables and columns are snake_case");
+
+    @ArchTest
+    static final ArchRule tables_are_snake_case =
+            classes()
+                    .that().areAnnotatedWith("jakarta.persistence.Table")
+                    .should(SnakeCaseNames.tableName())
+                    .because("CLAUDE.md: tables and columns are snake_case");
 
     /**
      * Money rounding lives in one place (TL-8).
@@ -396,34 +398,6 @@ class ArchitectureTest {
     }
 
     /**
-     * A criterion on {@code _id} is built from the id as stored, through {@code StoredId.of} (W-340, D-789). Spring Data
-     * converts a String of 24 hex digits to an {@code ObjectId} in a query naming no entity, so on prod's string ids an
-     * update matched nothing and reported success (W-338). An entity-typed query names the id property instead, whose
-     * mapping keeps the stored type.
-     *
-     * <p>A source scan: ArchUnit reads bytecode, where the field name passed to {@code where} is a constant it cannot see.
-     */
-    @Test
-    void an_id_criterion_is_built_from_the_stored_id() throws IOException {
-        Pattern idCriterion = Pattern.compile("where\\(\"_id\"\\)\\s*\\.(is|in|ne|nin)\\((?!StoredId\\.of\\()");
-        try (Stream<Path> paths = Files.walk(Path.of("src/main/java"))) {
-            List<String> offenders = paths.filter(f -> f.toString().endsWith(".java")).flatMap(f -> {
-                try {
-                    Matcher found = idCriterion.matcher(Files.readString(f));
-                    List<String> hits = new ArrayList<>();
-                    while (found.find()) {
-                        hits.add(f.getFileName() + ": " + found.group());
-                    }
-                    return hits.stream();
-                } catch (IOException e) {
-                    throw new IllegalStateException("could not read " + f, e);
-                }
-            }).toList();
-            assertThat(offenders).as("an _id criterion not built by StoredId.of — W-338's silent no-match").isEmpty();
-        }
-    }
-
-    /**
      * No node maps a category to a rule set — the pattern W-088m2 replaced with conditions on the item, so a new
      * category is a row, not a map entry (review E1; D-254).
      *
@@ -539,37 +513,5 @@ class ArchitectureTest {
         assertThat(duplicates)
                 .as("top-level classes sharing a simple name — rename one to the concept it states")
                 .isEmpty();
-    }
-
-    /**
-     * A dropped Mongo collection loses its indexes, and an {@code @PostConstruct} index initializer created them only
-     * at startup. A test that once dropped {@code profit_and_loss} this way left every later class in the shared
-     * container without {@code pnl_user_year_idx}, and ten simultaneous buys then stored two documents for one year
-     * (W-300, D-603) — {@code profit_and_loss} itself moved to PostgreSQL in W-337e, D-949, where
-     * {@code pnl_user_year_idx} is declared in DDL and survives a {@code TRUNCATE}; the last Mongo collections still
-     * behind an index initializer moved the same way in W-337f, D-951, which leaves this rule guarding against a
-     * hazard no current collection can hit — kept as the safety net for whichever one comes back. Main and test
-     * classes alike: clear Mongo collections with {@code deleteMany}.
-     */
-    @Test
-    void nothing_drops_a_collection() {
-        List<String> drops = new ClassFileImporter()
-                .importPackages("com.thiru.wealthlens")
-                .stream()
-                .flatMap(javaClass -> javaClass.getMethodCallsFromSelf().stream())
-                .filter(call -> isCollectionDrop(call.getTarget().getOwner(), call.getTarget().getName()))
-                .map(call -> call.getOrigin().getFullName())
-                .distinct()
-                .sorted()
-                .toList();
-
-        assertThat(drops)
-                .as("calls that drop a MongoDB collection, and with it its indexes — clear it with deleteMany instead")
-                .isEmpty();
-    }
-
-    private static boolean isCollectionDrop(JavaClass owner, String method) {
-        return owner.isAssignableTo(MongoCollection.class) && method.equals("drop")
-                || owner.isAssignableTo(MongoOperations.class) && method.equals("dropCollection");
     }
 }

@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * {@code EncryptedField}'s JPA counterpart for {@link DisabilitySeverity} (W-337f): stores the constant's name
+ * Stores a {@link DisabilitySeverity} encrypted (W-337f, {@code DR 14} O1.1): the constant's name
  * encrypted, named on the field with {@code @Convert(converter = EncryptedDisabilitySeverityColumn.class)}. Lives in
  * {@code taxplanning}, not {@code shared.protection} beside {@code EncryptedColumn}/{@code EncryptedDateColumn},
  * because {@code shared}'s allowed dependencies are {@code portfolio} only — it cannot import a {@code taxengine}

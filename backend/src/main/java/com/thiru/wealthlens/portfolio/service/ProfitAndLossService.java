@@ -44,8 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Accumulates realised profit/loss figures per financial year. Class-level
- * @{@link Transactional} ensures save operations are atomic. Safe only when
- * MongoDB replica set + {@code app.mongodb.transactions-enabled=true} is set.
+ * @{@link Transactional} ensures save operations are atomic (PostgreSQL's transaction).
  */
 @Log4j2
 @AllArgsConstructor
