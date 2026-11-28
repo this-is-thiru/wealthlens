@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.portfolio.service;
 
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -35,6 +36,35 @@ public final class TradeFingerprint {
                 String.valueOf(request.getPrice()),
                 String.valueOf(request.getTransactionDate()));
         return sha256(material);
+    }
+
+    /**
+     * An upload row's trade, for its idempotency key (W-440a): {@link #of}'s fields and the venue, segment, account
+     * type and order the row also names, so two rows a broker's export tells apart are never one. Quantity and price
+     * are written as plain decimals, so the key reads as the amount at every size ({@code String.valueOf} writes
+     * {@code 1.0E7}). Not unique on its own — two equal rows are two trades — so the caller adds the row's occurrence
+     * among equal rows of its file.
+     */
+    public static String ofRow(String email, AssetRequest request) {
+        String material = String.join(String.valueOf(SEPARATOR),
+                String.valueOf(email),
+                String.valueOf(request.getBrokerName()),
+                String.valueOf(request.getAccountHolder()),
+                String.valueOf(request.getAccountType()),
+                String.valueOf(request.getAssetType()),
+                String.valueOf(request.getSegment()),
+                String.valueOf(request.getExchangeName()),
+                String.valueOf(request.getStockCode()),
+                String.valueOf(request.getTransactionType()),
+                String.valueOf(request.getTransactionDate()),
+                plain(request.getQuantity()),
+                plain(request.getPrice()),
+                String.valueOf(request.getOrderId()));
+        return sha256(material);
+    }
+
+    private static String plain(Double amount) {
+        return amount == null ? "null" : BigDecimal.valueOf(amount).stripTrailingZeros().toPlainString();
     }
 
     /** The hex SHA-256 of {@code material}; shared with {@link CapitalGainsSummaryService}'s computation reference. */

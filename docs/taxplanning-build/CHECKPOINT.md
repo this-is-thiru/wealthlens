@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-435 DONE (D-1052), committed and pushed with tag docs-history-m5. Tracking is now BACKLOG.md (open items only) + this file + DECISIONS.md.
-Stage           : #87 open; check its run on the latest commit, then ask "merge #87".
-Last item commit: "taxplanning W-435: track only open items in BACKLOG.md, in five new phases — the status board, work items, parked register and the runbook's extras into tag docs-history-m5; D-1051, D-1052"
-Current position: dev, staging, prod on m1.9, all personal data plain (W-428b). On w-337, not yet released: W-428c (encryption removed, Flyway V14), W-430 – W-435 (clean-up). Before the next release starts on each database: runbook §1.1.
-Next step       : 1. #87 green → "merge #87" → release → runbook §1.1 per database. 2. 2026-11-29: runbook §1.2 count. 3. W-337j4 due 2026-12-05. 4. BACKLOG.md Phase 1, W-385 first; W-384 can close (done by W-430) on owner's word.
-Files touched   : (none). api-collection committed properly at 3b99d5e (token variables empty, filled by Login); never commit a token value
-Flags for owner : W-337j4 (delete the 3 Atlas clusters) due 2026-12-05. W-418 needs the broker statement. Same-day FIFO tie in sales proposed, not placed (D-1010). W-416 waits. §1.s Aiven retention not given (staging's only way back to m1.8 now). Keep tax key values (password manager) while dev/prod pre-w428a dumps are kept; §2.21 removes them from env files.
+Item            : W-440 in progress (P): W-440a DONE (D-1054, approved C1a C2a D-1053). Next W-440b (registry on charge_instruments), then W-440c (parsers in portfolio).
+Stage           : W-440a committed; W-440c waits on owner rulings C3 – C13 (plans/W-440.md §2, §3a, §3b).
+Last item commit: "taxplanning W-440a: key an upload row on its trade and its occurrence in the file — an overlapping export recorded every shared trade again; D-1053, D-1054"
+Current position: dev, staging, prod on m1.9. On w-337, not yet released: W-428c, W-430 – W-435, W-436 – W-440a. Before the next release on each database: runbook §1.1.
+Next step       : 1. Plan W-440b (stage 2) — no ruling needed. 2. Ask C3 – C13. 3. #87 green → "merge #87" → release → runbook §1.1. 4. 2026-11-29: runbook §1.2 count. 5. W-337j4 due 2026-12-05.
+Files touched   : (none). Broker samples only in the session scratchpad (personal data) — never in the repo.
+Flags for owner : W-440 open gap: rows uploaded before W-440a + a later overlapping file still double (backfill or C8b). W-337j4 due 2026-12-05. W-418 needs the broker statement. W-416 waits.
 Env notes       : NO Claude attribution; ask "commit and push" explicitly; OrbStack: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; SQL via postgres:18 psql. Owner's zsh: no inline # comments.
-  Jars: m1.9 ../wealthlens-m1.9-pg/backend/target (all three run it). env files ~/wealthlens-runs/{dev,staging,prod}.env (600): DATABASE_*, still MONGO_* (W-337j3d). No app running.
+  Jars: m1.9 ../wealthlens-m1.9-pg/backend/target (all three run it). env files ~/wealthlens-runs/{dev,staging,prod}.env (600). No app running.
 Updated         : 2026-11-28 (session 128)
 ```
 

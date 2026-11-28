@@ -292,12 +292,21 @@ public class PortfolioService {
 
         String fileDigest = uploadDigest(userMail, quarter, file);
         List<String> filteredOutTransactions = new ArrayList<>();
+        Map<String, Integer> equalRowsSoFar = new HashMap<>();
         int repeated = 0;
         for (int row = 0; row < assetRequests.size(); row++) {
             AssetRequest assetRequest = assetRequests.get(row);
-            // The row's place in this file is its identity: two identical rows are two trades, and the same file sent
-            // again replays every row instead of recording it twice (W-275). Unique across users, as the index is.
-            assetRequest.setIdempotencyKey("upload:" + fileDigest + ":" + (row + 1));
+            // A row is its trade and how many equal rows came before it in this file: two equal rows are two trades
+            // (W-275), and a later file holding the same trade — other bytes, an overlapping export — records it once
+            // (W-440a). Unique across users, as the index is, since the user is in the fingerprint.
+            String trade = TradeFingerprint.ofRow(userMail.getEmail(), assetRequest);
+            int occurrence = equalRowsSoFar.merge(trade, 1, Integer::sum);
+            // A row recorded before W-440a holds its file's key instead, so that file sent again is still a replay
+            if (transactionService.isRecorded(userMail, "upload:" + fileDigest + ":" + (row + 1))) {
+                repeated++;
+                continue;
+            }
+            assetRequest.setIdempotencyKey("upload-trade:" + trade + ":" + occurrence);
             if (REPLAYED_MESSAGE.equals(uploadTrade(userMail, assetRequest, filteredOutTransactions, row + 1))) {
                 repeated++;
             }
@@ -305,7 +314,7 @@ public class PortfolioService {
 
         int recorded = assetRequests.size() - repeated - filteredOutTransactions.size();
         String answer = "From " + file.getOriginalFilename() + ", quarter " + quarter + ": " + recorded + " recorded, "
-                + repeated + " already recorded by an earlier send of this file";
+                + repeated + " already recorded by an earlier upload";
         if (!filteredOutTransactions.isEmpty()) {
             answer += "; held back for a corporate action: " + filteredOutTransactions;
         }
@@ -324,7 +333,10 @@ public class PortfolioService {
         }
     }
 
-    /** The user, the quarter and the file's bytes, digested: the same file sent again by the same user digests the same. */
+    /**
+     * The user, the quarter and the file's bytes, digested: the key an upload row was given before W-440a (D-561), read
+     * so a file recorded then is still recognised when sent again.
+     */
     private static String uploadDigest(UserMail userMail, String quarter, MultipartFile file) {
         try {
             return TradeFingerprint.sha256(String.join("\u001f", userMail.getEmail(), quarter,

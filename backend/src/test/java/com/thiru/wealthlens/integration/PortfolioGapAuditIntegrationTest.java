@@ -27,10 +27,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -783,6 +787,51 @@ class PortfolioGapAuditIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, theirs.getStatusCode().value(), theirs.getBody());
         assertEquals(1, transactionsOf(OWNER).size());
         assertEquals(1, transactionsOf(OTHER).size());
+    }
+
+    @Test
+    void uploadTransactions_whenALaterFileHoldsTheTradesOfAnEarlierOne_recordsOnlyTheNewTrade() throws IOException {
+        // Given — one buy of 10 INFY on 5 Jan uploaded; then a later export of that day holding it and a second, equal buy
+        // (W-440a: the same trade in a file with other bytes)
+        upload(OWNER, workbook(JAN_5, 1, true), "Q1");
+
+        // When
+        ResponseEntity<String> later = upload(OWNER, workbook(JAN_5, 2, true), "Q1");
+
+        // Then — two trades in all, 20 held: the shared row recognised, the second recorded
+        assertEquals(200, later.getStatusCode().value(), later.getBody());
+        assertEquals(2, transactionsOf(OWNER).size(), later.getBody());
+        assertEquals(20.0, lotsOf(OWNER).stream().mapToDouble(AssetEntity::getQuantity).sum());
+        assertTrue(later.getBody().contains("1 recorded, 1 already recorded"), later.getBody());
+    }
+
+    @Test
+    void uploadTransactions_whenAFileRecordedUnderItsFileKeyIsSentAgain_recordsNothingTwice() throws Exception {
+        // Given — the row of a one-row sheet recorded before W-440a, under the key that sheet's bytes gave it then:
+        // "upload:" + SHA-256 of (user, quarter, the bytes as Base64), joined by U+001F, + ":" + its place (D-561)
+        byte[] sheet = workbook(JAN_5, 1, true);
+        String material = String.join("\u001f", OWNER, "Q1", Base64.getEncoder().encodeToString(sheet));
+        String digest = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                .digest(material.getBytes(StandardCharsets.UTF_8)));
+        TransactionEntity earlier = new TransactionEntity();
+        earlier.setEmail(OWNER);
+        earlier.setStockCode(STOCK);
+        earlier.setBrokerName(BrokerName.ZERODHA);
+        earlier.setAssetType(AssetType.EQUITY);
+        earlier.setTransactionType(TransactionType.BUY);
+        earlier.setQuantity(10.0);
+        earlier.setPrice(100.0);
+        earlier.setTransactionDate(JAN_5);
+        earlier.setIdempotencyKey("upload:" + digest + ":1");
+        transactionRepository.save(earlier);
+
+        // When — the same sheet again
+        ResponseEntity<String> again = upload(OWNER, sheet, "Q1");
+
+        // Then — nothing recorded: the stored row is the same trade
+        assertEquals(200, again.getStatusCode().value(), again.getBody());
+        assertEquals(1, transactionsOf(OWNER).size(), again.getBody());
+        assertTrue(again.getBody().contains("0 recorded, 1 already recorded"), again.getBody());
     }
 
     /**
