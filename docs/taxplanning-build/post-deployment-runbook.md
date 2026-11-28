@@ -136,6 +136,42 @@ query above (`upgraded`) counts the accounts this concerns.
 
 ---
 
+### 1.3 W-440b (D-1055, D-1056) — the instrument registry: V15 at the start, then the owner's aliases · owner · **every database · the start once; the aliases before the first broker import (W-440c), again for each new instrument**
+
+**Why.** The release carrying W-440b applies `portfolio/V15__instrument_aliases.sql` at its first start: a new, empty table
+`instrument_aliases`, nothing else changed. A broker import (W-440c) finds each row's instrument only through it, and refuses a
+row whose ISIN, scrip code or symbol it lacks. Nothing is seeded (C15a): the list is your holdings, so it is posted from your own
+files, never kept in the repo.
+
+**At the start (automatic).** §2.3: the log shows `Successfully applied 1 migration … now at version v15`. Read-only check after
+(`PSQL`, §0.2): `SELECT count(*) FROM wealthlens.instrument_aliases;` → `0`.
+
+**Register (any time after the start; `$BASE`, `$ADMIN_TOKEN` as above).** One file `aliases.json` in a folder of your own, each
+value copied from your broker file exactly as it is written (Fyers' `="…"` removed), the code the one your trades are stored under.
+An ISIN names no broker; `SCRIP_CODE` and `BROKER_SYMBOL` name one of `ZERODHA`, `FYERS`, `UPSTOX`:
+
+```zsh
+curl -sS -H "Authorization: Bearer $ADMIN_TOKEN" "$BASE/api/v1/admin/portfolio/instrument-aliases?size=200"
+curl -sS -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' --data @aliases.json "$BASE/api/v1/admin/portfolio/instrument-aliases"
+curl -sS -H "Authorization: Bearer $ADMIN_TOKEN" "$BASE/api/v1/admin/portfolio/instrument-aliases?size=200"
+```
+
+`aliases.json` is `{"aliases": [{"kind": "ISIN", "brokerName": null, "value": "<isin>", "stockCode": "<code>"}, …]}`. The first and last
+calls only read: `page.totalElements` after = before + the POST's `created` count. **A second run is safe:** an alias already
+naming the same code is listed under `skipped` and nothing is written. A refusal (400) writes nothing at all and names the value:
+a value already naming another code, two codes for one value in the file, an ISIN not of its shape, a broker missing or extra, a
+space around a value. Delete `aliases.json` once the run is logged (it lists your holdings).
+
+**Way back.** Going to a release without W-440b leaves the table unused (Flyway does not undo V15; the older app ignores it).
+To remove aliases posted by mistake, back up first, then delete by the time of the run (`PSQL`, §0.2):
+
+```zsh
+PSQL <<< "\copy (SELECT * FROM wealthlens.instrument_aliases) TO '/w/instrument-aliases-backup.csv' CSV HEADER"
+PSQL -v since='<yyyy-mm-dd hh:mm:ss UTC of the run>' <<< "DELETE FROM wealthlens.instrument_aliases WHERE created_at >= :'since';"
+```
+
+---
+
 ## 2. On every start — automatic; confirm in the log
 
 | # | Item / decision | What happens at startup | Check | If it fails |

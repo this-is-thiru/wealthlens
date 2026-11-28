@@ -4,11 +4,11 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-440 in progress (P): W-440a DONE (D-1054, approved C1a C2a D-1053). Next W-440b (registry on charge_instruments), then W-440c (parsers in portfolio).
-Stage           : W-440a committed; W-440c waits on owner rulings C3 – C13 (plans/W-440.md §2, §3a, §3b).
-Last item commit: "taxplanning W-440a: key an upload row on its trade and its occurrence in the file — an overlapping export recorded every shared trade again; D-1053, D-1054"
+Item            : W-440 in progress (P): W-440a DONE (D-1054), W-440b DONE (D-1056, approved C14a C15a D-1055). Next W-440c (parsers in portfolio).
+Stage           : W-440b committed and pushed. Runs to check: 46147876089 (W-440a) and the W-440b push. W-440c waits on C3 – C13.
+Last item commit: "taxplanning W-440b: add the instrument registry's aliases, kept by the owner — an import must find a trade's instrument by what the broker file writes; D-1055, D-1056"
 Current position: dev, staging, prod on m1.9. On w-337, not yet released: W-428c, W-430 – W-435, W-436 – W-440a. Before the next release on each database: runbook §1.1.
-Next step       : 1. Plan W-440b (stage 2) — no ruling needed. 2. Ask C3 – C13. 3. #87 green → "merge #87" → release → runbook §1.1. 4. 2026-11-29: runbook §1.2 count. 5. W-337j4 due 2026-12-05.
+Next step       : 1. Check both runs. 2. Ask C3 – C13 for W-440c. 3. #87 green → "merge #87" → release → runbook §1.1. 4. 2026-11-29: runbook §1.2 count. 5. W-337j4 due 2026-12-05.
 Files touched   : (none). Broker samples only in the session scratchpad (personal data) — never in the repo.
 Flags for owner : W-440 open gap: rows uploaded before W-440a + a later overlapping file still double (backfill or C8b). W-337j4 due 2026-12-05. W-418 needs the broker statement. W-416 waits.
 Env notes       : NO Claude attribution; ask "commit and push" explicitly; OrbStack: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; SQL via postgres:18 psql. Owner's zsh: no inline # comments.
