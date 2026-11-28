@@ -34,7 +34,7 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Loads the shipped charge catalogue and rate cards at startup.
+ * Loads the shipped charge catalogue, rate cards and scheme profiles into the database.
  *
  * <h2>It runs when asked, not at startup</h2>
  * {@code POST /api/v1/admin/charges/seed} is the only caller. Seeding at {@code @PostConstruct} meant a
@@ -42,11 +42,9 @@ import tools.jackson.databind.node.ObjectNode;
  * who or when — there is no security context during startup, so not one document could name its
  * author. See ADR-27.
  *
- * <h2>It fails fast, unlike the seeder it is modelled on</h2>
- * The tax-policy seeder (retired by W-159) logged and continued when a file would not load. That is the wrong
- * behaviour here: an application that starts with a malformed or missing rate card goes on to price
- * real trades from whatever did load, and the resulting charges look exactly like correct ones.
- * A bad card stops startup (AC-9).
+ * <h2>It fails fast</h2>
+ * A malformed or missing rate card is refused rather than skipped: an application left with whatever did load
+ * goes on to price real trades from it, and the resulting charges look exactly like correct ones (AC-9).
  *
  * <h2>Order matters</h2>
  * The catalogue is written before the cards, because the validator rejects any rule code absent from
@@ -55,7 +53,7 @@ import tools.jackson.databind.node.ObjectNode;
  * name catalogue codes of their own.
  *
  * <h2>Idempotent by code</h2>
- * The seeder runs on every startup. A catalogue entry already present is left alone, and so is a
+ * A catalogue entry already present is left alone, and so is a
  * schedule whose {@code scheduleCode} is on file — including one an operator has since edited, which
  * must not be silently overwritten by the shipped version. A profile carries no code, so its
  * identity is the scheme and the date its version took effect.
@@ -107,15 +105,13 @@ public class ChargeSeederService {
     /**
      * Applies the shipped catalogue, rate cards and scheme profiles, and says what it did.
      *
-     * <p>Called by {@code POST /api/v1/admin/charges/seed} and by nothing else. It used to run at startup, which
-     * meant a deployment wrote to the database as a side effect of booting — as nobody, since there
-     * is no security context at {@code @PostConstruct}, so not one seeded document could say who
-     * had written it. Doing it deliberately and as somebody is the whole point (ADR-27).
+     * <p>Called by {@code POST /api/v1/admin/charges/seed} and by nothing else, so every seeded row names who
+     * wrote it (ADR-27).
      *
      * <p>Safe to run repeatedly: everything here is idempotent, and a second run reports that it
      * wrote nothing rather than doing anything twice.
      *
-     * @param auditor recorded on the report. The documents themselves are stamped by Spring Data's
+     * @param auditor recorded on the report. The rows themselves are stamped by Spring Data's
      *                auditing, which reads the authenticated caller through {@code SecurityAuditorAware}
      */
     @Transactional
@@ -241,8 +237,7 @@ public class ChargeSeederService {
         JsonNode file = comparable(shipped);
 
         // One side's property names are enough: both are the same class serialised the same way, so
-        // the sets are identical and scanning both was a loop that could not find anything the first
-        // had missed. Mutation testing is what said so — deleting either scan changed no outcome.
+        // the sets are identical.
         List<String> differing = new ArrayList<>();
         for (String field : sorted(file.propertyNames())) {
             if (!Objects.equals(stored.get(field), file.get(field))) {
@@ -326,9 +321,8 @@ public class ChargeSeederService {
      * exists ({@code ConstructorDetector.DEFAULT} — the compiled entity carries no
      * {@code @ConstructorProperties}), and a card built through it has a <em>null</em>
      * {@code auditMetadata} where a card built through the no-arg constructor has an empty one.
-     * Spring Data's auditing fills an object; it does not create one. So a seeded card used to be
-     * saved with no audit metadata at all, while every entity this application builds normally — a
-     * transaction, say — records who wrote it and when.
+     * Spring Data's auditing fills an object; it does not create one, so a card built that way would be saved with no
+     * audit metadata, unlike every other entity this application writes.
      *
      * <p>Updating a pre-built instance keeps the initialiser and gives auditing something to write
      * into. Nothing here sets a single audit field: {@code SecurityAuditorAware} and

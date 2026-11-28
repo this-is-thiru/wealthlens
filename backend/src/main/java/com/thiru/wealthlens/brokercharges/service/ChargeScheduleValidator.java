@@ -231,8 +231,8 @@ public class ChargeScheduleValidator {
     }
 
     /**
-     * D7. A rule carrying both a rate and a flat amount has to say which wins; the superseded
-     * implementation resolved the ambiguity to zero, so a mispriced card looked like a free trade.
+     * D7. A rule carrying both a rate and a flat amount has to say which wins; unresolved, a mispriced
+     * card would look like a free trade.
      */
     private static void validateAggregator(ChargeRule rule, List<String> errors) {
         boolean bothOperands = rule.getRate() != null && rule.getFlatAmount() != null;
