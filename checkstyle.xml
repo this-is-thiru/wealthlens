@@ -62,7 +62,9 @@
         <module name="SimplifyBooleanExpression"/>
         <module name="OneStatementPerLine"/>
         <module name="MultipleVariableDeclarations"/>
-        <module name="HideUtilityClassConstructor"/>
+        <module name="HideUtilityClassConstructor">
+            <property name="ignoreAnnotatedBy" value="SpringBootApplication, UtilityClass"/>
+        </module>
 
         <!-- Size -->
         <module name="MethodLength">

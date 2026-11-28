@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.util.calculator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thiru.wealthlens.portfolio.dto.analytics.CashFlow;
 import com.thiru.wealthlens.shared.util.calculator.XirrCalculator;

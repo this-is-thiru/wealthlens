@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -331,7 +332,7 @@ public class ChargeSeederService {
     <T> T read(Resource file, Supplier<T> factory) {
         try (InputStream stream = file.getInputStream()) {
             return objectMapper.readerForUpdating(factory.get()).readValue(stream);
-        } catch (Exception e) {
+        } catch (IOException | JacksonException e) {
             throw new IllegalStateException(
                     "Could not read the charge seed file " + file.getFilename() + ": " + e.getMessage(), e);
         }
@@ -345,7 +346,7 @@ public class ChargeSeederService {
                 values.add(objectMapper.readerForUpdating(factory.get()).readValue(element));
             }
             return values;
-        } catch (Exception e) {
+        } catch (IOException | JacksonException e) {
             throw new IllegalStateException(
                     "Could not read the charge seed file " + file.getFilename() + ": " + e.getMessage(), e);
         }

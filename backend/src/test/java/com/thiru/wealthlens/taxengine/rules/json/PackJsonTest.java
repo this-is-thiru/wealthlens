@@ -45,7 +45,7 @@ class PackJsonTest {
         return MAPPER.readTree(raw);
     }
 
-    static Provenance provenance() {
+    Provenance provenance() {
         return new Provenance(
                 java.net.URI.create("https://egazette.gov.in/x.pdf"),
                 "somewhere",

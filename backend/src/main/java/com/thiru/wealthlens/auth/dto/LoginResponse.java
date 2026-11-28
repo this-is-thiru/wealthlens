@@ -7,8 +7,10 @@ import lombok.Data;
 @Data
 @AllArgsConstructor(staticName = "from")
 public class LoginResponse {
-	private String access_token;
-	private int expires_in;
+	@JsonProperty("access_token")
+	private String accessToken;
+	@JsonProperty("expires_in")
+	private int expiresIn;
 	/** Renews the access token for 14 days from this sign-in, rotated on each use (W-358b). */
 	@JsonProperty("refresh_token")
 	private String refreshToken;

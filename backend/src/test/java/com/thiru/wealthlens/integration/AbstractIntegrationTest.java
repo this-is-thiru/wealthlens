@@ -64,7 +64,7 @@ public abstract class AbstractIntegrationTest {
             // class happened to run first. A test needing a rate card writes one.
             "charge_catalogue");
 
-    static final PostgreSQLContainer postgresContainer;
+    static final PostgreSQLContainer POSTGRES_CONTAINER;
     static {
         /*
          * max_connections raised from Postgres's default 100 (W-337e): Spring's test context cache holds up to 32
@@ -73,9 +73,9 @@ public abstract class AbstractIntegrationTest {
          * shared container. The default ceiling made a long local or CI run fail with "sorry, too many clients
          * already" partway through, unrelated to any one test's correctness.
          */
-        postgresContainer = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400")
+        POSTGRES_CONTAINER = new PostgreSQLContainer("postgres:18").withCommand("postgres", "-c", "max_connections=400")
                 .withInitScript("postgres-schema.sql");
-        postgresContainer.start();
+        POSTGRES_CONTAINER.start();
     }
 
     /** The malware scanner every upload passes through (W-131e); shared and left running, as the database containers are. */
@@ -90,9 +90,9 @@ public abstract class AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", postgresContainer::getUsername);
-        registry.add("spring.datasource.password", postgresContainer::getPassword);
+        registry.add("spring.datasource.url", POSTGRES_CONTAINER::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES_CONTAINER::getUsername);
+        registry.add("spring.datasource.password", POSTGRES_CONTAINER::getPassword);
         registry.add("app.tax.documents.scan.host", () -> "localhost");
         registry.add("app.tax.documents.scan.port", CLAMD::port);
     }

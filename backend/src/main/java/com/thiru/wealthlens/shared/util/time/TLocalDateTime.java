@@ -7,8 +7,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.NonNull;
 
+@UtilityClass
 public class TLocalDateTime {
 
     public static final String COMPLETE_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";

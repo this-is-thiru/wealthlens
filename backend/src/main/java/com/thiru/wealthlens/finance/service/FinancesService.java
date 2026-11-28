@@ -92,45 +92,51 @@ public class FinancesService {
 
     private void validateFinanceInputs(FinanceRequest financeRequest, CalculationType calculationType) {
         switch (calculationType) {
-            case EMI, TOTAL_AMOUNT -> {
-                if (financeRequest.getPrincipalAmount() < 0) {
-                    throw new IllegalArgumentException("Principal amount must be non-negative");
-                }
-                if (financeRequest.getRateOfInterest() < 0) {
-                    throw new IllegalArgumentException("Rate of interest must be non-negative");
-                }
-                if (financeRequest.getTimePeriod() <= 0) {
-                    throw new IllegalArgumentException("Time period must be greater than zero");
-                }
-            }
-            case PRINCIPAL_AMOUNT -> {
-                if (financeRequest.getEmiAmount() <= 0) {
-                    throw new IllegalArgumentException("EMI amount must be greater than zero");
-                }
-                if (financeRequest.getRateOfInterest() < 0) {
-                    throw new IllegalArgumentException("Rate of interest must be non-negative");
-                }
-                if (financeRequest.getTimePeriod() <= 0) {
-                    throw new IllegalArgumentException("Time period must be greater than zero");
-                }
-            }
-            case TIME_PERIOD -> {
-                if (financeRequest.getPrincipalAmount() <= 0) {
-                    throw new IllegalArgumentException("Principal amount must be greater than zero");
-                }
-                if (financeRequest.getEmiAmount() <= 0) {
-                    throw new IllegalArgumentException("EMI amount must be greater than zero");
-                }
-                if (financeRequest.getRateOfInterest() < 0) {
-                    throw new IllegalArgumentException("Rate of interest must be non-negative");
-                }
-                double rateOfInterestPerMonth = financeRequest.getRateOfInterest() / (12 * 100);
-                if (financeRequest.getEmiAmount() <= financeRequest.getPrincipalAmount() * rateOfInterestPerMonth) {
-                    throw new IllegalArgumentException("EMI must be greater than principal times monthly rate");
-                }
-            }
+            case EMI, TOTAL_AMOUNT -> validateEmiOrTotalInputs(financeRequest);
+            case PRINCIPAL_AMOUNT -> validatePrincipalInputs(financeRequest);
+            case TIME_PERIOD -> validateTimePeriodInputs(financeRequest);
             default -> {
             }
+        }
+    }
+
+    private void validateEmiOrTotalInputs(FinanceRequest financeRequest) {
+        if (financeRequest.getPrincipalAmount() < 0) {
+            throw new IllegalArgumentException("Principal amount must be non-negative");
+        }
+        if (financeRequest.getRateOfInterest() < 0) {
+            throw new IllegalArgumentException("Rate of interest must be non-negative");
+        }
+        if (financeRequest.getTimePeriod() <= 0) {
+            throw new IllegalArgumentException("Time period must be greater than zero");
+        }
+    }
+
+    private void validatePrincipalInputs(FinanceRequest financeRequest) {
+        if (financeRequest.getEmiAmount() <= 0) {
+            throw new IllegalArgumentException("EMI amount must be greater than zero");
+        }
+        if (financeRequest.getRateOfInterest() < 0) {
+            throw new IllegalArgumentException("Rate of interest must be non-negative");
+        }
+        if (financeRequest.getTimePeriod() <= 0) {
+            throw new IllegalArgumentException("Time period must be greater than zero");
+        }
+    }
+
+    private void validateTimePeriodInputs(FinanceRequest financeRequest) {
+        if (financeRequest.getPrincipalAmount() <= 0) {
+            throw new IllegalArgumentException("Principal amount must be greater than zero");
+        }
+        if (financeRequest.getEmiAmount() <= 0) {
+            throw new IllegalArgumentException("EMI amount must be greater than zero");
+        }
+        if (financeRequest.getRateOfInterest() < 0) {
+            throw new IllegalArgumentException("Rate of interest must be non-negative");
+        }
+        double rateOfInterestPerMonth = financeRequest.getRateOfInterest() / (12 * 100);
+        if (financeRequest.getEmiAmount() <= financeRequest.getPrincipalAmount() * rateOfInterestPerMonth) {
+            throw new IllegalArgumentException("EMI must be greater than principal times monthly rate");
         }
     }
 }

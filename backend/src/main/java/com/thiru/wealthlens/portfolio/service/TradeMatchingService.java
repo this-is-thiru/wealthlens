@@ -41,7 +41,9 @@ public class TradeMatchingService {
         List<BuyLot> lots = new ArrayList<>();
         for (Map.Entry<String, List<TransactionEntity>> entry : grouped.entrySet()) {
             List<TransactionEntity> txns = entry.getValue();
-            if (txns.isEmpty()) continue;
+            if (txns.isEmpty()) {
+                continue;
+            }
             lots.add(lotOf(txns));
         }
 
@@ -142,10 +144,14 @@ public class TradeMatchingService {
         double sellRemaining = sell.getQuantity();
 
         for (BuyLot lot : eligibleLots(sell, lots)) {
-            if (sellRemaining <= 0) break;
+            if (sellRemaining <= 0) {
+                break;
+            }
 
             double lotRemainingQty = lot.getQuantity();
-            if (lotRemainingQty <= 0) continue;
+            if (lotRemainingQty <= 0) {
+                continue;
+            }
 
             double matchedQty = Math.min(lotRemainingQty, sellRemaining);
             // Deducted once per match, from what earlier sells left (B-8), before the quantity falls

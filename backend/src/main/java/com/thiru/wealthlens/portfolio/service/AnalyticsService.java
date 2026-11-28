@@ -114,41 +114,19 @@ public class AnalyticsService {
         List<TradeOutcomeEntity> outcomes = tradeOutcomeRepository.findByEmail(userMail.getEmail());
 
         if (outcomes.isEmpty()) {
-            return PerformanceMetricsResponse.builder()
-                    .totalTrades(0L)
-                    .winCount(0L)
-                    .lossCount(0L)
-                    .breakevenCount(0L)
-                    .averageProfitPerWin(0.0)
-                    .averageLossPerLoss(0.0)
-                    .winLossRatio(null)
-                    .averageHoldingPeriodDays(0.0)
-                    .portfolioTurnover(0.0)
-                    .build();
+            return emptyPerformanceMetrics();
         }
 
         // Separate outcomes by profit category (treat null netProfit as 0)
-        List<TradeOutcomeEntity> wins = outcomes.stream()
-                .filter(o -> o.getNetProfit() > 0)
-                .collect(Collectors.toList());
-        List<TradeOutcomeEntity> losses = outcomes.stream()
-                .filter(o -> o.getNetProfit() < 0)
-                .collect(Collectors.toList());
-        List<TradeOutcomeEntity> breakevens = outcomes.stream()
-                .filter(o -> o.getNetProfit() == 0)
-                .collect(Collectors.toList());
+        List<TradeOutcomeEntity> wins = outcomes.stream().filter(o -> o.getNetProfit() > 0).toList();
+        List<TradeOutcomeEntity> losses = outcomes.stream().filter(o -> o.getNetProfit() < 0).toList();
+        long breakevenCount = outcomes.stream().filter(o -> o.getNetProfit() == 0).count();
 
-        long totalTrades = outcomes.size();
-        long winCount = wins.size();
-        long lossCount = losses.size();
-        long breakevenCount = breakevens.size();
-
-        // Averages
         double avgProfit = wins.stream().mapToDouble(TradeOutcomeEntity::getNetProfit).average().orElse(0.0);
         double avgLoss = losses.stream().mapToDouble(o -> Math.abs(o.getNetProfit())).average().orElse(0.0);
 
         // With no losses there is no ratio; 0.0 would read as no wins (W-322)
-        Double winLossRatio = lossCount > 0 ? (double) winCount / lossCount : null;
+        Double winLossRatio = !losses.isEmpty() ? (double) wins.size() / losses.size() : null;
         double avgHolding = outcomes.stream().mapToDouble(TradeOutcomeEntity::getHoldingPeriodDays).average().orElse(0.0);
 
         // Portfolio turnover = total sell value / total buy value
@@ -157,40 +135,24 @@ public class AnalyticsService {
         double turnover = totalBuyValue > 0 ? totalSellValue / totalBuyValue : 0.0;
 
         // Best / worst stock by aggregated net profit
-        Map<String, Double> profitByStock = outcomes.stream()
-                .collect(Collectors.groupingBy(
-                        TradeOutcomeEntity::getStockCode,
-                        Collectors.summingDouble(TradeOutcomeEntity::getNetProfit)
-                ));
-
-        Map<String, Double> investedByStock = outcomes.stream()
-                .collect(Collectors.groupingBy(
-                        TradeOutcomeEntity::getStockCode,
-                        Collectors.summingDouble(TradeOutcomeEntity::getTotalBuyValue)
-                ));
+        Map<String, Double> profitByStock = outcomes.stream().collect(
+                Collectors.groupingBy(TradeOutcomeEntity::getStockCode, Collectors.summingDouble(TradeOutcomeEntity::getNetProfit)));
+        Map<String, Double> investedByStock = outcomes.stream().collect(
+                Collectors.groupingBy(TradeOutcomeEntity::getStockCode, Collectors.summingDouble(TradeOutcomeEntity::getTotalBuyValue)));
 
         StockPerformance best = profitByStock.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
-                .map(e -> {
-                    double invested = investedByStock.getOrDefault(e.getKey(), 1.0);
-                    double pct = invested > 0 ? (e.getValue() / invested) * 100 : 0.0;
-                    return new StockPerformance(e.getKey(), null, pct, e.getValue());
-                })
+                .map(e -> toStockPerformance(e, investedByStock))
                 .orElse(null);
-
         StockPerformance worst = profitByStock.entrySet().stream()
                 .min(Map.Entry.comparingByValue())
-                .map(e -> {
-                    double invested = investedByStock.getOrDefault(e.getKey(), 1.0);
-                    double pct = invested > 0 ? (e.getValue() / invested) * 100 : 0.0;
-                    return new StockPerformance(e.getKey(), null, pct, e.getValue());
-                })
+                .map(e -> toStockPerformance(e, investedByStock))
                 .orElse(null);
 
         return PerformanceMetricsResponse.builder()
-                .totalTrades(totalTrades)
-                .winCount(winCount)
-                .lossCount(lossCount)
+                .totalTrades((long) outcomes.size())
+                .winCount((long) wins.size())
+                .lossCount((long) losses.size())
                 .breakevenCount(breakevenCount)
                 .averageProfitPerWin(avgProfit)
                 .averageLossPerLoss(avgLoss)
@@ -200,6 +162,26 @@ public class AnalyticsService {
                 .bestPerformingStock(best)
                 .worstPerformingStock(worst)
                 .build();
+    }
+
+    private static PerformanceMetricsResponse emptyPerformanceMetrics() {
+        return PerformanceMetricsResponse.builder()
+                .totalTrades(0L)
+                .winCount(0L)
+                .lossCount(0L)
+                .breakevenCount(0L)
+                .averageProfitPerWin(0.0)
+                .averageLossPerLoss(0.0)
+                .winLossRatio(null)
+                .averageHoldingPeriodDays(0.0)
+                .portfolioTurnover(0.0)
+                .build();
+    }
+
+    private static StockPerformance toStockPerformance(Map.Entry<String, Double> entry, Map<String, Double> investedByStock) {
+        double invested = investedByStock.getOrDefault(entry.getKey(), 1.0);
+        double pct = invested > 0 ? (entry.getValue() / invested) * 100 : 0.0;
+        return new StockPerformance(entry.getKey(), null, pct, entry.getValue());
     }
 
     /**

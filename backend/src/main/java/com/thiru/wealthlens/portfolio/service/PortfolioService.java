@@ -194,7 +194,13 @@ public class PortfolioService {
         }
 
         checkNamedFacts(assetRequest);
+        checkPriceAndQuantity(assetRequest);
+        checkStockCodeAndDate(assetRequest);
+        checkAssetTypeConstraints(assetRequest);
+        checkExchange(assetRequest);
+    }
 
+    private static void checkPriceAndQuantity(AssetRequest assetRequest) {
         Double quantity = assetRequest.getQuantity();
         if (quantity == null || quantity <= 0) {
             throw new BadRequestException("Quantity must be greater than zero, but was: " + quantity);
@@ -206,7 +212,9 @@ public class PortfolioService {
         if (assetRequest.getPrice() < 0) {
             throw new BadRequestException("Price must not be negative, but was: " + assetRequest.getPrice());
         }
+    }
 
+    private void checkStockCodeAndDate(AssetRequest assetRequest) {
         String stockCode = assetRequest.getStockCode();
         if (stockCode != null && !stockCode.equals(stockCode.strip())) {
             // Codes match exactly everywhere, so a spaced one would hold apart from its clean twin (W-345)
@@ -221,7 +229,9 @@ public class PortfolioService {
                             + "against whichever rate card is open-ended today rather than the one in force "
                             + "when it settles");
         }
+    }
 
+    private static void checkAssetTypeConstraints(AssetRequest assetRequest) {
         if (assetRequest.getAssetType() == AssetType.GOLD_BOND && assetRequest.getMaturityDate() == null) {
             throw new BadRequestException(
                     "A GOLD_BOND needs its " + ExcelHeaders.MATURITY_DATE + "; it is not assumed");
@@ -230,8 +240,6 @@ public class PortfolioService {
         if (assetRequest.getAssetType() == AssetType.LAND_OR_BUILDING) {
             throw new BadRequestException(AssetType.NOT_A_BROKER_TRADE);
         }
-
-        checkExchange(assetRequest);
     }
 
     /**

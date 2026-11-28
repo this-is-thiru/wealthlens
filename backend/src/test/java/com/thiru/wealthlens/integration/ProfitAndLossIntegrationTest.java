@@ -1,6 +1,9 @@
 package com.thiru.wealthlens.integration;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
@@ -54,7 +57,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest sellRequest = createSellRequest(email, stockCode, sellDate, 100.0, 15.0, AccountType.SELF);
 
-        ProfitAndLossContext context = buildContext(email, stockCode, buyDate, sellDate, 100.0, 10.0, 15.0, AccountType.SELF);
+        ProfitAndLossContext context = buildContext(email, stockCode, new TradeDates(buyDate, sellDate), 100.0, 10.0, 15.0, AccountType.SELF);
 
         // WHEN
         profitAndLossService.updateProfitAndLoss(userMail, context);
@@ -71,8 +74,8 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
     void updateProfitAndLoss_whenSaved_keepsTheSplitByAssetTypeAndSegment() {
         // Given -- 10 bought at 100 and sold at 150, delivery (the request's default)
         String email = "split@example.com";
-        ProfitAndLossContext context = buildContext(email, "RELIANCE", LocalDate.of(2024, 1, 15),
-                LocalDate.of(2024, 6, 20), 10.0, 100.0, 150.0, AccountType.SELF);
+        ProfitAndLossContext context = buildContext(email, "RELIANCE",
+                new TradeDates(LocalDate.of(2024, 1, 15), LocalDate.of(2024, 6, 20)), 10.0, 100.0, 150.0, AccountType.SELF);
 
         // When
         profitAndLossService.updateProfitAndLoss(UserMail.from(email), context);
@@ -99,7 +102,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest sellRequest = createSellRequest(email, stockCode, sellDate, 50.0, 12.0, AccountType.OUTSOURCED);
 
-        ProfitAndLossContext context = buildContext(email, stockCode, buyDate, sellDate, 50.0, 5.0, 12.0, AccountType.OUTSOURCED);
+        ProfitAndLossContext context = buildContext(email, stockCode, new TradeDates(buyDate, sellDate), 50.0, 5.0, 12.0, AccountType.OUTSOURCED);
 
         // WHEN
         profitAndLossService.updateProfitAndLoss(userMail, context);
@@ -126,7 +129,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
 
         AssetRequest sellRequest = createSellRequest(email, stockCode, sellDate, 75.0, 18.0, AccountType.SELF);
 
-        ProfitAndLossContext context = buildContext(email, stockCode, buyDate, sellDate, 75.0, 8.0, 18.0, AccountType.SELF);
+        ProfitAndLossContext context = buildContext(email, stockCode, new TradeDates(buyDate, sellDate), 75.0, 8.0, 18.0, AccountType.SELF);
 
         // Ensure no existing P&L
         deletePnlByEmail(email);
@@ -220,7 +223,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         LocalDate buyDate = LocalDate.of(2024, 1, 15);
         LocalDate sellDate = LocalDate.of(2024, 6, 20);
 
-        ProfitAndLossContext context = buildContext(email, stockCode, buyDate, sellDate, 100.0, 10.0, 15.0, AccountType.SELF);
+        ProfitAndLossContext context = buildContext(email, stockCode, new TradeDates(buyDate, sellDate), 100.0, 10.0, 15.0, AccountType.SELF);
 
         // WHEN/THEN - Service should handle gracefully without throwing
         assertDoesNotThrow(() -> profitAndLossService.updateProfitAndLoss(userMail, context));
@@ -312,8 +315,13 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         return request;
     }
 
-    private ProfitAndLossContext buildContext(String email, String stockCode, LocalDate buyDate, LocalDate sellDate,
-                                              double quantity, double buyPrice, double sellPrice, AccountType accountType) {
+    private record TradeDates(LocalDate buy, LocalDate sell) {
+    }
+
+    private ProfitAndLossContext buildContext(String email, String stockCode, TradeDates dates,
+            double quantity, double buyPrice, double sellPrice, AccountType accountType) {
+        LocalDate buyDate = dates.buy();
+        LocalDate sellDate = dates.sell();
         AssetEntity buyAsset = new AssetEntity();
         buyAsset.setEmail(email);
         buyAsset.setStockCode(stockCode);

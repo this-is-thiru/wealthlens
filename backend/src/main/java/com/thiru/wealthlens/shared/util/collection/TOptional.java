@@ -2,7 +2,9 @@ package com.thiru.wealthlens.shared.util.collection;
 
 import java.util.Optional;
 import java.util.function.Function;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class TOptional {
 
     public static <T> T mapO(T object, T defaultValue) {

@@ -5,10 +5,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class TLocalDate {
 
-    public static String TIME_ZONE_IST = "Asia/Kolkata";
+    public static final String TIME_ZONE_IST = "Asia/Kolkata";
 
     public static Month firstMonthOfQuarter(int quarter) {
         if (quarter <= 0 || quarter >= 5) {

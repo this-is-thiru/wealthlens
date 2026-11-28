@@ -258,7 +258,19 @@ class ChargeInvariantTest {
     }
 
     private static ChargeRule generateRule(Random random, String code, int order) {
-        ChargeBasis basis = switch (random.nextInt(6)) {
+        ChargeBasis basis = randomBasis(random);
+        ChargeRule rule = rule(code, basis, order);
+        rule.setActive(random.nextInt(10) > 0);
+        rule.setSide(randomSide(random));
+        rule.setEvents(random.nextInt(10) > 0
+                ? Set.of(ChargeEvent.BUY, ChargeEvent.SELL)
+                : Set.of(ChargeEvent.BUY));
+        populateRuleForBasis(rule, basis, random);
+        return rule;
+    }
+
+    private static ChargeBasis randomBasis(Random random) {
+        return switch (random.nextInt(6)) {
             case 0 -> ChargeBasis.FLAT;
             case 1 -> ChargeBasis.PER_UNIT;
             case 2 -> ChargeBasis.SLAB;
@@ -266,18 +278,17 @@ class ChargeInvariantTest {
             case 4 -> ChargeBasis.FORMULA;
             default -> ChargeBasis.TURNOVER;
         };
+    }
 
-        ChargeRule rule = rule(code, basis, order);
-        rule.setActive(random.nextInt(10) > 0);
-        rule.setSide(switch (random.nextInt(4)) {
+    private static ChargeSide randomSide(Random random) {
+        return switch (random.nextInt(4)) {
             case 0 -> ChargeSide.BUY;
             case 1 -> ChargeSide.SELL;
             default -> ChargeSide.BOTH;
-        });
-        rule.setEvents(random.nextInt(10) > 0
-                ? Set.of(ChargeEvent.BUY, ChargeEvent.SELL)
-                : Set.of(ChargeEvent.BUY));
+        };
+    }
 
+    private static void populateRuleForBasis(ChargeRule rule, ChargeBasis basis, Random random) {
         switch (basis) {
             case TURNOVER -> rule.setRate(round(random.nextDouble() * 0.5));
             case FLAT, SCOPED_FLAT -> rule.setFlatAmount(round(random.nextDouble() * 50));
@@ -288,7 +299,6 @@ class ChargeInvariantTest {
                     new ChargeSlab(50000.0, null, null, round(random.nextDouble() * 40))));
             default -> throw new IllegalStateException("unreachable");
         }
-        return rule;
     }
 
     /** Turnover-only and unrounded, so linearity can be asserted exactly. */

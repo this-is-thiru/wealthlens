@@ -100,6 +100,10 @@ class InputsFingerprintTest {
     class Sensitivity {
 
         static Stream<Arguments> perturbations() {
+            return Stream.concat(corePerturbations(), ledgerAndFilingPerturbations());
+        }
+
+        private static Stream<Arguments> corePerturbations() {
             return Stream.of(
                     Arguments.of("taxYear", mutate(in -> withTaxYear(in, TaxYearId.of(2025)))),
                     Arguments.of(
@@ -145,7 +149,11 @@ class InputsFingerprintTest {
                                             true,
                                             Optional.empty(),
                                             Optional.empty(),
-                                            false, true)))))),
+                                            false, true)))))));
+        }
+
+        private static Stream<Arguments> ledgerAndFilingPerturbations() {
+            return Stream.of(
                     Arguments.of(
                             "ledgers.retirementAllowedBefore",
                             mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(

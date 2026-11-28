@@ -1,8 +1,23 @@
 package com.thiru.wealthlens.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
@@ -104,41 +119,20 @@ class PortfolioServiceTest {
      * the behaviour of methods that are difficult to mock in tests.
      */
     private TestablePortfolioService testableService(ChargeEngineProperties properties) {
-        return new TestablePortfolioService(
-                portfolioRepository,
-                transactionService,
-                profitAndLossService,
-                tradeOutcomeService,
-                transactionRepository,
-                temporaryTransactionService,
-                chargeRecordingGateway,
-                properties,
-                tradeOutcomeRecorder,
-                EXCHANGES
-        );
+        return new TestablePortfolioService(properties);
     }
 
-    static class TestablePortfolioService extends PortfolioService {
+    class TestablePortfolioService extends PortfolioService {
         private int callCount;
         private int failFromCall;
         private RuntimeException throwOnCall;
 
-        TestablePortfolioService(
-                PortfolioRepository portfolioRepository,
-                TransactionService transactionService,
-                ProfitAndLossService profitAndLossService,
-                TradeOutcomeService tradeOutcomeService,
-                TransactionRepository transactionRepository,
-                TemporaryTransactionService temporaryTransactionService,
-                ChargeRecordingGateway chargeRecordingGateway,
-                ChargeEngineProperties chargeEngineProperties,
-                TradeOutcomeRecorder tradeOutcomeRecorder,
-                TradeExchangeProperties tradeExchangeProperties) {
+        TestablePortfolioService(ChargeEngineProperties chargeEngineProperties) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    tradeOutcomeRecorder, tradeExchangeProperties, Clock.systemUTC());
+                    tradeOutcomeRecorder, EXCHANGES, Clock.systemUTC());
         }
 
         void resetAddTransactionBehaviour() {
@@ -170,23 +164,13 @@ class PortfolioServiceTest {
      * Subclass of PortfolioService that does NOT override addTransaction,
      * allowing tests to exercise the real addTransaction flow (including temp-txn checks).
      */
-    static class RealPortfolioService extends PortfolioService {
-        RealPortfolioService(
-                PortfolioRepository portfolioRepository,
-                TransactionService transactionService,
-                ProfitAndLossService profitAndLossService,
-                TradeOutcomeService tradeOutcomeService,
-                TransactionRepository transactionRepository,
-                TemporaryTransactionService temporaryTransactionService,
-                ChargeRecordingGateway chargeRecordingGateway,
-                ChargeEngineProperties chargeEngineProperties,
-                TradeOutcomeRecorder tradeOutcomeRecorder,
-                TradeExchangeProperties tradeExchangeProperties) {
+    class RealPortfolioService extends PortfolioService {
+        RealPortfolioService(ChargeEngineProperties chargeEngineProperties) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway,
                     chargeEngineProperties,
-                    tradeOutcomeRecorder, tradeExchangeProperties, Clock.systemUTC());
+                    tradeOutcomeRecorder, EXCHANGES, Clock.systemUTC());
         }
 
         @Override
@@ -199,11 +183,7 @@ class PortfolioServiceTest {
     @Test
     void addTransaction_whenTempTransactionsExist_throwsBadRequestException() {
         // Given: use real service so check is exercised
-        RealPortfolioService realService = new RealPortfolioService(
-                portfolioRepository, transactionService, profitAndLossService,
-                tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
+        RealPortfolioService realService = new RealPortfolioService(new ChargeEngineProperties(true, true, false));
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -217,11 +197,7 @@ class PortfolioServiceTest {
     @Test
     void addTransaction_whenNoTempTransactions_continuesNormally() {
         // Given: use real service so check is exercised
-        RealPortfolioService realService = new RealPortfolioService(
-                portfolioRepository, transactionService, profitAndLossService,
-                tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
+        RealPortfolioService realService = new RealPortfolioService(new ChargeEngineProperties(true, true, false));
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -704,11 +680,7 @@ class PortfolioServiceTest {
         request.setTempTransactionId("temp-1");
         when(transactionService.recordTransaction(any(), any(), any()))
                 .thenReturn(TransactionRecord.replayOf("txn-first-redrive"));
-        RealPortfolioService realService = new RealPortfolioService(
-                portfolioRepository, transactionService, profitAndLossService,
-                tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
+        RealPortfolioService realService = new RealPortfolioService(new ChargeEngineProperties(true, true, false));
 
         // When
         String result = realService.addTransaction(userMail, request, new ArrayList<>());
@@ -892,11 +864,7 @@ class PortfolioServiceTest {
     // ========================================
 
     private RealPortfolioService realService() {
-        return new RealPortfolioService(
-                portfolioRepository, transactionService, profitAndLossService,
-                tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder, EXCHANGES);
+        return new RealPortfolioService(new ChargeEngineProperties(true, true, false));
     }
 
     private AssetRequest trade(AssetType assetType, String exchange) {

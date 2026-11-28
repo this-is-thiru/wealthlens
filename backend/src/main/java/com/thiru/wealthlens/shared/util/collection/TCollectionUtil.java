@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-import lombok.AllArgsConstructor;
+import lombok.experimental.UtilityClass;
 
-@AllArgsConstructor
+@UtilityClass
 public class TCollectionUtil {
 
     public static final String DATE_FORMAT = "yyyy-MM-dd";

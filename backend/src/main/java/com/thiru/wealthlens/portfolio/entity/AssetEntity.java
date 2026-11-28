@@ -180,7 +180,7 @@ public class AssetEntity {
     // this email we can't accept from the request payload, we are formatting this through the code
     public static final String EMAIL = "email";
 
-    public static Set<String> ALLOWED_FIELDS = Set.of(EMAIL, "transaction_date", "transaction_type",
+    public static final Set<String> ALLOWED_FIELDS = Set.of(EMAIL, "transaction_date", "transaction_type",
             "account_type", "account_holder", "exchange_name", "stock_code", "broker_name", "asset_type");
 
 }
