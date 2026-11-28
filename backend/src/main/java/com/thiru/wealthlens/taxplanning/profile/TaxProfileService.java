@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
-import com.thiru.wealthlens.shared.protection.IdentifierDigest;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
 import java.time.LocalDateTime;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class TaxProfileService {
 
     private final TaxpayerProfileRepository taxpayerProfileRepository;
-    private final IdentifierDigest identifierDigest;
     private final TaxAccessLog taxAccessLog;
 
     public TaxpayerProfile create(String email, TaxpayerProfileRequest request) {
@@ -65,13 +63,13 @@ public class TaxProfileService {
     }
 
     /**
-     * Holds the profile for erasure from {@code requestedAt} (UTC; W-235): from then it reads as absent, and its PAN's digest is
-     * dropped so the PAN may be registered again. The encrypted PAN stays until the profile is erased.
+     * Holds the profile for erasure from {@code requestedAt} (UTC; W-235): from then it reads as absent, and its PAN may be
+     * registered again, since the PAN's unique index covers only profiles not held (W-428c, D-1039). The PAN stays until the
+     * profile is erased.
      */
     public TaxpayerProfile holdForErasure(String email, String profileId, LocalDateTime requestedAt) {
         TaxpayerProfile profile = owned(email, profileId);
         profile.setErasureRequestedAt(requestedAt);
-        profile.setPanDigest(null);
         TaxpayerProfile held = taxpayerProfileRepository.save(profile);
         log.info("Held taxpayer profile {} for erasure", held.getId());
         return held;
@@ -86,7 +84,6 @@ public class TaxProfileService {
                 .filter(TaxProfileService::isActive).anyMatch(holder -> !holder.getId().equals(profile.getId()))) {
             throw new BadRequestException("Another profile of this account already holds its portfolio");
         }
-        profile.setPanDigest(identifierDigest.of(profile.getPan()));
         try {
             // Flushed here, so the unique index refuses a taken PAN inside this catch rather than at commit
             TaxpayerProfile saved = taxpayerProfileRepository.saveAndFlush(profile);

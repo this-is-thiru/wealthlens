@@ -5,10 +5,8 @@ import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -49,12 +47,10 @@ public class ChargeAccountEntity {
     private String id;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** Whose account this is. Matches the value carried on transactions. */
     @Column(name = "account_holder")
-    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
     @Column(name = "broker_name")
@@ -62,7 +58,6 @@ public class ChargeAccountEntity {
     private BrokerName brokerName;
 
     @Column(name = "demat_account_id")
-    @Convert(converter = SearchableColumn.class)
     private String dematAccountId;
 
     /** Rate variant this account is on, where the broker offers more than one. */

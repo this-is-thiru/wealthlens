@@ -12,7 +12,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import jakarta.persistence.Column;
@@ -46,7 +45,6 @@ public class TransactionEntity {
 	private String id;
 
 	@Column(name = "email", nullable = false)
-	@Convert(converter = SearchableColumn.class)
 	private String email;
 
 	@Column(name = "stock_code")
@@ -107,7 +105,6 @@ public class TransactionEntity {
 	private AccountType accountType;
 
 	@Column(name = "account_holder")
-	@Convert(converter = SearchableColumn.class)
 	private String accountHolder;
 
 	@Column(name = "transaction_type")

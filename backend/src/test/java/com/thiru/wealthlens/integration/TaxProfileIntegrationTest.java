@@ -265,7 +265,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void save_whenAProfileAndItsReferencesAreStored_holdsNoPersonalDataInTheClear() {
+    void save_whenAProfileAndItsReferencesAreStored_storesThemPlainAndReadsThemBack() {
         // Given
         String profileId = createdProfileId();
         String path = "/profiles/" + profileId + "/";
@@ -279,7 +279,7 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, path + "lenders",
                 "{\"name\": \"Meera\", \"address\": \"Pune\", \"pan\": \"FGHIJ8765K\", \"kind\": \"OTHER\"}");
 
-        // Then — stored plain since W-428a (D-1036); what the app reads back is unchanged
+        // Then — stored plain (W-428a, W-428c); what the app reads back is unchanged
         assertThat(String.valueOf(rawFirst("tax_profiles"))).contains(PAN, "Self", "1985-06-01").doesNotContain("k1:");
         assertThat(String.valueOf(rawFirst("tax_family_members"))).contains("PQRST5678K", "Asha", "1986-02-01").doesNotContain("k1:");
         assertThat(String.valueOf(rawFirst("tax_employers"))).contains("BLRA12345B").doesNotContain("k1:");
@@ -287,8 +287,8 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         assertThat(String.valueOf(rawFirst("tax_lenders"))).contains("FGHIJ8765K", "Meera", "Pune").doesNotContain("k1:");
         Map<String, Object> profile = rawFirst("tax_profiles");
         assertThat((String) profile.get("pan")).isEqualTo(PAN);
-        // HMAC-SHA256 of ABCDE1234F under the test digest key (bytes 0x1F … 0x3E), computed with Python's hmac, not the code
-        assertThat((String) profile.get("pan_digest")).isEqualTo("fc7b5d1c7f778ae0d11ff7f39543daf491a5b2f2e1ca37b3f68a03e2066bca62");
+        // no digest beside it since W-428c (D-1039): the PAN's own index keeps it unique
+        assertThat(profile).doesNotContainKey("pan_digest");
         TaxpayerProfile read = profiles.findAll().getFirst();
         assertThat(read.getPan()).isEqualTo(PAN);
         assertThat(read.getName()).isEqualTo("Self");

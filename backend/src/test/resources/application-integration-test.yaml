@@ -68,9 +68,6 @@ app:
       withdrawal: "Withdraw your consent at any time by asking for your whole account to be erased (POST /api/v1/me/privacy/erasure): one request, as registering was. All processing stops at once, and your data is erased as the right to erasure above describes"
       # Act s.5(1)(iii), s.13(3), r.3(c)(iii), r.20: no address for the Board is in the Act or the Rules; the owner adds its link when given (W-250 C5a)
       board-complaint: "If a grievance raised here is not resolved, you may complain to the Data Protection Board of India, which works as a digital office (DPDP Rules r.20). The Act asks you to raise it here first (s.13(3))"
-  personal-data:
-    data-key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
-    digest-key: HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=
   tax:
     # W-131d1: the documents flow is tested switched on; the profile yamls ship it off
     documents:

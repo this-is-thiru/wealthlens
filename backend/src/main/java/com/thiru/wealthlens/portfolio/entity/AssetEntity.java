@@ -10,7 +10,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -49,7 +48,6 @@ public class AssetEntity {
     private String id;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "stock_code")
@@ -131,7 +129,6 @@ public class AssetEntity {
     private AccountType accountType;
 
     @Column(name = "account_holder")
-    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
     @Column(name = "corporate_action")

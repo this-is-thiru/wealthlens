@@ -1,9 +1,7 @@
 package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -34,7 +32,6 @@ public class BreachIntimation {
     private String noticeId;
 
     @Column(name = "email")
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** UTC; when the notice appeared in the user's account. */

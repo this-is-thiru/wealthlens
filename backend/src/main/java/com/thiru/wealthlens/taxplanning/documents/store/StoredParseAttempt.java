@@ -4,12 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseAttempt;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParseOutcome;
 import com.thiru.wealthlens.taxplanning.documents.ingest.ParserRun;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -57,15 +55,12 @@ public class StoredParseAttempt implements CreatedWithId {
     @Column(name = "outcome")
     private ParseOutcome outcome;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "fields_json")
     private String fieldsJson;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "unmapped_text_json")
     private String unmappedTextJson;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "parser_notes_json")
     private String parserNotesJson;
 

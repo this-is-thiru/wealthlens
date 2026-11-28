@@ -1,9 +1,7 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -32,7 +30,6 @@ public class ProfileErasure {
     @Id
     private String id;
 
-    @Convert(converter = SearchableColumn.class)
     @Column(name = "email")
     private String email;
 

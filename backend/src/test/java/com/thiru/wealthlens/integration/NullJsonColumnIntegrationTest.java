@@ -31,7 +31,7 @@ class NullJsonColumnIntegrationTest extends AbstractIntegrationTest {
         // the mapper can bypass field initialisers, leaving the new maps null rather than empty.
         new JdbcTemplate(postgresDataSource).update(
                 "INSERT INTO trade_outcomes (id, email, stock_code) VALUES (?, ?, ?)",
-                "outcome-legacy-1", storedIdentifier("legacy@example.com"), "INFY");
+                "outcome-legacy-1", "legacy@example.com", "INFY");
 
         // When
         TradeOutcomeEntity loaded = tradeOutcomeRepository.findById("outcome-legacy-1").orElseThrow();

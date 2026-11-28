@@ -1,9 +1,7 @@
 package com.thiru.wealthlens.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -29,7 +27,6 @@ public class UserDetail {
 
     @JsonIgnore
     @Column(name = "email", unique = true, nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "password")

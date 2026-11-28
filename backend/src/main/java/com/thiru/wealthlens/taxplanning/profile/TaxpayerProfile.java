@@ -5,14 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.EncryptedDateColumn;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.ResidentialStatus;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -42,22 +38,12 @@ public class TaxpayerProfile implements CreatedWithId {
     @Id
     private String id;
 
-    @Convert(converter = SearchableColumn.class)
     @Column(name = "email")
     private String email;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "pan")
     private String pan;
 
-    /**
-     * The PAN's keyed digest: what keeps a PAN unique now that the PAN itself is stored encrypted (D-447 C1a). Absent while the
-     * profile is held for erasure, so the same PAN may be registered again (W-235); hence sparse.
-     */
-    @Column(name = "pan_digest")
-    private String panDigest;
-
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "name")
     private String name;
 
@@ -66,7 +52,6 @@ public class TaxpayerProfile implements CreatedWithId {
     private AssesseeKind kind;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    @Convert(converter = EncryptedDateColumn.class)
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
@@ -78,7 +63,7 @@ public class TaxpayerProfile implements CreatedWithId {
     @Column(name = "holds_portfolio")
     private boolean holdsPortfolio;
 
-    @Convert(converter = EncryptedDisabilitySeverityColumn.class)
+    @Enumerated(EnumType.STRING)
     @Column(name = "disability")
     private DisabilitySeverity disability;
 

@@ -3,18 +3,14 @@ package com.thiru.wealthlens.portfolio.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
-import com.thiru.wealthlens.shared.protection.FieldCipher;
-import com.thiru.wealthlens.shared.protection.PersonalDataKeys;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CorporateActionListConverterTest {
 
-    private static final String KEY = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
     private static final String AUTHOR = "admin@example.com";
 
-    private final FieldCipher cipher = new FieldCipher(new PersonalDataKeys(KEY, KEY));
-    private final CorporateActionListConverter converter = new CorporateActionListConverter(cipher);
+    private final CorporateActionListConverter converter = new CorporateActionListConverter();
 
     private static CorporateActionEntity copyBy(String author) {
         CorporateActionEntity copy = new CorporateActionEntity();
@@ -31,19 +27,6 @@ class CorporateActionListConverterTest {
 
         // Then — plain since W-428a (D-1036)
         assertThat(stored).contains("\"createdBy\":\"" + AUTHOR + "\"").contains("\"updatedBy\":null").doesNotContain("k1:");
-    }
-
-    @Test
-    void convertToEntityAttribute_whenTheAuthorIsTheOldCiphertext_readsItPlain() {
-        // Given — a copy written before W-428a, its author sealed
-        String stored = "[{\"id\":\"ca-1\",\"stockCode\":\"RELIANCE\",\"auditMetadata\":{\"createdBy\":\""
-                + cipher.encryptSearchable(AUTHOR) + "\",\"updatedBy\":null}}]";
-
-        // When
-        List<CorporateActionEntity> copies = converter.convertToEntityAttribute(stored);
-
-        // Then
-        assertThat(copies).singleElement().satisfies(copy -> assertThat(copy.getAuditMetadata().getCreatedBy()).isEqualTo(AUTHOR));
     }
 
     @Test

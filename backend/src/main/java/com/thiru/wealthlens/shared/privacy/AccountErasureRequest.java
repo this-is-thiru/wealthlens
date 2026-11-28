@@ -1,9 +1,7 @@
 package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -35,7 +33,6 @@ public class AccountErasureRequest {
     private String id;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** UTC; the last processing, from which Rules r.8(3)'s year is counted; for a lapse, the moment the purpose lapsed. */

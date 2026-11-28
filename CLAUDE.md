@@ -80,7 +80,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 # Build (skip tests)
 ./mvnw clean install -pl backend -am -DskipTests
 
-# Run the app (default profile → dev's PostgreSQL, -Dspring-boot.run.profiles=staging|prod for the others; needs DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD, JWT_SECURITY_KEY, TAX_DATA_KEY, TAX_DIGEST_KEY, PRIVACY_CONTACT — the two tax keys 32 bytes in base64)
+# Run the app (default profile → dev's PostgreSQL, -Dspring-boot.run.profiles=staging|prod for the others; needs DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD, JWT_SECURITY_KEY, PRIVACY_CONTACT)
 ./mvnw spring-boot:run -pl backend
 
 # All tests (unit + integration; integration needs Docker)

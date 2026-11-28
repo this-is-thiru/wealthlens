@@ -64,6 +64,7 @@ against the named database.
 | 0.8 | Legacy salary and policy collections: count, back up, drop (W-159) | **retired** (W-331): done (W-334e1) | **retired** (W-331): done (W-334d2) |
 | 0.9 | The move: copy MongoDB into PostgreSQL (W-337g2c), at W-337i, before §1B on that database | at the move | at the move |
 | 2.20 | Stored personal data made plain (W-428a), before the first normal start of the release carrying it | **done** 2026-11-28 (`m1.9`) | **done** 2026-11-28 (`m1.9`; no dump before, D-1038) |
+| 2.21 | Encryption removed (W-428c): precheck before the first start of the release carrying it, then the two tax keys out of the env files | run | run |
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
@@ -85,6 +86,7 @@ when its run is logged for both. Everything below is the full sequence for a fre
 and W-370's went with W-337i6 (D-1015), W-337j2's start check once logged for both (2026-11-28); W-427's env-file line and W-428a's §2.20 once logged for all three (2026-11-28, D-1038).
 
 1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, read in SQL on PostgreSQL (`SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded FROM wealthlens.user_details;`, D-1007 C2a, D-1013 C1a): the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
+2. §2.21 W-428c (D-1039) — **before the first start of the release carrying W-428c, per database (dev, staging, prod):** backup, the read-only precheck (all `0`), the start (Flyway v14), the check after, then the two tax keys out of the env file. Keep the key values while the `*-pre-w428a.dump` files are kept.
 
 ## 0. Before deploying
 
@@ -92,7 +94,7 @@ and W-370's went with W-337i6 (D-1015), W-337j2's start check once logged for bo
 
 | # | Check | Why |
 |---|---|---|
-| 0.1.1 | `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` (W-427; a build before it reads `APP_POSTGRES_DATASOURCE_*`), `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
+| 0.1.1 | `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` (W-427; a build before it reads `APP_POSTGRES_DATASOURCE_*`), `JWT_SECURITY_KEY`, `PRIVACY_CONTACT` are set (a build before W-428c also needs `TAX_DATA_KEY`, `TAX_DIGEST_KEY`) | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. A build from W-428c (D-1040) has no tax keys: personal data is stored plain (§2.21). Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
 | 0.1.2 | ~~MongoDB is a replica set~~ | **Retired by W-337j2 (D-1018):** the app has no MongoDB client; PostgreSQL's transactions need no setting. `MONGO_USER` / `MONGO_PASSWORD` are no longer read |
 | 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /api/v1/public/auth/register`, then `db.user_details.updateOne({ email: "<stored owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })` with the stored form from §0.7 (from W-253 the email is stored encrypted and is no longer the `_id`), then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
 
@@ -293,7 +295,7 @@ with the drop; step 2's hold is met once the board shows `W-159 D`.
 
 Safe to repeat; it writes nothing, so there is nothing to undo.
 
-### 0.7 W-253 (D-485) — an identifier's stored form, for a console query · owner · **whenever a step names `<stored …>`**
+### 0.7 W-253 (D-485) — an identifier's stored form, for a console query · owner · **retired by W-428c (D-1040) · do not run** — a stored value is the value itself; where a step says `<stored email>`, use the email
 
 From W-253 every email, account holder and demat account id — and from W-256 the email of whoever wrote a row — is stored encrypted, one value always storing the same
 form (`k1:…`). A console query that matches one by its plain value finds nothing, silently. Where a step says
@@ -2171,7 +2173,7 @@ the Neon branch or Aiven service. Nothing but the empty schema is in any of them
 
 ---
 
-### 2.20 W-428a (D-1036, D-1037) — stored personal data made plain · owner · **every database · once · done 2026-11-28 (`m1.9`; D-1038)**
+### 2.20 W-428a (D-1036, D-1037) — stored personal data made plain · owner · **every database · once · done 2026-11-28 (`m1.9`; D-1038) · retired by W-428c (D-1040): the rewrite is removed; kept as the record**
 
 **Why.** From W-428a the app writes every personal value plain and looks an email up by its plain value. Rows stored before it
 hold `k1:` ciphertext, so on such a database **nobody can sign in** until this run has made them plain. The run is the app itself,
@@ -2222,6 +2224,45 @@ completes the rest. **Way back:** stop the app and restore the step-1 dump (`pg_
 then start the previous release, which reads only ciphertext. A release carrying W-428a also reads the restored ciphertext,
 but nobody signs in on it until this step runs again. **Removed after use:** with the cipher, by W-428c (its row names this
 section and the profile; YouTrack WL-51, under WL-28), once this step is logged for dev, staging and prod.
+
+---
+
+### 2.21 W-428c (D-1039, D-1040) — encryption removed: precheck, the start, the keys out · owner · **every database · once · before the first start of the release carrying W-428c**
+
+**Why.** That release has no cipher and no keys. At its first start Flyway applies `V14__plain_personal_data.sql`: `date_of_birth`
+back to `DATE` on `tax_profiles` and `tax_family_members`, `pan_digest` / `tan_digest` dropped, a PAN unique among profiles not
+held for erasure and a TAN unique within a profile. A date not in `yyyy-MM-dd` form or two active profiles with one PAN would stop
+that start, so a read-only check comes first. Running SQL is §2.19 step 4 (`PSQL`), from a folder of your own; the env file is the
+database's own (`~/wealthlens-runs/<env>.env`).
+
+1. **Backup first** — the migration changes column types: `pg_dump` as §2.20 step 1, to `<env>-pre-w428c.dump`; stop if empty.
+2. **Check before (read-only)** — every count must be `0`:
+   ```zsh
+   PSQL <<'EOF'
+   SELECT (SELECT count(*) FROM wealthlens.tax_profiles WHERE date_of_birth IS NOT NULL AND date_of_birth !~ '^\d{4}-\d{2}-\d{2}$') AS profile_dates,
+          (SELECT count(*) FROM wealthlens.tax_family_members WHERE date_of_birth IS NOT NULL AND date_of_birth !~ '^\d{4}-\d{2}-\d{2}$') AS family_dates,
+          (SELECT count(*) FROM (SELECT pan FROM wealthlens.tax_profiles WHERE erasure_requested_at IS NULL AND pan IS NOT NULL GROUP BY pan HAVING count(*) > 1) d) AS shared_pans,
+          (SELECT count(*) FROM (SELECT profile_id, tan FROM wealthlens.tax_employers GROUP BY profile_id, tan HAVING count(*) > 1) d) AS shared_tans,
+          (SELECT count(*) FROM wealthlens.user_details WHERE email LIKE 'k1:%') AS sealed_logins;
+   EOF
+   ```
+   A non-zero count: stop and paste it.
+3. **The start:** the release as usual. Expect Flyway "Successfully applied 1 migration … now at version v14", then `Started`, and
+   the owner's sign-in `200`.
+4. **Check after (read-only):** `PSQL <<< "SELECT data_type FROM information_schema.columns WHERE table_schema = 'wealthlens' AND table_name IN ('tax_profiles', 'tax_family_members') AND column_name IN ('date_of_birth', 'pan_digest');"`
+   → two rows, both `date` (no `pan_digest`).
+5. **The keys out of the env file** (after step 4 on that database; backup first):
+   ```zsh
+   cp -p ~/wealthlens-runs/<env>.env ~/wealthlens-runs/<env>.env.pre-w428c
+   sed -i '' -E '/^(export )?TAX_(DATA|DIGEST)_KEY=/d' ~/wealthlens-runs/<env>.env
+   grep -c TAX_ ~/wealthlens-runs/<env>.env
+   ```
+   → `0`. **Keep both values in your password manager** while `dev-pre-w428a.dump` and `prod-pre-w428a.dump` are kept: those
+   dumps hold ciphertext, readable only with them and the `m1.9` build.
+
+**Second run:** steps 2 and 4 are read-only; Flyway applies V14 once; step 5 finds nothing to remove. **Way back:** stop the app,
+restore `<env>-pre-w428c.dump` (`pg_restore --clean --if-exists -n wealthlens`), put back `<env>.env.pre-w428c`, start `m1.9`.
+**Removed after use:** this section, once logged for dev, staging and prod (WL-51's last step).
 
 ---
 

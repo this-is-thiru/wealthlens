@@ -14,7 +14,6 @@ import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
-import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.testsupport.FakeClamd;
 import io.restassured.RestAssured;
 import java.time.Clock;
@@ -140,9 +139,6 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected ProfitAndLossRepository profitAndLossRepository;
 
-    @Autowired
-    private FieldCipher fieldCipher;
-
     /** The application's own encoder and clock (W-358b), so a test token is signed and timed as a real one is. */
     @Autowired
     private JwtEncoder jwtEncoder;
@@ -174,16 +170,6 @@ public abstract class AbstractIntegrationTest {
         if (!toTruncate.isEmpty()) {
             jdbc.execute("TRUNCATE TABLE " + String.join(", ", toTruncate) + " CASCADE");
         }
-    }
-
-    /** An identifier as stored: plain since W-428a (D-1036), so what a raw column holds and a raw query matches is the value itself. */
-    protected String storedIdentifier(String identifier) {
-        return identifier;
-    }
-
-    /** A value in the {@code k1:} form stored before W-428a (D-1036), for a test that plants an old row. */
-    protected String oldCiphertext(String plain) {
-        return fieldCipher.encryptSearchable(plain);
     }
 
     /** The login of {@code email} from PostgreSQL (W-337c1); {@code null} when there is none. */

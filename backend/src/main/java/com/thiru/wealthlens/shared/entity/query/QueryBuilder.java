@@ -12,17 +12,12 @@ import org.springframework.data.jpa.domain.Specification;
  * MongoDB {@code Criteria} version this class held before the port).
  *
  * <p>Every filter's key is the Java property name on the target entity (not the stored column name), the same way
- * a JPQL {@code WHERE} clause always is — Hibernate applies an attribute's own {@code @Convert} (e.g.
- * {@code SearchableColumn} on {@code email} / {@code accountHolder}) when a predicate is built against
- * {@code root.get(propertyName)}, exactly as it already does for the hand-written JPQL queries elsewhere in this
- * codebase. {@link QueryFilter#getFilterKey()} is sanitised to the Java property name before this class sees it.
+ * a JPQL {@code WHERE} clause always is.
  */
 public final class QueryBuilder {
 
     /**
-     * {@code QueryFilter}'s keys are the stored field's own name (snake_case, same as the old Mongo document key)
-     * for every field except the one MongoDB's converter needed to see by Java name to encrypt the query value
-     * correctly (W-253). A JPQL-style
+     * {@code QueryFilter}'s keys are the stored field's own name (snake_case, same as the old Mongo document key). A JPQL-style
      * {@link Specification} always needs the Java property name, so every key is translated here.
      */
     private static final Map<String, String> JAVA_PROPERTY_NAMES = Map.ofEntries(

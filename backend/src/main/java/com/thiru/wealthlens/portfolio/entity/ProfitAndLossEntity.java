@@ -3,7 +3,6 @@ package com.thiru.wealthlens.portfolio.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
@@ -65,7 +64,6 @@ public class ProfitAndLossEntity {
     private String id;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "financial_year")

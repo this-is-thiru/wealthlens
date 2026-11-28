@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
@@ -38,15 +36,12 @@ public class DraftRevision implements CreatedWithId {
     @Column(name = "revision_number")
     private int revisionNumber;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "full_state_json")
     private String fullStateJson;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "change_set_json")
     private String changeSetJson;
 
-    @Convert(converter = SearchableColumn.class)
     @Column(name = "changed_by")
     private String changedBy;
 

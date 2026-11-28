@@ -1,10 +1,8 @@
 package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -63,7 +61,6 @@ public class BreachNotice {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "privacy_breach_notice_affected", joinColumns = @JoinColumn(name = "notice_id"))
     @Column(name = "affected", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private List<String> affected = new ArrayList<>();
 
     /** UTC. */

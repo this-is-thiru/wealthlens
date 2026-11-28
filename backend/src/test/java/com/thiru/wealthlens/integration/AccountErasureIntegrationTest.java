@@ -236,15 +236,15 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
                     // the receipt index refuses a second null, as m1.6.1's unique index did (D-969)
                     new JdbcTemplate(postgresDataSource).update(
                             "INSERT INTO tax_draft_computations (id, email, receipt) VALUES (?, ?, ?)",
-                            UUID.randomUUID().toString(), storedIdentifier(email), UUID.randomUUID().toString());
+                            UUID.randomUUID().toString(), email, UUID.randomUUID().toString());
                 } else if (table.equals("privacy_processing_log")) {
                     new JdbcTemplate(postgresDataSource).update(
                             "INSERT INTO privacy_processing_log (id, principal, status) VALUES (?, ?, 200)",
-                            UUID.randomUUID().toString(), storedIdentifier(email));
+                            UUID.randomUUID().toString(), email);
                 } else {
                     new JdbcTemplate(postgresDataSource).update(
                             "INSERT INTO " + table + " (id, " + column + ") VALUES (?, ?)",
-                            UUID.randomUUID().toString(), storedIdentifier(email));
+                            UUID.randomUUID().toString(), email);
                 }
             }
         });
@@ -252,7 +252,7 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
 
     private long tableCount(String table, String column, String email) {
         Long rows = new JdbcTemplate(postgresDataSource).queryForObject(
-                "SELECT COUNT(*) FROM " + table + " WHERE " + column + " = ?", Long.class, storedIdentifier(email));
+                "SELECT COUNT(*) FROM " + table + " WHERE " + column + " = ?", Long.class, email);
         return rows != null ? rows : 0L;
     }
 

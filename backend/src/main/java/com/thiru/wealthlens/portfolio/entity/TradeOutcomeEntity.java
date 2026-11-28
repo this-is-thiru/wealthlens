@@ -9,7 +9,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -51,7 +50,6 @@ public class TradeOutcomeEntity {
 
     // Identity fields
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "stock_code")
@@ -76,7 +74,6 @@ public class TradeOutcomeEntity {
     private AccountType accountType;
 
     @Column(name = "account_holder")
-    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
     // Buy side
