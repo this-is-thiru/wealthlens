@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-422 DONE (D-1011), committed and pushed on w-337; PR to master opened (owner: "commit and push W-422, open the PR"). W-337i4 STOPPED at row 10 (D-1010), resumes at row 9 on m1.7.6.
-Stage           : m1.7.5 released. Staging: copied on m1.7.5 (rows 3 – 9 go); row 10 compare 6 diffs (RELIANCE same-day lots). BOTH APPS STILL UP on 8081/8082 (pids ~/wealthlens-runs/w337i4/*.pid); before/ after/ kept in ~/wealthlens-runs/w406.
-Last item commit: "taxplanning W-421: leave out the camelCase assetRequest of staging's old temporary, counted — m1.6.1 never read it; W-337i4 planned (D-1007), stopped at row 6; D-1008, D-1009"
-Next step       : 1. Check the PR's run (gh run list --branch w-337 --limit 1). 2. Green → owner's "merge" → m1.7.6 (W-337i1 again). 3. Staging: kill 8082, start m1.7.6 on 8082 (row 9), rm -rf ~/wealthlens-runs/w406/before after, row 10 fetch both sides with m1.7.6's tool.
+Item            : W-337i4 DONE (D-1012) — staging on PostgreSQL, m1.7.6. Next: W-337i5 (prod moves), not started.
+Stage           : Close-out committed and pushed on w-337, PR to master opened (owner's word). m1.7.6 released (tag → e1b30700).
+Last item commit: "taxplanning W-337i4: staging signed off on m1.7.6 — copy clean, read comparison 0 differences, §1B, routes; D-1012"
+Next step       : 1. Check the close-out PR's run; green → owner's "merge" (docs only, no release). 2. On/after 2026-11-29: §1.h staging count in SQL (D-1007 C2a), one run-log line. 3. "start W-337i5" → plan prod (Cluster0 → Neon production, m1.7.6; prod.env lacks PG vars); STOP.
 Files touched   : (none); api-collection Bruno edits — never commit
 Flags for owner : staging: target holds Flyway's empty tables (row 6 refused in prepare); it-staging untouched. §1.h count due 2026-11-29 (staging per C2; prod still Mongo: console). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner. staging.env gains PG vars at row 2.
 Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; CI = 3 jobs, ~5½ min.
