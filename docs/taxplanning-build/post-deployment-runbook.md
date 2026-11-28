@@ -554,25 +554,23 @@ python3 -I -B $W compare before after > report.txt; echo "exit: $?"; tail -3 rep
 
 Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. **From W-336 (D-783)** every shipped profile has `app.tax.jobs.enabled: false`: nothing is scheduled, and the owner runs each job through `POST /api/v1/admin/tax/jobs/{name}/run` (`SUPER_USER`) on §5.2's cadence. The crons — `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`) — apply only where the switch is turned on. Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only. **W-138 (D-450):** `staleness-sweep` runs at every start where the switch is on, and on request where it is off (after every start of a new build, §5.2); it logs `Job staleness-sweep flagged N draft(s)`; after a deploy that changes a pack (a new `law` or `exec` version in a lock), expect N to be the ready and filed drafts computed under the old one, and 0 on the next run. **W-257 (D-487):** a row a job writes carries the job's name as its actor (`audit_metadata.updatedBy`, or `createdBy` on a new row: `auto-archive`, `staleness-sweep`, `retention-purge`), stored like any actor (§0.7 gives the form to query); rows written before W-257 keep `unknown`. Information only — no step.
 
-**After the first run of each** (read-only):
+**After the first run of each** (read-only; `PSQL`, §2.19):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, failures: d.tax_job_failures.find({}, { _id: 0, job: 1, subject: 1, reason: 1 }).toArray(),
-      leasesHeld: d.tax_job_leases.countDocuments({}) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT job, subject, reason FROM tax_job_failures ORDER BY failed_at;
+SELECT count(*) AS leases_held FROM tax_job_leases;
 ```
 
 Expected: no failures, and `leasesHeld` 0 between runs. A failure naming a tax year means a filed draft of a year no shipped pack covers: it is **kept**, and the row stays until the owner decides (ship that year's pack, or a D-row). Nothing to run twice; the collections are new.
 
-**From W-239 (D-505)** the monthly `retention-purge` also deletes **landlords and lenders** once `app.tax.retention.third-party-after` (P2Y, all three profile yamls) has passed since the end of the last tax year the record can support (`DR 14` O5). From W-239a (D-506) that year is the later of the latest tax year of a stored draft **naming** the record (`/thirdParties/landlordIds`, `/thirdParties/lenderIds` in its inputs) and the year the record was last entered or changed; a record no draft names supports only the year of its last change. Drafts stored before W-239a name nothing, so on the first run their records follow that second rule. Each deletion logs `Job retention-purge deleted landlord <id>` or `… deleted lender <id>`; a record with no stored date is **kept** and logged as a refusal in `tax_job_failures` (subject `landlord <id>` / `lender <id>`). Nothing to seed or run. **Before the first run carrying W-239, and after it** (read-only; the drop is the records past their period):
+**From W-239 (D-505)** the monthly `retention-purge` also deletes **landlords and lenders** once `app.tax.retention.third-party-after` (P2Y, all three profile yamls) has passed since the end of the last tax year the record can support (`DR 14` O5). From W-239a (D-506) that year is the later of the latest tax year of a stored draft **naming** the record (`/thirdParties/landlordIds`, `/thirdParties/lenderIds` in its inputs) and the year the record was last entered or changed; a record no draft names supports only the year of its last change. Drafts stored before W-239a name nothing, so on the first run their records follow that second rule. Each deletion logs `Job retention-purge deleted landlord <id>` or `… deleted lender <id>`; a record with no stored date is **kept** and logged as a refusal in `tax_job_failures` (subject `landlord <id>` / `lender <id>`). Nothing to seed or run. **Before the first run carrying W-239, and after it** (read-only; `PSQL`, §2.19; the drop is the records past their period):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, landlords: d.tax_landlords.countDocuments({}), lenders: d.tax_lenders.countDocuments({}),
-      undated: d.tax_landlords.countDocuments({ "audit_metadata.updatedAt": null, "audit_metadata.createdAt": null })
-        + d.tax_lenders.countDocuments({ "audit_metadata.updatedAt": null, "audit_metadata.createdAt": null }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM tax_landlords) AS landlords, (SELECT count(*) FROM tax_lenders) AS lenders,
+  (SELECT count(*) FROM tax_landlords WHERE created_at IS NULL AND updated_at IS NULL)
+  + (SELECT count(*) FROM tax_lenders WHERE created_at IS NULL AND updated_at IS NULL) AS undated;
 ```
 
 Expected after: the counts fall by the number of `deleted landlord|lender` log lines, and `undated` equals the third-party refusals. A second run deletes nothing more. **Way back:** restore the two collections from the backup taken before the deploy — deleting them is the point, so only if a record was deleted in error.
@@ -588,22 +586,23 @@ status, revisions, computations, family, employers, landlords, lenders, bank acc
 and the access records naming any of them — logging `Job retention-purge erased profile <id>`. Nothing to seed or correct.
 
 **Before the first start:** `PRIVACY_CONTACT` set (§0.1.1) to the contact the owner publishes; the start is refused
-without it. **After a purge that logged an erasure** (read-only; replace `<id>`):
+without it. **After a purge that logged an erasure** (read-only; `PSQL -v id='<id>'`, §2.19):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const id = "<id>";
-    return { database: n, left: ["tax_family_members", "tax_employers", "tax_landlords", "tax_lenders", "tax_bank_accounts",
-      "tax_year_workspaces", "tax_filing_drafts", "tax_regime_election_history"].reduce((sum, c) =>
-        sum + d.getCollection(c).countDocuments({ profile_id: id }), d.tax_profiles.countDocuments({ _id: id })),
-      heldOverdue: d.tax_profiles.countDocuments({ erasure_requested_at: { $lte: new Date(Date.now() - 366 * 864e5) } }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM tax_family_members WHERE profile_id = :'id') + (SELECT count(*) FROM tax_employers WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_landlords WHERE profile_id = :'id') + (SELECT count(*) FROM tax_lenders WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_bank_accounts WHERE profile_id = :'id') + (SELECT count(*) FROM tax_year_workspaces WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_filing_drafts WHERE profile_id = :'id') + (SELECT count(*) FROM tax_regime_election_history WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_profiles WHERE id = :'id') AS left_rows,
+  (SELECT count(*) FROM tax_profiles WHERE erasure_requested_at <= (now() AT TIME ZONE 'UTC') - interval '366 days') AS held_overdue;
 ```
 
 Expected: `left` 0, `heldOverdue` 0 (a held profile past its year still present means the purge did not run or failed:
 §1.y's failure check). A second purge changes nothing. **Way back:** none for an erased profile — erasure is the point;
-before the hold ends, a held profile can be released only by unsetting `erasure_requested_at` in the console (the PAN
-digest is rebuilt on the user's next save), which needs the user's word. **Backups:** an Atlas snapshot keeps erased data
-until it expires; when that is, and a restore, are in §1.s (W-237f).
+before the hold ends, a held profile can be released only with the user's word (the PAN digest is rebuilt on the user's
+next save): `PSQL -v id='<id>' <<< "UPDATE wealthlens.tax_profiles SET erasure_requested_at = NULL WHERE id = :'id';"`.
+**Backups:** a host backup keeps erased data until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.w W-236 — the Gazette watch · owner, `SUPER_USER` · **when the owner chooses to start it; each database once**
 
@@ -621,7 +620,7 @@ holds `Ensured the indexes of GazetteLead`.
    curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.page.totalElements'
    ```
 
-   Expect `0`. In `mongosh`: `db.tax_gazette_cursor.find()` returns nothing.
+   Expect `0`. In SQL (`PSQL`, §2.19): `SELECT count(*) FROM wealthlens.tax_gazette_cursor;` answers `0`.
 2. **Choose the starting number.** On egazette.gov.in, open a recent Extraordinary Gazette; its address ends
    `WriteReadData/<year>/<number>.pdf`. The watch reads the numbers **after** the one given, so give the latest one already
    looked at (a lower number only means a longer first run).
@@ -697,27 +696,27 @@ about them stay until their year (§1.t). Nothing to seed or correct.
 
 **Before the first start:** the hold moved from `app.tax.retention.erasure-hold` to `app.privacy.erasure-hold` (env var
 `APP_PRIVACY_ERASUREHOLD`); the run log has no §1.z run, so no environment carries the old name. **After a run that
-logged `Account erasure <id> done`** (read-only; replace `<stored email>` with the erased email's stored form, §0.7 — W-253):
+logged `Account erasure <id> done`** (read-only; `PSQL -v email='<stored email>'`, §2.19, with the erased email's stored form, §0.7 — W-253):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const e = "<stored email>";
-    return { database: n, left: ["assets", "transactions", "trade_outcomes", "profit_and_loss", "user_charges",
-      "charge_accounts", "lastly_performed_corporate_action", "insurances",
-      "tax_profiles", "tax_draft_computations", "privacy_grievances", "privacy_breach_intimations"].reduce((sum, c) =>
-        sum + d.getCollection(c).countDocuments({ email: e }), d.user_details.countDocuments({ email: e })
-        + d.tax_access_log.countDocuments({ principal: e }) + d.privacy_processing_log.countDocuments({ principal: e })
-        + d.privacy_breach_notices.countDocuments({ affected: e })),
-      heldOverdue: d.privacy_erasure_requests.countDocuments({ erased_at: null,
-        requested_at: { $lte: new Date(Date.now() - 367 * 864e5) } }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM assets WHERE email = :'email') + (SELECT count(*) FROM transactions WHERE email = :'email')
+  + (SELECT count(*) FROM trade_outcomes WHERE email = :'email') + (SELECT count(*) FROM profit_and_loss WHERE email = :'email')
+  + (SELECT count(*) FROM user_charges WHERE email = :'email') + (SELECT count(*) FROM charge_accounts WHERE email = :'email')
+  + (SELECT count(*) FROM lastly_performed_corporate_action WHERE email = :'email') + (SELECT count(*) FROM insurances WHERE email = :'email')
+  + (SELECT count(*) FROM tax_profiles WHERE email = :'email') + (SELECT count(*) FROM tax_draft_computations WHERE email = :'email')
+  + (SELECT count(*) FROM privacy_grievances WHERE email = :'email') + (SELECT count(*) FROM privacy_breach_intimations WHERE email = :'email')
+  + (SELECT count(*) FROM user_details WHERE email = :'email') + (SELECT count(*) FROM tax_access_log WHERE principal = :'email')
+  + (SELECT count(*) FROM privacy_processing_log WHERE principal = :'email')
+  + (SELECT count(*) FROM privacy_breach_notice_affected WHERE affected = :'email') AS left_rows,
+  (SELECT count(*) FROM privacy_erasure_requests WHERE erased_at IS NULL AND requested_at <= (now() AT TIME ZONE 'UTC') - interval '367 days') AS held_overdue;
 ```
 
 Expected: `left` 0 and `heldOverdue` 0 on every database (an open request past its year means the job did not run or
 failed: §1.y's failure check; the next run completes it). A second run changes nothing: each erase deletes by email.
-**Way back:** none for an erased account. Before the hold ends, an account is released only with the user's word, by
-deleting its open request row in the console (`deleteOne` on its `_id`) and unsetting `erasure_requested_at` on its tax
-profiles. **Backups:** an Atlas snapshot keeps erased data until it expires; when that is, and a restore, are in §1.s
-(W-237f).
+**Way back:** none for an erased account. Before the hold ends, an account is released only with the user's word:
+`PSQL -v email='<stored email>' <<< "BEGIN; UPDATE wealthlens.tax_profiles SET erasure_requested_at = NULL WHERE email = :'email' AND erasure_requested_at IS NOT NULL; DELETE FROM wealthlens.privacy_erasure_requests WHERE email = :'email' AND erased_at IS NULL; COMMIT;"`.
+**Backups:** a host backup keeps erased data until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.t W-237e — logs of processing kept a year, then erased · owner · **first deploy carrying it; monthly review; after the first run that erases**
 
@@ -735,40 +734,34 @@ it) and are diagnostics (W-237e C5a).
 **First start (automatic):** `PrivacyIndexInitializer` creates the log's indexes. **Confirm** the log holds `Ensured the
 indexes of ProcessingRecord`; a failure stops startup. The collection is new: nothing to check first, nothing to seed.
 
-**Monthly review (read-only, safe to repeat, nothing to roll back)** — r.6(1)(c)'s "monitoring and review": failed logins
-by email and address over the last 31 days, and any principal that reached more than one person's data:
+**Monthly review (read-only, safe to repeat, nothing to roll back; `PSQL`, §2.19)** — r.6(1)(c)'s "monitoring and review": failed logins
+by email and address over the last 31 days, and any principal that reached more than one person's data (as stored, §0.7):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    const since = new Date(Date.now() - 31 * 864e5);
-    return { database: n,
-      failedLogins: d.privacy_processing_log.aggregate([{ $match: { route: "/api/v1/public/auth/login", status: { $ne: 200 },
-        recorded_at: { $gte: since } } }, { $group: { _id: { principal: "$principal", from: "$remote_address" },
-        attempts: { $sum: 1 } } }, { $sort: { attempts: -1 } }]).toArray(),
-      reachedOthers: d.privacy_processing_log.aggregate([{ $match: { recorded_at: { $gte: since },
-        $expr: { $ne: ["$principal", "$subject_email"] } } }, { $group: { _id: "$principal",
-        subjects: { $addToSet: "$subject_email" } } }]).toArray() }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT principal, remote_address, count(*) AS attempts FROM privacy_processing_log
+  WHERE route = '/api/v1/public/auth/login' AND status <> 200 AND recorded_at >= (now() AT TIME ZONE 'UTC') - interval '31 days'
+  GROUP BY principal, remote_address ORDER BY attempts DESC;
+SELECT principal, count(DISTINCT subject_email) AS subjects FROM privacy_processing_log
+  WHERE recorded_at >= (now() AT TIME ZONE 'UTC') - interval '31 days' AND principal IS DISTINCT FROM subject_email GROUP BY principal;
 ```
 
 Expected: few failed logins per email and address, and `reachedOthers` naming only the owner. Anything else is a
 possible unauthorised access: §5.7.
 
-**After the first run that erases** (a year after this deploy; read-only):
+**After the first run that erases** (a year after this deploy; read-only; `PSQL`, §2.19):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    const cut = new Date(Date.now() - 367 * 864e5);
-    return { database: n, overdue: d.privacy_processing_log.countDocuments({ recorded_at: { $lte: cut } })
-      + d.tax_access_log.countDocuments({ read_at: { $lte: cut } })
-      + d.privacy_grievances.countDocuments({ answered_at: { $lte: cut } })
-      + d.privacy_erasure_requests.countDocuments({ erased_at: { $lte: cut } }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM privacy_processing_log WHERE recorded_at <= (now() AT TIME ZONE 'UTC') - interval '367 days')
+  + (SELECT count(*) FROM tax_access_log WHERE read_at <= now() - interval '367 days')
+  + (SELECT count(*) FROM privacy_grievances WHERE answered_at <= (now() AT TIME ZONE 'UTC') - interval '367 days')
+  + (SELECT count(*) FROM privacy_erasure_requests WHERE erased_at <= (now() AT TIME ZONE 'UTC') - interval '367 days') AS overdue;
 ```
 
 Expected: `overdue` 0 on every database (more means the job did not run or failed: §1.y's failure check; the next run
 completes it). A second run changes nothing: each step deletes by date. **Way back:** stop running it (nothing is scheduled while
-`app.tax.jobs.enabled` is false, W-336); erased rows are gone — restore from the database backup. **Backups:** an Atlas snapshot
+`app.tax.jobs.enabled` is false, W-336); erased rows are gone — restore from the database backup. **Backups:** a host backup
 keeps erased rows until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.s W-237f — erased data in the backups, and a restore · owner · **before the duties commence (about May 2027); on every restore**
@@ -782,7 +775,7 @@ after each erasure (§1.t), so a snapshot older than that could hold a person no
 **When erased data leaves the backups:** at `erased_at` plus the longest retention below. Data is erased a year after the
 request (§1.z, §1.u), so a snapshot taken during the hold holds it until that snapshot expires.
 
-**The owner's record (W-237f facts 1 – 4, C4a)** — filled in by the owner (tier and backup 2026-11-19, W-334b row 2; the rest not yet given; dev is M0 free with no Cloud Backup too):
+**The owner's record on MongoDB (W-237f facts 1 – 4, C4a) — kept as the record of the Mongo era (D-1022 C5a)** — filled in by the owner (tier and backup 2026-11-19, W-334b row 2; the rest not yet given; dev is M0 free with no Cloud Backup too):
 
 | | prod `Cluster0` | staging `it-staging` |
 |---|---|---|
@@ -801,31 +794,51 @@ request (§1.z, §1.u), so a snapshot taken during the hold holds it until that 
 | Longest retention ≤ P1Y? (the check) | yes, 6 hours | *not given* | *not given* |
 | Processor terms accepted: document and date | *not given* | *not given* | *not given* |
 
-**The check (owner, read-only, safe to repeat):** read each cluster's backup policy in Atlas, enter every retention
-figure above, and confirm none exceeds one year. A longer one is shortened in Atlas before the duties commence. If a
-tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here. **2026-11-19:** every
-cluster is M0 free with no Cloud Backup; the re-plan is folded into W-337, the move off MongoDB (D-786 C5a).
+**The check (owner, read-only, safe to repeat):** read each PostgreSQL host's backup settings (Neon: history retention and
+snapshots; Aiven: the service's backups), enter every retention figure in the table above, and confirm none exceeds one
+year. A longer one is shortened on the host before the duties commence. If a host has no backup that can be set, that is
+a re-plan of W-237f (its risk 2), not a row here. **2026-11-19 (MongoDB):** every cluster was M0 free with no Cloud Backup;
+the re-plan was folded into W-337 (D-786 C5a).
 
 **On every restore.** A restore puts the database back to the snapshot's moment, and every erasure since is lost from the
 data. The records of those erasures are exported first and put back after, and then one call applies them again. It
 reapplies only what was done at or after the snapshot's time. An erasure from before that time is already reflected in
 the snapshot, and its email may since belong to a new account, which must not be touched.
 
-1. **Before the restore, from the live database** (read-only):
+1. **Before the restore, from the live database** (read-only; `PSQL`, §2.19):
 
    ```bash
-   mongoexport --uri "<uri>" --db <db> --collection privacy_erasure_requests --out erasure-requests-before-restore.json
-   mongoexport --uri "<uri>" --db <db> --collection tax_profile_erasures --out profile-erasures-before-restore.json
+   PSQL <<'EOF'
+   COPY (SELECT * FROM wealthlens.privacy_erasure_requests) TO STDOUT WITH CSV HEADER \g /w/erasure-requests-before-restore.csv
+   COPY (SELECT * FROM wealthlens.tax_profile_erasures) TO STDOUT WITH CSV HEADER \g /w/profile-erasures-before-restore.csv
+   EOF
    ```
 
    Note the snapshot's time in UTC (`yyyy-MM-ddTHH:mm:ss`) as `S`.
-2. **Restore** the snapshot in Atlas. A snapshot from before §1.r (prod before 2026-11-21, staging before 2026-11-20) holds plain rows that no build from `m1.6` on can read or seal (W-254, D-893): restore such a one only on `m1.5`, and run §1.r there before moving on.
-3. **Put the records back** (an upsert by `_id`: a record the snapshot already holds is replaced by its later state):
+2. **Restore** on the host (D-1022 C5a): prod (Neon) from its history, "up to 6 hours", or its one manual snapshot
+   (`sources/2026-11-23-neon-postgresql.md`); staging and dev (Aiven) from a service backup, whose retention is *not given*
+   (`sources/2026-11-22-aiven-postgresql.md`). The console steps are in neither note. Every PostgreSQL backup postdates §1.r
+   (the move, W-337i), so no restore needs `m1.5`.
+3. **Put the records back** (an upsert by `id`: a record the restored database already holds is replaced by its later state):
 
    ```bash
-   mongoimport --uri "<uri>" --db <db> --collection privacy_erasure_requests --mode upsert --file erasure-requests-before-restore.json
-   mongoimport --uri "<uri>" --db <db> --collection tax_profile_erasures --mode upsert --file profile-erasures-before-restore.json
+   PSQL <<'EOF'
+   BEGIN;
+   CREATE TEMP TABLE er (LIKE wealthlens.privacy_erasure_requests) ON COMMIT DROP;
+   \copy er FROM '/w/erasure-requests-before-restore.csv' WITH CSV HEADER
+   INSERT INTO wealthlens.privacy_erasure_requests SELECT * FROM er ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email,
+     requested_at = EXCLUDED.requested_at, cause = EXCLUDED.cause, erased_at = EXCLUDED.erased_at, created_by = EXCLUDED.created_by,
+     updated_by = EXCLUDED.updated_by, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at;
+   CREATE TEMP TABLE pe (LIKE wealthlens.tax_profile_erasures) ON COMMIT DROP;
+   \copy pe FROM '/w/profile-erasures-before-restore.csv' WITH CSV HEADER
+   INSERT INTO wealthlens.tax_profile_erasures SELECT * FROM pe ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email,
+     profile_id = EXCLUDED.profile_id, requested_at = EXCLUDED.requested_at, erased_at = EXCLUDED.erased_at, created_by = EXCLUDED.created_by,
+     updated_by = EXCLUDED.updated_by, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at;
+   COMMIT;
+   EOF
    ```
+
+   Expect `INSERT 0 n` twice, each `n` the rows its file holds.
 
 4. **Apply them again** (`SUPER_USER`):
 
@@ -837,17 +850,14 @@ the snapshot, and its email may since belong to a new account, which must not be
    The answer names `accountsErased` (erased at or after `S`, erased again; `erased_at` unchanged), `accountsHeld`
    (asked at or after `S`, not yet erased, held again) and `profiles` (single profiles erased or held again). A time
    in the future, or none, is refused with 400.
-5. **Check after (read-only)**, with `S` as an ISO date:
+5. **Check after (read-only)**, with `S` as `-v s='<S>'` (`PSQL`, §2.19):
 
-   ```js
-   db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-     .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-       const s = new Date("<S>Z");
-       const emails = d.privacy_erasure_requests.distinct("email", { erased_at: { $gte: s } });
-       return { database: n, accountsBack: d.user_details.countDocuments({ _id: { $in: emails } })
-           + d.assets.countDocuments({ email: { $in: emails } }) + d.tax_profiles.countDocuments({ email: { $in: emails } }),
-         profilesBack: d.tax_profiles.countDocuments({ _id: { $in: d.tax_profile_erasures.distinct("profile_id",
-           { erased_at: { $ne: null } }) } }) }; }) }])
+   ```sql
+   SET search_path = wealthlens;
+   SELECT (SELECT count(*) FROM user_details WHERE email IN (SELECT email FROM privacy_erasure_requests WHERE erased_at >= :'s'::timestamp))
+     + (SELECT count(*) FROM assets WHERE email IN (SELECT email FROM privacy_erasure_requests WHERE erased_at >= :'s'::timestamp))
+     + (SELECT count(*) FROM tax_profiles WHERE email IN (SELECT email FROM privacy_erasure_requests WHERE erased_at >= :'s'::timestamp)) AS accounts_back,
+     (SELECT count(*) FROM tax_profiles WHERE id IN (SELECT profile_id FROM tax_profile_erasures WHERE erased_at IS NOT NULL)) AS profiles_back;
    ```
 
    Expected: `accountsBack` 0 and `profilesBack` 0 on every database; then §1.u's check for each email in
@@ -963,23 +973,21 @@ before W-249) gets the first run's time: **nothing can lapse earlier than three 
 database.** No command to run. The privacy notice (`GET /api/v1/public/privacy/rights`, `/privacy`) states the period.
 
 **Before the first start:** an environment override `APP_PRIVACY_PURPOSELAPSE` must be longer than `erasure-hold` (P1Y),
-or the app refuses to start naming `app.privacy.purpose-lapse`; none is expected. **Read-only, before the first run and
+or the app refuses to start naming `app.privacy.purpose-lapse`; none is expected. **Read-only (`PSQL`, §2.19), before the first run and
 after it** (the day after the deploy):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, users: d.user_details.countDocuments({}),
-      notCounted: d.user_details.countDocuments({ last_signed_in_at: { $exists: false } }),
-      lapseErasures: d.privacy_erasure_requests.countDocuments({ cause: "PURPOSE_LAPSED" }),
-      lapseOpen: d.privacy_erasure_requests.countDocuments({ cause: "PURPOSE_LAPSED", erased_at: null }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT count(*) AS users, count(*) FILTER (WHERE last_signed_in_at IS NULL) AS not_counted,
+  (SELECT count(*) FROM privacy_erasure_requests WHERE cause = 'PURPOSE_LAPSED') AS lapse_erasures,
+  (SELECT count(*) FROM privacy_erasure_requests WHERE cause = 'PURPOSE_LAPSED' AND erased_at IS NULL) AS lapse_open FROM user_details;
 ```
 
 Expected before: `notCounted` = `users`, `lapseErasures` 0. After the first run: `notCounted` 0 and `lapseErasures` 0
 (the earliest lapse is three years away). From then, `lapseOpen` 0 the day after any run (an open one means the run
 failed part-way: §1.y's failure check; the next run completes it). A second run changes nothing: the time is set only
-where absent, and an account with a request open is left to it. **Way back:** before the first lapse, `$unset`
-`last_signed_in_at` loses nothing (the next run counts again from its own time). An erased account cannot be brought
+where absent, and an account with a request open is left to it. **Way back:** before the first lapse, clearing
+`last_signed_in_at` (`UPDATE wealthlens.user_details SET last_signed_in_at = NULL;`, run in W-337j3b's local proof only) loses nothing (the next run counts again from its own time). An erased account cannot be brought
 back; after a restore, §1.s's reapply erases a lapse erasure again like a requested one.
 
 ### 1.p W-250 (D-481) — the notice before consent · owner · **first deploy carrying it, then a week after**
@@ -994,23 +1002,23 @@ before it can register anyone.** W-131d1 (D-765 C5a) changed the `tax-planning` 
 `board-complaint` has no link to the Board yet: add it there when you have one. That changes the version, which is
 expected.
 
-**At the first start:** the log shows `Ensured the indexes of PrivacyConsent`, the unique `email` index. **Read-only,
+**At the first start:** the unique `email` index is Flyway's (`privacy_consents_email_idx`). **Read-only (`PSQL`, §2.19),
 before the deploy and a week after it:**
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, users: d.user_details.countDocuments({}),
-      consents: d.privacy_consents.countDocuments({ given_at: { $exists: true } }),
-      noticed: d.privacy_consents.countDocuments({ noticed_at: { $exists: true } }),
-      unique: d.privacy_consents.getIndexes().filter(i => i.unique && i.key.email).length }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM user_details) AS users,
+  (SELECT count(*) FROM privacy_consents WHERE given_at IS NOT NULL) AS consents,
+  (SELECT count(*) FROM privacy_consents WHERE noticed_at IS NOT NULL) AS noticed,
+  (SELECT count(*) FROM pg_indexes WHERE schemaname = 'wealthlens' AND tablename = 'privacy_consents'
+     AND indexdef LIKE 'CREATE UNIQUE INDEX%(email)') AS "unique";
 ```
 
 Expected before: `consents` 0, `noticed` 0, `unique` 0. A week after: `unique` 1, and `consents` + `noticed` no more than
 `users`. Every account that signed in or registered since the deploy has a row. A second start or sign-in changes
 nothing: the index already exists, and a row is never written twice for one account. **Way back:** redeploy the earlier
-build. `privacy_consents` can stay (nothing else reads it) or be dropped (`db.privacy_consents.drop()`, after
-`mongodump --collection privacy_consents`), and nothing else changes.
+build. `privacy_consents` stays (a Flyway table: dropping it stops the next start's schema check, D-963; nothing else reads
+it), and nothing else changes.
 
 ### 1.o W-255 (D-482) — accounts that chose their own role · owner · **retired by W-337j3a (D-1020) · do not run**
 
@@ -1074,7 +1082,7 @@ Automatic: from W-131f every PDF, at upload (the page count) and in the `parse-d
 
 ### 1.m W-131e (D-768), W-131h (D-769) — the malware scanner beside the app · owner · **each host, when the scan is turned on (off in staging and prod)**
 
-**From W-131h (D-769):** staging and prod ship `app.tax.documents.scan.enabled: false` (owner: traffic and budget). Uploads are then stored unscanned, each `tax_documents` row records `scanned: false`, and every start logs `The malware scan is off: uploads are stored unscanned (W-131h)`. **Confirm** the staging and prod yamls hold `scan.enabled: false` and `application.yaml` holds `true`. Nothing below runs until the owner turns the scan on. **Turning it on:** steps 1 – 6 below, then `scan.enabled: true` in the profile's yaml and redeploy, then W-131i's rescan of what was stored unscanned. Read-only count before and after: `db.tax_documents.countDocuments({scanned: {$ne: true}})`.
+**From W-131h (D-769):** staging and prod ship `app.tax.documents.scan.enabled: false` (owner: traffic and budget). Uploads are then stored unscanned, each `tax_documents` row records `scanned: false`, and every start logs `The malware scan is off: uploads are stored unscanned (W-131h)`. **Confirm** the staging and prod yamls hold `scan.enabled: false` and `application.yaml` holds `true`. Nothing below runs until the owner turns the scan on. **Turning it on:** steps 1 – 6 below, then `scan.enabled: true` in the profile's yaml and redeploy, then W-131i's rescan of what was stored unscanned. Read-only count before and after: `SELECT count(*) FROM wealthlens.tax_documents WHERE scanned IS NOT TRUE;` (`PSQL`, §2.19).
 
 From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored or the PDF is opened (`MalwareScan`, `DocumentBytes.store`). It fails closed: with no scanner an upload answers 503 "The malware scan could not be completed; nothing was stored", and a file it finds malware in answers 400 "This file failed the malware scan and was not stored". While `app.tax.documents.enabled` is `false` nothing calls it, so a deploy carrying W-131e needs nothing until the switch is turned on. **Confirm** the three profile yamls hold `app.tax.documents.scan.host: ${CLAMD_HOST:localhost}`, `port: 3310` and `timeout: PT60S`.
 
@@ -1083,7 +1091,7 @@ From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored 
 3. `docker run -d --name clamd --restart unless-stopped --network wealthlens --mount source=clam_db,target=/var/lib/clamav clamav/clamav:1.5`. No port is published: only containers on `wealthlens` reach it, so a document's bytes never leave the host.
 4. **Check** (read-only): `docker inspect --format '{{.State.Health.Status}}' clamd` answers `healthy` (the image's own health check pings `clamd`). The first start loads the signatures; on CI it answered within 17 s (run 44328189271).
 5. Run the app on the same network, naming the scanner: add `--network wealthlens -e CLAMD_HOST=clamd` to its `docker run` (`docker run -d -p 8080:8080 --name wealthlens-container tperamasani/wealthlens`) and redeploy.
-6. **After**, on staging with the switch on (§1.n): `db.tax_documents.countDocuments()`, then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/api/v1/me/tax/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
+6. **After**, on staging with the switch on (§1.n): `SELECT count(*) FROM wealthlens.tax_documents;` (`PSQL`, §2.19), then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/api/v1/me/tax/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
 
 **A second run** is safe: step 2 reports the network and volume exist, and step 3 reports the name in use — `docker start clamd` instead. `freshclam` inside the container updates the signatures once a day; nothing to run. **Way back:** turn the switch off first (§1.n), then `docker rm -f clamd` and `docker volume rm clam_db`; the scanner stores nothing of ours.
 
@@ -1125,14 +1133,12 @@ was older (every hash stored before W-358d3 is unlabelled BCrypt, `$2a$10$…`, 
 change store Argon2id from the start. An account nobody signs in to keeps its BCrypt hash, which still signs in. A plain-text
 (`{noop}`) or digest (`{MD5}`, `{SHA-1}` …) value never signs anyone in.
 
-**Read-only, before the deploy and a week after** (IntelliJ console on the cluster, one query):
+**Read-only, before the deploy and a week after** (`PSQL`, §2.19, one query):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    const users = d.user_details.countDocuments({});
-    const upgraded = d.user_details.countDocuments({ password: /^\{argon2\}/ });
-    return { database: n, users, upgraded, bcrypt: users - upgraded }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded,
+  count(*) FILTER (WHERE password NOT LIKE '{argon2}%' OR password IS NULL) AS bcrypt FROM user_details;
 ```
 
 Expected before: `upgraded` 0. A week after: `upgraded` the accounts that signed in or registered since, `upgraded` + `bcrypt` =
@@ -1140,10 +1146,10 @@ Expected before: `upgraded` 0. A week after: `upgraded` the accounts that signed
 
 **Way back (D-885 C3a: no copy of the hashes is kept).** `m1.5` and earlier cannot read a labelled hash, so after going back an
 upgraded account is refused until its password is reset: `htpasswd -bnBC 10 "" '<password>' | tr -d ':\n'` gives a BCrypt hash;
-`db.user_details.updateOne({ email: "<stored email>" }, { $set: { password: "<hash>" } })` with the stored form of the email (§0.7). The
+`PSQL -v email='<stored email>' -v hash='<hash>' <<< "UPDATE wealthlens.user_details SET password = :'hash' WHERE email = :'email';"` (`UPDATE 1`) with the stored form of the email (§0.7). The
 query above (`upgraded`) counts the accounts this concerns.
 
-## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
+## 1A. W-176 (D-379) — clear the charge engine's data · owner, SQL · **every fresh start**
 
 **Why.** The owner's fresh start (2026-10-27): the charge engine's data is cleared where it exists and seeded new in
 §1B, so every database starts from the cards in the repository. The configuration seeded from the repository
@@ -1156,69 +1162,100 @@ sides of a `profit_and_loss` document). The P&L's gains stay.
 - **Staging loses its 328 recorded contract notes.** The cost basis already written on `assets` stays as recorded. A
   V2 sale recorded before the deploy keeps its brokerage in the P&L's gains split (§2.8). The owner called this
   staging data (W-176 plan, risk 1).
-- **Documents are deleted, collections are not dropped.** Dropping would also remove the unique indexes
-  `ChargeIndexInitializer` created at startup (§1.6), leaving `user_charges {email, transaction_id}` unenforced until
-  the next restart.
+- **Rows are deleted, tables are not dropped.** The tables and their unique indexes (`user_charge_txn_idx` on
+  `user_charges (email, transaction_id)`) are Flyway's; the app checks the schema at start (D-963), so a dropped table
+  stops the next start.
 - **No trade between 1A and 1B.** With the flags on and no cards, a V2 buy is charged ₹0 and that ₹0 becomes its
   cost basis.
 - 1A is a fresh-start step, not a one-time migration, so it has no Phase 15 row and no code to remove.
 
-1. **Count before** (read-only; run it again after step 3):
+1. **Count before** (read-only; run it again after step 3; `PSQL`, §2.19):
 
-   ```js
-   ({ db: db.getName(),
-      charge_catalogue: db.charge_catalogue.countDocuments({}),
-      charge_schedules: db.charge_schedules.countDocuments({}),
-      charge_instruments: db.charge_instruments.countDocuments({}),
-      user_charges: db.user_charges.countDocuments({}),
-      charge_accounts: db.charge_accounts.countDocuments({}),
-      pnl_charge_side: db.profit_and_loss.countDocuments({ $or: [
-        { "realised_profits.yearly_charge_summary": { $exists: true } },
-        { "out_sourced_realised_profits.yearly_charge_summary": { $exists: true } } ] }) })
+   ```sql
+   SELECT (SELECT count(*) FROM wealthlens.charge_catalogue) AS charge_catalogue,
+     (SELECT count(*) FROM wealthlens.charge_schedules) AS charge_schedules,
+     (SELECT count(*) FROM wealthlens.charge_instruments) AS charge_instruments,
+     (SELECT count(*) FROM wealthlens.user_charges) AS user_charges,
+     (SELECT count(*) FROM wealthlens.charge_accounts) AS charge_accounts,
+     (SELECT count(*) FROM wealthlens.profit_and_loss WHERE jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+        OR jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object') AS pnl_charge_side;
    ```
 
-   Expect (2026-10-27): prod 0 / 0 / 0 / 0 / 0 / 0; staging 12 / 11 / 2 / 328 / 1 / 2. Take it again now; report a
-   difference before clearing.
-2. **Back up** (staging; on prod only if step 1 is not all 0):
+   Read 2026-11-28 (W-337j3b, D-1022): dev 13 / 40 / 2 / 0 / 0 / 0, staging 13 / 39 / 2 / 0 / 0 / 0 (on MongoDB, 2026-10-27:
+   prod 0 / 0 / 0 / 0 / 0 / 0, staging 12 / 11 / 2 / 328 / 1 / 2). Take it again now; report a difference before clearing.
+2. **Back up** (staging; on prod only if step 1 is not all 0). Each child table goes with its parent:
 
    ```bash
-   for c in charge_catalogue charge_schedules charge_instruments user_charges charge_accounts; do
-     mongoexport --uri "<uri>" --db <db> --collection $c --out charge-engine-$c-backup.json
-   done
-   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss \
-     --query '{"$or":[{"realised_profits.yearly_charge_summary":{"$exists":true}},{"out_sourced_realised_profits.yearly_charge_summary":{"$exists":true}}]}' \
-     --fields _id,realised_profits.yearly_charge_summary,out_sourced_realised_profits.yearly_charge_summary \
-     --out charge-engine-pnl-charge-side-backup.json
+   PSQL <<'EOF'
+   COPY (SELECT * FROM wealthlens.charge_catalogue) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_catalogue-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_schedules) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_schedules-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_instruments) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_instruments-backup.csv
+   COPY (SELECT * FROM wealthlens.user_charges) TO STDOUT WITH CSV HEADER \g /w/charge-engine-user_charges-backup.csv
+   COPY (SELECT * FROM wealthlens.user_charge_lines) TO STDOUT WITH CSV HEADER \g /w/charge-engine-user_charge_lines-backup.csv
+   COPY (SELECT * FROM wealthlens.user_charge_amounts) TO STDOUT WITH CSV HEADER \g /w/charge-engine-user_charge_amounts-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_accounts) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_accounts-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_account_billing_events) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_account_billing_events-backup.csv
+   COPY (SELECT * FROM wealthlens.profit_and_loss WHERE jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+        OR jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object') TO STDOUT WITH CSV HEADER \g /w/charge-engine-pnl-charge-side-backup.csv
+   EOF
    ```
 
-3. **Clear.** The per-user part refuses to run unless the database is `it-staging`:
+3. **Clear.** The configuration is cleared on every database; the per-user part refuses unless the host passed is
+   staging's (dev and staging are both `defaultdb`, so the database name cannot tell them apart; D-1022 C4a):
 
-   ```js
-   (() => {
-     const configuration = Object.fromEntries(["charge_catalogue", "charge_schedules", "charge_instruments"]
-       .map(c => [c, db.getCollection(c).deleteMany({}).deletedCount]));
-     if (db.getName() !== "it-staging") {
-       return { db: db.getName(), configuration, perUser: "not cleared: only it-staging clears per-user data" };
-     }
-     return { db: db.getName(), configuration,
-       user_charges: db.user_charges.deleteMany({}).deletedCount,
-       charge_accounts: db.charge_accounts.deleteMany({}).deletedCount,
-       pnl_charge_side: db.profit_and_loss.updateMany(
-         { $or: [ { "realised_profits.yearly_charge_summary": { $exists: true } },
-                  { "out_sourced_realised_profits.yearly_charge_summary": { $exists: true } } ] },
-         { $unset: { "realised_profits.yearly_charge_summary": "",
-                     "out_sourced_realised_profits.yearly_charge_summary": "" } }).modifiedCount };
-   })()
+   ```bash
+   PSQL -v host='<the host PSQL connects to>' <<'EOF'
+   BEGIN;
+   DELETE FROM wealthlens.charge_catalogue; DELETE FROM wealthlens.charge_schedules; DELETE FROM wealthlens.charge_instruments;
+   COMMIT;
+   SELECT :'host' = 'wealthlens-staging-aaaaaw.e.aivencloud.com' AS is_staging \gset
+   \if :is_staging
+   BEGIN;
+   DELETE FROM wealthlens.user_charge_lines; DELETE FROM wealthlens.user_charge_amounts; DELETE FROM wealthlens.user_charges;
+   DELETE FROM wealthlens.charge_account_billing_events; DELETE FROM wealthlens.charge_accounts;
+   UPDATE wealthlens.profit_and_loss SET
+     realised_profits_json = CASE WHEN jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+       THEN (realised_profits_json::jsonb - 'yearlyChargeSummary')::text ELSE realised_profits_json END,
+     out_sourced_realised_profits_json = CASE WHEN jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+       THEN (out_sourced_realised_profits_json::jsonb - 'yearlyChargeSummary')::text ELSE out_sourced_realised_profits_json END
+     WHERE jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+        OR jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object';
+   COMMIT;
+   \else
+   \echo refused: the per-user clear runs only on staging
+   \endif
+   EOF
    ```
 
-   Expect the counts from step 1 (on prod, `configuration` all 0).
+   Expect each `DELETE` to name step 1's count (on prod, the configuration's are 0, and the per-user part prints `refused`).
 4. **Verify:** step 1 again reads all 0 (on prod, the per-user counts were 0 before and stay so), and
-   `db.user_charges.getIndexes()` still lists `user_charge_txn_idx`.
+   `SELECT count(*) FROM pg_indexes WHERE schemaname = 'wealthlens' AND indexname = 'user_charge_txn_idx';` answers 1.
 
-**Second run:** safe, including after a run that failed part-way: deleting from an empty collection and unsetting an
-absent field change nothing (all counts 0). **Way back:** `mongoimport --uri "<uri>" --db <db> --collection <c> --file
-charge-engine-<c>-backup.json` per collection, and `mongoimport --mode merge` of the P&L file; then `POST
-/api/v1/admin/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5, "written directly").
+**Second run:** safe, including after a run that failed part-way: each block is one transaction, and deleting from an empty
+table or updating no row changes nothing (all counts 0). **Way back:** put each backup back, parents before children, and
+the P&L rows by delete and copy (the form proven by W-337j3b, D-1022):
+
+```bash
+PSQL <<'EOF'
+BEGIN;
+\copy wealthlens.charge_catalogue FROM '/w/charge-engine-charge_catalogue-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_schedules FROM '/w/charge-engine-charge_schedules-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_instruments FROM '/w/charge-engine-charge_instruments-backup.csv' WITH CSV HEADER
+\copy wealthlens.user_charges FROM '/w/charge-engine-user_charges-backup.csv' WITH CSV HEADER
+\copy wealthlens.user_charge_lines FROM '/w/charge-engine-user_charge_lines-backup.csv' WITH CSV HEADER
+\copy wealthlens.user_charge_amounts FROM '/w/charge-engine-user_charge_amounts-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_accounts FROM '/w/charge-engine-charge_accounts-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_account_billing_events FROM '/w/charge-engine-charge_account_billing_events-backup.csv' WITH CSV HEADER
+CREATE TEMP TABLE pnl_back (LIKE wealthlens.profit_and_loss) ON COMMIT DROP;
+\copy pnl_back FROM '/w/charge-engine-pnl-charge-side-backup.csv' WITH CSV HEADER
+DELETE FROM wealthlens.profit_and_loss WHERE id IN (SELECT id FROM pnl_back);
+INSERT INTO wealthlens.profit_and_loss SELECT * FROM pnl_back;
+COMMIT;
+EOF
+```
+
+Then `POST /api/v1/admin/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5,
+"written directly"). Delete the backup files once the run is logged.
 
 ## 1B. Charge engine — seed the rate cards · `SUPER_USER` · **every database · after §1A, before the first trade; on a PostgreSQL database, after §0.9**
 
@@ -1422,15 +1459,15 @@ A failing user is an error naming them; the users before stay written.
    be in it. On staging and prod as they stand, that is users who never sold, giving 0 rows, plus any user whose
    rows were deleted.
 2. **Write:** the same call with `?dryRun=false`.
-3. **Verify:** for each rebuilt user, `db.trade_outcomes.countDocuments({ email: "<stored user email>" })` (§0.7, from W-253) equals the rows the
-   report gave for them, and each row's `audit_metadata.createdBy` is `<stored caller email>` (§0.7). A second call reports
+3. **Verify:** for each rebuilt user, `SELECT count(*) FROM wealthlens.trade_outcomes WHERE email = :'email';` (`PSQL -v email='<stored user email>'`, §2.19; §0.7) equals the rows the
+   report gave for them, and each row's `created_by` is `<stored caller email>` (§0.7). A second call reports
    `rowsWritten` 0.
 
 **Know this:** since W-343 (D-800) same-day sales are replayed in id order, so a run gives the same rows every time (before it, MongoDB's unfixed order could move a sale to another lot, W-342). Rebuilt rows carry no charge breakdown, so the capital-gains summary refuses a user whose rebuilt rows
 have broker charges (D-238 C2a; §3.1). Rebuild one user at a time (delete only that user's rows), never the whole
 collection.
 
-**Way back:** delete the rows this run wrote (`audit_metadata.createdBy` = `<stored caller email>` (§0.7), `createdAt` = the run).
+**Way back:** delete the rows this run wrote (`created_by` = `<stored caller email>` (§0.7), `created_at` = the run).
 
 ### 2.3 W-088u8c (D-285) — rewrite the `FY`-form financial years · `SUPER_USER` · **retired by W-149 (D-875) · do not run**
 
@@ -1788,10 +1825,12 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
   delivery, even when its sale was intraday. **Run §3.19 first, and do not rebuild a user it lists until W-297 has
   corrected their rows** (W-295, D-595). W-297's §2.14 was that correction (retired by W-299, D-891: nothing to correct on prod or staging).
 
-1. **Before (read-only):** note the user's documents and back them up:
+1. **Before (read-only):** note the user's documents and back them up (`PSQL`, §2.19; §0.7 for the stored form):
    ```bash
-   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss \
-     --query '{ "email": "<stored user email>" }' --out pnl-<user>-backup.json   # §0.7 for the stored form
+   PSQL -v email='<stored user email>' <<'EOF'
+   COPY (SELECT * FROM wealthlens.profit_and_loss WHERE email = :'email') TO STDOUT WITH CSV HEADER \g /w/pnl-<user>-backup.csv
+   SELECT count(*) AS profit_and_loss FROM wealthlens.profit_and_loss WHERE email = :'email';
+   EOF
    ```
 2. **Dry run** (the default):
    ```bash
@@ -1800,13 +1839,21 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
    Read `years`: per financial year, `stored` against `rebuilt`. For a V2-only user they agree to the paisa; any
    difference is the correction, or a V1 figure (above). Decide before writing.
 3. **Write:** the same call with `?dryRun=false`.
-4. **Verify (read-only):** `db.profit_and_loss.countDocuments({ email: "<stored user email>" })` equals the number of
+4. **Verify (read-only):** `SELECT count(*) FROM wealthlens.profit_and_loss WHERE email = :'email';` equals the number of
    rebuilt years, and a second dry run reports every year's `stored` equal to its `rebuilt`.
 
 **Second run:** safe, including after one that failed part-way: the write is one transaction that replaces the user's
 documents with the same fold, so a second run writes the same documents (`ProfitAndLossRebuildIntegrationTest`).
-**Way back:** delete the user's documents and `mongoimport --uri "<uri>" --db <db> --collection profit_and_loss
---file pnl-<user>-backup.json`.
+**Way back:** delete the user's documents and put the backup back, in one transaction (`PSQL`, §2.19):
+```bash
+PSQL -v email='<stored user email>' <<'EOF'
+BEGIN;
+DELETE FROM wealthlens.profit_and_loss WHERE email = :'email';
+\copy wealthlens.profit_and_loss FROM '/w/pnl-<user>-backup.csv' WITH CSV HEADER
+SELECT count(*) AS profit_and_loss FROM wealthlens.profit_and_loss WHERE email = :'email';
+COMMIT;
+EOF
+```
 
 ### 2.12 W-283a3 (D-586) — rebuild one user's `assets` from `transactions` · `SUPER_USER` · **when needed, not once**
 
@@ -1831,12 +1878,13 @@ rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, the
 - A sale that finds less held than it sold refuses the whole call (400, naming it and the shortfall). That usually
   means a missing buy or an unperformed action; correct it first.
 
-1. **Before (read-only):** back up the user's lots, and note how many there are:
+1. **Before (read-only):** back up the user's lots, and note how many there are (`PSQL`, §2.19; §0.7 for the stored form):
    ```bash
-   mongoexport --uri "<uri>" --db <db> --collection assets \
-     --query '{ "email": "<stored user email>" }' --out assets-<user>-backup.json   # §0.7 for the stored form
+   PSQL -v email='<stored user email>' <<'EOF'
+   COPY (SELECT * FROM wealthlens.assets WHERE email = :'email') TO STDOUT WITH CSV HEADER \g /w/assets-<user>-backup.csv
+   SELECT count(*) AS assets FROM wealthlens.assets WHERE email = :'email';
+   EOF
    ```
-   `db.assets.countDocuments({ email: "<stored user email>" })`
 2. **Dry run** (the default):
    ```bash
    curl -sS -X POST "$BASE/api/v1/admin/portfolio/users/<email>/assets/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
@@ -1854,8 +1902,17 @@ rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, the
 the user's lots, so a failure leaves them as they were, and a second run writes the same lots under the same ids
 (`AssetsRebuildIntegrationTest`).
 
-**Way back:** delete the user's lots and
-`mongoimport --uri "<uri>" --db <db> --collection assets --file assets-<user>-backup.json`.
+**Way back:** delete the user's lots and put the backup back, in one transaction (`PSQL`, §2.19; `<user>` as in step 1):
+```bash
+PSQL -v email='<stored user email>' <<'EOF'
+BEGIN;
+DELETE FROM wealthlens.assets WHERE email = :'email';
+\copy wealthlens.assets FROM '/w/assets-<user>-backup.csv' WITH CSV HEADER
+SELECT count(*) AS assets FROM wealthlens.assets WHERE email = :'email';
+COMMIT;
+EOF
+```
+The count equals the backup's rows (W-337j3b's proof, D-1022, rolled back there).
 
 ### 2.13 W-291 (D-589) — clear what bonus transactions copied from a buy · owner, `mongosh` · **retired by W-294 (D-890) · do not run**
 
@@ -2098,6 +2155,15 @@ makes it (W-413, D-989): step 2 below is what makes it, on each host, before the
    `PostgreSQL 18.…`, the database above, `public`.
 2. **The schema:** `CREATE SCHEMA IF NOT EXISTS wealthlens;`
 3. **Check after (read-only):** `SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'wealthlens';` — one row.
+4. **Running SQL** (every SQL step in this runbook, W-337j3b, D-1022): `psql` from the `postgres:18` image, in a folder of
+   your own, which a step's backup files are written to (`/w` inside):
+   ```zsh
+   set -a; source ~/wealthlens-runs/<env>.env; set +a     # dev, staging or prod
+   PSQL() { docker run --rm -i -v "$PWD":/w -e PGPASSWORD="$APP_POSTGRES_DATASOURCE_PASSWORD" postgres:18 psql "host=<host> port=<port> dbname=<database> user=<role> sslmode=require" -v ON_ERROR_STOP=1 "$@"; }
+   ```
+   with the host, port, database and role from the table above (prod: no `port=`, and `channel_binding=require` added). `-v
+   email='<stored email>'` (§0.7) reaches a query as `:'email'`; `-v id=…`, `-v s=…`, `-v host=…` likewise. A step's SQL goes in
+   as `<<< "…"` or `<<'EOF' … EOF` (`-c` does not substitute variables). Afterwards `unset APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY APP_PASSWORD`.
 
 **Second run:** safe; `IF NOT EXISTS` changes nothing. **Way back:** `DROP SCHEMA wealthlens;` (empty until §0.9), or delete
 the Neon branch or Aiven service. Nothing but the empty schema is in any of them before W-337i.
@@ -2543,3 +2609,6 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-28 | staging, prod (W-337j2, D-1018; "Next deploy" line 2) | `m1.8` started without `MONGO_USER` / `MONGO_PASSWORD` (8082, then stopped) | owner | jar 115,408,953 bytes; staging `Started` in 8.956 s, prod in 11.267 s; each log: mongo lines **0**, ERROR **0**, `Charges engine ready: 39 rate card(s)`; `/privacy/rights` 200 on both; run folder removed — **go**; staging and prod on `m1.8`; W-337j4's week starts (due 2026-12-05, D-1016 C2a) |
 | 2026-11-28 | — this machine (W-337i6 row 2, D-1015; D-848 C1a, D-991 C6a) | the W-334 MongoDB archives deleted | owner | `ls -la ~/wealthlens-runs/archives/`: the six files of 2026-11-21 (`prod-after-m14.archive` 1,635,293 B, `prod-after-m14.txt` 3,932, `prod-dump.out` 5,451, `staging-after-m14.archive` 1,372,936 B, `staging-after-m14.txt` 3,989, `staging-dump.out` 5,838), each 600; the two archives `rm -P`, the rest `rm`, the folder `rmdir`; after: `ls: …/archives: No such file or directory` — **done**; no way back (the data is in PostgreSQL, `Cluster0` / `it-staging` kept until W-337j4) |
 | 2026-11-28 | prod, Neon `production` (W-337i6 row 4, D-1015 C2a) | the empty database `wealthlens` dropped | owner | before: tables outside the catalogues in `wealthlens` `0`; `DROP DATABASE wealthlens;` silent; after: databases `neondb`, `postgres`; `neondb`'s `wealthlens.user_details` `12` (prod's data untouched) — **done**; way back `CREATE DATABASE wealthlens;` (it held nothing) |
+| 2026-11-28 | dev, Aiven `wealthlens-dev` (W-337j3b step 2, D-1022 C1a, C2a) | the SQL proof: `r.sql` (18 read-only queries, session read-only) and `w.sql` (writes in `BEGIN … ROLLBACK`) | owner | every query and statement ran, no error. Q1 0 rows; Q2 0; Q3 0/0/0; Q4 0/0; Q5 0; Q6 `left_rows` 60 (owner's stored email matches), `held_overdue` 0; Q7, Q8 0 rows; Q9 0; Q10 0/0; Q11 users 1, not_counted 0, 0, 0; Q12 1/1/0, unique 1; Q13 0; Q14 1/1/0; Q15 catalogue 13, schedules 40, instruments 2, user_charges 0, charge_accounts 0, pnl_charge_side 0; Q16 1; Q17 0/0/0; Q18 0. W1 COPY 0 ×4; W2 0 rows each; W3 INSERT 0 0 ×2; W4 0/0; W5 UPDATE 1; W6 DELETE 13/40/2; W7 `refused`; W8 0 ×5, UPDATE 0; W9 13/40/0/0 = Q15 (nothing kept); CSV files removed, folder holds only the scripts. Dev holds none of the owner's lots, P&L or charges, so W2 and W8 moved 0 rows there; with rows they were run on a throwaway `postgres:18` from the 13 Flyway scripts (2 lots, 2 P&L, 1 charge with line and amount: DELETE/COPY 2, UPDATE 2, charge side left 0, as worked by hand). Q15's 40 schedules: the repository ships 39 cards (39 files under `data/charges/`, one card each; staging and prod log 39), so dev holds one card not seeded from the repository |
+| 2026-11-28 | staging, Aiven `wealthlens-staging` (W-337j3b step 2, D-1022 C1a: rows dev lacks) | `r.sql` only (read-only) | owner | no error. Q1 0 rows; Q2 0; Q3 0/0/0; Q4 0/0; Q5 0; Q6 1632, held 0; Q7 2 rows (one principal, two addresses, 1 attempt each); Q8 1 row, the owner, 3 subjects; Q9 0; Q10 0/0; Q11 users 14, not_counted 13 (the jobs ship off on staging, so purpose-lapse never ran), 0, 0; Q12 14/0/1, unique 1; Q13 0; Q14 14/1/13; Q15 13/39/2/0/0/0; Q16 1; Q17 57/3/224; Q18 130 (every staging `trade_outcomes` row was written with the owner as caller). Then every rewritten block of the 14 sections run in order on a throwaway `postgres:18` from the 13 Flyway scripts with hand-made rows — each `COPY`, `DELETE`, `UPDATE` and `INSERT` count as worked by hand; it found that `psql -c` does not substitute `:'…'` variables, so those lines take `<<<` |
+
