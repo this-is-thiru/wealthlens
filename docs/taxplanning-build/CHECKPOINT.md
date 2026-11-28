@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-337i5 DONE (D-1014) — prod on PostgreSQL (Neon neondb), m1.7.6. All three databases moved. Next: W-337i6 (close), not started.
+Item            : W-337j1 BUILT (D-1017), committed + pushed, PR open (owner's word); board R until merged. W-337i6 APPROVED (D-1015): row 3 done; rows 2 + 4 pastes awaited.
 Stage           : Close-out committed and pushed on w-337, PR to master opened (owner's word); its run to check. Empty Neon database `wealthlens` left (removal = later decision).
-Last item commit: "taxplanning W-337i5: prod signed off on m1.7.6 — copy clean, read comparison 0 differences, §1B, routes; schema made in neondb; D-1013, D-1014"
-Next step       : 1. Check the PR's run; green → owner's "merge" (docs only). 2. On/after 2026-11-29: §1.h counts in SQL on staging and prod (C2a/C1a). 3. "start W-337i6" → plan the close (archives ~/wealthlens-runs/archives, Next-deploy lines 3 – 5, W-337j); STOP.
+Last item commit: "taxplanning W-337j1: retire the copier and the read comparison — every database moved and compared; W-337i6 and W-337j planned; D-1015 – D-1017"
+Next step       : 1. PR run → green → owner's "merge"; then W-337j1 D (close-out commit) and WL-50 closed on the owner's word. 2. Rows 2 + 4 pastes → log, close W-337i6. 3. §1.h counts on/after 2026-11-29. 4. W-337j2 plan.
 Files touched   : (none); api-collection Bruno edits — never commit
 Flags for owner : staging: target holds Flyway's empty tables (row 6 refused in prepare); it-staging untouched. §1.h count due 2026-11-29 (staging per C2; prod still Mongo: console). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner. staging.env gains PG vars at row 2.
 Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; CI = 3 jobs, ~5½ min.

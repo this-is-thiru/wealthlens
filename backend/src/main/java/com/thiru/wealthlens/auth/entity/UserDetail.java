@@ -14,8 +14,8 @@ import lombok.Data;
 import lombok.ToString;
 
 /**
- * A registered user's login (ported to PostgreSQL in W-337c1, D-941). The id is caller-assigned (D-939 C2a) so the
- * W-337g copier preserves existing Mongo ids verbatim; {@link #assignIdIfAbsent} generates a UUID for fresh rows.
+ * A registered user's login (ported to PostgreSQL in W-337c1, D-941). The id is caller-assigned (D-939 C2a) so the ids
+ * MongoDB gave the logins moved in W-337i stayed as they were; {@link #assignIdIfAbsent} generates a UUID for fresh rows.
  */
 @Entity
 @Table(name = "user_details")

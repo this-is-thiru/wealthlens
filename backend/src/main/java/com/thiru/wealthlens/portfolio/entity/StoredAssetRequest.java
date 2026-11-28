@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * the Excel upload read ({@code AssetRequestParser.setBrokerOrderTime}), which {@code AssetRequest} hides from API callers with
  * {@code @JsonIgnore} and which a redrive reads first ({@code AssetRequest.orderExecutionDateTime()}). MongoDB stored it, as
  * Spring Data ignores {@code @JsonIgnore}; this keeps it in {@code asset_request_json}. Only the storing mapper registers it, so
- * the request contract is unchanged; the copier writes the same form (W-337g2b2).
+ * the request contract is unchanged; the rows moved from MongoDB in W-337i hold the same form (W-337g2b2).
  */
 public abstract class StoredAssetRequest {
 
