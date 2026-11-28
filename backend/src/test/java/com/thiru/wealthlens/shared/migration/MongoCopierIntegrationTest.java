@@ -255,6 +255,27 @@ class MongoCopierIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void copyAll_whenATemporaryHoldsTheCamelCaseAssetRequest_copiesItAsM161ReadIt() {
+        // Given — a temporary stored with TemporaryTransactionEntity's unannotated assetRequest (5bc7cf10); m1.6.1 reads only
+        // asset_request, so it read none (W-421, D-1008)
+        mongoTemplate.getCollection("transactions").insertOne(new Document("_id", "txn-temporary")
+                .append("email", cipher.encryptSearchable("owner@example.com")).append("stock_code", "INFY").append("price", 1500.0)
+                .append("quantity", 5.0).append("timezone_id", "Asia/Kolkata").append("status", "TEMPORARY")
+                .append("transaction_date", Date.from(Instant.parse("2025-06-30T00:00:00Z")))
+                .append("assetRequest", new Document("stockCode", "INFY").append("quantity", 5.0)));
+
+        // When
+        List<CopyReport> reports = copier.copyAll(CollectionCopies.SPECIFIED, KOLKATA);
+
+        // Then
+        assertThat(reports).allSatisfy(report -> assertThat(report.problems()).isEmpty());
+        CopyReport transactionsReport = reports.stream().filter(report -> report.source().equals("transactions")).findFirst().orElseThrow();
+        assertThat(transactionsReport.formerForms()).isEqualTo("read as m1.6.1 read them: 1 × assetRequest left out");
+        assertThat(transactionsReport.describe()).endsWith(", clean");
+        assertThat(transactions.findById("txn-temporary").orElseThrow().getAssetRequest()).isNull();
+    }
+
+    @Test
     void copyAll_whenATransactionLacksTimezoneId_copiesM161sDefaultAndNamesIt() {
         // Given — a transaction stored before timezone_id was written; m1.6.1 read it as Asia/Kolkata (W-419, D-1002)
         mongoTemplate.getCollection("transactions").insertOne(new Document("_id", "txn-old")

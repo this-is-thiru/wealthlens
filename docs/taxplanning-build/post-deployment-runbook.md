@@ -86,7 +86,7 @@ below is the full sequence for a fresh database (W-337).
 2. W-370 (D-900) — nothing to run: a caller's mistake (every 4xx), the 409 and the 503 are logged at WARN with the message only; only a 500 is logged at ERROR with its trace. A deploy's `grep -c " ERROR "` after the routes check expects **0** again (at `m1.6.1` it counted row 4's four refusals).
 3. §0.9 W-337g2c (D-979) — **at the move (W-337i), once per database:** the copy into PostgreSQL, before the PostgreSQL build first starts and before §1B there.
 4. §2.19 W-413 (D-989) — **before the PostgreSQL build first starts on a host:** schema `wealthlens` exists there (§2.19 steps 2 – 3). Prod: done (W-337h). Dev and staging: done (2026-11-27, 18.7, schema present). All three hosts ready.
-5. §0.10 W-406 (D-985) — **at W-337i's rehearsal, after §0.9 there, before staging:** the read comparison, `m1.6.1` against the PostgreSQL build.
+5. §0.10 W-406 (D-985) — **at W-337i — rehearsal, staging, prod — after §0.9 there, before §1B (D-991 C4a):** the read comparison, `m1.6.1` against the PostgreSQL build. Rehearsal logged (D-1006).
 
 ## 0. Before deploying
 
@@ -454,7 +454,10 @@ unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KE
    `stockName`, `toStockCode`, `toStockName`, `actionPrice` (5 each), `createdAt`, `createdBy` (3 each);
    `transactions` — 1 date and the same corporate-action keys. A form not listed is still refused. **W-419 (D-1002):**
    `N × timezone_id absent, read as Asia/Kolkata` — a transaction stored without `timezone_id`, written as the default
-   `m1.6.1`'s `TransactionEntity` read it (`FormerDefaults`); on prod's copy at least 379 (row 10 read the owner's transactions only); W-337i3's next row 7 gives the whole count.
+   `m1.6.1`'s `TransactionEntity` read it (`FormerDefaults`); on prod's copy at least 379 (row 10 read the owner's transactions only); W-337i3's next row 7 gives the whole count. **W-421 (D-1008):** `transactions` — `N × assetRequest left out`: a temporary stored with `TemporaryTransactionEntity`'s
+   unannotated `assetRequest` (5bc7cf10), which `m1.6.1` never reads (it reads `asset_request`, so the temporary holds none,
+   as its redrive says). Staging's survey (W-337i4 row 5, 2026-11-28): `assets` 3 × `total_value`; `transactions` 581 ×
+   `timezone_id` absent and 1 × `assetRequest`; no Java-named corporate-action key, no date at midnight Asia/Kolkata.
 5. **After-check, read-only** (DataGrip): these six equal step 1's counts — `SELECT (SELECT count(*) FROM wealthlens.user_details),
    (SELECT count(*) FROM wealthlens.transactions), (SELECT count(*) FROM wealthlens.assets),
    (SELECT count(*) FROM wealthlens.trade_outcomes), (SELECT count(*) FROM wealthlens.profit_and_loss),
@@ -466,10 +469,10 @@ unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KE
 
 **Removed after use:** W-337j removes the copier with MongoDB (YouTrack WL-50, under WL-28), once this step is logged for every database.
 
-### 0.10 W-406 (D-981, D-983, D-985) — the rehearsal's read comparison · owner · **at W-337i's rehearsal, after §0.9 there, before staging moves**
+### 0.10 W-406 (D-981, D-983, D-985) — the read comparison · owner · **at W-337i — the rehearsal, staging and prod — after §0.9 there, before §1B (D-991 C4a)**
 
-**Why.** Before staging moves, every read the PostgreSQL build answers is compared with what `m1.6.1` answers on the
-MongoDB copy it was copied from, as every user. `tools/read_comparison.py` reads every `GET` route in the `w-337`
+**Why.** Before a moved database is signed off, every read the PostgreSQL build answers is compared with what `m1.6.1` answers on the
+MongoDB it was copied from, as every user. `tools/read_comparison.py` reads every `GET` route in the `w-337`
 build's OpenAPI spec, fills the path ids from list answers, walks every page at 200, and diffs the two answers field by
 field. **Allowed, and nothing else** (D-981 C3a, D-983 C5a): a time `m1.6.1` showed in Asia/Kolkata comes back in UTC;
 a time `m1.6.1` already held in UTC (`UTC_HELD_FIELDS`, each with its `m1.6.1` line) comes back equal; a field filled
@@ -480,14 +483,15 @@ holdings lists (`HOLDING_ROUTES`) compared holding by holding on what the view w
 (`HOLDING_FIELDS`: the key and the summed figures, equal within a relative 1e-9 as `double` sums in another lot order), not
 the fields it copies from whichever lot it reads first (each lot's own fields are still compared on `/stocks/{stockCode}`,
 W-419 R1-C1a, R3-C1a); an Excel answer compared by cell; a PDF by status and type. **Any other
-difference stops the move.** The tool sends `GET` only. Both builds still record each read (processing log), on the
-rehearsal copies only.
+difference stops the move.** The tool sends `GET` only. Both builds still record each read (processing log):
+`m1.6.1` in the MongoDB source — on staging and prod the cluster kept, unused, as the way back (D-991 C5a) — and the
+`w-337` build in the moved database.
 
 **Before.** Both builds run on your machine at once, with the **same** `JWT_SECURITY_KEY`, `TAX_DATA_KEY` and
-`TAX_DIGEST_KEY`: `m1.6.1` on port 8081 against the MongoDB copy, and the `w-337` build on port 8082 against the
-PostgreSQL copy §0.9 filled.
+`TAX_DIGEST_KEY`: `m1.6.1` on port 8081 against the MongoDB source, and the `w-337` build on port 8082 against the
+PostgreSQL database §0.9 filled.
 
-1. **Precheck, read-only — the two lists** (DataGrip, on the rehearsal PostgreSQL):
+1. **Precheck, read-only — the two lists** (on the PostgreSQL database §0.9 filled):
    ```sql
    SELECT count(*) AS logins FROM wealthlens.user_details;
    SELECT profile_id || ' ' || tax_year_start FROM wealthlens.tax_year_workspaces ORDER BY 1;
@@ -2467,3 +2471,12 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 12, the routes on 8082 | owner | `HTTP/1.1 200` with `X-Request-Id`; `my stocks 200`; `spec paths 127` (row 10's spec count); `trade without stock: 400 A trade must name its stock code` — **go** |
 | 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 13, stop both | owner | `logout 204`; both `exit 143`, 8081 and 8082 stopped; ERROR lines: `m17.log` **0**, `m161.log` 451 — every one a refusal `m1.6.1` logs at ERROR (`ControllerAdviser.java:232` at `m1.6.1`): 448 "No charges recorded for transaction …" (row 10 read each transaction's charges; the copy holds no `user_charges`), 2 "No erasure was requested", 1 "Stock not found"; `m17.log` holds the same 448 below ERROR (W-370); row 10 showed both answering alike — **go** |
 | 2026-11-27 | rehearsal, local copy of `Cluster0` (W-337i3, D-998) | row 14, every copy removed | owner | `w337i3-mongo`, `w337i3-pg` removed with their volumes, then `0` containers; `w337i3` and `w406` folders gone ("No such file or directory" × 2), so the answers (§0.10 step 4) and `users.txt` with them; clipboard cleared; secrets unset — **go**; sign-off asked |
+| 2026-11-28 | staging, `it-staging` → Aiven `wealthlens-staging` (W-337i4, D-1007) | row 1, environment (from `staging.env`) | owner | keys 32 bytes, prefixes bbf4a26647f6 / c59064f277a6 / 5524e829976b (= W-366b row 1); PRIVACY_CONTACT 25; owner email 25; Mongo user set; PG URL not yet set (row 2); 8081, 8082 free; jars 91,330,043 (`m1.6.1`) and 120,973,903 (`m1.7.4`); **docker: OrbStack not running** (socket absent), images `0` — **hold**: `orb start`, then the images check again |
+| 2026-11-28 | staging (W-337i4, D-1007) | row 1, again: `orb start`, images | owner | images `2` (`postgres:18`, `mongo:8.0.4`) — **go**; row 1 done |
+| 2026-11-28 | staging (W-337i4, D-1007) | row 2, `staging.env` gains the target (backup `staging.env.before-w337i4` first) | owner | `-rw-------`, 605 bytes; 12 names, the last three `APP_POSTGRES_DATASOURCE_*`; password length 24; host part `wealthlens-staging-aaaaaw.e.aivencloud.com:18042 defaultdb` — **go** |
+| 2026-11-28 | staging, Aiven `wealthlens-staging` (W-337i4, D-1007) | row 3, §0.9 step 2, the target (read-only, `postgres:18` psql, C1a) | owner | `PostgreSQL 18.7 on x86_64-pc-linux-gnu`; schema `wealthlens` `1`; tables `0` — **go** |
+| 2026-11-28 | staging `it-staging` (W-337i4, D-1007) | row 4, §0.9 step 1, the source (read-only, IntelliJ console) | owner | `database` `it-staging`, `counted` 42, `loginsWithoutEmail` 0, `unknownWithData` `[]`; `nonZero` 13: user_details 14, refresh_tokens 4, charge_catalogue 13, charge_schedules 39, charge_instruments 2, corporate_action 7, lastly_performed_corporate_action 10, assets 431, transactions 660, trade_outcomes 130, profit_and_loss 8, privacy_consents 1, privacy_processing_log 109 (sum 1428) — **go** |
+| 2026-11-28 | staging `it-staging` (W-337i4, D-1007) | row 5, the old-forms survey (read-only, IntelliJ console; `find().toArray()` in `$documents` worked) | owner | `assetsWithTotalValue` 3; `transactionsWithoutTimezone` 581; `corporateActionKeys` `[]`; dates: assets `transaction_date` 431 dated, transactions 660, all at 00:00Z (`at1830Utc` 0, `otherTimes` 0), no `maturity_date` — **go**; row 7 must name `3 × total_value left out` (assets) and `581 × timezone_id absent` (transactions), nothing else |
+| 2026-11-28 | staging (W-337i4, D-1007) | row 6, §0.9 step 3, the copy | owner | **`exit: 1`**; tail shows only Hikari shutdown — cause asked (log kept) — **stop** |
+| 2026-11-28 | staging (W-337i4, D-1007) | row 6, the cause | owner, session | `IllegalStateException: transactions 693e80b96941753c15696441: transactions has no column asset_request for a stored key` (`RowMapping.java:191`), 0 `, clean` lines (refused in prepare, before any row is written; Flyway's empty tables expected on the target, as W-337i3 row 6). The copier maps `asset_request` to `asset_request_json` (`CollectionCopies.java:101`), so the stored key is likely another spelling of it (`assetRequest`: `TemporaryTransactionEntity` stored it unannotated, 5bc7cf10, in `temporary_transactions` until 117b3a0d) — **unverified**; read-only key survey asked — **stop (R13)** |
+| 2026-11-28 | staging `it-staging` (W-337i4, D-1007) | row 6, the key survey (read-only, IntelliJ console) | owner | the document found (string `_id`), `status` `TEMPORARY`, keys snake_case but **`assetRequest`** (14 camelCase sub-keys) — the only camelCase top-level key in any collection; `assetRequest` 1, `asset_request` 0 in `transactions`. `m1.6.1` reads only `asset_request` (`TransactionEntity.java:159 – 160`), so it sees none, and its redrive answers this one `failed: No asset request stored` (`PortfolioService.java:345 – 349` at `m1.6.1`). Prod copied clean (no such key). Decision asked (W-421) |

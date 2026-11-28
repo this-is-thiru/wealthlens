@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : PAUSED after W-337i3 (rehearsal) + W-420 (CI speed) — both DONE (D-1006). Next: W-337i4 (staging moves), not started.
-Stage           : All committed + pushed on w-337 (pause commit last). PR #80 (docs: close-out + pause) open; its run to check. m1.7.4 released (ccb7037d, tag 8aa6baf5).
-Last item commit: "taxplanning W-337i3: rehearsal signed off on m1.7.4 — rows 1 – 14, read comparison 0 differences; ci W-420 done — 5 m 22 s, red per tier; D-1006"
-Next step       : 1. gh run list --branch w-337 --limit 1 (red → read, report). 2. Green: owner's word → merge #80 (docs only, no release needed). 3. "start W-337i4" → read plans/W-337i3.md, runbook §0.9/§0.10/§1B, D-991; write plans/W-337i4.md (it-staging → Aiven wealthlens-staging, m1.7.4 jar); STOP.
+Item            : W-421 DONE (D-1009), committed into PR #80. W-337i4 STOPPED at row 6 (D-1008), resumes from row 3 on m1.7.5.
+Stage           : W-421 + W-337i4 docs committed on w-337 and pushed (PR #80); its run to check. Staging PG holds Flyway's empty tables; it-staging untouched.
+Last item commit: "taxplanning W-421: leave out the camelCase assetRequest of staging's old temporary, counted — m1.6.1 never read it; W-337i4 planned (D-1007), stopped at row 6; D-1008, D-1009"
+Next step       : 1. gh run list --branch w-337 --limit 1 (red → read, report). 2. Green: owner's "merge #80". 3. m1.7.5 = W-337i1 again (tag, worktree ../wealthlens-m1.7.5-pg, jar, WL-A-2). 4. W-337i4 from row 3: J17 → m1.7.5, PSQL DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens; row 7 expects transactions '1 × assetRequest left out, 581 × timezone_id absent', assets '3 × total_value left out'.
 Files touched   : (none); api-collection Bruno edits — never commit
-Flags for owner : §1.h count due 2026-11-29 (staging/prod still Mongo: console). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner. staging.env/prod.env lack PG vars (W-337i4 needs staging's).
-Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; CI = 3 jobs (unit, integration, gate), ~5½ min.
-  Jars: m1.7.4 ../wealthlens-m1.7.4-pg/backend/target (the move's build), m1.6.1 ../wealthlens-m1.6.1/backend/target. No containers, no app running; rehearsal copies all removed.
-Updated         : 2026-11-27 (session 125) — paused
+Flags for owner : staging: target holds Flyway's empty tables (row 6 refused in prepare); it-staging untouched. §1.h count due 2026-11-29 (staging per C2; prod still Mongo: console). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner. staging.env gains PG vars at row 2.
+Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; CI = 3 jobs, ~5½ min.
+  Jars: m1.7.4 ../wealthlens-m1.7.4-pg/backend/target (120,973,903 B, sha 6270d07a6010…), m1.6.1 ../wealthlens-m1.6.1/backend/target (91,330,043 B).
+Updated         : 2026-11-28 (session 126)
 ```
 ## Resume check (run these, compare, then act on "Next step")
 
