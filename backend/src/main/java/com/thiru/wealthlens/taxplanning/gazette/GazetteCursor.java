@@ -35,9 +35,9 @@ public class GazetteCursor {
     private long lastNumber;
 
     /**
-     * Who moved the cursor and when (W-337f, D-951 C7a): standard audit columns, replacing the manual {@code updatedAt}/
-     * {@code updatedBy} fields the Mongo era set by hand — {@code TaxJobRunner.run()} already wraps a job in
-     * {@code auditor.runAs(job.name(), ...)}, so this fills with the job's own name exactly as the manual call did.
+     * Who moved the cursor and when (W-337f, D-951 C7a): the standard audit columns. {@code TaxJobRunner.run()} wraps a
+     * job in {@code auditor.runAs(job.name(), ...)},
+     * so this fills with the job's own name.
      */
     @Embedded
     private AuditColumns auditMetadata = new AuditColumns();

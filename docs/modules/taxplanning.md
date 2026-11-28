@@ -163,7 +163,7 @@ Every `BadRequestException` and `IllegalArgumentException` maps to HTTP **400** 
 | Newly added landlord/lender id not held by this profile | 400 `"landlord <id> is not one of this profile's landlords"` / `"lender <id> is not one of this profile's lenders"` | `profile/TaxProfileReferenceService.java:110` – `:123`; `workspace/DraftService.java:200` – `:210` |
 | Evidence does not match entries by position, exceeds tenancy months / incurred amount / paid total, or names an unentered code / absent Agniveer fund | 400 naming the `/evidence/...` path and bound | `workspace/EvidenceHeld.java:48` – `:91`; `workspace/ChapterViiiEvidence.java:46` – `:70` |
 | `/filing/ofWhichByEmployer` negative or exceeds `/filing/taxAtSource` | 400 (`IllegalArgumentException` inside `DraftInputs.Filing`; caught as bind refusal on patch) | `workspace/DraftInputs.java:92` – `:96` |
-| `/filing/declarations` names a question not asked for the year or wrong answer kind | 400 (from `TaxCalculator.requireAsked`) | `workspace/DraftService.java:186` – `:187` |
+| `/filing/declarations` names a question not asked for the year or wrong answer kind | 400 (from `TaxCalculator.requireAsked`) | `workspace/DraftService.java:204` – `:205` |
 | Illegal draft status transition or null status | 400 `"A draft that is <current> cannot become <next>"` | `workspace/DraftService.java:245` – `:247` |
 | Requested revision number does not exist (negative or above `currentRevision`) | 400 `"This draft has no revision <number>"` | `workspace/DraftService.java:235` – `:237` |
 | Patch/import against non-editable draft (`ACTED_ON` or `ARCHIVED`) | **409** `"A draft that is <status> cannot be edited"` (`conflictingPaths = []`) | `workspace/DraftService.java:172` – `:175` |
@@ -346,7 +346,7 @@ still refused (`documents/store/ReadingJson.java`).
   3. Applies patch, runs `DraftInputsMapper.requireBinds`, binds `DraftInputs`.
   4. Checks only **newly added** landlord/lender IDs against `thirdPartyReferences.requireHeld(...)`, so IDs previously stored on a draft whose reference row was later purged by retention do not block unrelated edits (`:200` – `:210`).
   5. Validates `evidence.requireFits(entered, taxYear)`: each positional list (`receiptedMonths`, `journeyExpenditure`, and `ChapterViiiEvidence`'s six lists) must be empty or the exact length of its corresponding `/entered/...` list, with every count/amount in `[0, enteredBound]`, every `qualifyingPayments` code present in `/entered/qualifyingPayments` and `≤` the sum paid under that code, and `agniveerOwnSubscription` present only when `/entered/agniveerCorpusFund` is present (`EvidenceHeld.java:48` – `:91`; `ChapterViiiEvidence.java:46` – `:70`).
-  6. Validates `/filing/declarations` against the year's catalogue via `taxCalculator.requireAsked(...)` (`DraftService.java:186` – `:187`).
+  6. Validates `/filing/declarations` against the year's catalogue via `taxCalculator.requireAsked(...)` (`DraftService.java:204` – `:205`).
   7. Inserts `DraftRevision` at `expectedRevision + 1` **before** saving `FilingDraft` (`:192` – `:196`), setting `reopened = true` if the draft was `READY` and moving status back to `DRAFT`.
 - **Optimistic concurrency & retry (`workspace/DraftSaveRetry.java:27` – `:77`; `workspace/DraftService.java:285` – `:311`):**
   - Two concurrent saves at the same revision both attempt to insert `{draft_id, expectedRevision + 1}` into `tax_draft_revisions`. The loser hits `DataIntegrityViolationException` and rolls back.

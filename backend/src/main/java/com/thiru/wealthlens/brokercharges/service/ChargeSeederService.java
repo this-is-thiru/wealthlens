@@ -85,10 +85,8 @@ public class ChargeSeederService {
      * reachable from a test.
      *
      * <p>Declared as the {@code ApplicationContext} rather than as the {@code ResourcePatternResolver}
-     * it is used as. Both work — the context is one — but the narrower type has more than one bean
-     * answering to it once GridFS is on the classpath, so the injection resolves implicitly and every
-     * IDE flags it. {@code ApplicationContext} is registered as a resolvable dependency and is
-     * unambiguous by construction.
+     * it is used as. Both work — the context is one — and {@code ApplicationContext} is registered as a
+     * resolvable dependency, so it is unambiguous by construction.
      */
     private final ApplicationContext resourceResolver;
 

@@ -23,7 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * One try at reading a document, as stored (TS T7; W-131a, D-761 C4a). What was read — the fields, the text left unread and the
- * parser's notes — is encrypted; which parser ran, when and how it ended stay plain, since a rerun is found by them
+ * parser's notes — and which parser ran, when and how it ended, by which a rerun is found
  * ({@code DR 19} E8).
  */
 @Entity

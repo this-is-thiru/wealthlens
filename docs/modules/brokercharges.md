@@ -160,7 +160,7 @@ card's own code replaces it in place; either evicts both resolver caches (`Charg
 (`data/charges/charge-catalogue.json`, 13 codes), the cards (39 files), then the instrument profiles (`data/charges/instruments/`, 2 files).
 A code or card already on file is **left alone**, and a stored card differing from its file is logged and listed as drift (`:174` – `:188`,
 `:213` – `:231`). Shipped cards with overlapping windows in one scope, an invalid card, or an unknown JSON key stop the run
-(`service/ChargeScheduleWindows.java:34` – `:60`; `ChargeSeederService.java:104` – `:107`, `:194` – `:199`). A second run writes
+(`service/ChargeScheduleWindows.java:34` – `:60`; `ChargeSeederService.java:102` – `:105`, `:194` – `:199`). A second run writes
 nothing.
 
 **Recording** (`service/UserChargeService.java:139` – `:172`): price, then write the row for `{email, transactionId}` — a new one, or the
@@ -284,7 +284,7 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not execu
   rule cannot be written (`dto/enums/DedupeScope.java:6` – `:8`). Nor can a charge on cumulative monthly turnover, or one that accrues
   daily on an open position (MTF interest): every charge is priced at an event.
 - **A card or profile written straight to the repository is not seen** until the caches are evicted: only publishing, closing and
-  seeding evict (`ChargeScheduleService.java:77`, `:99`; `ChargeSeederService.java:137` – `:138`), and nothing but the seeder writes a
+  seeding evict (`ChargeScheduleService.java:77`, `:99`; `ChargeSeederService.java:135` – `:136`), and nothing but the seeder writes a
   profile (grep for `ChargeInstrumentRepository`: the resolver, the seeder, the repository).
 - **Two schemes have profiles** (`data/charges/instruments/`), keyed on a short `stock_code` (`ChargeInstrumentEntity.java:58` – `:60`);
   every other fund is `NO_INSTRUMENT_PROFILE`. **No card starts before 2025-04-01** (the file names), so an earlier trade is

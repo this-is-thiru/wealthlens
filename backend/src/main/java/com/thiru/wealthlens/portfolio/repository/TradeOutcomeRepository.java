@@ -19,8 +19,8 @@ public interface TradeOutcomeRepository extends JpaRepository<TradeOutcomeEntity
      * One user's rows sold strictly between the two dates — both ends excluded, so a caller wanting a closed range
      * passes the days either side. Served by {@code trade_outcome_user_idx}.
      *
-     * <p>Spring Data JPA's derived {@code Between} keyword maps to SQL's inclusive {@code BETWEEN}, unlike Spring
-     * Data MongoDB's, which this method's contract was built on (exclusive both ends) — so this stays an explicit
+     * <p>Spring Data JPA's derived {@code Between} keyword maps to SQL's inclusive {@code BETWEEN}, while this
+     * method excludes both ends — so this stays an explicit
      * JPQL query rather than a derived one (W-337e, D-949).
      */
     @Query("SELECT t FROM TradeOutcomeEntity t WHERE t.email = :email AND t.sellDate > :after AND t.sellDate < :before")

@@ -33,8 +33,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * Indexed on {@code {email, sell_date}} because every read is one user's realised trades, and a capital-gains
  * statement wants them in date order; {@code trade_outcome_buy_lot_idx} is every realised row that consumed a
  * given buy lot, backing the per-holding charge view. Both indexes are declared in
- * {@code db/migration/portfolio/V9__portfolio.sql} (W-337e, D-949) — Postgres indexes apply at DDL time, unlike
- * {@code PortfolioIndexInitializer}'s old Mongo {@code createIndex} calls, which this port removes.
+ * {@code db/migration/portfolio/V9__portfolio.sql} (W-337e, D-949).
  */
 @Entity
 @Table(name = "trade_outcomes")

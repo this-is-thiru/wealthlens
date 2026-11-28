@@ -20,8 +20,8 @@ public interface PortfolioRepository extends JpaRepository<AssetEntity, String>,
 
     /**
      * Every lot oldest first — creation time, the one lot stored before auditing first, then id — so each holding a view
-     * combines shows its oldest lot's own fields and the list keeps one order (W-419, D-1002). MongoDB answered in its stored
-     * order, which no column records.
+     * combines shows its oldest lot's own fields and the list keeps one order (W-419, D-1002); with no order the
+     * store's own would decide, which no column records.
      */
     @Query("SELECT a FROM AssetEntity a WHERE a.email = :email " + OLDEST_FIRST)
     List<AssetEntity> findByEmail(@Param("email") String email);
@@ -30,9 +30,8 @@ public interface PortfolioRepository extends JpaRepository<AssetEntity, String>,
      * The oldest lot of a stock bought on a day in a segment — the one V1's buy merges into; V2 may have bought several
      * (W-272). A buy of another segment that day is a lot of its own (W-296).
      *
-     * <p>Ordered by creation time, not id (W-337e, D-949): Mongo's {@code ObjectId} is itself time-ordered, so
-     * {@code OrderByIdAsc} doubled as "oldest first" there; the id here is a random UUID (W-337a's convention), which
-     * carries no temporal order at all.
+     * <p>Ordered by creation time, not id (W-337e, D-949): the id is a random UUID (W-337a's convention), which
+     * carries no temporal order.
      */
     Optional<AssetEntity> findFirstByEmailAndStockCodeAndBrokerNameAndAccountHolderAndSegmentAndTransactionDateOrderByAuditMetadataCreatedAtAsc(
             String email, String stockCode, BrokerName brokerName, String accountHolder, TradeSegment segment,
@@ -52,7 +51,7 @@ public interface PortfolioRepository extends JpaRepository<AssetEntity, String>,
     /**
      * A stock's lots by trade date, then oldest first as {@link #findByEmail}, so lots sharing a trade date — a bonus
      * allotted on two brokers, say — come back in one order (W-422, D-1011); by trade date alone they came back in
-     * whatever order the store kept, which MongoDB and PostgreSQL do not share.
+     * whatever order the store kept.
      */
     @Query("SELECT a FROM AssetEntity a WHERE a.email = :email AND a.stockCode = :stockCode ORDER BY a.transactionDate ASC, "
             + "a.auditMetadata.createdAt ASC NULLS FIRST, a.id ASC")

@@ -23,8 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
  * Records a trade again when its transaction collided with another trade being recorded at the same moment.
  *
  * <p>Every trade rewrites the user's one profit-and-loss row for the year, and may merge into an existing lot in
- * {@code assets}. Under PostgreSQL (W-337e, D-949 C5a) there is no document-level write-conflict detection the way
- * MongoDB's multi-document transactions had, so a collision now surfaces as one of three things: an
+ * {@code assets}. A collision (W-337e, D-949 C5a)
+ * surfaces as one of three things: an
  * {@link OptimisticLockingFailureException} from {@code ProfitAndLossEntity} or {@code AssetEntity}'s own
  * {@code @Version} check (an update raced another update); a lock timeout or deadlock
  * ({@link CannotAcquireLockException}, Postgres SQLState {@code 40P01}); or, when two attempts both found no

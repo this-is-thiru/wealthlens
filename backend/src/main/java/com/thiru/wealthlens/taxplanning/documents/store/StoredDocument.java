@@ -24,7 +24,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 /**
  * An uploaded document as stored (TS T7; W-131a, D-761). The same bytes are one document per profile, not per world: a key
  * across accounts would refuse a person a file they never stored and tell them someone else has (D-761 C2a). Nothing here says
- * what the form holds, so nothing here is encrypted; where the bytes are is W-131b's.
+ * what the form holds; where the bytes are is W-131b's.
  */
 @Entity
 @Table(name = "tax_documents")

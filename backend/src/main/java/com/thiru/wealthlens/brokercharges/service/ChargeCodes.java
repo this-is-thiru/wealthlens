@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
  *
  * <p>A charge code is not merely an identifier — it is a stored key: {@code UserChargeEntity.amountByCode}
  * ({@code user_charge_amounts.charge_code}) and {@code ChargeSummaryReport.amountByCode} (inside the P&amp;L's JSON) are both
- * keyed by it and matched exactly, so every stored code keeps one shape, {@code [A-Z][A-Z0-9_]*}. The shape dates from
- * MongoDB, which refused a field name containing {@code .} or beginning with {@code $}; every code stored since has it.
+ * keyed by it and matched exactly, so every stored code keeps one shape, {@code [A-Z][A-Z0-9_]*}. Every code stored
+ * so far has it.
  *
  * <p>Case is fixed for a second reason. The catalogue's unique index is case-sensitive, so {@code BROKERAGE}
  * and {@code brokerage} would be two catalogue rows for one charge. Rules name codes exactly, so the

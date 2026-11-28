@@ -44,7 +44,7 @@ public class AccessRecord {
     @Column(name = "read_at")
     private Instant readAt;
 
-    /** New (W-337f, D-951 C7a): this entity had no audit trail under Mongo. */
+    /** Who wrote it and when (W-337f, D-951 C7a). */
     @Embedded
     private AuditColumns auditMetadata = new AuditColumns();
 

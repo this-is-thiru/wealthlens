@@ -160,8 +160,8 @@ public class AssetEntity {
     private AuditColumns auditMetadata = new AuditColumns();
 
     /**
-     * Guards the read-modify-write merge of a same-day buy into this lot (W-337e, D-949). MongoDB's multi-document
-     * transactions caught two concurrent writers of the same lot automatically; PostgreSQL does not, so a lot now
+     * Guards the read-modify-write merge of a same-day buy into this lot (W-337e, D-949): two concurrent writers of the same
+     * lot are caught by nothing else, so a lot
      * carries its own optimistic lock, same as {@code ProfitAndLossEntity}'s.
      */
     @JsonIgnore

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * (W-337e, D-949 C3a) — {@code lastUpdatedTime} is stamped by {@code ProfitAndLossService} explicitly, never by
  * Spring Data auditing, which only ever fires for the aggregate root.
  *
- * <p>Deliberately not {@code Serializable}: it was under Mongo, but nothing nested inside it ({@code FinancialReport},
+ * <p>Deliberately not {@code Serializable}: nothing nested inside it ({@code FinancialReport},
  * {@code YearlyChargeSummary}, …) is, and Hibernate 7 falls back to byte-serializing the whole graph for dirty-checking
  * an attribute-converted type that claims to be — which then fails on the first non-serializable nested class.
  */

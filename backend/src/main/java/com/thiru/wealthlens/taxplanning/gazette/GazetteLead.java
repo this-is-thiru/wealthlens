@@ -72,7 +72,7 @@ public class GazetteLead {
     @Column(name = "found_at")
     private LocalDateTime foundAt;
 
-    /** Who found it and when (W-337f, D-951 C7a): new, this entity had no audit trail under Mongo. */
+    /** Who found it and when (W-337f, D-951 C7a). */
     @Embedded
     private AuditColumns auditMetadata = new AuditColumns();
 

@@ -28,7 +28,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A person's confirmation of one attempt, as stored (TS T7; W-131a, D-761 C4a): one per attempt, so the attempt's id is its
- * key. The values the person accepted are encrypted; the paths they rejected name rows of a form, not what the rows hold.
+ * key: the values the person accepted, and the paths they rejected (rows of a form, not what the rows hold).
  */
 @Entity
 @Table(name = "tax_document_confirmations")

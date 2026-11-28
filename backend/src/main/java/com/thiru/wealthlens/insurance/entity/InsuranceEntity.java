@@ -28,8 +28,8 @@ import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
- * Insurance policies on PostgreSQL (W-337c1, D-941). {@code policyDetails} is stored in {@code insurance_policy_details}
- * as an eager element collection matching Mongo's embedded list.
+ * Insurance policies (W-337c1, D-941). {@code policyDetails} is stored in {@code insurance_policy_details}
+ * as an eager element collection.
  */
 @Entity
 @Table(name = "insurances")

@@ -37,7 +37,7 @@ public class JobFailure {
     @Column(name = "failed_at")
     private LocalDateTime failedAt;
 
-    /** New (W-337f, D-951 C7a): this entity had no audit trail under Mongo. */
+    /** Who recorded it and when (W-337f, D-951 C7a). */
     @Embedded
     private AuditColumns auditMetadata = new AuditColumns();
 

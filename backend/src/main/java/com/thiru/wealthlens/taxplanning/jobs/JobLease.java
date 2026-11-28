@@ -16,8 +16,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * Which run of a job holds it ({@code DR 19} E8): keyed by the job's name, so at most one exists; a lease past {@code expiresAt}
  * may be taken over. {@code holder} is unique per run, so a run overtaken while it was slow sees that it no longer holds the
  * lease and stops. An {@link Instant}, not a local time, so the comparison against "now" is the same moment whatever the
- * server's zone. No TTL index under Postgres (W-337f, D-951 C6a): an abandoned lease is reclaimed lazily by the next
- * acquire's {@code expires_at < now} check, same as Mongo's TTL removal achieved in effect, never swept proactively — same
+ * server's zone. No TTL index (W-337f, D-951 C6a): an abandoned lease is reclaimed lazily by the next
+ * acquire's {@code expires_at < now} check, never swept proactively — same
  * precedent as {@code refresh_tokens} (D-937 C3a).
  */
 @Entity
@@ -37,7 +37,7 @@ public class JobLease {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
-    /** New (W-337f, D-951 C7a): this entity had no audit trail under Mongo. */
+    /** Who took it and when (W-337f, D-951 C7a). */
     @Embedded
     private AuditColumns auditMetadata = new AuditColumns();
 }

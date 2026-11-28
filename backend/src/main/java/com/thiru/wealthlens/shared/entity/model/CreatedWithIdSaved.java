@@ -5,7 +5,7 @@ import jakarta.persistence.PostPersist;
 /**
  * Clears a {@link CreatedWithId}'s creation flag once it is saved, so saving the same instance again updates it.
  *
- * <p>JPA's counterpart of the Mongo-era {@code AfterSaveCallback<CreatedWithId>} (W-337f): named on an entity with
+ * <p>Named (W-337f) on an entity with
  * {@code @EntityListeners(CreatedWithIdSaved.class)} (alongside {@code AuditingEntityListener.class}). Hibernate
  * instantiates an entity listener by reflection and calls its {@code @PostPersist} method with the entity itself, so
  * this takes {@code Object} rather than {@code CreatedWithId} — one listener class is shared across every entity

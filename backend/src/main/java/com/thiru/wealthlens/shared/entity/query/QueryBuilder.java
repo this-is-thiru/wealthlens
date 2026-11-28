@@ -8,8 +8,7 @@ import java.util.Map;
 import org.springframework.data.jpa.domain.Specification;
 
 /**
- * Builds a {@link Specification} from a caller's ad-hoc {@link QueryFilter} list (W-337e, D-949 C6a — replaces the
- * MongoDB {@code Criteria} version this class held before the port).
+ * Builds a {@link Specification} from a caller's ad-hoc {@link QueryFilter} list (W-337e, D-949 C6a).
  *
  * <p>Every filter's key is the Java property name on the target entity (not the stored column name), the same way
  * a JPQL {@code WHERE} clause always is.
@@ -17,7 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 public final class QueryBuilder {
 
     /**
-     * {@code QueryFilter}'s keys are the stored field's own name (snake_case, same as the old Mongo document key). A JPQL-style
+     * {@code QueryFilter}'s keys are the stored field's own name (snake_case). A JPQL-style
      * {@link Specification} always needs the Java property name, so every key is translated here.
      */
     private static final Map<String, String> JAVA_PROPERTY_NAMES = Map.ofEntries(
@@ -62,8 +61,8 @@ public final class QueryBuilder {
         };
     }
 
-    // Preserves the original's exact null-unboxing: a filter that omits isDateField throws a NullPointerException,
-    // same as the Mongo-era QueryBuilder did (QueryFilterSearchIntegrationTest#search_whenIsDateFieldNotSet_throwsNullPointerException).
+    // A filter that omits isDateField throws a NullPointerException on unboxing
+    // (QueryFilterSearchIntegrationTest#search_whenIsDateFieldNotSet_throwsNullPointerException).
     private static void sanitize(QueryFilter queryFilter) {
         if (queryFilter.getIsDateField()) {
             String value = (String) queryFilter.getValue();

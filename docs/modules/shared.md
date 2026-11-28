@@ -157,7 +157,7 @@ Unanswered grievances and breach notices stay.
 **Field protection:** none since W-428c (D-1039) — personal data is stored plain (D-1036); the logs still mask every email and PAN
 (`logback-spring.xml`, `EmailLogMaskTest`, `PanLogMaskTest`). Encryption again, with key rotation, is W-429.
 
-**Dynamic queries** (`entity/query/QueryFilter.java:49` – `:83`; `QueryBuilder.java:22` – `:65`):
+**Dynamic queries** (`entity/query/QueryFilter.java:49` – `:83`; `QueryBuilder.java:21` – `:64`):
 - **The caller's own email is forced:** a filter naming another is dropped, and the caller's added.
 - **Only `AssetEntity.ALLOWED_FIELDS`** may be filtered: `email`, `transaction_date`, `transaction_type`, `account_type`,
   `account_holder`, `exchange_name`, `stock_code`, `broker_name`, `asset_type` (`portfolio/entity/AssetEntity.java:155` – `:156`).
@@ -227,12 +227,12 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not execu
    `application-prod.yaml:62`). Passwords are written as Argon2id since W-358d3, and BCrypt is only read for older hashes
    (`config/InvestmentTrackerConfig.java:16` – `:25`). Correcting it changes the notice's version (§5), so new registrations meet the
    corrected wording. The wording is the owner's.
-2. **A query filter that omits `isDateField` answers 500.** `QueryBuilder.sanitize` unboxes the `Boolean` (`QueryBuilder.java:60` – `:65`;
+2. **A query filter that omits `isDateField` answers 500.** `QueryBuilder.sanitize` unboxes the `Boolean` (`QueryBuilder.java:59` – `:64`;
    `QueryFilter.java:30`).
    - **Shown at the build** (a throwaway integration test, deleted): `POST /api/v1/me/portfolio/assets/search` with
      `{filterKey: stock_code, operation: EQUALS, value: TCS}` answered 500.
 3. **`STARTS_WITH` is neither a prefix nor literal.** It passes the caller's text to `regex` unanchored and unescaped
-   (`QueryBuilder.java:43`).
+   (`QueryBuilder.java:42`).
    - **Shown at the build:** `STARTS_WITH "CS"` found TCS.
    - **Risk:** a caller's pattern runs on the server, so a costly one is the caller's to choose.
 4. **Framework and JDK text reach the caller.** These pass `ex.getMessage()` through (`ControllerAdviser.java:40` – `:44`, `:79` – `:89`,

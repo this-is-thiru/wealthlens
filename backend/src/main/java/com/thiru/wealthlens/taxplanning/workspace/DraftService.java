@@ -183,8 +183,8 @@ public class DraftService {
     }
 
     private DraftView save(String email, String draftId, int expectedRevision, JsonNode patch, Optional<WorkbookImport> imported) {
-        // PostgreSQL makes a racing save wait on the winner's revision row; bounded, the wait fails like Mongo's write
-        // conflict did, so DraftSaveRetry can still answer that the other save had not finished (D-621 C2a)
+        // A racing save waits on the winner's revision row; bounded, the wait fails as a conflict,
+        // so DraftSaveRetry can still answer that the other save had not finished (D-621 C2a)
         revisionRepository.boundLockWaits(RACE_WAIT);
         FilingDraft draft = owned(email, draftId);
         if (!draft.getStatus().isEditable()) {
