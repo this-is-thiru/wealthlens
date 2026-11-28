@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
@@ -1270,11 +1271,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertNotNull(savedAsset, "Asset should be created via v2 endpoint");
         assertEquals(TradeFlow.V2, transactionRepository.findAll().getFirst().getTradeFlow());
         assertEquals(10.0, savedAsset.getQuantity());
-        // The superseded implementation is deleted (Chunk 11), so user_broker_charges cannot be
-        // written by anything. Asserted on the raw collection rather than a mapped type, because
-        // the type no longer exists.
-        assertEquals(0, mongoTemplate.getCollection("user_broker_charges").countDocuments(),
-                "nothing may write the superseded implementation's collection");
+        // The superseded implementation is deleted (Chunk 11): nothing may bring back its store, which W-337 did not port.
+        assertEquals(0, supersededChargeTables(), "nothing may create the superseded implementation's table");
     }
 
     @Test
@@ -1308,11 +1306,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         List<AssetEntity> assets = assetsOf(TEST_EMAIL, TEST_STOCK_CODE);
         double totalQty = assets.stream().mapToDouble(AssetEntity::getQuantity).sum();
         assertEquals(5.0, totalQty, "Quantity should be reduced after partial sell");
-        // The superseded implementation is deleted (Chunk 11), so user_broker_charges cannot be
-        // written by anything. Asserted on the raw collection rather than a mapped type, because
-        // the type no longer exists.
-        assertEquals(0, mongoTemplate.getCollection("user_broker_charges").countDocuments(),
-                "nothing may write the superseded implementation's collection");
+        // The superseded implementation is deleted (Chunk 11): nothing may bring back its store, which W-337 did not port.
+        assertEquals(0, supersededChargeTables(), "nothing may create the superseded implementation's table");
     }
 
     @Test
@@ -1496,4 +1491,9 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
     private static final LocalDate UPLOAD_DATE = LocalDate.of(LocalDate.now().getYear(), 1, 1);
 
+
+    private int supersededChargeTables() {
+        return new JdbcTemplate(postgresDataSource).queryForObject("SELECT count(*) FROM information_schema.tables"
+                + " WHERE table_schema = current_schema() AND table_name = 'user_broker_charges'", Integer.class);
+    }
 }

@@ -6,12 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * {@link SearchableIdentifier}'s JPA counterpart (W-337a, D-937): stores a text column encrypted yet still queryable by equality
+ * Stores a text column encrypted yet still queryable by equality (W-337a, D-937)
  * (W-253's scheme), named on the field with {@code @Convert(converter = SearchableColumn.class)}. The same value always stores
  * the same form (the nonce is the value's keyed digest, {@link FieldCipher#encryptSearchable}), so a derived query or a JPQL
- * {@code WHERE} naming the Java property matches without being rewritten. Scoped to text only — no insurance or auth column
- * that moves on this branch is a list of searchable identifiers, unlike {@link SearchableIdentifier}'s Mongo list form, so that
- * case is not built speculatively.
+ * {@code WHERE} naming the Java property matches without being rewritten. Text only: no column holds a list of identifiers.
  */
 @Component
 @Converter

@@ -21,8 +21,8 @@ public final class QueryBuilder {
 
     /**
      * {@code QueryFilter}'s keys are the stored field's own name (snake_case, same as the old Mongo document key)
-     * for every field except the one Spring Data's converter needed to see by Java name to encrypt the query value
-     * correctly — the same special case {@code SearchableIdentifier}'s javadoc describes. A JPQL-style
+     * for every field except the one MongoDB's converter needed to see by Java name to encrypt the query value
+     * correctly (W-253). A JPQL-style
      * {@link Specification} always needs the Java property name, so every key is translated here.
      */
     private static final Map<String, String> JAVA_PROPERTY_NAMES = Map.ofEntries(

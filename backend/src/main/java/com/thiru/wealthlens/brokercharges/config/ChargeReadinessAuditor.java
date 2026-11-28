@@ -18,9 +18,7 @@ import org.springframework.stereotype.Component;
  * fails a health check, the charge is simply zero. Under {@code authoritative} that zero becomes the
  * cost basis, and the only trace is a gaps report nobody is reading on day one.
  *
- * <p>So the condition is announced where somebody will see it — the same reasoning as
- * {@code TransactionSafetyAuditor}, which exists because a disabled transaction manager is equally
- * quiet about itself.
+ * <p>So the condition is announced where somebody will see it.
  *
  * <p>It stays quiet when both phase flags are off: nothing is recording or pricing, so an unseeded
  * database is just one nobody has seeded yet, and warning about it would train people to ignore the

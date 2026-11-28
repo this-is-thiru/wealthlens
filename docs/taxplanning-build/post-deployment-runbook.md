@@ -84,6 +84,7 @@ when its run is logged for both. Everything below is the full sequence for a fre
 and W-370's went with W-337i6 (D-1015), their runs logged for every database.
 
 1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, read in SQL on PostgreSQL (`SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded FROM wealthlens.user_details;`, D-1007 C2a, D-1013 C1a): the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
+2. W-337j2 (D-1018) — **at the deploy of the release carrying it, per database:** the app no longer reads `MONGO_USER` / `MONGO_PASSWORD` and opens no MongoDB connection (§0.1.1, §0.1.2, §1.7). Start it with the two lines removed from the environment; check `grep -ci mongo` on the start log is `0`. That release starts W-337j4's week (D-1016 C2a).
 
 ## 0. Before deploying
 
@@ -91,8 +92,8 @@ and W-370's went with W-337i6 (D-1015), their runs logged for every database.
 
 | # | Check | Why |
 |---|---|---|
-| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
-| 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
+| 0.1.1 | `APP_POSTGRES_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
+| 0.1.2 | ~~MongoDB is a replica set~~ | **Retired by W-337j2 (D-1018):** the app has no MongoDB client; PostgreSQL's transactions need no setting. `MONGO_USER` / `MONGO_PASSWORD` are no longer read |
 | 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /api/v1/public/auth/register`, then `db.user_details.updateOne({ email: "<stored owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })` with the stored form from §0.7 (from W-253 the email is stored encrypted and is no longer the `_id`), then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
 
 ### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **every database · before the deploy that first carries TL-7**
@@ -540,7 +541,7 @@ python3 -I -B $W compare before after > report.txt; echo "exit: $?"; tail -3 rep
 | 1.4 | **W-088u8b** (D-284) | **Nothing.** `trade_outcomes` is no longer rebuilt at boot when empty: see §2.2 | — | — |
 | 1.5 | Charge engine (ADR-27) | `ChargeReadinessAuditor` counts the rate cards when the engine is pricing | Grep the log for `NO RATE CARDS`. Expected on a database never seeded (prod today) until §1B runs; `Charges engine ready: N rate card(s)` otherwise | Run §1A / §1B before anyone trades |
 | 1.6 | TL-7; charge engine | `PortfolioIndexInitializer` and `ChargeIndexInitializer` create their collections' indexes | Grep the log for `Could not create index` (ERROR from `portfolio`, WARN from the charge engine) | The app has started without that constraint. A unique one almost certainly means duplicates: §0.2, then restart |
-| 1.7 | Transactions | `TransactionSafetyAuditor` checks for a `MongoTransactionManager` | Grep the log for `multi-document transactions are DISABLED` | Not a replica set, or `app.mongodb.transactions-enabled` is off (§0.1.2) |
+| 1.7 | Transactions | **Retired by W-337j2 (D-1018):** `TransactionSafetyAuditor` went with the MongoDB client | — | — |
 
 ---
 

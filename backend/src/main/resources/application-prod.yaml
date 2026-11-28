@@ -5,10 +5,6 @@ spring:
   application:
     name: wealthlens
 
-  mongodb:
-    uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@cluster0.x6trgen.mongodb.net/?retryWrites=true&w=majority
-    database: Cluster0
-
 app:
   security:
     key-secret: ${JWT_SECURITY_KEY}

@@ -23,8 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Holds transactions that are blocked by a pending corporate action, to be
  * redriven after the action is processed. Class-level @{@link Transactional}
- * ensures single-method writes are atomic. Safe only when MongoDB replica set
- * + {@code app.mongodb.transactions-enabled=true} is set.
+ * ensures single-method writes are atomic (PostgreSQL's transaction).
  */
 @Log4j2
 @Service

@@ -1,7 +1,4 @@
 spring:
-  mongodb:
-    uri: mongodb://localhost:27017/testdb
-    database: integration-test
   main:
     allow-bean-definition-overriding: true
 
@@ -103,9 +100,4 @@ app:
       purge-archived-after: P12M
       # W-239: DR 14 O5 — a landlord or lender is kept to the end of the tax year it last supports, plus this
       third-party-after: P2Y
-  mongodb:
-    transactions-enabled: true
 
-logging:
-  level:
-    org.springframework.data.mongodb.core.MongoTemplate: DEBUG

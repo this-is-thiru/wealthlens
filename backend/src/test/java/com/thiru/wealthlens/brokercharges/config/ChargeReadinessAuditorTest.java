@@ -21,8 +21,7 @@ import org.mockito.quality.Strictness;
  * resolves {@code NO_SCHEDULE}: nothing errors, nothing fails, the charge is simply zero, and the
  * gap surfaces only in a report nobody is reading yet.
  *
- * <p>Modelled on {@code TransactionSafetyAuditor}, which exists for the same reason — a capability
- * that is off says nothing about itself unless something checks.
+ * <p>A capability that is off says nothing about itself unless something checks — why the auditor exists.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

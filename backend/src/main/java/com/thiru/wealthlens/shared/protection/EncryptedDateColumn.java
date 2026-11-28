@@ -7,10 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * {@link EncryptedField}'s JPA counterpart for a {@code LocalDate} (W-337f): stores the date's {@code toString()} form
- * encrypted, named on the field with {@code @Convert(converter = EncryptedDateColumn.class)}. {@link EncryptedColumn}
- * stays scoped to text; a date needs its own converter because JPA, unlike Mongo's {@code MongoValueConverter}, binds
- * one converter class to one concrete attribute type, not every type a field might declare.
+ * Stores a {@code LocalDate} encrypted (W-337f, {@code DR 14} O1.1): the date's {@code toString()} form, named on the field
+ * with {@code @Convert(converter = EncryptedDateColumn.class)}. {@link EncryptedColumn} stays scoped to text; a date needs its
+ * own converter because JPA binds one converter class to one concrete attribute type.
  */
 @Component
 @Converter
