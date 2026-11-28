@@ -1203,7 +1203,7 @@ Cited by `PackLintTest`.
 - **`DR 15` C4** (`taxplanning-design/15-review-findings.md:405`): `PackDiff` plus lint findings; eight lints; "run the
   diff as a build step that writes a human-readable review file … require a reviewer to sign that file off".
   **`DR 18` V7** (`18-temporal-versioning.md:356`) adds seven shape lints.
-- **W-045h erratum** (`03-WORK-ITEMS.md:514`): `PackDiff` (`taxengine/rules/timeline/PackDiff.java`) has `RuleAdded`,
+- **W-045h erratum** (`BACKLOG.md:514`): `PackDiff` (`taxengine/rules/timeline/PackDiff.java`) has `RuleAdded`,
   `RuleRemoved`, `VersionAdded`, `VersionRemoved`, `ValueChanged`, reading only compiled `law/rates.json`; W-139 adds
   the lint findings, the magnitude, and **regimes** (not diffed today). `PackDiff` has no caller in `main`, only
   `PackDiffTest`.
@@ -1239,7 +1239,7 @@ Cited by `PackReviewTest`.
 
 #### What I read (session 48)
 
-- **The row** (`03-WORK-ITEMS.md`, W-139a) and **D-452**: 220 of the review's 235 change lines read "version 2025-04-01
+- **The row** (`BACKLOG.md`, W-139a) and **D-452**: 220 of the review's 235 change lines read "version 2025-04-01
   removed; version 2026-04-01 added". `PackLint` already pairs each new version with its predecessor
   (`lintVersions` → `lintSuccession`); `PackDiff.compare` already walks two nodes leaf by leaf.
 - **Survey of the 220 successions at 2026-04-01** (a script over `rulepacks/timeline/law/rules/*.json`, run once,

@@ -80,7 +80,7 @@ static final ArchRule money_rounding_lives_in_one_place =
 > they live in **`taxrules.money`**. `taxrules` may not depend on `taxengine` (T1), and a rule
 > pack holds rupee figures by its nature — slab band bounds, the 80C ceiling, the standard
 > deduction — so a cap shape in `taxrules.cap` cannot express a limit without them. Decided as
-> option (A) of `STATE.md` **B-001**.
+> option (A) of `BACKLOG.md` **B-001**.
 > Verified by: `./mvnw test -pl backend -Dtest=WealthLensModulithTest` failed with
 > *"Module 'taxrules' depends on module 'taxengine' via …CapResult -> …taxengine.money.Money"*
 > before the move, and passes after it.
@@ -606,7 +606,7 @@ the rule rather than living in an email.
 | PR 1 | `Money` under `..taxengine.money..`; `Rate`; `MoneyBridge` stub |
 
 > **Erratum (W-013, 2026-09-19):** `..taxrules.money..` — see the erratum in E1 above and
-> `STATE.md` **B-001**.
+> `BACKLOG.md` **B-001**.
 | PR 2 | **+** the pack Maven plugin: validate, link, generate constants (E3) |
 | **PR 2b** (new) | JSON Schema generation + the CLI goals (E2) |
 | PR 3 | **+** test-data builders (E4.5) |

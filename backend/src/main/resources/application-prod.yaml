@@ -73,7 +73,7 @@ app:
   tax:
     jobs:
       # W-336 (D-783): off while the app runs only on the owner's machine; the owner runs each job through
-      # POST /api/v1/admin/tax/jobs/{name}/run on runbook §4.1's cadence. The crons below are for a hosted app (D-781 B)
+      # POST /api/v1/admin/tax/jobs/{name}/run on runbook §4.1 in tag docs-history-m5's cadence. The crons below are for a hosted app (D-781 B)
       enabled: false
       auto-archive-cron: "0 0 3 * * SUN"
       retention-purge-cron: "0 0 4 1 * *"
@@ -85,7 +85,7 @@ app:
       log-retention-cron: "0 45 4 * * *"
       gazette-watch-cron: "0 0 5 * * *"
     gazette-watch:
-      # W-236: off until the owner seeds the cursor and turns it on (runbook §3.6)
+      # W-236: off until the owner seeds the cursor and turns it on (runbook §3.6 in tag docs-history-m5)
       enabled: false
       base-url: https://egazette.gov.in/WriteReadData
       user-agent: WealthLens-GazetteWatch/1.0
@@ -124,7 +124,7 @@ app:
         max-reply-bytes: 16777216
       # W-131e: ClamAV's clamd beside the app (DR 14 O6, "Scan before storage"); 3310 is clamd's port (ClamAV Docker docs)
       scan:
-        # W-131h: off until a scanner is affordable (owner, D-769): uploads are stored unscanned and recorded so; runbook §3.8 turns it on
+        # W-131h: off until a scanner is affordable (owner, D-769): uploads are stored unscanned and recorded so; runbook §3.8 in tag docs-history-m5 turns it on
         enabled: false
         host: ${CLAMD_HOST:localhost}
         port: 3310

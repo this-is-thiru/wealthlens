@@ -135,7 +135,7 @@ These override any instinct, any shortcut, and anything else in this repository.
 | **R6** | **Ambiguous spec → stop.** Mark `BLOCKED`, write what is ambiguous, and **stop the session**. The backlog does not encode dependencies, so you cannot know what is safe to do next — I decide. |
 | **R7** | **Never write to `docs/taxplanning-design/`** — with exactly one exception: you may **append an erratum block** where the design is demonstrably wrong. Nothing else. See §10. |
 | **R8** | **One item in flight.** Never two `IN_PROGRESS`, never start a new one while something is `AWAITING_REVIEW`. |
-| **R9** | **Update `STATE.md` before you stop.** Especially mid-item. |
+| **R9** | **Update `BACKLOG.md` before you stop.** Especially mid-item. |
 | **R10** | **Never `double`/`float` for money. Never `LocalDate.now()` in `taxengine`.** Both fail ArchUnit. |
 | **R11** | **Never mark an item `DONE`.** Only a human review does that. |
 | **R12** | **Explain before you code.** No exceptions. |
@@ -147,7 +147,7 @@ These override any instinct, any shortcut, and anything else in this repository.
 > document edited **in place**, with its own Changes log — like `01-PRD.md` and `02-TECH-SPEC.md`. The
 > other design documents remain errata-only.
 
-> **Amendment (D-435, 2026-11-01) — the switch to Phase 11.** R4's order is `PARKED-ROWS.md`'s queue, then the board. Related items
+> **Amendment (D-435, 2026-11-01) — the switch to Phase 11.** R4's order is now `BACKLOG.md`'s phases (W-435). Related items
 > are planned and approved as one family. A new row needs a wrong figure with no refusal or notice; anything else is a line under
 > that file's "Noted". The commit still needs the owner's word.
 
@@ -157,11 +157,11 @@ These override any instinct, any shortcut, and anything else in this repository.
 
 ```
 1. git log --oneline --grep='^taxplanning W-' -1
-                                     → compare the SUBJECT with STATE.md "Last checkpoint"
+                                     → compare the SUBJECT with CHECKPOINT.md "Last checkpoint"
                                        mismatch → STOP, report `git log --oneline -10`
                                        (non-item commits are ignored by this check)
 2. git status --short                → uncommitted work?
-3. Read STATE.md "Current position" (decisions are in `DECISIONS.md`)
+3. Read CHECKPOINT.md "Current position" (decisions are in `DECISIONS.md`)
 4. Act on the status you find:
      EXPLAINED        → the plan is written. Ask for approval. Do NOT code yet.
      IN_PROGRESS      → check which of "Produces" exist and compile. Finish only what is missing.
@@ -176,12 +176,12 @@ These override any instinct, any shortcut, and anything else in this repository.
 >
 > 1. **`CHECKPOINT.md` is the resume point** — about 20 lines, overwritten (never appended). Update
 >    it at **every stage change** and **after every plan step**, and always **before** reporting to
->    the owner. Resume reads it first; `STATE.md` is read only when the checkpoint points there.
+>    the owner. Resume reads it first; `BACKLOG.md` is read only when the checkpoint points there.
 > 2. **The plan lives in a file**, `plans/W-0nn.md`, not only in the chat. Approval is recorded in it
 >    (the owner's exact words). The plan's **Steps** list is ticked as work proceeds; a resumed session
 >    continues at the first unticked step and redoes nothing ticked.
 > 3. **No work-in-progress commits.** Uncommitted files survive on disk between sessions; the item
->    is still one commit (its `Produces`, its plan file, `STATE.md` and `CHECKPOINT.md`). The resume
+>    is still one commit (its `Produces`, its plan file, `BACKLOG.md` and `CHECKPOINT.md`). The resume
 >    check compares `git status --short` with the checkpoint's "Files touched".
 >
 > The short resume prompt is **P1-quick** in `04-PROMPTS.md`.
@@ -193,12 +193,12 @@ These override any instinct, any shortcut, and anything else in this repository.
 - [ ] The item's `Verify` command passes
 - [ ] `./mvnw test -pl backend -Punit` passes
 - [ ] `./mvnw spotless:apply` has been run
-- [ ] **The only files changed are:** the item's `Produces` list, **plus `docs/taxplanning-build/STATE.md`**, **plus** any file `spotless:apply` reformatted with no semantic change
+- [ ] **The only files changed are:** the item's `Produces` list, **plus `docs/taxplanning-build/BACKLOG.md`**, **plus** any file `spotless:apply` reformatted with no semantic change
 - [ ] If `spotless` touched a file that is **not** in `Produces`, `git checkout --` that file and say so in the report — formatting an unrelated file is someone else's change, not yours
-- [ ] `STATE.md` updated
+- [ ] `BACKLOG.md` updated
 - [ ] **A human has reviewed and approved**
-- [ ] The item is **committed** in **one** commit — its `Produces` files plus `STATE.md` — whose
-      subject is `taxplanning W-0nn: <title>`, and STATE.md's "Last checkpoint" names that item and
+- [ ] The item is **committed** in **one** commit — its `Produces` files plus `BACKLOG.md` — whose
+      subject is `taxplanning W-0nn: <title>`, and CHECKPOINT.md's "Last checkpoint" names that item and
       subject **before** the commit is made
 
 Eight of eight, or it is not done. The commit is part of the item, not an afterthought — the resume
@@ -231,7 +231,7 @@ split. That is a decision for me, taken at the plan stage — never discovered h
 - **the design docs and the existing code disagree** — use prompt **P10**, do not change either side;
 - **the item is mis-sized** (§7) — raise it in the EXPLAIN, not mid-code.
 
-Record it in `STATE.md` in exactly this shape:
+Record it in `BACKLOG.md` in exactly this shape:
 
 ```
 ### B-00n  (W-0nn)
@@ -248,9 +248,9 @@ What I would need to proceed:
 > **Amendment (D-046 B1, 2026-09-23):** `01-PRD.md` and `02-TECH-SPEC.md` are **no longer
 > append-only**. They state the current truth and are edited in place; every change is logged in
 > their **Changes** section, and the prior text stays in git. The errata rule below still governs
-> the 25 design documents and `03-WORK-ITEMS.md`.
+> the 25 design documents and `BACKLOG.md`.
 
-The design is a record of what was decided and why, and `03-WORK-ITEMS.md` is a record of what was
+The design is a record of what was decided and why, and `BACKLOG.md` is a record of what was
 planned. When building reveals either is **wrong** — not merely incomplete, and not a matter of
 taste — append an erratum **immediately below the wrong text**, in exactly this shape:
 
@@ -273,7 +273,7 @@ Rules for an erratum:
 This exception exists because `W-002` found `19-engineering-foundations.md` E1 quoting an ArchUnit
 rule **without** its `ChargeRounding` exemption — implementing from that quote alone would have
 broken the charges engine. A design that cannot be corrected is a design that misleads the next
-reader in exactly the way it misled you. Extended to `03-WORK-ITEMS.md` by decision **D-009**, after
+reader in exactly the way it misled you. Extended to `BACKLOG.md` by decision **D-009**, after
 `W-006` found a work item citing the wrong test.
 
 ---
@@ -285,9 +285,8 @@ reader in exactly the way it misled you. Extended to `03-WORK-ITEMS.md` by decis
 | `00-START-HERE.md` | this protocol | start of every session |
 | `01-PRD.md` | what the product must do | when an item cites a feature ID |
 | `02-TECH-SPEC.md` | every type, package, collection, endpoint, invariant | when an item cites a type |
-| `03-WORK-ITEMS.md` | the ordered backlog with checkboxes | every session |
+| `BACKLOG.md` | every open item, its status and phase (W-435) | every session |
 | `04-PROMPTS.md` | copy-paste prompts for each stage | every session |
-| `STATE.md` | status board, current position, open owner questions, unverified rules | when the checkpoint points there |
 | `DECISIONS.md` | every decision (D-rows) and blocker (B-00n), cited by the code | when a D-row or B-row is named |
 | [`../README.md`](../README.md) | the docs index; history is in git tag `docs-history-m1` | to find any doc |
 | `CHECKPOINT.md` | **the resume point** — ~20 lines, overwritten | first and last thing, every session (§5b) |
@@ -311,10 +310,10 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 
 | ID | Means | Home | Cite as |
 |---|---|---|---|
-| `W-0nn`, `W-0nnx` | work item; suffixed ids are splits/insertions, never renumbered | `03-WORK-ITEMS.md` | `W-045b` |
+| `W-0nn`, `W-0nnx` | work item; suffixed ids are splits/insertions, never renumbered | `BACKLOG.md` | `W-045b` |
 | `B-00n` | a blocker | `DECISIONS.md` | `B-002` |
 | `D-0nn` | a build decision (three digits) | `DECISIONS.md` | `D-046` |
-| `B1`, `B2` | backlog rules (B1: an item carries its own test; B2: a `permits` clause lists only what exists) | `03-WORK-ITEMS.md` | `WI rule B2` |
+| `B1`, `B2` | backlog rules (B1: an item carries its own test; B2: a `permits` clause lists only what exists) | `BACKLOG.md` | `WI rule B2` |
 | `R1`–`R15` | the absolute rules | this file §4 | `START-HERE R7` |
 | `P0`–`P11`, `P1-quick` | prompts | `04-PROMPTS.md` | `prompt P11` |
 | `F1`–`F41` | product features; `F2.9` = a criterion | `01-PRD.md` | `PRD F2.9` |
@@ -324,7 +323,7 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 | `T1`–`T12` | tech-spec sections | `02-TECH-SPEC.md` | `TS T5` |
 | `I1`–`I32` | invariants | `02-TECH-SPEC.md` T5 | `TS I8` |
 | `A1`–`A7`, `B1`–`B6`, `C1`–`C5` (in a review) | review findings / decisions | `reviews/<date>-…md` | `review 2026-09-23 B4` |
-| `Q1`–`Q3` | session-3 questions (answered by D-043) | `STATE.md` | `STATE Q2` |
+| `Q1`–`Q3` | session-3 questions (answered by D-043) | `BACKLOG.md` | `STATE Q2` |
 
 ### The brief (`docs/taxplanning-design/00-BRIEF.md`)
 

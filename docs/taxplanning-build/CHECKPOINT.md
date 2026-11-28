@@ -4,10 +4,11 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-434 DONE (D-1050), committed and pushed with tag docs-history-m4; the clean-up W-431 – W-434 is complete. Next: owner's word.
-Stage           : #87 open; check its run on the latest commit, then ask "merge #87"; then a release and runbook §1.1 (W-428c) per database.
-Last item commit: "taxplanning W-434: rewrite the README to a page and move the unread design-phase docs into tag docs-history-m4 — the kept design docs marked as pre-build references; D-1049, D-1050"
-Next step       : 1. #87 green → "merge #87" → release (m1.10?) → runbook §1.1 per database. 2. 2026-11-29: runbook §1.2 count. 3. W-337j4 due 2026-12-05. 4. seen, not placed: GEMINI.md, test-oracle/ in the repo root.
+Item            : W-435 DONE (D-1052), committed and pushed with tag docs-history-m5. Tracking is now BACKLOG.md (open items only) + this file + DECISIONS.md.
+Stage           : #87 open; check its run on the latest commit, then ask "merge #87".
+Last item commit: "taxplanning W-435: track only open items in BACKLOG.md, in five new phases — the status board, work items, parked register and the runbook's extras into tag docs-history-m5; D-1051, D-1052"
+Current position: dev, staging, prod on m1.9, all personal data plain (W-428b). On w-337, not yet released: W-428c (encryption removed, Flyway V14), W-430 – W-435 (clean-up). Before the next release starts on each database: runbook §1.1.
+Next step       : 1. #87 green → "merge #87" → release → runbook §1.1 per database. 2. 2026-11-29: runbook §1.2 count. 3. W-337j4 due 2026-12-05. 4. BACKLOG.md Phase 1, W-385 first; W-384 can close (done by W-430) on owner's word.
 Files touched   : (none); api-collection — never commit
 Flags for owner : W-337j4 (delete the 3 Atlas clusters) due 2026-12-05. W-418 needs the broker statement. Same-day FIFO tie in sales proposed, not placed (D-1010). W-416 waits. §1.s Aiven retention not given (staging's only way back to m1.8 now). Keep tax key values (password manager) while dev/prod pre-w428a dumps are kept; §2.21 removes them from env files.
 Env notes       : NO Claude attribution; ask "commit and push" explicitly; OrbStack: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; SQL via postgres:18 psql. Owner's zsh: no inline # comments.

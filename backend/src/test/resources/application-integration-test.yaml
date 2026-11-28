@@ -76,7 +76,7 @@ app:
       enabled: false
       gazette-watch-cron: "0 0 5 * * *"
     gazette-watch:
-      # W-236: off until the owner seeds the cursor and turns it on (runbook §3.6)
+      # W-236: off until the owner seeds the cursor and turns it on (runbook §3.6 in tag docs-history-m5)
       enabled: false
       base-url: https://egazette.gov.in/WriteReadData
       user-agent: WealthLens-GazetteWatch/1.0

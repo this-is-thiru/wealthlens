@@ -257,4 +257,4 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not execu
 
 - Sign-in, tokens and the login's erasure: `docs/modules/auth.md`.
 - Each module's own erasure part: its module doc (`portfolio`, `insurance`; `taxplanning`, W-357b10).
-- The jobs that run erasure and retention, and their switch: `taxplanning` (W-357b10); deploy runbook §4.1.
+- The jobs that run erasure and retention, and their switch: `taxplanning` (W-357b10); deploy runbook §4.1 in tag docs-history-m5.

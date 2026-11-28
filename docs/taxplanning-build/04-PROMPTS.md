@@ -25,10 +25,10 @@ Copy-paste these. They are written so a smaller model cannot drift.
 ## P1 — Start or resume a session
 
 > Read `docs/taxplanning-build/00-START-HERE.md` completely, then read
-> `docs/taxplanning-build/STATE.md`.
+> `docs/taxplanning-build/BACKLOG.md`.
 >
 > Run `git log --oneline --grep='^taxplanning W-' -1` and compare its **subject** with the
-> **"Last checkpoint"** line in STATE.md. Non-item commits (docs, tooling) are ignored.
+> **"Last checkpoint"** line in CHECKPOINT.md. Non-item commits (docs, tooling) are ignored.
 > - **Matches** → normal. Proceed.
 > - **Differs** → an item was committed outside this protocol. **Stop and tell me** what
 >   `git log --oneline -10` shows. Do not proceed until I say so.
@@ -56,7 +56,7 @@ when the checkpoint check fails.
 
 ## P2 — Explain an item *(stage 2 — the first stop point)*
 
-> Take work item **`<W-0nn>`** from `docs/taxplanning-build/03-WORK-ITEMS.md`.
+> Take work item **`<W-0nn>`** from `docs/taxplanning-build/BACKLOG.md`.
 >
 > Read: that item; the design sections it names under `docs/taxplanning-design/`; and only those.
 > You may also read `02-TECH-SPEC.md` for any type it mentions.
@@ -69,7 +69,7 @@ when the checkpoint check fails.
 > - If the item would require modifying a file not in its `Produces` list, **stop — that is a blocker.**
 > - Do not invent a type, package or endpoint name that is not in `02-TECH-SPEC.md`.
 >
-> **Write no code.** Update STATE.md: set `<W-0nn>` to `EXPLAINED`. Then stop and wait for my approval.
+> **Write no code.** Update BACKLOG.md: set `<W-0nn>` to `EXPLAINED`. Then stop and wait for my approval.
 
 ---
 
@@ -114,7 +114,7 @@ when the checkpoint check fails.
 >   tried. Do not proceed to the report template.
 >
 > If both pass, report using the **exact template** in `00-START-HERE.md` §3, pasting real command
-> output — never a summary of it. Update STATE.md: set `<W-0nn>` to `AWAITING_REVIEW`.
+> output — never a summary of it. Update BACKLOG.md: set `<W-0nn>` to `AWAITING_REVIEW`.
 >
 > Then **stop**. Do not start the next item.
 
@@ -126,14 +126,14 @@ when the checkpoint check fails.
 
 > Review of **`<W-0nn>`**: **approved.**
 >
-> 1. Update STATE.md: set `<W-0nn>` to `DONE` with today's date, advance "Current position" to the next
+> 1. Update CHECKPOINT.md: set `<W-0nn>` to `DONE` with today's date, advance "Current position" to the next
 >    item, and add anything learned to CHECKPOINT.md (a ruling as a D-row in DECISIONS.md).
-> 2. **Before committing**, set STATE.md's **"Last checkpoint"** line to
+> 2. **Before committing**, set CHECKPOINT.md's **"Last checkpoint"** line to
 >    `W-0nn — "taxplanning W-0nn: <one-line title>"`. It must match the subject you are about to use.
-> 3. Stage and commit **only** the files in this item's `Produces` list, plus STATE.md, in **one**
+> 3. Stage and commit **only** the files in this item's `Produces` list, plus BACKLOG.md, in **one**
 >    commit:
->    `git add <those paths> docs/taxplanning-build/STATE.md`
->    `git commit -F <message-file> -- <those paths> docs/taxplanning-build/STATE.md`
+>    `git add <those paths> docs/taxplanning-build/BACKLOG.md`
+>    `git commit -F <message-file> -- <those paths> docs/taxplanning-build/BACKLOG.md`
 >    Subject: `taxplanning W-0nn: <one-line title>`. Use the attribution lines this session was given.
 >    *(Use `-F` with a file: a heredoc into `git commit -- <paths>` is read as paths, not a message.)*
 > 4. Confirm with `git log --oneline -1` that the subject matches the checkpoint line. **Do not amend
@@ -156,7 +156,7 @@ when the checkpoint check fails.
 
 ## P5 — When something is blocked
 
-> Item **`<W-0nn>`** is blocked. Write the blocker in STATE.md using the exact shape in
+> Item **`<W-0nn>`** is blocked. Write the blocker in BACKLOG.md using the exact shape in
 > `00-START-HERE.md` §8, set the item to `BLOCKED`, and then tell me:
 > 1. what you needed and could not find;
 > 2. the two or three options you can see, with the trade-off of each;
@@ -171,7 +171,7 @@ when the checkpoint check fails.
 ## P6 — Ending a session cleanly
 
 > We are stopping. Before you finish:
-> 1. update STATE.md — statuses, "Current position", "Last updated"; CHECKPOINT.md;
+> 1. update CHECKPOINT.md — statuses, "Current position", "Last updated"; CHECKPOINT.md;
 > 2. if an item is mid-flight, write in CHECKPOINT.md exactly which files exist, which compile,
 >    and what remains;
 > 3. run `git status --short` and list what is uncommitted;
@@ -185,7 +185,7 @@ when the checkpoint check fails.
 
 > Without changing any code, report:
 > 1. items `DONE` / `AWAITING_REVIEW` / `BLOCKED` / `NOT_STARTED`;
-> 2. which milestone in `03-WORK-ITEMS.md` we are between;
+> 2. which milestone in `BACKLOG.md` we are between;
 > 3. `./mvnw test -pl backend -Punit` — pass, and wall time (budget: 20 s);
 > 4. how many golden (year × regime) cells are filled versus required;
 > 5. every rule still marked `NEEDS VERIFICATION` or `STATUS UNCLEAR` that a **completed** item used;
@@ -199,7 +199,7 @@ when the checkpoint check fails.
 > 1. list every item in the phase with its status;
 > 2. run each item's `Verify` command and paste the output;
 > 3. run `./mvnw test -pl backend -Punit` and `-Dtest=ArchitectureTest`;
-> 4. confirm the milestone row in `03-WORK-ITEMS.md` for this phase is actually true;
+> 4. confirm the milestone row in `BACKLOG.md` for this phase is actually true;
 > 5. list anything the phase was meant to deliver that is missing.
 >
 > Then stop. Do not start the next phase.
@@ -230,7 +230,7 @@ Run this **before** approving any plan that touches a rupee value.
 > 4. Propose **one** of: a forward-fix item appended to the backlog; a revert of that commit; or
 >    reopening `<W-0nn>`. Give the trade-off of each.
 >
-> **Do not revert, reopen or edit anything until I choose.** When I do, record it in STATE.md under
+> **Do not revert, reopen or edit anything until I choose.** When I do, record it in BACKLOG.md under
 > DECISIONS.md and set the status accordingly.
 
 ---

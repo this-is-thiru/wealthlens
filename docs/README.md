@@ -1,6 +1,6 @@
 # WealthLens docs — index
 
-Start here. Every kept doc is listed with what it is for. Anything removed is in a git tag: **`docs-history-m1`** (W-357a), **`docs-history-m2`** (the old deploy runbook, W-430) or **`docs-history-m3`** (finished plans, reviews and work-item rows, W-432) or **`docs-history-m4`** (the old README, `taxplanning-context/`, the design `PROGRESS.md`, W-434):
+Start here. Every kept doc is listed with what it is for. Anything removed is in a git tag: **`docs-history-m1`** (W-357a), **`docs-history-m2`** (the old deploy runbook, W-430), **`docs-history-m3`** (finished plans, reviews and work-item rows, W-432), **`docs-history-m4`** (the old README, `taxplanning-context/`, the design `PROGRESS.md`, W-434) or **`docs-history-m5`** (the status board, work items, parked register and runbook extras, W-435):
 `git show docs-history-m1:<path>` prints a removed file, `git ls-tree -r --name-only docs-history-m1 docs/` lists them.
 
 ## Working on the build (`docs/taxplanning-build/`)
@@ -9,10 +9,8 @@ Start here. Every kept doc is listed with what it is for. Anything removed is in
 |---|---|
 | [`00-START-HERE.md`](taxplanning-build/00-START-HERE.md) | the process: how an item is planned, built, verified and closed |
 | [`CHECKPOINT.md`](taxplanning-build/CHECKPOINT.md) | where the work stands now — read first when resuming |
-| [`STATE.md`](taxplanning-build/STATE.md) | the status board (every item's status), the current position, open owner questions, rules not fully verified |
 | [`DECISIONS.md`](taxplanning-build/DECISIONS.md) | every decision (D-001 …) and blocker (B-001 – B-004); the code cites these rows |
-| [`03-WORK-ITEMS.md`](taxplanning-build/03-WORK-ITEMS.md) | the open work items; finished ones are in tag `docs-history-m3` (the code cites their ids) |
-| [`PARKED-ROWS.md`](taxplanning-build/PARKED-ROWS.md) | parked items with when each comes back, and noted ideas |
+| [`BACKLOG.md`](taxplanning-build/BACKLOG.md) | every open item with its status, phase and, if parked, its gate; an item not in it is finished (W-435). The old board, work items and parked register are in tag `docs-history-m5` |
 | [`plans/`](taxplanning-build/plans/) | plans of items not yet finished (and two the rule packs cite) |
 | [`01-PRD.md`](taxplanning-build/01-PRD.md), [`02-TECH-SPEC.md`](taxplanning-build/02-TECH-SPEC.md) | product requirements and the tax-planning technical spec |
 | [`04-PROMPTS.md`](taxplanning-build/04-PROMPTS.md) | the session prompts |

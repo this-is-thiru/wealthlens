@@ -17,27 +17,27 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Every {@code PLANNED} section names an item still to be built (D-159, D-161). A pointer at an item that is not on
- * the status board, or is done or retired, leaves a section claimed by nothing — W-078c's {@code W-078d}, never in the
- * backlog, and nine sections left behind by W-046, W-049, W-060 and W-067 went unnoticed that way. The status board in
- * {@code STATE.md} is read because it is the one place an item's status is kept. A section in the first scope with no item
+ * the backlog, or is done or retired, leaves a section claimed by nothing — W-078c's {@code W-078d}, never in the
+ * backlog, and nine sections left behind by W-046, W-049, W-060 and W-067 went unnoticed that way.
+ * {@code BACKLOG.md} is read because it is the one place an open item's status is kept (W-435). A section in the first scope with no item
  * at all ({@code DEFERRED BUILT_FIRST}) is refused too: 42 sat there unnamed from W-045o until W-078e2 (D-162).
  */
 class CoverageBacklogTest {
 
     private static final Path TIMELINE = Path.of("src/main/resources/rulepacks/timeline");
-    private static final Path STATE = Path.of("..", "docs", "taxplanning-build", "STATE.md");
+    private static final Path BACKLOG = Path.of("..", "docs", "taxplanning-build", "BACKLOG.md");
 
     @Test
     void stalePointers_whenTheShippedRegisterIsReadAgainstTheBoard_findsNone() throws IOException {
         // Given
         Timeline timeline = TimelineReader.read(TIMELINE);
-        Map<String, String> board = StatusBoard.read(Files.readAllLines(STATE));
+        Map<String, String> board = StatusBoard.read(Files.readAllLines(BACKLOG));
 
         // When
         List<String> stale = stalePointers(CoverageRegister.of(timeline).sections(), board);
 
         // Then
-        assertThat(board).as("the status board in STATE.md").isNotEmpty();
+        assertThat(board).as("the open items in BACKLOG.md").isNotEmpty();
         assertThat(stale).as("PLANNED sections whose item is missing, done or retired — re-point or reclassify them")
                 .isEmpty();
     }
@@ -89,10 +89,10 @@ class CoverageBacklogTest {
         // Then
         assertThat(stale).hasSize(2)
                 .anySatisfy(line -> assertThat(line).contains("W-046").contains("done or retired"))
-                .anySatisfy(line -> assertThat(line).contains("W-999").contains("not on the status board"));
+                .anySatisfy(line -> assertThat(line).contains("W-999").contains("not in the backlog"));
     }
 
-    /** Each {@code PLANNED} section whose item is not on the board, or is done or retired, described. */
+    /** Each {@code PLANNED} section whose item is not in the backlog, or is done or retired, described. */
     private static List<String> stalePointers(Map<SectionRef, Coverage> sections, Map<String, String> board) {
         return sections.entrySet().stream()
                 .filter(entry -> entry.getValue() instanceof Coverage.Planned)
@@ -105,7 +105,7 @@ class CoverageBacklogTest {
     private static Optional<String> staleness(SectionRef section, String item, Map<String, String> board) {
         String status = board.get(item);
         if (status == null) {
-            return Optional.of(section + " names " + item + ", which is not on the status board");
+            return Optional.of(section + " names " + item + ", which is not in the backlog (finished, or never placed)");
         }
         return StatusBoard.isFinished(status) ? Optional.of(section + " names " + item + ", which is done or retired")
                 : Optional.empty();
