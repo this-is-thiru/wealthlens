@@ -92,7 +92,6 @@ public abstract class AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("app.postgres.enabled", () -> "true");
         registry.add("app.postgres.datasource.url", postgresContainer::getJdbcUrl);
         registry.add("app.postgres.datasource.username", postgresContainer::getUsername);
         registry.add("app.postgres.datasource.password", postgresContainer::getPassword);

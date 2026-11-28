@@ -58,7 +58,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Erasure of a whole account over HTTP and Mongo (W-237d, C1a – C7a), on a clock the test sets. Times counted by hand: asked
+ * Erasure of a whole account over HTTP and PostgreSQL (W-237d, C1a – C7a), on a clock the test sets. Times counted by hand: asked
  * at 2027-06-10T08:00Z with {@code erasure-hold: P1Y} (application-integration-test.yaml) → erased from 2028-06-10T08:00Z, one
  * calendar year later, not a second before.
  *

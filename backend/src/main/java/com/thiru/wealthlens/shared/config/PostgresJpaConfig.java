@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
@@ -31,7 +30,6 @@ import org.springframework.transaction.PlatformTransactionManager;
  * C3a) — so every bean is explicitly named and the entity manager factory scans exactly the packages listed below.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "app.postgres", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableJpaAuditing(auditorAwareRef = "securityAuditorAware", dateTimeProviderRef = "utcDateTimeProvider")
 @EnableJpaRepositories(
         basePackages = {"com.thiru.wealthlens.auth.repository", "com.thiru.wealthlens.insurance.repository",

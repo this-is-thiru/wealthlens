@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Verifies the charge documents map and the repository queries execute against a real MongoDB.
+ * Verifies the charge entities map and the repository queries execute against a real PostgreSQL.
  *
  * <p>Written now rather than with the rest of the integration tier, because two of these queries
  * are the sort that fail silently: a parameter substituted into a field name, and a status

@@ -25,7 +25,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Breach intimation over HTTP and Mongo (W-237c, C1a – C4a), on a clock the test sets. Times counted by hand: aware at
+ * Breach intimation over HTTP and PostgreSQL (W-237c, C1a – C4a), on a clock the test sets. Times counted by hand: aware at
  * 2027-06-10T08:00Z with {@code board-report-hours: 72} (application-integration-test.yaml) → the Board's report is due
  * 2027-06-13T08:00Z (three days of 24 hours); the notice is posted at 2027-06-10T09:00Z.
  */

@@ -1010,7 +1010,7 @@ class ProfitAndLossServiceTest {
     @Test
     void updateProfitAndLoss_accumulatingManySells_keepsTheStoredTotalExact() {
         // Given -- ten sells of Rs.0.10 into one period. Raw `+=` gives 0.9999999999999999, which
-        // prints as 1.00 and fails every equality check and every exact Mongo query (TL-8).
+        // prints as 1.00 and fails every equality check and every exact database query (TL-8).
         ProfitAndLossEntity accumulating = new ProfitAndLossEntity(TEST_EMAIL, "2023-2024");
         when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
                 .thenReturn(Optional.of(accumulating));

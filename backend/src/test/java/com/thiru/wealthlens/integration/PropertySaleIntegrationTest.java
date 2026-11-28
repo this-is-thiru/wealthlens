@@ -28,7 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * A property sale over HTTP and into Mongo (W-088g9, D-434): one {@code trade_outcomes} row the capital-gains summary
+ * A property sale over HTTP and into PostgreSQL (W-088g9, D-434): one {@code trade_outcomes} row the capital-gains summary
  * reads with its expenses by code, nothing written for a broker trade, a repeat and a malformed sale refused, the row
  * safe for the other readers of that collection, and cleared with the user's records.
  */

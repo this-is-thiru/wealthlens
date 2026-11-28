@@ -1288,10 +1288,10 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, performed.size());
     }
 
-    // ========== MONGO: performPendingCorporateActions rollback ==========
+    // ========== TRANSACTION: performPendingCorporateActions records a due bonus once ==========
 
     @Test
-    void performPendingCorporateActions_whenMongoRollback_throwsException() {
+    void performPendingCorporateActions_whenABonusIsDue_recordsItPerformedOnce() {
         // GIVEN
         CorporateActionEntity ca = new CorporateActionEntity();
         ca.setStockCode("RELIANCE");
