@@ -5,7 +5,7 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-428c DONE (D-1040), committed and pushed; W-428 complete. Next: owner word for a release (m1.10?), then §2.21 per database; W-429 deferred.
-Stage           : pushed to w-337; needs a PR to master (none open) before a release.
+Stage           : PR #87: baseline-test fix committed and pushed (the gate was red on d89ba299); new run to check.
 Last item commit: "taxplanning W-428c: remove the encryption — the converters, cipher, digests, keys and the one-time rewrite go; dates back to DATE, a PAN unique among profiles not held; D-1039, D-1040"
 Next step       : 1. check the w-337 pipeline (no PR yet: offer PR to master). 2. release on owner's word, then §2.21 dev → staging → prod. 3. 2026-11-29: §1.h rerun. 4. W-337j4 due 2026-12-05. 5. proposed: ChargeRuleListConverter onto JsonColumnConverter (not placed).
 Files touched   : (none); api-collection — never commit
