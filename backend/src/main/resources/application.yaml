@@ -2,6 +2,18 @@ server:
   port: 8080
 
 spring:
+  # W-426, W-427: the one store, by Spring Boot's own auto-configuration, from DATABASE_URL / _USERNAME / _PASSWORD
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      # W-413 (D-989): every connection works in schema wealthlens (D-929), which W-337h made on each host
+      schema: wealthlens
+  jpa:
+    hibernate:
+      # W-405 (D-963): every entity checked against its table at start; Flyway migrates first
+      ddl-auto: validate
   application:
     name: wealthlens
   # W-131d1: above app.tax.documents.max-bytes (20 MB), so a file just past it gets DocumentBytes' own refusal; larger is a 400
@@ -166,11 +178,6 @@ app:
         port: 3310
         # W-131e: connect, then each read; the slowest 20 MiB scan seen was 1.33 s (CI run 44328189271); owner adopted PT60S
         timeout: PT60S
-  # W-413 (D-989): every connection works in schema wealthlens (D-929), which W-337h made on each host
-  postgres:
-    datasource:
-      hikari:
-        schema: wealthlens
   portfolio:
     idempotency:
       # How long a trade with NO client-supplied idempotencyKey stays de-duplicable, in seconds.

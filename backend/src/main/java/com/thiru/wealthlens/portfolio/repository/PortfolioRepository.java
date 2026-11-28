@@ -70,6 +70,6 @@ public interface PortfolioRepository extends JpaRepository<AssetEntity, String>,
     List<AssetEntity> findByEmailAndTransactionDateBetween(@Param("email") String email, @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 }

@@ -22,9 +22,9 @@ import tools.jackson.databind.node.ObjectNode;
  * {@code @Entity} with its own table, so it cannot also be the element type of an {@code @ElementCollection} without
  * conflating "this lot's copy" with "a row in {@code corporate_action}"; no query anywhere filters inside the list.
  *
- * <p>A copy keeps the action's audit fields (W-341). Jackson does not apply {@code AuditColumns}' {@code @Convert}, so this
- * converter encrypts {@code createdBy} / {@code updatedBy} itself, in the searchable form MongoDB held them in (W-401,
- * D-956), on the serialized tree — never on the copies in memory — and decrypts them before binding.
+ * <p>A copy keeps the action's audit fields (W-341). Jackson does not apply {@code AuditColumns}' {@code @Convert}; this
+ * converter encrypted {@code createdBy} / {@code updatedBy} itself (W-401, D-956). Since W-428a (D-1036) they are written plain
+ * and read plain or in the old {@code k1:} form ({@link FieldCipher#reveal}), on the serialized tree.
  */
 @Component
 @Converter
@@ -43,9 +43,7 @@ public class CorporateActionListConverter implements AttributeConverter<List<Cor
         if (attribute == null) {
             return null;
         }
-        JsonNode copies = MAPPER.valueToTree(attribute);
-        rewriteActors(copies, cipher::encryptSearchable);
-        return MAPPER.writeValueAsString(copies);
+        return MAPPER.writeValueAsString(attribute);
     }
 
     @Override
@@ -54,7 +52,7 @@ public class CorporateActionListConverter implements AttributeConverter<List<Cor
             return new ArrayList<>();
         }
         JsonNode copies = MAPPER.readTree(dbData);
-        rewriteActors(copies, cipher::decrypt);
+        rewriteActors(copies, cipher::reveal);
         return MAPPER.convertValue(copies, TYPE);
     }
 

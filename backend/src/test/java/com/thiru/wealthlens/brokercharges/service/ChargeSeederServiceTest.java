@@ -260,7 +260,7 @@ class ChargeSeederServiceTest {
     }
 
     @Test
-    void seed_handsEveryDocumentToMongoWithSomethingAuditingCanFill() {
+    void seed_handsEveryRowToTheStoreWithSomethingAuditingCanFill() {
         // Given — Spring Data's auditing populates an AuditMetadata; it does not create one. A card
         // Jackson built through @AllArgsConstructor carries null there, because Jackson 3's
         // constructor detector prefers the visible all-args constructor even over a no-arg one, so
@@ -376,7 +376,7 @@ class ChargeSeederServiceTest {
 
     @Test
     void findDrift_ignoresTheFieldsTheDatabaseOwns() {
-        // Given — a card read back from MongoDB carries audit metadata that no shipped file has:
+        // Given — a card read back from the database carries audit metadata that no shipped file has:
         // who wrote it and when. Comparing those would report every single card as drifted, and a
         // report that is never empty is one nobody reads.
         //
@@ -386,7 +386,7 @@ class ChargeSeederServiceTest {
         when(chargeScheduleRepository.findByScheduleCode(anyString())).thenAnswer(call -> {
             Optional<ChargeScheduleEntity> onFile = shipped(call.getArgument(0));
             onFile.ifPresent(card -> {
-                card.setId("mongo-generated-id");
+                card.setId("database-generated-id");
                 stampAuditMetadata(card);
             });
             return onFile;
@@ -865,12 +865,12 @@ class ChargeSeederServiceTest {
     }
 
     // ========================================
-    // A charge code becomes a Mongo field name
+    // A charge code is a stored key with one shape
     // ========================================
 
     /**
-     * {@code amount_by_code} is keyed by charge code, so a code is a <em>field name</em> in MongoDB —
-     * and Mongo rejects field names containing a dot or starting with {@code $}. Such a code passes
+     * {@code amount_by_code} is keyed by charge code, so a code is a stored key, matched exactly —
+     * and every stored code has one shape, {@code [A-Z][A-Z0-9_]*} (MongoDB's field-name limit is where it began). Such a code passes
      * the catalogue check, prices correctly, and then fails when the row is saved: the charge is
      * computed and lost. Rejected at the gate every code enters through instead.
      */
@@ -879,7 +879,7 @@ class ChargeSeederServiceTest {
         // Given / When / Then
         assertThatThrownBy(() -> ChargeCodes.validate("MTF.INTEREST"))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("MTF.INTEREST");
+                .hasMessage("Charge code MTF.INTEREST must match [A-Z][A-Z0-9_]* — upper case, digits and underscores only: every stored code has this one shape");
     }
 
     @Test
@@ -889,7 +889,7 @@ class ChargeSeederServiceTest {
     }
 
     /**
-     * Mongo's unique index is case-sensitive, so {@code BROKERAGE} and {@code brokerage} would be two
+     * The catalogue's unique index is case-sensitive, so {@code BROKERAGE} and {@code brokerage} would be two
      * catalogue rows for one charge. Rules name codes exactly, so the second is unreachable — and a
      * charge nobody can name is worse than one that was refused.
      */
@@ -989,7 +989,7 @@ class ChargeSeederServiceTest {
      */
     @Test
     void seed_appliesTheCodeShapeGuardToTheCatalogueItReads() {
-        // Given — a catalogue whose code could not be used as a Mongo field name
+        // Given — a catalogue whose code does not have the stored shape
         ApplicationContext badCatalogue = mock(ApplicationContext.class);
         when(badCatalogue.getResource(anyString()))
                 .thenReturn(new PathMatchingResourcePatternResolver()

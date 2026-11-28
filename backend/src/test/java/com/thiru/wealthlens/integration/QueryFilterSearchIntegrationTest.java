@@ -22,7 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public class QueryFilterSearchIntegrationTest extends AbstractIntegrationTest {
 
-    private static final String TEST_EMAIL = "mongotemplate@test.com";
+    private static final String TEST_EMAIL = "queryfilter@test.com";
     private static final String OTHER_EMAIL = "other@test.com";
 
     @Autowired

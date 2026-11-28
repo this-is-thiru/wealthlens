@@ -30,7 +30,7 @@ public class LogRetention {
         return nowUtc.minus(privacy.logRetention());
     }
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void eraseExpired(LocalDateTime nowUtc) {
         LocalDateTime cutoff = cutoff(nowUtc);
         int records = processingRecords.deleteRecordedBy(cutoff);

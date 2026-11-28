@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -92,10 +91,9 @@ public abstract class AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("app.postgres.enabled", () -> "true");
-        registry.add("app.postgres.datasource.url", postgresContainer::getJdbcUrl);
-        registry.add("app.postgres.datasource.username", postgresContainer::getUsername);
-        registry.add("app.postgres.datasource.password", postgresContainer::getPassword);
+        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgresContainer::getUsername);
+        registry.add("spring.datasource.password", postgresContainer::getPassword);
         registry.add("app.tax.documents.scan.host", () -> "localhost");
         registry.add("app.tax.documents.scan.port", CLAMD::port);
     }
@@ -104,7 +102,6 @@ public abstract class AbstractIntegrationTest {
     private int port;
 
     @Autowired
-    @Qualifier("postgresDataSource")
     protected DataSource postgresDataSource;
 
     @Autowired
@@ -179,9 +176,14 @@ public abstract class AbstractIntegrationTest {
         }
     }
 
-    /** An identifier as stored (W-253): what a raw document or column holds and a raw query matches. */
+    /** An identifier as stored: plain since W-428a (D-1036), so what a raw column holds and a raw query matches is the value itself. */
     protected String storedIdentifier(String identifier) {
-        return fieldCipher.encryptSearchable(identifier);
+        return identifier;
+    }
+
+    /** A value in the {@code k1:} form stored before W-428a (D-1036), for a test that plants an old row. */
+    protected String oldCiphertext(String plain) {
+        return fieldCipher.encryptSearchable(plain);
     }
 
     /** The login of {@code email} from PostgreSQL (W-337c1); {@code null} when there is none. */

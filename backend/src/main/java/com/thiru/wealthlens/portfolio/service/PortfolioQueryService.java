@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Log4j2
 @Service
-@Transactional(value = "postgresTransactionManager", readOnly = true)
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class PortfolioQueryService {
 

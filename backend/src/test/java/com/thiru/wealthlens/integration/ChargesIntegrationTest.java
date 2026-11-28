@@ -68,7 +68,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * The charges engine against a real MongoDB and a real HTTP stack.
+ * The charges engine against a real PostgreSQL and a real HTTP stack.
  *
  * <p>Two things can only be shown here. Deduplication is one: whether a depository charge is levied
  * once or twice for two sells of the same scrip on the same day is decided by an indexed query, and

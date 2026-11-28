@@ -37,7 +37,7 @@ import org.springframework.util.unit.DataSize;
 import org.springframework.web.client.RestClient;
 
 /**
- * The Gazette watch end to end against a local e-Gazette and the test Mongo (W-236): where the cursor moves, when a run
+ * The Gazette watch end to end against a local e-Gazette and the test PostgreSQL (W-236): where the cursor moves, when a run
  * stops, the year roll, a second run adding nothing, a failure holding the cursor, and a copy too large to read. No test
  * here reaches egazette.gov.in; the endpoints are {@code GazetteWatchEndpointIntegrationTest}'s.
  */

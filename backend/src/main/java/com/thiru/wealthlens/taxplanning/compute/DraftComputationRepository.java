@@ -15,7 +15,7 @@ public interface DraftComputationRepository extends JpaRepository<DraftComputati
     void deleteByDraftId(String draftId);
 
     /** Deletes this person's computations, including any left without its draft, with their account (W-237d). */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 
     List<DraftComputation> findByDraftId(String draftId);

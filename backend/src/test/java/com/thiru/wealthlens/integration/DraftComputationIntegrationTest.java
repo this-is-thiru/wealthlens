@@ -746,15 +746,15 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void byReceipt_whenShown_isStoredEncryptedAndTheReadIsRecorded() {
+    void byReceipt_whenShown_isStoredPlainAndTheReadIsRecorded() {
         // Given
         String receipt = compute(draft(false, "0")).at("/tax/receipt").asString();
 
         // When
         call(HttpMethod.GET, OWNER, "/computations/" + receipt, null, null);
 
-        // Then — DR 14 O1.1, O4
-        assertThat(new JdbcTemplate(postgresDataSource).queryForObject("SELECT result_json FROM tax_draft_computations LIMIT 1", String.class)).startsWith("k1:");
+        // Then — stored plain since W-428a (D-1036); O4
+        assertThat(new JdbcTemplate(postgresDataSource).queryForObject("SELECT result_json FROM tax_draft_computations LIMIT 1", String.class)).startsWith("{");
         assertThat(accessRecordRepository.findAll()).singleElement()
                 .satisfies(read -> assertThat(read.getSubject()).isEqualTo(ReadSubject.COMPUTATION))
                 .satisfies(read -> assertThat(read.getSubjectId()).isEqualTo(receipt));

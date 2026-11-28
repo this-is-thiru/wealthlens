@@ -82,7 +82,7 @@ class DocumentBytesTest {
     }
 
     @Test
-    void store_whenExactlyAtBothLimits_storesItEncryptedUnderItsIdAndCountsItsPages() throws java.io.IOException {
+    void store_whenExactlyAtBothLimits_storesItUnderItsIdAndCountsItsPages() throws java.io.IOException {
         // Given — two pages against a limit of two, and the file's own length as the byte limit
         byte[] file = TestPdfs.pages(2);
 
@@ -96,8 +96,8 @@ class DocumentBytesTest {
         verify(repository).save(written.capture());
         TaxDocumentBytes stored = written.getValue();
         assertThat(stored.getDocumentId()).isEqualTo("document-1");
-        assertThat(new String(stored.getBytes(), StandardCharsets.ISO_8859_1)).doesNotContain("%PDF-");
-        assertThat(CIPHER.decryptBytes(stored.getBytes())).isEqualTo(file);
+        // plain since W-428a (D-1036)
+        assertThat(stored.getBytes()).isEqualTo(file);
     }
 
     @Test

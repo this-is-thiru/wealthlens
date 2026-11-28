@@ -27,7 +27,7 @@ public class PrivacyRecordErasure implements PersonalDataHolder {
     }
 
     @Override
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void erase(String email) {
         grievances.deleteByEmail(email);
         intimations.deleteByEmail(email);

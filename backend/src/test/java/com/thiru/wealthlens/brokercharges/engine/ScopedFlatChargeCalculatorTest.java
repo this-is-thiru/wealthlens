@@ -165,13 +165,13 @@ class ScopedFlatChargeCalculatorTest {
         // double-charge silently, which is worse than the trade failing.
         when(userChargeRepository.existsChargeForScripOnDate(
                 anyString(), anyString(), any(), anyString(), any(), anyString()))
-                .thenThrow(new IllegalStateException("mongo is down"));
+                .thenThrow(new IllegalStateException("database is down"));
 
         // When / Then
         assertThatThrownBy(() -> calculator.compute(
                         scopedRule(DedupeScope.PER_SCRIP_PER_DAY), trade(), new ChargeAccumulator()))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("mongo is down");
+                .hasMessageContaining("database is down");
     }
 
     @Test

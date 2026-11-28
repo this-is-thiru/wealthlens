@@ -6,14 +6,12 @@ import java.util.regex.Pattern;
 /**
  * What a charge code is allowed to look like.
  *
- * <p>A charge code is not merely an identifier — it becomes a <b>field name in MongoDB</b>, because
- * {@code UserChargeEntity.amountByCode} and {@code ChargeSummaryReport.amountByCode} are both keyed
- * by it. MongoDB rejects a field name containing {@code .} or beginning with {@code $}. A code like
- * {@code MTF.INTEREST} therefore passes the catalogue check, prices correctly, and then fails when
- * the row is written: the charge is computed and then lost, which is the failure mode this whole
- * design exists to avoid.
+ * <p>A charge code is not merely an identifier — it is a stored key: {@code UserChargeEntity.amountByCode}
+ * ({@code user_charge_amounts.charge_code}) and {@code ChargeSummaryReport.amountByCode} (inside the P&amp;L's JSON) are both
+ * keyed by it and matched exactly, so every stored code keeps one shape, {@code [A-Z][A-Z0-9_]*}. The shape dates from
+ * MongoDB, which refused a field name containing {@code .} or beginning with {@code $}; every code stored since has it.
  *
- * <p>Case is fixed for a second reason. Mongo's unique index is case-sensitive, so {@code BROKERAGE}
+ * <p>Case is fixed for a second reason. The catalogue's unique index is case-sensitive, so {@code BROKERAGE}
  * and {@code brokerage} would be two catalogue rows for one charge. Rules name codes exactly, so the
  * second would be unreachable — and a charge nobody can name is worse than one that was refused.
  *
@@ -28,8 +26,8 @@ public final class ChargeCodes {
     }
 
     /**
-     * @throws BadRequestException if the code could not be used as a MongoDB field name, or differs
-     *                             only by case from how it must be written
+     * @throws BadRequestException if the code does not have the one shape every stored code has, or
+     *                             differs only by case from how it must be written
      */
     public static void validate(String code) {
         if (code == null || code.isBlank()) {
@@ -42,8 +40,8 @@ public final class ChargeCodes {
         }
         if (!VALID.matcher(code).matches()) {
             throw new BadRequestException(
-                    "Charge code " + code + " is not usable as a field name: a code is stored as the key of "
-                            + "amount_by_code, so it must match [A-Z][A-Z0-9_]* — no dots, no '$', no spaces");
+                    "Charge code " + code + " must match [A-Z][A-Z0-9_]* — upper case, digits and underscores "
+                            + "only: every stored code has this one shape");
         }
     }
 }

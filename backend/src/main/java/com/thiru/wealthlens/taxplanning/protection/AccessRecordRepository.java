@@ -11,10 +11,10 @@ public interface AccessRecordRepository extends JpaRepository<AccessRecord, Stri
     void deleteBySubjectIdIn(Collection<String> subjectIds);
 
     /** Deletes the records of the reads this person made, with their account (W-237d). */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByPrincipal(String principal);
 
     /** Deletes the records of reads made on or before {@code cutoff}, a year after them (W-237f); how many. */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     long deleteByReadAtLessThanEqual(Instant cutoff);
 }

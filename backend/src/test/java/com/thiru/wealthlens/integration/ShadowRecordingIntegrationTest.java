@@ -40,7 +40,7 @@ import org.springframework.test.context.TestPropertySource;
  * <p>What only this tier can show is that the wiring exists at all. The unit tests stub the gateway
  * and prove {@code ProfitAndLossService} calls it; they cannot prove Spring has an implementation to
  * inject, that {@code brokercharges} may depend on {@code portfolio} to provide one, or that a row
- * actually reaches Mongo with its lines mapped.
+ * actually reaches the database with its lines mapped.
  */
 @TestPropertySource(properties = "app.charges.shadow-recording=true")
 class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
@@ -152,7 +152,7 @@ class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
                         ? Optional.empty()
                         : Optional.of(chargeSimulationOf("txn-summary")));
 
-        // Then — read back from Mongo, not from the object that was written
+        // Then — read back from the database, not from the object that was written
         ProfitAndLossEntity saved = profitAndLossRepository
                 .findByEmailAndFinancialYear(EMAIL, "2025-2026").orElseThrow();
         YearlyChargeSummary summary = saved.getRealisedProfits().getYearlyChargeSummary();

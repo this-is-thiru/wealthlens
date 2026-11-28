@@ -70,7 +70,7 @@ class UserRecordsErasureServiceTest {
     @DisplayName("erase: one failing delete does not stop the others")
     void erase_whenOneDeleteFails_stillClearsTheRest() {
         // Given
-        doThrow(new RuntimeException("mongo down")).when(transactionService).deleteTransactions(USER);
+        doThrow(new RuntimeException("database down")).when(transactionService).deleteTransactions(USER);
 
         // When
         service.erase(USER);
@@ -89,7 +89,7 @@ class UserRecordsErasureServiceTest {
     @DisplayName("erase: a failed delete is reported, not swallowed into a success")
     void erase_whenOneDeleteFails_saysWhichOne() {
         // Given
-        doThrow(new RuntimeException("mongo down")).when(userChargeService).deleteByEmail(EMAIL);
+        doThrow(new RuntimeException("database down")).when(userChargeService).deleteByEmail(EMAIL);
 
         // When
         ErasureReport report = service.erase(USER);
@@ -103,8 +103,8 @@ class UserRecordsErasureServiceTest {
     @DisplayName("erase: every failure is named, not only the first")
     void erase_whenSeveralDeletesFail_namesThemAll() {
         // Given
-        doThrow(new RuntimeException("mongo down")).when(portfolioRepository).deleteByEmail(EMAIL);
-        doThrow(new RuntimeException("mongo down")).when(chargeAccountService).deleteByEmail(EMAIL);
+        doThrow(new RuntimeException("database down")).when(portfolioRepository).deleteByEmail(EMAIL);
+        doThrow(new RuntimeException("database down")).when(chargeAccountService).deleteByEmail(EMAIL);
 
         // When
         ErasureReport report = service.erase(USER);

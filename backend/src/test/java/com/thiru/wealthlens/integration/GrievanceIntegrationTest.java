@@ -23,7 +23,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Grievance redressal over HTTP and Mongo (W-237b, C1a – C4a), on a clock the test sets. The dates are counted by hand:
+ * Grievance redressal over HTTP and PostgreSQL (W-237b, C1a – C4a), on a clock the test sets. The dates are counted by hand:
  * with {@code response-days: 30} (application-integration-test.yaml), a grievance received at 2027-06-01T10:00Z is to be
  * answered by 2027-07-01T10:00Z (June has 30 days); one received a day later, by 2027-07-02T10:00Z.
  */

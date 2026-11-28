@@ -47,7 +47,7 @@ class ChargeCatalogueServiceTest {
 
     @Test
     void findActive_sortsByCodeSoTheListingIsStable() {
-        // Given — Mongo returns insertion order, which changes when the seeder is re-run.
+        // Given — an unordered read follows the table's storage order, which changes when the seeder is re-run.
         // A listing that reshuffles between calls is one nobody can diff.
         when(chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE))
                 .thenReturn(List.of(entry("GST"), entry("DP"), entry("STT"), entry("BROKERAGE")));

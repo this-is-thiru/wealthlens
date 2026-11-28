@@ -63,6 +63,7 @@ against the named database.
 | 0.3 | `profit_and_loss.version` present | **done**: 0 without (2026-10-27) | **done**: 0 without (2026-10-27) |
 | 0.8 | Legacy salary and policy collections: count, back up, drop (W-159) | **retired** (W-331): done (W-334e1) | **retired** (W-331): done (W-334d2) |
 | 0.9 | The move: copy MongoDB into PostgreSQL (W-337g2c), at W-337i, before §1B on that database | at the move | at the move |
+| 2.20 | Stored personal data made plain (W-428a), before the first normal start of the release carrying it | run | run |
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
@@ -78,13 +79,14 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ## Next deploy — what prod and staging still need
 
-All three databases are on PostgreSQL with `m1.7.6` (dev W-337i2, staging W-337i4, prod W-337i5; D-1012, D-1014); the app runs
+All three databases are on PostgreSQL (dev W-337i2, staging W-337i4, prod W-337i5; D-1012, D-1014); staging and prod run `m1.8`, which needs no MongoDB (W-337j2, D-1018); the app runs
 locally, nothing is hosted. An item that needs something at the next deploy adds its line here when it is committed; each line goes
 when its run is logged for both. Everything below is the full sequence for a fresh database. The move's lines (§0.9, §2.19, §0.10)
-and W-370's went with W-337i6 (D-1015), their runs logged for every database.
+and W-370's went with W-337i6 (D-1015), W-337j2's start check once logged for both (2026-11-28).
 
-1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, read in SQL on PostgreSQL (`SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded FROM wealthlens.user_details;`, D-1007 C2a, D-1013 C1a): the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
-2. W-337j2 (D-1018) — **at the deploy of the release carrying it, per database:** the app no longer reads `MONGO_USER` / `MONGO_PASSWORD` and opens no MongoDB connection (§0.1.1, §0.1.2, §1.7). Start it with the two lines removed from the environment; check `grep -ci mongo` on the start log is `0`. That release starts W-337j4's week (D-1016 C2a).
+1. W-427 (D-1034) — **after the first release carrying W-427 has started on that database:** remove the three `APP_POSTGRES_DATASOURCE_*` lines from its env file (owner; backup first; `sed -i '' -E '/^(export )?APP_POSTGRES_DATASOURCE_(URL|USERNAME|PASSWORD)=/d'`), keeping `DATABASE_*`. Until then the file holds both, because `m1.8` reads the old names. Check: `grep -c APP_POSTGRES` answers 0 and the app starts. Way back: the backup.
+2. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, read in SQL on PostgreSQL (`SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded FROM wealthlens.user_details;`, D-1007 C2a, D-1013 C1a): the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
+3. §2.20 W-428a (D-1036) — **before the first normal start of the release carrying W-428a, per database (dev, staging, prod):** backup, the rewrite run, the `k1:` check answering no rows, a sign-in. Until it runs nobody can sign in on that database. Keep `TAX_DATA_KEY` / `TAX_DIGEST_KEY` while the step-1 dumps are kept.
 
 ## 0. Before deploying
 
@@ -92,11 +94,13 @@ and W-370's went with W-337i6 (D-1015), their runs logged for every database.
 
 | # | Check | Why |
 |---|---|---|
-| 0.1.1 | `APP_POSTGRES_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
+| 0.1.1 | `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` (W-427; a build before it reads `APP_POSTGRES_DATASOURCE_*`), `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
 | 0.1.2 | ~~MongoDB is a replica set~~ | **Retired by W-337j2 (D-1018):** the app has no MongoDB client; PostgreSQL's transactions need no setting. `MONGO_USER` / `MONGO_PASSWORD` are no longer read |
 | 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /api/v1/public/auth/register`, then `db.user_details.updateOne({ email: "<stored owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })` with the stored form from §0.7 (from W-253 the email is stored encrypted and is no longer the `_id`), then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
 
-### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **every database · before the deploy that first carries TL-7**
+### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Mongo-only: the unique indexes `PortfolioIndexInitializer` applied are Flyway DDL on PostgreSQL, built before the copy, which refuses a violating row (W-337g), so the step cannot apply on PostgreSQL. Kept below as the record of what it did.
 
 **Why.** `PortfolioIndexInitializer` covers `transactions` and `profit_and_loss`. Both carry unique indexes
 (`transactions.source_temp_transaction_id`, unique and sparse; `profit_and_loss {email, financial_year}`) that, with
@@ -167,7 +171,9 @@ half. **Never simply delete one:** the figures do not come back.
 **Way back:** each correction above starts with a `mongoexport` of the documents it touches; `mongoimport --mode
 upsert` restores them.
 
-### 0.3 Trade ledger — `version` on `profit_and_loss` · owner, `mongosh` · **every database · before the deploy · done**
+### 0.3 Trade ledger — `version` on `profit_and_loss` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Mongo-only (Spring Data reading a null `@Version` as a new document); its heading recorded it done before the move. Kept below as the record of what it did.
 
 **Why.** `ProfitAndLossEntity` carries `@Version private Long version`. On a document written without the field, Spring
 Data reads the null version as a new document and inserts against an existing `_id`
@@ -200,7 +206,9 @@ grep -oE 'W-[0-9]+[a-z0-9]* K( |$)' docs/taxplanning-build/STATE.md
 Expected: empty, or every row printed named in a waiver D-row by the owner.
 
 
-### 0.5 W-134 (D-447) — the tax keys, and the tax-planning collections cleared · owner · **every database · before the first deploy carrying W-134**
+### 0.5 W-134 (D-447) — the tax keys, and the tax-planning collections cleared · owner · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** A MongoDB clearing step for the first deploy carrying W-134; the two keys stay required at every start (§0.1.1). Kept below as the record of what it did.
 
 **Why.** From W-134 the profile, reference, draft and computation collections hold personal data encrypted
 (`k1:…`) and PANs and TANs as keyed digests (`pan_digest`, `tan_digest`). Rows written before it are plain text, which
@@ -549,25 +557,23 @@ python3 -I -B $W compare before after > report.txt; echo "exit: $?"; tail -3 rep
 
 Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. **From W-336 (D-783)** every shipped profile has `app.tax.jobs.enabled: false`: nothing is scheduled, and the owner runs each job through `POST /api/v1/admin/tax/jobs/{name}/run` (`SUPER_USER`) on §5.2's cadence. The crons — `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`) — apply only where the switch is turned on. Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only. **W-138 (D-450):** `staleness-sweep` runs at every start where the switch is on, and on request where it is off (after every start of a new build, §5.2); it logs `Job staleness-sweep flagged N draft(s)`; after a deploy that changes a pack (a new `law` or `exec` version in a lock), expect N to be the ready and filed drafts computed under the old one, and 0 on the next run. **W-257 (D-487):** a row a job writes carries the job's name as its actor (`audit_metadata.updatedBy`, or `createdBy` on a new row: `auto-archive`, `staleness-sweep`, `retention-purge`), stored like any actor (§0.7 gives the form to query); rows written before W-257 keep `unknown`. Information only — no step.
 
-**After the first run of each** (read-only):
+**After the first run of each** (read-only; `PSQL`, §2.19):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, failures: d.tax_job_failures.find({}, { _id: 0, job: 1, subject: 1, reason: 1 }).toArray(),
-      leasesHeld: d.tax_job_leases.countDocuments({}) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT job, subject, reason FROM tax_job_failures ORDER BY failed_at;
+SELECT count(*) AS leases_held FROM tax_job_leases;
 ```
 
 Expected: no failures, and `leasesHeld` 0 between runs. A failure naming a tax year means a filed draft of a year no shipped pack covers: it is **kept**, and the row stays until the owner decides (ship that year's pack, or a D-row). Nothing to run twice; the collections are new.
 
-**From W-239 (D-505)** the monthly `retention-purge` also deletes **landlords and lenders** once `app.tax.retention.third-party-after` (P2Y, all three profile yamls) has passed since the end of the last tax year the record can support (`DR 14` O5). From W-239a (D-506) that year is the later of the latest tax year of a stored draft **naming** the record (`/thirdParties/landlordIds`, `/thirdParties/lenderIds` in its inputs) and the year the record was last entered or changed; a record no draft names supports only the year of its last change. Drafts stored before W-239a name nothing, so on the first run their records follow that second rule. Each deletion logs `Job retention-purge deleted landlord <id>` or `… deleted lender <id>`; a record with no stored date is **kept** and logged as a refusal in `tax_job_failures` (subject `landlord <id>` / `lender <id>`). Nothing to seed or run. **Before the first run carrying W-239, and after it** (read-only; the drop is the records past their period):
+**From W-239 (D-505)** the monthly `retention-purge` also deletes **landlords and lenders** once `app.tax.retention.third-party-after` (P2Y, all three profile yamls) has passed since the end of the last tax year the record can support (`DR 14` O5). From W-239a (D-506) that year is the later of the latest tax year of a stored draft **naming** the record (`/thirdParties/landlordIds`, `/thirdParties/lenderIds` in its inputs) and the year the record was last entered or changed; a record no draft names supports only the year of its last change. Drafts stored before W-239a name nothing, so on the first run their records follow that second rule. Each deletion logs `Job retention-purge deleted landlord <id>` or `… deleted lender <id>`; a record with no stored date is **kept** and logged as a refusal in `tax_job_failures` (subject `landlord <id>` / `lender <id>`). Nothing to seed or run. **Before the first run carrying W-239, and after it** (read-only; `PSQL`, §2.19; the drop is the records past their period):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, landlords: d.tax_landlords.countDocuments({}), lenders: d.tax_lenders.countDocuments({}),
-      undated: d.tax_landlords.countDocuments({ "audit_metadata.updatedAt": null, "audit_metadata.createdAt": null })
-        + d.tax_lenders.countDocuments({ "audit_metadata.updatedAt": null, "audit_metadata.createdAt": null }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM tax_landlords) AS landlords, (SELECT count(*) FROM tax_lenders) AS lenders,
+  (SELECT count(*) FROM tax_landlords WHERE created_at IS NULL AND updated_at IS NULL)
+  + (SELECT count(*) FROM tax_lenders WHERE created_at IS NULL AND updated_at IS NULL) AS undated;
 ```
 
 Expected after: the counts fall by the number of `deleted landlord|lender` log lines, and `undated` equals the third-party refusals. A second run deletes nothing more. **Way back:** restore the two collections from the backup taken before the deploy — deleting them is the point, so only if a record was deleted in error.
@@ -583,22 +589,23 @@ status, revisions, computations, family, employers, landlords, lenders, bank acc
 and the access records naming any of them — logging `Job retention-purge erased profile <id>`. Nothing to seed or correct.
 
 **Before the first start:** `PRIVACY_CONTACT` set (§0.1.1) to the contact the owner publishes; the start is refused
-without it. **After a purge that logged an erasure** (read-only; replace `<id>`):
+without it. **After a purge that logged an erasure** (read-only; `PSQL -v id='<id>'`, §2.19):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const id = "<id>";
-    return { database: n, left: ["tax_family_members", "tax_employers", "tax_landlords", "tax_lenders", "tax_bank_accounts",
-      "tax_year_workspaces", "tax_filing_drafts", "tax_regime_election_history"].reduce((sum, c) =>
-        sum + d.getCollection(c).countDocuments({ profile_id: id }), d.tax_profiles.countDocuments({ _id: id })),
-      heldOverdue: d.tax_profiles.countDocuments({ erasure_requested_at: { $lte: new Date(Date.now() - 366 * 864e5) } }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM tax_family_members WHERE profile_id = :'id') + (SELECT count(*) FROM tax_employers WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_landlords WHERE profile_id = :'id') + (SELECT count(*) FROM tax_lenders WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_bank_accounts WHERE profile_id = :'id') + (SELECT count(*) FROM tax_year_workspaces WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_filing_drafts WHERE profile_id = :'id') + (SELECT count(*) FROM tax_regime_election_history WHERE profile_id = :'id')
+  + (SELECT count(*) FROM tax_profiles WHERE id = :'id') AS left_rows,
+  (SELECT count(*) FROM tax_profiles WHERE erasure_requested_at <= (now() AT TIME ZONE 'UTC') - interval '366 days') AS held_overdue;
 ```
 
 Expected: `left` 0, `heldOverdue` 0 (a held profile past its year still present means the purge did not run or failed:
 §1.y's failure check). A second purge changes nothing. **Way back:** none for an erased profile — erasure is the point;
-before the hold ends, a held profile can be released only by unsetting `erasure_requested_at` in the console (the PAN
-digest is rebuilt on the user's next save), which needs the user's word. **Backups:** an Atlas snapshot keeps erased data
-until it expires; when that is, and a restore, are in §1.s (W-237f).
+before the hold ends, a held profile can be released only with the user's word (the PAN digest is rebuilt on the user's
+next save): `PSQL -v id='<id>' <<< "UPDATE wealthlens.tax_profiles SET erasure_requested_at = NULL WHERE id = :'id';"`.
+**Backups:** a host backup keeps erased data until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.w W-236 — the Gazette watch · owner, `SUPER_USER` · **when the owner chooses to start it; each database once**
 
@@ -616,7 +623,7 @@ holds `Ensured the indexes of GazetteLead`.
    curl -sS "$BASE/api/v1/admin/tax/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.page.totalElements'
    ```
 
-   Expect `0`. In `mongosh`: `db.tax_gazette_cursor.find()` returns nothing.
+   Expect `0`. In SQL (`PSQL`, §2.19): `SELECT count(*) FROM wealthlens.tax_gazette_cursor;` answers `0`.
 2. **Choose the starting number.** On egazette.gov.in, open a recent Extraordinary Gazette; its address ends
    `WriteReadData/<year>/<number>.pdf`. The watch reads the numbers **after** the one given, so give the latest one already
    looked at (a lower number only means a longer first run).
@@ -692,27 +699,27 @@ about them stay until their year (§1.t). Nothing to seed or correct.
 
 **Before the first start:** the hold moved from `app.tax.retention.erasure-hold` to `app.privacy.erasure-hold` (env var
 `APP_PRIVACY_ERASUREHOLD`); the run log has no §1.z run, so no environment carries the old name. **After a run that
-logged `Account erasure <id> done`** (read-only; replace `<stored email>` with the erased email's stored form, §0.7 — W-253):
+logged `Account erasure <id> done`** (read-only; `PSQL -v email='<stored email>'`, §2.19, with the erased email's stored form, §0.7 — W-253):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const e = "<stored email>";
-    return { database: n, left: ["assets", "transactions", "trade_outcomes", "profit_and_loss", "user_charges",
-      "charge_accounts", "lastly_performed_corporate_action", "insurances",
-      "tax_profiles", "tax_draft_computations", "privacy_grievances", "privacy_breach_intimations"].reduce((sum, c) =>
-        sum + d.getCollection(c).countDocuments({ email: e }), d.user_details.countDocuments({ email: e })
-        + d.tax_access_log.countDocuments({ principal: e }) + d.privacy_processing_log.countDocuments({ principal: e })
-        + d.privacy_breach_notices.countDocuments({ affected: e })),
-      heldOverdue: d.privacy_erasure_requests.countDocuments({ erased_at: null,
-        requested_at: { $lte: new Date(Date.now() - 367 * 864e5) } }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM assets WHERE email = :'email') + (SELECT count(*) FROM transactions WHERE email = :'email')
+  + (SELECT count(*) FROM trade_outcomes WHERE email = :'email') + (SELECT count(*) FROM profit_and_loss WHERE email = :'email')
+  + (SELECT count(*) FROM user_charges WHERE email = :'email') + (SELECT count(*) FROM charge_accounts WHERE email = :'email')
+  + (SELECT count(*) FROM lastly_performed_corporate_action WHERE email = :'email') + (SELECT count(*) FROM insurances WHERE email = :'email')
+  + (SELECT count(*) FROM tax_profiles WHERE email = :'email') + (SELECT count(*) FROM tax_draft_computations WHERE email = :'email')
+  + (SELECT count(*) FROM privacy_grievances WHERE email = :'email') + (SELECT count(*) FROM privacy_breach_intimations WHERE email = :'email')
+  + (SELECT count(*) FROM user_details WHERE email = :'email') + (SELECT count(*) FROM tax_access_log WHERE principal = :'email')
+  + (SELECT count(*) FROM privacy_processing_log WHERE principal = :'email')
+  + (SELECT count(*) FROM privacy_breach_notice_affected WHERE affected = :'email') AS left_rows,
+  (SELECT count(*) FROM privacy_erasure_requests WHERE erased_at IS NULL AND requested_at <= (now() AT TIME ZONE 'UTC') - interval '367 days') AS held_overdue;
 ```
 
 Expected: `left` 0 and `heldOverdue` 0 on every database (an open request past its year means the job did not run or
 failed: §1.y's failure check; the next run completes it). A second run changes nothing: each erase deletes by email.
-**Way back:** none for an erased account. Before the hold ends, an account is released only with the user's word, by
-deleting its open request row in the console (`deleteOne` on its `_id`) and unsetting `erasure_requested_at` on its tax
-profiles. **Backups:** an Atlas snapshot keeps erased data until it expires; when that is, and a restore, are in §1.s
-(W-237f).
+**Way back:** none for an erased account. Before the hold ends, an account is released only with the user's word:
+`PSQL -v email='<stored email>' <<< "BEGIN; UPDATE wealthlens.tax_profiles SET erasure_requested_at = NULL WHERE email = :'email' AND erasure_requested_at IS NOT NULL; DELETE FROM wealthlens.privacy_erasure_requests WHERE email = :'email' AND erased_at IS NULL; COMMIT;"`.
+**Backups:** a host backup keeps erased data until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.t W-237e — logs of processing kept a year, then erased · owner · **first deploy carrying it; monthly review; after the first run that erases**
 
@@ -730,40 +737,34 @@ it) and are diagnostics (W-237e C5a).
 **First start (automatic):** `PrivacyIndexInitializer` creates the log's indexes. **Confirm** the log holds `Ensured the
 indexes of ProcessingRecord`; a failure stops startup. The collection is new: nothing to check first, nothing to seed.
 
-**Monthly review (read-only, safe to repeat, nothing to roll back)** — r.6(1)(c)'s "monitoring and review": failed logins
-by email and address over the last 31 days, and any principal that reached more than one person's data:
+**Monthly review (read-only, safe to repeat, nothing to roll back; `PSQL`, §2.19)** — r.6(1)(c)'s "monitoring and review": failed logins
+by email and address over the last 31 days, and any principal that reached more than one person's data (as stored, §0.7):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    const since = new Date(Date.now() - 31 * 864e5);
-    return { database: n,
-      failedLogins: d.privacy_processing_log.aggregate([{ $match: { route: "/api/v1/public/auth/login", status: { $ne: 200 },
-        recorded_at: { $gte: since } } }, { $group: { _id: { principal: "$principal", from: "$remote_address" },
-        attempts: { $sum: 1 } } }, { $sort: { attempts: -1 } }]).toArray(),
-      reachedOthers: d.privacy_processing_log.aggregate([{ $match: { recorded_at: { $gte: since },
-        $expr: { $ne: ["$principal", "$subject_email"] } } }, { $group: { _id: "$principal",
-        subjects: { $addToSet: "$subject_email" } } }]).toArray() }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT principal, remote_address, count(*) AS attempts FROM privacy_processing_log
+  WHERE route = '/api/v1/public/auth/login' AND status <> 200 AND recorded_at >= (now() AT TIME ZONE 'UTC') - interval '31 days'
+  GROUP BY principal, remote_address ORDER BY attempts DESC;
+SELECT principal, count(DISTINCT subject_email) AS subjects FROM privacy_processing_log
+  WHERE recorded_at >= (now() AT TIME ZONE 'UTC') - interval '31 days' AND principal IS DISTINCT FROM subject_email GROUP BY principal;
 ```
 
 Expected: few failed logins per email and address, and `reachedOthers` naming only the owner. Anything else is a
 possible unauthorised access: §5.7.
 
-**After the first run that erases** (a year after this deploy; read-only):
+**After the first run that erases** (a year after this deploy; read-only; `PSQL`, §2.19):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    const cut = new Date(Date.now() - 367 * 864e5);
-    return { database: n, overdue: d.privacy_processing_log.countDocuments({ recorded_at: { $lte: cut } })
-      + d.tax_access_log.countDocuments({ read_at: { $lte: cut } })
-      + d.privacy_grievances.countDocuments({ answered_at: { $lte: cut } })
-      + d.privacy_erasure_requests.countDocuments({ erased_at: { $lte: cut } }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM privacy_processing_log WHERE recorded_at <= (now() AT TIME ZONE 'UTC') - interval '367 days')
+  + (SELECT count(*) FROM tax_access_log WHERE read_at <= now() - interval '367 days')
+  + (SELECT count(*) FROM privacy_grievances WHERE answered_at <= (now() AT TIME ZONE 'UTC') - interval '367 days')
+  + (SELECT count(*) FROM privacy_erasure_requests WHERE erased_at <= (now() AT TIME ZONE 'UTC') - interval '367 days') AS overdue;
 ```
 
 Expected: `overdue` 0 on every database (more means the job did not run or failed: §1.y's failure check; the next run
 completes it). A second run changes nothing: each step deletes by date. **Way back:** stop running it (nothing is scheduled while
-`app.tax.jobs.enabled` is false, W-336); erased rows are gone — restore from the database backup. **Backups:** an Atlas snapshot
+`app.tax.jobs.enabled` is false, W-336); erased rows are gone — restore from the database backup. **Backups:** a host backup
 keeps erased rows until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.s W-237f — erased data in the backups, and a restore · owner · **before the duties commence (about May 2027); on every restore**
@@ -777,7 +778,7 @@ after each erasure (§1.t), so a snapshot older than that could hold a person no
 **When erased data leaves the backups:** at `erased_at` plus the longest retention below. Data is erased a year after the
 request (§1.z, §1.u), so a snapshot taken during the hold holds it until that snapshot expires.
 
-**The owner's record (W-237f facts 1 – 4, C4a)** — filled in by the owner (tier and backup 2026-11-19, W-334b row 2; the rest not yet given; dev is M0 free with no Cloud Backup too):
+**The owner's record on MongoDB (W-237f facts 1 – 4, C4a) — kept as the record of the Mongo era (D-1022 C5a)** — filled in by the owner (tier and backup 2026-11-19, W-334b row 2; the rest not yet given; dev is M0 free with no Cloud Backup too):
 
 | | prod `Cluster0` | staging `it-staging` |
 |---|---|---|
@@ -796,31 +797,51 @@ request (§1.z, §1.u), so a snapshot taken during the hold holds it until that 
 | Longest retention ≤ P1Y? (the check) | yes, 6 hours | *not given* | *not given* |
 | Processor terms accepted: document and date | *not given* | *not given* | *not given* |
 
-**The check (owner, read-only, safe to repeat):** read each cluster's backup policy in Atlas, enter every retention
-figure above, and confirm none exceeds one year. A longer one is shortened in Atlas before the duties commence. If a
-tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here. **2026-11-19:** every
-cluster is M0 free with no Cloud Backup; the re-plan is folded into W-337, the move off MongoDB (D-786 C5a).
+**The check (owner, read-only, safe to repeat):** read each PostgreSQL host's backup settings (Neon: history retention and
+snapshots; Aiven: the service's backups), enter every retention figure in the table above, and confirm none exceeds one
+year. A longer one is shortened on the host before the duties commence. If a host has no backup that can be set, that is
+a re-plan of W-237f (its risk 2), not a row here. **2026-11-19 (MongoDB):** every cluster was M0 free with no Cloud Backup;
+the re-plan was folded into W-337 (D-786 C5a).
 
 **On every restore.** A restore puts the database back to the snapshot's moment, and every erasure since is lost from the
 data. The records of those erasures are exported first and put back after, and then one call applies them again. It
 reapplies only what was done at or after the snapshot's time. An erasure from before that time is already reflected in
 the snapshot, and its email may since belong to a new account, which must not be touched.
 
-1. **Before the restore, from the live database** (read-only):
+1. **Before the restore, from the live database** (read-only; `PSQL`, §2.19):
 
    ```bash
-   mongoexport --uri "<uri>" --db <db> --collection privacy_erasure_requests --out erasure-requests-before-restore.json
-   mongoexport --uri "<uri>" --db <db> --collection tax_profile_erasures --out profile-erasures-before-restore.json
+   PSQL <<'EOF'
+   COPY (SELECT * FROM wealthlens.privacy_erasure_requests) TO STDOUT WITH CSV HEADER \g /w/erasure-requests-before-restore.csv
+   COPY (SELECT * FROM wealthlens.tax_profile_erasures) TO STDOUT WITH CSV HEADER \g /w/profile-erasures-before-restore.csv
+   EOF
    ```
 
    Note the snapshot's time in UTC (`yyyy-MM-ddTHH:mm:ss`) as `S`.
-2. **Restore** the snapshot in Atlas. A snapshot from before §1.r (prod before 2026-11-21, staging before 2026-11-20) holds plain rows that no build from `m1.6` on can read or seal (W-254, D-893): restore such a one only on `m1.5`, and run §1.r there before moving on.
-3. **Put the records back** (an upsert by `_id`: a record the snapshot already holds is replaced by its later state):
+2. **Restore** on the host (D-1022 C5a): prod (Neon) from its history, "up to 6 hours", or its one manual snapshot
+   (`sources/2026-11-23-neon-postgresql.md`); staging and dev (Aiven) from a service backup, whose retention is *not given*
+   (`sources/2026-11-22-aiven-postgresql.md`). The console steps are in neither note. Every PostgreSQL backup postdates §1.r
+   (the move, W-337i), so no restore needs `m1.5`.
+3. **Put the records back** (an upsert by `id`: a record the restored database already holds is replaced by its later state):
 
    ```bash
-   mongoimport --uri "<uri>" --db <db> --collection privacy_erasure_requests --mode upsert --file erasure-requests-before-restore.json
-   mongoimport --uri "<uri>" --db <db> --collection tax_profile_erasures --mode upsert --file profile-erasures-before-restore.json
+   PSQL <<'EOF'
+   BEGIN;
+   CREATE TEMP TABLE er (LIKE wealthlens.privacy_erasure_requests) ON COMMIT DROP;
+   \copy er FROM '/w/erasure-requests-before-restore.csv' WITH CSV HEADER
+   INSERT INTO wealthlens.privacy_erasure_requests SELECT * FROM er ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email,
+     requested_at = EXCLUDED.requested_at, cause = EXCLUDED.cause, erased_at = EXCLUDED.erased_at, created_by = EXCLUDED.created_by,
+     updated_by = EXCLUDED.updated_by, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at;
+   CREATE TEMP TABLE pe (LIKE wealthlens.tax_profile_erasures) ON COMMIT DROP;
+   \copy pe FROM '/w/profile-erasures-before-restore.csv' WITH CSV HEADER
+   INSERT INTO wealthlens.tax_profile_erasures SELECT * FROM pe ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email,
+     profile_id = EXCLUDED.profile_id, requested_at = EXCLUDED.requested_at, erased_at = EXCLUDED.erased_at, created_by = EXCLUDED.created_by,
+     updated_by = EXCLUDED.updated_by, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at;
+   COMMIT;
+   EOF
    ```
+
+   Expect `INSERT 0 n` twice, each `n` the rows its file holds.
 
 4. **Apply them again** (`SUPER_USER`):
 
@@ -832,17 +853,14 @@ the snapshot, and its email may since belong to a new account, which must not be
    The answer names `accountsErased` (erased at or after `S`, erased again; `erased_at` unchanged), `accountsHeld`
    (asked at or after `S`, not yet erased, held again) and `profiles` (single profiles erased or held again). A time
    in the future, or none, is refused with 400.
-5. **Check after (read-only)**, with `S` as an ISO date:
+5. **Check after (read-only)**, with `S` as `-v s='<S>'` (`PSQL`, §2.19):
 
-   ```js
-   db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-     .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-       const s = new Date("<S>Z");
-       const emails = d.privacy_erasure_requests.distinct("email", { erased_at: { $gte: s } });
-       return { database: n, accountsBack: d.user_details.countDocuments({ _id: { $in: emails } })
-           + d.assets.countDocuments({ email: { $in: emails } }) + d.tax_profiles.countDocuments({ email: { $in: emails } }),
-         profilesBack: d.tax_profiles.countDocuments({ _id: { $in: d.tax_profile_erasures.distinct("profile_id",
-           { erased_at: { $ne: null } }) } }) }; }) }])
+   ```sql
+   SET search_path = wealthlens;
+   SELECT (SELECT count(*) FROM user_details WHERE email IN (SELECT email FROM privacy_erasure_requests WHERE erased_at >= :'s'::timestamp))
+     + (SELECT count(*) FROM assets WHERE email IN (SELECT email FROM privacy_erasure_requests WHERE erased_at >= :'s'::timestamp))
+     + (SELECT count(*) FROM tax_profiles WHERE email IN (SELECT email FROM privacy_erasure_requests WHERE erased_at >= :'s'::timestamp)) AS accounts_back,
+     (SELECT count(*) FROM tax_profiles WHERE id IN (SELECT profile_id FROM tax_profile_erasures WHERE erased_at IS NOT NULL)) AS profiles_back;
    ```
 
    Expected: `accountsBack` 0 and `profilesBack` 0 on every database; then §1.u's check for each email in
@@ -958,23 +976,21 @@ before W-249) gets the first run's time: **nothing can lapse earlier than three 
 database.** No command to run. The privacy notice (`GET /api/v1/public/privacy/rights`, `/privacy`) states the period.
 
 **Before the first start:** an environment override `APP_PRIVACY_PURPOSELAPSE` must be longer than `erasure-hold` (P1Y),
-or the app refuses to start naming `app.privacy.purpose-lapse`; none is expected. **Read-only, before the first run and
+or the app refuses to start naming `app.privacy.purpose-lapse`; none is expected. **Read-only (`PSQL`, §2.19), before the first run and
 after it** (the day after the deploy):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, users: d.user_details.countDocuments({}),
-      notCounted: d.user_details.countDocuments({ last_signed_in_at: { $exists: false } }),
-      lapseErasures: d.privacy_erasure_requests.countDocuments({ cause: "PURPOSE_LAPSED" }),
-      lapseOpen: d.privacy_erasure_requests.countDocuments({ cause: "PURPOSE_LAPSED", erased_at: null }) }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT count(*) AS users, count(*) FILTER (WHERE last_signed_in_at IS NULL) AS not_counted,
+  (SELECT count(*) FROM privacy_erasure_requests WHERE cause = 'PURPOSE_LAPSED') AS lapse_erasures,
+  (SELECT count(*) FROM privacy_erasure_requests WHERE cause = 'PURPOSE_LAPSED' AND erased_at IS NULL) AS lapse_open FROM user_details;
 ```
 
 Expected before: `notCounted` = `users`, `lapseErasures` 0. After the first run: `notCounted` 0 and `lapseErasures` 0
 (the earliest lapse is three years away). From then, `lapseOpen` 0 the day after any run (an open one means the run
 failed part-way: §1.y's failure check; the next run completes it). A second run changes nothing: the time is set only
-where absent, and an account with a request open is left to it. **Way back:** before the first lapse, `$unset`
-`last_signed_in_at` loses nothing (the next run counts again from its own time). An erased account cannot be brought
+where absent, and an account with a request open is left to it. **Way back:** before the first lapse, clearing
+`last_signed_in_at` (`UPDATE wealthlens.user_details SET last_signed_in_at = NULL;`, run in W-337j3b's local proof only) loses nothing (the next run counts again from its own time). An erased account cannot be brought
 back; after a restore, §1.s's reapply erases a lapse erasure again like a requested one.
 
 ### 1.p W-250 (D-481) — the notice before consent · owner · **first deploy carrying it, then a week after**
@@ -989,25 +1005,27 @@ before it can register anyone.** W-131d1 (D-765 C5a) changed the `tax-planning` 
 `board-complaint` has no link to the Board yet: add it there when you have one. That changes the version, which is
 expected.
 
-**At the first start:** the log shows `Ensured the indexes of PrivacyConsent`, the unique `email` index. **Read-only,
+**At the first start:** the unique `email` index is Flyway's (`privacy_consents_email_idx`). **Read-only (`PSQL`, §2.19),
 before the deploy and a week after it:**
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    return { database: n, users: d.user_details.countDocuments({}),
-      consents: d.privacy_consents.countDocuments({ given_at: { $exists: true } }),
-      noticed: d.privacy_consents.countDocuments({ noticed_at: { $exists: true } }),
-      unique: d.privacy_consents.getIndexes().filter(i => i.unique && i.key.email).length }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT (SELECT count(*) FROM user_details) AS users,
+  (SELECT count(*) FROM privacy_consents WHERE given_at IS NOT NULL) AS consents,
+  (SELECT count(*) FROM privacy_consents WHERE noticed_at IS NOT NULL) AS noticed,
+  (SELECT count(*) FROM pg_indexes WHERE schemaname = 'wealthlens' AND tablename = 'privacy_consents'
+     AND indexdef LIKE 'CREATE UNIQUE INDEX%(email)') AS "unique";
 ```
 
 Expected before: `consents` 0, `noticed` 0, `unique` 0. A week after: `unique` 1, and `consents` + `noticed` no more than
 `users`. Every account that signed in or registered since the deploy has a row. A second start or sign-in changes
 nothing: the index already exists, and a row is never written twice for one account. **Way back:** redeploy the earlier
-build. `privacy_consents` can stay (nothing else reads it) or be dropped (`db.privacy_consents.drop()`, after
-`mongodump --collection privacy_consents`), and nothing else changes.
+build. `privacy_consents` stays (a Flyway table: dropping it stops the next start's schema check, D-963; nothing else reads
+it), and nothing else changes.
 
-### 1.o W-255 (D-482) — accounts that chose their own role · owner · **every database · before the deploy carrying W-255, then after any correction**
+### 1.o W-255 (D-482) — accounts that chose their own role · owner · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Its read was a MongoDB query before W-255's deploy; every account since registers as `USER` and the copy carried the roles as stored (W-337i). Kept below as the record of what it did.
 
 Until W-255, `POST /api/v1/public/auth/register` stored whatever `role` the body sent, so anyone could register as `SUPER_USER`. Now
 every registration stores `USER`, and a body naming `role` is refused with 400. Roles already stored are not changed
@@ -1067,7 +1085,7 @@ Automatic: from W-131f every PDF, at upload (the page count) and in the `parse-d
 
 ### 1.m W-131e (D-768), W-131h (D-769) — the malware scanner beside the app · owner · **each host, when the scan is turned on (off in staging and prod)**
 
-**From W-131h (D-769):** staging and prod ship `app.tax.documents.scan.enabled: false` (owner: traffic and budget). Uploads are then stored unscanned, each `tax_documents` row records `scanned: false`, and every start logs `The malware scan is off: uploads are stored unscanned (W-131h)`. **Confirm** the staging and prod yamls hold `scan.enabled: false` and `application.yaml` holds `true`. Nothing below runs until the owner turns the scan on. **Turning it on:** steps 1 – 6 below, then `scan.enabled: true` in the profile's yaml and redeploy, then W-131i's rescan of what was stored unscanned. Read-only count before and after: `db.tax_documents.countDocuments({scanned: {$ne: true}})`.
+**From W-131h (D-769):** staging and prod ship `app.tax.documents.scan.enabled: false` (owner: traffic and budget). Uploads are then stored unscanned, each `tax_documents` row records `scanned: false`, and every start logs `The malware scan is off: uploads are stored unscanned (W-131h)`. **Confirm** the staging and prod yamls hold `scan.enabled: false` and `application.yaml` holds `true`. Nothing below runs until the owner turns the scan on. **Turning it on:** steps 1 – 6 below, then `scan.enabled: true` in the profile's yaml and redeploy, then W-131i's rescan of what was stored unscanned. Read-only count before and after: `SELECT count(*) FROM wealthlens.tax_documents WHERE scanned IS NOT TRUE;` (`PSQL`, §2.19).
 
 From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored or the PDF is opened (`MalwareScan`, `DocumentBytes.store`). It fails closed: with no scanner an upload answers 503 "The malware scan could not be completed; nothing was stored", and a file it finds malware in answers 400 "This file failed the malware scan and was not stored". While `app.tax.documents.enabled` is `false` nothing calls it, so a deploy carrying W-131e needs nothing until the switch is turned on. **Confirm** the three profile yamls hold `app.tax.documents.scan.host: ${CLAMD_HOST:localhost}`, `port: 3310` and `timeout: PT60S`.
 
@@ -1076,7 +1094,7 @@ From W-131e every upload is scanned by ClamAV's `clamd` before a byte is stored 
 3. `docker run -d --name clamd --restart unless-stopped --network wealthlens --mount source=clam_db,target=/var/lib/clamav clamav/clamav:1.5`. No port is published: only containers on `wealthlens` reach it, so a document's bytes never leave the host.
 4. **Check** (read-only): `docker inspect --format '{{.State.Health.Status}}' clamd` answers `healthy` (the image's own health check pings `clamd`). The first start loads the signatures; on CI it answered within 17 s (run 44328189271).
 5. Run the app on the same network, naming the scanner: add `--network wealthlens -e CLAMD_HOST=clamd` to its `docker run` (`docker run -d -p 8080:8080 --name wealthlens-container tperamasani/wealthlens`) and redeploy.
-6. **After**, on staging with the switch on (§1.n): `db.tax_documents.countDocuments()`, then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/api/v1/me/tax/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
+6. **After**, on staging with the switch on (§1.n): `SELECT count(*) FROM wealthlens.tax_documents;` (`PSQL`, §2.19), then upload the 68-byte EICAR test file from eicar.org: `curl -s -X POST "$BASE/api/v1/me/tax/documents" -H "Authorization: Bearer $TOKEN" -F file=@eicar.com -F profileId=<a test profile> -F taxYear=2026 -F documentType=FORM_130` → 400 as above, the app log holds `An upload failed the malware scan: Eicar-Test-Signature`, and the count is unchanged. Then `docker stop clamd`, upload a real Form No. 130 → 503 and the count unchanged; `docker start clamd`, wait for `healthy`, upload it again → 200 and the count one higher.
 
 **A second run** is safe: step 2 reports the network and volume exist, and step 3 reports the name in use — `docker start clamd` instead. `freshclam` inside the container updates the signatures once a day; nothing to run. **Way back:** turn the switch off first (§1.n), then `docker rm -f clamd` and `docker volume rm clam_db`; the scanner stores nothing of ours.
 
@@ -1093,7 +1111,9 @@ and so its version — changes with this deploy (§1.p): a client registering re
 `curl -s -o /dev/null -w '%{http_code}\n' "$BASE/privacy/rights"` — expected `401` (outside every zone). **Way back:** deploy the
 previous build; callers go back to the old paths.
 
-### 1.j W-358b (D-854) — refresh tokens; callers sign in again · owner · **first deploy carrying W-358b**
+### 1.j W-358b (D-854) — refresh tokens; callers sign in again · owner · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Its checks were MongoDB index reads at W-358b's deploy; on PostgreSQL the indexes are Flyway DDL. Kept below as the record of what it did.
 
 Automatic at startup (`LoginIndexInitializer`). **Before** (read-only, `mongosh` on the database): `db.refresh_tokens.countDocuments({})` — expected `0`
 (the collection is new). **Confirm** the log holds `Ensured the indexes of UserDetail` and `Ensured the indexes of RefreshToken`; a failure stops
@@ -1116,14 +1136,12 @@ was older (every hash stored before W-358d3 is unlabelled BCrypt, `$2a$10$…`, 
 change store Argon2id from the start. An account nobody signs in to keeps its BCrypt hash, which still signs in. A plain-text
 (`{noop}`) or digest (`{MD5}`, `{SHA-1}` …) value never signs anyone in.
 
-**Read-only, before the deploy and a week after** (IntelliJ console on the cluster, one query):
+**Read-only, before the deploy and a week after** (`PSQL`, §2.19, one query):
 
-```js
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    const users = d.user_details.countDocuments({});
-    const upgraded = d.user_details.countDocuments({ password: /^\{argon2\}/ });
-    return { database: n, users, upgraded, bcrypt: users - upgraded }; }) }])
+```sql
+SET search_path = wealthlens;
+SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded,
+  count(*) FILTER (WHERE password NOT LIKE '{argon2}%' OR password IS NULL) AS bcrypt FROM user_details;
 ```
 
 Expected before: `upgraded` 0. A week after: `upgraded` the accounts that signed in or registered since, `upgraded` + `bcrypt` =
@@ -1131,10 +1149,10 @@ Expected before: `upgraded` 0. A week after: `upgraded` the accounts that signed
 
 **Way back (D-885 C3a: no copy of the hashes is kept).** `m1.5` and earlier cannot read a labelled hash, so after going back an
 upgraded account is refused until its password is reset: `htpasswd -bnBC 10 "" '<password>' | tr -d ':\n'` gives a BCrypt hash;
-`db.user_details.updateOne({ email: "<stored email>" }, { $set: { password: "<hash>" } })` with the stored form of the email (§0.7). The
+`PSQL -v email='<stored email>' -v hash='<hash>' <<< "UPDATE wealthlens.user_details SET password = :'hash' WHERE email = :'email';"` (`UPDATE 1`) with the stored form of the email (§0.7). The
 query above (`upgraded`) counts the accounts this concerns.
 
-## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
+## 1A. W-176 (D-379) — clear the charge engine's data · owner, SQL · **every fresh start**
 
 **Why.** The owner's fresh start (2026-10-27): the charge engine's data is cleared where it exists and seeded new in
 §1B, so every database starts from the cards in the repository. The configuration seeded from the repository
@@ -1147,69 +1165,100 @@ sides of a `profit_and_loss` document). The P&L's gains stay.
 - **Staging loses its 328 recorded contract notes.** The cost basis already written on `assets` stays as recorded. A
   V2 sale recorded before the deploy keeps its brokerage in the P&L's gains split (§2.8). The owner called this
   staging data (W-176 plan, risk 1).
-- **Documents are deleted, collections are not dropped.** Dropping would also remove the unique indexes
-  `ChargeIndexInitializer` created at startup (§1.6), leaving `user_charges {email, transaction_id}` unenforced until
-  the next restart.
+- **Rows are deleted, tables are not dropped.** The tables and their unique indexes (`user_charge_txn_idx` on
+  `user_charges (email, transaction_id)`) are Flyway's; the app checks the schema at start (D-963), so a dropped table
+  stops the next start.
 - **No trade between 1A and 1B.** With the flags on and no cards, a V2 buy is charged ₹0 and that ₹0 becomes its
   cost basis.
 - 1A is a fresh-start step, not a one-time migration, so it has no Phase 15 row and no code to remove.
 
-1. **Count before** (read-only; run it again after step 3):
+1. **Count before** (read-only; run it again after step 3; `PSQL`, §2.19):
 
-   ```js
-   ({ db: db.getName(),
-      charge_catalogue: db.charge_catalogue.countDocuments({}),
-      charge_schedules: db.charge_schedules.countDocuments({}),
-      charge_instruments: db.charge_instruments.countDocuments({}),
-      user_charges: db.user_charges.countDocuments({}),
-      charge_accounts: db.charge_accounts.countDocuments({}),
-      pnl_charge_side: db.profit_and_loss.countDocuments({ $or: [
-        { "realised_profits.yearly_charge_summary": { $exists: true } },
-        { "out_sourced_realised_profits.yearly_charge_summary": { $exists: true } } ] }) })
+   ```sql
+   SELECT (SELECT count(*) FROM wealthlens.charge_catalogue) AS charge_catalogue,
+     (SELECT count(*) FROM wealthlens.charge_schedules) AS charge_schedules,
+     (SELECT count(*) FROM wealthlens.charge_instruments) AS charge_instruments,
+     (SELECT count(*) FROM wealthlens.user_charges) AS user_charges,
+     (SELECT count(*) FROM wealthlens.charge_accounts) AS charge_accounts,
+     (SELECT count(*) FROM wealthlens.profit_and_loss WHERE jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+        OR jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object') AS pnl_charge_side;
    ```
 
-   Expect (2026-10-27): prod 0 / 0 / 0 / 0 / 0 / 0; staging 12 / 11 / 2 / 328 / 1 / 2. Take it again now; report a
-   difference before clearing.
-2. **Back up** (staging; on prod only if step 1 is not all 0):
+   Read 2026-11-28 (W-337j3b, D-1022): dev 13 / 40 / 2 / 0 / 0 / 0, staging 13 / 39 / 2 / 0 / 0 / 0 (on MongoDB, 2026-10-27:
+   prod 0 / 0 / 0 / 0 / 0 / 0, staging 12 / 11 / 2 / 328 / 1 / 2). Take it again now; report a difference before clearing.
+2. **Back up** (staging; on prod only if step 1 is not all 0). Each child table goes with its parent:
 
    ```bash
-   for c in charge_catalogue charge_schedules charge_instruments user_charges charge_accounts; do
-     mongoexport --uri "<uri>" --db <db> --collection $c --out charge-engine-$c-backup.json
-   done
-   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss \
-     --query '{"$or":[{"realised_profits.yearly_charge_summary":{"$exists":true}},{"out_sourced_realised_profits.yearly_charge_summary":{"$exists":true}}]}' \
-     --fields _id,realised_profits.yearly_charge_summary,out_sourced_realised_profits.yearly_charge_summary \
-     --out charge-engine-pnl-charge-side-backup.json
+   PSQL <<'EOF'
+   COPY (SELECT * FROM wealthlens.charge_catalogue) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_catalogue-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_schedules) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_schedules-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_instruments) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_instruments-backup.csv
+   COPY (SELECT * FROM wealthlens.user_charges) TO STDOUT WITH CSV HEADER \g /w/charge-engine-user_charges-backup.csv
+   COPY (SELECT * FROM wealthlens.user_charge_lines) TO STDOUT WITH CSV HEADER \g /w/charge-engine-user_charge_lines-backup.csv
+   COPY (SELECT * FROM wealthlens.user_charge_amounts) TO STDOUT WITH CSV HEADER \g /w/charge-engine-user_charge_amounts-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_accounts) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_accounts-backup.csv
+   COPY (SELECT * FROM wealthlens.charge_account_billing_events) TO STDOUT WITH CSV HEADER \g /w/charge-engine-charge_account_billing_events-backup.csv
+   COPY (SELECT * FROM wealthlens.profit_and_loss WHERE jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+        OR jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object') TO STDOUT WITH CSV HEADER \g /w/charge-engine-pnl-charge-side-backup.csv
+   EOF
    ```
 
-3. **Clear.** The per-user part refuses to run unless the database is `it-staging`:
+3. **Clear.** The configuration is cleared on every database; the per-user part refuses unless the host passed is
+   staging's (dev and staging are both `defaultdb`, so the database name cannot tell them apart; D-1022 C4a):
 
-   ```js
-   (() => {
-     const configuration = Object.fromEntries(["charge_catalogue", "charge_schedules", "charge_instruments"]
-       .map(c => [c, db.getCollection(c).deleteMany({}).deletedCount]));
-     if (db.getName() !== "it-staging") {
-       return { db: db.getName(), configuration, perUser: "not cleared: only it-staging clears per-user data" };
-     }
-     return { db: db.getName(), configuration,
-       user_charges: db.user_charges.deleteMany({}).deletedCount,
-       charge_accounts: db.charge_accounts.deleteMany({}).deletedCount,
-       pnl_charge_side: db.profit_and_loss.updateMany(
-         { $or: [ { "realised_profits.yearly_charge_summary": { $exists: true } },
-                  { "out_sourced_realised_profits.yearly_charge_summary": { $exists: true } } ] },
-         { $unset: { "realised_profits.yearly_charge_summary": "",
-                     "out_sourced_realised_profits.yearly_charge_summary": "" } }).modifiedCount };
-   })()
+   ```bash
+   PSQL -v host='<the host PSQL connects to>' <<'EOF'
+   BEGIN;
+   DELETE FROM wealthlens.charge_catalogue; DELETE FROM wealthlens.charge_schedules; DELETE FROM wealthlens.charge_instruments;
+   COMMIT;
+   SELECT :'host' = 'wealthlens-staging-aaaaaw.e.aivencloud.com' AS is_staging \gset
+   \if :is_staging
+   BEGIN;
+   DELETE FROM wealthlens.user_charge_lines; DELETE FROM wealthlens.user_charge_amounts; DELETE FROM wealthlens.user_charges;
+   DELETE FROM wealthlens.charge_account_billing_events; DELETE FROM wealthlens.charge_accounts;
+   UPDATE wealthlens.profit_and_loss SET
+     realised_profits_json = CASE WHEN jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+       THEN (realised_profits_json::jsonb - 'yearlyChargeSummary')::text ELSE realised_profits_json END,
+     out_sourced_realised_profits_json = CASE WHEN jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+       THEN (out_sourced_realised_profits_json::jsonb - 'yearlyChargeSummary')::text ELSE out_sourced_realised_profits_json END
+     WHERE jsonb_typeof(realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object'
+        OR jsonb_typeof(out_sourced_realised_profits_json::jsonb -> 'yearlyChargeSummary') = 'object';
+   COMMIT;
+   \else
+   \echo refused: the per-user clear runs only on staging
+   \endif
+   EOF
    ```
 
-   Expect the counts from step 1 (on prod, `configuration` all 0).
+   Expect each `DELETE` to name step 1's count (on prod, the configuration's are 0, and the per-user part prints `refused`).
 4. **Verify:** step 1 again reads all 0 (on prod, the per-user counts were 0 before and stay so), and
-   `db.user_charges.getIndexes()` still lists `user_charge_txn_idx`.
+   `SELECT count(*) FROM pg_indexes WHERE schemaname = 'wealthlens' AND indexname = 'user_charge_txn_idx';` answers 1.
 
-**Second run:** safe, including after a run that failed part-way: deleting from an empty collection and unsetting an
-absent field change nothing (all counts 0). **Way back:** `mongoimport --uri "<uri>" --db <db> --collection <c> --file
-charge-engine-<c>-backup.json` per collection, and `mongoimport --mode merge` of the P&L file; then `POST
-/api/v1/admin/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5, "written directly").
+**Second run:** safe, including after a run that failed part-way: each block is one transaction, and deleting from an empty
+table or updating no row changes nothing (all counts 0). **Way back:** put each backup back, parents before children, and
+the P&L rows by delete and copy (the form proven by W-337j3b, D-1022):
+
+```bash
+PSQL <<'EOF'
+BEGIN;
+\copy wealthlens.charge_catalogue FROM '/w/charge-engine-charge_catalogue-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_schedules FROM '/w/charge-engine-charge_schedules-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_instruments FROM '/w/charge-engine-charge_instruments-backup.csv' WITH CSV HEADER
+\copy wealthlens.user_charges FROM '/w/charge-engine-user_charges-backup.csv' WITH CSV HEADER
+\copy wealthlens.user_charge_lines FROM '/w/charge-engine-user_charge_lines-backup.csv' WITH CSV HEADER
+\copy wealthlens.user_charge_amounts FROM '/w/charge-engine-user_charge_amounts-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_accounts FROM '/w/charge-engine-charge_accounts-backup.csv' WITH CSV HEADER
+\copy wealthlens.charge_account_billing_events FROM '/w/charge-engine-charge_account_billing_events-backup.csv' WITH CSV HEADER
+CREATE TEMP TABLE pnl_back (LIKE wealthlens.profit_and_loss) ON COMMIT DROP;
+\copy pnl_back FROM '/w/charge-engine-pnl-charge-side-backup.csv' WITH CSV HEADER
+DELETE FROM wealthlens.profit_and_loss WHERE id IN (SELECT id FROM pnl_back);
+INSERT INTO wealthlens.profit_and_loss SELECT * FROM pnl_back;
+COMMIT;
+EOF
+```
+
+Then `POST /api/v1/admin/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5,
+"written directly"). Delete the backup files once the run is logged.
 
 ## 1B. Charge engine — seed the rate cards · `SUPER_USER` · **every database · after §1A, before the first trade; on a PostgreSQL database, after §0.9**
 
@@ -1413,15 +1462,15 @@ A failing user is an error naming them; the users before stay written.
    be in it. On staging and prod as they stand, that is users who never sold, giving 0 rows, plus any user whose
    rows were deleted.
 2. **Write:** the same call with `?dryRun=false`.
-3. **Verify:** for each rebuilt user, `db.trade_outcomes.countDocuments({ email: "<stored user email>" })` (§0.7, from W-253) equals the rows the
-   report gave for them, and each row's `audit_metadata.createdBy` is `<stored caller email>` (§0.7). A second call reports
+3. **Verify:** for each rebuilt user, `SELECT count(*) FROM wealthlens.trade_outcomes WHERE email = :'email';` (`PSQL -v email='<stored user email>'`, §2.19; §0.7) equals the rows the
+   report gave for them, and each row's `created_by` is `<stored caller email>` (§0.7). A second call reports
    `rowsWritten` 0.
 
 **Know this:** since W-343 (D-800) same-day sales are replayed in id order, so a run gives the same rows every time (before it, MongoDB's unfixed order could move a sale to another lot, W-342). Rebuilt rows carry no charge breakdown, so the capital-gains summary refuses a user whose rebuilt rows
 have broker charges (D-238 C2a; §3.1). Rebuild one user at a time (delete only that user's rows), never the whole
 collection.
 
-**Way back:** delete the rows this run wrote (`audit_metadata.createdBy` = `<stored caller email>` (§0.7), `createdAt` = the run).
+**Way back:** delete the rows this run wrote (`created_by` = `<stored caller email>` (§0.7), `created_at` = the run).
 
 ### 2.3 W-088u8c (D-285) — rewrite the `FY`-form financial years · `SUPER_USER` · **retired by W-149 (D-875) · do not run**
 
@@ -1779,10 +1828,12 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
   delivery, even when its sale was intraday. **Run §3.19 first, and do not rebuild a user it lists until W-297 has
   corrected their rows** (W-295, D-595). W-297's §2.14 was that correction (retired by W-299, D-891: nothing to correct on prod or staging).
 
-1. **Before (read-only):** note the user's documents and back them up:
+1. **Before (read-only):** note the user's documents and back them up (`PSQL`, §2.19; §0.7 for the stored form):
    ```bash
-   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss \
-     --query '{ "email": "<stored user email>" }' --out pnl-<user>-backup.json   # §0.7 for the stored form
+   PSQL -v email='<stored user email>' <<'EOF'
+   COPY (SELECT * FROM wealthlens.profit_and_loss WHERE email = :'email') TO STDOUT WITH CSV HEADER \g /w/pnl-<user>-backup.csv
+   SELECT count(*) AS profit_and_loss FROM wealthlens.profit_and_loss WHERE email = :'email';
+   EOF
    ```
 2. **Dry run** (the default):
    ```bash
@@ -1791,13 +1842,21 @@ of the nested P&L after a correction (B-4). A **standing operation**, not remove
    Read `years`: per financial year, `stored` against `rebuilt`. For a V2-only user they agree to the paisa; any
    difference is the correction, or a V1 figure (above). Decide before writing.
 3. **Write:** the same call with `?dryRun=false`.
-4. **Verify (read-only):** `db.profit_and_loss.countDocuments({ email: "<stored user email>" })` equals the number of
+4. **Verify (read-only):** `SELECT count(*) FROM wealthlens.profit_and_loss WHERE email = :'email';` equals the number of
    rebuilt years, and a second dry run reports every year's `stored` equal to its `rebuilt`.
 
 **Second run:** safe, including after one that failed part-way: the write is one transaction that replaces the user's
 documents with the same fold, so a second run writes the same documents (`ProfitAndLossRebuildIntegrationTest`).
-**Way back:** delete the user's documents and `mongoimport --uri "<uri>" --db <db> --collection profit_and_loss
---file pnl-<user>-backup.json`.
+**Way back:** delete the user's documents and put the backup back, in one transaction (`PSQL`, §2.19):
+```bash
+PSQL -v email='<stored user email>' <<'EOF'
+BEGIN;
+DELETE FROM wealthlens.profit_and_loss WHERE email = :'email';
+\copy wealthlens.profit_and_loss FROM '/w/pnl-<user>-backup.csv' WITH CSV HEADER
+SELECT count(*) AS profit_and_loss FROM wealthlens.profit_and_loss WHERE email = :'email';
+COMMIT;
+EOF
+```
 
 ### 2.12 W-283a3 (D-586) — rebuild one user's `assets` from `transactions` · `SUPER_USER` · **when needed, not once**
 
@@ -1822,12 +1881,13 @@ rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, the
 - A sale that finds less held than it sold refuses the whole call (400, naming it and the shortfall). That usually
   means a missing buy or an unperformed action; correct it first.
 
-1. **Before (read-only):** back up the user's lots, and note how many there are:
+1. **Before (read-only):** back up the user's lots, and note how many there are (`PSQL`, §2.19; §0.7 for the stored form):
    ```bash
-   mongoexport --uri "<uri>" --db <db> --collection assets \
-     --query '{ "email": "<stored user email>" }' --out assets-<user>-backup.json   # §0.7 for the stored form
+   PSQL -v email='<stored user email>' <<'EOF'
+   COPY (SELECT * FROM wealthlens.assets WHERE email = :'email') TO STDOUT WITH CSV HEADER \g /w/assets-<user>-backup.csv
+   SELECT count(*) AS assets FROM wealthlens.assets WHERE email = :'email';
+   EOF
    ```
-   `db.assets.countDocuments({ email: "<stored user email>" })`
 2. **Dry run** (the default):
    ```bash
    curl -sS -X POST "$BASE/api/v1/admin/portfolio/users/<email>/assets/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
@@ -1845,8 +1905,17 @@ rebuilds: §2.2 (`trade_outcomes`, only if those rows are wrong), then this, the
 the user's lots, so a failure leaves them as they were, and a second run writes the same lots under the same ids
 (`AssetsRebuildIntegrationTest`).
 
-**Way back:** delete the user's lots and
-`mongoimport --uri "<uri>" --db <db> --collection assets --file assets-<user>-backup.json`.
+**Way back:** delete the user's lots and put the backup back, in one transaction (`PSQL`, §2.19; `<user>` as in step 1):
+```bash
+PSQL -v email='<stored user email>' <<'EOF'
+BEGIN;
+DELETE FROM wealthlens.assets WHERE email = :'email';
+\copy wealthlens.assets FROM '/w/assets-<user>-backup.csv' WITH CSV HEADER
+SELECT count(*) AS assets FROM wealthlens.assets WHERE email = :'email';
+COMMIT;
+EOF
+```
+The count equals the backup's rows (W-337j3b's proof, D-1022, rolled back there).
 
 ### 2.13 W-291 (D-589) — clear what bonus transactions copied from a buy · owner, `mongosh` · **retired by W-294 (D-890) · do not run**
 
@@ -1933,7 +2002,9 @@ transactions-segment-backup.json`, and the same for `trade_outcomes`.
 **Retired after use:** W-299 / WL-46, once this is logged for every database. The code
 (`SegmentCorrection`, its controller, report and test) is removed then.
 
-### 2.15 W-339 (D-803) — back up and drop `reports` · owner, `mongosh` · **every database · once · outstanding**
+### 2.15 W-339 (D-803) — back up and drop `reports` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Moot: `reports` was never copied (no entity maps it) and no table of that name exists on staging or prod (W-337j3a's check, 2026-11-28); the MongoDB clusters holding it are deleted by W-337j4. Kept below as the record of what it did.
 
 **Why.** `reports` holds rows no code has read or written since `4c6c92e0` (2026-06-14): no entity maps it and no code names it
 (`grep '"reports"'`, 2026-11-20). On prod it holds 163 rows, 73 of them with a plain actor email (W-334c2 row 5) that §1.r cannot
@@ -1957,7 +2028,9 @@ reports --file reports-backup.json`. No code would read it.
 
 **Retired after use:** W-339, once this is logged for every database. There is no code to remove.
 
-### 2.16 W-347 (D-808) — remove the owner's test entries `DUMMY` and `LAVANYA` · owner, `mongosh` · **prod · once; other databases sized at their run**
+### 2.16 W-347 (D-808) — remove the owner's test entries `DUMMY` and `LAVANYA` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Moot on PostgreSQL: staging and prod hold no `DUMMY` / `LAVANYA` row and no row without an `asset_type` (W-337j3a's check, 2026-11-28). Kept below as the record of what it did.
 
 **Why.** The owner entered trades in two made-up stocks on prod to test the app (owner, 2026-11-20). They sit in two users' data with no
 corporate action behind their bonuses and count in those users' holdings. On prod's copy (W-347 row 1) they are 9 transactions and 8
@@ -1979,7 +2052,9 @@ lots, in two users who hold nothing else and have no P&L year, so removing them 
 
 **Retired after use:** W-347, once logged for prod. There is no code to remove.
 
-### 2.17 W-354 (D-831, D-832) — remove prod's last test entries: `DUMMY3` and `"username"` · owner, `mongosh` · **prod · once, after §2.16; other databases sized at their run**
+### 2.17 W-354 (D-831, D-832) — remove prod's last test entries: `DUMMY3` and `"username"` · owner, `mongosh` · **retired by W-337j3a (D-1020) · do not run**
+
+> **Retired.** Moot on PostgreSQL: staging and prod hold no `DUMMY3` row, no `ICICIBANK` lot `6835e328e9c3af1009a6f4dd` and no row without an `asset_type` (W-337j3a's check, 2026-11-28). Kept below as the record of what it did.
 
 **Why.** Prod's 5 trades and 6 lots with no `asset_type` (§3.10) are all test entries (owner, 2026-11-20: "safe to delete"). §2.16
 removes the `LAVANYA` ones; this removes the rest: the stock `DUMMY3` (user A: 1 transaction, 1 lot, a login, nothing else) and the
@@ -2083,9 +2158,72 @@ makes it (W-413, D-989): step 2 below is what makes it, on each host, before the
    `PostgreSQL 18.…`, the database above, `public`.
 2. **The schema:** `CREATE SCHEMA IF NOT EXISTS wealthlens;`
 3. **Check after (read-only):** `SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'wealthlens';` — one row.
+4. **Running SQL** (every SQL step in this runbook, W-337j3b, D-1022): `psql` from the `postgres:18` image, in a folder of
+   your own, which a step's backup files are written to (`/w` inside):
+   ```zsh
+   set -a; source ~/wealthlens-runs/<env>.env; set +a     # dev, staging or prod
+   PSQL() { docker run --rm -i -v "$PWD":/w -e PGPASSWORD="$DATABASE_PASSWORD" postgres:18 psql "host=<host> port=<port> dbname=<database> user=<role> sslmode=require" -v ON_ERROR_STOP=1 "$@"; }
+   ```
+   with the host, port, database and role from the table above (prod: no `port=`, and `channel_binding=require` added). `-v
+   email='<stored email>'` (§0.7) reaches a query as `:'email'`; `-v id=…`, `-v s=…`, `-v host=…` likewise. A step's SQL goes in
+   as `<<< "…"` or `<<'EOF' … EOF` (`-c` does not substitute variables). Afterwards `unset DATABASE_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KEY JWT_SECURITY_KEY APP_PASSWORD`.
 
 **Second run:** safe; `IF NOT EXISTS` changes nothing. **Way back:** `DROP SCHEMA wealthlens;` (empty until §0.9), or delete
 the Neon branch or Aiven service. Nothing but the empty schema is in any of them before W-337i.
+
+---
+
+### 2.20 W-428a (D-1036, D-1037) — stored personal data made plain · owner · **every database · once · before its first normal start on the release carrying W-428a**
+
+**Why.** From W-428a the app writes every personal value plain and looks an email up by its plain value. Rows stored before it
+hold `k1:` ciphertext, so on such a database **nobody can sign in** until this run has made them plain. The run is the app itself,
+started with the `plain-text-rewrite` profile beside the environment's own: no port is opened, it finds every `k1:` value by its
+form in every text and `bytea` column of schema `wealthlens` (whole values, strings inside JSON, document bytes), makes it plain,
+one transaction per column, logs one line per column it changed, and stops (`PlainTextRewrite`, `PlainTextRewriteRun`). It
+needs the database's own `TAX_DATA_KEY` and `TAX_DIGEST_KEY` (in the env file). Passwords and refresh-token hashes are not
+ciphertext and are not touched. Order: dev, then staging, then prod; logged in the run log each time.
+
+Running SQL is §2.19 step 4 (`PSQL`, from a folder of your own).
+
+1. **Backup first** (it holds ciphertext, so it is read only with this database's keys — keep the keys while the dump is kept):
+   ```zsh
+   set -a; source ~/wealthlens-runs/<env>.env; set +a     # dev, staging or prod
+   docker run --rm -v "$PWD":/w -e PGPASSWORD="$DATABASE_PASSWORD" postgres:18 pg_dump "host=<host> port=<port> dbname=<database> user=<role> sslmode=require" -n wealthlens -Fc -f /w/<env>-pre-w428a.dump
+   ls -l <env>-pre-w428a.dump
+   ```
+   (prod: no `port=`, `channel_binding=require` added, as §2.19.) Stop if the file is missing or empty.
+2. **Check before (read-only):** the columns still holding `k1:` values, and how many:
+   ```zsh
+   PSQL <<'EOF'
+   SELECT 'SELECT * FROM (' || string_agg(format('SELECT %L AS table_name, %L AS column_name, count(*) AS sealed FROM wealthlens.%I WHERE %s',
+     table_name, column_name, table_name, CASE data_type WHEN 'bytea' THEN format('substring(%I FROM 1 FOR 3) = %L::bytea', column_name, 'k1:')
+     ELSE format('(%I LIKE %L OR %I LIKE %L)', column_name, 'k1:%', column_name, '%"k1:%') END), ' UNION ALL ') || ') x WHERE sealed > 0 ORDER BY 1, 2'
+     FROM information_schema.columns WHERE table_schema = 'wealthlens' AND data_type IN ('text', 'character varying', 'bytea')
+       AND table_name <> 'flyway_schema_history' \gexec
+   EOF
+   ```
+   Expect rows (`user_details.email` among them) on a database stored before W-428a. Keep the output.
+3. **The run** — from the release worktree, with the app stopped:
+   ```zsh
+   [[ -f wealthlens.jar ]] || { echo "no wealthlens.jar here: stop"; return 1 }
+   set -a; source ~/wealthlens-runs/<env>.env; set +a
+   java -jar wealthlens.jar --spring.profiles.active=<profile>plain-text-rewrite --app.tax.jobs.enabled=false 2>&1 | tee rewrite-<env>.log
+   ```
+   with `<profile>` empty for dev, `staging,` or `prod,`. Expect one `<table>.<column>: N made plain` line per column step 2
+   listed, then `Plain-text rewrite done: … value(s) made plain in … column(s)`, and the process ends with exit 0
+   (`echo $pipestatus[1]`). A value that will not decrypt (another database's keys, an altered value) stops the run with an
+   error; its column is left as it was, the columns before it are already plain — fix the cause and run again.
+4. **Check after (read-only):** step 2 again — **no rows**. A row left is a value that only names `k1:` as text (the log says
+   `… left (no ciphertext in them)`) or one the run missed: read it before going on; W-428c may not start while any database
+   answers a row it cannot explain.
+5. **Start and sign in:** start the app as usual; sign in as the owner — 200. Then delete `rewrite-<env>.log` (it names
+   columns and counts, no personal data, but is not kept).
+
+**Second run:** safe — it finds nothing sealed and changes nothing (`PlainTextRewriteIntegrationTest`); after a failed run it
+completes the rest. **Way back:** stop the app and restore the step-1 dump (`pg_restore --clean --if-exists -n wealthlens -d …`),
+then start the previous release, which reads only ciphertext. A release carrying W-428a also reads the restored ciphertext,
+but nobody signs in on it until this step runs again. **Removed after use:** with the cipher, by W-428c (its row names this
+section and the profile; YouTrack WL-51, under WL-28), once this step is logged for dev, staging and prod.
 
 ---
 
@@ -2096,105 +2234,142 @@ Any repair would be a new work item with its own section-2 entry.
 
 | # | Item / decision | Condition | Read-only check |
 |---|---|---|---|
-| 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again", worded since W-223: a trade a rate card prices can be recorded again, and one no card prices cannot be computed until its charges can be entered by code). The rebuild's rows never have one. **Prod (W-334c7b2 row 2, D-821):** 61 rows of 2 users (the owner 60: 10 / 34 / 16 by sale year 2023-24 – 2025-26; the other user 1) — **left as they are**: those years are filed; the refusal is per sale year, so TY 2026-27 on is not touched. Do not add a breakdown by hand: one without an `STT` line reads as STT not paid | Count below |
-| 3.2 | **W-088f** (D-249 C4a, "no backfill") | Rows written before W-088f have no `acquisition_mode`; they read as `UNRECORDED` (`Acquisition.stored` maps a missing mode to it) | `db.trade_outcomes.countDocuments({ acquisition_mode: { $exists: false } })` |
-| 3.3 | **W-088j** (D-292), narrowed by **W-088j2c2** (D-298), **W-088j2d** (D-299) and **W-088j2e** (D-300) | A side of a disposal with no charge breakdown says nothing of STT, so it reads as `UNKNOWN`, not "no STT". Since D-298 the engine settles such a side from its recorded venue: an equity side on `NSE` or `BSE` in `DELIVERY` (and a sale in `INTRADAY`) is chargeable under Chapter VII s.98 Sl. 1–3 — a buy only when the lot was acquired by purchase (Sl. 1 "Purchase", D-300), and a long-term buy acquired before 1-10-2004 or by a bonus or demerger is settled by S.O. 5054(E) (`CG-PART-LONG-NOTIFIED`). What is still **refused** by the tax engine: a side with nil charges and no breakdown whose exchange is not recorded, is spelt other than exactly `NSE` / `BSE`, or is genuinely off an exchange, and a long-term buy on `NSE` / `BSE` that is not shown to be a purchase and is not a bonus or demerger allotment — a rights allotment, or an unrecorded mode (D-300) (a side with charges and no breakdown is refused earlier, §3.1). No user declaration was built (D-299); a repair, if the count is not nil, is a new work item — the exchange string is the fault for most rows, and §2.2's rebuild fills a row's missing venue from `transactions` | Count below (an upper bound) |
-| 3.4 | **W-088j2b** (D-295, "no backfill") | `trade_outcomes` rows written before W-088j2b have no per-side venue (`buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`); they read as `TradeVenue.UNRECORDED`. The old `exchange_name` / `segment` are **not** read for tax (V1 took the exchange from the buy, V2 and the rebuild from the sale). Remedy for a user: §2.2's per-user rebuild, which writes the new fields. The segment is published as recorded: `DELIVERY` is also the entry default (D-295) | Count and values below |
-| 3.5 | **W-088k3** (D-305) | The tax engine decides short-term or long-term itself, from `RS-CG-TERM`: an equity disposal is a listed security (twelve months) when its **sale** is recorded on `NSE` or `BSE` (`sell_exchange_name`; a reading, D-305 C1). A disposal whose sale exchange is absent or another string is **refused** for the term — no other period is shipped (D-305 C2). Rows written before W-088j2b have no `sell_exchange_name` (§3.4). Remedy for a user: §2.2's per-user rebuild, which writes it from `transactions.exchange_name` | Count below |
-| 3.6 | **W-088k4a** (D-307) | `corporate_action.allotment_date` is new and not backfilled. Performing a `BONUS` action without it is **refused** (400, naming the stock and record date), so a pending bonus whose date is not entered blocks its quarterly perform. Bonus lots processed before W-088k4a are dated at the ex-date; W-088k4b corrects them **Prod (W-346, D-805):** ASHOKLEY's action is stored with record date 2025-07-17 where the company's Annual Report 2025-26 (p. 24) gives 2025-07-16; MSUMI's 2025-07-19 is unconfirmed; no holding changes across either pair of dates, so the bonus reached the same holders — recorded, not corrected | List below |
-| 3.7 | **W-088g5** (D-433) | A `LAND_OR_BUILDING` trade is now **refused** on V1, V2 and the upload (400). Land was enterable from W-088g2 (D-425) until this guard; a row entered in that window **stays as it is** — the guard refuses new entries and touches nothing stored. Expected 0 on every database; a non-zero count is reported to the owner, not corrected (a correction would be its own item, with W-088g9's property entry) | the 3.7 query below, owner, any time after the deploy that carries W-088g5; safe to run again |
-| 3.8 | **W-223** (D-437), **W-230** (D-439) | Until these a V2 buy no rate card priced had its entered `brokerCharges` replaced by nil, and a V2 sale's never reached its row; from them the entered figure stays. A lot or row already written stays nil; its entered charge is still on its source transaction, so nothing is lost. Reported, not corrected: a correction is its own item | the 3.8 query below, owner, any time after the deploy that carries W-223; read-only; safe to run again; nothing to undo |
-| 3.9 | **W-213, W-216** (D-438) | Until W-213 a stock split performed through the per-user path changed no lot, yet was marked performed, and a malformed ratio could be too. A lot affected stays unsplit with a performed row. Reported, not corrected: a correction is its own row, placed once a count is seen. **Read the ratios too:** W-213 reads `n:d` as new shares to old (`2:1` doubles). A stored `1:10` meant as ten-for-one would **shrink** a holding when performed: re-enter such an action before anyone performs it | the 3.9 query below, owner, after the deploy that carries W-213 and before any split is performed; read-only; safe to run again; nothing to undo |
-| 3.10 | **W-268** (D-553 C1a) | `POST /portfolio/user/{email}/update` is **removed**: it let any signed-in user set a missing `asset_type` to `MUTUAL_FUND` on every user's `assets` and `transactions`. Whether it was ever run on a database is not known. A record with no `asset_type` stays as it is; expected 0. A non-zero count is reported to the owner, not corrected — a scoped, idempotent backfill would be its own row, placed once a count is seen. **Prod (W-354, D-831, 2026-11-20):** `assets` 6, `transactions` 5 — all test entries, removed by §2.16 (`LAVANYA` 4 / 4) and §2.17 (`DUMMY3` 1 / 1, the `"username"` lot 1 / 0); expected 0 / 0 after both | `({ assets: db.assets.countDocuments({ asset_type: null }), transactions: db.transactions.countDocuments({ asset_type: null }) })`, owner, `mongosh`, before or after the deploy that carries W-268; read-only; safe to run again; nothing to undo |
-| 3.11 | **W-270** (D-555 C2a) | A trade held back by a corporate action now records the flow that received it (`trade_flow`, `V1` or `V2`), and redrive records it the same way. A `TEMPORARY` transaction stored before W-270 has none; which flow sent it cannot be recovered, so it is redriven through V1 as before — a V2 trade among them comes back merged into a same-day lot and unpriced by the charge engine (W-264a G-8). Reported, not corrected: the count decides whether a row is placed. **Prod (W-334c7b3, D-823):** 18 — all one `TEST_USER` account's buys of codes `A` / `B` / `C`, none keeping its request (a redrive cannot replay them); the whole test account is removed (`c7b3-03-test-account.js`, then `c7b-e5-test-users.js` with backups guarding the delete), so the count is 0 | `db.transactions.countDocuments({ status: "TEMPORARY", trade_flow: null })`, owner, `mongosh`, after the deploy that carries W-270; read-only; safe to run again; nothing to undo |
-| 3.12 | **W-271** (D-556 C2a) | A V1 sale now takes only lots held on its date, as V2's does. Until W-271 a V1 sale (the route, the upload, a V1 redrive) read every lot, so a sale dated before a purchase could consume that later lot; each such allocation left a `trade_outcomes` row whose `buy_date` is after its `sell_date`. Expected 0; a non-zero count is reported to the owner, not corrected — a correction would be its own row | `db.trade_outcomes.countDocuments({ $expr: { $gt: ["$buy_date", "$sell_date"] } })`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
-| 3.13 | **W-274** (D-560 C3a) | Sale quantities are now compared within a tolerance of 1e-9. Until W-274 a V1 sale of fractional units could leave a lot holding a float remainder (2.8e-17 units seen in W-264a) that was never deleted. Such a lot is no longer shown in the holdings views, but stays stored. Expected 0; a non-zero count is reported to the owner, not corrected — a removal would be its own row | `db.assets.countDocuments({ quantity: { $gt: 0, $lt: 1e-9 } })`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
-| 3.14 | **W-279** (D-565 C2a) | A V1 buy merged into the day's lot now keeps its order time on the lot. Until W-279 the merge dropped it, so a lot built from several V1 buys lists order times for the first only. Lots with two or more buy transactions are V1 merges (V2 writes a lot per buy); one never sold from whose order times sum below its quantity lost some. The lost times are on each buy's transaction row, not the lot. Reported, not corrected — a correction would be its own row | `db.assets.countDocuments({ "buy_transaction_ids.1": { $exists: true }, sell_transaction_ids: { $size: 0 }, $expr: { $lt: [ { $sum: "$order_time_quantities.quantity" }, "$quantity" ] } })`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
-| 3.15 | **W-280** (D-566 C2a) | A V1 buy is now priced and recorded under its own segment. Until W-280 V1's buy passed `DELIVERY` whatever the trade said, so a V1 intraday buy was priced on the delivery card and its `user_charges` row says `DELIVERY` while its transaction says `INTRADAY` (V2 always passed the segment, so such a pair is always a V1 buy). Reported, not corrected — re-pricing would be its own row (ADR-32). **This count matched nothing before W-292 and still matches nothing for a trade stored before it** (W-292, D-591): until then no transaction stored its segment, so none said `INTRADAY`. A V1 intraday buy made before W-280 cannot be found from stored data at all, because its charge row was priced as `DELIVERY` too. §3.18 counts the transactions whose charge row knows better | `db.transactions.aggregate([{ $match: { transaction_type: "BUY", segment: "INTRADAY" } }, { $lookup: { from: "user_charges", let: { id: { $toString: "$_id" } }, pipeline: [{ $match: { $expr: { $eq: ["$transaction_id", "$$id"] } } }], as: "charge" } }, { $match: { "charge.segment": "DELIVERY" } }, { $count: "priced_as_delivery" }])`, owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
-| 3.16 | **W-289** (D-587 C2a) | A trade now waits for a split, bonus or demerger recorded in an earlier quarter and not yet performed, when the user holds lots it reaches. Until W-289 only an action in the trade's own quarter held it, so a sale in a later quarter could be applied to pre-split units before the action was performed: holding 10, a 2:1 split, selling 4 left 12, not 16. The count lists **candidates** — users with a sale dated after an action's record date, of a stock they bought with that broker before it. Same-quarter and correctly ordered ones are included, so each user is checked with §2.12's dry run, which shows the actual drift, and corrected through §2.12 then §2.11 | `db.corporate_action.aggregate([{ $match: { type: { $in: ["STOCK_SPLIT", "BONUS", "DEMERGER"] } } }, { $lookup: { from: "transactions", let: { s: "$stock_code", r: "$record_date" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$stock_code", "$$s"] }, { $eq: ["$transaction_type", "SELL"] }, { $gt: ["$transaction_date", "$$r"] }] } } }], as: "sale" } }, { $unwind: "$sale" }, { $lookup: { from: "transactions", let: { s: "$stock_code", r: "$record_date", e: "$sale.email", b: "$sale.broker_name" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$stock_code", "$$s"] }, { $eq: ["$email", "$$e"] }, { $eq: ["$broker_name", "$$b"] }, { $eq: ["$transaction_type", "BUY"] }, { $lt: ["$transaction_date", "$$r"] }] } } }, { $limit: 1 }], as: "bought_before" } }, { $match: { bought_before: { $ne: [] } } }, { $group: { _id: "$sale.email", sales: { $sum: 1 } } }])` — one row per candidate user (the stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
+| 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again", worded since W-223: a trade a rate card prices can be recorded again, and one no card prices cannot be computed until its charges can be entered by code). The rebuild's rows never have one. **Prod (W-334c7b2 row 2, D-821):** 61 rows of 2 users (the owner 60: 10 / 34 / 16 by sale year 2023-24 – 2025-26; the other user 1) — **left as they are**: those years are filed; the refusal is per sale year, so TY 2026-27 on is not touched. Do not add a breakdown by hand: one without an `STT` line reads as STT not paid | Count below (SQL, `PSQL`, §2.19) **On PostgreSQL (2026-11-28, W-337j3c):** prod 2 / 61 (unchanged), staging 2 / 40, dev 0. |
+| 3.2 | **W-088f** (D-249 C4a, "no backfill") | Rows written before W-088f have no `acquisition_mode`; they read as `UNRECORDED` (`Acquisition.stored` maps a missing mode to it) | the 3.2 query below (SQL, `PSQL`, §2.19) |
+| 3.3 | **W-088j** (D-292), narrowed by **W-088j2c2** (D-298), **W-088j2d** (D-299) and **W-088j2e** (D-300) | A side of a disposal with no charge breakdown says nothing of STT, so it reads as `UNKNOWN`, not "no STT". Since D-298 the engine settles such a side from its recorded venue: an equity side on `NSE` or `BSE` in `DELIVERY` (and a sale in `INTRADAY`) is chargeable under Chapter VII s.98 Sl. 1–3 — a buy only when the lot was acquired by purchase (Sl. 1 "Purchase", D-300), and a long-term buy acquired before 1-10-2004 or by a bonus or demerger is settled by S.O. 5054(E) (`CG-PART-LONG-NOTIFIED`). What is still **refused** by the tax engine: a side with nil charges and no breakdown whose exchange is not recorded, is spelt other than exactly `NSE` / `BSE`, or is genuinely off an exchange, and a long-term buy on `NSE` / `BSE` that is not shown to be a purchase and is not a bonus or demerger allotment — a rights allotment, or an unrecorded mode (D-300) (a side with charges and no breakdown is refused earlier, §3.1). No user declaration was built (D-299); a repair, if the count is not nil, is a new work item — the exchange string is the fault for most rows, and §2.2's rebuild fills a row's missing venue from `transactions` | Count below (SQL, `PSQL`, §2.19) (an upper bound) |
+| 3.4 | **W-088j2b** (D-295, "no backfill") | `trade_outcomes` rows written before W-088j2b have no per-side venue (`buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`); they read as `TradeVenue.UNRECORDED`. The old `exchange_name` / `segment` are **not** read for tax (V1 took the exchange from the buy, V2 and the rebuild from the sale). Remedy for a user: §2.2's per-user rebuild, which writes the new fields. The segment is published as recorded: `DELIVERY` is also the entry default (D-295) | Count and values below (SQL, `PSQL`, §2.19) |
+| 3.5 | **W-088k3** (D-305) | The tax engine decides short-term or long-term itself, from `RS-CG-TERM`: an equity disposal is a listed security (twelve months) when its **sale** is recorded on `NSE` or `BSE` (`sell_exchange_name`; a reading, D-305 C1). A disposal whose sale exchange is absent or another string is **refused** for the term — no other period is shipped (D-305 C2). Rows written before W-088j2b have no `sell_exchange_name` (§3.4). Remedy for a user: §2.2's per-user rebuild, which writes it from `transactions.exchange_name` | Count below (SQL, `PSQL`, §2.19) |
+| 3.6 | **W-088k4a** (D-307) | `corporate_action.allotment_date` is new and not backfilled. Performing a `BONUS` action without it is **refused** (400, naming the stock and record date), so a pending bonus whose date is not entered blocks its quarterly perform. Bonus lots processed before W-088k4a are dated at the ex-date; W-088k4b corrects them **Prod (W-346, D-805):** ASHOKLEY's action is stored with record date 2025-07-17 where the company's Annual Report 2025-26 (p. 24) gives 2025-07-16; MSUMI's 2025-07-19 is unconfirmed; no holding changes across either pair of dates, so the bonus reached the same holders — recorded, not corrected | List below (SQL, `PSQL`, §2.19) |
+| 3.7 | **W-088g5** (D-433) | A `LAND_OR_BUILDING` trade is now **refused** on V1, V2 and the upload (400). Land was enterable from W-088g2 (D-425) until this guard; a row entered in that window **stays as it is** — the guard refuses new entries and touches nothing stored. Expected 0 on every database; a non-zero count is reported to the owner, not corrected (a correction would be its own item, with W-088g9's property entry) | the 3.7 query below (SQL, `PSQL`, §2.19), owner, any time after the deploy that carries W-088g5; safe to run again |
+| 3.8 | **W-223** (D-437), **W-230** (D-439) | Until these a V2 buy no rate card priced had its entered `brokerCharges` replaced by nil, and a V2 sale's never reached its row; from them the entered figure stays. A lot or row already written stays nil; its entered charge is still on its source transaction, so nothing is lost. Reported, not corrected: a correction is its own item | the 3.8 query below (SQL, `PSQL`, §2.19), owner, any time after the deploy that carries W-223; read-only; safe to run again; nothing to undo |
+| 3.9 | **W-213, W-216** (D-438) | Until W-213 a stock split performed through the per-user path changed no lot, yet was marked performed, and a malformed ratio could be too. A lot affected stays unsplit with a performed row. Reported, not corrected: a correction is its own row, placed once a count is seen. **Read the ratios too:** W-213 reads `n:d` as new shares to old (`2:1` doubles). A stored `1:10` meant as ten-for-one would **shrink** a holding when performed: re-enter such an action before anyone performs it | the 3.9 query below (SQL, `PSQL`, §2.19), owner, after the deploy that carries W-213 and before any split is performed; read-only; safe to run again; nothing to undo |
+| 3.10 | **W-268** (D-553 C1a) | `POST /portfolio/user/{email}/update` is **removed**: it let any signed-in user set a missing `asset_type` to `MUTUAL_FUND` on every user's `assets` and `transactions`. Whether it was ever run on a database is not known. A record with no `asset_type` stays as it is; expected 0. A non-zero count is reported to the owner, not corrected — a scoped, idempotent backfill would be its own row, placed once a count is seen. **Prod (W-354, D-831, 2026-11-20):** `assets` 6, `transactions` 5 — all test entries, removed by §2.16 (`LAVANYA` 4 / 4) and §2.17 (`DUMMY3` 1 / 1, the `"username"` lot 1 / 0); expected 0 / 0 after both | the 3.10 query below, owner, SQL (`PSQL`, §2.19), before or after the deploy that carries W-268; read-only; safe to run again; nothing to undo |
+| 3.11 | **W-270** (D-555 C2a) | A trade held back by a corporate action now records the flow that received it (`trade_flow`, `V1` or `V2`), and redrive records it the same way. A `TEMPORARY` transaction stored before W-270 has none; which flow sent it cannot be recovered, so it is redriven through V1 as before — a V2 trade among them comes back merged into a same-day lot and unpriced by the charge engine (W-264a G-8). Reported, not corrected: the count decides whether a row is placed. **Prod (W-334c7b3, D-823):** 18 — all one `TEST_USER` account's buys of codes `A` / `B` / `C`, none keeping its request (a redrive cannot replay them); the whole test account is removed (`c7b3-03-test-account.js`, then `c7b-e5-test-users.js` with backups guarding the delete), so the count is 0 | the 3.11 query below, owner, SQL (`PSQL`, §2.19), after the deploy that carries W-270; read-only; safe to run again; nothing to undo **On PostgreSQL (2026-11-28, W-337j3c):** prod 0, staging 1, dev 0. |
+| 3.12 | **W-271** (D-556 C2a) | A V1 sale now takes only lots held on its date, as V2's does. Until W-271 a V1 sale (the route, the upload, a V1 redrive) read every lot, so a sale dated before a purchase could consume that later lot; each such allocation left a `trade_outcomes` row whose `buy_date` is after its `sell_date`. Expected 0; a non-zero count is reported to the owner, not corrected — a correction would be its own row | the 3.12 query below, owner, SQL (`PSQL`, §2.19), any time; read-only; safe to run again; nothing to undo |
+| 3.13 | **W-274** (D-560 C3a) | Sale quantities are now compared within a tolerance of 1e-9. Until W-274 a V1 sale of fractional units could leave a lot holding a float remainder (2.8e-17 units seen in W-264a) that was never deleted. Such a lot is no longer shown in the holdings views, but stays stored. Expected 0; a non-zero count is reported to the owner, not corrected — a removal would be its own row | the 3.13 query below, owner, SQL (`PSQL`, §2.19), any time; read-only; safe to run again; nothing to undo |
+| 3.14 | **W-279** (D-565 C2a) | A V1 buy merged into the day's lot now keeps its order time on the lot. Until W-279 the merge dropped it, so a lot built from several V1 buys lists order times for the first only. Lots with two or more buy transactions are V1 merges (V2 writes a lot per buy); one never sold from whose order times sum below its quantity lost some. The lost times are on each buy's transaction row, not the lot. Reported, not corrected — a correction would be its own row | the 3.14 query below, owner, SQL (`PSQL`, §2.19), any time; read-only; safe to run again; nothing to undo **On PostgreSQL (2026-11-28, W-337j3c):** prod 21, staging 26, dev 0 lots; every one has an empty sell list stored (none NULL), so the count means what MongoDB's did. |
+| 3.15 | **W-280** (D-566 C2a) | A V1 buy is now priced and recorded under its own segment. Until W-280 V1's buy passed `DELIVERY` whatever the trade said, so a V1 intraday buy was priced on the delivery card and its `user_charges` row says `DELIVERY` while its transaction says `INTRADAY` (V2 always passed the segment, so such a pair is always a V1 buy). Reported, not corrected — re-pricing would be its own row (ADR-32). **This count matched nothing before W-292 and still matches nothing for a trade stored before it** (W-292, D-591): until then no transaction stored its segment, so none said `INTRADAY`. A V1 intraday buy made before W-280 cannot be found from stored data at all, because its charge row was priced as `DELIVERY` too. §3.18 counts the transactions whose charge row knows better | the 3.15 query below, owner, SQL (`PSQL`, §2.19), any time; read-only; safe to run again; nothing to undo |
+| 3.16 | **W-289** (D-587 C2a) | A trade now waits for a split, bonus or demerger recorded in an earlier quarter and not yet performed, when the user holds lots it reaches. Until W-289 only an action in the trade's own quarter held it, so a sale in a later quarter could be applied to pre-split units before the action was performed: holding 10, a 2:1 split, selling 4 left 12, not 16. The count lists **candidates** — users with a sale dated after an action's record date, of a stock they bought with that broker before it. Same-quarter and correctly ordered ones are included, so each user is checked with §2.12's dry run, which shows the actual drift, and corrected through §2.12 then §2.11 | the 3.16 query below — one row per candidate user (the stored email, §0.7), owner, SQL (`PSQL`, §2.19), any time; read-only; safe to run again; nothing to undo |
 | 3.17 | **W-291** (D-589 C2a) | A bonus lot and its transaction now carry only the bonus. Until W-291 the lot copied the first held lot's charges, allocated charges, sales and actions, and the transaction copied the first buy's charges and identifiers. A sale of bonus shares therefore charged buy charges paid once already, overstating cost and understating the gain. And a bonus could not be performed at all for a user whose first buy carried an idempotency key or came from a redrive (a duplicate key). The count lists users with bonus lots carrying charges. §2.13 corrected the transactions (retired by W-294, D-890, once run on prod and staging); then each user listed was put through §2.12 → §2.2 → §2.11 | `db.assets.aggregate([{ $match: { corporate_action: "BONUS", $or: [{ broker_charges: { $gt: 0 } }, { misc_charges: { $gt: 0 } }, { allocated_buy_charges: { $gt: 0 } }, { allocated_buy_misc_charges: { $gt: 0 } }] } }, { $group: { _id: "$email", bonus_lots_with_charges: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.18 | **W-292** (D-591 C2a) | A transaction and a lot now record the segment the trade was entered in. Until W-292 neither did (`AssetRequest.asTransaction`, `asAsset`), so every stored one says `DELIVERY`, and an outcome row's `buy_segment` (taken from the lot) and a §2.2 rebuild's venues (taken from the transactions) say it too. The trade's `user_charges` row was priced under the request's segment (V2 always, V1 since W-280), so it knows better. The count lists users with transactions whose charge row says another segment. Reported here; §2.14 (W-297) corrected it, finding nothing on prod or staging (retired by W-299, D-891) | `db.transactions.aggregate([{ $lookup: { from: "user_charges", let: { id: { $toString: "$_id" } }, pipeline: [{ $match: { $expr: { $eq: ["$transaction_id", "$$id"] } } }], as: "charge" } }, { $unwind: "$charge" }, { $match: { $expr: { $ne: ["$segment", "$charge.segment"] } } }, { $group: { _id: "$email", segment_differs: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
 | 3.19 | **W-295** (D-595 C3a) | An outcome row now records the segment of its sale whichever flow wrote it. Until W-295 only V2 did: a V1 row and a row rebuilt by §2.2 held `sell_segment` but no `segment`, and §2.11 files a row under `segment`, reading an absent one as delivery. So a §2.11 rebuild moved such a sale out of intraday (live P&L was right). The count lists users with rows whose `sell_segment` is not `DELIVERY` and that have no `segment`; those are the rows filed wrongly. Reported here; §2.14 (W-297) corrected it, finding nothing on prod or staging (retired by W-299, D-891). **Until §2.14 has run, do not run §2.11 for a user this lists** | `db.trade_outcomes.aggregate([{ $match: { segment: null, sell_segment: { $nin: [null, "DELIVERY"] } } }, { $group: { _id: "$email", rows_filed_as_delivery: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, any time; read-only; safe to run again; nothing to undo |
-| 3.20 | **W-303** (D-619 C4a) | A fund redeemed inside its exit-load window is now charged the load on its redemption value (the lot's units at the sale price). Until W-303 the engine took a lot's turnover at its **buy** price, so a stored `EXIT_LOAD` on a sale above cost is too low and one below cost too high; the row keeps the sale's `turnover` and each line's `base_amount` (the lot's cost) but not the lots, so it cannot be recomputed from the row alone. The count lists users with rows carrying an exit load; a non-zero count gets a correction row with its own plan (no recompute route exists, CE-4 / W-308) | `db.user_charges.aggregate([{ $match: { "amount_by_code.EXIT_LOAD": { $gt: 0 } } }, { $group: { _id: "$email", exit_load_rows: { $sum: 1 } } }])` — one row per user (stored email, §0.7), owner, `mongosh`, after deploy, on each database; read-only; safe to run again; nothing to undo; log the count in the run log |
-| 3.21 | **W-304** (D-623 C4a) | A card is now chosen for a trade only if one of its active rules declares the trade's event (BUY, SELL, AMC_CYCLE). Until W-304 an unscoped card with no rule for the event, such as a broker's maintenance card (AMC_CYCLE only) or the statutory account card, could stand in for a missing trade card. The trade was then stored as `RESOLVED`, or `NO_MATCHING_RULES`, with the missing card's charges silently absent and not listed by `/gaps`. With the shipped cards there is no such hole from 1 Apr 2025, so every count should be 0; a database's own cards may differ. The count lists, per database, the BUY/SELL rows whose `schedule_code` or `statutory_schedule_code` names a card with no active rule for the row's event. A non-zero count gets a correction row with its own plan (no recompute route exists, CE-4 / W-308) | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("user_charges")).map(n => { const covers = c => ({ $cond: [{ $eq: [{ $size: c }, 0] }, true, { $anyElementTrue: [{ $map: { input: { $ifNull: [{ $first: { $map: { input: c, as: "s", in: "$$s.rules" } } }, []] }, as: "r", in: { $and: [{ $eq: ["$$r.active", true] }, { $in: ["$event", { $ifNull: ["$$r.events", []] }] }] } } }] }] }); const r = db.getSiblingDB(n).user_charges.aggregate([{ $match: { event: { $in: ["BUY", "SELL"] } } }, { $lookup: { from: "charge_schedules", localField: "schedule_code", foreignField: "schedule_code", as: "card" } }, { $lookup: { from: "charge_schedules", localField: "statutory_schedule_code", foreignField: "schedule_code", as: "law" } }, { $project: { broker: covers("$card"), law: covers("$law") } }, { $group: { _id: null, trade_rows: { $sum: 1 }, broker_card_without_the_event: { $sum: { $cond: ["$broker", 0, 1] } }, statutory_card_without_the_event: { $sum: { $cond: ["$law", 0, 1] } } } }]).toArray()[0] ?? { trade_rows: 0, broker_card_without_the_event: 0, statutory_card_without_the_event: 0 }; return { database: n, trade_rows: r.trade_rows, broker_card_without_the_event: r.broker_card_without_the_event, statutory_card_without_the_event: r.statutory_card_without_the_event }; }) }])` — one row per database, owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4` with hand-made rows: 4 trade rows, 2 broker (a maintenance card on a sale, a card whose only rule is switched off), 1 statutory (the account card on a buy), as worked by hand; a database without `user_charges` is skipped. Log the three counts in the run log |
-| 3.22 | **W-313** (D-637 C2a) | A demerger's share ratio is now read **new:held**, as the market writes it (ITC's "1:10" = one ITC Hotels share for every ten ITC). Until W-313 the second number was taken as new shares per share held, so a demerger other than `1:1` allotted the wrong quantity and cost (ITC: 10,000 shares and ₹5,40,400 instead of 100 and ₹54,040). The query lists, per database, every stored demerger whose ratio is not `1:1` and the users holding lots it created. **Check each listed demerger's ratio against its announcement first**: one entered in the old reading is deleted (`DELETE /api/v1/admin/corporate-actions/{id}`) and added again with the right ratio (`POST /api/v1/admin/corporate-actions`), both `SUPER_USER`, before any rebuild. Then rebuild each listed user with §2.12, which replays demergers through the fixed code | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("corporate_action")).map(n => { const d = db.getSiblingDB(n); const demergers = d.corporate_action.find({ type: "DEMERGER", "demerger_detail.demerger_ratio": { $ne: "1:1" } }, { _id: 0, stock_code: 1, record_date: 1, "demerger_detail.demerger_ratio": 1, "demerger_detail.demerger_stocks.stock_code": 1 }).toArray(); const created = demergers.flatMap(a => (a.demerger_detail.demerger_stocks || []).map(s => s.stock_code)); const users = created.length === 0 ? [] : d.assets.distinct("email", { corporate_action: "DEMERGER", stock_code: { $in: created } }); return { database: n, demergers_not_one_for_one: demergers.map(a => ({ stock: a.stock_code, ratio: a.demerger_detail.demerger_ratio, record_date: a.record_date, creates: (a.demerger_detail.demerger_stocks || []).map(s => s.stock_code) })), users_to_rebuild: users }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: a `1:10` and a `1:1` demerger, lots from each → the `1:10` one only, with its two users, as worked by hand. Log the lists in the run log; each §2.12 run is logged as §2.12 **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
-| 3.23 | **W-312** (D-638 C3a) | A bonus is now allotted per account holder. Until W-312 it pooled every holder at the broker into one bonus lot **and one bonus transaction** for the first holder. The transaction is the record, so §2.12 cannot repair it. The query lists, per database, each bonus transaction whose stock, broker and user had buys (not held `TEMPORARY`) from more than one holder before it; a non-empty list gets a correction row with its own plan | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("transactions")).map(n => { const rows = db.getSiblingDB(n).transactions.aggregate([{ $match: { corporate_action: "BONUS" } }, { $lookup: { from: "transactions", let: { e: "$email", s: "$stock_code", b: "$broker_name", t: "$transaction_date" }, pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$email", "$$e"] }, { $eq: ["$stock_code", "$$s"] }, { $eq: ["$broker_name", "$$b"] }, { $lt: ["$transaction_date", "$$t"] }, { $eq: ["$transaction_type", "BUY"] }, { $ne: ["$corporate_action", "BONUS"] }, { $ne: ["$status", "TEMPORARY"] }] } } }, { $group: { _id: { type: "$account_type", holder: "$account_holder" } } }], as: "holders" } }, { $match: { "holders.1": { $exists: true } } }, { $project: { _id: 0, email: 1, stock_code: 1, broker_name: 1, allotted_on: "$transaction_date", quantity: 1, holders: "$holders._id" } }]).toArray(); return { database: n, pooled_bonuses: rows }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: a pooled bonus, a holder buying after the bonus, and a held trade → the pooled one only, as worked by hand. Log the list in the run log |
-| 3.24 | **W-316** (D-640) | A rights issue or buyback no longer holds a trade: the app records them but cannot apply them, so until W-316 a trade on such a stock after its record date was held `TEMPORARY` for good, and the quarter's run stopped at the action with 400. Trades already held that way are recorded by a redrive. The query lists, per database, the users and stocks with `TEMPORARY` trades on a stock that has a rights issue or buyback. **Then**, for each user listed: `curl -sS -X POST "$BASE/api/v1/me/portfolio/temporary-transactions/redrive" -H "Authorization: Bearer $ADMIN_TOKEN"` (`SUPER_USER`). Redrive is the normal route and safe to run again; a trade still held by a bonus, split or demerger stays held | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).filter(n => db.getSiblingDB(n).getCollectionNames().includes("corporate_action")).map(n => { const d = db.getSiblingDB(n); const stocks = d.corporate_action.distinct("stock_code", { type: { $in: ["RIGHTS_ISSUANCE", "BUYBACK"] } }); const held = stocks.length === 0 ? [] : d.transactions.aggregate([{ $match: { status: "TEMPORARY", stock_code: { $in: stocks } } }, { $group: { _id: { email: "$email", stock: "$stock_code" }, held_trades: { $sum: 1 } } }, { $project: { _id: 0, email: "$_id.email", stock: "$_id.stock", held_trades: 1 } }]).toArray(); return { database: n, stocks_with_rights_or_buyback: stocks, held_to_redrive: held }; }) }])` — owner, console, after deploy, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: held trades on a rights-issue and a buyback stock, one held by a bonus, one processed → the first two only, as worked by hand. Log the list and each redrive's result in the run log **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
-| 3.25 | **W-342** (D-798 C1a) | The startup rebuild once put a lot's whole buy charge on each later sale of it (W-088u5); §2.1 was to correct those rows by replaying the transactions, but the replay orders same-day sales by date only, so it pairs neither prod user and corrects nothing. **Accepted, not corrected:** on prod (rehearsed on its copy, 2026-11-20) the rows on lots sold more than once carry ₹68.99 of buy charges where ₹53.00 is the lot's own shared by quantity — **₹15.99 over** on nine lots, so those sales' cost is overstated and their gain understated by that much. Reported per lot with no email | `~/wealthlens-runs/w334c/c4-w342-overcharge.js` (W-342 row 3) — per lot: rows, quantity sold, lot quantity, the lot's buy charges, carried, fair, over; owner, `mongosh`, any time; read-only; safe to run again; nothing to undo. Expected on prod: 12 lots, 29 rows, carried 68.99, over 15.99 |
-| 3.26 | **W-344** (D-799 C1a) | A stock code is matched exactly everywhere — lots, sales, corporate actions, rate cards — so one stored with a leading or trailing space (`MOTHERSON `, seen on prod's copy by W-342 row 3) is a different stock from the clean one: its sales cannot reach the clean code's lots, and a corporate action entered under the clean code never reaches it. Reported, not corrected: a correction is its own row, placed once each database is sized. **Prod (rehearsed on its copy, 2026-11-20):** one code, `"MOTHERSON "` — one user's closed position (3 transactions, 2 outcome rows, no lot, no clean `MOTHERSON` anywhere): nothing split, **not corrected** (D-799 C1a). New entries are refused from W-345 | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin","local","config"].includes(n)).flatMap(n => { const d = db.getSiblingDB(n); return d.getCollectionNames().filter(c => !c.startsWith("system.")).flatMap(c => ["stock_code", "to_stock_code"].map(f => { const m = { [f]: { $type: "string", $regex: /^\s\|\s$/ } }; const k = d.getCollection(c).countDocuments(m); return k === 0 ? null : { database: n, collection: c, field: f, documents: k, codes: d.getCollection(c).distinct(f, m).map(s => JSON.stringify(s)) }; })).filter(x => x); }) }])` — one row per database, collection and field (`stock_code`, `to_stock_code`) with the count and the codes as stored (quoted, so the space shows); owner, console, on each cluster; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: two `MOTHERSON ` and one ` TCS` in `transactions`, an `ITCHOTELS` + tab in `corporate_action.to_stock_code` → 3 and 1, as worked by hand; an inner space (`A B`), `null` and a number not counted. Log the rows in the run log |
-| 3.27 | **W-353** (D-826, D-828, D-829, D-830) | A trade must now name an exchange its asset type lists in `app.portfolio.trade-exchanges` (EQUITY / MUTUAL_FUND `NSE` or `BSE`; BOND / GOLD_BOND also `OFF_EXCHANGE`; FD / INSURANCE `OFF_EXCHANGE` only), exactly as written, and an asset type; anything else is refused with a 400 on V1, V2, the upload and redrive. **Stored trades are not changed** (`outside`, informational): on prod (owner's count, 2026-11-20) 183 — 178 `MUTUAL_FUND`/`BMF` and 5 with no asset type, test entries removed by §2.16 and §2.17 (W-354), so 178 after the prod run. A **held** trade (`status: TEMPORARY`) is checked again at redrive from its stored request, so one outside the table now fails its redrive item (`held`, expected 0; a non-zero count is reported to the owner, not corrected) | `db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name).filter(n => !["admin", "local", "config"].includes(n) && db.getSiblingDB(n).getCollectionNames().includes("transactions")).map(n => { const d = db.getSiblingDB(n); const listed = { EQUITY: ["NSE", "BSE"], MUTUAL_FUND: ["NSE", "BSE"], BOND: ["NSE", "BSE", "OFF_EXCHANGE"], GOLD_BOND: ["NSE", "BSE", "OFF_EXCHANGE"], FD: ["OFF_EXCHANGE"], INSURANCE: ["OFF_EXCHANGE"] }; const outside = (t, e) => ({ $nor: Object.entries(listed).map(([k, v]) => ({ [t]: k, [e]: { $in: v } })) }); return { database: n, outside: d.transactions.countDocuments(outside("asset_type", "exchange_name")), held: d.transactions.countDocuments({ status: "TEMPORARY", ...outside("asset_request.assetType", "asset_request.exchangeName") }) }; }) }])` — one row per database; owner, console, on each cluster, after the deploy that carries W-353; read-only; safe to run again; nothing to undo. The lists in it copy the yaml's; if the yaml changes, change them too. Tried on a throwaway `mongo:8.0.4`: 12 trades (`nse`, `NSE `, `BMF`, none, FD/`NSE`, a GOLD_BOND with no exchange, a held `BMF`, a processed one whose request says `bse`, and four listed) → outside 7, held 1, as worked by hand. Log the rows in the run log |
+| 3.20 | **W-303** (D-619 C4a) | A fund redeemed inside its exit-load window is now charged the load on its redemption value (the lot's units at the sale price). Until W-303 the engine took a lot's turnover at its **buy** price, so a stored `EXIT_LOAD` on a sale above cost is too low and one below cost too high; the row keeps the sale's `turnover` and each line's `base_amount` (the lot's cost) but not the lots, so it cannot be recomputed from the row alone. The count lists users with rows carrying an exit load; a non-zero count gets a correction row with its own plan (no recompute route exists, CE-4 / W-308) | the 3.20 query below — one row per user (stored email, §0.7), owner, SQL (`PSQL`, §2.19), after deploy, on each database; read-only; safe to run again; nothing to undo; log the count in the run log |
+| 3.21 | **W-304** (D-623 C4a) | A card is now chosen for a trade only if one of its active rules declares the trade's event (BUY, SELL, AMC_CYCLE). Until W-304 an unscoped card with no rule for the event, such as a broker's maintenance card (AMC_CYCLE only) or the statutory account card, could stand in for a missing trade card. The trade was then stored as `RESOLVED`, or `NO_MATCHING_RULES`, with the missing card's charges silently absent and not listed by `/gaps`. With the shipped cards there is no such hole from 1 Apr 2025, so every count should be 0; a database's own cards may differ. The count lists, per database, the BUY/SELL rows whose `schedule_code` or `statutory_schedule_code` names a card with no active rule for the row's event. A non-zero count gets a correction row with its own plan (no recompute route exists, CE-4 / W-308) | the 3.21 query below — one row, owner, SQL (`PSQL`, §2.19), after deploy, on each database; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4` with hand-made rows: 4 trade rows, 2 broker (a maintenance card on a sale, a card whose only rule is switched off), 1 statutory (the account card on a buy), as worked by hand; a database without `user_charges` is skipped. Log the three counts in the run log |
+| 3.22 | **W-313** (D-637 C2a) | A demerger's share ratio is now read **new:held**, as the market writes it (ITC's "1:10" = one ITC Hotels share for every ten ITC). Until W-313 the second number was taken as new shares per share held, so a demerger other than `1:1` allotted the wrong quantity and cost (ITC: 10,000 shares and ₹5,40,400 instead of 100 and ₹54,040). The query lists, per database, every stored demerger whose ratio is not `1:1` and the users holding lots it created. **Check each listed demerger's ratio against its announcement first**: one entered in the old reading is deleted (`DELETE /api/v1/admin/corporate-actions/{id}`) and added again with the right ratio (`POST /api/v1/admin/corporate-actions`), both `SUPER_USER`, before any rebuild. Then rebuild each listed user with §2.12, which replays demergers through the fixed code | the 3.22 query below — owner, SQL (`PSQL`, §2.19), after deploy, on each database; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: a `1:10` and a `1:1` demerger, lots from each → the `1:10` one only, with its two users, as worked by hand. Log the lists in the run log; each §2.12 run is logged as §2.12 **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
+| 3.23 | **W-312** (D-638 C3a) | A bonus is now allotted per account holder. Until W-312 it pooled every holder at the broker into one bonus lot **and one bonus transaction** for the first holder. The transaction is the record, so §2.12 cannot repair it. The query lists, per database, each bonus transaction whose stock, broker and user had buys (not held `TEMPORARY`) from more than one holder before it; a non-empty list gets a correction row with its own plan | the 3.23 query below — owner, SQL (`PSQL`, §2.19), after deploy, on each database; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: a pooled bonus, a holder buying after the bonus, and a held trade → the pooled one only, as worked by hand. Log the list in the run log |
+| 3.24 | **W-316** (D-640) | A rights issue or buyback no longer holds a trade: the app records them but cannot apply them, so until W-316 a trade on such a stock after its record date was held `TEMPORARY` for good, and the quarter's run stopped at the action with 400. Trades already held that way are recorded by a redrive. The query lists, per database, the users and stocks with `TEMPORARY` trades on a stock that has a rights issue or buyback. **Then**, for each user listed: `curl -sS -X POST "$BASE/api/v1/me/portfolio/temporary-transactions/redrive" -H "Authorization: Bearer $ADMIN_TOKEN"` (`SUPER_USER`). Redrive is the normal route and safe to run again; a trade still held by a bonus, split or demerger stays held | the 3.24 query below — owner, SQL (`PSQL`, §2.19), after deploy, on each database; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: held trades on a rights-issue and a buyback stock, one held by a bonus, one processed → the first two only, as worked by hand. Log the list and each redrive's result in the run log **Corrected 2026-11-20 (W-334c5 plan):** the query named the collection `corporate_actions`; the entity's is `corporate_action` (`CorporateActionEntity.java:19`), so it skipped every real database and reported nothing — the throwaway trial planted the plural name |
+| 3.25 | **W-342** (D-798 C1a) · **check retired by W-337j3c (D-1025) · do not run** | The startup rebuild once put a lot's whole buy charge on each later sale of it (W-088u5); §2.1 was to correct those rows by replaying the transactions, but the replay orders same-day sales by date only, so it pairs neither prod user and corrects nothing. **Accepted, not corrected:** on prod (rehearsed on its copy, 2026-11-20) the rows on lots sold more than once carry ₹68.99 of buy charges where ₹53.00 is the lot's own shared by quantity — **₹15.99 over** on nine lots, so those sales' cost is overstated and their gain understated by that much. Reported per lot with no email **After the rebuild (W-348b, D-824, D-836):** over 0, carried ₹53.00 (= 68.99 − 15.99) — the over-charge is gone | Retired (D-1025 C3b): the MongoDB script it named (`~/wealthlens-runs/w334c/c4-w342-overcharge.js`) was never in the repository and is no longer kept, and its condition read 0 after the rebuild. The record: prod 2026-11-20, 12 lots, 29 rows, carried 68.99, over 15.99; after W-348b over 0, carried 53.00 |
+| 3.26 | **W-344** (D-799 C1a) | A stock code is matched exactly everywhere — lots, sales, corporate actions, rate cards — so one stored with a leading or trailing space (`MOTHERSON `, seen on prod's copy by W-342 row 3) is a different stock from the clean one: its sales cannot reach the clean code's lots, and a corporate action entered under the clean code never reaches it. Reported, not corrected: a correction is its own row, placed once each database is sized. **Prod (rehearsed on its copy, 2026-11-20):** one code, `"MOTHERSON "` — one user's closed position (3 transactions, 2 outcome rows, no lot, no clean `MOTHERSON` anywhere): nothing split, **not corrected** (D-799 C1a). New entries are refused from W-345 | the 3.26 query below — one row per table and column (`stock_code`, `to_stock_code`) with the count and the codes as stored (quoted, so the space shows); owner, SQL (`PSQL`, §2.19), on each database; read-only; safe to run again; nothing to undo. Tried on a throwaway `mongo:8.0.4`: two `MOTHERSON ` and one ` TCS` in `transactions`, an `ITCHOTELS` + tab in `corporate_action.to_stock_code` → 3 and 1, as worked by hand; an inner space (`A B`), `null` and a number not counted. Log the rows in the run log **On PostgreSQL (2026-11-28, W-337j3c):** prod `MOTHERSON ` only (3 transactions, 2 outcome rows), staging and dev none. |
+| 3.27 | **W-353** (D-826, D-828, D-829, D-830) | A trade must now name an exchange its asset type lists in `app.portfolio.trade-exchanges` (EQUITY / MUTUAL_FUND `NSE` or `BSE`; BOND / GOLD_BOND also `OFF_EXCHANGE`; FD / INSURANCE `OFF_EXCHANGE` only), exactly as written, and an asset type; anything else is refused with a 400 on V1, V2, the upload and redrive. **Stored trades are not changed** (`outside`, informational): on prod (owner's count, 2026-11-20) 183 — 178 `MUTUAL_FUND`/`BMF` and 5 with no asset type, test entries removed by §2.16 and §2.17 (W-354), so 178 after the prod run. A **held** trade (`status: TEMPORARY`) is checked again at redrive from its stored request, so one outside the table now fails its redrive item (`held`, expected 0; a non-zero count is reported to the owner, not corrected) | the 3.27 query below — one row; owner, SQL (`PSQL`, §2.19), on each database, after the deploy that carries W-353; read-only; safe to run again; nothing to undo. The lists in it copy the yaml's; if the yaml changes, change them too. Tried on a throwaway `mongo:8.0.4`: 12 trades (`nse`, `NSE `, `BMF`, none, FD/`NSE`, a GOLD_BOND with no exchange, a held `BMF`, a processed one whose request says `bse`, and four listed) → outside 7, held 1, as worked by hand. Log the rows in the run log **On PostgreSQL (2026-11-28, W-337j3c):** prod outside 178, held 0; staging 99, 1; dev 0, 0. |
 
-```js
-// 3.1 — rows, and users, whose summary would be refused
-db.trade_outcomes.aggregate([
-  { $match: { $or: [
-      { buy_broker_charges: { $ne: 0 }, $or: [ { buy_charge_breakup: { $exists: false } }, { buy_charge_breakup: {} } ] },
-      { sell_broker_charges: { $ne: 0 }, $or: [ { sell_charge_breakup: { $exists: false } }, { sell_charge_breakup: {} } ] } ] } },
-  { $group: { _id: "$email", rows: { $sum: 1 } } },
-  { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
-])
+Every query here only reads. Run them through `PSQL` (§2.19), in one go with `-f` or one at a time; a session opened
+`READ ONLY` (first line) refuses any write. Proven on a throwaway `postgres:18` with rows planted for each check, including
+missing and null values, then on dev, staging and prod (W-337j3c, D-1024; run log 2026-11-28).
 
-// 3.4 — rows without per-side venues (W-088j2b, D-295), and the exchange strings and segments trades hold
-db.trade_outcomes.countDocuments({ sell_exchange_name: { $exists: false } })
-db.transactions.aggregate([{ $group: { _id: { exchange: "$exchange_name", segment: "$segment" }, n: { $sum: 1 } } }])
-
-// 3.6 — bonus actions without an allotment date (W-088k4a, D-307): performing them is refused until it is entered
-db.corporate_action.find({ type: "BONUS", allotment_date: { $exists: false } }, { stock_code: 1, record_date: 1, ex_date: 1 })
-
-// 3.7 — land or building rows entered on the trade paths before W-088g5's guard (D-433); one query over every app database
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); return {
-    database: n,
-    transactions: d.transactions.countDocuments({ asset_type: "LAND_OR_BUILDING" }),
-    assets: d.assets.countDocuments({ asset_type: "LAND_OR_BUILDING" }),
-    trade_outcomes: d.trade_outcomes.countDocuments({ asset_type: "LAND_OR_BUILDING" }) }; }) }])
-
-// 3.8 — lots with nil charges whose source transaction entered a charge above nil (W-223, D-437); one query over every app database
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
-    const ids = lot => lot.buy_transaction_ids.flatMap(id => ObjectId.isValid(id) ? [id, new ObjectId(id)] : [id]);
-    return { database: n, lots: d.assets.find({ broker_charges: 0, "buy_transaction_ids.0": { $exists: true } },
-        { buy_transaction_ids: 1 }).toArray()
-      .filter(lot => d.transactions.countDocuments({ _id: { $in: ids(lot) }, broker_charges: { $gt: 0 } }) > 0).length,
-      sales: d.trade_outcomes.find({ sell_broker_charges: 0, sell_charge_breakup: {}, source_sell_transaction_id: { $exists: true } },
-        { source_sell_transaction_id: 1 }).toArray().map(r => ({ buy_transaction_ids: [r.source_sell_transaction_id] }))
-      .filter(lot => d.transactions.countDocuments({ _id: { $in: ids(lot) }, broker_charges: { $gt: 0 } }) > 0).length }; }) }])
-
-// 3.9 — splits already performed, and every stored split's ratio (W-213, W-216, D-438); one query over every app database
-db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); return {
-    database: n,
-    performed: d.lastly_performed_corporate_action.countDocuments({ action_type: "STOCK_SPLIT" }),
-    ratios: d.corporate_action.distinct("ratio", { type: "STOCK_SPLIT" }) }; }) }])
-
-// 3.5 — equity disposals whose term the engine refuses: the sale not recorded on NSE or BSE (W-088k3, D-305). On the row's
-// facts only (W-349): the stored term this once selected on is removed by §2.5, which left the count at 0 on every database
-db.trade_outcomes.aggregate([
-  { $match: { asset_type: "EQUITY", sell_exchange_name: { $nin: ["NSE", "BSE"] } } },
-  { $group: { _id: "$email", rows: { $sum: 1 } } },
-  { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
-])
-
-// 3.3 — equity disposals the engine still refuses for STT after W-088j2c (D-298, D-299, D-300): a side with nil charges and no
-// breakdown that no RS-STT-CHARGEABLE row settles. An upper bound: a long-term buy by purchase before 1-10-2004 is
-// settled by CG-PART-LONG-NOTIFIED but is counted here. Since W-349 the buy arm counts every term — the stored term it
-// selected long-term rows by is removed by §2.5, and the term is the engine's to decide (RS-CG-TERM), so the bound is wider.
-db.trade_outcomes.aggregate([
-  { $match: { asset_type: "EQUITY", $or: [
-      { $and: [
-          { $or: [ { sell_charge_breakup: { $exists: false } }, { sell_charge_breakup: {} } ] },
-          { sell_broker_charges: { $in: [0, null] } },
-          { $or: [ { sell_exchange_name: { $nin: ["NSE", "BSE"] } },
-                   { sell_segment: { $nin: ["DELIVERY", "INTRADAY"] } } ] } ] },
-      { $and: [
-          { acquisition_corporate_action: { $nin: ["BONUS", "DEMERGER"] } },
-          { $or: [ { buy_charge_breakup: { $exists: false } }, { buy_charge_breakup: {} } ] },
-          { buy_broker_charges: { $in: [0, null] } },
-          { $or: [ { acquisition_mode: { $ne: "PURCHASE" } },
-                   { buy_exchange_name: { $nin: ["NSE", "BSE"] } }, { buy_segment: { $ne: "DELIVERY" } } ] } ] } ] } },
-  { $group: { _id: "$email", rows: { $sum: 1 } } },
-  { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
-])
+```sql
+SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;
+SET search_path = wealthlens;
+-- 3.1 — disposals with broker charges and no breakdown: users, rows
+SELECT count(*) AS users, COALESCE(sum(rows), 0) AS rows FROM (SELECT email, count(*) AS rows FROM trade_outcomes
+  WHERE (buy_broker_charges IS DISTINCT FROM 0 AND COALESCE(NULLIF(buy_charge_breakup_json, 'null')::jsonb, '{}'::jsonb) = '{}'::jsonb)
+     OR (sell_broker_charges IS DISTINCT FROM 0 AND COALESCE(NULLIF(sell_charge_breakup_json, 'null')::jsonb, '{}'::jsonb) = '{}'::jsonb) GROUP BY email) u;
+-- 3.2 — rows without an acquisition mode
+SELECT count(*) AS rows FROM trade_outcomes WHERE acquisition_mode IS NULL;
+-- 3.3 — equity disposals the engine still refuses for STT (an upper bound): users, rows
+SELECT count(*) AS users, COALESCE(sum(rows), 0) AS rows FROM (SELECT email, count(*) AS rows FROM trade_outcomes
+  WHERE asset_type = 'EQUITY' AND (
+    (COALESCE(NULLIF(sell_charge_breakup_json, 'null')::jsonb, '{}'::jsonb) = '{}'::jsonb AND COALESCE(sell_broker_charges, 0) = 0
+      AND (COALESCE(sell_exchange_name, '') NOT IN ('NSE', 'BSE') OR COALESCE(sell_segment, '') NOT IN ('DELIVERY', 'INTRADAY')))
+    OR (COALESCE(acquisition_corporate_action, '') NOT IN ('BONUS', 'DEMERGER') AND COALESCE(NULLIF(buy_charge_breakup_json, 'null')::jsonb, '{}'::jsonb) = '{}'::jsonb
+      AND COALESCE(buy_broker_charges, 0) = 0
+      AND (acquisition_mode IS DISTINCT FROM 'PURCHASE' OR COALESCE(buy_exchange_name, '') NOT IN ('NSE', 'BSE')
+           OR buy_segment IS DISTINCT FROM 'DELIVERY'))) GROUP BY email) u;
+-- 3.4 — rows without a sale venue; trades by exchange and segment
+SELECT count(*) AS rows_without_sell_exchange FROM trade_outcomes WHERE sell_exchange_name IS NULL;
+SELECT exchange_name, segment, count(*) AS n FROM transactions GROUP BY exchange_name, segment ORDER BY exchange_name, segment;
+-- 3.5 — equity disposals whose sale is not recorded on NSE or BSE: users, rows
+SELECT count(*) AS users, COALESCE(sum(rows), 0) AS rows FROM (SELECT email, count(*) AS rows FROM trade_outcomes
+  WHERE asset_type = 'EQUITY' AND COALESCE(sell_exchange_name, '') NOT IN ('NSE', 'BSE') GROUP BY email) u;
+-- 3.6 — bonus actions without an allotment date
+SELECT stock_code, record_date, ex_date FROM corporate_action WHERE type = 'BONUS' AND allotment_date IS NULL ORDER BY record_date, stock_code;
+-- 3.7 — land or building rows
+SELECT (SELECT count(*) FROM transactions WHERE asset_type = 'LAND_OR_BUILDING') AS transactions,
+  (SELECT count(*) FROM assets WHERE asset_type = 'LAND_OR_BUILDING') AS assets,
+  (SELECT count(*) FROM trade_outcomes WHERE asset_type = 'LAND_OR_BUILDING') AS trade_outcomes;
+-- 3.8 — nil-charge lots and sales whose transaction entered a charge
+SELECT (SELECT count(*) FROM assets a WHERE a.broker_charges = 0 AND jsonb_array_length(COALESCE(NULLIF(a.buy_transaction_ids_json, 'null')::jsonb, '[]'::jsonb)) > 0
+    AND EXISTS (SELECT 1 FROM transactions t WHERE t.broker_charges > 0
+      AND t.id IN (SELECT jsonb_array_elements_text(COALESCE(NULLIF(a.buy_transaction_ids_json, 'null')::jsonb, '[]'::jsonb))))) AS lots,
+  (SELECT count(*) FROM trade_outcomes o WHERE o.sell_broker_charges = 0 AND COALESCE(NULLIF(o.sell_charge_breakup_json, 'null')::jsonb, '{}'::jsonb) = '{}'::jsonb
+    AND o.source_sell_transaction_id IS NOT NULL
+    AND EXISTS (SELECT 1 FROM transactions t WHERE t.id = o.source_sell_transaction_id AND t.broker_charges > 0)) AS sales;
+-- 3.9 — splits performed; stored split ratios
+SELECT count(*) AS performed FROM lastly_performed_corporate_action WHERE action_type = 'STOCK_SPLIT';
+SELECT DISTINCT ratio FROM corporate_action WHERE type = 'STOCK_SPLIT' ORDER BY ratio;
+-- 3.10 — rows without an asset type
+SELECT (SELECT count(*) FROM assets WHERE asset_type IS NULL) AS assets, (SELECT count(*) FROM transactions WHERE asset_type IS NULL) AS transactions;
+-- 3.11 — held trades without a flow
+SELECT count(*) AS held_without_flow FROM transactions WHERE status = 'TEMPORARY' AND trade_flow IS NULL;
+-- 3.12 — rows bought after their sale
+SELECT count(*) AS rows FROM trade_outcomes WHERE buy_date > sell_date;
+-- 3.13 — lots holding a float remainder
+SELECT count(*) AS lots FROM assets WHERE quantity > 0 AND quantity < 1e-9;
+-- 3.14 — merged unsold lots whose order times cover less than their quantity
+SELECT count(*) AS lots FROM assets a WHERE jsonb_array_length(COALESCE(NULLIF(a.buy_transaction_ids_json, 'null')::jsonb, '[]'::jsonb)) >= 2
+  AND jsonb_array_length(COALESCE(NULLIF(a.sell_transaction_ids_json, 'null')::jsonb, '[]'::jsonb)) = 0
+  AND COALESCE((SELECT sum((q ->> 'quantity')::float8) FROM jsonb_array_elements(COALESCE(NULLIF(a.order_time_quantities_json, 'null')::jsonb, '[]'::jsonb)) q), 0) < a.quantity;
+-- 3.15 — intraday buys priced as delivery
+SELECT count(*) AS priced_as_delivery FROM transactions t WHERE t.transaction_type = 'BUY' AND t.segment = 'INTRADAY'
+  AND EXISTS (SELECT 1 FROM user_charges c WHERE c.transaction_id = t.id AND c.segment = 'DELIVERY');
+-- 3.16 — sales after an earlier quarter split, bonus or demerger, by users who held before it (per stored email)
+SELECT s.email, count(*) AS sales FROM corporate_action a JOIN transactions s ON s.stock_code = a.stock_code
+  AND s.transaction_type = 'SELL' AND s.transaction_date > a.record_date
+  WHERE a.type IN ('STOCK_SPLIT', 'BONUS', 'DEMERGER') AND EXISTS (SELECT 1 FROM transactions b WHERE b.stock_code = a.stock_code
+    AND b.email = s.email AND b.broker_name IS NOT DISTINCT FROM s.broker_name AND b.transaction_type = 'BUY'
+    AND b.transaction_date < a.record_date)
+  GROUP BY s.email ORDER BY s.email;
+-- 3.20 — users with exit-load rows
+SELECT c.email, count(*) AS exit_load_rows FROM user_charges c JOIN user_charge_amounts m ON m.user_charge_id = c.id
+  WHERE m.charge_code = 'EXIT_LOAD' AND m.amount > 0 GROUP BY c.email ORDER BY c.email;
+-- 3.21 — trade rows whose card has no active rule for the event
+SELECT count(*) AS trade_rows,
+  count(*) FILTER (WHERE NOT (NOT EXISTS (SELECT 1 FROM charge_schedules s WHERE s.schedule_code = c.schedule_code)
+    OR EXISTS (SELECT 1 FROM charge_schedules s, jsonb_array_elements(COALESCE(NULLIF(s.rules_json, 'null')::jsonb, '[]'::jsonb)) r WHERE s.schedule_code = c.schedule_code
+      AND (r ->> 'active')::boolean IS TRUE AND COALESCE(r -> 'events', '[]'::jsonb) ? c.event))) AS broker_card_without_the_event,
+  count(*) FILTER (WHERE NOT (NOT EXISTS (SELECT 1 FROM charge_schedules s WHERE s.schedule_code = c.statutory_schedule_code)
+    OR EXISTS (SELECT 1 FROM charge_schedules s, jsonb_array_elements(COALESCE(NULLIF(s.rules_json, 'null')::jsonb, '[]'::jsonb)) r WHERE s.schedule_code = c.statutory_schedule_code
+      AND (r ->> 'active')::boolean IS TRUE AND COALESCE(r -> 'events', '[]'::jsonb) ? c.event))) AS statutory_card_without_the_event
+  FROM user_charges c WHERE c.event IN ('BUY', 'SELL');
+-- 3.22 — demergers not one for one, and the users holding lots they created
+SELECT a.stock_code AS stock, a.demerger_ratio AS ratio, a.record_date, array_agg(d.stock_code ORDER BY d.stock_code) AS creates
+  FROM corporate_action a LEFT JOIN corporate_action_demerger_stocks d ON d.corporate_action_id = a.id
+  WHERE a.type = 'DEMERGER' AND a.demerger_ratio IS DISTINCT FROM '1:1' GROUP BY a.id, a.stock_code, a.demerger_ratio, a.record_date ORDER BY a.record_date;
+SELECT DISTINCT x.email AS user_to_rebuild FROM assets x WHERE x.corporate_action = 'DEMERGER' AND x.stock_code IN (SELECT d.stock_code
+  FROM corporate_action a JOIN corporate_action_demerger_stocks d ON d.corporate_action_id = a.id
+  WHERE a.type = 'DEMERGER' AND a.demerger_ratio IS DISTINCT FROM '1:1') ORDER BY 1;
+-- 3.23 — bonuses pooled over more than one holder
+SELECT t.email, t.stock_code, t.broker_name, t.transaction_date AS allotted_on, t.quantity, h.holders FROM transactions t
+  CROSS JOIN LATERAL (SELECT count(DISTINCT COALESCE(b.account_type, '-') || '|' || COALESCE(b.account_holder, '-')) AS holders
+    FROM transactions b WHERE b.email = t.email AND b.stock_code = t.stock_code AND b.broker_name IS NOT DISTINCT FROM t.broker_name
+      AND b.transaction_date < t.transaction_date AND b.transaction_type = 'BUY'
+      AND b.corporate_action IS DISTINCT FROM 'BONUS' AND b.status IS DISTINCT FROM 'TEMPORARY') h
+  WHERE t.corporate_action = 'BONUS' AND h.holders > 1 ORDER BY t.transaction_date;
+-- 3.24 — stocks with a rights issue or buyback; trades held on them
+SELECT DISTINCT stock_code AS stocks_with_rights_or_buyback FROM corporate_action WHERE type IN ('RIGHTS_ISSUANCE', 'BUYBACK') ORDER BY 1;
+SELECT email, stock_code AS stock, count(*) AS held_trades FROM transactions WHERE status = 'TEMPORARY'
+  AND stock_code IN (SELECT stock_code FROM corporate_action WHERE type IN ('RIGHTS_ISSUANCE', 'BUYBACK')) GROUP BY email, stock_code;
+-- 3.26 — stock codes with a leading or trailing space, per table and column
+SELECT 'SELECT * FROM (' || string_agg(format('SELECT %L AS table_name, %L AS column_name, count(*) AS rows, array_agg(DISTINCT quote_literal(%I)) AS codes FROM wealthlens.%I WHERE %I ~ %L',
+  table_name, column_name, column_name, table_name, column_name, '^\s|\s$'), ' UNION ALL ') || ') x WHERE rows > 0'
+  FROM information_schema.columns WHERE table_schema = 'wealthlens' AND column_name IN ('stock_code', 'to_stock_code') \gexec
+-- 3.27 — trades outside the exchange table, and held ones
+SELECT (SELECT count(*) FROM transactions t WHERE NOT EXISTS (SELECT 1 FROM (VALUES ('EQUITY', 'NSE'), ('EQUITY', 'BSE'), ('MUTUAL_FUND', 'NSE'),
+    ('MUTUAL_FUND', 'BSE'), ('BOND', 'NSE'), ('BOND', 'BSE'), ('BOND', 'OFF_EXCHANGE'), ('GOLD_BOND', 'NSE'), ('GOLD_BOND', 'BSE'),
+    ('GOLD_BOND', 'OFF_EXCHANGE'), ('FD', 'OFF_EXCHANGE'), ('INSURANCE', 'OFF_EXCHANGE')) v(k, e) WHERE v.k = t.asset_type AND v.e = t.exchange_name)) AS outside,
+  (SELECT count(*) FROM transactions t WHERE t.status = 'TEMPORARY' AND NOT EXISTS (SELECT 1 FROM (VALUES ('EQUITY', 'NSE'), ('EQUITY', 'BSE'),
+    ('MUTUAL_FUND', 'NSE'), ('MUTUAL_FUND', 'BSE'), ('BOND', 'NSE'), ('BOND', 'BSE'), ('BOND', 'OFF_EXCHANGE'), ('GOLD_BOND', 'NSE'),
+    ('GOLD_BOND', 'BSE'), ('GOLD_BOND', 'OFF_EXCHANGE'), ('FD', 'OFF_EXCHANGE'), ('INSURANCE', 'OFF_EXCHANGE')) v(k, e)
+    WHERE v.k = NULLIF(t.asset_request_json, 'null')::jsonb ->> 'assetType' AND v.e = NULLIF(t.asset_request_json, 'null')::jsonb ->> 'exchangeName')) AS held;
 ```
 
 ---
@@ -2219,7 +2394,10 @@ files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former 
 **The trade ledger's, with no step left:**
 - **Trades dated 31 March.** Three financial-year derivations filed a trade made **on** 31 March into the next year;
   fixed in code. `db.transactions.countDocuments({ transaction_date: /-03-31$/ })` returned `0` on prod on
-  2026-09-12 (run log), so no stored data needed correcting.
+  2026-09-12 (run log; MongoDB, as run then), so no stored data needed correcting. On PostgreSQL:
+  `SELECT count(*) FROM wealthlens.transactions WHERE to_char(transaction_date, 'MM-DD') = '03-31';` (`PSQL`, §2.19) —
+  2026-11-28: prod 2, staging 0. The count was 0 on 2026-09-12, after the fix, so both rows were stored since then, under the
+  fixed derivations; nothing to correct.
 - **Additive fields.** `transactions.idempotency_key`, `trade_fingerprint` and `submitted_at` are absent on old rows;
   both indexes are sparse, so old rows are simply not indexed. The trade ledger's other added fields were since
   removed by tax-planning items, and their stored copies are §2.5, §2.6, §2.7 and §2.9.
@@ -2287,7 +2465,7 @@ Full list in `docs/modules/brokercharges.md` §8.
 - **Nothing before 2025-04-01 can be priced:** no card covers it.
 - **Only two mutual-fund schemes have exit-load profiles.** Every other fund resolves `NO_INSTRUMENT_PROFILE` and
   accrues no exit load; recorded, never fatal (ADR-24).
-- **A rate card written directly to MongoDB is invisible** until the resolver cache is evicted. `POST
+- **A rate card written directly to the database is invisible** until the resolver cache is evicted. `POST
   /api/v1/admin/charges/charge-schedules`, the close endpoint and `POST /api/v1/admin/charges/seed` evict it. Go through the API.
 - **Scheme profiles have no publishing endpoint:** they arrive by seeding, and a profile added by hand needs a
   restart or a seed run.
@@ -2523,3 +2701,17 @@ every step of §0 – §3 run or recorded as not needed for each (D-845 – D-84
 | 2026-11-28 | prod (W-337i5, D-1013) | row 14, part 1 (read-only, by the session) | session | `m161.log` ERROR lines of any other kind `0`; the run's files still present (`w337i5`, `w406` with `users.txt` and `report.txt`, `prod.env.before-w337i5`) — the removal not yet run; owner's "prod signed off" received, recorded once row 14's removal is pasted |
 | 2026-11-28 | prod (W-337i5, D-1013) | row 14, the run's files removed | owner | `w337i5`, `w406` (logs, `users.txt`, `report.txt`) and `prod.env.before-w337i5` gone ("No such file or directory" ×3); `prod.env` kept, `-rw-------`, 617 bytes, now holding the target's values; secrets unset — **go** |
 | 2026-11-28 | prod, `Cluster0` → Neon `production` (W-337i5, D-1014) | sign-off | owner | "prod signed off" — prod on `m1.7.6` / PostgreSQL; §0.9, §0.10 and §1B logged for prod (and so for every database); `Cluster0` kept, unused, as the way back (D-991 C5a); W-337i5 done |
+| 2026-11-28 | staging, prod (W-337j3a, D-1020) | §2.15 – §2.17 sized on PostgreSQL (read-only) | owner | both: no `DUMMY` / `LAVANYA` / `DUMMY3` row, no row without `asset_type`, `icici lot 6835e328` 0, `reports table` 0 — the three cleanups moot; retired with §0.2, §0.3, §0.5, §1.o, §1.j |
+| 2026-11-28 | — (W-337i1's steps for `m1.8`, D-1018) | PR #85 to WL-A-2 | session (owner: "merge #85, release m1.8") | PR #85 run 46103853759 `success` on f979b2af; merged `ce445f6f`; `master` run 46104306496 `push` `success`; tag `m1.8` → `ce445f6f` pushed; worktree `../wealthlens-m1.8-pg`; jar 115,408,953 bytes (5.6 MB smaller: no MongoDB driver), sha256 `8440d4c56b20de92…`, 0 entries naming mongo; WL-A-2 published from it, read back whole — **go**; `m1.8` is the build staging and prod start next ("Next deploy" line 2) |
+| 2026-11-28 | staging, prod (W-337j2, D-1018; "Next deploy" line 2) | `m1.8` started without `MONGO_USER` / `MONGO_PASSWORD` (8082, then stopped) | owner | jar 115,408,953 bytes; staging `Started` in 8.956 s, prod in 11.267 s; each log: mongo lines **0**, ERROR **0**, `Charges engine ready: 39 rate card(s)`; `/privacy/rights` 200 on both; run folder removed — **go**; staging and prod on `m1.8`; W-337j4's week starts (due 2026-12-05, D-1016 C2a) |
+| 2026-11-28 | — this machine (W-337i6 row 2, D-1015; D-848 C1a, D-991 C6a) | the W-334 MongoDB archives deleted | owner | `ls -la ~/wealthlens-runs/archives/`: the six files of 2026-11-21 (`prod-after-m14.archive` 1,635,293 B, `prod-after-m14.txt` 3,932, `prod-dump.out` 5,451, `staging-after-m14.archive` 1,372,936 B, `staging-after-m14.txt` 3,989, `staging-dump.out` 5,838), each 600; the two archives `rm -P`, the rest `rm`, the folder `rmdir`; after: `ls: …/archives: No such file or directory` — **done**; no way back (the data is in PostgreSQL, `Cluster0` / `it-staging` kept until W-337j4) |
+| 2026-11-28 | prod, Neon `production` (W-337i6 row 4, D-1015 C2a) | the empty database `wealthlens` dropped | owner | before: tables outside the catalogues in `wealthlens` `0`; `DROP DATABASE wealthlens;` silent; after: databases `neondb`, `postgres`; `neondb`'s `wealthlens.user_details` `12` (prod's data untouched) — **done**; way back `CREATE DATABASE wealthlens;` (it held nothing) |
+| 2026-11-28 | dev, Aiven `wealthlens-dev` (W-337j3b step 2, D-1022 C1a, C2a) | the SQL proof: `r.sql` (18 read-only queries, session read-only) and `w.sql` (writes in `BEGIN … ROLLBACK`) | owner | every query and statement ran, no error. Q1 0 rows; Q2 0; Q3 0/0/0; Q4 0/0; Q5 0; Q6 `left_rows` 60 (owner's stored email matches), `held_overdue` 0; Q7, Q8 0 rows; Q9 0; Q10 0/0; Q11 users 1, not_counted 0, 0, 0; Q12 1/1/0, unique 1; Q13 0; Q14 1/1/0; Q15 catalogue 13, schedules 40, instruments 2, user_charges 0, charge_accounts 0, pnl_charge_side 0; Q16 1; Q17 0/0/0; Q18 0. W1 COPY 0 ×4; W2 0 rows each; W3 INSERT 0 0 ×2; W4 0/0; W5 UPDATE 1; W6 DELETE 13/40/2; W7 `refused`; W8 0 ×5, UPDATE 0; W9 13/40/0/0 = Q15 (nothing kept); CSV files removed, folder holds only the scripts. Dev holds none of the owner's lots, P&L or charges, so W2 and W8 moved 0 rows there; with rows they were run on a throwaway `postgres:18` from the 13 Flyway scripts (2 lots, 2 P&L, 1 charge with line and amount: DELETE/COPY 2, UPDATE 2, charge side left 0, as worked by hand). Q15's 40 schedules: the repository ships 39 cards (39 files under `data/charges/`, one card each; staging and prod log 39), so dev holds one card not seeded from the repository |
+| 2026-11-28 | staging, Aiven `wealthlens-staging` (W-337j3b step 2, D-1022 C1a: rows dev lacks) | `r.sql` only (read-only) | owner | no error. Q1 0 rows; Q2 0; Q3 0/0/0; Q4 0/0; Q5 0; Q6 1632, held 0; Q7 2 rows (one principal, two addresses, 1 attempt each); Q8 1 row, the owner, 3 subjects; Q9 0; Q10 0/0; Q11 users 14, not_counted 13 (the jobs ship off on staging, so purpose-lapse never ran), 0, 0; Q12 14/0/1, unique 1; Q13 0; Q14 14/1/13; Q15 13/39/2/0/0/0; Q16 1; Q17 57/3/224; Q18 130 (every staging `trade_outcomes` row was written with the owner as caller). Then every rewritten block of the 14 sections run in order on a throwaway `postgres:18` from the 13 Flyway scripts with hand-made rows — each `COPY`, `DELETE`, `UPDATE` and `INSERT` count as worked by hand; it found that `psql -c` does not substitute `:'…'` variables, so those lines take `<<<` |
+| 2026-11-28 | staging, Aiven `wealthlens-staging`; prod, Neon `production` (§1.h, W-358d3, D-885; "Next deploy" line 1) | §1.h's count in SQL (D-1007 C2a, D-1013 C1a), read-only | owner | staging users 14, upgraded 1; prod users 12, upgraded 1 — read six days after the 2026-11-22 reading (due 2026-11-29); `upgraded` unchanged at 1 on each (the owner's sign-in); the other accounts keep their BCrypt hash, which still signs in |
+| 2026-11-28 | dev, staging, prod (W-337j3c step 2, D-1024 C1a) | §3's 23 checks in SQL (`c.sql`, read-only session; 3.25 apart) | owner | no error on any. **prod:** 3.1 2 / 61 (= the row); 3.2 0, 3.3 0 / 0, 3.4 0, 3.5 0 / 0 (D-824 read 73, 1 / 48, 73, 2 / 49 on the rehearsal copy before W-348b's rebuild wrote the new facts, D-836); trades BMF 178 / BSE 136 / NSE 474, all `DELIVERY`; 3.6, 3.7 none; 3.8 0 / 0; 3.9 0, no split; 3.10 0 / 0; 3.11 0 (= the row); 3.12, 3.13 0; 3.14 21; 3.15, 3.16, 3.20, 3.21 (0 trade rows), 3.22 – 3.24 none; 3.26 `MOTHERSON ` in `transactions` 3 and `trade_outcomes` 2 (= the row); 3.27 outside 178, held 0 (= the row). **staging:** 3.1 2 / 40; 3.2 – 3.5 0; trades BMF 99 / BSE 118 / NSE 443; 3.8 lots 4, sales 0; 3.11 1; 3.14 26; 3.27 99, held 1; the rest 0 or none. **dev:** every check 0 or none; one split ratio `2:1`, none performed. Before them the script ran on a throwaway `postgres:18` from the 13 Flyway scripts with rows planted for each check (null and missing cases included): every count as worked by hand |
+| 2026-11-28 | staging, prod (W-337j3c step 2, D-1024) | `f.sql`, read-only: 3.14's lots by how the sell list is stored; §4's 31-March count | owner | staging `sells_null` 0, empty list 26; prod 0, 21 — 3.14's SQL counts what MongoDB's did. 31 March: staging 0, prod 2 (0 on 2026-09-12, after the fix) |
+| 2026-11-28 | dev, staging, prod env files (W-337j3d rows 1 – 3, D-1026) | `MONGO_USER` / `MONGO_PASSWORD` removed from `~/wealthlens-runs/{dev,staging,prod}.env` | owner | dev trimmed first (its lines start `export `); `m1.8` on dev from the trimmed file: `Started WealthLensApplication in 9.345 seconds`, ERROR 0. Staging and prod hold the lines without `export `, so the first `sed` left them; backed up again and trimmed with `/^(export )?MONGO_(USER|PASSWORD)=/d`. Check: `0 mongo` on all three, ten names each. Dev's backup was removed with the start log before the staging / prod rerun (dev had started clean) |
+| 2026-11-28 | dev, staging, prod env files (W-427 step 2, D-1034) | `DATABASE_URL` / `_USERNAME` / `_PASSWORD` added beside `APP_POSTGRES_DATASOURCE_*` (backup `*.env.pre-w427` first; values copied by `sed`, never printed) | owner | names listed: both sets on all three; a session check compared each pair without printing — URL, USERNAME, PASSWORD the same on dev, staging, prod; files still `600`. The old lines stay until the release carrying W-427 starts on each ("Next deploy" line 1) |
+
+

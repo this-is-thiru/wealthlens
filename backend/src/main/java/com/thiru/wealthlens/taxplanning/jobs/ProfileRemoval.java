@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * keep a filed computation ({@code sources/2026-11-07-data-protection.md}).
  */
 @Service
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class ProfileRemoval {
 

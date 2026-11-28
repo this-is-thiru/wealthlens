@@ -43,7 +43,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * The processing log over HTTP and Mongo, and the year after which logs and privacy records are erased (W-237e, C1a – C4a), on
+ * The processing log over HTTP and PostgreSQL, and the year after which logs and privacy records are erased (W-237e, C1a – C4a), on
  * a clock the test sets. Times counted by hand: processed at 2027-06-10T08:00Z with {@code log-retention: P1Y}
  * (application-integration-test.yaml) → erased from 2028-06-10T08:00Z, one calendar year later, not a second before.
  */

@@ -25,6 +25,6 @@ public interface ChargeAccountRepository extends JpaRepository<ChargeAccountEnti
             @Param("frequency") AmcChargeFrequency frequency,
             @Param("billedThroughBefore") LocalDate billedThroughBefore);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 }

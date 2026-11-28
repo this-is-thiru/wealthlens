@@ -38,7 +38,7 @@ PostgreSQL table `insurances` + child table `insurance_policy_details` (W-337c1,
 ## 5. Behaviour
 
 **Erasure** (`InsuranceRecordErasure.java:15` – `:30`): as a `PersonalDataHolder` named `"insurance"` in the erasure notice (`:21` – `:24`),
-it removes every policy whose `email` is the person's via `InsuranceRepository.deleteByEmail` (`:26` – `:30`) inside `postgresTransactionManager` when their account is erased (W-237d).
+it removes every policy whose `email` is the person's via `InsuranceRepository.deleteByEmail` (`:26` – `:30`) inside the one transaction when their account is erased (W-237d).
 
 Nothing else runs.
 

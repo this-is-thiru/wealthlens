@@ -77,7 +77,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         // When
         profitAndLossService.updateProfitAndLoss(UserMail.from(email), context);
 
-        // Then -- read back through Mongo, the nested enum-keyed map survives
+        // Then -- read back through PostgreSQL, the nested enum-keyed map survives
         FinancialReport split = findPnlByEmail(email).getRealisedProfits().getGainsByAssetAndSegment()
                 .get(AssetType.EQUITY).get(TradeSegment.DELIVERY);
         assertNotNull(split);

@@ -36,7 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * Which rate card priced a trade.
  *
  * <p>Validity — the date window and the status predicate — belongs to the repository query and is
- * asserted in {@code ChargeRepositoryIntegrationTest} against a real Mongo, including the point that
+ * asserted in {@code ChargeRepositoryIntegrationTest} against a real PostgreSQL, including the point that
  * a superseded card still prices a transaction backdated into its own window (ADR-12). What is under
  * test here is the choice between cards that are all already valid.
  *

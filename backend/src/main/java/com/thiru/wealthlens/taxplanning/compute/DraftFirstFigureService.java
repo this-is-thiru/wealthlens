@@ -23,7 +23,7 @@ import tools.jackson.databind.node.ObjectNode;
  * (W-122c C3a).
  */
 @Service
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class DraftFirstFigureService {
 

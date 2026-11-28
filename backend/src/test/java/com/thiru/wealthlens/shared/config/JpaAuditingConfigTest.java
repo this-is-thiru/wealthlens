@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
 
-class PostgresJpaConfigTest {
+class JpaAuditingConfigTest {
 
     @Test
     void utcDateTimeProvider_whenTheClockReadsInKolkata_isTheUtcTime() {
@@ -16,7 +16,7 @@ class PostgresJpaConfigTest {
         Clock kolkata = Clock.fixed(Instant.parse("2026-01-31T18:30:00Z"), ZoneId.of("Asia/Kolkata"));
 
         // When
-        Object now = new PostgresJpaConfig().utcDateTimeProvider(kolkata).getNow().orElseThrow();
+        Object now = new JpaAuditingConfig().utcDateTimeProvider(kolkata).getNow().orElseThrow();
 
         // Then
         assertThat(now).isEqualTo(LocalDateTime.of(2026, 1, 31, 18, 30));

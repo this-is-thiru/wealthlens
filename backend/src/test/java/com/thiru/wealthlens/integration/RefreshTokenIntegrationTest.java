@@ -189,7 +189,7 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void refresh_whenStored_keepsOnlyAHashAndTheEncryptedEmail() {
+    void refresh_whenStored_keepsOnlyAHashAndThePlainEmail() {
         // Given
         registered("USER");
 
@@ -199,8 +199,8 @@ class RefreshTokenIntegrationTest extends AbstractIntegrationTest {
         // Then
         List<Map<String, Object>> stored = storedRefreshTokens();
         assertThat(stored).hasSize(1);
-        assertThat(stored.get(0).toString()).doesNotContain(first).doesNotContain(EMAIL);
-        assertThat(stored.get(0).get("email")).isEqualTo(storedIdentifier(EMAIL));
+        assertThat(stored.get(0).toString()).doesNotContain(first);
+        assertThat(stored.get(0).get("email")).isEqualTo(EMAIL); // plain since W-428a (D-1036)
     }
 
     @Test

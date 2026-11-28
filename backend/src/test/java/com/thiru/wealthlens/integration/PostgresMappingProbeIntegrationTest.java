@@ -17,16 +17,15 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Proves the PostgreSQL 18 JPA mapping (W-337a D-937; re-pointed to the live entities in W-337c1 D-941): encrypted and
- * searchable columns, an embedded list, an atomic conditional update (refresh-token spend), expiry swept with no TTL
- * index, transaction rollback, money as {@code double} and exact times, and ciphertext compatibility between Mongo's
- * {@code SearchableIdentifier}/{@code EncryptedField} and JPA's {@code SearchableColumn}/{@code EncryptedColumn}.
+ * Proves the PostgreSQL 18 JPA mapping (W-337a D-937; re-pointed to the live entities in W-337c1 D-941): the converted
+ * columns, an embedded list, an atomic conditional update (refresh-token spend), expiry swept with no TTL
+ * index, transaction rollback, money as {@code double} and exact times, and — since W-428a (D-1036) — values stored plain
+ * while the {@code k1:} ciphertext stored before it is still read.
  */
 class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
 
@@ -35,11 +34,10 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private InsuranceRepository insuranceRepository;
     @Autowired
-    @Qualifier("postgresTransactionManager")
-    private PlatformTransactionManager postgresTransactionManager;
+    private PlatformTransactionManager transactionManager;
 
     @Test
-    void save_whenAUserIsStored_holdsItsEmailEncryptedAndFindsItByDerivedQuery() {
+    void save_whenAUserIsStored_holdsItsEmailPlainAndFindsItByDerivedQuery() {
         // Given
         String email = "probe.one@example.com";
         UserDetail user = new UserDetail();
@@ -52,25 +50,25 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
         String raw = new JdbcTemplate(postgresDataSource).queryForObject("SELECT email FROM user_details WHERE id = ?",
                 String.class, user.getId());
 
-        // Then — stored encrypted, exactly as Mongo's SearchableIdentifier would store it (the copier's premise)
-        assertThat(raw).startsWith("k1:").doesNotContain("probe.one").isEqualTo(storedIdentifier(email));
+        // Then — stored plain since W-428a (D-1036)
+        assertThat(raw).isEqualTo(email);
         assertThat(userDetailsRepository.findByEmail(email)).isPresent().get()
                 .extracting(UserDetail::getEmail).isEqualTo(email);
     }
 
     @Test
-    void readByJpa_whenWrittenByMongosConverter_decryptsTheSameCiphertext() {
-        // Given — a value sealed exactly as Mongo's SearchableIdentifier/FieldCipher would seal it
+    void readByJpa_whenStoredInTheOldCiphertext_readsItPlain() {
+        // Given — a value sealed as every row was before W-428a (D-1036)
         String email = "probe.two@example.com";
         UserDetail user = new UserDetail();
         user.setId(UUID.randomUUID().toString());
         user.setEmail("placeholder@example.com");
         userDetailsRepository.save(user);
         new JdbcTemplate(postgresDataSource).update("UPDATE user_details SET email = ? WHERE id = ?",
-                storedIdentifier(email), user.getId());
+                oldCiphertext(email), user.getId());
 
-        // When / Then — the JPA converter reads it back unchanged
-        assertThat(userDetailsRepository.findByEmail(email)).isPresent().get().extracting(UserDetail::getEmail)
+        // When / Then — the JPA converter reads it back plain (a lookup by email finds it only after the rewrite, PlainTextRewriteIntegrationTest)
+        assertThat(userDetailsRepository.findById(user.getId())).isPresent().get().extracting(UserDetail::getEmail)
                 .isEqualTo(email);
     }
 
@@ -83,7 +81,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
         AtomicInteger totalRowsChanged = new AtomicInteger();
 
         // When — two threads race the same compare-and-set update, each its own transaction
-        TransactionTemplate transactionTemplate = new TransactionTemplate(postgresTransactionManager);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         CompletableFuture<Integer> first = CompletableFuture
                 .supplyAsync(() -> transactionTemplate.execute(status -> refreshTokenRepository.spend(token.getTokenHash(), now)));
         CompletableFuture<Integer> second = CompletableFuture
@@ -107,7 +105,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
         refreshTokenRepository.save(live);
 
         // When
-        int removed = new TransactionTemplate(postgresTransactionManager)
+        int removed = new TransactionTemplate(transactionManager)
                 .execute(status -> refreshTokenRepository.deleteExpired(Instant.now()));
 
         // Then
@@ -117,7 +115,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void save_whenAnInsuranceHasEmbeddedPolicyDetails_roundTripsMoneyDatesAndEncryptedTextExactly() {
+    void save_whenAnInsuranceHasEmbeddedPolicyDetails_roundTripsMoneyDatesAndTextExactly() {
         // Given
         PolicyDetails policy = new PolicyDetails();
         policy.setPolicyId("POL-1");
@@ -150,7 +148,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
     @Test
     void transaction_whenItRollsBack_leavesNothingStored() {
         // Given
-        TransactionTemplate transactionTemplate = new TransactionTemplate(postgresTransactionManager);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         UserDetail user = new UserDetail();
         user.setId(UUID.randomUUID().toString());
         user.setEmail("probe.rollback@example.com");

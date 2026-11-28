@@ -22,7 +22,7 @@ public class InsuranceRecordErasure implements PersonalDataHolder {
     }
 
     @Override
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void erase(String email) {
         repository.deleteByEmail(email);
     }

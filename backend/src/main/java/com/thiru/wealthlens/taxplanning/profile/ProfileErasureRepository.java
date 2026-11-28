@@ -15,10 +15,10 @@ public interface ProfileErasureRepository extends JpaRepository<ProfileErasure, 
     List<ProfileErasure> findByErasedAtIsNullAndRequestedAtGreaterThanEqual(LocalDateTime requestedFrom);
 
     /** Deletes the records of the profile erasures this person asked for, with their account (W-237d). */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 
     /** Deletes the records of profile erasures done on or before {@code cutoff}, a year after them (W-237f); how many. */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     long deleteByErasedAtLessThanEqual(LocalDateTime cutoff);
 }

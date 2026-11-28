@@ -26,13 +26,13 @@ public class RegisteredUserDirectory implements RegisteredUsers {
     }
 
     /** A targeted update, so a sign-in never overwrites a password changed at the same moment. */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void recordSignIn(String email, LocalDateTime atUtc) {
         repository.recordSignIn(email, atUtc);
     }
 
     /** A targeted update by email, refusing when no login holds that email (W-369). */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void storePassword(String email, String hash) {
         int matched = repository.storePassword(email, hash);
         if (matched != 1) {
@@ -41,7 +41,7 @@ public class RegisteredUserDirectory implements RegisteredUsers {
     }
 
     @Override
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void startCounting(LocalDateTime nowUtc) {
         repository.startCounting(nowUtc);
     }

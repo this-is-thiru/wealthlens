@@ -9,7 +9,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 /** Records each read of special-category data ({@code DR 14} O1.1, O4, D-447 C3a), inside the read's own transaction. */
 @Service
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class TaxAccessLog {
 

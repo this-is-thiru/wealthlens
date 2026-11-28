@@ -1,0 +1,5 @@
+# The plain-text rewrite's run (W-428a, D-1036 C1a): started with this profile beside the environment's own, the application
+# serves nothing while it turns every stored k1: ciphertext plain, then stops (post-deployment-runbook.md). As the copier did
+# (W-409, D-984): the servlet context is kept, because the security chain's CORS needs it, and no port is opened.
+server:
+  port: -1

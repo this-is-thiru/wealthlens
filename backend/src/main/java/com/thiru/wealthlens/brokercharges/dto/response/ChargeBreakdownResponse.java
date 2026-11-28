@@ -17,7 +17,7 @@ import lombok.ToString;
  *
  * <p>A deliberate translation rather than the engine's own record. {@code ChargeComputation} is an
  * internal type whose fields move as the engine does, and a published API should not move with it.
- * It also carries {@code scheduleId}, which is a Mongo identifier of no use to a caller; the
+ * It also carries {@code scheduleId}, the card's row id, of no use to a caller; the
  * {@code scheduleCode} beside it is the thing a human can look up.
  *
  * <p>{@code resolution} is always populated, including when nothing was charged. A zero total with

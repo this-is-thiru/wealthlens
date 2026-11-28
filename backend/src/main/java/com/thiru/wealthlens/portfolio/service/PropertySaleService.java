@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Log4j2
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class PropertySaleService {
 

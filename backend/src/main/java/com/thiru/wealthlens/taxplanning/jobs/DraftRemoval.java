@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
  * workspace's primary. The access log and the regime election history stay: they outlive the draft ({@code DR 14} O4, O5).
  */
 @Service
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class DraftRemoval {
 
