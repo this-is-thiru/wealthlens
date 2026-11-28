@@ -9,7 +9,7 @@ import java.util.Collection;
  *
  * <p><b>The problem this solves is not precision — it is canonicalisation.</b> A charge everyone
  * agrees is ₹145.38 stores as {@code 145.37999999999997}: close enough to print, and wrong enough
- * that exact equality fails, a MongoDB query for the amount misses the row holding it, and
+ * that exact equality fails, a database query for the amount misses the row holding it, and
  * reconciliation against a broker's statement cannot tell a real one-paisa discrepancy from a
  * floating-point artefact.
  *

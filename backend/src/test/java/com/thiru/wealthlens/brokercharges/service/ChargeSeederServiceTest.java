@@ -879,7 +879,7 @@ class ChargeSeederServiceTest {
         // Given / When / Then
         assertThatThrownBy(() -> ChargeCodes.validate("MTF.INTEREST"))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("MTF.INTEREST");
+                .hasMessage("Charge code MTF.INTEREST must match [A-Z][A-Z0-9_]* — upper case, digits and underscores only: every stored code has this one shape");
     }
 
     @Test

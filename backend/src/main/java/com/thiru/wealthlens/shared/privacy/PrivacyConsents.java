@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 /**
  * Records the notice before consent and the consent given against it (Digital Personal Data Protection Act, 2023 s.5,
  * s.6(10); W-250), for {@code auth}, which registers and signs people in but holds no privacy record of its own. Not
- * transactional: each write is one document, and a duplicate key inside a MongoDB transaction would abort it rather than be
+ * transactional: each write is one document, and a duplicate key inside a PostgreSQL transaction aborts the whole transaction rather than being
  * recognised as a record already made.
  */
 @Service

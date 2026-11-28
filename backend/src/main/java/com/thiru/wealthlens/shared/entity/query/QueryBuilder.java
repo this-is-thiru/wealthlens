@@ -68,7 +68,7 @@ public final class QueryBuilder {
     }
 
     // Preserves the original's exact null-unboxing: a filter that omits isDateField throws a NullPointerException,
-    // same as the Mongo-era QueryBuilder did (MongoTemplateIntegrationTest#getDocuments_whenMongoDown_shouldThrow).
+    // same as the Mongo-era QueryBuilder did (QueryFilterSearchIntegrationTest#search_whenIsDateFieldNotSet_throwsNullPointerException).
     private static void sanitize(QueryFilter queryFilter) {
         if (queryFilter.getIsDateField()) {
             String value = (String) queryFilter.getValue();

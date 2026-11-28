@@ -26,10 +26,9 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * PostgreSQL on Neon/Aiven (W-337a D-937; live cutover starting W-337c1 D-941 C3a): active by default on branch
- * {@code w-337} ({@code matchIfMissing = true}), since {@code auth} and {@code insurance} now store their live rows in
- * PostgreSQL. Built by hand rather than left to Spring Boot's JPA auto-configuration while MongoDB still serves the
- * remaining modules, so every bean is explicitly named and the entity manager factory scans only the ported packages.
+ * PostgreSQL on Neon/Aiven (W-337a D-937), the only store since W-337i (D-1012, D-1014). Built by hand rather than left
+ * to Spring Boot's JPA auto-configuration — begun while MongoDB still served the modules not yet ported (W-337c1, D-941
+ * C3a) — so every bean is explicitly named and the entity manager factory scans exactly the packages listed below.
  */
 @Configuration
 @ConditionalOnProperty(prefix = "app.postgres", name = "enabled", havingValue = "true", matchIfMissing = true)

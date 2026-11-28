@@ -29,7 +29,7 @@ public class YearlyChargeSummary extends ChargeSummaryReport {
      *
      * <p>{@code Map<Month, …>} iterates in calendar order, so a report rendered straight from it
      * opens in January — three months into the year it is reporting. Offered as an accessor rather
-     * than by making the map ordered, because the stored order is Mongo's business and the reading
+     * than by making the map ordered, because the stored order is the store's business and the reading
      * order is the report's.
      */
     public List<MonthlyChargeSummary> monthsInFinancialYearOrder() {

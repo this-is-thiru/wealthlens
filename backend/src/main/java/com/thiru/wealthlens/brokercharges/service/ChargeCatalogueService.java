@@ -26,7 +26,7 @@ public class ChargeCatalogueService {
 
     private final ChargeCatalogueRepository chargeCatalogueRepository;
 
-    /** Sorted by code: Mongo returns insertion order, which the seeder changes between runs. */
+    /** Sorted by code: an unordered read follows the table's storage order, which the seeder changes between runs. */
     public List<ChargeCatalogueEntity> findActive() {
         return chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE).stream()
                 .sorted(Comparator.comparing(ChargeCatalogueEntity::getCode))

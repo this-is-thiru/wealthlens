@@ -70,7 +70,7 @@ public class ChargeSeederService {
     private static final String INSTRUMENTS = "classpath*:data/charges/instruments/*.json";
     private static final String CATALOGUE_FILE = "charge-catalogue.json";
 
-    /** Written by MongoDB, absent from every shipped file, and therefore never drift. */
+    /** Set on save (the entity's own id, JPA auditing), absent from every shipped file, and therefore never drift. */
     private static final List<String> DATABASE_OWNED = List.of("id", "auditMetadata");
 
     private final ChargeCatalogueRepository chargeCatalogueRepository;
@@ -147,8 +147,8 @@ public class ChargeSeederService {
     private List<String> seedCatalogue() {
         List<String> created = new ArrayList<>();
         for (ChargeCatalogueEntity entry : readAll(resource(CATALOGUE), ChargeCatalogueEntity::new)) {
-            // The gate every code enters through. A code is a Mongo field name downstream, so one
-            // that cannot be used as a field name has to be refused here rather than at save time.
+            // The gate every code enters through. A code is a stored map key downstream (ChargeCodes), so
+            // one without the stored shape has to be refused here rather than at save time.
             ChargeCodes.validate(entry.getCode());
             // A catalogue entry that has priced something must not be silently rewritten.
             if (chargeCatalogueRepository.findByCode(entry.getCode()).isPresent()) {
@@ -334,7 +334,7 @@ public class ChargeSeederService {
      *
      * <p>Updating a pre-built instance keeps the initialiser and gives auditing something to write
      * into. Nothing here sets a single audit field: {@code SecurityAuditorAware} and
-     * {@code @EnableMongoAuditing} do that, as they already did everywhere else.
+     * {@code @EnableJpaAuditing} ({@code PostgresJpaConfig}) do that, as they already did everywhere else.
      */
     <T> T read(Resource file, Supplier<T> factory) {
         try (InputStream stream = file.getInputStream()) {

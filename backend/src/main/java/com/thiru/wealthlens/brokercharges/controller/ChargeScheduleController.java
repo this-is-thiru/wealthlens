@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  * The rate cards and the charge catalogue, read by any signed-in user (D-855 C2a): a card decides what they are charged.
  * Publishing, closing, seeding and the drift check are an admin's, in {@code ChargeSchedulePublishingController} (D-855 C6a).
  *
- * <p>Schedules are addressed by {@code scheduleCode}, not by Mongo id. The code is the natural key — it is what the seed files,
+ * <p>Schedules are addressed by {@code scheduleCode}, not by row id. The code is the natural key — it is what the seed files,
  * the validator and every stored charge row already carry, and it is the only one of the two a human can quote.
  *
  * <p>{@code GET /api/v1/me/charges/charge-catalogue} lives here rather than in a controller of its own. It is the registry a rate
