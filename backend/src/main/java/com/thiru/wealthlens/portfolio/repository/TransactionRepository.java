@@ -28,7 +28,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
 
     List<TransactionEntity> findByEmailAndStockCodeAndBrokerNameAndTransactionDateBeforeOrderByTransactionDateDesc(String email, String stockCode, BrokerName brokerName, LocalDate transactionDate);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 
     Optional<TransactionEntity> findByEmailAndSourceTempTransactionId(String email, String sourceTempTransactionId);
@@ -41,7 +41,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
     List<TransactionEntity> findByEmailAndStatusAndStockCodeAndAssetTypeAndTransactionDateAfterOrderByTransactionDateAsc(
             String email, TransactionStatus status, String stockCode, AssetType assetType, LocalDate date);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmailAndStatus(String email, TransactionStatus status);
 
     Optional<TransactionEntity> findByEmailAndIdempotencyKey(String email, String idempotencyKey);

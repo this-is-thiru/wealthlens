@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * (W-262): no law here, and no gain computed. The one reader of a held lot's term, which the capital-gains view uses too.
  */
 @Service
-@Transactional(value = "postgresTransactionManager", readOnly = true)
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class HeldAssetsViewService {
 

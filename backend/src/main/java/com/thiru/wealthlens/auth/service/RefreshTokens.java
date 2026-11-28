@@ -40,7 +40,7 @@ public class RefreshTokens {
     private final SecureRandom random = new SecureRandom();
 
     /** A new family, at sign-in; sweeps expired tokens (D-937 C3a) and returns the token to hand out. */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public String start(String email, Collection<String> factors) {
         Instant now = clock.instant();
         repository.deleteExpired(now);
@@ -52,7 +52,7 @@ public class RefreshTokens {
      * family is then ended), ended or expired, all with the same answer, so a refusal says nothing about the token.
      * {@code noRollbackFor = BadCredentialsException.class} ensures family revocation on reuse commits even as the refusal is thrown.
      */
-    @Transactional(transactionManager = "postgresTransactionManager", noRollbackFor = BadCredentialsException.class)
+    @Transactional(noRollbackFor = BadCredentialsException.class)
     public RefreshToken spend(String presented) {
         String hash = hash(presented);
         Instant now = clock.instant();
@@ -71,29 +71,29 @@ public class RefreshTokens {
     }
 
     /** The token that follows {@code spent}: same family, same factors, same expiry. */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public String succeed(RefreshToken spent) {
         return store(spent.getEmail(), spent.getFamilyId(), spent.getFactors(), clock.instant(), spent.getExpiresAt());
     }
 
     /** Logout: ends the family of {@code presented}; an unknown token changes nothing, and the answer is the same. */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void end(String presented) {
         repository.findByTokenHash(hash(presented)).ifPresent(token -> repository.endFamily(token.getFamilyId(), clock.instant()));
     }
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void endFamily(String familyId) {
         repository.endFamily(familyId, clock.instant());
     }
 
     /** Every sign-in of {@code email}, as after a password change. */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void endAll(String email) {
         repository.endAll(email, clock.instant());
     }
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void erase(String email) {
         repository.deleteByEmail(email);
     }

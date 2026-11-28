@@ -321,7 +321,7 @@ Before B-7 / B-8 the full ₹10 was divided by what remained each time: 3.33 + 5
 | `app.portfolio.trade-exchanges.accepted` | EQUITY and MUTUAL_FUND: NSE, BSE; BOND and GOLD_BOND: NSE, BSE, OFF_EXCHANGE; FD and INSURANCE: OFF_EXCHANGE (`application.yaml:183` – `:189`) | the exchanges a trade may name; a type not listed accepts none; absent stops the start (`config/TradeExchangeProperties.java:19` – `:34`) |
 | `app.charges.*` | see `docs/modules/brokercharges.md` §6 | whether a trade is priced, and whether a V2 buy's cost is the computed total |
 
-A trade spanning several tables is all-or-nothing under PostgreSQL's own ACID transaction (`@Transactional("postgresTransactionManager")`,
+A trade spanning several tables is all-or-nothing under PostgreSQL's own ACID transaction (`@Transactional`,
 `PortfolioService.java:80`) — unconditionally, unlike the Mongo era's `app.mongodb.transactions-enabled` flag and replica-set
 requirement, both gone with the port (W-337e).
 

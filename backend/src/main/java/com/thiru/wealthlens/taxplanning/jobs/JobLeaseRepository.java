@@ -21,7 +21,7 @@ public interface JobLeaseRepository extends JpaRepository<JobLease, String> {
      *
      * @return 1 if acquired, 0 if another run holds a lease that has not yet expired
      */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "INSERT INTO tax_job_leases (job, holder, expires_at) VALUES (:job, :holder, :newExpiresAt) "
             + "ON CONFLICT (job) DO UPDATE SET holder = EXCLUDED.holder, expires_at = EXCLUDED.expires_at "
@@ -31,6 +31,6 @@ public interface JobLeaseRepository extends JpaRepository<JobLease, String> {
 
     boolean existsByJobAndHolderAndExpiresAtAfter(String job, String holder, Instant now);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByJobAndHolder(String job, String holder);
 }

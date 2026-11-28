@@ -318,7 +318,7 @@ class DocumentIntegrationTest extends AbstractIntegrationTest {
         String documentId = storedDocumentId();
         call(HttpMethod.GET, OWNER, "/documents/" + documentId + "/parse", null);
 
-        // When — ProfileRemoval.remove is itself @Transactional("postgresTransactionManager"); no outer wrapping needed
+        // When — ProfileRemoval.remove is itself @Transactional; no outer wrapping needed
         profileRemoval.remove(profiles.findById(profileId).orElseThrow());
 
         // Then

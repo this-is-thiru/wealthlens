@@ -20,7 +20,7 @@ public class LoginErasure implements PersonalDataHolder {
     }
 
     @Override
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void erase(String email) {
         refreshTokens.erase(email);
         repository.deleteByEmail(email);

@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * profile is this account's.
  */
 @Service
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class TaxProfileReferenceService {
 
@@ -66,7 +66,7 @@ public class TaxProfileReferenceService {
         };
     }
 
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public List<Employer> employers(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return employerRepository.findByProfileId(profileId);
@@ -80,7 +80,7 @@ public class TaxProfileReferenceService {
         return replace(email, profileId, id, request, landlordRepository);
     }
 
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public List<Landlord> landlords(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return landlordRepository.findByProfileId(profileId);
@@ -94,7 +94,7 @@ public class TaxProfileReferenceService {
         return replace(email, profileId, id, request, lenderRepository);
     }
 
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public List<Lender> lenders(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return lenderRepository.findByProfileId(profileId);
@@ -106,7 +106,7 @@ public class TaxProfileReferenceService {
      *
      * @throws BadRequestException naming the first id the profile does not hold
      */
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public void requireHeld(String profileId, Collection<String> landlordIds, Collection<String> lenderIds) {
         requireAmong(landlordIds, landlordRepository.findByProfileId(profileId).stream().map(Landlord::getId), "landlord");
         requireAmong(lenderIds, lenderRepository.findByProfileId(profileId).stream().map(Lender::getId), "lender");
@@ -130,7 +130,7 @@ public class TaxProfileReferenceService {
         return replace(email, profileId, id, request, bankAccountRepository);
     }
 
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public List<BankAccount> bankAccounts(String email, String profileId) {
         taxProfileService.owned(email, profileId);
         return bankAccountRepository.findByProfileId(profileId);

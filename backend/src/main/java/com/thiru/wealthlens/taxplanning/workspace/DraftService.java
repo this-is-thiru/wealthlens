@@ -34,7 +34,7 @@ import tools.jackson.databind.JsonNode;
  * failure ends its transaction, so the controller asks for the conflict afterwards.
  */
 @Service
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class DraftService {
 
@@ -143,7 +143,7 @@ public class DraftService {
      *
      * @throws BadRequestException otherwise
      */
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public OwnedDraft ownedDraft(String email, String draftId) {
         FilingDraft draft = owned(email, draftId);
         return new OwnedDraft(draft, DraftInputsMapper.read(draft.getInputsJson()));
@@ -227,7 +227,7 @@ public class DraftService {
         return added;
     }
 
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public List<DraftRevision> revisions(String email, String draftId) {
         owned(email, draftId);
         return revisionRepository.findByDraftIdOrderByRevisionNumber(draftId);
@@ -299,7 +299,7 @@ public class DraftService {
      * The conflict for a save that collided on every attempt ({@link DraftSaveRetry}): the other save had not
      * committed, so which paths it changes is not yet known and the revision has not visibly moved.
      */
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public DraftConflictException conflictAfterRace(String email, String draftId) {
         return new DraftConflictException("Another save of this draft had not finished; read the draft and send again",
                 DraftView.of(owned(email, draftId)), List.of());

@@ -53,7 +53,7 @@ public class CorporateActionService {
     private final LastlyPerformedCorporateActionRepo lastlyPerformedCorporateActionRepo;
 
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public String addCorporateAction(CorporateActionDto actionWrapper) {
         validateCorporateActionData(actionWrapper);
         if (actionWrapper.getType() == CorporateActionType.STOCK_SPLIT) {
@@ -86,7 +86,7 @@ public class CorporateActionService {
         return corporateAction.get();
     }
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public String updateCorporateActionPriority(String id, int priority) {
 
         Optional<CorporateActionEntity> existingAction = corporateActionRepository.findById(id);
@@ -107,7 +107,7 @@ public class CorporateActionService {
         return corporateActionRepository.findByIdIn(ids, latestRecordFirst(pageable));
     }
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void deleteCorporateActions(String id) {
         corporateActionRepository.deleteById(id);
     }
@@ -125,10 +125,10 @@ public class CorporateActionService {
     /**
      * Iterates over corporate actions in the current quarter and processes them.
      * Each action may write to portfolio, transactions, and the performed-CAs table — all on PostgreSQL since
-     * {@code portfolio}'s own cutover (W-337e, D-949), so this runs as one {@code postgresTransactionManager}
+     * {@code portfolio}'s own cutover (W-337e, D-949), so this runs as one
      * transaction (D-945 C3a named this the point to switch).
      */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public void performPendingCorporateActions(String email, CorporateActionPerformDto actionPerformDto, boolean allBrokers) {
         if (actionPerformDto.brokerName() == null && !allBrokers) {
             throw new IllegalArgumentException("Invalid action perform details: " + actionPerformDto);
@@ -226,9 +226,9 @@ public class CorporateActionService {
 
     /**
      * Processes a single corporate action (a name change) by writing to the asset and transaction tables, now both
-     * on PostgreSQL (W-337e, D-949), as one {@code postgresTransactionManager} transaction.
+     * on PostgreSQL (W-337e, D-949), as one transaction.
      */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public String performCorporateAction(CorporateActionDto actionWrapper) {
 
         CorporateActionType action = actionWrapper.getType();

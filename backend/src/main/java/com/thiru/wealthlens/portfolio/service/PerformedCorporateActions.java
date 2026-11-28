@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  * other way round. Actions are performed quarter by quarter, so every one up to that date was.
  */
 @Service
-@Transactional(value = "postgresTransactionManager", readOnly = true)
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class PerformedCorporateActions {
 

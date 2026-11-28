@@ -36,7 +36,7 @@ public interface TradeOutcomeRepository extends JpaRepository<TradeOutcomeEntity
      */
     List<TradeOutcomeEntity> findByEmailAndSourceBuyLotIdIn(String email, Collection<String> sourceBuyLotIds);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 
     long countByEmail(String email);

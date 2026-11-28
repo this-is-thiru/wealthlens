@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  * instalment still to come would cost nothing, since its interest has not accrued yet (the W-114 probe).
  */
 @Service
-@Transactional(value = "postgresTransactionManager", readOnly = true)
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class DraftCalendarService {
 

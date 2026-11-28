@@ -66,6 +66,6 @@ public interface UserChargeRepository extends JpaRepository<UserChargeEntity, St
     /** In the same order as {@link #findByEmailOrderByTransactionDateDescIdAsc} (W-412). */
     List<UserChargeEntity> findByEmailAndResolutionInOrderByTransactionDateDescIdAsc(String email, List<ChargeResolution> resolutions);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 }

@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
  * that a restore from an older snapshot cannot undo it (W-237f).
  */
 @Service
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class ErasureService {
 

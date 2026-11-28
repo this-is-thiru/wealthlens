@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 /** Taxpayer profiles, each read and written only through the account that owns it. Logs carry ids, never a PAN ({@code DR 14} O1.1). */
 @Service
 @Log4j2
-@Transactional("postgresTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 public class TaxProfileService {
 
@@ -52,7 +52,7 @@ public class TaxProfileService {
      *
      * @throws BadRequestException otherwise, saying the same whether it is absent, another account's or held for erasure
      */
-    @Transactional(value = "postgresTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public TaxpayerProfile owned(String email, String profileId) {
         return taxpayerProfileRepository.findById(profileId)
                 .filter(profile -> email.equals(profile.getEmail()))

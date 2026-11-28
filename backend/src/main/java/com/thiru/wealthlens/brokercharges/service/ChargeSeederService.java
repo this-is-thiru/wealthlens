@@ -120,7 +120,7 @@ public class ChargeSeederService {
      * @param auditor recorded on the report. The documents themselves are stamped by Spring Data's
      *                auditing, which reads the authenticated caller through {@code SecurityAuditorAware}
      */
-    @Transactional("postgresTransactionManager")
+    @Transactional
     public ChargeSeedReport seed(String auditor) {
         log.info("Seeding charge catalogue, rate cards and scheme profiles, requested by {}", auditor);
         List<String> catalogue = seedCatalogue();
@@ -334,7 +334,7 @@ public class ChargeSeederService {
      *
      * <p>Updating a pre-built instance keeps the initialiser and gives auditing something to write
      * into. Nothing here sets a single audit field: {@code SecurityAuditorAware} and
-     * {@code @EnableJpaAuditing} ({@code PostgresJpaConfig}) do that, as they already did everywhere else.
+     * {@code @EnableJpaAuditing} ({@code JpaAuditingConfig}) do that, as they already did everywhere else.
      */
     <T> T read(Resource file, Supplier<T> factory) {
         try (InputStream stream = file.getInputStream()) {

@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * A lot the rows give no term for is named rather than refusing the rest.
  */
 @Service
-@Transactional(value = "postgresTransactionManager", readOnly = true)
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CapitalGainsViewService {
 

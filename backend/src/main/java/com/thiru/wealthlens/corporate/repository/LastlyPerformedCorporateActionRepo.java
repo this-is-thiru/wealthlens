@@ -19,6 +19,6 @@ public interface LastlyPerformedCorporateActionRepo extends JpaRepository<Lastly
             @Param("assetType") AssetType assetType, @Param("actionType") CorporateActionType actionType,
             @Param("brokerName") BrokerName brokerName);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 }

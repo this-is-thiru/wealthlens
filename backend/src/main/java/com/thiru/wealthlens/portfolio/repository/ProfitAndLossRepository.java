@@ -11,6 +11,6 @@ public interface ProfitAndLossRepository extends JpaRepository<ProfitAndLossEnti
 
     List<ProfitAndLossEntity> findAllByEmail(String email);
 
-    @Transactional("postgresTransactionManager")
+    @Transactional
     void deleteByEmail(String email);
 }

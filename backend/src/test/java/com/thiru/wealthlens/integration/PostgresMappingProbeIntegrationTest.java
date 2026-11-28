@@ -17,7 +17,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -35,8 +34,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private InsuranceRepository insuranceRepository;
     @Autowired
-    @Qualifier("postgresTransactionManager")
-    private PlatformTransactionManager postgresTransactionManager;
+    private PlatformTransactionManager transactionManager;
 
     @Test
     void save_whenAUserIsStored_holdsItsEmailEncryptedAndFindsItByDerivedQuery() {
@@ -83,7 +81,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
         AtomicInteger totalRowsChanged = new AtomicInteger();
 
         // When — two threads race the same compare-and-set update, each its own transaction
-        TransactionTemplate transactionTemplate = new TransactionTemplate(postgresTransactionManager);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         CompletableFuture<Integer> first = CompletableFuture
                 .supplyAsync(() -> transactionTemplate.execute(status -> refreshTokenRepository.spend(token.getTokenHash(), now)));
         CompletableFuture<Integer> second = CompletableFuture
@@ -107,7 +105,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
         refreshTokenRepository.save(live);
 
         // When
-        int removed = new TransactionTemplate(postgresTransactionManager)
+        int removed = new TransactionTemplate(transactionManager)
                 .execute(status -> refreshTokenRepository.deleteExpired(Instant.now()));
 
         // Then
@@ -150,7 +148,7 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
     @Test
     void transaction_whenItRollsBack_leavesNothingStored() {
         // Given
-        TransactionTemplate transactionTemplate = new TransactionTemplate(postgresTransactionManager);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         UserDetail user = new UserDetail();
         user.setId(UUID.randomUUID().toString());
         user.setEmail("probe.rollback@example.com");

@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -61,7 +60,6 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
     private DocumentRemoval documentRemoval;
 
     @Autowired
-    @Qualifier("postgresTransactionManager")
     private PlatformTransactionManager transactionManager;
 
     @Autowired
