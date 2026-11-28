@@ -364,7 +364,7 @@ Gross salary is `Σ` over a **declared partition** of codes — the pack names w
 ### M3.1 Why the profile is not the shape of the placeholder's
 
 `FACT`: `SalaryProfileEntity` in the placeholder has **no date fields at all**
-(`docs/taxplanning-context/00-INDEX.md`, open question 3, read this session). `INFERENCE (from D5,
+(`docs/taxplanning-context/00-INDEX.md` (tag `docs-history-m4`), open question 3, read this session). `INFERENCE (from D5,
 DOC-F130-MULTI-001, SAL-HRA-003, SAL-LTA-BLOCK-001, RET-VRS-002)`: at least five rules need dates —
 mid-year joining, the HRA "relevant period", the LTA calendar block, the once-in-a-lifetime VRS
 deduction, and the monthly TDS projection. A dateless profile cannot express any of them.

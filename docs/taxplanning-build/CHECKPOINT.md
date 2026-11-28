@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-433a DONE (D-1048), committed and pushed; W-433b – f not taken. Next: plan W-434 (design docs and README).
-Stage           : #87 open; check its run on the latest commit, then ask "merge #87".
-Last item commit: "taxplanning W-433a: correct the untrue and historical comments in the three heaviest brokercharges files — the comment pass stops at the sample; D-1047, D-1048"
-Next step       : 1. plan W-434 (EXPLAIN, STOP). 2. #87 green → "merge #87" → release → runbook §1.1 per database. 3. 2026-11-29: runbook §1.2 count. 4. W-337j4 due 2026-12-05.
+Item            : W-434 DONE (D-1050), committed and pushed with tag docs-history-m4; the clean-up W-431 – W-434 is complete. Next: owner's word.
+Stage           : #87 open; check its run on the latest commit, then ask "merge #87"; then a release and runbook §1.1 (W-428c) per database.
+Last item commit: "taxplanning W-434: rewrite the README to a page and move the unread design-phase docs into tag docs-history-m4 — the kept design docs marked as pre-build references; D-1049, D-1050"
+Next step       : 1. #87 green → "merge #87" → release (m1.10?) → runbook §1.1 per database. 2. 2026-11-29: runbook §1.2 count. 3. W-337j4 due 2026-12-05. 4. seen, not placed: GEMINI.md, test-oracle/ in the repo root.
 Files touched   : (none); api-collection — never commit
 Flags for owner : W-337j4 (delete the 3 Atlas clusters) due 2026-12-05. W-418 needs the broker statement. Same-day FIFO tie in sales proposed, not placed (D-1010). W-416 waits. §1.s Aiven retention not given (staging's only way back to m1.8 now). Keep tax key values (password manager) while dev/prod pre-w428a dumps are kept; §2.21 removes them from env files.
 Env notes       : NO Claude attribution; ask "commit and push" explicitly; OrbStack: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; SQL via postgres:18 psql. Owner's zsh: no inline # comments.

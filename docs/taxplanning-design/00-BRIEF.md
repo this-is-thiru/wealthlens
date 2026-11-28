@@ -1,5 +1,8 @@
 # 00 — The brief
 
+> **Design references, written before the build** (W-434, D-1049). Where any document in this folder differs from the code,
+> the code and `docs/modules/` are current.
+
 **Read this before any other document in this folder.** It is the founding statement of what this
 module is for, who it serves and what it must survive. Every other design document is an elaboration
 of it; where one disagrees with this brief, **this brief wins** and the other document is wrong.
@@ -9,7 +12,7 @@ of it; where one disagrees with this brief, **this brief wins** and the other do
 | Written | 2026-09-23, from the product owner's own statement of intent (session 4) |
 | Owner | the product owner (repository owner) |
 | Supersedes | the scope statements in `00-SUMMARY.md` (D1, D7), `04-product-spec.md` P1, `01-PRD.md` §2 and §7 — those stay in place for history; each carries an amendment pointing here |
-| Why it exists | the original brief (`docs/prompts/taxplanning-design.md`) is **empty in git** (0 lines, commit `15d36e8`). Twenty-five design documents cite "the brief" for their central requirement, and nothing on disk records it. This file is that record |
+| Why it exists | the original brief (`docs/prompts/taxplanning-design.md` (tag `docs-history-m4`)) is **empty in git** (0 lines, commit `15d36e8`). Twenty-five design documents cite "the brief" for their central requirement, and nothing on disk records it. This file is that record |
 | Decisions it records | D-033 … D-047 (`docs/taxplanning-build/STATE.md`) |
 
 ---

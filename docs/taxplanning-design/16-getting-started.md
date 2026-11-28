@@ -22,7 +22,7 @@ Everything else is reference, consulted when the slice you are on needs it.
 
 ## S1 — Day 0: seven decisions only you can make
 
-Each blocks something concrete. Record the answer in `PROGRESS.md` under a **Decision log** heading.
+Each blocks something concrete. Record the answer in `PROGRESS.md` (tag `docs-history-m4`) under a **Decision log** heading.
 
 | # | Decision | Why it blocks | Recommendation |
 |---|---|---|---|

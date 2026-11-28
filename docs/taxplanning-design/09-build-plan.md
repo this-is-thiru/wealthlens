@@ -164,7 +164,7 @@ directory.
 ### The rule
 
 **Nothing is deleted until its replacement has passing golden tests.** `INFERENCE`: the placeholder is
-a leaf — `docs/taxplanning-context/00-INDEX.md` records that no production code outside the module
+a leaf — `docs/taxplanning-context/00-INDEX.md` (tag `docs-history-m4`) records that no production code outside the module
 imports it, and the only inbound references in the repository are eight imports in one integration
 test. So it can coexist with the replacement at zero cost, and deleting it early buys nothing while
 removing the ability to diff behaviour.

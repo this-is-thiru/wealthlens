@@ -1,6 +1,6 @@
 # WealthLens docs — index
 
-Start here. Every kept doc is listed with what it is for. Anything removed is in a git tag: **`docs-history-m1`** (W-357a), **`docs-history-m2`** (the old deploy runbook, W-430) or **`docs-history-m3`** (finished plans, reviews and work-item rows, W-432):
+Start here. Every kept doc is listed with what it is for. Anything removed is in a git tag: **`docs-history-m1`** (W-357a), **`docs-history-m2`** (the old deploy runbook, W-430) or **`docs-history-m3`** (finished plans, reviews and work-item rows, W-432) or **`docs-history-m4`** (the old README, `taxplanning-context/`, the design `PROGRESS.md`, W-434):
 `git show docs-history-m1:<path>` prints a removed file, `git ls-tree -r --name-only docs-history-m1 docs/` lists them.
 
 ## Working on the build (`docs/taxplanning-build/`)
@@ -25,7 +25,7 @@ Start here. Every kept doc is listed with what it is for. Anything removed is in
 
 | Doc | What it is |
 |---|---|
-| [`taxplanning-design/`](taxplanning-design/) | the tax design — the cited source for figures and structure (rule R1); `00-BRIEF.md` first |
+| [`taxplanning-design/`](taxplanning-design/) | the tax design — the cited source for figures and structure (rule R1); `00-BRIEF.md` first. Written before the build: where it differs from the code, the code and `docs/modules/` are current (W-434) |
 
 ## Modules (`docs/modules/`)
 

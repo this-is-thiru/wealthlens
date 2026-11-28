@@ -1,6 +1,6 @@
 # 00 — Summary
 
-Greenfield research and design for the `taxplanning` module. Nine documents plus `PROGRESS.md`, all
+Greenfield research and design for the `taxplanning` module. Nine documents plus `PROGRESS.md` (tag `docs-history-m4`), all
 under `docs/taxplanning-design/`. **No source code, tests or build files were changed.**
 
 | File | What it settles |
@@ -480,7 +480,7 @@ Eight primary gazette documents were downloaded and read in full or in targeted 
 | S7 | **Finance Act, 2025 (No. 7 of 2025)** — gazette CG-DL-E-29032025-262125 | final |
 | S9 | EY technical alert on the Rules 2026 | secondary; used only to corroborate the **direction** of change, never a number |
 
-Plus six code files read first-hand for `path:line` claims (`PROGRESS.md` records them).
+Plus six code files read first-hand for `path:line` claims (`PROGRESS.md` (tag `docs-history-m4`) records them).
 
 ---
 

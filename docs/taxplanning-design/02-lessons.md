@@ -4,7 +4,7 @@
 already made 36 recorded mistakes, and each one identifies a **design property** that the replacement
 must have structurally, so that the same mistake becomes impossible rather than merely fixed.
 
-**Provenance.** The `O-n` observations are from `docs/taxplanning-context/04-constants-tests-history.md`,
+**Provenance.** The `O-n` observations are from `docs/taxplanning-context/04-constants-tests-history.md` (tag `docs-history-m4`),
 read this session. That pack is a **lead, not proof** — I read the observation titles and bodies for
 O-1 to O-16 directly and the titles for O-17 to O-36. Where a design rule below depends on a legal
 fact, the fact carries a rule ID from `01-rulebook.md` and the observation only supplies the symptom.
