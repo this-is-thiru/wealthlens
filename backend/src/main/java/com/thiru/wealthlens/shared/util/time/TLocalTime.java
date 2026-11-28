@@ -4,8 +4,10 @@ package com.thiru.wealthlens.shared.util.time;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.NonNull;
 
+@UtilityClass
 public class TLocalTime {
 
     public static LocalTime toLocalTime(@NonNull String time, @NonNull String pattern) {

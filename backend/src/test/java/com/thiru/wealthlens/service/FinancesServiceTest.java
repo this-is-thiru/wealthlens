@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.thiru.wealthlens.finance.dto.FinanceRequest;
 import com.thiru.wealthlens.finance.dto.FinanceResponse;

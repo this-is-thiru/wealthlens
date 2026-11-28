@@ -7,7 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import java.time.LocalDate;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.DisplayName;
@@ -96,5 +98,40 @@ class TradeFingerprintTest {
         // Then
         assertEquals(64, fingerprint.length(), "SHA-256 hex");
         assertTrue(fingerprint.matches("[0-9a-f]{64}"));
+    }
+
+    private static String rowWith(Consumer<AssetRequest> change) {
+        AssetRequest request = trade();
+        change.accept(request);
+        return TradeFingerprint.ofRow(EMAIL, request);
+    }
+
+    @Test
+    @DisplayName("an upload row's fingerprint is the same for the same row in another file (W-440a)")
+    void ofRow_whenTheRowIsIdentical_isStable() {
+        // Given / When / Then
+        assertEquals(TradeFingerprint.ofRow(EMAIL, trade()), TradeFingerprint.ofRow(EMAIL, trade()));
+    }
+
+    @Test
+    @DisplayName("every field an upload row carries changes its fingerprint, the venue and order among them (W-440a)")
+    void ofRow_whenAnyRowFieldDiffers_differs() {
+        // Given
+        String base = TradeFingerprint.ofRow(EMAIL, trade());
+
+        // When / Then
+        assertNotEquals(base, TradeFingerprint.ofRow("other@example.com", trade()), "user");
+        assertNotEquals(base, rowWith(r -> r.setStockCode("TCS")), "stock code");
+        assertNotEquals(base, rowWith(r -> r.setBrokerName(BrokerName.UPSTOX)), "broker");
+        assertNotEquals(base, rowWith(r -> r.setAccountHolder("spouse")), "account holder");
+        assertNotEquals(base, rowWith(r -> r.setAccountType(AccountType.OUTSOURCED)), "account type");
+        assertNotEquals(base, rowWith(r -> r.setAssetType(AssetType.MUTUAL_FUND)), "asset type");
+        assertNotEquals(base, rowWith(r -> r.setSegment(TradeSegment.INTRADAY)), "segment");
+        assertNotEquals(base, rowWith(r -> r.setExchangeName("BSE")), "exchange");
+        assertNotEquals(base, rowWith(r -> r.setTransactionType(TransactionType.SELL)), "side");
+        assertNotEquals(base, rowWith(r -> r.setTransactionDate(LocalDate.of(2025, 6, 11))), "date");
+        assertNotEquals(base, rowWith(r -> r.setQuantity(10.5)), "quantity");
+        assertNotEquals(base, rowWith(r -> r.setPrice(1500.05)), "price");
+        assertNotEquals(base, rowWith(r -> r.setOrderId("1100000065815135")), "order id");
     }
 }

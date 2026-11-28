@@ -1,9 +1,14 @@
 package com.thiru.wealthlens.integration;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.CorporateActionPerformDto;
@@ -190,7 +195,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== VALIDATION: addCorporateAction DEMERGER null demergerDetail ==========
 
     @Test
-    void addCorporateActionDEMERGER_whenNullDemergerDetail_throwsException() {
+    void addCorporateActionDemerger_whenNullDemergerDetail_throwsException() {
         // GIVEN
         CorporateActionDto dto = new CorporateActionDto();
         dto.setStockCode("RELIANCE");
@@ -209,7 +214,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== VALIDATION: addCorporateAction DEMERGER invalid ratio format ==========
 
     @Test
-    void addCorporateActionDEMERGER_whenInvalidRatioFormat_throwsException() {
+    void addCorporateActionDemerger_whenInvalidRatioFormat_throwsException() {
         // GIVEN
         CorporateActionDto.DemergerDetailDto demergerDetail = new CorporateActionDto.DemergerDetailDto(
                 "INVALID",
@@ -238,7 +243,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== VALIDATION: addCorporateAction DEMERGER mismatched ratios vs stocks count ==========
 
     @Test
-    void addCorporateActionDEMERGER_whenMismatchedRatiosVsStocksCount_throwsException() {
+    void addCorporateActionDemerger_whenMismatchedRatiosVsStocksCount_throwsException() {
         // GIVEN
         CorporateActionDto.DemergerDetailDto demergerDetail = new CorporateActionDto.DemergerDetailDto(
                 "1:1:1",
@@ -267,7 +272,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== VALIDATION: addCorporateAction DEMERGER price ratio length mismatch ==========
 
     @Test
-    void addCorporateActionDEMERGER_whenPriceRatioLengthMismatch_throwsException() {
+    void addCorporateActionDemerger_whenPriceRatioLengthMismatch_throwsException() {
         // GIVEN
         CorporateActionDto.DemergerDetailDto demergerDetail = new CorporateActionDto.DemergerDetailDto(
                 "1:1",
@@ -294,7 +299,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== VALIDATION: addCorporateAction BONUS invalid ratio ==========
 
     @Test
-    void addCorporateActionBONUS_whenInvalidRatio_throwsException() {
+    void addCorporateActionBonus_whenInvalidRatio_throwsException() {
         // GIVEN
         CorporateActionDto dto = new CorporateActionDto();
         dto.setStockCode("RELIANCE");
@@ -313,7 +318,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== HAPPY: addCorporateAction BONUS success ==========
 
     @Test
-    void addCorporateActionBONUS_whenValidData_success() {
+    void addCorporateActionBonus_whenValidData_success() {
         // GIVEN
         CorporateActionDto dto = new CorporateActionDto();
         dto.setStockCode("RELIANCE");
@@ -395,7 +400,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== HAPPY: addCorporateAction DEMERGER success ==========
 
     @Test
-    void addCorporateActionDEMERGER_whenValidData_success() {
+    void addCorporateActionDemerger_whenValidData_success() {
         // GIVEN
         CorporateActionDto.DemergerDetailDto demergerDetail = new CorporateActionDto.DemergerDetailDto(
                 "1:1",
@@ -695,7 +700,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== HAPPY: performCorporateAction STOCK_SPLIT ==========
 
     @Test
-    void performCorporateAction_STOCKSPLIT_refusesAndChangesNoLot() {
+    void performCorporateAction_stockSplit_refusesAndChangesNoLot() {
         // GIVEN
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -738,7 +743,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== HAPPY: performCorporateAction NAME_OR_SYMBOL_CHANGE ==========
 
     @Test
-    void performCorporateAction_NAMECHANGE_whenValidData_success() {
+    void performCorporateAction_nameChange_whenValidData_success() {
         // GIVEN
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -952,7 +957,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void addCorporateActionBONUS_whenTheAllotmentDateIsGiven_savesIt() {
+    void addCorporateActionBonus_whenTheAllotmentDateIsGiven_savesIt() {
         // GIVEN -- W-088k4a case 3
         CorporateActionDto dto = new CorporateActionDto();
         dto.setStockCode("RELIANCE");
@@ -972,7 +977,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void addCorporateActionBONUS_whenTheAllotmentDateIsNotYetKnown_savesItWithout() {
+    void addCorporateActionBonus_whenTheAllotmentDateIsNotYetKnown_savesItWithout() {
         // GIVEN -- W-088k4a case 4: entered when announced, before allotment; only performing needs the date
         CorporateActionDto dto = new CorporateActionDto();
         dto.setStockCode("RELIANCE");
@@ -1392,56 +1397,41 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setPriority(1);
         corporateActionRepository.save(ca);
 
-        AssetEntity asset1 = new AssetEntity();
-        asset1.setEmail("test@example.com");
-        asset1.setStockCode("RELIANCE");
-        asset1.setStockName("Reliance Industries");
-        asset1.setBrokerName(BrokerName.UPSTOX);
-        asset1.setAssetType(AssetType.EQUITY);
-        asset1.setQuantity(100.0);
-        asset1.setPrice(2500.0);
-        asset1.setTransactionDate(LocalDate.of(2024, 1, 10));
-        asset1.setTransactionType(TransactionType.BUY);
-        portfolioRepository.save(asset1);
-
-        AssetEntity asset2 = new AssetEntity();
-        asset2.setEmail("test@example.com");
-        asset2.setStockCode("RELIANCE");
-        asset2.setStockName("Reliance Industries");
-        asset2.setBrokerName(BrokerName.UPSTOX);
-        asset2.setAssetType(AssetType.EQUITY);
-        asset2.setQuantity(100.0);
-        asset2.setPrice(2500.0);
-        asset2.setTransactionDate(LocalDate.of(2024, 1, 11));
-        asset2.setTransactionType(TransactionType.BUY);
-        portfolioRepository.save(asset2);
-
-        TransactionEntity transaction1 = new TransactionEntity();
-        transaction1.setEmail("test@example.com");
-        transaction1.setStockCode("RELIANCE");
-        transaction1.setStockName("Reliance Industries");
-        transaction1.setBrokerName(BrokerName.UPSTOX);
-        transaction1.setAssetType(AssetType.EQUITY);
-        transaction1.setQuantity(100.0);
-        transaction1.setPrice(2500.0);
-        transaction1.setTransactionType(TransactionType.BUY);
-        transaction1.setTransactionDate(LocalDate.of(2024, 1, 10));
-        transactionRepository.save(transaction1);
-
-        TransactionEntity transaction2 = new TransactionEntity();
-        transaction2.setEmail("test@example.com");
-        transaction2.setStockCode("RELIANCE");
-        transaction2.setStockName("Reliance Industries");
-        transaction2.setBrokerName(BrokerName.UPSTOX);
-        transaction2.setAssetType(AssetType.EQUITY);
-        transaction2.setQuantity(100.0);
-        transaction2.setPrice(2500.0);
-        transaction2.setTransactionType(TransactionType.BUY);
-        transaction2.setTransactionDate(LocalDate.of(2024, 1, 11));
-        transactionRepository.save(transaction2);
+        AssetEntity asset1 = saveRelianceAsset(LocalDate.of(2024, 1, 10));
+        AssetEntity asset2 = saveRelianceAsset(LocalDate.of(2024, 1, 11));
+        saveRelianceBuy(LocalDate.of(2024, 1, 10));
+        saveRelianceBuy(LocalDate.of(2024, 1, 11));
 
         // WHEN - processing bonus shares with multiple transactions (mutable list, should succeed)
         assertDoesNotThrow(() -> corporateActionService.processBonusShares("test@example.com", ca, BrokerName.UPSTOX, new ArrayList<>(List.of(asset1, asset2))));
+    }
+
+    private AssetEntity saveRelianceAsset(LocalDate date) {
+        AssetEntity asset = new AssetEntity();
+        asset.setEmail("test@example.com");
+        asset.setStockCode("RELIANCE");
+        asset.setStockName("Reliance Industries");
+        asset.setBrokerName(BrokerName.UPSTOX);
+        asset.setAssetType(AssetType.EQUITY);
+        asset.setQuantity(100.0);
+        asset.setPrice(2500.0);
+        asset.setTransactionDate(date);
+        asset.setTransactionType(TransactionType.BUY);
+        return portfolioRepository.save(asset);
+    }
+
+    private void saveRelianceBuy(LocalDate date) {
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setEmail("test@example.com");
+        transaction.setStockCode("RELIANCE");
+        transaction.setStockName("Reliance Industries");
+        transaction.setBrokerName(BrokerName.UPSTOX);
+        transaction.setAssetType(AssetType.EQUITY);
+        transaction.setQuantity(100.0);
+        transaction.setPrice(2500.0);
+        transaction.setTransactionType(TransactionType.BUY);
+        transaction.setTransactionDate(date);
+        transactionRepository.save(transaction);
     }
 
     // ========== VALID: processDemerger demergerStocks.size()!=1 ==========

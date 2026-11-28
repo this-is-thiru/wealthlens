@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
 import com.thiru.wealthlens.taxplanning.enums.EmployerType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -39,15 +37,9 @@ public class Employer implements CreatedWithId, ProfileScoped {
     @Column(name = "name")
     private String name;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "tan")
     private String tan;
 
-    /** The TAN's keyed digest, which keeps a TAN unique within a profile now that the TAN is stored encrypted (D-447 C1a). */
-    @Column(name = "tan_digest")
-    private String tanDigest;
-
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "pan")
     private String pan;
 

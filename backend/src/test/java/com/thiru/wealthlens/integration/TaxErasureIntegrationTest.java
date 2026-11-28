@@ -332,14 +332,14 @@ class TaxErasureIntegrationTest extends AbstractIntegrationTest {
         assertThat(erase(held).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         TaxpayerProfile stored = profiles.findById(held).orElseThrow();
         assertThat(stored.getErasureRequestedAt()).isEqualTo(LocalDateTime.parse("2026-11-07T10:00:00"));
-        assertThat(stored.getPanDigest()).isNull();
+        assertThat(stored.getPan()).isEqualTo("ABCDE1234F"); // kept until erased, so a reapply has it (W-428c C1a)
     }
 
     @Test
-    void request_whenThePanIsRegisteredAgainAfterTwoHolds_isAccepted() {
-        // Given — two held profiles both lack a digest, which a unique index that is not sparse would refuse
+    void request_whenThePanIsRegisteredAgainAfterTwoHoldsOfIt_isAccepted() {
+        // Given — two held profiles with the same PAN, which a unique index over every profile would refuse (W-428c C1a)
         assertThat(erase(createdProfile("ABCDE1234F")).getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
-        assertThat(erase(createdProfile("PQRSX5678K")).getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        assertThat(erase(createdProfile("ABCDE1234F")).getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
 
         // When
         ResponseEntity<String> again = call(HttpMethod.POST, "/profiles", profile("ABCDE1234F"));

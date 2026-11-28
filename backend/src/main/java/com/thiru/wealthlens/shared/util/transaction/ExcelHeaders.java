@@ -1,5 +1,8 @@
 package com.thiru.wealthlens.shared.util.transaction;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class ExcelHeaders {
 
     public static final String EMAIL = "EMAIL";

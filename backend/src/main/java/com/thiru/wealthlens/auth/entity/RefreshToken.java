@@ -1,9 +1,7 @@
 package com.thiru.wealthlens.auth.entity;
 
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -40,7 +38,6 @@ public class RefreshToken {
     private String familyId;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     /** Eager so callers outside the spend transaction can read the factors carried into the new access token. */

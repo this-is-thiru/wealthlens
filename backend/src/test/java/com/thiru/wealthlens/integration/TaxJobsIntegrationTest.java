@@ -272,7 +272,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(stored("ready").getStatus()).isEqualTo(DraftStatus.READY);
         assertThat(leases.findAll()).isEmpty();
         assertThat(stored("old").getAuditMetadata().getUpdatedBy()).isEqualTo("auto-archive");
-        assertThat(rawUpdatedBy("tax_filing_drafts", "old")).isEqualTo(storedIdentifier("auto-archive"));
+        assertThat(rawUpdatedBy("tax_filing_drafts", "old")).isEqualTo("auto-archive");
     }
 
     @Test

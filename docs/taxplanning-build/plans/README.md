@@ -19,3 +19,6 @@ Each step is small enough to finish in one go: one file, or one tightly-coupled 
 that stops between steps resumes at the first unticked one.
 
 The plan file is committed **with its item**, as part of the item's single commit.
+
+Only plans of open items stay here, with `W-078f.md` and `W-112b.md`, which the rule packs cite. Every finished plan is in
+git tag `docs-history-m3` (W-432, D-1045): `git show docs-history-m3:docs/taxplanning-build/plans/<id>.md`.

@@ -1,7 +1,7 @@
 # Module `taxplanning` — profiles, drafts, computations, documents and tax operations
 
 > Written from the code at `review/taxplanning`; every claim cites the line it was read from, and a bare path is under
-> `backend/src/main/java/com/thiru/wealthlens/taxplanning/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a. The module is
+> `backend/src/main/java/com/thiru/wealthlens/taxplanning/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a. The module is
 > written in four parts (D-923): boundary, profiles, workspaces, drafts and salary import (W-357b10a, D-924); assembly, portfolio
 > bridge, computation, advisory views and report (W-357b10b, D-925); documents and isolation (W-357b10c, D-926); protection, erasure,
 > jobs and the Gazette watch (W-357b10d, D-927). The doc is complete.
@@ -163,7 +163,7 @@ Every `BadRequestException` and `IllegalArgumentException` maps to HTTP **400** 
 | Newly added landlord/lender id not held by this profile | 400 `"landlord <id> is not one of this profile's landlords"` / `"lender <id> is not one of this profile's lenders"` | `profile/TaxProfileReferenceService.java:110` – `:123`; `workspace/DraftService.java:200` – `:210` |
 | Evidence does not match entries by position, exceeds tenancy months / incurred amount / paid total, or names an unentered code / absent Agniveer fund | 400 naming the `/evidence/...` path and bound | `workspace/EvidenceHeld.java:48` – `:91`; `workspace/ChapterViiiEvidence.java:46` – `:70` |
 | `/filing/ofWhichByEmployer` negative or exceeds `/filing/taxAtSource` | 400 (`IllegalArgumentException` inside `DraftInputs.Filing`; caught as bind refusal on patch) | `workspace/DraftInputs.java:92` – `:96` |
-| `/filing/declarations` names a question not asked for the year or wrong answer kind | 400 (from `TaxCalculator.requireAsked`) | `workspace/DraftService.java:186` – `:187` |
+| `/filing/declarations` names a question not asked for the year or wrong answer kind | 400 (from `TaxCalculator.requireAsked`) | `workspace/DraftService.java:204` – `:205` |
 | Illegal draft status transition or null status | 400 `"A draft that is <current> cannot become <next>"` | `workspace/DraftService.java:245` – `:247` |
 | Requested revision number does not exist (negative or above `currentRevision`) | 400 `"This draft has no revision <number>"` | `workspace/DraftService.java:235` – `:237` |
 | Patch/import against non-editable draft (`ACTED_ON` or `ARCHIVED`) | **409** `"A draft that is <status> cannot be edited"` (`conflictingPaths = []`) | `workspace/DraftService.java:172` – `:175` |
@@ -189,7 +189,7 @@ Every `BadRequestException` and `IllegalArgumentException` maps to HTTP **400** 
 | Accepting a row not read; a row both accepted and corrected; rejecting a row not read; correcting a path that is no single-value row of the layout; a path both accepted and rejected | 400 `"<path> was not read, so it cannot be accepted: correct it instead"` / `"<path> is both accepted and corrected"` / `"<path> was not read, so it cannot be rejected"` / `"<path> is not a row of FORM_130 that can be written"` / `"A field is accepted or rejected, not both: <path>"` | `documents/ConfirmedRows.java:28` – `:43`, `:47` – `:55`; `documents/ingest/DocumentConfirmation.java:24` – `:28` |
 | A correction that does not read as its row's kind | 400 `"<path>: '<text>' is not an amount in rupees, e.g. 950000 or 950000.50"` / `"… is not yes or no"` / `"… is not a period as yyyy-MM-dd/yyyy-MM-dd"` | `documents/Corrections.java:29` – `:60` |
 | Erasure of a profile absent, of another account, or already held | 400 `"This account holds no such profile"` (`TaxProfileService.owned`) | `profile/TaxProfileService.java:71` – `:72` |
-| A job name no job has; the Gazette watch while `app.tax.gazette-watch.enabled` is false | 400 `"No tax job is named <name>; the jobs are [account-erasure, auto-archive, gazette-watch, log-retention, parse-documents, retention-purge, staleness-sweep]"` / `"The Gazette watch is off (app.tax.gazette-watch.enabled); runbook §1.w turns it on"` | `jobs/TaxJobDirectory.java:29` – `:34` |
+| A job name no job has; the Gazette watch while `app.tax.gazette-watch.enabled` is false | 400 `"No tax job is named <name>; the jobs are [account-erasure, auto-archive, gazette-watch, log-retention, parse-documents, retention-purge, staleness-sweep]"` / `"The Gazette watch is off (app.tax.gazette-watch.enabled); runbook §3.6 in tag docs-history-m5 turns it on"` | `jobs/TaxJobDirectory.java:29` – `:34` |
 | Cursor year before 2009 or after this year; `lastNumber` not positive | 400 `"The year must be a Gazette folder from 2009 to <this year>, but was <year>"` / `"The last number read must be positive, but was <n>"` | `gazette/GazetteWatchService.java:21`, `:42` – `:49` |
 | A user's token on an admin route | 403 | `controller/GazetteWatchController.java:30`, `:37`; `controller/TaxJobController.java:22` |
 | The confirmed employee PAN is another than the profile's, or is not among the confirmed rows | 400 `"This certificate is for another PAN than the profile's"` / `"The certificate's employee PAN (Part A item 11) is not read: correct it to confirm"` | `documents/DocumentService.java:118` – `:122` |
@@ -346,7 +346,7 @@ still refused (`documents/store/ReadingJson.java`).
   3. Applies patch, runs `DraftInputsMapper.requireBinds`, binds `DraftInputs`.
   4. Checks only **newly added** landlord/lender IDs against `thirdPartyReferences.requireHeld(...)`, so IDs previously stored on a draft whose reference row was later purged by retention do not block unrelated edits (`:200` – `:210`).
   5. Validates `evidence.requireFits(entered, taxYear)`: each positional list (`receiptedMonths`, `journeyExpenditure`, and `ChapterViiiEvidence`'s six lists) must be empty or the exact length of its corresponding `/entered/...` list, with every count/amount in `[0, enteredBound]`, every `qualifyingPayments` code present in `/entered/qualifyingPayments` and `≤` the sum paid under that code, and `agniveerOwnSubscription` present only when `/entered/agniveerCorpusFund` is present (`EvidenceHeld.java:48` – `:91`; `ChapterViiiEvidence.java:46` – `:70`).
-  6. Validates `/filing/declarations` against the year's catalogue via `taxCalculator.requireAsked(...)` (`DraftService.java:186` – `:187`).
+  6. Validates `/filing/declarations` against the year's catalogue via `taxCalculator.requireAsked(...)` (`DraftService.java:204` – `:205`).
   7. Inserts `DraftRevision` at `expectedRevision + 1` **before** saving `FilingDraft` (`:192` – `:196`), setting `reopened = true` if the draft was `READY` and moving status back to `DRAFT`.
 - **Optimistic concurrency & retry (`workspace/DraftSaveRetry.java:27` – `:77`; `workspace/DraftService.java:285` – `:311`):**
   - Two concurrent saves at the same revision both attempt to insert `{draft_id, expectedRevision + 1}` into `tax_draft_revisions`. The loser hits `DataIntegrityViolationException` and rolls back.
@@ -652,7 +652,7 @@ Properties read by the module (shipped identically across `application.yaml`, `a
 
 ## 11. Hand-worked figures the tests cite
 
-Moved verbatim from the plans cited by `taxplanning`'s tests (W-357b10b, C1a; same convention as `docs/modules/taxengine.md` §11). `W-089`'s T13-1 working already lives in `docs/modules/taxengine.md` §11 (W-089), where `DraftCalendarServiceTest`, `DraftForecastServiceTest` and `DraftComputationIntegrationTest` now point. `plans/W-088g9.md` had no other non-history citation and was deleted (readable at `1f5fce4b`); `plans/W-088g.md`, `plans/W-088g2.md` and `plans/W-089.md` stay while other kept plans (`W-088g1/g2/g4/g5`, `W-112b`) still cite them. W-357b10d moved `W-137`'s and `W-235`'s hand-worked tests here and deleted both plans (readable at `d8ef2aad`).
+Moved verbatim from the plans cited by `taxplanning`'s tests (W-357b10b, C1a; same convention as `docs/modules/taxengine.md` §11). `W-089`'s T13-1 working already lives in `docs/modules/taxengine.md` §11 (W-089), where `DraftCalendarServiceTest`, `DraftForecastServiceTest` and `DraftComputationIntegrationTest` now point. `plans/W-088g9.md` had no other non-history citation and was deleted (readable at `1f5fce4b`); `plans/W-088g.md` (tag `docs-history-m3`), `plans/W-088g2.md` (tag `docs-history-m3`) and `plans/W-089.md` (tag `docs-history-m3`) stay while other kept plans (`W-088g1/g2/g4/g5`, `W-112b`) still cite them. W-357b10d moved `W-137`'s and `W-235`'s hand-worked tests here and deleted both plans (readable at `d8ef2aad`).
 
 ### W-088g — land or building acquired before 23-7-2024
 

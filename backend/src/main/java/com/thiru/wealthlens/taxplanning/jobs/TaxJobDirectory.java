@@ -30,7 +30,7 @@ public class TaxJobDirectory {
                 .orElseThrow(() -> new IllegalArgumentException("No tax job is named " + name + "; the jobs are " + names()));
         if (job instanceof GazetteWatch && !gazetteWatchSettings.enabled()) {
             throw new IllegalArgumentException(
-                    "The Gazette watch is off (app.tax.gazette-watch.enabled); runbook §1.w turns it on");
+                    "The Gazette watch is off (app.tax.gazette-watch.enabled); runbook §3.6 in tag docs-history-m5 turns it on");
         }
         log.info("Job {} run on request", name);
         return new JobRunReceipt(name, runner.run(job));

@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -79,7 +80,7 @@ public class ChargeRecordingGatewayImpl implements ChargeRecordingGateway {
                     event, profitLossContext.stockCode(), profitLossContext.date(),
                     computation.total(), computation.lines().size(), computation.resolution());
             return Optional.of(computation);
-        } catch (RuntimeException e) {
+        } catch (DataAccessException | IllegalStateException | IllegalArgumentException e) {
             // Deliberately swallowed. The live trade must complete whatever the engine does, and a
             // missing shadow row is visible in the reconciliation report as an absent computation.
             log.error("Shadow charge recording failed for transaction {} ({} {} on {}); the trade is unaffected",

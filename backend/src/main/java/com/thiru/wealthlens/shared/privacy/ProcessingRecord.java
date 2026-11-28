@@ -1,9 +1,6 @@
 package com.thiru.wealthlens.shared.privacy;
 
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -31,12 +28,10 @@ public class ProcessingRecord {
 
     /** The signed-in user, or the email a login was attempted for. */
     @Column(name = "principal")
-    @Convert(converter = SearchableColumn.class)
     private String principal;
 
     /** The person whose data the request reached: the path's {@code {email}}, else the principal. */
     @Column(name = "subject_email")
-    @Convert(converter = SearchableColumn.class)
     private String subjectEmail;
 
     @Column(name = "method")
@@ -51,7 +46,6 @@ public class ProcessingRecord {
 
     /** The address the request came from: r.8(3)'s "associated traffic data". */
     @Column(name = "remote_address")
-    @Convert(converter = EncryptedColumn.class)
     private String remoteAddress;
 
     @Column(name = "recorded_at")

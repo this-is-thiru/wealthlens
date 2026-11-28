@@ -35,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -261,7 +262,7 @@ class ChargeGoldenFileTest {
     private static <T> T parse(Resource resource, Class<T> type) {
         try (InputStream stream = resource.getInputStream()) {
             return MAPPER.readValue(stream, type);
-        } catch (Exception e) {
+        } catch (IOException | JacksonException e) {
             throw new IllegalStateException("Could not read " + resource.getFilename(), e);
         }
     }

@@ -24,8 +24,8 @@ public class DocumentRemoval {
 
     /**
      * Confirmations first, then attempts, then the documents: a run cut off part-way leaves no confirmation without its attempt.
-     * The bytes go last — a plain {@code tax_document_bytes} row now, in the same transaction as everything above, not a GridFS
-     * bucket that "takes no part in it" (W-337f, D-951 removed that split: GridFS is gone, so there is nothing left to defer).
+     * The bytes go last: a {@code tax_document_bytes} row, in the same transaction as everything above
+     * (W-337f, D-951).
      */
     public void removeAll(List<StoredDocument> removed) {
         if (removed.isEmpty()) {

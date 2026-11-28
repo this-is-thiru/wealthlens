@@ -2,7 +2,9 @@ package com.thiru.wealthlens.shared.util.collection;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class TStringUtil {
     public static List<String> splitSafeTrimmed(String string, String delimiter) {
         return splitSafeTrimmed(string, delimiter, -1);

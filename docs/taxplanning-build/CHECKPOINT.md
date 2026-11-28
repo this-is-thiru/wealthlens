@@ -4,14 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-428a DONE (D-1037), committed and pushed; WL-51 (removal, under WL-28). Next W-428b (owner runs §2.20 per database) after a release carrying W-428a; W-428c after all three.
-Stage           : pushed to w-337; PR #86 reruns with W-428a. Ask "merge #86" when green.
-Last item commit: "taxplanning W-428a: store personal data plain and read both forms, with a one-time rewrite of the stored ciphertext — sign-in needs the rewrite first; runbook §2.20, WL-51; D-1037"
-Next step       : 1. gh run list --branch w-337 --limit 1 → green → ask "merge #86"; red → read, report. 2. publish runbook to WL-A-2 if not yet (tools/youtrack_publish_runbook.py). 3. 2026-11-29: §1.h rerun. 4. W-337j4 due 2026-12-05.
-Files touched   : (none); api-collection — never commit
-Flags for owner : W-337j4 (delete the 3 Atlas clusters) due 2026-12-05. W-418 needs the broker statement. Same-day FIFO tie in sales proposed, not placed (D-1010). W-416 waits. §1.s Aiven retention not given. Key rotation offered (W-429 placed).
-Env notes       : NO Claude attribution; ask "commit and push" explicitly; OrbStack: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; SQL via postgres:18 psql.
-  Jars: m1.8 ../wealthlens-m1.8-pg/backend/target. env files ~/wealthlens-runs/{dev,staging,prod}.env (600) still hold MONGO_* (W-337j3d). No app running.
+Item            : W-440 in progress (P): W-440a DONE (D-1054), W-440b DONE (D-1056, approved C14a C15a D-1055). Next W-440c (parsers in portfolio).
+Stage           : W-440b committed and pushed. Runs to check: 46147876089 (W-440a) and the W-440b push. W-440c waits on C3 – C13.
+Last item commit: "taxplanning W-440b: add the instrument registry's aliases, kept by the owner — an import must find a trade's instrument by what the broker file writes; D-1055, D-1056"
+Current position: dev, staging, prod on m1.9. On w-337, not yet released: W-428c, W-430 – W-435, W-436 – W-440a. Before the next release on each database: runbook §1.1.
+Next step       : 1. Check both runs. 2. Ask C3 – C13 for W-440c. 3. #87 green → "merge #87" → release → runbook §1.1. 4. 2026-11-29: runbook §1.2 count. 5. W-337j4 due 2026-12-05.
+Files touched   : (none). Broker samples only in the session scratchpad (personal data) — never in the repo.
+Flags for owner : W-440 open gap: rows uploaded before W-440a + a later overlapping file still double (backfill or C8b). W-337j4 due 2026-12-05. W-418 needs the broker statement. W-416 waits.
+Env notes       : NO Claude attribution; ask "commit and push" explicitly; OrbStack: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; SQL via postgres:18 psql. Owner's zsh: no inline # comments.
+  Jars: m1.9 ../wealthlens-m1.9-pg/backend/target (all three run it). env files ~/wealthlens-runs/{dev,staging,prod}.env (600). No app running.
 Updated         : 2026-11-28 (session 128)
 ```
 

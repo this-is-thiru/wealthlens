@@ -1,8 +1,6 @@
 package com.thiru.wealthlens.shared.entity.helper;
 
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import java.time.LocalDateTime;
 import lombok.Data;
@@ -14,19 +12,17 @@ import org.springframework.data.annotation.LastModifiedDate;
 /**
  * JPA counterpart of {@link AuditMetadata} (W-337c1, D-941): embedded in JPA entities with
  * {@code @EntityListeners(AuditingEntityListener.class)} so Spring Data JPA auditing fills creation and update
- * timestamps and encrypts actor emails via {@link SearchableColumn}.
+ * timestamps and actor emails.
  */
 @Embeddable
 @Data
 public class AuditColumns {
 
     @Column(name = "created_by")
-    @Convert(converter = SearchableColumn.class)
     @CreatedBy
     private String createdBy;
 
     @Column(name = "updated_by")
-    @Convert(converter = SearchableColumn.class)
     @LastModifiedBy
     private String updatedBy;
 

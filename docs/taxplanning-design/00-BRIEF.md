@@ -1,5 +1,8 @@
 # 00 — The brief
 
+> **Design references, written before the build** (W-434, D-1049). Where any document in this folder differs from the code,
+> the code and `docs/modules/` are current.
+
 **Read this before any other document in this folder.** It is the founding statement of what this
 module is for, who it serves and what it must survive. Every other design document is an elaboration
 of it; where one disagrees with this brief, **this brief wins** and the other document is wrong.
@@ -9,8 +12,8 @@ of it; where one disagrees with this brief, **this brief wins** and the other do
 | Written | 2026-09-23, from the product owner's own statement of intent (session 4) |
 | Owner | the product owner (repository owner) |
 | Supersedes | the scope statements in `00-SUMMARY.md` (D1, D7), `04-product-spec.md` P1, `01-PRD.md` §2 and §7 — those stay in place for history; each carries an amendment pointing here |
-| Why it exists | the original brief (`docs/prompts/taxplanning-design.md`) is **empty in git** (0 lines, commit `15d36e8`). Twenty-five design documents cite "the brief" for their central requirement, and nothing on disk records it. This file is that record |
-| Decisions it records | D-033 … D-047 (`docs/taxplanning-build/STATE.md`) |
+| Why it exists | the original brief (`docs/prompts/taxplanning-design.md` (tag `docs-history-m4`)) is **empty in git** (0 lines, commit `15d36e8`). Twenty-five design documents cite "the brief" for their central requirement, and nothing on disk records it. This file is that record |
+| Decisions it records | D-033 … D-047 (`docs/taxplanning-build/BACKLOG.md`) |
 
 ---
 
@@ -528,7 +531,7 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 | Compiled per-year law | **rule pack** — never "snapshot", which names input projections | `RulePackCompiler`, `PackDiff`, `rulepacks/2026-27.lock.json` |
 | Item commit | `taxplanning W-0nn: <verb> <types> — <why, briefly>` | `taxplanning W-043: add TaxComputation, FilingPosition, ComputationReceipt` |
 | Cross-document references | prefixed by document, because bare IDs collide (`T1`, `B2`, `F4`, `D-17`/`D-017` each mean two or more things) | `TS-T1`, `GT-T1`, `DR15-B2`, `PRD-F4` |
-| Build decisions | `D-0nn` in `STATE.md` only; design rules keep `D-WORD`; review-finding defects are cited as `DR15-D-n` | `D-034`, `D-PURE`, `DR15-D-17` |
+| Build decisions | `D-0nn` in `BACKLOG.md` only; design rules keep `D-WORD`; review-finding defects are cited as `DR15-D-n` | `D-034`, `D-PURE`, `DR15-D-17` |
 
 ---
 
@@ -537,10 +540,10 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 | Area | Change | Owner |
 |---|---|---|
 | `01-PRD.md` §2, §7 | amended to point here (D-033) | done with this brief |
-| `03-WORK-ITEMS.md` | **Phase 4b** — every prerequisite of `W-046`, collected in one place (D-043): rule-ID rename, three statuses, timeline + snapshot compiler, publish diff, generated `NodeIds`, coverage register, section catalogue, `Assessee` family, 2025-26 verification, legacy-endpoint warning, and the backlog/design housekeeping | done with this brief |
-| `03-WORK-ITEMS.md` | prerequisites that belong **later**, placed where they are needed: `W-052b` (result → `TaxComputation`), `W-052c` (2025-26 versions of the Phase 5 rules), I3 switched on at `W-053`, and the owed-later list (HUF sourcing, non-portfolio capital gains, admin console, legacy deletions) | done with this brief |
+| `BACKLOG.md` | **Phase 4b** — every prerequisite of `W-046`, collected in one place (D-043): rule-ID rename, three statuses, timeline + snapshot compiler, publish diff, generated `NodeIds`, coverage register, section catalogue, `Assessee` family, 2025-26 verification, legacy-endpoint warning, and the backlog/design housekeeping | done with this brief |
+| `BACKLOG.md` | prerequisites that belong **later**, placed where they are needed: `W-052b` (result → `TaxComputation`), `W-052c` (2025-26 versions of the Phase 5 rules), I3 switched on at `W-053`, and the owed-later list (HUF sourcing, non-portfolio capital gains, admin console, legacy deletions) | done with this brief |
 | Live system | the old `/tax-planning/**/compute` endpoint serves known-wrong tax (H-1, H-3, H-5) until replaced; **disable or label it** | owner's call |
-| `STATE.md` | D-033 … D-040 recorded; `W-046` held until the items above exist | done with this brief |
+| `BACKLOG.md` | D-033 … D-040 recorded; `W-046` held until the items above exist | done with this brief |
 
 ---
 

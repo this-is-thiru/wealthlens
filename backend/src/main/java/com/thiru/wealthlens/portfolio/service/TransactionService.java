@@ -107,6 +107,11 @@ public class TransactionService {
         return TransactionRecord.created(transactionRepository.save(entity).getId());
     }
 
+    /** Whether {@code userMail} already has a transaction recorded under {@code idempotencyKey}. */
+    public boolean isRecorded(UserMail userMail, String idempotencyKey) {
+        return transactionRepository.findByEmailAndIdempotencyKey(userMail.getEmail(), idempotencyKey).isPresent();
+    }
+
     public List<TransactionEntity> transactionsForCorporateActions(String stockCode, LocalDate recordDate) {
         return transactionRepository.findByStockCodeAndTransactionDateBeforeOrderByTransactionDateDesc(stockCode, recordDate);
     }

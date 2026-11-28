@@ -1,5 +1,8 @@
 package com.thiru.wealthlens.auth.dto;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class AuthHelper {
     public enum Role {
         SUPER_USER,

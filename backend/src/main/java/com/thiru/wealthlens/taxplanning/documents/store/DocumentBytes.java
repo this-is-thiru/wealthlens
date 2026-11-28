@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxplanning.documents.store;
 
 import com.thiru.wealthlens.shared.exception.ServiceUnavailableException;
-import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.taxplanning.documents.parser.DocumentContent;
 import com.thiru.wealthlens.taxplanning.documents.parser.IsolatedPdfRead;
 import com.thiru.wealthlens.taxplanning.documents.parser.PdfText;
@@ -18,13 +17,13 @@ import org.springframework.dao.DataAccessResourceFailureException;
 
 /**
  * A document's bytes, kept in {@code tax_document_bytes} under the document's id ({@code DR 14} O6; W-131b, D-762; a table since
- * W-337f, D-951). Stored plain since W-428a (D-1036); bytes sealed before it are read through {@link FieldCipher#revealBytes}. What is refused is refused before anything is written: too large, failing the malware scan, not a PDF, locked by a
- * password, or too long. The scan comes before the PDF is opened, so the PDF library never reads an unscanned file (W-131e
+ * W-337f, D-951), as they were uploaded (W-428c, D-1039). What is refused is refused before anything is written: too large, failing
+ * the malware scan, not a PDF, locked by a password, or too long. The scan comes before the PDF is opened, so the PDF library never reads an unscanned file (W-131e
  * C3a); it is opened in a child process, never here (W-131f C3a). A store that cannot be reached is a 503 (O9).
  *
  * @param repository the {@code tax_document_bytes} table
  */
-public record DocumentBytes(TaxDocumentBytesRepository repository, FieldCipher cipher, DocumentSettings settings, MalwareScan scan,
+public record DocumentBytes(TaxDocumentBytesRepository repository, DocumentSettings settings, MalwareScan scan,
         Clock clock, IsolatedPdfRead reader) {
 
     private static final byte[] PDF_START = "%PDF-".getBytes(StandardCharsets.US_ASCII);
@@ -56,7 +55,7 @@ public record DocumentBytes(TaxDocumentBytesRepository repository, FieldCipher c
         if (row == null) {
             throw new IllegalStateException("Document " + documentId + " has no stored bytes");
         }
-        return new DocumentContent(cipher.revealBytes(row.getBytes()));
+        return new DocumentContent(row.getBytes());
     }
 
     public void remove(Collection<String> documentIds) {

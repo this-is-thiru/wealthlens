@@ -1,9 +1,7 @@
 package com.thiru.wealthlens.taxplanning.protection;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -33,7 +31,6 @@ public class AccessRecord {
     @Id
     private String id;
 
-    @Convert(converter = SearchableColumn.class)
     @Column(name = "principal")
     private String principal;
 
@@ -47,7 +44,7 @@ public class AccessRecord {
     @Column(name = "read_at")
     private Instant readAt;
 
-    /** New (W-337f, D-951 C7a): this entity had no audit trail under Mongo. */
+    /** Who wrote it and when (W-337f, D-951 C7a). */
     @Embedded
     private AuditColumns auditMetadata = new AuditColumns();
 

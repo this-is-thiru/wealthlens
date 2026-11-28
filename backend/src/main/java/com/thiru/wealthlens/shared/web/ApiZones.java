@@ -22,7 +22,7 @@ public class ApiZones implements WebMvcConfigurer {
 
     private static final String BASE_PACKAGE = "com.thiru.wealthlens.";
 
-    /** The module's name in a URL: short, and the word a caller knows (`plans/W-358c.md`). */
+    /** The module's name in a URL: short, and the word a caller knows (`plans/W-358c.md` (tag docs-history-m3)). */
     static final Map<String, String> MODULE_PATHS = Map.of("auth", "auth", "brokercharges", "charges", "corporate", "corporate-actions",
             "finance", "finances", "helper", "templates", "portfolio", "portfolio", "shared", "privacy", "taxplanning", "tax");
 

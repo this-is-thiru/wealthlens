@@ -22,7 +22,7 @@ Everything else is reference, consulted when the slice you are on needs it.
 
 ## S1 — Day 0: seven decisions only you can make
 
-Each blocks something concrete. Record the answer in `PROGRESS.md` under a **Decision log** heading.
+Each blocks something concrete. Record the answer in `PROGRESS.md` (tag `docs-history-m4`) under a **Decision log** heading.
 
 | # | Decision | Why it blocks | Recommendation |
 |---|---|---|---|
@@ -133,7 +133,7 @@ public record SlabLadder(List<Band> bands) implements CapShape {
 >
 > 1. **`ctx.base()` takes an argument.** `CapContext` holds `Map<BaseId, Money>` and
 >    `base(BaseId)` resolves a declared base, so `SlabLadder` carries a `BaseId` like
->    `PercentOfBase` does. Decided in `STATE.md` **D-012**'s sibling call on `CapContext` — a
+>    `PercentOfBase` does. Decided in `BACKLOG.md` **D-012**'s sibling call on `CapContext` — a
 >    single implicit base cannot express `LeastOf`, whose limbs each read a different one.
 > 2. **`validate()` here checks only gaps and overlaps between adjacent bands.** Three more ways
 >    to write a malformed ladder pass it silently, each of them untaxing real income: a first band

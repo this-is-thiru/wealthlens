@@ -24,8 +24,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * Proves the PostgreSQL 18 JPA mapping (W-337a D-937; re-pointed to the live entities in W-337c1 D-941): the converted
  * columns, an embedded list, an atomic conditional update (refresh-token spend), expiry swept with no TTL
- * index, transaction rollback, money as {@code double} and exact times, and — since W-428a (D-1036) — values stored plain
- * while the {@code k1:} ciphertext stored before it is still read.
+ * index, transaction rollback, money as {@code double} and exact times, and personal values stored plain (W-428c, D-1039).
  */
 class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
 
@@ -54,22 +53,6 @@ class PostgresMappingProbeIntegrationTest extends AbstractIntegrationTest {
         assertThat(raw).isEqualTo(email);
         assertThat(userDetailsRepository.findByEmail(email)).isPresent().get()
                 .extracting(UserDetail::getEmail).isEqualTo(email);
-    }
-
-    @Test
-    void readByJpa_whenStoredInTheOldCiphertext_readsItPlain() {
-        // Given — a value sealed as every row was before W-428a (D-1036)
-        String email = "probe.two@example.com";
-        UserDetail user = new UserDetail();
-        user.setId(UUID.randomUUID().toString());
-        user.setEmail("placeholder@example.com");
-        userDetailsRepository.save(user);
-        new JdbcTemplate(postgresDataSource).update("UPDATE user_details SET email = ? WHERE id = ?",
-                oldCiphertext(email), user.getId());
-
-        // When / Then — the JPA converter reads it back plain (a lookup by email finds it only after the rewrite, PlainTextRewriteIntegrationTest)
-        assertThat(userDetailsRepository.findById(user.getId())).isPresent().get().extracting(UserDetail::getEmail)
-                .isEqualTo(email);
     }
 
     @Test

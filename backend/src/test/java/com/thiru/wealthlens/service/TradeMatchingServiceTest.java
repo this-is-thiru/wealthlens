@@ -1,7 +1,10 @@
 package com.thiru.wealthlens.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
@@ -34,10 +37,10 @@ class TradeMatchingServiceTest {
         LocalDate buyDate = LocalDate.of(2023, 1, 15);
         String accountHolder = "main";
 
-        TransactionEntity buy1 = createBuyTransaction(email, stockCode, "Reliance Industries", BrokerName.ZERODHA,
-                AccountType.SELF, accountHolder, 100.0, 5.0, 10.0, 5.0, buyDate);
-        TransactionEntity buy2 = createBuyTransaction(email, stockCode, "Reliance Industries", BrokerName.ZERODHA,
-                AccountType.SELF, accountHolder, 120.0, 5.0, 15.0, 5.0, buyDate);
+        TransactionEntity buy1 = createBuyTransaction(email, stockCode, BrokerName.ZERODHA,
+                accountHolder, new BuyPricing(100.0, 5.0, 10.0, 5.0), buyDate);
+        TransactionEntity buy2 = createBuyTransaction(email, stockCode, BrokerName.ZERODHA,
+                accountHolder, new BuyPricing(120.0, 5.0, 15.0, 5.0), buyDate);
 
         List<TransactionEntity> buyTransactions = List.of(buy1, buy2);
 
@@ -70,8 +73,8 @@ class TradeMatchingServiceTest {
 
         // Build a buy lot
         List<TransactionEntity> buyTransactions = List.of(
-                createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                        AccountType.SELF, accountHolder, 100.0, 10.0, 20.0, 10.0, buyDate)
+                createBuyTransaction(email, stockCode, brokerName,
+                        accountHolder, new BuyPricing(100.0, 10.0, 20.0, 10.0), buyDate)
         );
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(buyTransactions);
 
@@ -130,10 +133,10 @@ class TradeMatchingServiceTest {
         LocalDate sellDate = LocalDate.of(2023, 6, 15);
 
         List<TransactionEntity> buyTransactions = List.of(
-                createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                        AccountType.SELF, accountHolder, 100.0, 5.0, 10.0, 5.0, buyDate1),
-                createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                        AccountType.SELF, accountHolder, 120.0, 5.0, 10.0, 5.0, buyDate2)
+                createBuyTransaction(email, stockCode, brokerName,
+                        accountHolder, new BuyPricing(100.0, 5.0, 10.0, 5.0), buyDate1),
+                createBuyTransaction(email, stockCode, brokerName,
+                        accountHolder, new BuyPricing(120.0, 5.0, 10.0, 5.0), buyDate2)
         );
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(buyTransactions);
 
@@ -193,8 +196,8 @@ class TradeMatchingServiceTest {
         LocalDate sellDate = LocalDate.of(2023, 6, 15);
 
         List<TransactionEntity> buyTransactions = List.of(
-                createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                        AccountType.SELF, accountHolder, 100.0, 10.0, 30.0, 20.0, buyDate)
+                createBuyTransaction(email, stockCode, brokerName,
+                        accountHolder, new BuyPricing(100.0, 10.0, 30.0, 20.0), buyDate)
         );
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(buyTransactions);
 
@@ -251,8 +254,8 @@ class TradeMatchingServiceTest {
         LocalDate sellDate = LocalDate.of(2023, 6, 15);
 
         List<TransactionEntity> buyTransactions = List.of(
-                createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                        AccountType.SELF, accountHolder, 100.0, 10.0, 10.0, 5.0, buyDate)
+                createBuyTransaction(email, stockCode, brokerName,
+                        accountHolder, new BuyPricing(100.0, 10.0, 10.0, 5.0), buyDate)
         );
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(buyTransactions);
 
@@ -301,10 +304,10 @@ class TradeMatchingServiceTest {
         LocalDate sellDate = LocalDate.of(2023, 6, 15);
 
         List<TransactionEntity> buyTransactions = List.of(
-                createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                        AccountType.SELF, accountHolder, 100.0, 5.0, 5.0, 2.0, buyDate1),
-                createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                        AccountType.SELF, accountHolder, 120.0, 5.0, 6.0, 3.0, buyDate2)
+                createBuyTransaction(email, stockCode, brokerName,
+                        accountHolder, new BuyPricing(100.0, 5.0, 5.0, 2.0), buyDate1),
+                createBuyTransaction(email, stockCode, brokerName,
+                        accountHolder, new BuyPricing(120.0, 5.0, 6.0, 3.0), buyDate2)
         );
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(buyTransactions);
 
@@ -357,8 +360,8 @@ class TradeMatchingServiceTest {
 
         LocalDate buyDate = LocalDate.of(2023, 1, 15);
 
-        TransactionEntity bonusBuy = createBuyTransaction(email, stockCode, "Reliance Industries", brokerName,
-                AccountType.SELF, accountHolder, 0.0, 10.0, 10.0, 5.0, buyDate);
+        TransactionEntity bonusBuy = createBuyTransaction(email, stockCode, brokerName,
+                accountHolder, new BuyPricing(0.0, 10.0, 10.0, 5.0), buyDate);
         bonusBuy.setCorporateActionType(CorporateActionType.BONUS);
 
         List<TransactionEntity> buyTransactions = List.of(bonusBuy);
@@ -375,8 +378,8 @@ class TradeMatchingServiceTest {
     void matchSellToLots_whenSoldEitherSideOfTheYearEnd_writesTheYearAsPortfolioDoes() {
         // Given — one lot of 10; sells of 5 on 31 March 2024 and 5 on 1 April 2024
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(List.of(createBuyTransaction("test@example.com",
-                "RELIANCE", "Reliance Industries", BrokerName.ZERODHA, AccountType.SELF, "main", 100.0, 10.0, 0.0,
-                0.0, LocalDate.of(2023, 1, 15))));
+                "RELIANCE", BrokerName.ZERODHA, "main", new BuyPricing(100.0, 10.0, 0.0, 0.0),
+                LocalDate.of(2023, 1, 15))));
 
         // When
         String lastDay = tradeMatchingService.matchSellToLots(sellOfFive("sell-1", LocalDate.of(2024, 3, 31)), lots)
@@ -600,8 +603,8 @@ class TradeMatchingServiceTest {
     void matchSellToLots_whenALotIsSoldInTwoSells_chargesItsBuyChargesOnce() {
         // Given — one lot of 10 @ 100 carrying broker 10 and misc 4; sold 5, then 5
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(List.of(createBuyTransaction("test@example.com",
-                "RELIANCE", "Reliance Industries", BrokerName.ZERODHA, AccountType.SELF, "main", 100.0, 10.0, 10.0,
-                4.0, LocalDate.of(2024, 1, 15))));
+                "RELIANCE", BrokerName.ZERODHA, "main", new BuyPricing(100.0, 10.0, 10.0, 4.0),
+                LocalDate.of(2024, 1, 15))));
 
         // When
         MatchedTrade firstSell = tradeMatchingService.matchSellToLots(sellOf("sell-1", 5.0, LocalDate.of(2025, 2, 3)),
@@ -621,8 +624,8 @@ class TradeMatchingServiceTest {
     void matchSellToLots_whenAThreeUnitLotIsSoldOneAtATime_chargesExactlyWhatWasPaid() {
         // Given — B-8's example: a lot of 3 carrying broker ₹10, sold one unit at a time
         List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(List.of(createBuyTransaction("test@example.com",
-                "RELIANCE", "Reliance Industries", BrokerName.ZERODHA, AccountType.SELF, "main", 100.0, 3.0, 10.0,
-                0.0, LocalDate.of(2024, 1, 15))));
+                "RELIANCE", BrokerName.ZERODHA, "main", new BuyPricing(100.0, 3.0, 10.0, 0.0),
+                LocalDate.of(2024, 1, 15))));
 
         // When
         double charged = 0;
@@ -765,23 +768,24 @@ class TradeMatchingServiceTest {
         assertEquals(LocalDate.of(2023, 6, 15), request.getSellDate());
     }
 
-    private TransactionEntity createBuyTransaction(String email, String stockCode, String stockName,
-                                                    BrokerName brokerName, AccountType accountType,
-                                                    String accountHolder, double price, double quantity,
-                                                    double brokerCharges, double miscCharges, LocalDate date) {
+    private record BuyPricing(double price, double quantity, double brokerCharges, double miscCharges) {
+    }
+
+    private TransactionEntity createBuyTransaction(String email, String stockCode, BrokerName brokerName,
+            String accountHolder, BuyPricing pricing, LocalDate date) {
         TransactionEntity txn = new TransactionEntity();
         txn.setEmail(email);
         txn.setStockCode(stockCode);
-        txn.setStockName(stockName);
+        txn.setStockName("Reliance Industries");
         txn.setExchangeName("NSE");
         txn.setBrokerName(brokerName);
         txn.setAssetType(AssetType.EQUITY);
-        txn.setAccountType(accountType);
+        txn.setAccountType(AccountType.SELF);
         txn.setAccountHolder(accountHolder);
-        txn.setPrice(price);
-        txn.setQuantity(quantity);
-        txn.setBrokerCharges(brokerCharges);
-        txn.setMiscCharges(miscCharges);
+        txn.setPrice(pricing.price());
+        txn.setQuantity(pricing.quantity());
+        txn.setBrokerCharges(pricing.brokerCharges());
+        txn.setMiscCharges(pricing.miscCharges());
         txn.setTransactionDate(date);
         txn.setCorporateActions(new ArrayList<>());
         return txn;

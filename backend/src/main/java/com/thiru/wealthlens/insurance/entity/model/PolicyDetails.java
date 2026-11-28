@@ -1,8 +1,6 @@
 package com.thiru.wealthlens.insurance.entity.model;
 
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import java.time.LocalDate;
 import lombok.Data;
@@ -12,7 +10,6 @@ import lombok.Data;
 public class PolicyDetails {
 
     @Column(name = "policy_id")
-    @Convert(converter = EncryptedColumn.class)
     private String policyId;
 
     @Column(name = "premium")
@@ -31,29 +28,23 @@ public class PolicyDetails {
     private String broker;
 
     @Column(name = "agent_name")
-    @Convert(converter = EncryptedColumn.class)
     private String agentName;
 
     @Column(name = "agent_email")
-    @Convert(converter = EncryptedColumn.class)
     private String agentEmail;
 
     @Column(name = "agent_contact")
-    @Convert(converter = EncryptedColumn.class)
     private String agentContact;
 
     @Column(name = "agent_address")
-    @Convert(converter = EncryptedColumn.class)
     private String agentAddress;
 
     @Column(name = "insurance_status")
     private String insuranceStatus;
 
     @Column(name = "notes")
-    @Convert(converter = EncryptedColumn.class)
     private String notes;
 
     @Column(name = "policy_description")
-    @Convert(converter = EncryptedColumn.class)
     private String policyDescription;
 }

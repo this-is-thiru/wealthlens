@@ -9,9 +9,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * A document's bytes, sealed with the personal-data key before they ever reach this column, so nothing stored is
- * readable without the application ({@code DR 14} O6; W-131b). Replaces the {@code tax_document_bytes} GridFS
- * bucket (W-337f, D-951): the document's own id is the primary key, caller-assigned, not generated here.
+ * A document's bytes as uploaded ({@code DR 14} O6; W-131b; stored plain since W-428c, D-1040), one row per
+ * document (W-337f, D-951): the document's own id is the primary key,
+ * caller-assigned, not generated here.
  */
 @Entity
 @Table(name = "tax_document_bytes")

@@ -25,10 +25,10 @@ Copy-paste these. They are written so a smaller model cannot drift.
 ## P1 — Start or resume a session
 
 > Read `docs/taxplanning-build/00-START-HERE.md` completely, then read
-> `docs/taxplanning-build/STATE.md`.
+> `docs/taxplanning-build/BACKLOG.md`.
 >
 > Run `git log --oneline --grep='^taxplanning W-' -1` and compare its **subject** with the
-> **"Last checkpoint"** line in STATE.md. Non-item commits (docs, tooling) are ignored.
+> **"Last checkpoint"** line in CHECKPOINT.md. Non-item commits (docs, tooling) are ignored.
 > - **Matches** → normal. Proceed.
 > - **Differs** → an item was committed outside this protocol. **Stop and tell me** what
 >   `git log --oneline -10` shows. Do not proceed until I say so.
@@ -56,7 +56,7 @@ when the checkpoint check fails.
 
 ## P2 — Explain an item *(stage 2 — the first stop point)*
 
-> Take work item **`<W-0nn>`** from `docs/taxplanning-build/03-WORK-ITEMS.md`.
+> Take work item **`<W-0nn>`** from `docs/taxplanning-build/BACKLOG.md`.
 >
 > Read: that item; the design sections it names under `docs/taxplanning-design/`; and only those.
 > You may also read `02-TECH-SPEC.md` for any type it mentions.
@@ -69,7 +69,7 @@ when the checkpoint check fails.
 > - If the item would require modifying a file not in its `Produces` list, **stop — that is a blocker.**
 > - Do not invent a type, package or endpoint name that is not in `02-TECH-SPEC.md`.
 >
-> **Write no code.** Update STATE.md: set `<W-0nn>` to `EXPLAINED`. Then stop and wait for my approval.
+> **Write no code.** Update BACKLOG.md: set `<W-0nn>` to `EXPLAINED`. Then stop and wait for my approval.
 
 ---
 
@@ -114,7 +114,7 @@ when the checkpoint check fails.
 >   tried. Do not proceed to the report template.
 >
 > If both pass, report using the **exact template** in `00-START-HERE.md` §3, pasting real command
-> output — never a summary of it. Update STATE.md: set `<W-0nn>` to `AWAITING_REVIEW`.
+> output — never a summary of it. Update BACKLOG.md: set `<W-0nn>` to `AWAITING_REVIEW`.
 >
 > Then **stop**. Do not start the next item.
 
@@ -126,14 +126,14 @@ when the checkpoint check fails.
 
 > Review of **`<W-0nn>`**: **approved.**
 >
-> 1. Update STATE.md: set `<W-0nn>` to `DONE` with today's date, advance "Current position" to the next
+> 1. Update CHECKPOINT.md: set `<W-0nn>` to `DONE` with today's date, advance "Current position" to the next
 >    item, and add anything learned to CHECKPOINT.md (a ruling as a D-row in DECISIONS.md).
-> 2. **Before committing**, set STATE.md's **"Last checkpoint"** line to
+> 2. **Before committing**, set CHECKPOINT.md's **"Last checkpoint"** line to
 >    `W-0nn — "taxplanning W-0nn: <one-line title>"`. It must match the subject you are about to use.
-> 3. Stage and commit **only** the files in this item's `Produces` list, plus STATE.md, in **one**
+> 3. Stage and commit **only** the files in this item's `Produces` list, plus BACKLOG.md, in **one**
 >    commit:
->    `git add <those paths> docs/taxplanning-build/STATE.md`
->    `git commit -F <message-file> -- <those paths> docs/taxplanning-build/STATE.md`
+>    `git add <those paths> docs/taxplanning-build/BACKLOG.md`
+>    `git commit -F <message-file> -- <those paths> docs/taxplanning-build/BACKLOG.md`
 >    Subject: `taxplanning W-0nn: <one-line title>`. Use the attribution lines this session was given.
 >    *(Use `-F` with a file: a heredoc into `git commit -- <paths>` is read as paths, not a message.)*
 > 4. Confirm with `git log --oneline -1` that the subject matches the checkpoint line. **Do not amend
@@ -156,7 +156,7 @@ when the checkpoint check fails.
 
 ## P5 — When something is blocked
 
-> Item **`<W-0nn>`** is blocked. Write the blocker in STATE.md using the exact shape in
+> Item **`<W-0nn>`** is blocked. Write the blocker in BACKLOG.md using the exact shape in
 > `00-START-HERE.md` §8, set the item to `BLOCKED`, and then tell me:
 > 1. what you needed and could not find;
 > 2. the two or three options you can see, with the trade-off of each;
@@ -171,7 +171,7 @@ when the checkpoint check fails.
 ## P6 — Ending a session cleanly
 
 > We are stopping. Before you finish:
-> 1. update STATE.md — statuses, "Current position", "Last updated"; CHECKPOINT.md;
+> 1. update CHECKPOINT.md — statuses, "Current position", "Last updated"; CHECKPOINT.md;
 > 2. if an item is mid-flight, write in CHECKPOINT.md exactly which files exist, which compile,
 >    and what remains;
 > 3. run `git status --short` and list what is uncommitted;
@@ -185,7 +185,7 @@ when the checkpoint check fails.
 
 > Without changing any code, report:
 > 1. items `DONE` / `AWAITING_REVIEW` / `BLOCKED` / `NOT_STARTED`;
-> 2. which milestone in `03-WORK-ITEMS.md` we are between;
+> 2. which milestone in `BACKLOG.md` we are between;
 > 3. `./mvnw test -pl backend -Punit` — pass, and wall time (budget: 20 s);
 > 4. how many golden (year × regime) cells are filled versus required;
 > 5. every rule still marked `NEEDS VERIFICATION` or `STATUS UNCLEAR` that a **completed** item used;
@@ -199,7 +199,7 @@ when the checkpoint check fails.
 > 1. list every item in the phase with its status;
 > 2. run each item's `Verify` command and paste the output;
 > 3. run `./mvnw test -pl backend -Punit` and `-Dtest=ArchitectureTest`;
-> 4. confirm the milestone row in `03-WORK-ITEMS.md` for this phase is actually true;
+> 4. confirm the milestone row in `BACKLOG.md` for this phase is actually true;
 > 5. list anything the phase was meant to deliver that is missing.
 >
 > Then stop. Do not start the next phase.
@@ -230,7 +230,7 @@ Run this **before** approving any plan that touches a rupee value.
 > 4. Propose **one** of: a forward-fix item appended to the backlog; a revert of that commit; or
 >    reopening `<W-0nn>`. Give the trade-off of each.
 >
-> **Do not revert, reopen or edit anything until I choose.** When I do, record it in STATE.md under
+> **Do not revert, reopen or edit anything until I choose.** When I do, record it in BACKLOG.md under
 > DECISIONS.md and set the status accordingly.
 
 ---
@@ -244,3 +244,32 @@ Run this **before** approving any plan that touches a rupee value.
 > check the "Amends" line at the top of each).
 >
 > Then recommend which should change, and why. **I decide.**
+
+---
+
+## P12 — Periodic tax audit and rule-pack refresh *(was `05-TAX-AUDIT-MASTER-PROMPT.md`, reviewed 2026-11-28)*
+
+Run in a fresh session: after a Finance Act is assented and published in the Gazette, or new Rules or ITR forms are notified, before a new tax year's pack ships; after a CII, perquisite, allowance or PFRDA / EPFO change; or before a release that touched `taxengine`, `taxplanning`, `portfolio` or `brokercharges`. Replace `<TRIGGER_AND_YEAR>` (e.g. `TY 2027-28 Finance Act 2027 refresh`) and `<YYYY-MM-DD>`, and nothing else.
+
+> Act as a senior principal product manager working with a senior Indian chartered accountant. **Audit trigger:** `<TRIGGER_AND_YEAR>`. Audit `taxengine`, `taxplanning`, their rule packs and the `portfolio` bridge, and write one report with a roadmap for my review.
+>
+> **Ground rules**
+> 1. **Gazette only.** A figure, section (1961 and 2025 Acts), rate, cap, threshold, holding period, window, carry-forward span or lock-in counts as verified only when read in a Gazette copy, or in a `SOURCE_CHECKED` rule under `backend/src/main/resources/rulepacks/timeline/` or a file in `docs/taxplanning-build/sources/`. A CBDT circular, a department page or a reprint counts only where I have said it may. Anything else is `[NEEDS GAZETTE VERIFICATION]`. Never recall law from memory; this prompt states no legal figure, so take none from it.
+> 2. **Every name must exist.** Before citing a type, enum value, rule id, rule set, method, path or item id, find it (`rg` / read the file). Enumerations — asset types, other-source kinds, regimes — are read from their source file, never listed from memory.
+> 3. **Run or read, stated per finding.** Each finding says **RUN** (the test's name, its inputs, and the surefire XML counts and output pasted) or **READ** (the `path:line` read, and that it was not executed). Nothing is "live-verified" without a RUN.
+> 4. **Refusal or crash.** Classify every failure by how `shared/exception/ControllerAdviser` answers it: an `IllegalArgumentException` is a refusal (400); anything else reaches the caller as 500. Say which, from the exception type at the cited line.
+> 5. **Existing before new.** Before marking anything `[NEW]`, search `BACKLOG.md`, `DECISIONS.md` and the `F` numbers of `01-PRD.md` for it; a tracked item is cited as `[EXISTING: W-nnn]` with its status, a decided question by its D-row.
+> 6. **Facts, not rules (CLAUDE.md §4).** Flag any legal date, threshold, rate, city list or qualifying list in Java rather than in tax-year-versioned pack data.
+> 7. **Local test budget.** Never run a full tier, `-Pbenchmark` or a package glob locally. Run only one temporary named class: `./mvnw test -pl backend -Punit -Dtest=SeniorCaPeriodicAuditTest -Dspotless.check.skip=true -o -Daether.syncContext.named.factory=noop -Daether.remoteRepositoryFilter.prefixes=false`.
+> 8. **Read-only on repo state.** Do not change `docs/taxplanning-design/`, `BACKLOG.md`, `CHECKPOINT.md`, `DECISIONS.md` or any main source. The temporary test is copied to the session's scratchpad (so a RUN can be repeated) and removed from the tree before you stop.
+> 9. No AI or model attribution in any file.
+>
+> **Stage 1 — Resume and inventory.** Read `CHECKPOINT.md`, `BACKLOG.md`, `rulepacks/shipped-years.json` and the latest review in `docs/taxplanning-build/reviews/`. With a script, read every file under `timeline/law/rules/`, `timeline/law/disallowances/`, `timeline/exec/components/` and `timeline/exec/funds/` (liquidity terms are a field in the last two), and `timeline/content/claim-catalogue.json`. Report: rules and tax years shipped; every version not `SOURCE_CHECKED`; validity or sanction windows ended or ending, a cost inflation index missing the current year, an ended LTA block; each figure that differs between shipped years; and each value of `portfolio`'s `AssetType` and the engine's `OtherSourceKind` (read from their files) that no row of `RS-CG-TERM`, `RS-CG-PART` or `RS-OS-INCOME` serves. **Tracking check:** every item open (`K`, `·`, `E`, `P`, `B`) on the board of the latest `docs-history-*` tag is either in `BACKLOG.md` or has a D-row that finished it; list any that is neither.
+>
+> **Stage 2 — Stress tests against `TaxCalculator`.** In `backend/src/test/java/com/thiru/wealthlens/taxengine/golden/SeniorCaPeriodicAuditTest.java`, run each shipped year and regime through: (1) **age boundary** — born 31 March, 1 April, 2 April of the year that makes 60 and 80, across slabs, the senior health and deposit-interest rows and the advance-tax age exemption; the 1-April ruling is `W-439`'s — report its state, do not assume the law; (2) **surcharge and marginal relief with deferment relief** — income just above each surcharge threshold, from salary alone and from salary plus gains dated after an instalment date, computed on the year's first day and after a due date; the special-rate cap as `RATE-SUR-*-LIMIT` states it; (3) **rebate** — at each rebate row's ceiling and just above it, with and without special-rate gains, both regimes; (4) **house property** — the own-residence caps and completion window, the pre-construction instalments, a let property's loss in each regime, a negative annual value, three houses not let (`HouseElection`); (5) **perquisites and allowances** — each `PERQ-*` and `SAL-ALW-*` row's boundary, the specified-employee gate, a second car, the employer-contribution limit and accretion; (6) **Chapter VIII** — each deduction row's cap and its conflicts (shared ceilings, mutual exclusions, the s.133 / s.134 refusal); (7) **capital gains** — every `AssetType` value as its file declares it, the land indexation choice, the long-term exempt band and the basic-exemption shift, the reinvestment exemption's windows, cap and bar, set-off and carry-forward; (8) **advance tax and interest** — deferment relief with full and short payment by the last instalment, an undated dividend, refund interest at `INT-REFUND`'s threshold; (9) **retirement** — each `RET-*` row's limit and once-only bar; (10) **ITR form choice** (`chooseForm`) at each form's bars and with an unanswered declaration; (11) **elections and optimiser** (`compareRegimes`, `optimise`, `priceDeductionRoom`, `priceRentRoom`) — and whether `HouseElection` and `SetOffOrderElection` have a production caller; (12) **the `taxplanning` API** — typed `@Valid` requests, the `Clock`, the portfolio bridge, carry-forward across years, documents and jobs posture, ITR export state. Every expected figure is worked by hand from the cited rule before the run (CLAUDE.md §5).
+>
+> **Stage 3 — Tax-saving levers.** For each lever the pack models, give its rule ids, 1961 and 2025 sections, annual cap, statutory years and windows, whether it is an action still open or a check of one already taken, the regimes it reaches, its liquidity terms and their source, its conflicts (mutual exclusion, shared ceiling, the same rupee twice) and its traps. Start from the latest review's groups if it has them; regroup where the pack says otherwise.
+>
+> **Stage 4 — Report.** Write `docs/taxplanning-build/reviews/<YYYY-MM-DD>-periodic-tax-audit.md` with: (1) what changed since the latest review; (2) the test matrix — inputs, outputs, RUN or READ, PASS / FAIL / REFUSED (400) / 500, `path:line`; (3) a roadmap in **my standing order** — the D-rows that order the work (D-781 A, D-904 and any later) first, then the rest by what gives a wrong figure, refuses a valid return, or answers 500 — each line `[EXISTING: W-nnn]` or `[NEW]`, with a backlog row drafted for every `[NEW]` (phase, item text, source, when); the shape of the roadmap follows from the findings; (4) the sourcing queue — every figure, lock-in, circular or amendment to be read before it is built; (5) numbered questions for my rulings.
+>
+> **Stage 5 — Clean and stop.** Copy `SeniorCaPeriodicAuditTest.java` to the scratchpad, remove it from the tree, run `git status --short` and confirm only the report is new. Point me to the report and list the questions waiting on me. Do not commit, and do not edit `BACKLOG.md` until I rule.

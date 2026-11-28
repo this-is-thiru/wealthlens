@@ -4,12 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.taxplanning.documents.ingest.DocumentConfirmation;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -31,7 +28,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * A person's confirmation of one attempt, as stored (TS T7; W-131a, D-761 C4a): one per attempt, so the attempt's id is its
- * key. The values the person accepted are encrypted; the paths they rejected name rows of a form, not what the rows hold.
+ * key: the values the person accepted, and the paths they rejected (rows of a form, not what the rows hold).
  */
 @Entity
 @Table(name = "tax_document_confirmations")
@@ -43,14 +40,12 @@ public class StoredConfirmation implements CreatedWithId {
     @Id
     private String id;
 
-    @Convert(converter = SearchableColumn.class)
     @Column(name = "confirmed_by")
     private String confirmedBy;
 
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "accepted_json")
     private String acceptedJson;
 

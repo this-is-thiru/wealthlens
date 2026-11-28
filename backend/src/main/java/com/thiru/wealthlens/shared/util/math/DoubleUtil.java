@@ -1,5 +1,8 @@
 package com.thiru.wealthlens.shared.util.math;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class DoubleUtil {
     private static final double EPSILON = 1e-9;
 

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionException;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
@@ -114,7 +115,7 @@ public class ChargeFormulaEvaluator {
             return parse(expression).getValue(evaluationContext(context, accumulator), type);
         } catch (BadRequestException e) {
             throw e;
-        } catch (RuntimeException e) {
+        } catch (ExpressionException | ArithmeticException e) {
             throw new BadRequestException("Could not evaluate charge expression: " + expression
                     + " (" + e.getMessage() + ")");
         }
@@ -126,7 +127,7 @@ public class ChargeFormulaEvaluator {
         SafeExpressions.reject(expression);
         try {
             return parser.parseExpression(expression);
-        } catch (RuntimeException e) {
+        } catch (ExpressionException e) {
             throw new BadRequestException("Invalid charge expression: " + expression
                     + " (" + e.getMessage() + ")");
         }

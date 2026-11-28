@@ -8,14 +8,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The tax-planning status board in {@code docs/taxplanning-build/STATE.md}, read as each item's status.
+ * The open items of {@code docs/taxplanning-build/BACKLOG.md}, read as each item's status (W-435, D-1051).
  *
- * <p>The board is the one place an item's status is kept (D-159), so every test that checks the backlog against
- * something else reads it here — the coverage register's pointers and the plans' open steps (W-200).
+ * <p>The backlog lists every open item and nothing else, so an item absent from it is finished; every test that checks
+ * something against the backlog — the coverage register's pointers, the plans' open steps, a text waiting on an item —
+ * reads it here.
  */
 public final class StatusBoard {
 
-    private static final Pattern BOARD_ENTRY = Pattern.compile("(W-[0-9]{3}[a-z0-9]*) (\\S)");
+    /** A backlog row: its id, then its one-character status. */
+    private static final Pattern ROW = Pattern.compile("^\\| (W-[0-9]{3}[a-z0-9]*) \\| (\\S) \\|");
 
     /** Done, and retired or split: no work is left on an item with either status. */
     private static final Set<String> FINISHED = Set.of("D", "—");
@@ -23,27 +25,26 @@ public final class StatusBoard {
     private StatusBoard() {
     }
 
-    /** The board: the lines from {@code ## Status board} up to the counts line, each {@code W-0nn X} entry. */
+    /** Each backlog row's id and status. */
     public static Map<String, String> read(List<String> lines) {
         Map<String, String> board = new HashMap<>();
-        boolean inside = false;
         for (String line : lines) {
-            if (line.startsWith("## Status board")) {
-                inside = true;
-            } else if (inside && line.startsWith("Counts")) {
-                break;
-            } else if (inside) {
-                Matcher entry = BOARD_ENTRY.matcher(line);
-                while (entry.find()) {
-                    board.put(entry.group(1), entry.group(2));
-                }
+            Matcher row = ROW.matcher(line);
+            if (row.find()) {
+                board.put(row.group(1), row.group(2));
             }
         }
         return board;
     }
 
-    /** Whether a board status means the item is done or retired. */
+    /** Whether a status means the item is done or retired. */
     public static boolean isFinished(String status) {
         return FINISHED.contains(status);
+    }
+
+    /** Whether {@code item} is finished: absent from the backlog, or marked done or retired in it. */
+    public static boolean isFinished(Map<String, String> board, String item) {
+        String status = board.get(item);
+        return status == null || isFinished(status);
     }
 }

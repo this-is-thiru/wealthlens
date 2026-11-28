@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /**
- * Refresh token store on PostgreSQL (W-337c1, D-941). {@link #spend} replaces Mongo's {@code findAndModify} atomic
+ * Refresh token store (W-337c1, D-941). {@link #spend} is an atomic
  * compare-and-set: the {@code WHERE} clause only matches an unused, unrevoked row, so two concurrent calls serialise
- * under Postgres' row lock and exactly one reports a row changed (D-937 C2a). {@link #deleteExpired} replaces the TTL
- * index (D-937 C3a).
+ * under Postgres' row lock and exactly one reports a row changed (D-937 C2a). {@link #deleteExpired} removes
+ * expired tokens, there being no TTL index (D-937 C3a).
  */
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, String> {
 

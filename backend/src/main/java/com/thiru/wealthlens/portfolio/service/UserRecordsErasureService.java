@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,7 +89,7 @@ public class UserRecordsErasureService {
             delete.run();
             report.recordCleared(collection);
             log.info("Deleted all {} for user: {}", collection, email);
-        } catch (RuntimeException e) {
+        } catch (DataAccessException | IllegalStateException | IllegalArgumentException e) {
             report.recordFailed(collection);
             log.error("Failed to delete {} for user: {} — continuing with the remaining collections",
                     collection, email, e);

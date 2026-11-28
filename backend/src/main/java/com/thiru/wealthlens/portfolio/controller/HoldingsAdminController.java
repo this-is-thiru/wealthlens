@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * One user's holdings, read by the owner: the check after an assets rebuild (runbook §2.12, D-855 C3a). A user reads their own at
+ * One user's holdings, read by the owner: the check after an assets rebuild (runbook §2.12 in tag docs-history-m2, D-855 C3a). A user reads their own at
  * {@code /api/v1/me/portfolio/stocks}.
  */
 @RequiredArgsConstructor

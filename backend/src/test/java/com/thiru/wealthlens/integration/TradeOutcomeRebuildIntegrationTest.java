@@ -73,8 +73,8 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
         assertThat(tradeOutcomeRepository.findByEmail(B)).hasSize(2);
         assertThat(tradeOutcomeRepository.findByEmail(C)).extracting(TradeOutcomeEntity::getId).containsExactly("c-v2-row");
         String createdBy = new JdbcTemplate(postgresDataSource).queryForObject(
-                "SELECT created_by FROM trade_outcomes WHERE email = ? LIMIT 1", String.class, storedIdentifier(A));
-        assertThat(createdBy).isEqualTo(storedIdentifier(ADMIN));
+                "SELECT created_by FROM trade_outcomes WHERE email = ? LIMIT 1", String.class, A);
+        assertThat(createdBy).isEqualTo(ADMIN);
     }
 
     @Test

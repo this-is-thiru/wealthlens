@@ -5,13 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.EncryptedDateColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -42,7 +39,6 @@ public class FamilyMember implements CreatedWithId, ProfileScoped {
     @Column(name = "profile_id")
     private String profileId;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "name")
     private String name;
 
@@ -51,14 +47,13 @@ public class FamilyMember implements CreatedWithId, ProfileScoped {
     private FamilySnapshot.Relationship relationship;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    @Convert(converter = EncryptedDateColumn.class)
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
     @Column(name = "dependant")
     private boolean dependant;
 
-    @Convert(converter = EncryptedDisabilitySeverityColumn.class)
+    @Enumerated(EnumType.STRING)
     @Column(name = "disability")
     private DisabilitySeverity disability;
 
@@ -72,7 +67,6 @@ public class FamilyMember implements CreatedWithId, ProfileScoped {
     @Column(name = "resident_in_india")
     private boolean residentInIndia;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "pan")
     private String pan;
 

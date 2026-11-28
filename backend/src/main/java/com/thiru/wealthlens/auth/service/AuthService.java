@@ -54,7 +54,7 @@ public class AuthService {
         UserDetail userEntity = new UserDetail();
         userEntity.setEmail(request.getEmail());
         userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
-        // A role above USER is granted by the owner, never chosen at registration (W-255; runbook §0.1.3).
+        // A role above USER is granted by the owner, never chosen at registration (W-255; runbook §0.1).
         userEntity.setRoles(AuthHelper.Role.USER.name());
         LocalDateTime registeredAt = nowUtc();
         userEntity.setLastSignedInAt(registeredAt);

@@ -3,7 +3,6 @@ package com.thiru.wealthlens.portfolio.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
@@ -31,10 +30,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * both mutate and both write — and the second would silently erase the first's capital gains and
  * charges. Optimistic locking turns that into a detected failure instead of lost money.
  *
- * <p>The failure surfaces as {@code ObjectOptimisticLockingFailureException}. Under MongoDB's multi-document
- * transactions this was pre-empted in practice by the database's own write-conflict detection, which is why the
- * class's own retry lived outside it; under PostgreSQL there is no equivalent document-level conflict detection, so
- * this {@code @Version} check is now the only place two concurrent trades for the same user and year are caught —
+ * <p>The failure surfaces as {@code ObjectOptimisticLockingFailureException}. PostgreSQL detects no conflict at the
+ * level of the row's contents, so
+ * this {@code @Version} check is the only place two concurrent trades for the same user and year are caught —
  * {@code TradeCollisionRetry} retries on it explicitly (W-337e, D-949 C5a).
  *
  * <p>Uniqueness on {@code {email, financial_year}} is enforced by {@code pnl_user_year_idx}
@@ -65,7 +63,6 @@ public class ProfitAndLossEntity {
     private String id;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "financial_year")

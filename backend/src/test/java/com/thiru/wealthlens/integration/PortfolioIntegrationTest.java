@@ -1,7 +1,10 @@
 package com.thiru.wealthlens.integration;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
@@ -419,8 +422,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void uploadTransactions_allSucceed_whenValidExcel_expected200() throws Exception {
         String token = generateToken(TEST_EMAIL);
 
-        byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "RELIANCE", "Reliance Industries",
-                "NSE", "ZERODHA", "EQUITY", 2500.0, 10.0, "BUY");
+        byte[] excelContent = buildValidExcelContent("RELIANCE", "Reliance Industries", 2500.0, 10.0);
 
         String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
@@ -494,8 +496,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         corporateActionRepository.save(ca);
 
         // Excel with a blocked stock
-        byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "VALID_STOCK", "Valid Stock Corp",
-                "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
+        byte[] excelContent = buildValidExcelContent("VALID_STOCK", "Valid Stock Corp", 1000.0, 5.0);
 
         String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
@@ -532,8 +533,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         temp.setStatus(TransactionStatus.TEMPORARY);
         transactionRepository.save(temp);
 
-        byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "SOME_STOCK", "Some Stock Corp",
-                "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
+        byte[] excelContent = buildValidExcelContent("SOME_STOCK", "Some Stock Corp", 1000.0, 5.0);
 
         String url = baseUrl() + "/api/v1/me/portfolio/transactions/uploads?quarter=Q1";
         HttpHeaders headers = new HttpHeaders();
@@ -1114,7 +1114,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     // ============================================================
 
     @Test
-    void sellStock_fifoAcrossLots_whenMultipleLots_expectedFIFODeduction() {
+    void sellStock_fifoAcrossLots_whenMultipleLots_expectedFifoDeduction() {
         String token = generateToken(TEST_EMAIL);
 
         // Buy 10 @ 100, then 10 @ 200
@@ -1216,8 +1216,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         String token = generateToken(TEST_EMAIL);
 
         // Excel with invalid date content
-        byte[] excelContent = buildValidExcelContent(TEST_EMAIL, "TEST_STOCK", "Test Stock Corp",
-                "NSE", "ZERODHA", "EQUITY", 1000.0, 5.0, "BUY");
+        byte[] excelContent = buildValidExcelContent("TEST_STOCK", "Test Stock Corp", 1000.0, 5.0);
         // The date cell holds text, not a date
         try (Workbook book = new XSSFWorkbook(new java.io.ByteArrayInputStream(excelContent));
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -1429,9 +1428,8 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         return entity;
     }
 
-    private byte[] buildValidExcelContent(String email, String stockCode, String stockName,
-                                           String exchange, String broker, String assetType,
-                                           Double price, Double quantity, String transactionType) throws IOException {
+    private byte[] buildValidExcelContent(String stockCode, String stockName,
+            Double price, Double quantity) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (Workbook workbook = new XSSFWorkbook()) {
             // Create one sheet per quarter so sheetIndex(quarter) finds the right sheet.
@@ -1461,16 +1459,16 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
             // Create data row
             Row dataRow = sheet.createRow(1);
-            dataRow.createCell(0).setCellValue(email);
+            dataRow.createCell(0).setCellValue(TEST_EMAIL);
             dataRow.createCell(1).setCellValue(stockCode);
             dataRow.createCell(2).setCellValue(stockName);
-            dataRow.createCell(3).setCellValue(exchange);
-            dataRow.createCell(4).setCellValue(broker);
-            dataRow.createCell(5).setCellValue(assetType);
+            dataRow.createCell(3).setCellValue("NSE");
+            dataRow.createCell(4).setCellValue("ZERODHA");
+            dataRow.createCell(5).setCellValue("EQUITY");
             dataRow.createCell(6).setCellValue(""); // MATURITY DATE - empty for EQUITY
             dataRow.createCell(7).setCellValue(price);
             dataRow.createCell(8).setCellValue(quantity);
-            dataRow.createCell(9).setCellValue(transactionType);
+            dataRow.createCell(9).setCellValue("BUY");
 
             // TRANSACTION_DATE as a proper POI date cell (parser uses getLocalDateTimeCellValue)
             CreationHelper createHelper = workbook.getCreationHelper();

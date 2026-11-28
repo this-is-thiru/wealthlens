@@ -18,7 +18,7 @@ restates a number. If a number changes, exactly one row changes.
 
 Claim tags used in the prose: `FACT (evidence)`, `INFERENCE (from what)`, `RECOMMENDATION`.
 
-## Sources actually opened (see PROGRESS.md verification log for the full table)
+## Sources actually opened (see PROGRESS.md (tag `docs-history-m4`) verification log for the full table)
 
 - **S2** — THE INCOME-TAX ACT, 2025 (No. 30 of 2025), gazette CG-DL-E-22082025-265620, **as enacted**. Not the FA-2026-amended reprint.
 - **S3** — THE FINANCE ACT, 2026 (No. 4 of 2026), gazette CG-DL-E-31032026-271439, **final**.

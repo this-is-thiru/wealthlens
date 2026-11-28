@@ -1,7 +1,7 @@
 # Module `shared` — the privacy duties, and what every module stands on
 
 > W-357b8 (D-914), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a bare
-> path is under `backend/src/main/java/com/thiru/wealthlens/shared/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a.
+> path is under `backend/src/main/java/com/thiru/wealthlens/shared/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a.
 
 ## 1. Purpose
 
@@ -12,7 +12,6 @@
 - **What every module stands on:**
   - the route zones and `@CallerEmail` (`web/`);
   - the one error shape (`exception/`);
-  - field encryption (`protection/`);
   - audit metadata and the dynamic query filter (`entity/`);
   - transaction and Mongo configuration (`config/`);
   - the `T`-prefixed utilities (`util/`).
@@ -70,16 +69,16 @@ Every admin route carries `@PreAuthorize("hasRole('SUPER_USER')")` too (`Account
 
 ## 4. Stored data
 
-PostgreSQL tables (W-337c2, D-943; Flyway `db/migration/shared/V3__privacy.sql:4` – `:98`). Each table's `email`-like column is encrypted and searchable (`SearchableColumn`); free text is encrypted (`EncryptedColumn`). Primary keys are caller-assigned `VARCHAR(255)` with `@PrePersist` UUID default.
+PostgreSQL tables (W-337c2, D-943; Flyway `db/migration/shared/V3__privacy.sql:4` – `:98`). Every column is stored plain (W-428c, D-1039). Primary keys are caller-assigned `VARCHAR(255)` with `@PrePersist` UUID default.
 
 | Table | Columns | Where |
 |---|---|---|
 | `privacy_erasure_requests` | `email` (indexed), `requested_at`, `cause` (`REQUESTED`, `PURPOSE_LAPSED`; absent reads as requested), `erased_at`, `created_by`/`updated_by`/`created_at`/`updated_at` (`AuditColumns`); kept after the erasure as its record | `privacy/AccountErasureRequest.java:25` – `:66`; `privacy/ErasureCause.java:4` – `:11` |
-| `privacy_grievances` | `email` (indexed), `text` and `answer` (encrypted), `received_at`, `respond_by` (the date promised at receipt), `answered_at`, `AuditColumns` | `privacy/Grievance.java:24` – `:66` |
+| `privacy_grievances` | `email` (indexed), `text` and `answer`, `received_at`, `respond_by` (the date promised at receipt), `answered_at`, `AuditColumns` | `privacy/Grievance.java:24` – `:66` |
 | `privacy_breach_notices` + `privacy_breach_notice_affected` | `description`, `consequences`, `mitigation`, `safety_measures`, `became_aware_at`, `scope`, `affected` (eager `@ElementCollection` in `privacy_breach_notice_affected`, `notice_id` FK), `posted_at`, `board_report_due_at`, `board_extension_reference`, `board_first_intimated_at`, `board_report_sent_at`, `AuditColumns` | `privacy/BreachNotice.java:29` – `:90` |
 | `privacy_breach_intimations` | `notice_id` and `email` (indexed), `posted_at`, `read_at`, `emailed_at`, `AuditColumns` | `privacy/BreachIntimation.java:22` – `:60` |
 | `privacy_consents` | `email` (unique `privacy_consents_email_idx`), `notice_version`, `given_at` (consent at registration), `noticed_at` (an older account first shown the notice), `AuditColumns` | `privacy/PrivacyConsent.java:24` – `:57` |
-| `privacy_processing_log` | `principal` (indexed) and `subject_email`, `method`, `route` (the pattern, never the path), `status`, `remote_address` (encrypted), `recorded_at` (indexed), `request_id`; append-only, no audit columns | `privacy/ProcessingRecord.java:22` – `:72` |
+| `privacy_processing_log` | `principal` (indexed) and `subject_email`, `method`, `route` (the pattern, never the path), `status`, `remote_address`, `recorded_at` (indexed), `request_id`; append-only, no audit columns | `privacy/ProcessingRecord.java:22` – `:72` |
 
 Schema and indexes are managed by Flyway (`V3__privacy.sql:4` – `:98`).
 
@@ -155,19 +154,13 @@ Unanswered grievances and breach notices stay.
 - **500** anything else, answered "Something went wrong. Quote X-Request-Id … when you report it" and logged with its stack trace.
 - A refusal is logged at WARN with its message only.
 
-**Field protection** (`protection/`):
-- **The cipher:** AES-256-GCM, the stored form prefixed with its key id `k1:` (`FieldCipher.java:21` – `:118`):
-  - a fresh nonce per value for `EncryptedField` (text, a date or an enum, `EncryptedField.java:15` – `:46`);
-  - a nonce that is the value's keyed digest for `SearchableIdentifier`, so equal values store equally and stay queryable
-    (`SearchableIdentifier.java:18` – `:45`).
-- **Digests:** `IdentifierDigest` is an HMAC-SHA256 for unique indexes (`IdentifierDigest.java:14` – `:33`).
-- **Keys:** both must be 32 bytes in base64, or the start is refused (`KeyBytes.java:13` – `:22`).
+**Field protection:** none since W-428c (D-1039) — personal data is stored plain (D-1036); the logs still mask every email and PAN
+(`logback-spring.xml`, `EmailLogMaskTest`, `PanLogMaskTest`). Encryption again, with key rotation, is W-429.
 
-**Dynamic queries** (`entity/query/QueryFilter.java:49` – `:83`; `QueryBuilder.java:22` – `:65`):
+**Dynamic queries** (`entity/query/QueryFilter.java:49` – `:83`; `QueryBuilder.java:21` – `:64`):
 - **The caller's own email is forced:** a filter naming another is dropped, and the caller's added.
 - **Only `AssetEntity.ALLOWED_FIELDS`** may be filtered: `email`, `transaction_date`, `transaction_type`, `account_type`,
   `account_holder`, `exchange_name`, `stock_code`, `broker_name`, `asset_type` (`portfolio/entity/AssetEntity.java:155` – `:156`).
-- **Encrypted fields:** `account_holder` is matched exactly only.
 
 **Expressions stored as data** run only in a read-only SpEL context; a type, constructor or bean reference is refused when written
 (`util/expression/SafeExpressions.java:37` – `:72`).
@@ -210,7 +203,6 @@ request with `requested_at` 2026-11-20T08:00:00, the moment the purpose lapsed, 
 | `app.privacy.breach.board-report-hours` | 72 (`application.yaml:70`) | the Board's deadline; at least 1 (`privacy/BreachReporting.java:10` – `:17`) |
 | `app.privacy.erasure-hold`, `log-retention`, `purpose-lapse` | P1Y, P1Y, P3Y (`application.yaml:73`, `:76`, `:80`) | the hold before erasure; how long logs and privacy records are kept; when an unused account lapses (the owner's ruling, D-480) |
 | `app.privacy.consent.*` | `application.yaml:83` – `:101` | the notice before consent: the personal data by part, the purpose, the withdrawal, the Board complaint |
-| `app.personal-data.data-key`, `digest-key` | `${TAX_DATA_KEY}`, `${TAX_DIGEST_KEY}` | the cipher's and the digest's keys (`protection/PersonalDataKeys.java:9` – `:11`) |
 | `app.mongodb.transactions-enabled` | true | multi-document transactions |
 
 ## 7. Tests
@@ -219,7 +211,6 @@ request with `requested_at` 2026-11-20T08:00:00, the moment the purpose lapsed, 
 |---|---|
 | `ControllerAdviserTest` | 28 |
 | `PrivacySettingsTest` | 26 |
-| `FieldCipherTest` | 13 |
 | `ProcessingLogIntegrationTest` | 12 |
 | `PurposeLapseIntegrationTest`, `ErasureReapplicationIntegrationTest`, `BreachNoticeIntegrationTest` | 11, 10, 10 |
 | `GrievanceIntegrationTest`, `AccountErasureIntegrationTest` | 9 each (the latter shows the email pulled from a breach notice, `AccountErasureIntegrationTest.java:316`) |
@@ -236,12 +227,12 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not execu
    `application-prod.yaml:62`). Passwords are written as Argon2id since W-358d3, and BCrypt is only read for older hashes
    (`config/InvestmentTrackerConfig.java:16` – `:25`). Correcting it changes the notice's version (§5), so new registrations meet the
    corrected wording. The wording is the owner's.
-2. **A query filter that omits `isDateField` answers 500.** `QueryBuilder.sanitize` unboxes the `Boolean` (`QueryBuilder.java:60` – `:65`;
+2. **A query filter that omits `isDateField` answers 500.** `QueryBuilder.sanitize` unboxes the `Boolean` (`QueryBuilder.java:59` – `:64`;
    `QueryFilter.java:30`).
    - **Shown at the build** (a throwaway integration test, deleted): `POST /api/v1/me/portfolio/assets/search` with
      `{filterKey: stock_code, operation: EQUALS, value: TCS}` answered 500.
 3. **`STARTS_WITH` is neither a prefix nor literal.** It passes the caller's text to `regex` unanchored and unescaped
-   (`QueryBuilder.java:43`).
+   (`QueryBuilder.java:42`).
    - **Shown at the build:** `STARTS_WITH "CS"` found TCS.
    - **Risk:** a caller's pattern runs on the server, so a costly one is the caller's to choose.
 4. **Framework and JDK text reach the caller.** These pass `ex.getMessage()` through (`ControllerAdviser.java:40` – `:44`, `:79` – `:89`,
@@ -266,4 +257,4 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not execu
 
 - Sign-in, tokens and the login's erasure: `docs/modules/auth.md`.
 - Each module's own erasure part: its module doc (`portfolio`, `insurance`; `taxplanning`, W-357b10).
-- The jobs that run erasure and retention, and their switch: `taxplanning` (W-357b10); deploy runbook §5.2.
+- The jobs that run erasure and retention, and their switch: `taxplanning` (W-357b10); deploy runbook §4.1 in tag docs-history-m5.

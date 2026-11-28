@@ -1,7 +1,7 @@
 # Module `helper` — the transaction upload template, and file answers
 
 > W-357b3 (D-903), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from. Template:
-> `docs/taxplanning-build/plans/W-357b.md` C2a.
+> `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a.
 
 ## 1. Purpose
 

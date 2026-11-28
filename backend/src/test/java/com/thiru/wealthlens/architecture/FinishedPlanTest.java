@@ -19,28 +19,28 @@ import org.junit.jupiter.api.Test;
  *
  * <p>The bookkeeping audit of 2026-10-28 (G5) found 15 steps left as {@code - [ ]} in eight plans whose items were
  * done — every one done in its item's commit, never ticked, so the plan said the work was open while git said it was
- * finished. An item is finished when the status board says {@code D} or {@code —}; a step that was deliberately not
- * done says {@code not taken} with its reason, as W-180's do. A plan whose item has no board entry (a split parent such
- * as W-071) has no status to check, and is left alone.
+ * finished. An item is finished when it is not in {@code BACKLOG.md} (W-435), or is marked {@code D} or {@code —} there; a step that was deliberately not
+ * done says {@code not taken} with its reason, as W-180's do. A plan whose item is not in the backlog is finished, so
+ * it is checked too.
  */
 class FinishedPlanTest {
 
     private static final Path PLANS = Path.of("..", "docs", "taxplanning-build", "plans");
-    private static final Path STATE = Path.of("..", "docs", "taxplanning-build", "STATE.md");
+    private static final Path BACKLOG = Path.of("..", "docs", "taxplanning-build", "BACKLOG.md");
     private static final Pattern OPEN_STEP = Pattern.compile("^\\s*- \\[ \\] ");
     private static final String NOT_TAKEN = "not taken";
 
     @Test
     void openSteps_whenEveryPlanIsReadAgainstTheBoard_findsNoneOnAFinishedItem() throws IOException {
         // Given
-        Map<String, String> board = StatusBoard.read(Files.readAllLines(STATE));
+        Map<String, String> board = StatusBoard.read(Files.readAllLines(BACKLOG));
         Map<String, List<String>> plans = plans();
 
         // When
         List<String> open = openSteps(plans, board);
 
         // Then
-        assertThat(board).as("the status board in STATE.md").isNotEmpty();
+        assertThat(board).as("the open items in BACKLOG.md").isNotEmpty();
         assertThat(plans).as("the plans in docs/taxplanning-build/plans").isNotEmpty();
         assertThat(open).as("open steps in plans of finished items — tick each with the commit that did it, "
                 + "or mark it \"not taken\" with why").isEmpty();
@@ -85,23 +85,22 @@ class FinishedPlanTest {
     }
 
     @Test
-    void openSteps_whenThePlanIsNotOnTheBoard_reportsNothing() {
-        // Given
+    void openSteps_whenThePlanIsNotInTheBacklog_checksItAsFinished() {
+        // Given — not in the backlog means finished (W-435)
         Map<String, List<String>> plans = Map.of("W-071", List.of("- [ ] 1. Split"));
 
         // When
-        List<String> open = openSteps(plans, Map.of("W-071a", "D"));
+        List<String> open = openSteps(plans, Map.of("W-072", "·"));
 
         // Then
-        assertThat(open).isEmpty();
+        assertThat(open).containsExactly("W-071: - [ ] 1. Split");
     }
 
     /** Each open step, not marked not taken, in a plan whose item the board calls finished — as "item: line". */
     private static List<String> openSteps(Map<String, List<String>> plans, Map<String, String> board) {
         List<String> open = new ArrayList<>();
         plans.forEach((item, lines) -> {
-            String status = board.get(item);
-            if (status != null && StatusBoard.isFinished(status)) {
+            if (StatusBoard.isFinished(board, item)) {
                 lines.stream()
                         .filter(line -> OPEN_STEP.matcher(line).find() && !line.contains(NOT_TAKEN))
                         .forEach(line -> open.add(item + ": " + line));

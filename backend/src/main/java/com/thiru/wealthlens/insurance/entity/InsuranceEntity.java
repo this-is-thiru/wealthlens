@@ -5,11 +5,8 @@ import com.thiru.wealthlens.insurance.dto.enums.InsuranceType;
 import com.thiru.wealthlens.insurance.dto.enums.PolicyType;
 import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -31,8 +28,8 @@ import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
- * Insurance policies on PostgreSQL (W-337c1, D-941). {@code policyDetails} is stored in {@code insurance_policy_details}
- * as an eager element collection matching Mongo's embedded list.
+ * Insurance policies (W-337c1, D-941). {@code policyDetails} is stored in {@code insurance_policy_details}
+ * as an eager element collection.
  */
 @Entity
 @Table(name = "insurances")
@@ -47,7 +44,6 @@ public class InsuranceEntity {
     private String id;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "port_from")
@@ -57,7 +53,6 @@ public class InsuranceEntity {
     private String portTo;
 
     @Column(name = "insurance_id")
-    @Convert(converter = EncryptedColumn.class)
     private String insuranceId;
 
     @Column(name = "insurance_type")
@@ -90,26 +85,21 @@ public class InsuranceEntity {
     private String broker;
 
     @Column(name = "agent_name")
-    @Convert(converter = EncryptedColumn.class)
     private String agentName;
 
     @Column(name = "agent_email")
-    @Convert(converter = EncryptedColumn.class)
     private String agentEmail;
 
     @Column(name = "agent_contact")
-    @Convert(converter = EncryptedColumn.class)
     private String agentContact;
 
     @Column(name = "agent_address")
-    @Convert(converter = EncryptedColumn.class)
     private String agentAddress;
 
     @Column(name = "insurance_status")
     private String insuranceStatus;
 
     @Column(name = "notes")
-    @Convert(converter = EncryptedColumn.class)
     private String notes;
 
     @ElementCollection(fetch = FetchType.EAGER)

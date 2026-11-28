@@ -10,7 +10,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -49,7 +48,6 @@ public class AssetEntity {
     private String id;
 
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "stock_code")
@@ -131,7 +129,6 @@ public class AssetEntity {
     private AccountType accountType;
 
     @Column(name = "account_holder")
-    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
     @Column(name = "corporate_action")
@@ -163,8 +160,8 @@ public class AssetEntity {
     private AuditColumns auditMetadata = new AuditColumns();
 
     /**
-     * Guards the read-modify-write merge of a same-day buy into this lot (W-337e, D-949). MongoDB's multi-document
-     * transactions caught two concurrent writers of the same lot automatically; PostgreSQL does not, so a lot now
+     * Guards the read-modify-write merge of a same-day buy into this lot (W-337e, D-949): two concurrent writers of the same
+     * lot are caught by nothing else, so a lot
      * carries its own optimistic lock, same as {@code ProfitAndLossEntity}'s.
      */
     @JsonIgnore
@@ -183,7 +180,7 @@ public class AssetEntity {
     // this email we can't accept from the request payload, we are formatting this through the code
     public static final String EMAIL = "email";
 
-    public static Set<String> ALLOWED_FIELDS = Set.of(EMAIL, "transaction_date", "transaction_type",
+    public static final Set<String> ALLOWED_FIELDS = Set.of(EMAIL, "transaction_date", "transaction_type",
             "account_type", "account_holder", "exchange_name", "stock_code", "broker_name", "asset_type");
 
 }

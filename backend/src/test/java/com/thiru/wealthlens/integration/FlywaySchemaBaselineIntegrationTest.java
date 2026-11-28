@@ -28,7 +28,8 @@ class FlywaySchemaBaselineIntegrationTest extends AbstractIntegrationTest {
 
         // Then — V10 shares V5's derived description ("taxplanning"), both from the folder name
         assertThat(appliedScripts).containsExactly("auth and insurance", "corporate", "privacy", "charge catalogue",
-                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning", "unique nulls not distinct", "pnl unique nulls not distinct", "taxplanning unique nulls not distinct");
+                "taxplanning", "insurances audit", "corporate action", "brokercharges", "portfolio", "taxplanning", "unique nulls not distinct", "pnl unique nulls not distinct", "taxplanning unique nulls not distinct", "plain personal data",
+                "instrument aliases");
     }
 
     @Test

@@ -12,8 +12,8 @@ public interface JobLeaseRepository extends JpaRepository<JobLease, String> {
 
     /**
      * Acquires {@code job}'s lease for {@code holder} if no lease exists for it, or the existing one's
-     * {@code expires_at} is before {@code now} — the Postgres equivalent of Mongo's upsert-with-filter acquire
-     * (W-337f, D-951 C6a). An atomic statement, not a read-then-write: two runs racing for the same job can both
+     * {@code expires_at} is before {@code now} (W-337f, D-951 C6a).
+     * An atomic statement, not a read-then-write: two runs racing for the same job can both
      * try this at once and at most one gets a row back. The guard compares the OLD row's expiry against {@code now},
      * never against {@code newExpiresAt} — comparing against the new expiry would always be true and let a run
      * steal a lease that is still live. A native query bypasses Hibernate's lifecycle entirely, so this leaves

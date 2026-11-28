@@ -1,10 +1,7 @@
 package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -33,11 +30,9 @@ public class Grievance {
     private String id;
 
     @Column(name = "email")
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "text")
-    @Convert(converter = EncryptedColumn.class)
     private String text;
 
     /** UTC. */
@@ -49,7 +44,6 @@ public class Grievance {
     private LocalDateTime respondBy;
 
     @Column(name = "answer")
-    @Convert(converter = EncryptedColumn.class)
     private String answer;
 
     /** UTC; absent until answered. */

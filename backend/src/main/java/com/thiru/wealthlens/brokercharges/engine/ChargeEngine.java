@@ -373,9 +373,8 @@ public class ChargeEngine {
     }
 
     /**
-     * A rule carrying both a rate and a flat amount has to say which wins. The superseded
-     * implementation resolved this silently to zero, so a mispriced card looked exactly like a free
-     * trade (D7).
+     * A rule carrying both a rate and a flat amount has to say which wins; unresolved, a mispriced card
+     * would look exactly like a free trade (D7).
      */
     private static void rejectAmbiguousRule(ChargeRule rule) {
         if (rule.getRate() != null && rule.getFlatAmount() != null && rule.getAggregator() == null) {
@@ -426,7 +425,7 @@ public class ChargeEngine {
      * A rule paired with where it was read from.
      *
      * <p>The provenance is not written onto the rule itself: rules live inside cached schedule and
-     * instrument documents, and stamping a field on them would mutate shared state through the
+     * instrument entities, and stamping a field on them would mutate shared state through the
      * resolver cache.
      */
     private record SourcedRule(ChargeRule rule, ChargeRuleSource source) {

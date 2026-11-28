@@ -1,7 +1,7 @@
 # Module `brokercharges` — what a trade, an account or a redemption costs, priced from rate cards
 
 > W-357b6a (D-908), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a bare
-> path is under `backend/src/main/java/com/thiru/wealthlens/brokercharges/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a.
+> path is under `backend/src/main/java/com/thiru/wealthlens/brokercharges/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a.
 > This doc also holds the hand-worked figures `ChargeGapAuditIntegrationTest` asserts (§5), moved here from W-264b's review
 > (`reviews/2026-11-13-charge-engine-gap-audit.md` §2, deleted by W-357b6b and readable at tag `docs-history-m1`). The design notes it replaces, `docs/charges-engine/`, were deleted by W-357b6b
 > (D-909) and are still readable at tag `docs-history-m1`, e.g. `git show docs-history-m1:docs/charges-engine/decisions.md`. The code
@@ -160,7 +160,7 @@ card's own code replaces it in place; either evicts both resolver caches (`Charg
 (`data/charges/charge-catalogue.json`, 13 codes), the cards (39 files), then the instrument profiles (`data/charges/instruments/`, 2 files).
 A code or card already on file is **left alone**, and a stored card differing from its file is logged and listed as drift (`:174` – `:188`,
 `:213` – `:231`). Shipped cards with overlapping windows in one scope, an invalid card, or an unknown JSON key stop the run
-(`service/ChargeScheduleWindows.java:34` – `:60`; `ChargeSeederService.java:104` – `:107`, `:194` – `:199`). A second run writes
+(`service/ChargeScheduleWindows.java:34` – `:60`; `ChargeSeederService.java:102` – `:105`, `:194` – `:199`). A second run writes
 nothing.
 
 **Recording** (`service/UserChargeService.java:139` – `:172`): price, then write the row for `{email, transactionId}` — a new one, or the
@@ -222,7 +222,7 @@ The other figures `ChargeGapAuditIntegrationTest` asserts:
 | `authoritative` | the computed total is a V2 buy's cost, only while `shadow-recording` is on too (`portfolio/service/PortfolioService.java:502` – `:508`) |
 
 At start, with the engine on, either phase flag on and **no card on file**, `ChargeReadinessAuditor` warns that every trade will be
-`NO_SCHEDULE` and charged nothing (`config/ChargeReadinessAuditor.java:37` – `:63`): seed first (deploy runbook §1B).
+`NO_SCHEDULE` and charged nothing (`config/ChargeReadinessAuditor.java:37` – `:63`): seed first (deploy runbook §1B in tag `docs-history-m2`).
 
 ## 7. Tests
 
@@ -284,7 +284,7 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), not execu
   rule cannot be written (`dto/enums/DedupeScope.java:6` – `:8`). Nor can a charge on cumulative monthly turnover, or one that accrues
   daily on an open position (MTF interest): every charge is priced at an event.
 - **A card or profile written straight to the repository is not seen** until the caches are evicted: only publishing, closing and
-  seeding evict (`ChargeScheduleService.java:77`, `:99`; `ChargeSeederService.java:137` – `:138`), and nothing but the seeder writes a
+  seeding evict (`ChargeScheduleService.java:77`, `:99`; `ChargeSeederService.java:135` – `:136`), and nothing but the seeder writes a
   profile (grep for `ChargeInstrumentRepository`: the resolver, the seeder, the repository).
 - **Two schemes have profiles** (`data/charges/instruments/`), keyed on a short `stock_code` (`ChargeInstrumentEntity.java:58` – `:60`);
   every other fund is `NO_INSTRUMENT_PROFILE`. **No card starts before 2025-04-01** (the file names), so an earlier trade is

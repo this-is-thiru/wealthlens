@@ -745,37 +745,10 @@ class ConditionTest {
         @Test
         void everyConditionIsAccountedFor() {
             java.util.List<Condition> all = oneOfEach();
+            Class<?>[] permitted = Condition.class.getPermittedSubclasses();
 
-            for (Condition condition : all) {
-                String group = switch (condition) {
-                    case IsResident ignored -> "person";
-                    case IsOrdinarilyResident ignored -> "person";
-                    case HousePropertiesOwnedAtMost ignored -> "person";
-                    case HasLossUnderHead ignored -> "return";
-                    case HasLossBroughtForward ignored -> "return";
-                    case HasLossCarriedForward ignored -> "return";
-                    case CapitalGainsOnlyInParts ignored -> "return";
-                    case CapitalGainsPartAtMost ignored -> "return";
-                    case DeductionAllowedUnder ignored -> "return";
-                    case AgeAtLeast ignored -> "person";
-                    case HasPersonType ignored -> "person";
-                    case IsCertifiedDisabled ignored -> "person";
-                    case IncomeAtMost ignored -> "amount";
-                    case IncomeAtLeast ignored -> "amount";
-                    case HasIncomeUnderHead ignored -> "structure";
-                    case ComponentPresent ignored -> "structure";
-                    case EvidenceRecorded ignored -> "structure";
-                    case ItemFactIs ignored -> "item";
-                    case ItemFactAtMost ignored -> "item";
-                    case ItemDateBefore ignored -> "item";
-                    case Declared ignored -> "declaration";
-                    case DeclaredAmountAbove ignored -> "declaration";
-                    case AllOf ignored -> "composition";
-                    case AnyOf ignored -> "composition";
-                    case Not ignored -> "composition";
-                };
-                assertThat(group).isNotBlank();
-            }
+            assertThat(all.stream().map(Object::getClass).toList())
+                    .containsExactlyInAnyOrder(permitted);
 
             // Part E's list, after the W-021 erratum: 12, not the 16 the backlog claimed (PaidOtherThanInCash removed,
             // W-197); the three item facts; the two declarations (W-090a1); r.164(2)'s two person facts (W-090c1a); and the

@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -46,7 +44,6 @@ public class DraftComputation implements CreatedWithId {
     @Column(name = "receipt")
     private String receipt;
 
-    @Convert(converter = SearchableColumn.class)
     @Column(name = "email")
     private String email;
 
@@ -56,7 +53,6 @@ public class DraftComputation implements CreatedWithId {
     @Column(name = "revision")
     private int revision;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "result_json")
     private String resultJson;
 

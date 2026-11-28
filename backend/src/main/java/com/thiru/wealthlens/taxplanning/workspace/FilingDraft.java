@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.entity.model.CreatedWithIdSaved;
-import com.thiru.wealthlens.shared.protection.EncryptedColumn;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
@@ -53,7 +52,6 @@ public class FilingDraft implements CreatedWithId {
     @Column(name = "current_revision")
     private int currentRevision;
 
-    @Convert(converter = EncryptedColumn.class)
     @Column(name = "inputs_json")
     private String inputsJson;
 

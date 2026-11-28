@@ -1,9 +1,7 @@
 package com.thiru.wealthlens.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -14,8 +12,8 @@ import lombok.Data;
 import lombok.ToString;
 
 /**
- * A registered user's login (ported to PostgreSQL in W-337c1, D-941). The id is caller-assigned (D-939 C2a) so the ids
- * MongoDB gave the logins moved in W-337i stayed as they were; {@link #assignIdIfAbsent} generates a UUID for fresh rows.
+ * A registered user's login (W-337c1, D-941). The id is caller-assigned (D-939 C2a), so the logins moved in W-337i
+ * kept their ids; {@link #assignIdIfAbsent} generates a UUID for fresh rows.
  */
 @Entity
 @Table(name = "user_details")
@@ -29,7 +27,6 @@ public class UserDetail {
 
     @JsonIgnore
     @Column(name = "email", unique = true, nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "password")

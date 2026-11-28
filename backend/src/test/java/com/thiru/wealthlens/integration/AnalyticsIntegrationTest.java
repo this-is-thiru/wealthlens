@@ -1,7 +1,9 @@
 package com.thiru.wealthlens.integration;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.thiru.wealthlens.portfolio.dto.analytics.MarketPriceEntry;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
@@ -63,53 +65,10 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void seedData_BuyAndSell() {
-        // Seed BUY transaction
-        TransactionEntity buy = new TransactionEntity();
-        buy.setEmail(TEST_EMAIL);
-        buy.setTransactionType(TransactionType.BUY);
-        buy.setStatus(TransactionStatus.PROCESSED);
-        buy.setStockCode("INFY");
-        buy.setStockName("Infosys Ltd");
-        buy.setPrice(100.0);
-        buy.setQuantity(10.0);
-        buy.setBrokerCharges(10.0);
-        buy.setMiscCharges(5.0);
-        buy.setTransactionDate(LocalDate.of(2023, 1, 1));
-        buy.setAssetType(AssetType.EQUITY);
-        buy.setBrokerName(BrokerName.ZERODHA);
-        transactionRepository.save(buy);
+        saveProcessedTxn(TransactionType.BUY, "INFY", "Infosys Ltd", 100.0, 10.0, LocalDate.of(2023, 1, 1));
+        saveAsset("INFY", "Infosys Ltd", 100.0, 10.0, LocalDate.of(2023, 1, 1));
+        saveProcessedTxn(TransactionType.SELL, "INFY", "Infosys Ltd", 150.0, 15.0, LocalDate.of(2024, 6, 1));
 
-        // Seed Asset (position after BUY)
-        AssetEntity asset = new AssetEntity();
-        asset.setEmail(TEST_EMAIL);
-        asset.setStockCode("INFY");
-        asset.setStockName("Infosys Ltd");
-        asset.setPrice(100.0);
-        asset.setQuantity(10.0);
-        asset.setBrokerCharges(10.0);
-        asset.setMiscCharges(5.0);
-        asset.setTransactionDate(LocalDate.of(2023, 1, 1));
-        asset.setAssetType(AssetType.EQUITY);
-        asset.setBrokerName(BrokerName.ZERODHA);
-        portfolioRepository.save(asset);
-
-        // Seed SELL transaction
-        TransactionEntity sell = new TransactionEntity();
-        sell.setEmail(TEST_EMAIL);
-        sell.setTransactionType(TransactionType.SELL);
-        sell.setStatus(TransactionStatus.PROCESSED);
-        sell.setStockCode("INFY");
-        sell.setStockName("Infosys Ltd");
-        sell.setPrice(150.0);
-        sell.setQuantity(10.0);
-        sell.setBrokerCharges(15.0);
-        sell.setMiscCharges(5.0);
-        sell.setTransactionDate(LocalDate.of(2024, 6, 1));
-        sell.setAssetType(AssetType.EQUITY);
-        sell.setBrokerName(BrokerName.ZERODHA);
-        transactionRepository.save(sell);
-
-        // Seed TradeOutcome
         TradeOutcomeEntity outcome = new TradeOutcomeEntity();
         outcome.setEmail(TEST_EMAIL);
         outcome.setStockCode("INFY");
@@ -125,15 +84,14 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         outcome.setSellDate(LocalDate.of(2024, 6, 1));
         outcome.setSellBrokerCharges(15.0);
         outcome.setSellMiscCharges(5.0);
-        outcome.setTotalBuyValue(1000.0 + 10.0 + 5.0); // price*qty + charges
-        outcome.setTotalSellValue(1500.0 - 15.0 - 5.0); // price*qty - charges
-        outcome.setNetProfit(1480.0 - 1015.0); // ~465.0
+        outcome.setTotalBuyValue(1000.0 + 10.0 + 5.0);
+        outcome.setTotalSellValue(1500.0 - 15.0 - 5.0);
+        outcome.setNetProfit(1480.0 - 1015.0);
         outcome.setProfitPercentage((outcome.getNetProfit() / outcome.getTotalBuyValue()) * 100);
-        outcome.setHoldingPeriodDays(516L); // days between 2023-01-01 and 2024-06-01
+        outcome.setHoldingPeriodDays(516L);
         outcome.setFinancialYear("2024-25");
         tradeOutcomeRepository.save(outcome);
 
-        // Seed P&L record with realized profits
         ProfitAndLossEntity pnl = new ProfitAndLossEntity();
         pnl.setEmail(TEST_EMAIL);
         pnl.setFinancialYear("2024-25");
@@ -147,72 +105,13 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void seedData_MultipleTrades() {
-        // Trade 1: WIN
-        TradeOutcomeEntity win = new TradeOutcomeEntity();
-        win.setEmail(TEST_EMAIL);
-        win.setStockCode("RELIANCE");
-        win.setStockName("Reliance Industries");
-        win.setNetProfit(500.0);
-        win.setTotalBuyValue(1000.0);
-        win.setTotalSellValue(1500.0);
-        win.setHoldingPeriodDays(30L);
-        win.setFinancialYear("2024-25");
-        tradeOutcomeRepository.save(win);
+        saveOutcome("RELIANCE", "Reliance Industries", 500.0, 1000.0, 1500.0, 30L);
+        saveOutcome("HDFC", "HDFC Bank", -300.0, 2000.0, 1700.0, 60L);
+        saveOutcome("TCS", "Tata Consultancy Services", 0.0, 500.0, 500.0, 45L);
 
-        // Trade 2: LOSS
-        TradeOutcomeEntity loss = new TradeOutcomeEntity();
-        loss.setEmail(TEST_EMAIL);
-        loss.setStockCode("HDFC");
-        loss.setStockName("HDFC Bank");
-        loss.setNetProfit(-300.0);
-        loss.setTotalBuyValue(2000.0);
-        loss.setTotalSellValue(1700.0);
-        loss.setHoldingPeriodDays(60L);
-        loss.setFinancialYear("2024-25");
-        tradeOutcomeRepository.save(loss);
+        saveProcessedTxn(TransactionType.BUY, "RELIANCE", null, 100.0, 10.0, LocalDate.of(2023, 1, 1));
+        saveProcessedTxn(TransactionType.SELL, "RELIANCE", null, 150.0, 15.0, LocalDate.of(2023, 6, 1));
 
-        // Trade 3: BREAKEVEN
-        TradeOutcomeEntity breakeven = new TradeOutcomeEntity();
-        breakeven.setEmail(TEST_EMAIL);
-        breakeven.setStockCode("TCS");
-        breakeven.setStockName("Tata Consultancy Services");
-        breakeven.setNetProfit(0.0);
-        breakeven.setTotalBuyValue(500.0);
-        breakeven.setTotalSellValue(500.0);
-        breakeven.setHoldingPeriodDays(45L);
-        breakeven.setFinancialYear("2024-25");
-        tradeOutcomeRepository.save(breakeven);
-
-        // Seed transactions for XIRR calculation
-        TransactionEntity buy1 = new TransactionEntity();
-        buy1.setEmail(TEST_EMAIL);
-        buy1.setTransactionType(TransactionType.BUY);
-        buy1.setStatus(TransactionStatus.PROCESSED);
-        buy1.setStockCode("RELIANCE");
-        buy1.setPrice(100.0);
-        buy1.setQuantity(10.0);
-        buy1.setBrokerCharges(10.0);
-        buy1.setMiscCharges(5.0);
-        buy1.setTransactionDate(LocalDate.of(2023, 1, 1));
-        buy1.setAssetType(AssetType.EQUITY);
-        buy1.setBrokerName(BrokerName.ZERODHA);
-        transactionRepository.save(buy1);
-
-        TransactionEntity sell1 = new TransactionEntity();
-        sell1.setEmail(TEST_EMAIL);
-        sell1.setTransactionType(TransactionType.SELL);
-        sell1.setStatus(TransactionStatus.PROCESSED);
-        sell1.setStockCode("RELIANCE");
-        sell1.setPrice(150.0);
-        sell1.setQuantity(10.0);
-        sell1.setBrokerCharges(15.0);
-        sell1.setMiscCharges(5.0);
-        sell1.setTransactionDate(LocalDate.of(2023, 6, 1));
-        sell1.setAssetType(AssetType.EQUITY);
-        sell1.setBrokerName(BrokerName.ZERODHA);
-        transactionRepository.save(sell1);
-
-        // Asset for XIRR with open positions
         AssetEntity asset = new AssetEntity();
         asset.setEmail(TEST_EMAIL);
         asset.setStockCode("INFY");
@@ -220,19 +119,54 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         asset.setAssetType(AssetType.EQUITY);
         portfolioRepository.save(asset);
 
-        TransactionEntity buy2 = new TransactionEntity();
-        buy2.setEmail(TEST_EMAIL);
-        buy2.setTransactionType(TransactionType.BUY);
-        buy2.setStatus(TransactionStatus.PROCESSED);
-        buy2.setStockCode("INFY");
-        buy2.setPrice(100.0);
-        buy2.setQuantity(10.0);
-        buy2.setBrokerCharges(10.0);
-        buy2.setMiscCharges(5.0);
-        buy2.setTransactionDate(LocalDate.of(2023, 1, 1));
-        buy2.setAssetType(AssetType.EQUITY);
-        buy2.setBrokerName(BrokerName.ZERODHA);
-        transactionRepository.save(buy2);
+        saveProcessedTxn(TransactionType.BUY, "INFY", null, 100.0, 10.0, LocalDate.of(2023, 1, 1));
+    }
+
+    private void saveProcessedTxn(TransactionType type, String stockCode, String stockName,
+            double price, double brokerCharges, LocalDate date) {
+        TransactionEntity txn = new TransactionEntity();
+        txn.setEmail(TEST_EMAIL);
+        txn.setTransactionType(type);
+        txn.setStatus(TransactionStatus.PROCESSED);
+        txn.setStockCode(stockCode);
+        txn.setStockName(stockName);
+        txn.setPrice(price);
+        txn.setQuantity(10.0);
+        txn.setBrokerCharges(brokerCharges);
+        txn.setMiscCharges(5.0);
+        txn.setTransactionDate(date);
+        txn.setAssetType(AssetType.EQUITY);
+        txn.setBrokerName(BrokerName.ZERODHA);
+        transactionRepository.save(txn);
+    }
+
+    private void saveAsset(String stockCode, String stockName, double price, double quantity, LocalDate date) {
+        AssetEntity asset = new AssetEntity();
+        asset.setEmail(TEST_EMAIL);
+        asset.setStockCode(stockCode);
+        asset.setStockName(stockName);
+        asset.setPrice(price);
+        asset.setQuantity(quantity);
+        asset.setBrokerCharges(10.0);
+        asset.setMiscCharges(5.0);
+        asset.setTransactionDate(date);
+        asset.setAssetType(AssetType.EQUITY);
+        asset.setBrokerName(BrokerName.ZERODHA);
+        portfolioRepository.save(asset);
+    }
+
+    private void saveOutcome(String stockCode, String stockName, double netProfit,
+            double buyValue, double sellValue, long holdingDays) {
+        TradeOutcomeEntity outcome = new TradeOutcomeEntity();
+        outcome.setEmail(TEST_EMAIL);
+        outcome.setStockCode(stockCode);
+        outcome.setStockName(stockName);
+        outcome.setNetProfit(netProfit);
+        outcome.setTotalBuyValue(buyValue);
+        outcome.setTotalSellValue(sellValue);
+        outcome.setHoldingPeriodDays(holdingDays);
+        outcome.setFinancialYear("2024-25");
+        tradeOutcomeRepository.save(outcome);
     }
 
     // ============================================================

@@ -9,7 +9,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditColumns;
-import com.thiru.wealthlens.shared.protection.SearchableColumn;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -34,8 +33,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * Indexed on {@code {email, sell_date}} because every read is one user's realised trades, and a capital-gains
  * statement wants them in date order; {@code trade_outcome_buy_lot_idx} is every realised row that consumed a
  * given buy lot, backing the per-holding charge view. Both indexes are declared in
- * {@code db/migration/portfolio/V9__portfolio.sql} (W-337e, D-949) — Postgres indexes apply at DDL time, unlike
- * {@code PortfolioIndexInitializer}'s old Mongo {@code createIndex} calls, which this port removes.
+ * {@code db/migration/portfolio/V9__portfolio.sql} (W-337e, D-949).
  */
 @Entity
 @Table(name = "trade_outcomes")
@@ -51,7 +49,6 @@ public class TradeOutcomeEntity {
 
     // Identity fields
     @Column(name = "email", nullable = false)
-    @Convert(converter = SearchableColumn.class)
     private String email;
 
     @Column(name = "stock_code")
@@ -76,7 +73,6 @@ public class TradeOutcomeEntity {
     private AccountType accountType;
 
     @Column(name = "account_holder")
-    @Convert(converter = SearchableColumn.class)
     private String accountHolder;
 
     // Buy side

@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.shared.entity.model.CreatedWithId;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
-import com.thiru.wealthlens.shared.protection.IdentifierDigest;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
 import java.util.Collection;
@@ -32,7 +31,6 @@ public class TaxProfileReferenceService {
     private final LandlordRepository landlordRepository;
     private final LenderRepository lenderRepository;
     private final BankAccountRepository bankAccountRepository;
-    private final IdentifierDigest identifierDigest;
     private final TaxAccessLog taxAccessLog;
 
     public FamilyMember createFamilyMember(String email, String profileId, FamilyMemberRequest request) {
@@ -51,19 +49,11 @@ public class TaxProfileReferenceService {
     }
 
     public Employer createEmployer(String email, String profileId, EmployerRequest request) {
-        return create(email, profileId, withTanDigest(request), new Employer(), employerRepository);
+        return create(email, profileId, request, new Employer(), employerRepository);
     }
 
     public Employer replaceEmployer(String email, String profileId, String id, EmployerRequest request) {
-        return replace(email, profileId, id, withTanDigest(request), employerRepository);
-    }
-
-    private ProfileReferenceRequest<Employer> withTanDigest(EmployerRequest request) {
-        return record -> {
-            Employer employer = request.applyTo(record);
-            employer.setTanDigest(identifierDigest.of(employer.getTan()));
-            return employer;
-        };
+        return replace(email, profileId, id, request, employerRepository);
     }
 
     @Transactional(readOnly = true)
