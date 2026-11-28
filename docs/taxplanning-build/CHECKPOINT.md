@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-337j3c DONE (D-1025), committed and pushed (see Last item commit). Next-deploy line 1 kept: §1.h rerun 2026-11-29 (owner), then remove.
-Stage           : pushed to w-337 (PR #86 reruns). Check its run → ask "merge #86".
-Last item commit: "taxplanning W-337j3c: §3's standing checks as SQL — proven on dev, staging and prod; 3.25 retired; §1.h read at six days; D-1024, D-1025"
-Next step       : 1. gh run list --branch w-337 --limit 1 → green → ask "merge #86". 2. 2026-11-29: §1.h rerun → log → remove Next-deploy line 1. 3. "start W-337j3d" → plan; STOP.
+Item            : W-337j3d DONE (D-1027), committed and pushed (see Last item commit). W-337j3 complete. Owner: rm staging/prod .pre-j3d backups.
+Stage           : pushed to w-337 (PR #86 reruns).
+Last item commit: "taxplanning W-337j3d: CLAUDE.md PostgreSQL-only and the env files without MONGO_* — the docs describe the store that exists; W-423 placed; D-1026, D-1027"
+Next step       : 1. gh run list --branch w-337 --limit 1 → green → ask "merge #86". 2. 2026-11-29: §1.h rerun → log → remove Next-deploy line 1. 3. W-337j4 (owner, due 2026-12-05). 4. "start W-423" → plan; STOP.
 Files touched   : (none); api-collection Bruno edits — never commit
 Flags for owner : W-337j4 (delete the 3 Atlas clusters) due 2026-12-05. W-418 needs the broker statement. Same-day FIFO tie in sales proposed, not placed (D-1010). W-416 waits. §1.s Aiven retention not given.
 Env notes       : NO Claude attribution; ask "commit and push" explicitly; OrbStack: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; SQL via postgres:18 psql.
