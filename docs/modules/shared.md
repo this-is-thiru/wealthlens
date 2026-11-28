@@ -1,7 +1,7 @@
 # Module `shared` — the privacy duties, and what every module stands on
 
 > W-357b8 (D-914), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a bare
-> path is under `backend/src/main/java/com/thiru/wealthlens/shared/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a.
+> path is under `backend/src/main/java/com/thiru/wealthlens/shared/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a.
 
 ## 1. Purpose
 

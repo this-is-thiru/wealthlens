@@ -1,7 +1,7 @@
 # Module `taxengine` — income tax as data, and the engine that computes it
 
 > Written from the code at `review/taxplanning`; every claim cites the line it was read from, and a bare path is under
-> `backend/src/main/java/com/thiru/wealthlens/taxengine/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a. The module is
+> `backend/src/main/java/com/thiru/wealthlens/taxengine/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a. The module is
 > written in six parts (D-915), all now in: boundary and run (W-357b9a, D-916), the nodes (W-357b9b, D-917), the inputs (W-357b9c,
 > D-919), the rules vocabulary (W-357b9d, D-920), rule packs and filing (W-357b9e, D-921), elections and the optimiser (W-357b9f, D-922).
 
@@ -709,7 +709,7 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
    - `PerquisiteNode`'s "Built so far" list (`PerquisiteNode.java:46`) likewise.
 7. **Two plans stay** after W-357b9b1 moved the nodes' hand-worked figures into §11 (D-918) and W-357b10b re-homed the three
    `taxplanning` tests: `plans/W-112b.md`, cited by two pack files and a synthetic pack (kept by W-357b9e; see gap 13, W-393 (4)), and
-   `plans/W-089.md`, still cited by `plans/W-112b.md:58`.
+   `plans/W-089.md` (tag `docs-history-m3`), still cited by `plans/W-112b.md:58`.
 
 **The inputs (W-391):**
 8. **Javadoc that is no longer true:**
@@ -739,7 +739,7 @@ Counts are `@Test` / `@ParameterizedTest` annotations per file (grep), under `ta
 13. **Pack data still cites two plans** (a proposal). `INT-REFUND`'s `provenance.sourceDescription` cites `plans/W-112b.md`, and that
     field is inside the rule's checksum, so re-pointing it needs a relock and a `LAW` bump in both years. Its `_note`,
     `SEC-INTEREST-REFUND`'s `_sources` and the synthetic pack's copy cite the same plan. `DED-DONATION-UNREPORTED`'s `_note` (shipped
-    and synthetic) cites `plans/W-078f.md`, which `plans/W-156a.md` also cites. Both plans therefore stay. The proposal: move W-112b's
+    and synthetic) cites `plans/W-078f.md`, which `plans/W-156a.md` (tag `docs-history-m3`) also cites. Both plans therefore stay. The proposal: move W-112b's
     act-chain record into `sources/` and re-point all four, in one relock.
 
 **Elections and the optimiser (W-394):**

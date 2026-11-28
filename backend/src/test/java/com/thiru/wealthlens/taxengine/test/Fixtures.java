@@ -36,7 +36,7 @@ import java.util.Optional;
  * taxpayer instead of typing every component ({@code DR 19} E10, W-145).
  *
  * <p>Each is a resident individual in TY 2026-27 under the new tax regime, computed on the year's first day, when no
- * instalment or return is due. The facts are the owner's ({@code plans/W-145.md} C1a) and Priya's are {@code DR 08}
+ * instalment or return is due. The facts are the owner's ({@code plans/W-145.md (tag docs-history-m3)} C1a) and Priya's are {@code DR 08}
  * T8-1's; every figure they produce is worked by hand in {@code sources/2026-11-07-persona-figures.md}.
  */
 public final class Fixtures {

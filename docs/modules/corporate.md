@@ -1,7 +1,7 @@
 # Module `corporate` — corporate actions: recorded, then applied per user and broker
 
 > W-357b5 (D-906), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from. Template:
-> `docs/taxplanning-build/plans/W-357b.md` C2a. This doc also holds the hand-worked figures `StockSplitIntegrationTest` and
+> `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a. This doc also holds the hand-worked figures `StockSplitIntegrationTest` and
 > `CorporateActionGapAuditIntegrationTest` assert (§5), moved here from W-213's and W-264c's plans, which W-357b5 removed (W-357b C1a); both
 > are still readable, e.g. `git show docs-history-m1:docs/taxplanning-build/plans/W-213.md`.
 

@@ -1,7 +1,7 @@
 # Module `finance` — loan and SIP calculators
 
 > W-357b1 (D-901), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a claim this
-> doc cannot cite is not made. Template: `docs/taxplanning-build/plans/W-357b.md` C2a.
+> doc cannot cite is not made. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a.
 
 ## 1. Purpose
 
@@ -123,4 +123,4 @@ None: no `@ConfigurationProperties` and no `app.*` key is read in the package.
 ## 9. Not covered here
 
 - How a zone and module prefix are added to a path, and the error format: `shared` (W-358c1, W-359a).
-- Request validation in general: `plans/W-358d4.md`.
+- Request validation in general: `plans/W-358d4.md` (tag `docs-history-m3`).

@@ -1,7 +1,7 @@
 # Module `taxplanning` — profiles, drafts, computations, documents and tax operations
 
 > Written from the code at `review/taxplanning`; every claim cites the line it was read from, and a bare path is under
-> `backend/src/main/java/com/thiru/wealthlens/taxplanning/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a. The module is
+> `backend/src/main/java/com/thiru/wealthlens/taxplanning/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a. The module is
 > written in four parts (D-923): boundary, profiles, workspaces, drafts and salary import (W-357b10a, D-924); assembly, portfolio
 > bridge, computation, advisory views and report (W-357b10b, D-925); documents and isolation (W-357b10c, D-926); protection, erasure,
 > jobs and the Gazette watch (W-357b10d, D-927). The doc is complete.
@@ -652,7 +652,7 @@ Properties read by the module (shipped identically across `application.yaml`, `a
 
 ## 11. Hand-worked figures the tests cite
 
-Moved verbatim from the plans cited by `taxplanning`'s tests (W-357b10b, C1a; same convention as `docs/modules/taxengine.md` §11). `W-089`'s T13-1 working already lives in `docs/modules/taxengine.md` §11 (W-089), where `DraftCalendarServiceTest`, `DraftForecastServiceTest` and `DraftComputationIntegrationTest` now point. `plans/W-088g9.md` had no other non-history citation and was deleted (readable at `1f5fce4b`); `plans/W-088g.md`, `plans/W-088g2.md` and `plans/W-089.md` stay while other kept plans (`W-088g1/g2/g4/g5`, `W-112b`) still cite them. W-357b10d moved `W-137`'s and `W-235`'s hand-worked tests here and deleted both plans (readable at `d8ef2aad`).
+Moved verbatim from the plans cited by `taxplanning`'s tests (W-357b10b, C1a; same convention as `docs/modules/taxengine.md` §11). `W-089`'s T13-1 working already lives in `docs/modules/taxengine.md` §11 (W-089), where `DraftCalendarServiceTest`, `DraftForecastServiceTest` and `DraftComputationIntegrationTest` now point. `plans/W-088g9.md` had no other non-history citation and was deleted (readable at `1f5fce4b`); `plans/W-088g.md` (tag `docs-history-m3`), `plans/W-088g2.md` (tag `docs-history-m3`) and `plans/W-089.md` (tag `docs-history-m3`) stay while other kept plans (`W-088g1/g2/g4/g5`, `W-112b`) still cite them. W-357b10d moved `W-137`'s and `W-235`'s hand-worked tests here and deleted both plans (readable at `d8ef2aad`).
 
 ### W-088g — land or building acquired before 23-7-2024
 

@@ -1,7 +1,7 @@
 # Module `portfolio` — trades, holdings and what they earned
 
 > W-357b7a (D-911), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a bare
-> path is under `backend/src/main/java/com/thiru/wealthlens/portfolio/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a. This
+> path is under `backend/src/main/java/com/thiru/wealthlens/portfolio/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a. This
 > doc was written in two parts (D-910): **trades and holdings** (W-357b7a, D-911) and **outcomes and reports** — `profit_and_loss`,
 > `trade_outcomes`, analytics, the export, the property sale and their rebuilds (W-357b7b, D-912). It also holds the hand-worked
 > figures `ProfitAndLossGapAuditIntegrationTest` asserts (§5), moved here from W-264d's plan, which W-357b7b removed with its review

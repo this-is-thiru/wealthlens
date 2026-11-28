@@ -1,7 +1,7 @@
 # Module `brokercharges` — what a trade, an account or a redemption costs, priced from rate cards
 
 > W-357b6a (D-908), written from the code at `review/taxplanning` on 2026-11-22. Every claim cites the line it was read from; a bare
-> path is under `backend/src/main/java/com/thiru/wealthlens/brokercharges/`. Template: `docs/taxplanning-build/plans/W-357b.md` C2a.
+> path is under `backend/src/main/java/com/thiru/wealthlens/brokercharges/`. Template: `docs/taxplanning-build/plans/W-357b.md` (tag `docs-history-m3`) C2a.
 > This doc also holds the hand-worked figures `ChargeGapAuditIntegrationTest` asserts (§5), moved here from W-264b's review
 > (`reviews/2026-11-13-charge-engine-gap-audit.md` §2, deleted by W-357b6b and readable at tag `docs-history-m1`). The design notes it replaces, `docs/charges-engine/`, were deleted by W-357b6b
 > (D-909) and are still readable at tag `docs-history-m1`, e.g. `git show docs-history-m1:docs/charges-engine/decisions.md`. The code
