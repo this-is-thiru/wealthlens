@@ -13,7 +13,10 @@ final class RetiredKeys {
 
     private static final Map<String, Set<String>> BY_COLLECTION = Map.of(
             // AssetEntity's totalValue, removed by d55dd15f (#45); m1.6.1's AssetEntity has no such field
-            "assets", Set.of("total_value"));
+            "assets", Set.of("total_value"),
+            // TemporaryTransactionEntity's unannotated assetRequest (5bc7cf10); m1.6.1 reads only asset_request (117b3a0d,
+            // TransactionEntity.java:159 at m1.6.1), so it read such a temporary as holding none (W-421, D-1008)
+            "transactions", Set.of("assetRequest"));
 
     private static final Map<String, Set<String>> BY_CLASS = Map.of(
             // stored under the Java names before CorporateActionEntity took its snake_case @Field names, which m1.6.1 read

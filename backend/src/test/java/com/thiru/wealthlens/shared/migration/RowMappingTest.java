@@ -111,6 +111,25 @@ class RowMappingTest {
     }
 
     @Test
+    void of_whenATransactionHoldsTheCamelCaseAssetRequest_leavesItOutAndCountsIt() {
+        // Given — a temporary stored as TemporaryTransactionEntity's unannotated assetRequest (5bc7cf10); m1.6.1 reads only
+        // asset_request (117b3a0d), so it saw none (W-421, D-1008)
+        TargetTable transactionsTable = new TargetTable("transactions", "id", Map.of("id", "character varying", "status", "text",
+                "timezone_id", "text"));
+        Document stored = new Document("_id", "trade-3").append("status", "TEMPORARY").append("timezone_id", "Asia/Kolkata")
+                .append("assetRequest", new Document("stockCode", "INFY").append("quantity", 5.0));
+        FormerForms forms = FormerForms.of(KOLKATA);
+
+        // When
+        SourceRow row = RowMapping.of(stored, CollectionCopy.sameName("transactions"), transactionsTable, List.of(), Map.of(), forms);
+
+        // Then
+        assertThat(row.values()).containsExactlyInAnyOrderEntriesOf(Map.of("id", "trade-3", "status", "TEMPORARY",
+                "timezone_id", "Asia/Kolkata"));
+        assertThat(forms.describe()).isEqualTo("read as m1.6.1 read them: 1 × assetRequest left out");
+    }
+
+    @Test
     void of_whenATransactionLacksTimezoneId_writesM161sDefaultAndCountsIt() {
         // Given — a transaction stored without timezone_id; m1.6.1 kept TransactionEntity's initial Asia/Kolkata (W-419, D-1002)
         TargetTable transactionsTable = new TargetTable("transactions", "id", Map.of("id", "character varying", "timezone_id", "text"));
