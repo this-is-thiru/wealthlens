@@ -543,7 +543,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void patch_whenAFigureIsSaved_storesTheDraftAndItsRevisionsEncryptedAndRecordsTheirReads() {
+    void patch_whenAFigureIsSaved_storesTheDraftAndItsRevisionsPlainAndRecordsTheirReads() {
         // Given
         save(ADD_EMPLOYMENT.formatted("175000"), "\"rev-0\"");
 
@@ -551,14 +551,14 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.GET, OWNER, "/drafts/" + draftId, null, null);
         String atOne = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/1", null, null).getBody();
 
-        // Then — DR 14 O1.1: the figure is read back but is in no stored document; O4: both reads recorded
+        // Then — stored plain since W-428a (D-1036): the figure is in the stored draft and in revision 1 (revision 0 is the
+        // blank draft); O4: both reads recorded
         assertThat(atOne).contains("175000");
         JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
-        assertThat(jdbc.queryForObject("SELECT inputs_json FROM tax_filing_drafts", String.class)).startsWith("k1:");
-        jdbc.queryForList("SELECT * FROM tax_filing_drafts")
-                .forEach(stored -> assertThat(stored.toString()).doesNotContain("175000", "BASIC"));
-        jdbc.queryForList("SELECT * FROM tax_draft_revisions")
-                .forEach(stored -> assertThat(stored.toString()).doesNotContain("175000", "BASIC"));
+        assertThat(jdbc.queryForObject("SELECT inputs_json FROM tax_filing_drafts", String.class)).contains("175000", "BASIC")
+                .doesNotContain("k1:");
+        assertThat(jdbc.queryForMap("SELECT * FROM tax_draft_revisions WHERE revision_number = 1").toString()).contains("175000", "BASIC");
+        jdbc.queryForList("SELECT * FROM tax_draft_revisions").forEach(stored -> assertThat(stored.toString()).doesNotContain("k1:"));
         assertThat(accessRecords.findAll())
                 .extracting(AccessRecord::getSubject, AccessRecord::getSubjectId)
                 .containsExactlyInAnyOrder(tuple(ReadSubject.DRAFT, draftId), tuple(ReadSubject.DRAFT_REVISION, draftId));

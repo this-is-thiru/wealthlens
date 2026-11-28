@@ -63,6 +63,7 @@ against the named database.
 | 0.3 | `profit_and_loss.version` present | **done**: 0 without (2026-10-27) | **done**: 0 without (2026-10-27) |
 | 0.8 | Legacy salary and policy collections: count, back up, drop (W-159) | **retired** (W-331): done (W-334e1) | **retired** (W-331): done (W-334d2) |
 | 0.9 | The move: copy MongoDB into PostgreSQL (W-337g2c), at W-337i, before §1B on that database | at the move | at the move |
+| 2.20 | Stored personal data made plain (W-428a), before the first normal start of the release carrying it | run | run |
 | 1 | Deploy; startup checks | check | check |
 | 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
 | 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
@@ -85,6 +86,7 @@ and W-370's went with W-337i6 (D-1015), W-337j2's start check once logged for bo
 
 1. W-427 (D-1034) — **after the first release carrying W-427 has started on that database:** remove the three `APP_POSTGRES_DATASOURCE_*` lines from its env file (owner; backup first; `sed -i '' -E '/^(export )?APP_POSTGRES_DATASOURCE_(URL|USERNAME|PASSWORD)=/d'`), keeping `DATABASE_*`. Until then the file holds both, because `m1.8` reads the old names. Check: `grep -c APP_POSTGRES` answers 0 and the app starts. Way back: the backup.
 2. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, read in SQL on PostgreSQL (`SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded FROM wealthlens.user_details;`, D-1007 C2a, D-1013 C1a): the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
+3. §2.20 W-428a (D-1036) — **before the first normal start of the release carrying W-428a, per database (dev, staging, prod):** backup, the rewrite run, the `k1:` check answering no rows, a sign-in. Until it runs nobody can sign in on that database. Keep `TAX_DATA_KEY` / `TAX_DIGEST_KEY` while the step-1 dumps are kept.
 
 ## 0. Before deploying
 
@@ -2168,6 +2170,60 @@ makes it (W-413, D-989): step 2 below is what makes it, on each host, before the
 
 **Second run:** safe; `IF NOT EXISTS` changes nothing. **Way back:** `DROP SCHEMA wealthlens;` (empty until §0.9), or delete
 the Neon branch or Aiven service. Nothing but the empty schema is in any of them before W-337i.
+
+---
+
+### 2.20 W-428a (D-1036, D-1037) — stored personal data made plain · owner · **every database · once · before its first normal start on the release carrying W-428a**
+
+**Why.** From W-428a the app writes every personal value plain and looks an email up by its plain value. Rows stored before it
+hold `k1:` ciphertext, so on such a database **nobody can sign in** until this run has made them plain. The run is the app itself,
+started with the `plain-text-rewrite` profile beside the environment's own: no port is opened, it finds every `k1:` value by its
+form in every text and `bytea` column of schema `wealthlens` (whole values, strings inside JSON, document bytes), makes it plain,
+one transaction per column, logs one line per column it changed, and stops (`PlainTextRewrite`, `PlainTextRewriteRun`). It
+needs the database's own `TAX_DATA_KEY` and `TAX_DIGEST_KEY` (in the env file). Passwords and refresh-token hashes are not
+ciphertext and are not touched. Order: dev, then staging, then prod; logged in the run log each time.
+
+Running SQL is §2.19 step 4 (`PSQL`, from a folder of your own).
+
+1. **Backup first** (it holds ciphertext, so it is read only with this database's keys — keep the keys while the dump is kept):
+   ```zsh
+   set -a; source ~/wealthlens-runs/<env>.env; set +a     # dev, staging or prod
+   docker run --rm -v "$PWD":/w -e PGPASSWORD="$DATABASE_PASSWORD" postgres:18 pg_dump "host=<host> port=<port> dbname=<database> user=<role> sslmode=require" -n wealthlens -Fc -f /w/<env>-pre-w428a.dump
+   ls -l <env>-pre-w428a.dump
+   ```
+   (prod: no `port=`, `channel_binding=require` added, as §2.19.) Stop if the file is missing or empty.
+2. **Check before (read-only):** the columns still holding `k1:` values, and how many:
+   ```zsh
+   PSQL <<'EOF'
+   SELECT 'SELECT * FROM (' || string_agg(format('SELECT %L AS table_name, %L AS column_name, count(*) AS sealed FROM wealthlens.%I WHERE %s',
+     table_name, column_name, table_name, CASE data_type WHEN 'bytea' THEN format('substring(%I FROM 1 FOR 3) = %L::bytea', column_name, 'k1:')
+     ELSE format('(%I LIKE %L OR %I LIKE %L)', column_name, 'k1:%', column_name, '%"k1:%') END), ' UNION ALL ') || ') x WHERE sealed > 0 ORDER BY 1, 2'
+     FROM information_schema.columns WHERE table_schema = 'wealthlens' AND data_type IN ('text', 'character varying', 'bytea')
+       AND table_name <> 'flyway_schema_history' \gexec
+   EOF
+   ```
+   Expect rows (`user_details.email` among them) on a database stored before W-428a. Keep the output.
+3. **The run** — from the release worktree, with the app stopped:
+   ```zsh
+   [[ -f wealthlens.jar ]] || { echo "no wealthlens.jar here: stop"; return 1 }
+   set -a; source ~/wealthlens-runs/<env>.env; set +a
+   java -jar wealthlens.jar --spring.profiles.active=<profile>plain-text-rewrite --app.tax.jobs.enabled=false 2>&1 | tee rewrite-<env>.log
+   ```
+   with `<profile>` empty for dev, `staging,` or `prod,`. Expect one `<table>.<column>: N made plain` line per column step 2
+   listed, then `Plain-text rewrite done: … value(s) made plain in … column(s)`, and the process ends with exit 0
+   (`echo $pipestatus[1]`). A value that will not decrypt (another database's keys, an altered value) stops the run with an
+   error; its column is left as it was, the columns before it are already plain — fix the cause and run again.
+4. **Check after (read-only):** step 2 again — **no rows**. A row left is a value that only names `k1:` as text (the log says
+   `… left (no ciphertext in them)`) or one the run missed: read it before going on; W-428c may not start while any database
+   answers a row it cannot explain.
+5. **Start and sign in:** start the app as usual; sign in as the owner — 200. Then delete `rewrite-<env>.log` (it names
+   columns and counts, no personal data, but is not kept).
+
+**Second run:** safe — it finds nothing sealed and changes nothing (`PlainTextRewriteIntegrationTest`); after a failed run it
+completes the rest. **Way back:** stop the app and restore the step-1 dump (`pg_restore --clean --if-exists -n wealthlens -d …`),
+then start the previous release, which reads only ciphertext. A release carrying W-428a also reads the restored ciphertext,
+but nobody signs in on it until this step runs again. **Removed after use:** with the cipher, by W-428c (its row names this
+section and the profile; YouTrack WL-51, under WL-28), once this step is logged for dev, staging and prod.
 
 ---
 

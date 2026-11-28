@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * Stores a text column encrypted yet still queryable by equality (W-337a, D-937)
- * (W-253's scheme), named on the field with {@code @Convert(converter = SearchableColumn.class)}. The same value always stores
- * the same form (the nonce is the value's keyed digest, {@link FieldCipher#encryptSearchable}), so a derived query or a JPQL
- * {@code WHERE} naming the Java property matches without being rewritten. Text only: no column holds a list of identifiers.
+ * A text column that was stored encrypted yet queryable by equality (W-253's scheme, W-337a), named on the field with
+ * {@code @Convert(converter = SearchableColumn.class)}. Since W-428a (D-1036) it writes plain — so a query's value goes in plain
+ * too, and finds a row only once the rewrite ({@code PlainTextRewrite}) has made the stored value plain — and reads plain or the
+ * old {@code k1:} form ({@link FieldCipher#reveal}). W-428c removes it.
  */
 @Component
 @Converter
@@ -20,11 +20,11 @@ public class SearchableColumn implements AttributeConverter<String, String> {
 
     @Override
     public String convertToDatabaseColumn(String attribute) {
-        return attribute == null ? null : cipher.encryptSearchable(attribute);
+        return attribute;
     }
 
     @Override
     public String convertToEntityAttribute(String stored) {
-        return stored == null ? null : cipher.decrypt(stored);
+        return stored == null ? null : cipher.reveal(stored);
     }
 }

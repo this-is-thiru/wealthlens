@@ -176,9 +176,14 @@ public abstract class AbstractIntegrationTest {
         }
     }
 
-    /** An identifier as stored (W-253): what a raw document or column holds and a raw query matches. */
+    /** An identifier as stored: plain since W-428a (D-1036), so what a raw column holds and a raw query matches is the value itself. */
     protected String storedIdentifier(String identifier) {
-        return fieldCipher.encryptSearchable(identifier);
+        return identifier;
+    }
+
+    /** A value in the {@code k1:} form stored before W-428a (D-1036), for a test that plants an old row. */
+    protected String oldCiphertext(String plain) {
+        return fieldCipher.encryptSearchable(plain);
     }
 
     /** The login of {@code email} from PostgreSQL (W-337c1); {@code null} when there is none. */

@@ -75,7 +75,7 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void save_whenADocumentItsAttemptAndConfirmationAreStored_readsThemBackEqualAndKeepsNoReadValuePlain() {
+    void save_whenADocumentItsAttemptAndConfirmationAreStored_readsThemBackEqualAndStoresThemPlain() {
         // Given — row 12 read as "1,00,000" (₹1,00,000), confirmed as ₹9,50,000; a period; words the parser could not place
         IngestedDocument document = document("document-1", "profile-1");
         ParseAttempt attempt = new ParseAttempt("attempt-1", "document-1", new ParserRun("FORM_130", "3",
@@ -97,16 +97,16 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
         assertThat(documents.findById("document-1").orElseThrow().toRecord()).isEqualTo(document);
         assertThat(attempts.findById("attempt-1").orElseThrow().toRecord()).isEqualTo(attempt);
         assertThat(confirmations.findById("attempt-1").orElseThrow().toRecord()).isEqualTo(confirmation);
-        // Then — what the form says, and who confirmed it, is not stored as plain text
+        // Then — what the form says, and who confirmed it, is stored plain since W-428a (D-1036)
         Map<String, Object> storedAttempt = raw("tax_parse_attempts", "attempt-1");
         String attemptAsText = storedAttempt.values().stream().map(String::valueOf).collect(Collectors.joining("|"));
-        assertThat(attemptAsText).doesNotContain("1,00,000", "100000", "2026-04-01", "Signature", "row 8 not found");
+        assertThat(attemptAsText).contains("1,00,000", "Signature", "row 8 not found").doesNotContain("k1:");
         assertThat(storedAttempt.get("parser_version")).isEqualTo("3");
         assertThat(storedAttempt.get("outcome")).isEqualTo("PARTIAL");
         Map<String, Object> storedConfirmation = raw("tax_document_confirmations", "attempt-1");
         String confirmationAsText = storedConfirmation.values().stream().map(String::valueOf).collect(Collectors.joining("|"));
-        assertThat(confirmationAsText).doesNotContain("950000", "owner@example.com");
-        assertThat(storedConfirmation.get("confirmed_by")).isEqualTo(storedIdentifier("owner@example.com"));
+        assertThat(confirmationAsText).doesNotContain("k1:");
+        assertThat(storedConfirmation.get("confirmed_by")).isEqualTo("owner@example.com");
     }
 
     @Test
@@ -132,7 +132,7 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void store_whenAPdfIsStored_readsBackEqualAndKeepsNoPlainByteInPostgres() {
+    void store_whenAPdfIsStored_readsBackEqualAndStoresItPlain() {
         // Given
         byte[] pdf = TestPdfs.pages(2);
 
@@ -143,7 +143,7 @@ class DocumentStoreIntegrationTest extends AbstractIntegrationTest {
         assertThat(pages).isEqualTo(2);
         assertThat(documentBytes.read("document-1").bytes()).isEqualTo(pdf);
         byte[] stored = documentBytesRepository.findById("document-1").orElseThrow().getBytes();
-        assertThat(new String(stored, StandardCharsets.ISO_8859_1)).doesNotContain("%PDF-");
+        assertThat(stored).isEqualTo(pdf); // plain since W-428a (D-1036)
     }
 
     @Test

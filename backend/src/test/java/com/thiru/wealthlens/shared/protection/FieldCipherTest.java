@@ -138,4 +138,36 @@ class FieldCipherTest {
         assertThatThrownBy(() -> cipher(KEY).decryptBytes("%PDF-1.4".getBytes(java.nio.charset.StandardCharsets.US_ASCII)))
                 .isInstanceOf(IllegalStateException.class).hasMessageContaining("not encrypted under a known key");
     }
+
+    @Test
+    void reveal_whenStoredBeforeW428a_decryptsIt() {
+        // When / Then
+        assertThat(cipher(KEY).reveal(cipher(KEY).encrypt("ABCPE1234F"))).isEqualTo("ABCPE1234F");
+    }
+
+    @Test
+    void reveal_whenStoredPlain_returnsItAsItIs() {
+        // When / Then
+        assertThat(cipher(KEY).reveal("ABCPE1234F")).isEqualTo("ABCPE1234F");
+    }
+
+    @Test
+    void revealBytes_whenSealedBeforeW428a_opensThem() {
+        // Given
+        byte[] file = "%PDF-1.7".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+
+        // When / Then
+        assertThat(cipher(KEY).revealBytes(cipher(KEY).encryptBytes(file))).isEqualTo(file);
+    }
+
+    @Test
+    void revealBytes_whenStoredPlainOrShorterThanTheKeyId_returnsThemAsTheyAre() {
+        // Given
+        byte[] file = "%PDF-1.7".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        byte[] shortFile = {'k', '1'};
+
+        // When / Then
+        assertThat(cipher(KEY).revealBytes(file)).isEqualTo(file);
+        assertThat(cipher(KEY).revealBytes(shortFile)).isEqualTo(shortFile);
+    }
 }

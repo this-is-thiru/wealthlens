@@ -17,9 +17,8 @@ import java.util.function.Supplier;
 import org.springframework.dao.DataAccessResourceFailureException;
 
 /**
- * A document's bytes, kept in {@code tax_document_bytes} under the document's id, sealed with the personal-data key, so nothing
- * stored is readable without the application ({@code DR 14} O6; W-131b, D-762; table instead of a GridFS bucket since W-337f,
- * D-951). What is refused is refused before anything is written: too large, failing the malware scan, not a PDF, locked by a
+ * A document's bytes, kept in {@code tax_document_bytes} under the document's id ({@code DR 14} O6; W-131b, D-762; a table since
+ * W-337f, D-951). Stored plain since W-428a (D-1036); bytes sealed before it are read through {@link FieldCipher#revealBytes}. What is refused is refused before anything is written: too large, failing the malware scan, not a PDF, locked by a
  * password, or too long. The scan comes before the PDF is opened, so the PDF library never reads an unscanned file (W-131e
  * C3a); it is opened in a child process, never here (W-131f C3a). A store that cannot be reached is a 503 (O9).
  *
@@ -30,7 +29,7 @@ public record DocumentBytes(TaxDocumentBytesRepository repository, FieldCipher c
 
     private static final byte[] PDF_START = "%PDF-".getBytes(StandardCharsets.US_ASCII);
 
-    /** Checks the bytes against O6's limits and scans them, then stores them sealed; returns the number of pages. */
+    /** Checks the bytes against O6's limits and scans them, then stores them; returns the number of pages. */
     public int store(String documentId, DocumentContent content) {
         byte[] plain = content.bytes();
         if (plain.length > settings.maxBytes()) {
@@ -43,7 +42,7 @@ public record DocumentBytes(TaxDocumentBytesRepository repository, FieldCipher c
         int pages = pagesOf(plain);
         TaxDocumentBytes row = new TaxDocumentBytes();
         row.setDocumentId(documentId);
-        row.setBytes(cipher.encryptBytes(plain));
+        row.setBytes(plain);
         row.setUploadedAt(LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC));
         reachable(() -> repository.save(row));
         return pages;
@@ -57,7 +56,7 @@ public record DocumentBytes(TaxDocumentBytesRepository repository, FieldCipher c
         if (row == null) {
             throw new IllegalStateException("Document " + documentId + " has no stored bytes");
         }
-        return new DocumentContent(cipher.decryptBytes(row.getBytes()));
+        return new DocumentContent(cipher.revealBytes(row.getBytes()));
     }
 
     public void remove(Collection<String> documentIds) {

@@ -14,10 +14,8 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Under MongoDB, {@code AssetRequest.email} / {@code .accountHolder} carried
  * {@code @ValueConverter(SearchableIdentifier.class)}, so Spring Data encrypted them even nested inside
- * {@code TransactionEntity.assetRequest}. Jackson does not understand that annotation, so this converter encrypts
- * both fields itself before serializing (and decrypts them after reading back) — otherwise a second, plaintext
- * copy of the user's email and account holder would appear in the JSON blob, a protection regression this port
- * must not introduce.
+ * {@code TransactionEntity.assetRequest}; this converter did the same by hand. Since W-428a (D-1036) both are written plain,
+ * and read plain or in the old {@code k1:} form ({@link FieldCipher#reveal}); W-428c removes the reading of the old form.
  *
  * <p>Its mapper writes the stored form, {@link StoredAssetRequest}: the execution time an upload read, hidden from API
  * callers, is kept (W-408).
@@ -37,10 +35,7 @@ public class AssetRequestConverter implements AttributeConverter<AssetRequest, S
         if (attribute == null) {
             return null;
         }
-        AssetRequest copy = MAPPER.readValue(MAPPER.writeValueAsString(attribute), AssetRequest.class);
-        copy.setEmail(encrypt(copy.getEmail()));
-        copy.setAccountHolder(encrypt(copy.getAccountHolder()));
-        return MAPPER.writeValueAsString(copy);
+        return MAPPER.writeValueAsString(attribute);
     }
 
     @Override
@@ -54,11 +49,7 @@ public class AssetRequestConverter implements AttributeConverter<AssetRequest, S
         return attribute;
     }
 
-    private String encrypt(String value) {
-        return value == null ? null : cipher.encryptSearchable(value);
-    }
-
     private String decrypt(String value) {
-        return value == null ? null : cipher.decrypt(value);
+        return value == null ? null : cipher.reveal(value);
     }
 }

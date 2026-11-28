@@ -25,13 +25,25 @@ class CorporateActionListConverterTest {
     }
 
     @Test
-    void convertToDatabaseColumn_whenACopyNamesItsAuthor_storesTheSearchableFormOnly() {
+    void convertToDatabaseColumn_whenACopyNamesItsAuthor_storesItPlain() {
         // When
         String stored = converter.convertToDatabaseColumn(List.of(copyBy(AUTHOR)));
 
-        // Then — the form m1.6.1's SearchableIdentifier stored, so the copier carries MongoDB's value unchanged (D-956)
-        assertThat(stored).doesNotContain(AUTHOR).contains("\"createdBy\":\"" + cipher.encryptSearchable(AUTHOR) + "\"")
-                .contains("\"updatedBy\":null");
+        // Then — plain since W-428a (D-1036)
+        assertThat(stored).contains("\"createdBy\":\"" + AUTHOR + "\"").contains("\"updatedBy\":null").doesNotContain("k1:");
+    }
+
+    @Test
+    void convertToEntityAttribute_whenTheAuthorIsTheOldCiphertext_readsItPlain() {
+        // Given — a copy written before W-428a, its author sealed
+        String stored = "[{\"id\":\"ca-1\",\"stockCode\":\"RELIANCE\",\"auditMetadata\":{\"createdBy\":\""
+                + cipher.encryptSearchable(AUTHOR) + "\",\"updatedBy\":null}}]";
+
+        // When
+        List<CorporateActionEntity> copies = converter.convertToEntityAttribute(stored);
+
+        // Then
+        assertThat(copies).singleElement().satisfies(copy -> assertThat(copy.getAuditMetadata().getCreatedBy()).isEqualTo(AUTHOR));
     }
 
     @Test

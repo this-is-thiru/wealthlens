@@ -6,9 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * Stores a text column encrypted (W-337a, D-937; {@code DR 14} O1.1), named on the field with
- * {@code @Convert(converter = EncryptedColumn.class)}. Text only: a date has {@link EncryptedDateColumn}, an enum its own
- * converter where one is stored encrypted.
+ * A text column that was stored encrypted (W-337a, D-937), named on the field with
+ * {@code @Convert(converter = EncryptedColumn.class)}. Since W-428a (D-1036) it writes plain and reads plain or the old
+ * {@code k1:} form ({@link FieldCipher#reveal}); W-428c removes it once every database is plain. Text only: a date has
+ * {@link EncryptedDateColumn}.
  */
 @Component
 @Converter
@@ -19,11 +20,11 @@ public class EncryptedColumn implements AttributeConverter<String, String> {
 
     @Override
     public String convertToDatabaseColumn(String attribute) {
-        return attribute == null ? null : cipher.encrypt(attribute);
+        return attribute;
     }
 
     @Override
     public String convertToEntityAttribute(String stored) {
-        return stored == null ? null : cipher.decrypt(stored);
+        return stored == null ? null : cipher.reveal(stored);
     }
 }

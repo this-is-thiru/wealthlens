@@ -279,14 +279,14 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         call(HttpMethod.POST, OWNER, path + "lenders",
                 "{\"name\": \"Meera\", \"address\": \"Pune\", \"pan\": \"FGHIJ8765K\", \"kind\": \"OTHER\"}");
 
-        // Then — DR 14 O1.1: what Postgres holds names none of them; what the app reads back is unchanged
-        assertThat(String.valueOf(rawFirst("tax_profiles"))).doesNotContain(PAN, "Self", "1985-06-01");
-        assertThat(String.valueOf(rawFirst("tax_family_members"))).doesNotContain("PQRST5678K", "Asha", "1986-02-01", "DISABILITY");
-        assertThat(String.valueOf(rawFirst("tax_employers"))).doesNotContain("BLRA12345B");
-        assertThat(String.valueOf(rawFirst("tax_landlords"))).doesNotContain("LMNOP4321Q", "Ravi", "Bengaluru");
-        assertThat(String.valueOf(rawFirst("tax_lenders"))).doesNotContain("FGHIJ8765K", "Meera", "Pune");
+        // Then — stored plain since W-428a (D-1036); what the app reads back is unchanged
+        assertThat(String.valueOf(rawFirst("tax_profiles"))).contains(PAN, "Self", "1985-06-01").doesNotContain("k1:");
+        assertThat(String.valueOf(rawFirst("tax_family_members"))).contains("PQRST5678K", "Asha", "1986-02-01").doesNotContain("k1:");
+        assertThat(String.valueOf(rawFirst("tax_employers"))).contains("BLRA12345B").doesNotContain("k1:");
+        assertThat(String.valueOf(rawFirst("tax_landlords"))).contains("LMNOP4321Q", "Ravi", "Bengaluru").doesNotContain("k1:");
+        assertThat(String.valueOf(rawFirst("tax_lenders"))).contains("FGHIJ8765K", "Meera", "Pune").doesNotContain("k1:");
         Map<String, Object> profile = rawFirst("tax_profiles");
-        assertThat((String) profile.get("pan")).startsWith("k1:");
+        assertThat((String) profile.get("pan")).isEqualTo(PAN);
         // HMAC-SHA256 of ABCDE1234F under the test digest key (bytes 0x1F … 0x3E), computed with Python's hmac, not the code
         assertThat((String) profile.get("pan_digest")).isEqualTo("fc7b5d1c7f778ae0d11ff7f39543daf491a5b2f2e1ca37b3f68a03e2066bca62");
         TaxpayerProfile read = profiles.findAll().getFirst();

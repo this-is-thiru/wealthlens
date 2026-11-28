@@ -17,8 +17,6 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class AssetRequestConverterTest {
 
-    private static final String SEALED = "sealed:";
-
     @Mock
     private FieldCipher cipher;
 
@@ -27,9 +25,8 @@ class AssetRequestConverterTest {
 
     @Test
     void convertToEntityAttribute_whenTheRequestHeldAnUploadedOrderTime_keepsIt() {
-        // Given — the upload set the cell's time (AssetRequestParser.setBrokerOrderTime); the cipher seals by prefix here
-        given(cipher.encryptSearchable(anyString())).willAnswer(call -> SEALED + call.getArgument(0));
-        given(cipher.decrypt(anyString())).willAnswer(call -> call.<String>getArgument(0).substring(SEALED.length()));
+        // Given — the upload set the cell's time (AssetRequestParser.setBrokerOrderTime); the cipher reveals what it is given
+        given(cipher.reveal(anyString())).willAnswer(call -> call.getArgument(0));
         AssetRequest request = new AssetRequest();
         request.setEmail("owner@example.com");
         request.setOrderExecutionDateTime(LocalDateTime.of(2026, 1, 15, 10, 30));
@@ -38,9 +35,9 @@ class AssetRequestConverterTest {
         String stored = converter.convertToDatabaseColumn(request);
         AssetRequest read = converter.convertToEntityAttribute(stored);
 
-        // Then — the time survives; the email is sealed in the column and opened on read, as before
+        // Then — the time survives; the email is stored plain since W-428a (D-1036) and read back
         assertThat(read.getOrderExecutionDateTime()).isEqualTo(LocalDateTime.of(2026, 1, 15, 10, 30));
-        assertThat(stored).contains(SEALED + "owner@example.com");
+        assertThat(stored).contains("\"email\":\"owner@example.com\"");
         assertThat(read.getEmail()).isEqualTo("owner@example.com");
     }
 

@@ -82,6 +82,22 @@ public class FieldCipher {
     }
 
     /**
+     * A stored value as plain text (W-428a, D-1036): one written before W-428a is {@code k1:} ciphertext and is decrypted; one
+     * written since is plain and returned as it is. Kept until every database has had the rewrite ({@code PlainTextRewrite}) and
+     * W-428c removes the cipher.
+     */
+    public String reveal(String stored) {
+        return stored.startsWith(KEY_ID) ? decrypt(stored) : stored;
+    }
+
+    /** A stored file's bytes as plain bytes, as {@link #reveal} does for text (W-428a): a PDF never starts with {@code k1:}. */
+    public byte[] revealBytes(byte[] stored) {
+        byte[] keyId = KEY_ID.getBytes(StandardCharsets.US_ASCII);
+        boolean sealed = stored.length >= keyId.length && Arrays.equals(stored, 0, keyId.length, keyId, 0, keyId.length);
+        return sealed ? decryptBytes(stored) : stored;
+    }
+
+    /**
      * @throws IllegalStateException if {@code stored} is not this key's, or was altered
      */
     public String decrypt(String stored) {

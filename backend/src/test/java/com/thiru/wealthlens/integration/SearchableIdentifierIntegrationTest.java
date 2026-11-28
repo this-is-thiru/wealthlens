@@ -45,18 +45,18 @@ class SearchableIdentifierIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void save_whenAnAssetIsStored_holdsItsIdentifiersEncrypted() {
+    void save_whenAnAssetIsStored_holdsItsIdentifiersPlain() {
         // When
         Map<String, Object> stored = new JdbcTemplate(postgresDataSource)
                 .queryForMap("SELECT email, account_holder FROM assets LIMIT 1");
 
-        // Then
-        assertThat(stored.get("email").toString()).startsWith("k1:").doesNotContain("holder");
-        assertThat(stored.get("account_holder").toString()).startsWith("k1:").doesNotContain("Lakshmi");
+        // Then — plain since W-428a (D-1036)
+        assertThat(stored.get("email")).isEqualTo(USER);
+        assertThat(stored.get("account_holder")).isEqualTo(HOLDER);
     }
 
     @Test
-    void findByEmail_whenStoredEncrypted_findsTheAssetAndReadsItsIdentifiersBack() {
+    void findByEmail_whenStored_findsTheAssetAndReadsItsIdentifiersBack() {
         // When / Then
         assertThat(portfolioRepository.findByEmail(USER)).singleElement()
                 .satisfies(asset -> assertThat(asset.getAccountHolder()).isEqualTo(HOLDER));
