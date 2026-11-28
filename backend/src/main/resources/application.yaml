@@ -2,11 +2,11 @@ server:
   port: 8080
 
 spring:
-  # W-426: the one store, by Spring Boot's own auto-configuration; the env names stay APP_POSTGRES_DATASOURCE_*
+  # W-426, W-427: the one store, by Spring Boot's own auto-configuration, from DATABASE_URL / _USERNAME / _PASSWORD
   datasource:
-    url: ${app.postgres.datasource.url}
-    username: ${app.postgres.datasource.username}
-    password: ${app.postgres.datasource.password}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     hikari:
       # W-413 (D-989): every connection works in schema wealthlens (D-929), which W-337h made on each host
       schema: wealthlens

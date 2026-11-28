@@ -91,9 +91,9 @@ public abstract class AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("app.postgres.datasource.url", postgresContainer::getJdbcUrl);
-        registry.add("app.postgres.datasource.username", postgresContainer::getUsername);
-        registry.add("app.postgres.datasource.password", postgresContainer::getPassword);
+        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgresContainer::getUsername);
+        registry.add("spring.datasource.password", postgresContainer::getPassword);
         registry.add("app.tax.documents.scan.host", () -> "localhost");
         registry.add("app.tax.documents.scan.port", CLAMD::port);
     }
