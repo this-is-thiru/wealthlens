@@ -50,7 +50,7 @@ public class PostgresJpaConfig {
     }
 
     /**
-     * The pool every PostgreSQL user shares — Flyway, Hibernate, the copier's {@code current_schema()} — so its
+     * The pool every PostgreSQL user shares — Flyway and Hibernate — so its
      * {@code hikari.schema} puts them all in schema {@code wealthlens} (W-413, D-989; D-929).
      */
     @Bean

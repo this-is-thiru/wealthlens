@@ -1,7 +1,0 @@
-# The copier's run (W-337g, D-953 C2a): started with this profile beside the environment's own, the application serves
-# nothing while it copies MongoDB into PostgreSQL, then stops. app.copier.written-zone has no default: the owner states the
-# time zone the JVM that wrote the MongoDB rows ran in (post-deployment-runbook.md).
-# W-409 (D-984): the servlet context is kept, because the security chain's CORS needs it (AuthConfig), and no port is opened:
-# -1 is Spring Boot's "create the web context, open no endpoint".
-server:
-  port: -1

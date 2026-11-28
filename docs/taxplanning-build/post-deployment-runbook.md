@@ -78,15 +78,12 @@ and seed before anyone trades. On staging the owner is the only user.
 
 ## Next deploy — what prod and staging still need
 
-Both are on `m1.6.1` (W-366, D-896, D-897); the app runs locally, nothing is hosted. An item that needs
-something at the next deploy adds its line here when it is committed; each line goes when its run is logged for both. Everything
-below is the full sequence for a fresh database (W-337).
+All three databases are on PostgreSQL with `m1.7.6` (dev W-337i2, staging W-337i4, prod W-337i5; D-1012, D-1014); the app runs
+locally, nothing is hosted. An item that needs something at the next deploy adds its line here when it is committed; each line goes
+when its run is logged for both. Everything below is the full sequence for a fresh database. The move's lines (§0.9, §2.19, §0.10)
+and W-370's went with W-337i6 (D-1015), their runs logged for every database.
 
-1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
-2. W-370 (D-900) — nothing to run: a caller's mistake (every 4xx), the 409 and the 503 are logged at WARN with the message only; only a 500 is logged at ERROR with its trace. A deploy's `grep -c " ERROR "` after the routes check expects **0** again (at `m1.6.1` it counted row 4's four refusals).
-3. §0.9 W-337g2c (D-979) — **at the move (W-337i), once per database:** the copy into PostgreSQL, before the PostgreSQL build first starts and before §1B there.
-4. §2.19 W-413 (D-989) — **before the PostgreSQL build first starts on a host:** schema `wealthlens` exists there (§2.19 steps 2 – 3). Prod: done (W-337h). Dev and staging: done (2026-11-27, 18.7, schema present). All three hosts ready.
-5. §0.10 W-406 (D-985) — **at W-337i — rehearsal, staging, prod — after §0.9 there, before §1B (D-991 C4a):** the read comparison, `m1.6.1` against the PostgreSQL build. Rehearsal logged (D-1006).
+1. §1.h W-358d3 (D-885) — **read-only, a week after m1.6.1 (due 2026-11-29), per database:** §1.h's count. On 2026-11-22 `upgraded` was 1 on each (the owner's sign-in at W-366b / c row 4); a week after, read in SQL on PostgreSQL (`SELECT count(*) AS users, count(*) FILTER (WHERE password LIKE '{argon2}%') AS upgraded FROM wealthlens.user_details;`, D-1007 C2a, D-1013 C1a): the accounts that signed in or registered since. Going back to `m1.5` needs a password reset for each upgraded account (§1.h).
 
 ## 0. Before deploying
 
@@ -355,7 +352,9 @@ as the export rule above says, once step 4 is logged.
 **Removed after use:** W-331 / WL-47, with §0.6, once this step is logged for every database.
 
 
-### 0.9 W-337g2c (D-979) — the move: copy MongoDB into PostgreSQL · owner · **once per database, at W-337i, before the PostgreSQL build first starts against it**
+### 0.9 W-337g2c (D-979) — the move: copy MongoDB into PostgreSQL · owner · **retired by W-337j1 (D-1017) · do not run**
+
+> **Retired.** Run for every database: dev (W-337i2), the rehearsal (W-337i3), staging (W-337i4), prod (W-337i5); the copier and its `copier` profile were removed by W-337j1 (D-1017, WL-50). Kept below as the record of what it did.
 
 **Why.** The PostgreSQL build reads only PostgreSQL. The copier (W-337g, D-953; every `m1.6.1` collection specified by D-978) starts
 the app with the `copier` profile — no port opened (W-409, D-984: before it, this step failed at start) — reads every MongoDB collection and the documents' bytes, writes each row by key,
@@ -467,9 +466,11 @@ unset MONGO_PASSWORD APP_POSTGRES_DATASOURCE_PASSWORD TAX_DATA_KEY TAX_DIGEST_KE
    (`MongoCopierIntegrationTest`). **Way back:** on the target, `DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens;` (DataGrip) — MongoDB
    is untouched — then step 2 again.
 
-**Removed after use:** W-337j removes the copier with MongoDB (YouTrack WL-50, under WL-28), once this step is logged for every database.
+**Removed after use:** done — W-337j1 (D-1017) removed the copier (YouTrack WL-50, under WL-28), this step logged for every database.
 
-### 0.10 W-406 (D-981, D-983, D-985) — the read comparison · owner · **at W-337i — the rehearsal, staging and prod — after §0.9 there, before §1B (D-991 C4a)**
+### 0.10 W-406 (D-981, D-983, D-985) — the read comparison · owner · **retired by W-337j1 (D-1017) · do not run**
+
+> **Retired.** Run on the rehearsal (W-337i3), staging (W-337i4) and prod (W-337i5), each `0 differences outside the list`; `tools/read_comparison.py` and its test were removed by W-337j1 (D-1017, WL-50). Kept below as the record of what it did.
 
 **Why.** Before a moved database is signed off, every read the PostgreSQL build answers is compared with what `m1.6.1` answers on the
 MongoDB it was copied from, as every user. `tools/read_comparison.py` reads every `GET` route in the `w-337`
@@ -527,7 +528,7 @@ python3 -I -B $W compare before after > report.txt; echo "exit: $?"; tail -3 rep
 5. **Second run / way back.** A second run is safe: it only reads, and `fetch` writes a fresh folder (remove the old one
    first). There is nothing to undo on either database beyond the read records both builds keep.
 
-**Removed after use:** W-337j removes the tool with the copier (YouTrack WL-50).
+**Removed after use:** done — W-337j1 (D-1017) removed the tool with the copier (YouTrack WL-50).
 
 ## 1. On every deploy — startup, automatic; confirm in the log
 
