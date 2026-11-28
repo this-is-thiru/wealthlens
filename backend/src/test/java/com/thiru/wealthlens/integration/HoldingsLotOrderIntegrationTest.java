@@ -59,6 +59,21 @@ class HoldingsLotOrderIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void getStockQuantity_whenLotsShareATradeDate_answersByTradeDateThenOldestFirst() {
+        // Given — a lot dated a day earlier but created last still leads; the three same-day lots follow oldest first (W-422)
+        String earlier = lot("ORDER-E", 2.0);
+        JdbcTemplate jdbc = new JdbcTemplate(postgresDataSource);
+        jdbc.update("UPDATE assets SET transaction_date = ?, created_at = ? WHERE id = ?", BOUGHT.minusDays(1),
+                LocalDateTime.of(2025, 9, 1, 9, 0), earlier);
+
+        // When
+        List<AssetResponse> lots = portfolioQueryService.getStockQuantity(UserMail.from(OWNER), "INFY");
+
+        // Then
+        assertThat(lots).extracting(AssetResponse::getOrderId).containsExactly("ORDER-E", "ORDER-0", "ORDER-1", "ORDER-3");
+    }
+
+    @Test
     void getAllStocks_whenAHoldingHasSeveralLots_showsTheOldestLotsOwnFields() {
         // When
         List<AssetResponse> holdings = portfolioQueryService.getAllStocks(UserMail.from(OWNER));

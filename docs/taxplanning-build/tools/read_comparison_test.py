@@ -147,6 +147,31 @@ class CompareTest(unittest.TestCase):
         # Then
         self.assertEqual([], found)
 
+    def test_compare_whenAStocksSameDayLotsInAnotherOrder_allowed(self):
+        # Given: two bonus lots of one day on two brokers; m1.6.1 gave the tie in MongoDB's stored order (W-422)
+        fyers = {"transactionDate": "2024-10-29", "brokerName": "FYERS", "buyTransactionIds": ["b1"], "quantity": 2.0}
+        zerodha = {"transactionDate": "2024-10-29", "brokerName": "ZERODHA", "buyTransactionIds": ["b2"], "quantity": 1.0}
+        earlier = {"transactionDate": "2024-09-19", "brokerName": "ZERODHA", "buyTransactionIds": ["b0"], "quantity": 1.0}
+        route = "/api/v1/me/portfolio/stocks/{stockCode}"
+        before = [("u@x", route, "/s", 200, "application/json", as_json([earlier, fyers, zerodha]))]
+        after = [("u@x", route, "/s", 200, "application/json", as_json([earlier, zerodha, fyers]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual([], found)
+
+    def test_compare_whenAStocksSameDayLotChangedBeyondItsOrder_difference(self):
+        # Given: the same two lots, one quantity changed
+        fyers = {"transactionDate": "2024-10-29", "brokerName": "FYERS", "buyTransactionIds": ["b1"], "quantity": 2.0}
+        zerodha = {"transactionDate": "2024-10-29", "brokerName": "ZERODHA", "buyTransactionIds": ["b2"], "quantity": 1.0}
+        route = "/api/v1/me/portfolio/stocks/{stockCode}"
+        before = [("u@x", route, "/s", 200, "application/json", as_json([fyers, zerodha]))]
+        after = [("u@x", route, "/s", 200, "application/json", as_json([dict(zerodha, quantity=3.0), fyers]))]
+        # When
+        found = self.differences(before, after)
+        # Then
+        self.assertEqual(["u@x | /s | $[1].quantity: before 1.0, after 3.0"], found)
+
     def test_compare_whenAllocationRowsInAnotherOrder_allowed(self):
         # Given: both builds iterate a HashMap keyed by the enum, so the rows' order changes with each start
         equity = {"assetType": "EQUITY", "investedValue": 209095.98}

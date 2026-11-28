@@ -110,8 +110,8 @@ UTC_HELD_FIELDS = (
 # the holding's own (PortfolioQueryService.java:115 – 156, 87). m1.6.1 read lots in MongoDB's stored order, which the
 # 2026-11-21 rewrite left and no field records, so its first lot was arbitrary; the w-337 build reads oldest first
 # (PortfolioRepository.findByEmail). They are compared holding by holding on HOLDING_FIELDS only — the key and what the
-# view works out for the holding — each lot's own fields being compared on /stocks/{stockCode}, which both builds order by
-# trade date. A worked-out number is a double summed lot by lot, so lots in another order move its last digits: it is
+# view works out for the holding — each lot's own fields being compared on /stocks/{stockCode},
+# put in one order on both sides first (ORDERED_FOR_COMPARISON, W-422). A worked-out number is a double summed lot by lot, so lots in another order move its last digits: it is
 # equal within HOLDING_RELATIVE_TOLERANCE.
 HOLDING_ROUTES = (
     "/api/v1/me/portfolio/stocks",
@@ -134,6 +134,10 @@ ORDERED_FOR_COMPARISON = {
     # AnalyticsService.java:94 – 110 (and :93 – 108 at m1.6.1) groups by AssetType into a HashMap, whose order follows the
     # enum's identity hash: it changes with each start of either build
     "/api/v1/me/portfolio/analytics/asset-allocation": (("assetType", False),),
+    # PortfolioRepository.findByEmailAndStockCodeOrderByTransactionDate orders by trade date, then oldest first (W-422,
+    # D-1011); m1.6.1's (PortfolioRepository.java:36 at m1.6.1) by trade date alone, so lots sharing a date came back in
+    # MongoDB's stored order. AssetResponse carries no id: a lot is told by its broker and the buys it was made from
+    "/api/v1/me/portfolio/stocks/{stockCode}": (("transactionDate", False), ("brokerName", False), ("buyTransactionIds", False)),
 }
 
 DATE_TIME = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,9})?$")
@@ -415,11 +419,12 @@ def numeric(text):
 
 
 def ordered_for_comparison(route, answer):
-    """A list ORDERED_FOR_COMPARISON names, sorted by its key fields, last key first, so each sort keeps the one before."""
+    """A list ORDERED_FOR_COMPARISON names, sorted by its key fields, last key first, so each sort keeps the one before; a
+    field absent or null sorts after every value, since a lot may lack its trade date or broker (W-422)."""
     if route not in ORDERED_FOR_COMPARISON or not isinstance(answer, list):
         return answer
     for field, descending in reversed(ORDERED_FOR_COMPARISON[route]):
-        answer = sorted(answer, key=lambda item, name=field: item[name], reverse=descending)
+        answer = sorted(answer, key=lambda item, name=field: (item.get(name) is None, item.get(name)), reverse=descending)
     return answer
 
 
