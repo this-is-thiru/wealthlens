@@ -4,10 +4,10 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-421 DONE (D-1009), committed into PR #80. W-337i4 STOPPED at row 6 (D-1008), resumes from row 3 on m1.7.5.
-Stage           : W-421 + W-337i4 docs committed on w-337 and pushed (PR #80); its run to check. Staging PG holds Flyway's empty tables; it-staging untouched.
+Item            : W-422 DONE (D-1011), committed and pushed on w-337; PR to master opened (owner: "commit and push W-422, open the PR"). W-337i4 STOPPED at row 10 (D-1010), resumes at row 9 on m1.7.6.
+Stage           : m1.7.5 released. Staging: copied on m1.7.5 (rows 3 – 9 go); row 10 compare 6 diffs (RELIANCE same-day lots). BOTH APPS STILL UP on 8081/8082 (pids ~/wealthlens-runs/w337i4/*.pid); before/ after/ kept in ~/wealthlens-runs/w406.
 Last item commit: "taxplanning W-421: leave out the camelCase assetRequest of staging's old temporary, counted — m1.6.1 never read it; W-337i4 planned (D-1007), stopped at row 6; D-1008, D-1009"
-Next step       : 1. gh run list --branch w-337 --limit 1 (red → read, report). 2. Green: owner's "merge #80". 3. m1.7.5 = W-337i1 again (tag, worktree ../wealthlens-m1.7.5-pg, jar, WL-A-2). 4. W-337i4 from row 3: J17 → m1.7.5, PSQL DROP SCHEMA wealthlens CASCADE; CREATE SCHEMA wealthlens; row 7 expects transactions '1 × assetRequest left out, 581 × timezone_id absent', assets '3 × total_value left out'.
+Next step       : 1. Check the PR's run (gh run list --branch w-337 --limit 1). 2. Green → owner's "merge" → m1.7.6 (W-337i1 again). 3. Staging: kill 8082, start m1.7.6 on 8082 (row 9), rm -rf ~/wealthlens-runs/w406/before after, row 10 fetch both sides with m1.7.6's tool.
 Files touched   : (none); api-collection Bruno edits — never commit
 Flags for owner : staging: target holds Flyway's empty tables (row 6 refused in prepare); it-staging untouched. §1.h count due 2026-11-29 (staging per C2; prod still Mongo: console). §1.s Aiven retention not given. W-416 (retire V1) waits for the owner. staging.env gains PG vars at row 2.
 Env notes       : NO Claude attribution; OrbStack stops on reboot: `orb start`, DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock; full tiers on pipeline only; CI = 3 jobs, ~5½ min.

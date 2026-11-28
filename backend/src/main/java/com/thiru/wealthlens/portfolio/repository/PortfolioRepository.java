@@ -49,7 +49,14 @@ public interface PortfolioRepository extends JpaRepository<AssetEntity, String>,
 
     List<AssetEntity> findByEmailAndStockCodeAndTransactionDateBefore(String email, String stockCode, LocalDate transactionDate);
 
-    List<AssetEntity> findByEmailAndStockCodeOrderByTransactionDate(String email, String stockCode);
+    /**
+     * A stock's lots by trade date, then oldest first as {@link #findByEmail}, so lots sharing a trade date — a bonus
+     * allotted on two brokers, say — come back in one order (W-422, D-1011); by trade date alone they came back in
+     * whatever order the store kept, which MongoDB and PostgreSQL do not share.
+     */
+    @Query("SELECT a FROM AssetEntity a WHERE a.email = :email AND a.stockCode = :stockCode ORDER BY a.transactionDate ASC, "
+            + "a.auditMetadata.createdAt ASC NULLS FIRST, a.id ASC")
+    List<AssetEntity> findByEmailAndStockCodeOrderByTransactionDate(@Param("email") String email, @Param("stockCode") String stockCode);
 
     List<AssetEntity> findByEmailAndStockCodeIn(String email, Collection<String> stockCodes);
 
