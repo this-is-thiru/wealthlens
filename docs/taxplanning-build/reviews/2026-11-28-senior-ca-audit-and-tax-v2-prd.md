@@ -172,7 +172,7 @@ Today `SalaryOptimiser` (`taxengine/optimise/SalaryOptimiser.java`) only moves `
    - `measuredTaxSavedCurrentRegime` & `measuredTaxSavedOptimalRegime` (exact `TaxCalculator` runs!)
    - `requiredCashOutlay`, `efficiencyPercent` (`taxSaved / cashOutlay × 100`, `∞` for zero-outlay)
    - `statutoryWindows`: `{minYears, maxYears, completionWindowYears, carryForwardYears, sanctionWindow, blockYears}` (all read from pack!)
-   - `liquidityTerms` (from `exec/*/liquidity` with Gazette provenance; `"Unverified"` if unsourced)
+   - `liquidityTerms` (the liquidity field of `timeline/exec/funds/*.json` and `timeline/exec/components/*.json`, with its Gazette provenance; `"Unverified"` if unsourced)
    - `conflictsWith[]` (`MUTUALLY_EXCLUSIVE`, `SHARED_CEILING`, `NO_DOUBLE_DIP_SAME_RUPEE`), `traps[]` (e.g., ₹7.5L employer cap, ₹2.5L VPF cap, 2nd-car trap, ₹1.25L LTCL waste), `hrSupportLikelihood`
 2. **Multi-Factor Priority Ranking (Always Show ALL):**
    - Users see **every** applicable lever (grouped by `G1`–`G9` AND as a flat ranked list), sortable by:

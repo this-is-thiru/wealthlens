@@ -315,7 +315,7 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 | `D-0nn` | a build decision (three digits) | `DECISIONS.md` | `D-046` |
 | `B1`, `B2` | backlog rules (B1: an item carries its own test; B2: a `permits` clause lists only what exists) | `BACKLOG.md` | `WI rule B2` |
 | `R1`–`R15` | the absolute rules | this file §4 | `START-HERE R7` |
-| `P0`–`P11`, `P1-quick` | prompts | `04-PROMPTS.md` | `prompt P11` |
+| `P0`–`P12`, `P1-quick` | prompts | `04-PROMPTS.md` | `prompt P11` |
 | `F1`–`F41` | product features; `F2.9` = a criterion | `01-PRD.md` | `PRD F2.9` |
 | `N1`–`N12` | non-functional requirements | `01-PRD.md` | `PRD N12` |
 | `P1`–`P5` | the five properties | `01-PRD.md` §6 | `PRD P3` |
